@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # scripts/setup.sh
 # One-command setup for SeshatOS app on Linux and macOS.
 #
@@ -40,14 +40,14 @@ export SESHAT_RUNTIME_ROOT
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; BOLD='\033[1m'; NC='\033[0m'
 
-ok()   { echo -e "${GREEN}  âœ“${NC}  $*"; }
-info() { echo -e "${BLUE}  Â·${NC}  $*"; }
+ok()   { echo -e "${GREEN}  ✓${NC}  $*"; }
+info() { echo -e "${BLUE}  ·${NC}  $*"; }
 warn() { echo -e "${YELLOW}  !${NC}  $*"; }
-fail() { echo -e "${RED}  âœ—${NC}  $*" >&2; exit 1; }
+fail() { echo -e "${RED}  ✗${NC}  $*" >&2; exit 1; }
 step() { echo -e "\n${BOLD}$*${NC}"; }
 
 
-# â”€â”€ 1. Go â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── 1. Go ────────────────────────────────────────────────────────────────────
 step "Checking Go..."
 
 if ! command -v go &>/dev/null; then
@@ -62,7 +62,7 @@ if [ "$GO_MAJOR" -lt 1 ] || { [ "$GO_MAJOR" -eq 1 ] && [ "$GO_MINOR" -lt 26 ]; }
 fi
 ok "Go $GO_VERSION"
 
-# â”€â”€ 2. ripgrep â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── 2. ripgrep ───────────────────────────────────────────────────────────────â”€â”€â”€
 # Not a build dependency - a runtime one. seshat-backend embeds the seshat
 # engine, and its glob/grep tools shell out to `rg` directly (no pure-Go
 # fallback) - without it, every glob/grep tool call fails with "ripgrep (rg)
@@ -125,3 +125,91 @@ else
     fi
 fi
 
+# ── 3. Node.js ───────────────────────────────────────────────────────────────
+step "Checking Node.js..."
+
+if ! command -v node &>/dev/null; then
+    fail "Node.js not found. Install Node.js 22+ from: https://nodejs.org/"
+fi
+
+NODE_MAJOR="$(node --version | sed 's/v//' | cut -d. -f1)"
+if [ "$NODE_MAJOR" -lt 22 ]; then
+    fail "Node.js $(node --version) found but v22+ is required."
+fi
+ok "Node.js $(node --version)"
+
+# ── 4. Package manager + Node dependencies ────────────────────────────────────
+step "Checking package manager..."
+
+if command -v bun &>/dev/null; then
+    PKG_MGR="bun"
+    ok "bun $(bun --version)"
+elif command -v npm &>/dev/null; then
+    PKG_MGR="npm"
+    ok "npm $(npm --version)"
+else
+    fail "Neither bun nor npm found."
+fi
+
+step "Installing Node dependencies..."
+(
+    cd "$UI_DIR"
+    if [ "$PKG_MGR" = "bun" ]; then
+        bun install
+    else
+        npm install --legacy-peer-deps
+    fi
+)
+ok "Node dependencies installed"
+
+# ── 5. Python venv + docling-serve (optional) ─────────────────────────────────
+if [ "${SKIP_PYTHON:-}" = "1" ]; then
+    warn "Skipping Python/docling setup (SKIP_PYTHON=1)"
+    warn "Run this script again later without SKIP_PYTHON to enable document conversion."
+else
+    step "Setting up Python environment (docling-serve)..."
+    "$REPO_ROOT/scripts/install-python-env.sh"
+fi
+
+# ── 6. Build Go binary + UI ────────────────────────────────────────────────────
+step "Building seshat-backend..."
+(
+    cd "$BACKEND_DIR"
+    go build -o bin/seshat-api ./cmd/api
+)
+ok "seshat-backend"
+
+# go.work (repo root) can optionally point at a local checkout of the seshat
+# engine itself (sibling directory, "use ../seshat") for engine development -
+# see go.work's `use` block. Without it, seshat-backend builds fine against
+# the published module instead; this is informational only.
+GO_WORK_PATH="$REPO_ROOT/go.work"
+if [ -f "$GO_WORK_PATH" ] && grep -q '\.\./seshat"' "$GO_WORK_PATH" 2>/dev/null; then
+    SIBLING_GO_MOD="$(dirname "$REPO_ROOT")/seshat/go.mod"
+    if [ -f "$SIBLING_GO_MOD" ]; then
+        ok "go.work: local seshat engine checkout found at $(dirname "$SIBLING_GO_MOD")"
+    else
+        warn "go.work references ../seshat but no go.mod was found there - Go builds will fail until that checkout exists (or remove the 'use ../seshat' line to build against the published module instead)."
+    fi
+fi
+
+step "Building SeshatOS UI..."
+(
+    cd "$UI_DIR"
+    if [ "$PKG_MGR" = "bun" ]; then
+        bun run build
+    else
+        npm run build
+    fi
+)
+ok "Build complete -> seshat-desktop/out/"
+
+# ── Done ───────────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${GREEN}  Setup complete!${NC}"
+echo ""
+echo "  Runtime data: $SESHAT_RUNTIME_ROOT"
+echo ""
+echo "  Start in dev mode (from repo root - see Makefile):"
+echo "    make dev"
+echo ""
