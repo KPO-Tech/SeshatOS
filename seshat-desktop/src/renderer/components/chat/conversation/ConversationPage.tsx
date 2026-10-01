@@ -109,7 +109,7 @@ export function ConversationPage() {
     openRightPanel,
   })
 
-  useConversationSessionLoad({
+  const { loading: sessionLoading } = useConversationSessionLoad({
     sessionId: id,
     session,
     updateSession,
@@ -146,6 +146,17 @@ export function ConversationPage() {
   })
 
   if (!session) {
+    // Every conversation open goes through this branch for however long
+    // GET /sessions/:id takes, even a perfectly healthy one - without this,
+    // "Conversation not found" flashed on every single open, not just a
+    // genuinely missing session.
+    if (sessionLoading) {
+      return (
+        <div className="conv-empty">
+          <span className="size-5 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)]" />
+        </div>
+      )
+    }
     return <ConversationEmpty />
   }
 

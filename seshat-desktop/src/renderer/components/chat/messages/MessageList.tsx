@@ -42,6 +42,16 @@ export function MessageList({
   onSubmitToolPrompt,
   onRetryMessage,
 }: MessageListProps) {
+  if (messages.length === 0) {
+    return (
+      <div className={`conv-messages${blurred ? ' conv-messages--blurred' : ''}`} ref={scrollRef}>
+        <div className="conv-empty">
+          <p className="m-0 text-[13px] text-app-text-muted">Send a message to start this conversation.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`conv-messages${blurred ? ' conv-messages--blurred' : ''}`} ref={scrollRef}>
       <div
