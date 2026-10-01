@@ -47,7 +47,7 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
           <div className="text-[12px] font-bold leading-[1.4] text-app-text">
-            Allow Claude to run <span className="inline-flex items-center gap-[3px] text-app-text">{toolIcon(tool.name)}{toolLabel(tool.name)}</span>?
+            Allow the agent to run <span className="inline-flex items-center gap-[3px] text-app-text">{toolIcon(tool.name)}{toolLabel(tool.name)}</span>?
           </div>
           <div className="text-[11px] leading-[1.5] text-app-text-muted">{description}</div>
         </div>

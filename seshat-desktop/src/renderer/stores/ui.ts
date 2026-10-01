@@ -187,7 +187,11 @@ type UIState = {
   // Signatures (see lib/permissionSignature.ts) the user has marked "always
   // allow" from a PermissionCard - future matching tool.permission_required
   // events are auto-approved without ever showing the card again. Persisted
-  // (not session-scoped) since "always" is what the user asked for.
+  // (not session-scoped) since "always" is what the user asked for - see
+  // DataControlsSettings for the one way to clear this. For edit_file/
+  // write_file, the signature includes the actual proposed content, not
+  // just the path, so approving one edit never silently approves a later,
+  // different edit to the same file.
   rememberedApprovals: Record<string, boolean>
   openLightbox: (image: LightboxImage) => void
   closeLightbox: () => void
@@ -210,6 +214,7 @@ type UIState = {
   setAskUserAnswer: (key: string, value: string) => void
   rememberApproval: (signature: string) => void
   forgetApproval: (signature: string) => void
+  clearAllApprovals: () => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -507,6 +512,8 @@ export const useUIStore = create<UIState>()(
           delete next[signature]
           return { rememberedApprovals: next }
         }),
+
+      clearAllApprovals: () => set({ rememberedApprovals: {} }),
 
       applyTheme: () => {
         const { theme } = get()
