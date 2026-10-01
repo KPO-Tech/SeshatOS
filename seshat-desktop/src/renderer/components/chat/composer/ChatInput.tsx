@@ -64,6 +64,7 @@ export function ChatInput({
   const [slashIdx, setSlashIdx] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [corpora, setCorpora] = useState<Corpus[]>([])
+  const [corpusLoadError, setCorpusLoadError] = useState(false)
   const [corpusDropdownOpen, setCorpusDropdownOpen] = useState(false)
   const corpusDropdownRef = useRef<HTMLDivElement>(null)
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'transcribing'>('idle')
@@ -72,14 +73,19 @@ export function ChatInput({
   const micStreamRef = useRef<MediaStream | null>(null)
   const canSend = value.trim().length > 0 || attachments.length > 0
 
+  const loadCorpora = useCallback(() => {
+    setCorpusLoadError(false)
+    api.get<{ corpora: Corpus[] }>('/corpora')
+      .then(d => setCorpora(d.corpora ?? []))
+      .catch(() => setCorpusLoadError(true))
+  }, [])
+
   useEffect(() => {
     api.get<{ skills: SkillOption[] }>('/skills')
       .then(d => setSkills((d.skills ?? []).filter(s => s.Source !== 'mcp' && s.UserInvocable !== false && !s.IsHidden)))
       .catch(() => {})
-    api.get<{ corpora: Corpus[] }>('/corpora')
-      .then(d => setCorpora(d.corpora ?? []))
-      .catch(() => {})
-  }, [])
+    loadCorpora()
+  }, [loadCorpora])
 
   // Release the mic if the component unmounts mid-recording.
   useEffect(() => {
@@ -376,7 +382,14 @@ export function ChatInput({
             {corpusDropdownOpen && (
               <div className="absolute bottom-[calc(100%+8px)] left-0 z-[200] flex max-w-[280px] min-w-[220px] flex-col overflow-hidden rounded-[10px] border border-[var(--color-border)] bg-app-bg shadow-[0_8px_28px_rgba(0,0,0,0.18)]">
                 <div className="border-b border-app-border-subtle px-3.5 pb-1.5 pt-2 text-[11px] font-extrabold uppercase tracking-[0.06em] text-app-text-muted">Knowledge bases</div>
-                {corpora.length === 0 ? (
+                {corpusLoadError ? (
+                  <div className="flex flex-col items-start gap-1.5 p-3.5 text-[13px] text-app-text-muted">
+                    <span>Couldn't load knowledge bases.</span>
+                    <button type="button" onClick={loadCorpora} className="font-semibold text-[var(--color-primary)] hover:underline">
+                      Retry
+                    </button>
+                  </div>
+                ) : corpora.length === 0 ? (
                   <div className="p-3.5 text-[13px] text-app-text-muted">No knowledge bases found</div>
                 ) : corpora.map(c => {
                   const selected = c.id === selectedCorpusId

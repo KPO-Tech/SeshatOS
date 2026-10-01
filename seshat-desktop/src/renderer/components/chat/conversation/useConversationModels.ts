@@ -17,6 +17,11 @@ type UseConversationModelsArgs = {
   sessionId?: string
   session?: ChatSession
   updateSession: (id: string, patch: Partial<ChatSession>) => void
+  // Called when persisting the provider/model choice to the backend fails -
+  // the local store is already updated optimistically (so this run keeps
+  // working), but without this the choice silently reverts to whatever was
+  // last saved the next time the conversation loads, with no indication why.
+  onSaveError?: () => void
 }
 
 function modelChoiceId(providerId: string, modelId: string): string {
@@ -54,7 +59,7 @@ function isChatProviderUsable(provider: ProviderSetting): boolean {
   return provider.has_api_key || provider.connection_status === 'ready'
 }
 
-export function useConversationModels({ sessionId, session, updateSession }: UseConversationModelsArgs) {
+export function useConversationModels({ sessionId, session, updateSession, onSaveError }: UseConversationModelsArgs) {
   useProviders()
   const providers = useProvidersStore((s) => s.providers)
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
@@ -145,7 +150,7 @@ export function useConversationModels({ sessionId, session, updateSession }: Use
     setModelLoadError(null)
     const label = model?.display_name || choice.modelId
     if (sessionId) {
-      void api.patch(`/sessions/${sessionId}`, { provider_setting_id: choice.providerId, model_id: choice.modelId }).catch(() => {})
+      void api.patch(`/sessions/${sessionId}`, { provider_setting_id: choice.providerId, model_id: choice.modelId }).catch(() => onSaveError?.())
       updateSession(sessionId, {
         providerSettingId: choice.providerId,
         providerLabel: provider?.name,
@@ -153,7 +158,7 @@ export function useConversationModels({ sessionId, session, updateSession }: Use
         modelLabel: label,
       })
     }
-  }, [sessionId, providers, modelsByProvider, updateSession])
+  }, [sessionId, providers, modelsByProvider, updateSession, onSaveError])
 
   const handleModelRetry = useCallback(() => {
     setModelLoadError(null)

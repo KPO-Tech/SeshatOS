@@ -31,6 +31,7 @@ export function ConversationPage() {
   const filesOpen = useUIStore((s) =>
     s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'files' && p.sessionId === id))
   )
+  const { toasts, show: showToast } = useToast()
 
   const {
     allModelChoices,
@@ -42,7 +43,12 @@ export function ConversationPage() {
     modelLoadError,
     handleModelSelect,
     handleModelRetry,
-  } = useConversationModels({ sessionId: id, session, updateSession })
+  } = useConversationModels({
+    sessionId: id,
+    session,
+    updateSession,
+    onSaveError: () => showToast("Couldn't save model selection - it may revert next time you open this conversation.", 'err'),
+  })
 
   const {
     handleExecutionModeSelect,
@@ -75,7 +81,6 @@ export function ConversationPage() {
     uploadedFileIds,
     sentAttachments,
   } = useDraftAttachments(id)
-  const { toasts, show: showToast } = useToast()
   // Brief "done" checkmark after a genuinely successful turn - fires only
   // from useChat's actual commit path (see onTurnSuccess below), never on
   // isStreaming's falling edge alone, since that also fires on failure and
