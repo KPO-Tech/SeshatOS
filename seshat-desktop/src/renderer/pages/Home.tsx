@@ -13,6 +13,7 @@ import { useUIStore } from '@renderer/stores/ui'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 import { modelAlias } from '@renderer/lib/modelAlias'
+import './Home.css'
 
 type ModelChoice = {
   id: string
@@ -407,7 +408,6 @@ export function Home() {
 
   return (
     <div className="home-root">
-      <style>{HOME_CSS}</style>
 
       {/* Main Content */}
       <div className="home-center">
@@ -524,88 +524,3 @@ async function pollDocumentReadStatus(
   }
 }
 
-const HOME_CSS = `
-.home-root {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-bg);
-  overflow-y: auto;
-}
-
-.home-center {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 28px 18px 60px;
-  max-width: 900px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.home-greeting {
-  font-family: serif;
-  font-size: var(--font-size-2xl);
-  font-weight: 500;
-  color: var(--color-text);
-  margin-bottom: var(--space-7);
-  letter-spacing: -0.01em;
-}
-
-.home-input-container {
-  width: 100%;
-  max-width: 760px;
-  margin-bottom: var(--space-8);
-}
-
-.home-input-status {
-  text-align: center;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: var(--space-4);
-}
-
-.home-input-status.error {
-  color: var(--color-error);
-}
-
-.home-quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-4);
-}
-
-.qa-btn {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 7px var(--space-6);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.qa-btn:hover {
-  background: var(--color-bg);
-  border-color: var(--color-border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  transform: translateY(-1px);
-}
-
-.qa-icon {
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-}
-
-.qa-label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text);
-}
-`

@@ -17,6 +17,7 @@ import { useLiveActivityForAgent } from '../messages/liveActivity'
 import { MessageList } from '../messages/MessageList'
 import { useToast, ToastStack } from '@renderer/components/ui/Toast'
 import { useChat } from '@renderer/hooks/useChat'
+import './ConversationPage.css'
 
 export function ConversationPage() {
   const { id } = useParams()
@@ -150,7 +151,6 @@ export function ConversationPage() {
 
   return (
     <div className="conv-root">
-      <style>{CONV_CSS}</style>
       <ToastStack toasts={toasts} />
 
       <MessageList
@@ -217,71 +217,3 @@ export function ConversationPage() {
   )
 }
 
-const CONV_CSS = `
-.conv-root {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: color-mix(in srgb, var(--color-bg) 68%, var(--color-surface));
-  min-height: 0;
-  overflow: hidden;
-}
-
-.conv-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 22px 0 18px;
-  transition: filter 0.25s ease;
-}
-
-.conv-messages--blurred {
-  filter: blur(3px);
-  pointer-events: none;
-  user-select: none;
-}
-
-.conv-messages-inner {
-  /* sizing handled via inline style (virtualizer height) */
-}
-
-.conv-virtual-row {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 0 18px;
-  box-sizing: border-box;
-  /* Without this, MessageItem's own margin-top collapses straight through
-     this wrapper (no border/vertical padding blocks it) - since this row is
-     absolutely positioned by the virtualizer via a computed transform, that
-     collapsed margin has nowhere to go: it's invisible AND excluded from
-     this row's measured height, so the next row's offset doesn't account
-     for it either. flow-root establishes a block formatting context so the
-     margin renders (and gets measured) inside this box instead. */
-  display: flow-root;
-}
-
-.conv-input-area {
-  padding: 0 16px 14px;
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--color-bg) 66%, var(--color-surface)) 72%,
-    transparent
-  );
-  flex-shrink: 0;
-}
-
-.conv-input-inner {
-  max-width: 860px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.conv-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-}
-
-`
