@@ -467,6 +467,17 @@ export function registerBackendHandlers(ipcMain: IpcMain): void {
     return sessionView(cachedSession)
   })
 
+  ipcMain.handle('auth:continue-without-account', async (event) => {
+    assertTrustedSender(event)
+    const payload = await performJSONRequest('/auth/local-session', 'POST', undefined)
+    if (!payload.ok) {
+      throw new Error(extractErrorMessage(payload))
+    }
+    const data = payload.data as { token: string; user: AuthUser; roles?: string[] }
+    await saveSession({ token: data.token, user: data.user, roles: data.roles ?? [] })
+    return sessionView(cachedSession)
+  })
+
   ipcMain.handle('auth:logout', async (event) => {
     assertTrustedSender(event)
     const session = await loadSession()
@@ -502,7 +513,7 @@ export function registerBackendHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('http:request', async (event, payload: RequestPayload) => {
     assertTrustedSender(event)
-    if (payload.path === '/auth/login' || payload.path === '/auth/register') {
+    if (payload.path === '/auth/login' || payload.path === '/auth/register' || payload.path === '/auth/local-session') {
       throw new Error('Use the dedicated auth bridge for login and registration')
     }
     const session = await loadSession()

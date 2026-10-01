@@ -120,6 +120,7 @@ const nexusBridge = {
   auth: {
     login: (credentials: { email: string; password: string }) => ipcRenderer.invoke('auth:login', credentials),
     register: (payload: { name: string; email: string; password: string }) => ipcRenderer.invoke('auth:register', payload),
+    continueWithoutAccount: () => ipcRenderer.invoke('auth:continue-without-account'),
     logout: () => ipcRenderer.invoke('auth:logout'),
     restoreSession: () => ipcRenderer.invoke('auth:restore-session'),
     clearSession: () => ipcRenderer.invoke('auth:clear-session'),

@@ -29,6 +29,18 @@ export function useAuth() {
     return res.user
   }
 
+  async function continueWithoutAccount() {
+    if (window.nexus?.auth) {
+      const session = await window.nexus.auth.continueWithoutAccount()
+      store.setSession(session)
+      return session.user
+    }
+
+    const res = await api.post<LoginResponse>('/auth/local-session')
+    store.setSession({ user: res.user, roles: res.roles ?? [], isAuthenticated: true }, res.token)
+    return res.user
+  }
+
   async function restoreSession() {
     try {
       const session = await window.nexus?.auth?.restoreSession()
@@ -62,6 +74,7 @@ export function useAuth() {
     login,
     logout,
     register,
+    continueWithoutAccount,
     restoreSession
   }
 }

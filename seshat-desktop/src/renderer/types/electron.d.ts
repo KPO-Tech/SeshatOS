@@ -32,6 +32,7 @@ interface Window {
     auth?: {
       login: (credentials: { email: string; password: string }) => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean }>
       register: (payload: { name: string; email: string; password: string }) => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean }>
+      continueWithoutAccount: () => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean }>
       logout: () => Promise<void>
       restoreSession: () => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean } | null>
       clearSession: () => Promise<void>

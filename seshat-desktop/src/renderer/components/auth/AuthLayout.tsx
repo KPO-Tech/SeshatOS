@@ -6,7 +6,7 @@ type Props = {
   children: ReactNode
   title: string
   subtitle: string
-  mode: 'login' | 'register'
+  mode: 'login' | 'register' | 'welcome'
 }
 
 const highlights = ['Local workspace', 'Secure session', 'Agent tools']
@@ -49,7 +49,7 @@ export function AuthLayout({ children, title, subtitle, mode }: Props) {
           </div>
 
           <div className="text-center text-[11px] text-[var(--text-muted)]">
-            {mode === 'login' ? 'Welcome back' : 'Create your workspace'}
+            {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create your workspace' : 'Get started'}
           </div>
         </section>
 

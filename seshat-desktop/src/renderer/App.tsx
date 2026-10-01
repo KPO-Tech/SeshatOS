@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { RouterProvider } from 'react-router'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { useInactivityTimeout } from '@renderer/hooks/useInactivityTimeout'
 import { useSessionValidation } from '@renderer/hooks/useSessionValidation'
-import { Login } from '@renderer/pages/Login'
-import { Register } from '@renderer/pages/Register'
+import { Welcome } from '@renderer/pages/Welcome'
 import { router } from '@renderer/router'
 
 export function App() {
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const { isAuthenticated, restoring, restoreSession } = useAuth()
 
   useInactivityTimeout()
@@ -30,9 +28,7 @@ export function App() {
   }
 
   if (!isAuthenticated) {
-    return authMode === 'login'
-      ? <Login onRegisterClick={() => setAuthMode('register')} />
-      : <Register onLoginClick={() => setAuthMode('login')} />
+    return <Welcome />
   }
 
   return <RouterProvider router={router} />
