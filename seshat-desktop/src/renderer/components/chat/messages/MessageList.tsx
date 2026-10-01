@@ -1,6 +1,7 @@
 import type { RefObject } from 'react'
 import type { Virtualizer } from '@tanstack/react-virtual'
 import type { Message } from '@renderer/api/types'
+import type { ChatAttachment } from '@renderer/stores/session'
 import { MessageItem } from '@renderer/components/chat/messages/MessageItem'
 
 type LiveActivity = {
@@ -22,7 +23,7 @@ type MessageListProps = {
   onApproveTool: (toolUseId: string, remember?: boolean) => void
   onDenyTool: (toolUseId: string) => void
   onSubmitToolPrompt: (promptId: string, value: unknown) => void
-  onRetryMessage: (text: string) => void
+  onRetryMessage: (text: string, attachments?: ChatAttachment[]) => void
 }
 
 export function MessageList({

@@ -167,7 +167,9 @@ export function ConversationPage() {
         onApproveTool={onApproveTool}
         onDenyTool={onDenyTool}
         onSubmitToolPrompt={onSubmitToolPrompt}
-        onRetryMessage={(text) => { void sendMessage(text) }}
+        onRetryMessage={(text, attachments) => {
+          void sendMessage(text, attachments?.length ? { fileIds: attachments.map((a) => a.id), attachments } : undefined)
+        }}
       />
 
       <ConversationPendingPanels

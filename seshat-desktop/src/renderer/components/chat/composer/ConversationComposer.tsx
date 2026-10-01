@@ -123,7 +123,11 @@ export function ConversationComposer({
           isUploadingAttachments={uploadingAttachments}
           attachmentError={attachmentError}
           modelLabel={
-            modelLoadError
+            // A load failure on one provider must not blank out a model
+            // that's actually selected and available from another provider
+            // that succeeded - only claim "unavailable" when there's
+            // genuinely nothing to choose from.
+            allModelChoices.length === 0 && modelLoadError
               ? 'Models unavailable'
               : modelAlias(selectedModelChoice?.model.display_name || selectedModelChoice?.model.model_id || sessionModelLabel || 'Model')
           }
@@ -132,7 +136,7 @@ export function ConversationComposer({
               ? <ProviderIcon provider={selectedModelChoice.providerKind} size={13} />
               : undefined
           }
-          modelOptions={!modelLoadError ? allModelChoices.map((choice) => ({
+          modelOptions={allModelChoices.length > 0 ? allModelChoices.map((choice) => ({
             id: choice.id,
             label: modelAlias(choice.model.display_name || choice.model.model_id),
             description: providerDisplayName(choice.providerName, choice.providerKind),

@@ -153,7 +153,10 @@ type Props = {
   onApproveTool?: (toolUseId: string, remember?: boolean) => void
   onDenyTool?: (toolUseId: string) => void
   onSubmitToolPrompt?: (promptId: string, value: unknown) => void
-  onRetryMessage?: (text: string) => void
+  // attachments carries along whatever files the original message had, so
+  // retrying a failed send doesn't silently drop them - see metadata.attachments
+  // below, populated by useChatStream.sendMessage on the original send.
+  onRetryMessage?: (text: string, attachments?: ChatAttachment[]) => void
 }
 
 export type QuietGroupItem =
@@ -369,7 +372,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                   <button
                     type="button"
                     className="mt-1.5 block cursor-pointer border-0 bg-none p-0 text-left text-[12px] font-medium text-app-error hover:underline"
-                    onClick={() => onRetryMessage?.(block.text)}
+                    onClick={() => onRetryMessage?.(block.text, attachments)}
                   >
                     Failed to send · Retry
                   </button>
@@ -434,7 +437,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                 aria-label="Retry"
                 title="Send this message again"
                 type="button"
-                onClick={() => onRetryMessage(copyText)}
+                onClick={() => onRetryMessage(copyText, attachments)}
               >
                 <Redo size={11} />
               </button>

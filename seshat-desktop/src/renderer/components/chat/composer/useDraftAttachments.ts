@@ -1,4 +1,4 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { api } from '@renderer/api/client'
 import { attachmentCategory, isDocumentReadProcessing, isPDFFile, sentAttachment, type ChatAttachment, type DocumentReadStatus } from '@renderer/components/chat/attachments/attachmentTypes'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
@@ -28,6 +28,13 @@ export function useDraftAttachments(sessionId?: string) {
   const [attachments, setAttachments] = useState<ChatAttachment[]>([])
   const [uploadingAttachments, setUploadingAttachments] = useState(false)
   const [attachmentError, setAttachmentError] = useState<string | null>(null)
+  // The upload response swaps an attachment's local-* id for its real server
+  // id, which can land before renderPDFPagePreviews (rendering up to 10
+  // pages client-side) resolves - a preview update keyed on the now-stale
+  // local id would then match nothing and silently vanish. This tracks
+  // local id -> current id so the preview callback can always find the
+  // right attachment regardless of which finishes first.
+  const idMapRef = useRef<Record<string, string>>({})
 
   const handleAttachFiles = useCallback(async (files: FileList) => {
     if (!files.length || !sessionId) return
@@ -48,8 +55,9 @@ export function useDraftAttachments(sessionId?: string) {
         void renderPDFPagePreviews(file, 10)
           .then((previews) => {
             const urls = previews.map((preview) => preview.dataURL)
+            const currentId = (pendingId && idMapRef.current[pendingId]) || pendingId
             setAttachments(current => current.map(attachment => (
-              attachment.id === pendingId
+              attachment.id === currentId
                 ? { ...attachment, preview_url: urls[0], page_preview_urls: urls }
                 : attachment
             )))
@@ -65,6 +73,7 @@ export function useDraftAttachments(sessionId?: string) {
         const form = new FormData()
         form.append('file', file)
         const item = await api.upload<UploadedFileResponse>(`/sessions/${sessionId}/files`, form)
+        if (pendingId) idMapRef.current[pendingId] = item.id
         setAttachments(current => current.map(attachment => (
           attachment.id === pendingId
             ? {
