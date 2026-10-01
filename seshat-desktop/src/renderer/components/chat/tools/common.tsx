@@ -134,7 +134,7 @@ export function CodeBox({
           {content}
         </SyntaxHighlighter>
       ) : (
-        <pre className={cx('m-0 overflow-auto px-[9px] py-2 font-mono text-[11px] leading-[1.5] text-app-text-secondary', expanded ? 'max-h-none whitespace-pre' : 'max-h-[220px] whitespace-pre-wrap break-all', isError && 'text-[#fca5a5]')}>
+        <pre className={cx('m-0 overflow-auto px-[9px] py-2 font-mono text-[11px] leading-[1.5] text-app-text-secondary', expanded ? 'max-h-none whitespace-pre' : 'max-h-[220px] whitespace-pre-wrap break-all', isError && 'text-[var(--color-error)]')}>
           {content}
         </pre>
       )}
@@ -192,7 +192,7 @@ export function ProseBox({ content, copyable, bare, expanded }: { content: strin
 // duplicated in 16 renderers.
 export function ErrorPre({ content }: { content: string }) {
   return (
-    <pre className="m-0 max-h-[220px] overflow-y-auto whitespace-pre-wrap break-words rounded-app-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.08)] px-3 py-[10px] font-['JetBrains_Mono','Fira_Code',monospace] text-[12px] leading-normal text-[#fca5a5]">
+    <pre className="m-0 max-h-[220px] overflow-y-auto whitespace-pre-wrap break-words rounded-app-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.08)] px-3 py-[10px] font-['JetBrains_Mono','Fira_Code',monospace] text-[12px] leading-normal text-[var(--color-error)]">
       {content}
     </pre>
   )

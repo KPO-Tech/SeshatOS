@@ -228,15 +228,15 @@ export function DiffView({
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-lg border border-b-0 border-app-border-subtle bg-[rgba(255,255,255,0.03)] px-[9px] py-1.5">
           <span className="min-w-0 flex-1 truncate font-['JetBrains_Mono','Fira_Code',monospace] text-[11px] text-app-text-muted" title={filePath}>{filePath}</span>
           <span className="flex items-center gap-1.5 font-['JetBrains_Mono','Fira_Code',monospace] text-[10px] font-bold">
-            <span className="text-[#6ee7b7]">+{addCount}</span>
-            <span className="text-[#fca5a5]">−{delCount}</span>
+            <span className="text-[var(--color-success)]">+{addCount}</span>
+            <span className="text-[var(--color-error)]">−{delCount}</span>
           </span>
         </div>
       )}
       {expanded && (
         <div className="flex items-center justify-end gap-1.5 pb-1.5 font-['JetBrains_Mono','Fira_Code',monospace] text-[10px] font-bold">
-          <span className="text-[#6ee7b7]">+{addCount}</span>
-          <span className="text-[#fca5a5]">−{delCount}</span>
+          <span className="text-[var(--color-success)]">+{addCount}</span>
+          <span className="text-[var(--color-error)]">−{delCount}</span>
         </div>
       )}
       <div

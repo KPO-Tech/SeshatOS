@@ -4,8 +4,8 @@ import type { ToolViewProps } from '../types'
 const PATCH_LINE_CSS = 'rounded-[5px] px-2 py-[3px] font-[\'JetBrains_Mono\',\'Fira_Code\',monospace] text-[12px] text-app-text-secondary'
 
 const VERB_CLASS: Record<string, string> = {
-  Added: 'text-[#6ee7b7]',
-  Deleted: 'text-[#fca5a5]',
+  Added: 'text-[var(--color-success)]',
+  Deleted: 'text-[var(--color-error)]',
   Updated: 'text-[var(--color-accent)]',
   Moved: 'text-app-text-muted',
 }

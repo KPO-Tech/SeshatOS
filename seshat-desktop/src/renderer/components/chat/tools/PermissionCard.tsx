@@ -40,9 +40,9 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
   }
 
   return (
-    <div className="flex w-full flex-col gap-2.5 rounded-[11px] border border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.05)] px-[11px] py-2.5">
+    <div className="flex w-full flex-col gap-2.5 rounded-[11px] border border-[color-mix(in_srgb,var(--color-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_5%,transparent)] px-[11px] py-2.5">
       <div className="flex items-start gap-2.5">
-        <div className="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[rgba(251,191,36,0.12)] text-[#fbbf24]">
+        <div className="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]">
           <Caution size={13} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
