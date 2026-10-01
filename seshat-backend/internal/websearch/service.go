@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/websearch"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	backendsettings "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	searchproviders "github.com/KPO-Tech/seshat/pkg/web/search/providers"
 )
 

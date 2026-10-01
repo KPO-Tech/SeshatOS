@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	cloudmemberships "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/memberships"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	cloudmemberships "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/memberships"
 )
 
 // Admin Console's Users tab — deliberately built on seshat-server's

@@ -11,7 +11,7 @@ package azureblob
 import (
 	"context"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
 	coreconnectors "github.com/KPO-Tech/seshat/pkg/connectors"
 )
 

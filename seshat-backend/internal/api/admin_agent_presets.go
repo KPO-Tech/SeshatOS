@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	cloudagents "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/agents"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	cloudagents "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/agents"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Admin Console's Agents tab — deliberately separate from the embedded

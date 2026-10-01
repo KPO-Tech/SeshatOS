@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	backendfiles "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/files"
-	backendquery "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/query"
+	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
+	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/seshat/pkg/types"
 )
 

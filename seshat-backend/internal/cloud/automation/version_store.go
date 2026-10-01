@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // versionCredentialKey is a distinct credential row from policyCredentialKey

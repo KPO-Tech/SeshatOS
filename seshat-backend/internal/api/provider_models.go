@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	backendaudit "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/audit"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	appconfig "github.com/KPO-Tech/seshat/pkg/config"
 	"github.com/KPO-Tech/seshat/pkg/providers"
 )

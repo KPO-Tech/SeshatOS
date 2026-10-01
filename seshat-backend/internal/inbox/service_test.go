@@ -10,11 +10,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 	"github.com/KPO-Tech/seshat/pkg/storage"
 	"golang.org/x/oauth2"
 )

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 )
 
 type createUserRequest struct {

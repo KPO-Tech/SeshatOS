@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/prompt"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 )
 
 func TestDefaultInboxAgentParams_IsWellFormed(t *testing.T) {

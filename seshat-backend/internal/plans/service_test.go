@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 func openPlansService(t *testing.T) (*Service, *db.PlanDocumentStore) {

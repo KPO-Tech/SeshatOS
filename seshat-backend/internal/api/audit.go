@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	backendaudit "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/audit"
-	cloudaudit "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/audit"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	cloudaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/audit"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // handleAuditLogs — GET /api/v1/audit/logs. Once connected to an

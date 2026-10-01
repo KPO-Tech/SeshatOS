@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Dataflow secrets — org-scoped named values a graph node's *SecretRef

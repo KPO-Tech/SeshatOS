@@ -3,7 +3,7 @@ package onedrive
 import (
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
 )
 
 // onedrive's actual Discover/Sync/Graph-client logic and its own unit tests

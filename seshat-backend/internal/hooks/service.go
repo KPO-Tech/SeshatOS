@@ -15,9 +15,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	cloudhooks "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/hooks"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	cloudhooks "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/hooks"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 )
 

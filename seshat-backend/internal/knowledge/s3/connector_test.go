@@ -3,7 +3,7 @@ package s3
 import (
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
 )
 
 // s3's actual Discover/Sync/config-parsing logic and its own unit +

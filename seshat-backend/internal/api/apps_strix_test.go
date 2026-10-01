@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 func TestAppsStrixStatusRequiresAuth(t *testing.T) {

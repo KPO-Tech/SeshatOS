@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Invitation mirrors seshat-server's Invitation schema (openapi.yaml). Token

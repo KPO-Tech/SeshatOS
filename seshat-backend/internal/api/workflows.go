@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/workflows"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/workflows"
 )
 
 type workflowRunRequest struct {

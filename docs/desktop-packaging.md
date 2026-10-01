@@ -5,7 +5,7 @@ contract for Windows and Linux builds.
 
 ## Startup Model
 
-`seshat-ui` is an Electron app. In development it expects a backend already
+`seshat-desktop` is an Electron app. In development it expects a backend already
 running at `http://127.0.0.1:8090`, unless `SESHAT_BACKEND_ORIGIN` is set.
 
 In packaged builds, `src/main/backend-process.ts` starts a bundled backend
@@ -42,7 +42,7 @@ as an environment variable, so it did nothing.
 
 ## Windows Build
 
-Run from `seshat-ui/` on Windows:
+Run from `seshat-desktop/` on Windows:
 
 ```powershell
 npm run package:win
@@ -87,7 +87,7 @@ defaulting to the user's home config directory.
 
 ## Linux Build
 
-Run from `seshat-ui/` on Linux:
+Run from `seshat-desktop/` on Linux:
 
 ```sh
 npm run package:linux

@@ -17,8 +17,8 @@ import (
 
 	sdkmcp "github.com/KPO-Tech/seshat/pkg/mcp"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // Connector implements connector.ActionConnector by connecting to one

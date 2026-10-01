@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	backendaudit "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/audit"
-	bksettings "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/seshat/pkg/providers"
 )
 

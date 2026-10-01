@@ -9,11 +9,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox/tool"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/tool"
 	"github.com/KPO-Tech/seshat/pkg/automation"
 	"github.com/KPO-Tech/seshat/pkg/dataflow"
 	"github.com/KPO-Tech/seshat/pkg/tools"

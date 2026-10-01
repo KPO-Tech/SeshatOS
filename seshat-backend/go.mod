@@ -1,4 +1,4 @@
-module github.com/EngineerProjects/seshat-ai/seshat-backend
+module github.com/KPO-Tech/SeshatOS/seshat-backend
 
 go 1.26.6
 

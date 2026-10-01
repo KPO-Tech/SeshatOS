@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	seshat "github.com/EngineerProjects/seshat-ai/seshat-backend/internal"
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	seshat "github.com/KPO-Tech/SeshatOS/seshat-backend/internal"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 	"github.com/KPO-Tech/seshat/pkg/storage"
 )
 

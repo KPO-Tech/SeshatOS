@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/knowledge"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 )
 
 type connectManualAccountRequest struct {

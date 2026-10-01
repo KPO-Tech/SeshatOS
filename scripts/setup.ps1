@@ -2,13 +2,13 @@
 # One-command setup for SeshatOS app on Windows.
 #
 # What it does:
-#   1. Verifies Go 1.26+ (seshat-backend, seshat-server)
+#   1. Verifies Go 1.26+ (seshat-backend)
 #   2. Installs ripgrep (winget / scoop / choco) - required at runtime by the
 #      engine's glob/grep tools, which shell out to `rg` directly
 #   4. Verifies Node.js 22+ and bun (or npm)
 #   5. Installs Node dependencies
 #   6. Installs uv and docling-serve (optional - skip with $env:SKIP_PYTHON = "1")
-#   7. Builds seshat-backend.exe, seshat-server.exe, and the Electron app
+#   7. Builds seshat-backend.exe and the Electron app
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
@@ -23,9 +23,8 @@
 $ErrorActionPreference = "Stop"
 
 $RepoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$UiDir = Join-Path $RepoRoot "seshat-ui"
+$UiDir = Join-Path $RepoRoot "seshat-desktop"
 $BackendDir = Join-Path $RepoRoot "seshat-backend"
-$ServerDir = Join-Path $RepoRoot "seshat-server"
 
 if (-not $env:SESHAT_RUNTIME_ROOT) {
     $env:SESHAT_RUNTIME_ROOT = Join-Path $env:APPDATA "seshat"
@@ -177,20 +176,16 @@ if ($env:SKIP_PYTHON -eq "1") {
 }
 
 # â”€â”€ 7. Build Go binaries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-Write-Step "Building seshat-backend and seshat-server..."
+Write-Step "Building seshat-backend..."
 
 Set-Location $BackendDir
 go build ./...
 Write-Ok "seshat-backend"
 
-Set-Location $ServerDir
-go build ./...
-Write-Ok "seshat-server"
-
 # go.work (repo root) can optionally point at a local checkout of the seshat
 # engine itself (sibling directory, "use ../seshat") for engine development -
-# see go.work's `use` block. Without it, seshat-backend/seshat-server build
-# fine against the published module instead; this is informational only.
+# see go.work's `use` block. Without it, seshat-backend builds fine against
+# the published module instead; this is informational only.
 $goWorkPath = Join-Path $RepoRoot "go.work"
 if ((Test-Path $goWorkPath) -and (Select-String -Path $goWorkPath -Pattern "\.\./seshat" -Quiet)) {
     $siblingGoMod = Join-Path (Split-Path -Parent $RepoRoot) "seshat\go.mod"
@@ -210,7 +205,7 @@ if ($pkgManager -eq "bun") {
 } else {
     npm run build --legacy-peer-deps
 }
-Write-Ok "Build complete -> seshat-ui\out\"
+Write-Ok "Build complete -> seshat-desktop\out\"
 
 # â”€â”€ Done â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Write-Host ""

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // TestCacheRoundTripsResolvedOrganizationID is a regression test for a bug

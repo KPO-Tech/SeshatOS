@@ -1,10 +1,9 @@
-Copyright (c) 2026-present [TODO: confirm legal copyright holder — individual or company name]
+Copyright (c) 2026-present Stéphane Kpoviessi (Seshat)
 
 ================================================================================
- DRAFT NOTICE - not yet lawyer-reviewed. Fill in the [TODO: ...] placeholders
- below with confirmed values, and have the Commons Clause condition reviewed
- by a lawyer (it is the clause doing the actual commercial-protection work)
- before this license governs any published release.
+ DRAFT NOTICE - not yet lawyer-reviewed. Have the Commons Clause condition
+ reviewed by a lawyer (it is the clause doing the actual commercial-protection
+ work) before this license governs any published release.
 ================================================================================
 
 This license applies to SeshatOS: the seshat-backend, seshat-desktop, and
@@ -42,7 +41,7 @@ Software: SeshatOS (seshat-backend, seshat-desktop, seshat-intelligence)
 
 License: Apache License, Version 2.0
 
-Licensor: [TODO: confirm legal entity/individual]
+Licensor: Stéphane Kpoviessi (Seshat)
 
 ================================================================================
 Apache License
@@ -237,7 +236,7 @@ http://www.apache.org/licenses/
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright [yyyy] [name of copyright owner]
+   Copyright 2026 Stéphane Kpoviessi (Seshat)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

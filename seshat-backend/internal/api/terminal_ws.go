@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	backendquery "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/query"
+	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/gorilla/websocket"
 )
 

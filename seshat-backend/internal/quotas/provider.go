@@ -3,7 +3,7 @@ package quotas
 import (
 	"context"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 )
 
 // Provider is the quota backend behind Service: seshat-backend's own local

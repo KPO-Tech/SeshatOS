@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Client is a thin HTTP client for seshat-server's device-authenticated

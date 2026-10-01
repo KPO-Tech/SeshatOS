@@ -29,10 +29,10 @@ import (
 	"sync"
 	"time"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/query"
-	backendquotas "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/quotas"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
+	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 	"github.com/KPO-Tech/seshat/pkg/types"
 )

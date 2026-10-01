@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	backendplans "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/plans"
+	backendplans "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/plans"
 )
 
 // handlePlans handles GET /api/v1/plans?session_id=...

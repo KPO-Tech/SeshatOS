@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // Aliased from internal/db rather than redeclared, so the two can never

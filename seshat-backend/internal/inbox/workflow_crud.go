@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/seshat/pkg/automation"
 	"github.com/KPO-Tech/seshat/pkg/dataflow"
 )

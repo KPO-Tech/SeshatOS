@@ -10,7 +10,7 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 )
 
 // translateIncoming converts a whatsmeow message event into the

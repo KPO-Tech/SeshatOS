@@ -15,8 +15,8 @@ import (
 	"github.com/KPO-Tech/seshat/pkg/types"
 	"github.com/KPO-Tech/seshat/pkg/vector"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 type QueryRuntime interface {

@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	cloudsettings "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/settings"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	cloudsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/settings"
 )
 
 // Admin Console's organization-wide Providers tab — deliberately separate

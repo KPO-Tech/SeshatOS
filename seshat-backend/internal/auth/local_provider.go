@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // LocalProvider backs standalone mode: seshat-backend's own SQLite identity

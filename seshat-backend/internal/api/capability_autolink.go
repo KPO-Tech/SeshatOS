@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	backendsettings "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 )
 
 // autoLinkCapabilitiesFromProvider mirrors seshat-server's

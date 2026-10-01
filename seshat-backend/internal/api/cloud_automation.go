@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 )
 
 // These handlers cover pairing this device and read-only run visibility.

@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/automation"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 )
 
 // requireSettingsWritable is the settings-write half of the desktop policies

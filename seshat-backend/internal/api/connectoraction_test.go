@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	seshat "github.com/EngineerProjects/seshat-ai/seshat-backend/internal"
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	seshat "github.com/KPO-Tech/SeshatOS/seshat-backend/internal"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // newConnectorTestApp builds a minimal *App with only what

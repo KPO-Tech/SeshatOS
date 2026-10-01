@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Client is a thin, stateless HTTP client for seshat-server's MCP registry

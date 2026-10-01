@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	backendagents "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/agents"
+	backendagents "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/agents"
 	pkgagent "github.com/KPO-Tech/seshat/pkg/agent"
 )
 

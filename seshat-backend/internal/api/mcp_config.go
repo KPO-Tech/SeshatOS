@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	backendmcp "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/mcp"
+	backendmcp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/mcp"
 	"github.com/KPO-Tech/seshat/pkg/mcp"
 	"github.com/KPO-Tech/seshat/pkg/runtimepath"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 )
 
 func TestParseDefinition_ValidYAML(t *testing.T) {

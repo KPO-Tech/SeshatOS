@@ -10,7 +10,7 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 )
 
 func chatJID() types.JID { return types.NewJID("15551234567", "s.whatsapp.net") }

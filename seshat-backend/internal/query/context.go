@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	backendfiles "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/files"
-	backendknowledge "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/knowledge"
-	backendmemories "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/memories"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
+	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
+	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 )
 
 // renderingCapabilitiesBlock tells the model about UI-only rendering

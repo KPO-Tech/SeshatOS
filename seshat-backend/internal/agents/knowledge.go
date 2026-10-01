@@ -1,6 +1,6 @@
 package agents
 
-import "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/prompt"
+import "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 
 // KnowledgeAgentSlug is the well-known slug for the auto-provisioned
 // Knowledge Agent - see DefaultKnowledgeAgentParams and

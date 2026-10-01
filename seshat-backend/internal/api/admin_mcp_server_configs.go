@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	cloudhttp "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	cloudmcp "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/mcp"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	cloudhttp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	cloudmcp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/mcp"
 )
 
 // Admin Console's organization-wide MCP Servers tab — deliberately separate

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/documentreading"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
 )
 
 func TestHandleDocumentReaderTestProbesConversionAndHybridChunking(t *testing.T) {

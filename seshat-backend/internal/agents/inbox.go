@@ -1,6 +1,6 @@
 package agents
 
-import "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/prompt"
+import "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 
 // InboxAgentSlug is the well-known slug for the auto-provisioned Inbox
 // Agent - see DefaultInboxAgentParams and internal/api's ensureInboxAgent,

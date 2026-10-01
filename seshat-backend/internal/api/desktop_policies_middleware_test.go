@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	seshat "github.com/EngineerProjects/seshat-ai/seshat-backend/internal"
-	automation "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/automation"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	seshat "github.com/KPO-Tech/SeshatOS/seshat-backend/internal"
+	automation "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // newSettingsPolicyTestApp mirrors newSkillsTestApp, plus a wired

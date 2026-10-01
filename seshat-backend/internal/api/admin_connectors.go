@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	cloudconnectors "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/connectors"
-	cloudhttp "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	cloudconnectors "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/connectors"
+	cloudhttp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Admin Console's organization-wide Connectors tab — deliberately separate

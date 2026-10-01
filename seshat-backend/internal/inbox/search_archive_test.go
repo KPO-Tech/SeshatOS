@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 )
 
 // fakeSearchableConnector layers MessageSearcher/ThreadArchiver/

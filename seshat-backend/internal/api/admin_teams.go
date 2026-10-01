@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	cloudteams "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/teams"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	cloudteams "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/teams"
 )
 
 // Admin Console's organization-wide Teams tab — replaced the old local

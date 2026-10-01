@@ -10,7 +10,7 @@ import (
 
 	"github.com/KPO-Tech/seshat/pkg/dataflow"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // JobsClient talks to seshat-server's job-management API

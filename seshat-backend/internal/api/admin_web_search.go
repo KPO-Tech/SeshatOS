@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	cloudwebsearch "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/websearch"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	cloudwebsearch "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
 )
 
 // Admin Console's organization-wide Web Search tab — the domain policy

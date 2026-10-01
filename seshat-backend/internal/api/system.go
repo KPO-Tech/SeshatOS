@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/documentreading"
-	backendsettings "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
+	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 )
 

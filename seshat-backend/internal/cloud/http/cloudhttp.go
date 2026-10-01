@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 )
 
 // HTTPError carries the response status code so callers can translate it

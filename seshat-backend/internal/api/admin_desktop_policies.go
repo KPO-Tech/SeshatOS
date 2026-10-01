@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	clouddesktoppolicies "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/desktoppolicies"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	clouddesktoppolicies "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/desktoppolicies"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Admin Console's Desktop Policies tab — these bindings already actively

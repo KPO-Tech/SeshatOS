@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	automation "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/automation"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	automation "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 func newWorkspacePolicyTestService(t *testing.T, policies *automation.PolicyStore) (*Service, *Principal) {

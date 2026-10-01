@@ -6,8 +6,8 @@ import (
 
 	"github.com/KPO-Tech/seshat/pkg/vector"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // ragAllowedOwnerIDs mirrors knowledge.Service.checkAccess's own ownership

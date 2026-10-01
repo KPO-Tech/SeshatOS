@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/glebarez/go-sqlite"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 )
 
 func testSQLDB(t *testing.T) *sql.DB {

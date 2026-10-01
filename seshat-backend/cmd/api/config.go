@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/api"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/api"
 	appconfig "github.com/KPO-Tech/seshat/pkg/config"
 )
 

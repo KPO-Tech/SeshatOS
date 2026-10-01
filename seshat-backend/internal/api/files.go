@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	backendaudit "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/audit"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	backendfiles "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/files"
-	backendquotas "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/quotas"
+	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
+	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 )
 
 const maxUploadSize = 100 << 20 // 100 MB

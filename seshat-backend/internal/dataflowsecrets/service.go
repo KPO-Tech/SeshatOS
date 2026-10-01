@@ -14,7 +14,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // keyPrefix namespaces this package's rows within internal/db's shared

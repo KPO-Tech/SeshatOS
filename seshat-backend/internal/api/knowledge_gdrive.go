@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/knowledge"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/knowledge/gdrive"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/gdrive"
 	"golang.org/x/oauth2"
 )
 

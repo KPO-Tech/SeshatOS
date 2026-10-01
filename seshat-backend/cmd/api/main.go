@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/api"
-	seshatconfig "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/config"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/api"
+	seshatconfig "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/config"
 	appconfig "github.com/KPO-Tech/seshat/pkg/config"
 )
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/memories"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 )
 
 type memoryResponse struct {

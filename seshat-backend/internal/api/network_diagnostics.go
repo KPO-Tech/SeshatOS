@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/netdiag"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/netdiag"
 )
 
 // handleNetworkDiagnostics runs a live connectivity probe against this

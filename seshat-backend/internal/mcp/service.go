@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/mcp"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/mcp"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	enginemcp "github.com/KPO-Tech/seshat/pkg/mcp"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 )

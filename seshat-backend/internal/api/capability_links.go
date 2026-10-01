@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
-	backendsettings "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 )
 
 // allCapabilities is the fixed set this endpoint reports on - see

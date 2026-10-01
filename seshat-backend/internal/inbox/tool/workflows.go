@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/agents"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/agents"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 	"github.com/KPO-Tech/seshat/pkg/dataflow"
 	"github.com/KPO-Tech/seshat/pkg/tools"
 )

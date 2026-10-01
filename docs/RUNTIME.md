@@ -136,7 +136,7 @@ optional sidecar HTTP process on `127.0.0.1:5001`.
 ### Install
 
 ```bash
-# From seshat-ui/ or seshat/
+# From the repository root
 make install-python
 
 # Or directly:

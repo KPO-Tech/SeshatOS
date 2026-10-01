@@ -3,7 +3,7 @@ package gdrive
 import (
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
 )
 
 // gdrive's actual Discover/Sync/permission-mapping/allowlist logic and its

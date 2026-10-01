@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/automation"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Variables — org-scoped $vars.NAME values graph nodes can reference.

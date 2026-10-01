@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	backendskills "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/skills"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	backendskills "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
 )
 
 // skillDTO is the serializable view of a skill — excludes function fields.

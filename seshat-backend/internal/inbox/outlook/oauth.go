@@ -3,7 +3,7 @@ package outlook
 import (
 	"golang.org/x/oauth2"
 
-	microsoftOAuth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/oauth/microsoft"
+	microsoftOAuth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/oauth/microsoft"
 	coremsgraph "github.com/KPO-Tech/seshat/pkg/msgraph"
 )
 

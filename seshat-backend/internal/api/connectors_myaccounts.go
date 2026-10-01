@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
-	cloudconnectors "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/connectors"
-	cloudhttp "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	cloudconnectors "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/connectors"
+	cloudhttp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // Workspace → Connections: any authenticated employee connects their own

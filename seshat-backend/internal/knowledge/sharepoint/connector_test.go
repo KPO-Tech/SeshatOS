@@ -3,7 +3,7 @@ package sharepoint
 import (
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
 )
 
 // sharepoint's actual Discover/Sync/Graph-client/permission-mapping logic

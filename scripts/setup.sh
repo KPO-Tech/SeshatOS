@@ -3,12 +3,12 @@
 # One-command setup for SeshatOS app on Linux and macOS.
 #
 # What it does:
-#   1. Verifies Go 1.26+ (seshat-backend, seshat-server)
+#   1. Verifies Go 1.26+ (seshat-backend)
 #   2. Installs ripgrep (required at runtime by the engine's glob/grep tools)
 #   3. Verifies Node.js 22+ and bun (or npm)
 #   4. Installs Node dependencies (bun install)
-#   5. Installs uv and docling-serve (optional â€” skip with SKIP_PYTHON=1)
-#   6. Builds seshat-backend, seshat-server, and the Electron app
+#   5. Installs uv and docling-serve (optional — skip with SKIP_PYTHON=1)
+#   6. Builds seshat-backend and the Electron app
 #
 # Usage:
 #   ./scripts/setup.sh
@@ -25,9 +25,8 @@ set -euo pipefail
 
 OS="$(uname -s)"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UI_DIR="$REPO_ROOT/seshat-ui"
+UI_DIR="$REPO_ROOT/seshat-desktop"
 BACKEND_DIR="$REPO_ROOT/seshat-backend"
-SERVER_DIR="$REPO_ROOT/seshat-server"
 
 if [ -z "${SESHAT_RUNTIME_ROOT:-}" ]; then
     if [ -n "${XDG_CONFIG_HOME:-}" ]; then

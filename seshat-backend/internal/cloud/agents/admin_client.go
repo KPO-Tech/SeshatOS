@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
 // ─── Admin CRUD (organization-wide, seshat-backend's own Admin Console) ────

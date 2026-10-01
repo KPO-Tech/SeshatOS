@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 )
 
 const maxTranscribeUploadSize = 26 << 20 // ~26 MB, headroom over OpenAI's 25 MB cap

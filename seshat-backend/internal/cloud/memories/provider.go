@@ -3,9 +3,9 @@ package cloudmemories
 import (
 	"context"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/memories"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 )
 
 // Provider implements memories.Provider against a remote seshat-server —

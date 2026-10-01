@@ -3,7 +3,7 @@ package gdrive
 import (
 	"golang.org/x/oauth2"
 
-	googleOAuth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/oauth/google"
+	googleOAuth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/oauth/google"
 	coreconnectors "github.com/KPO-Tech/seshat/pkg/connectors"
 )
 

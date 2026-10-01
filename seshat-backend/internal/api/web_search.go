@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	backendwebsearch "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/websearch"
+	backendwebsearch "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
 	webpolicy "github.com/KPO-Tech/seshat/pkg/web"
 )
 

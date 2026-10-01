@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/netdiag"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/netdiag"
 )
 
 func TestHandleNetworkDiagnosticsProbesTargetServerURL(t *testing.T) {

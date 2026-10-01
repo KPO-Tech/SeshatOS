@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	cloudhttp "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	cloudinvitations "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/invitations"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	cloudhttp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	cloudinvitations "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/invitations"
 )
 
 // Admin Console's Invitations tab — pending/accepted/revoked/expired invites

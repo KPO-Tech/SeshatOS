@@ -16,9 +16,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	sdkproviders "github.com/KPO-Tech/seshat/pkg/providers"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 	sdktypes "github.com/KPO-Tech/seshat/pkg/types"

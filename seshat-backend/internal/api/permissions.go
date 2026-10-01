@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	backendplans "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/plans"
-	backendquery "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/query"
+	backendplans "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/plans"
+	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/seshat/pkg/types"
 )
 

@@ -3,8 +3,8 @@ package teams
 import (
 	"testing"
 
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/connector"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/inbox"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 	coremsgraph "github.com/KPO-Tech/seshat/pkg/msgraph"
 )
 

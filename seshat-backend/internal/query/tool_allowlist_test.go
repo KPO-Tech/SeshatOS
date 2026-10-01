@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	backendprompt "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/prompt"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	backendprompt "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 	"github.com/KPO-Tech/seshat/pkg/agent"
 )
 

@@ -3,9 +3,9 @@ package cloudquotas
 import (
 	"context"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/quotas"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 )
 
 // Provider implements quotas.Provider against a remote seshat-server — the

@@ -8,11 +8,11 @@ import (
 
 	"github.com/KPO-Tech/seshat/pkg/providers"
 
-	backendauth "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/auth"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/bkerr"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/automation"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/http"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/settings"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 )
 
 const (

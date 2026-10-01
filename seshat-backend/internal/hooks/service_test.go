@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	cloudhooks "github.com/EngineerProjects/seshat-ai/seshat-backend/internal/cloud/hooks"
-	"github.com/EngineerProjects/seshat-ai/seshat-backend/internal/db"
+	cloudhooks "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/hooks"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 )
 
