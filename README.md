@@ -57,6 +57,10 @@ make dev                 # start the local backend + desktop app
 
 See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.
 
+## Vision
+
+See [GOAL.md](./GOAL.md) for where the project is going, what's in scope, and what deliberately isn't.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md) (the latter is also what AI coding agents working in this repo should read first).
