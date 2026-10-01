@@ -81,12 +81,19 @@ const DOCUMENT_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['pdf', 'docx'
 const READABLE_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['browser', 'terminal', 'files', ...DOCUMENT_PANEL_KINDS])
 
 const RIGHT_PANEL_STACK_LIMIT = 1
+// Note: with this at 1, rightPanelColumnLimit below always returns 1
+// regardless of window width - the "2-column grid... reserved for
+// genuinely large/desktop monitors" the comment two lines down describes is
+// currently unreachable. Left as-is rather than guessed at (changing it to
+// 2 enables real new layout behavior this pass couldn't visually verify) -
+// flagged for a product decision on whether 2-column mode is meant to be
+// live or is deliberately paused.
 const RIGHT_PANEL_WIDE_COLUMN_LIMIT = 1
-// A lone open column can go up to 720px; once a 2nd column opens, both
-// clamp into this tighter range so the chat pane never gets crushed. This
-// static range alone is only safe on a wide-enough window, though - see
-// clampRightPanelWidth below for the dynamic top-up that protects small
-// windows too.
+// A lone open column can go up to 960px (RIGHT_PANEL_WIDTH_SOLO.max below);
+// once a 2nd column opens, both clamp into this tighter range so the chat
+// pane never gets crushed. This static range alone is only safe on a
+// wide-enough window, though - see clampRightPanelWidth below for the
+// dynamic top-up that protects small windows too.
 const RIGHT_PANEL_WIDTH_SOLO = { min: 320, max: 960 }
 const RIGHT_PANEL_WIDTH_SHARED = { min: 280, max: 480 }
 // A newly-opened column's default width is this fraction of the window,
@@ -115,7 +122,8 @@ const SIDEBAR_WIDTH = 224
 const SIDEBAR_COLLAPSED_WIDTH = 56
 // The chat pane has to stay readable at this floor, not just wide enough
 // for its narrowest controls. 460 is the width the chat pane actually renders at
-// once the right panel column hits its own static SOLO max (720px) on a
+// once the right panel column hits its own static SOLO max (RIGHT_PANEL_WIDTH_SOLO.max,
+// 960 - this comment said 720px, stale since that constant changed) on a
 // normal-sized window - i.e. the reduction a user already sees and finds
 // acceptable day-to-day. Without this floor, shrinking the window all the
 // way down to Electron's own minWidth (1100, see main/index.ts) let the
