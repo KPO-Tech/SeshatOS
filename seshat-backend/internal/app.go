@@ -15,7 +15,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/hooks"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/azureblob"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/gdrive"
@@ -158,17 +157,9 @@ type Dependencies struct {
 	// active (see internal/config/bootstrap.go). Pure counting either way,
 	// never an enforced limit.
 	QuotaProvider quotas.Provider
-	// Inbox is pre-built by bootstrap.go (not assembled here from raw
-	// stores like most other services) because its Connector registrations
-	// depend on which channel credentials (e.g. GOOGLE_OAUTH_CLIENT_ID) are
-	// configured in the environment - that decision belongs where the rest
-	// of the env-var-driven optional integrations already live. nil = the
-	// inbox domain is disabled (no routes registered).
-	Inbox *inbox.Service
-	// KnowledgeGDrive/KnowledgeGDriveAccounts follow the same
-	// bootstrap.go-owned, env-var-gated pattern as Inbox above - nil = the
-	// Google Drive Knowledge connector is disabled (no routes registered).
-	// See helps/roadmap.md Phase 1.
+	// KnowledgeGDrive/KnowledgeGDriveAccounts follow a bootstrap.go-owned,
+	// env-var-gated pattern - nil = the Google Drive Knowledge connector is
+	// disabled (no routes registered). See helps/roadmap.md Phase 1.
 	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
 	// ConnectorAccounts is the same generic, kind-agnostic store as
@@ -216,7 +207,6 @@ type App struct {
 	Skills      *skills.Service
 	Agents      *agents.Service
 	Workflows   *workflows.Service
-	Inbox       *inbox.Service
 
 	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
@@ -331,7 +321,6 @@ func NewApp(deps Dependencies) *App {
 		Preferences: preferencesService,
 		Skills:      skillsService,
 		Agents:      agentsService,
-		Inbox:       deps.Inbox,
 
 		KnowledgeGDrive:         deps.KnowledgeGDrive,
 		KnowledgeGDriveAccounts: deps.KnowledgeGDriveAccounts,

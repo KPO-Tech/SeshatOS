@@ -22,10 +22,7 @@ const (
 
 // gConnectorAccount is one connected external-source account for a
 // connector.KnowledgeConnector/ActionConnector (a Google Drive account, a
-// future SharePoint site, ...) - the generic-domain counterpart of
-// gChannelAccount (internal/inbox), kept as its own table rather than
-// reused so Knowledge/Action connector accounts don't get mixed in with
-// Inbox's messaging-shaped ones. Same encryption approach: AES-GCM via
+// future SharePoint site, ...). Encryption approach: AES-GCM via
 // loadOrCreateEncryptionKey/encryptAESGCM, package-private to internal/db.
 type gConnectorAccount struct {
 	ID                    string  `gorm:"primaryKey;size:64"`

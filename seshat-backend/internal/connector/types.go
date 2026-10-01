@@ -1,18 +1,11 @@
 // Package connector defines the shared contract every external-source
-// integration implements, regardless of domain (messaging, Knowledge,
-// Action). It generalizes what was previously a messaging-only Connector
-// interface living in internal/inbox - see helps/roadmap.md Phase 1.
+// integration implements, regardless of domain (Knowledge, Action) - see
+// helps/roadmap.md Phase 1.
 //
-// The contract is deliberately two-layered, mirroring the "optional
-// interface" pattern already used by inbox.AttachmentFetcher: Connector
-// itself only declares identity and capabilities; the actual behavior for
-// each capability lives in its own interface, which a caller type-asserts
-// for only when it needs that capability. Messaging's own interface
-// (inbox.Connector) lives in internal/inbox rather than here and simply
-// embeds Connector - this package can't import inbox's types (ChannelAccount,
-// ConnectorSecret) without an import cycle, since inbox imports this
-// package. KnowledgeConnector/ActionConnector below have no such
-// dependency, so they're defined here directly.
+// The contract is deliberately two-layered: Connector itself only declares
+// identity and capabilities; the actual behavior for each capability lives
+// in its own interface (KnowledgeConnector, ActionConnector below), which a
+// caller type-asserts for only when it needs that capability.
 package connector
 
 import (
@@ -22,8 +15,8 @@ import (
 	coreconnectors "github.com/KPO-Tech/seshat/pkg/connectors"
 )
 
-// Kind identifies a connector implementation, e.g. "gmail", "whatsapp",
-// "sharepoint", "gdrive".
+// Kind identifies a connector implementation, e.g. "gdrive", "sharepoint",
+// "onedrive", "s3".
 type Kind string
 
 // Capability declares one thing a connector can do. Capabilities() lets a
@@ -32,7 +25,6 @@ type Kind string
 type Capability string
 
 const (
-	CapabilityMessaging Capability = "messaging"
 	CapabilityKnowledge Capability = "knowledge"
 	CapabilityAction    Capability = "action"
 )
@@ -44,9 +36,8 @@ type Connector interface {
 	Capabilities() []Capability
 }
 
-// BlobFetcher generalizes inbox.AttachmentFetcher's lazy-fetch pattern
-// beyond messaging attachments - e.g. a Knowledge connector fetching a
-// discovered resource's bytes only at ingest time, not at Discover time.
+// BlobFetcher is a lazy-fetch pattern - e.g. a Knowledge connector fetching
+// a discovered resource's bytes only at ingest time, not at Discover time.
 type BlobFetcher interface {
 	FetchBlob(ctx context.Context, ref string) (data []byte, err error)
 }
@@ -60,10 +51,8 @@ type BlobFetcher interface {
 // designing it from scratch when the time comes.
 
 // Account is the minimal shape any external connection shares, regardless
-// of domain - a messaging account, a SharePoint site, a Postgres
-// connection all need: who owns it, is it healthy, when did it last sync.
-// Messaging keeps its own concrete inbox.ChannelAccount rather than being
-// retrofitted onto this - see MessagingConnector's doc comment.
+// of domain - a SharePoint site, a Postgres connection, an S3 bucket all
+// need: who owns it, is it healthy, when did it last sync.
 type Account struct {
 	ID           string
 	UserID       string
@@ -86,8 +75,8 @@ type Account struct {
 // the Discover/Sync logic that produces/consumes them now lives in
 // core/connectors (shared with seshat-server's own connectors package, see
 // ROADMAP.md's "core/connectors" entry) - aliasing keeps every consumer in
-// this module (inbox, gmail, whatsapp, mcp/action, the three
-// knowledge connectors) working unchanged, with zero conversion code.
+// this module (the three knowledge connectors, mcp/action) working
+// unchanged, with zero conversion code.
 //
 // AccessEntry names one identity or group allowed to see a resource,
 // mirroring Elastic Connectors' prefixed-identity ACL model
@@ -98,10 +87,9 @@ type Account struct {
 // permission filter, roadmap.md Phase 1's first item).
 //
 // Secret is the decrypted connection material a KnowledgeConnector/
-// ActionConnector needs to call its external API - the generic-domain
-// counterpart of inbox.ConnectorSecret, kept separate from Account so
-// callers can pass account metadata around without risking a secret
-// leaking into a log line or API response.
+// ActionConnector needs to call its external API, kept separate from
+// Account so callers can pass account metadata around without risking a
+// secret leaking into a log line or API response.
 //
 // ResourceRef is what Discover returns per resource found - enough to
 // decide whether/how to sync it without fetching its content yet.

@@ -37,12 +37,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/dataflowsecrets"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/gmail"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/outlook"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/teams"
-	inboxAgentTools "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/tool"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/whatsapp"
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/azureblob"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/gdrive"
@@ -57,10 +51,6 @@ import (
 	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	appconfig "github.com/KPO-Tech/seshat/pkg/config"
-	"github.com/KPO-Tech/seshat/pkg/dataflow"
-	dataflowexpr "github.com/KPO-Tech/seshat/pkg/dataflow/expr"
-	dataflownodes "github.com/KPO-Tech/seshat/pkg/dataflow/nodes"
-	dataflowdatabase "github.com/KPO-Tech/seshat/pkg/dataflow/nodes/database"
 	"github.com/KPO-Tech/seshat/pkg/documentreader"
 	"github.com/KPO-Tech/seshat/pkg/mcp"
 	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
@@ -281,135 +271,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	if err != nil {
 		_ = cleanup()
 		return nil, nil, fmt.Errorf("init ingestion job store: %w", err)
-	}
-
-	channelAccountStore, err := db.NewChannelAccountStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init channel account store: %w", err)
-	}
-	inboxContactStore, err := db.NewInboxContactStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init inbox contact store: %w", err)
-	}
-	inboxThreadStore, err := db.NewInboxThreadStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init inbox thread store: %w", err)
-	}
-	inboxMessageStore, err := db.NewInboxMessageStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init inbox message store: %w", err)
-	}
-	inboxService := inbox.NewService(channelAccountStore, inboxContactStore, inboxThreadStore, inboxMessageStore)
-	inboxWorkflowRows, err := db.NewInboxWorkflowStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init inbox workflow store: %w", err)
-	}
-	inboxService.WithWorkflowStore(inbox.NewWorkflowStore(inboxWorkflowRows))
-	// The executor half (WithWorkflowExecutor) is wired further down, once
-	// backendApp.Query exists - see the comment next to
-	// cloudAutomationExecutor, whose exact pattern it mirrors.
-	// Each channel connector is registered only when its credentials are
-	// actually configured - same pattern as document-reader/web search providers
-	// below: an unconfigured channel just doesn't show up as connectable,
-	// rather than the whole inbox domain failing to start.
-	if gmail.IsConfigured() {
-		gmailOAuthConfig, err := gmail.BaseOAuthConfig()
-		if err != nil {
-			_ = cleanup()
-			return nil, nil, fmt.Errorf("init gmail oauth config: %w", err)
-		}
-		inboxService.RegisterConnector(gmail.NewConnector(gmailOAuthConfig))
-		fmt.Printf("[API] Inbox: connecteur Gmail activé\n")
-
-		// Gmail is poll-based (unlike WhatsApp's persistent push connection),
-		// and there is no local job scheduler anymore for standalone
-		// deployments - automation now runs exclusively through a connected
-		// seshat-server, configured via seshat-console (see
-		// internal/cloudautomation's package doc), which a standalone
-		// desktop install (like a first pilot customer's) won't have. This
-		// loop is deliberately narrow - keeping one connector's data fresh
-		// in the background, the way any ordinary email client polls, not a
-		// general-purpose automation system. Connected-mode users get this
-		// for free too; a seshat-console-configured job is a future,
-		// additive option for them, not a requirement.
-		go runGmailSyncLoop(inboxService)
-	}
-
-	// Outlook Mail and Teams share one Microsoft OAuth client
-	// (MICROSOFT_OAUTH_CLIENT_ID) with the SharePoint Knowledge connector
-	// below - Graph scopes are additive across grants, so one Entra app
-	// registration covers all three. Same graceful-skip pattern as Gmail.
-	if outlook.IsConfigured() {
-		outlookOAuthConfig, err := outlook.BaseOAuthConfig()
-		if err != nil {
-			_ = cleanup()
-			return nil, nil, fmt.Errorf("init outlook oauth config: %w", err)
-		}
-		inboxService.RegisterConnector(outlook.NewConnector(outlookOAuthConfig))
-		fmt.Printf("[API] Inbox: connecteur Outlook activé\n")
-		go runMicrosoftInboxSyncLoop(inboxService, inbox.ChannelOutlook)
-	}
-	if teams.IsConfigured() {
-		teamsOAuthConfig, err := teams.BaseOAuthConfig()
-		if err != nil {
-			_ = cleanup()
-			return nil, nil, fmt.Errorf("init teams oauth config: %w", err)
-		}
-		inboxService.RegisterConnector(teams.NewConnector(teamsOAuthConfig))
-		fmt.Printf("[API] Inbox: connecteur Teams activé\n")
-		go runMicrosoftInboxSyncLoop(inboxService, inbox.ChannelTeams)
-	}
-
-	// WhatsApp shares this app's own database connection for whatsmeow's
-	// session tables (see whatsapp.NewManager's doc) - only possible
-	// when the main DB is one whatsmeow's dbutil actually understands
-	// (SQLite or Postgres, not MySQL). On an unsupported driver, WhatsApp
-	// just doesn't register as connectable, same graceful-skip pattern as
-	// every other optional integration here.
-	var whatsappManager *whatsapp.Manager
-	if waDialect, ok := whatsappDialectFor(database.Driver()); ok {
-		sqlDB, err := database.GormDB().DB()
-		if err != nil {
-			_ = cleanup()
-			return nil, nil, fmt.Errorf("get sql.DB for whatsapp manager: %w", err)
-		}
-		whatsappManager, err = whatsapp.NewManager(ctx, sqlDB, waDialect, inboxService.IngestMessage, inboxService.MarkAccountError)
-		if err != nil {
-			_ = cleanup()
-			return nil, nil, fmt.Errorf("init whatsapp manager: %w", err)
-		}
-		inboxService.RegisterConnector(whatsapp.NewConnector(whatsappManager))
-		fmt.Printf("[API] Inbox: connecteur WhatsApp activé\n")
-
-		// Reconnect every already-paired WhatsApp account so incoming
-		// messages resume flowing immediately on restart, without waiting
-		// for a user action - mirrors how Gmail's connector is stateless
-		// per-call, except WhatsApp needs its persistent connection
-		// actually re-established, not just "available to call".
-		if accounts, err := inboxService.ListConnectedAccountsByChannel(ctx, inbox.ChannelWhatsApp); err == nil {
-			for _, account := range accounts {
-				if err := whatsappManager.Reconnect(ctx, account.ID, account.ExternalAccountID); err != nil {
-					fmt.Fprintf(os.Stderr, "[API] Avertissement: reconnexion WhatsApp échouée pour %s: %v\n", account.DisplayName, err)
-					// Without this, the account's DB status stays "connected"
-					// (last known-good state) even though no live client exists -
-					// the Accounts page would show a green tile that will never
-					// sync or send again until the user notices and manually
-					// reconnects. Mirrors the live events.LoggedOut handler in
-					// whatsapp/manager.go, which marks the same way.
-					if markErr := inboxService.MarkAccountError(ctx, account.ID, inbox.AccountStatusError, err.Error()); markErr != nil {
-						fmt.Fprintf(os.Stderr, "[API] Avertissement: échec de l'enregistrement de l'erreur de compte WhatsApp pour %s: %v\n", account.DisplayName, markErr)
-					}
-				}
-			}
-		}
-		cleanups = append(cleanups, func() error { whatsappManager.DisconnectAll(); return nil })
-	} else {
-		fmt.Printf("[API] Inbox: connecteur WhatsApp désactivé (base de données %q non supportée par whatsmeow)\n", database.Driver())
 	}
 
 	// Google Drive Knowledge connector - same env-var-gated, graceful-skip
@@ -722,12 +583,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		),
 		documentChunkCache,
 	)
-	// Shares the same blob store as internal/files - inbox attachments live
-	// under their own "inbox-attachments/" key prefix, no separate storage
-	// mechanism. Nil-tolerant, same as files.NewService below: without it,
-	// attachment metadata still shows up, downloads just aren't available.
-	inboxService.WithArtifactStore(artifactStore)
-
 	// Documents (knowledge): standalone local knowledge.Service, or
 	// cloudknowledge.RemoteService proxying to a connected seshat-server's
 	// own org-wide corpora — both implement knowledge.Backend, and NewApp
@@ -1200,7 +1055,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		HookOrgApprovals:         hookOrgApprovalStore,
 		UserPreferencesStore:     userPreferencesStore,
 		AgentDefinitionStore:     agentDefinitionStore,
-		Inbox:                    inboxService,
 		KnowledgeGDrive:          knowledgeGDriveConnector,
 		KnowledgeGDriveAccounts:  connectorAccountStore,
 		ConnectorAccounts:        connectorAccountStore,
@@ -1218,34 +1072,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	if backendApp.Knowledge != nil {
 		if err := queryClient.RegisterTool(knowledgeAgentTools.NewSearchTool(backendApp.Knowledge)); err != nil {
 			fmt.Fprintf(os.Stderr, "[API] Avertissement: knowledge_search tool non enregistré: %v\n", err)
-		}
-	}
-
-	// Inbox Agent tools - same registration point/reasoning as
-	// knowledge_search above. Registered whenever the inbox domain itself
-	// is configured, independent of which channel connectors ended up
-	// active - a tool call against a channel with no connector fails
-	// clearly through inbox.Service, same as any other inbox error.
-	if backendApp.Inbox != nil {
-		toolsToRegister := []sdk.Tool{
-			inboxAgentTools.NewListThreadsTool(backendApp.Inbox),
-			inboxAgentTools.NewGetThreadTool(backendApp.Inbox),
-			inboxAgentTools.NewUpdateThreadStatusTool(backendApp.Inbox),
-			inboxAgentTools.NewDraftReplyTool(backendApp.Inbox),
-			inboxAgentTools.NewSendReplyTool(backendApp.Inbox),
-			inboxAgentTools.NewListAccountsTool(backendApp.Inbox),
-			inboxAgentTools.NewSearchContactsTool(backendApp.Inbox),
-			inboxAgentTools.NewSearchMessagesTool(backendApp.Inbox),
-			inboxAgentTools.NewArchiveThreadTool(backendApp.Inbox),
-			inboxAgentTools.NewSetThreadReadStatusTool(backendApp.Inbox),
-			inboxAgentTools.NewCreateWorkflowTool(backendApp.Inbox),
-			inboxAgentTools.NewListWorkflowsTool(backendApp.Inbox),
-			inboxAgentTools.NewDeleteWorkflowTool(backendApp.Inbox),
-		}
-		for _, tool := range toolsToRegister {
-			if err := queryClient.RegisterTool(tool); err != nil {
-				fmt.Fprintf(os.Stderr, "[API] Avertissement: tool inbox non enregistré: %v\n", err)
-			}
 		}
 	}
 
@@ -1279,73 +1105,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	cleanups = append(cleanups, func() error { cloudAutomationWorker.Stop(); return nil })
 	cloudAutomationService := cloudautomation.NewService(cloudAutomationStore, cloudAutomationPolicyStore, cloudAutomationVersionStore)
 	fmt.Printf("[API] Cloud automation worker démarré\n")
-
-	// Inbox event-triggered workflows (see internal/inbox.WorkflowExecutor's
-	// doc comment): mirrors cloudAutomationExecutor immediately above almost
-	// verbatim (bare Principal, resolveCloudJobModel, BuildContextInput,
-	// RunPrompt) - the same "no live HTTP request, still needs the real
-	// tooled agent path" problem, just triggered by an inbox message instead
-	// of a claimed cloud job. AgentSlug is the one real difference: a
-	// workflow always runs as a named agent (e.g. "inbox-agent"), where
-	// cloud automation jobs are a bare prompt with no agent identity.
-	inboxService.WithWorkflowExecutor(func(ctx context.Context, ownerID, agentSlug, prompt, modelOverride string) (string, error) {
-		principal := &backendauth.Principal{
-			User: backendauth.User{ID: ownerID},
-		}
-		providerSettingID, modelID := resolveCloudJobModel(ctx, backendApp.Settings, principal, modelOverride)
-		input, _ := backendApp.Query.BuildContextInput(ctx, backendquery.ContextBuildParams{
-			Principal:         principal,
-			Prompt:            prompt,
-			ProviderSettingID: providerSettingID,
-			ModelID:           modelID,
-			AgentSlug:         agentSlug,
-			ExecutionOrigin:   enginetypes.ExecutionOriginAutomation,
-		})
-		result, err := backendApp.Query.RunPrompt(ctx, principal, input)
-		if err != nil {
-			return "", err
-		}
-		return result.Content, nil
-	})
-
-	// Job.Graph execution (internal/inbox/workflow_graph.go): same
-	// principal/model-resolution/BuildContextInput/RunPrompt pattern as
-	// WithWorkflowExecutor immediately above, but threading QueryInput/
-	// QueryResult's SessionID across repeated calls (sessionID in, new
-	// sessionID out) so multiple "agent"/"subworkflow" nodes fired within
-	// one graph run share conversation context - inbox.WorkflowAsker's own
-	// doc comment for the contract this fulfills.
-	inboxService.WithWorkflowAsker(func(ctx context.Context, ownerID, agentSlug, prompt, modelOverride, sessionID string) (string, string, error) {
-		principal := &backendauth.Principal{
-			User: backendauth.User{ID: ownerID},
-		}
-		providerSettingID, modelID := resolveCloudJobModel(ctx, backendApp.Settings, principal, modelOverride)
-		input, _ := backendApp.Query.BuildContextInput(ctx, backendquery.ContextBuildParams{
-			Principal:         principal,
-			Prompt:            prompt,
-			SessionID:         sessionID,
-			ProviderSettingID: providerSettingID,
-			ModelID:           modelID,
-			AgentSlug:         agentSlug,
-			ExecutionOrigin:   enginetypes.ExecutionOriginAutomation,
-		})
-		result, err := backendApp.Query.RunPrompt(ctx, principal, input)
-		if err != nil {
-			return "", "", err
-		}
-		return result.Content, result.SessionID, nil
-	})
-	// Which node types a Graph can reference - generic (http_request/
-	// filter/if/switch/set/merge/wait, no credentials) plus database
-	// (postgres/mysql/sqlite/redis/mongodb/elasticsearch, credential-
-	// resolving via dataflowSecretsService below). Both come from the SDK;
-	// nothing here is seshat-ai-specific.
-	inboxNodeRegistry := dataflow.NewRegistry()
-	dataflow.RegisterBuiltins(inboxNodeRegistry)
-	dataflownodes.Register(inboxNodeRegistry, dataflowexpr.NewPool(8))
-	dataflowdatabase.Register(inboxNodeRegistry)
-	inboxService.WithNodeRegistry(inboxNodeRegistry)
-	inboxService.WithDataflowSecrets(dataflowSecretsService)
 
 	// Abandoned-session sweep: a session (plus any files attached to it) is
 	// created the instant a file is attached, before the user ever sends a
@@ -1414,7 +1173,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		SandboxKind:           sandboxKind,
 		TerminalRelay:         terminalRelay,
 		TitleBroker:           titleBroker,
-		WhatsAppManager:       whatsappManager,
 	})
 
 	// Only the local knowledge.Service has a queue for this runner to drain —
@@ -1694,90 +1452,4 @@ func resolveCloudJobModel(ctx context.Context, settingsService *backendsettings.
 		}
 	}
 	return "", ""
-}
-
-// gmailSyncInterval mirrors a typical email client's background poll
-// cadence - frequent enough that new mail shows up promptly, cheap enough
-// (Gmail's History API returns just a delta) not to matter at this rate.
-const gmailSyncInterval = 2 * time.Minute
-
-// runGmailSyncLoop periodically syncs every connected Gmail account across
-// every user - see its call site's comment for why this exists instead of
-// relying on cloudautomation. Runs for the process's lifetime with no
-// explicit shutdown, matching this file's other daemon-style background
-// loops (e.g. api.NewApp's artifactPreviews.Sweep ticker).
-func runGmailSyncLoop(inboxService *inbox.Service) {
-	syncAllGmailAccounts(inboxService)
-	ticker := time.NewTicker(gmailSyncInterval)
-	defer ticker.Stop()
-	for range ticker.C {
-		syncAllGmailAccounts(inboxService)
-	}
-}
-
-func syncAllGmailAccounts(inboxService *inbox.Service) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	accounts, err := inboxService.ListConnectedAccountsByChannel(ctx, inbox.ChannelGmail)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[API] Gmail sync loop: échec de la liste des comptes: %v\n", err)
-		return
-	}
-	for _, account := range accounts {
-		principal := &backendauth.Principal{User: backendauth.User{ID: account.UserID}}
-		if _, err := inboxService.SyncAccount(ctx, principal, account.ID); err != nil {
-			fmt.Fprintf(os.Stderr, "[API] Gmail sync loop: échec de sync pour %s: %v\n", account.DisplayName, err)
-		}
-	}
-}
-
-// microsoftInboxSyncInterval mirrors gmailSyncInterval's reasoning -
-// frequent enough that new mail/chat messages show up promptly, cheap
-// enough (Mail delta/Teams chat listing are both lightweight) not to matter
-// at this rate.
-const microsoftInboxSyncInterval = 2 * time.Minute
-
-// runMicrosoftInboxSyncLoop is runGmailSyncLoop's shape, generalized across
-// channel since outlook/teams differ only in which channel string to list
-// accounts for - both poll-based, same reasoning as Gmail's loop (no local
-// job scheduler for standalone deployments).
-func runMicrosoftInboxSyncLoop(inboxService *inbox.Service, channel string) {
-	syncAllAccountsForChannel(inboxService, channel)
-	ticker := time.NewTicker(microsoftInboxSyncInterval)
-	defer ticker.Stop()
-	for range ticker.C {
-		syncAllAccountsForChannel(inboxService, channel)
-	}
-}
-
-func syncAllAccountsForChannel(inboxService *inbox.Service, channel string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	accounts, err := inboxService.ListConnectedAccountsByChannel(ctx, channel)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[API] %s sync loop: échec de la liste des comptes: %v\n", channel, err)
-		return
-	}
-	for _, account := range accounts {
-		principal := &backendauth.Principal{User: backendauth.User{ID: account.UserID}}
-		if _, err := inboxService.SyncAccount(ctx, principal, account.ID); err != nil {
-			fmt.Fprintf(os.Stderr, "[API] %s sync loop: échec de sync pour %s: %v\n", channel, account.DisplayName, err)
-		}
-	}
-}
-
-// whatsappDialectFor maps this app's database driver to the dialect string
-// whatsmeow's sqlstore understands, so its session tables can live in the
-// same physical database as everything else rather than a second one.
-// whatsmeow only supports SQLite and Postgres (not MySQL) - see
-// go.mau.fi/util/dbutil's ParseDialect.
-func whatsappDialectFor(driver db.Driver) (string, bool) {
-	switch driver {
-	case db.DriverSQLite:
-		return "sqlite", true
-	case db.DriverPostgres:
-		return "postgres", true
-	default:
-		return "", false
-	}
 }

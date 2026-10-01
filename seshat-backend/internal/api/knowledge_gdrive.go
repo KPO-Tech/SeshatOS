@@ -67,8 +67,7 @@ func (a *App) handleKnowledgeGDriveAccounts(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, http.StatusOK, map[string]any{"accounts": items, "count": len(items)})
 }
 
-// handleKnowledgeGDriveOAuthStart handles POST /knowledge/connectors/gdrive/oauth/start
-// - same shape as handleInboxGmailOAuthStart, see its doc comment.
+// handleKnowledgeGDriveOAuthStart handles POST /knowledge/connectors/gdrive/oauth/start.
 func (a *App) handleKnowledgeGDriveOAuthStart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -98,10 +97,10 @@ func (a *App) handleKnowledgeGDriveOAuthStart(w http.ResponseWriter, r *http.Req
 	writeJSON(w, http.StatusOK, map[string]any{"authorization_url": authURL})
 }
 
-// handleKnowledgeGDriveOAuthCallback handles GET /knowledge/connectors/gdrive/oauth/callback
-// - see handleInboxGmailOAuthCallback's doc comment for why this is
-// unauthenticated (Google's redirect carries no bearer token) and relies on
-// the signed state issued in handleKnowledgeGDriveOAuthStart instead.
+// handleKnowledgeGDriveOAuthCallback handles GET /knowledge/connectors/gdrive/oauth/callback.
+// Deliberately unauthenticated - Google's redirect carries no bearer token -
+// and relies on the signed state issued in handleKnowledgeGDriveOAuthStart
+// instead.
 func (a *App) handleKnowledgeGDriveOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -147,8 +146,7 @@ func (a *App) handleKnowledgeGDriveOAuthCallback(w http.ResponseWriter, r *http.
 	}
 
 	// Reconnecting an already-known account (same user + external email)
-	// must update that account in place, not create a second row - mirrors
-	// inbox.Service.ConnectAccount's find-or-create.
+	// must update that account in place, not create a second row.
 	accounts := a.backend.KnowledgeGDriveAccounts
 	recordID := ""
 	if existing, found, lookupErr := accounts.GetByKindAndExternalID(r.Context(), userID, string(gdrive.Kind), email); lookupErr != nil {
@@ -284,8 +282,10 @@ func (a *App) handleKnowledgeGDriveAccountSync(w http.ResponseWriter, r *http.Re
 }
 
 // knowledgeGDriveCallbackURL derives the redirect URI from the incoming
-// request's own host:port - see gmailCallbackURL's doc comment (inbox.go)
-// for why.
+// request's own host:port, since this server's port can change if the
+// preferred one was taken (see cmd/api/config.go). Relies on the Google
+// Cloud OAuth client being registered as a "Desktop app" type, which
+// Google accepts any loopback port for.
 func knowledgeGDriveCallbackURL(r *http.Request) string {
 	return fmt.Sprintf("http://%s/api/v1/knowledge/connectors/gdrive/oauth/callback", r.Host)
 }

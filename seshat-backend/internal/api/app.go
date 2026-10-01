@@ -11,7 +11,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/dataflowsecrets"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/inbox/whatsapp"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat/pkg/rag"
@@ -105,9 +104,8 @@ type App struct {
 	// memory is fine: this app is a single desktop-local process, and a
 	// state is only ever alive for the few seconds/minutes a user takes to
 	// complete Google's consent screen.
-	oauthMu         sync.Mutex
-	oauthStates     map[string]oauthState
-	whatsappManager *whatsapp.Manager
+	oauthMu     sync.Mutex
+	oauthStates map[string]oauthState
 }
 
 // AppConfig holds all configuration needed to build an App.
@@ -148,11 +146,6 @@ type AppConfig struct {
 	// that construct an App without a full bootstrap.
 	TerminalRelay *backendquery.TerminalRelay
 	TitleBroker   *backendquery.TitleBroker
-	// WhatsAppManager is nil when the WhatsApp connector isn't registered
-	// (see config/bootstrap.go's whatsappDialectFor) - only the pairing
-	// endpoint needs direct access to it; everything else goes through
-	// Backend.Inbox's channel-agnostic API.
-	WhatsAppManager *whatsapp.Manager
 }
 
 func NewApp(cfg AppConfig) *App {
@@ -178,7 +171,6 @@ func NewApp(cfg AppConfig) *App {
 	}()
 	return &App{
 		oauthStates:           make(map[string]oauthState),
-		whatsappManager:       cfg.WhatsAppManager,
 		backend:               cfg.Backend,
 		db:                    cfg.DB,
 		modelStore:            cfg.ModelStore,

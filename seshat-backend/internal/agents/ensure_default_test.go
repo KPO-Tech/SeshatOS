@@ -18,6 +18,19 @@ func openTestDB(t *testing.T) *db.DB {
 	return database
 }
 
+// testFixtureAgentParams is a minimal, self-contained CreateParams used only
+// to exercise EnsureDefault's idempotency, independent of any real
+// provisioned agent.
+func testFixtureAgentParams() CreateParams {
+	return CreateParams{
+		Slug:         "test-fixture-agent",
+		Name:         "Test Fixture Agent",
+		WhenToUse:    "Used only by ensure_default_test.go.",
+		SystemPrompt: "You are a test fixture.",
+		Enabled:      true,
+	}
+}
+
 func TestEnsureDefault_CreatesOnceThenNoOps(t *testing.T) {
 	database := openTestDB(t)
 	store, err := db.NewAgentDefinitionStore(database)
@@ -27,18 +40,18 @@ func TestEnsureDefault_CreatesOnceThenNoOps(t *testing.T) {
 	svc := NewService(store, nil)
 	ctx := context.Background()
 
-	if err := svc.EnsureDefault(ctx, DefaultInboxAgentParams()); err != nil {
+	if err := svc.EnsureDefault(ctx, testFixtureAgentParams()); err != nil {
 		t.Fatalf("EnsureDefault (first call): %v", err)
 	}
-	first, err := svc.GetBySlug(ctx, InboxAgentSlug)
+	first, err := svc.GetBySlug(ctx, testFixtureAgentParams().Slug)
 	if err != nil {
 		t.Fatalf("GetBySlug after first EnsureDefault: %v", err)
 	}
 
-	if err := svc.EnsureDefault(ctx, DefaultInboxAgentParams()); err != nil {
+	if err := svc.EnsureDefault(ctx, testFixtureAgentParams()); err != nil {
 		t.Fatalf("EnsureDefault (second call): %v", err)
 	}
-	second, err := svc.GetBySlug(ctx, InboxAgentSlug)
+	second, err := svc.GetBySlug(ctx, testFixtureAgentParams().Slug)
 	if err != nil {
 		t.Fatalf("GetBySlug after second EnsureDefault: %v", err)
 	}
@@ -50,7 +63,7 @@ func TestEnsureDefault_CreatesOnceThenNoOps(t *testing.T) {
 
 func TestEnsureDefault_NilStoreIsANoOp(t *testing.T) {
 	svc := NewService(nil, nil)
-	if err := svc.EnsureDefault(context.Background(), DefaultInboxAgentParams()); err != nil {
+	if err := svc.EnsureDefault(context.Background(), testFixtureAgentParams()); err != nil {
 		t.Fatalf("expected EnsureDefault on a nil-store service to be a safe no-op, got: %v", err)
 	}
 }

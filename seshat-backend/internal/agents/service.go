@@ -75,8 +75,7 @@ func (s *Service) GetBySlug(ctx context.Context, slug string) (*Agent, error) {
 
 // EnsureDefault idempotently provisions a default agent by slug - creates
 // it if absent, is a no-op if it already exists. Used for agents with no
-// natural "first use" trigger to hook into (e.g. the Knowledge Agent,
-// unlike the Inbox Agent which provisions on first channel connection).
+// natural "first use" trigger to hook into.
 func (s *Service) EnsureDefault(ctx context.Context, params CreateParams) error {
 	if s == nil || s.store == nil {
 		return nil

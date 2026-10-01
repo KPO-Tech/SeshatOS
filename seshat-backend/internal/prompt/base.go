@@ -1,6 +1,6 @@
 // This file holds the working-discipline sections that are genuinely
-// universal - not identity, not coding-specific - so Inbox/Knowledge/future
-// agents can compose their own prompt from real, well-named pieces instead
+// universal - not identity, not coding-specific - so future custom agents
+// can compose their own prompt from real, well-named pieces instead
 // of either inheriting everything from DefaultCorePrompt() or reinventing
 // policy per agent. Each is a hand-adapted (reworded, trimmed of
 // coding-specific examples) derivative of the corresponding sections.go
@@ -73,8 +73,7 @@ Use task_create/task_update to keep a visible checklist when a job has three or 
 // KnowledgeBase is new content, not adapted from seshatcore.go (the SDK's
 // prompt has no concept of this - it's product-specific). Opt-in like
 // Delegation: only for an agent that actually has knowledge_search in its
-// Tools (General, Inbox today; Knowledge Agent doesn't need it, its whole
-// identity already covers this in more depth).
+// Tools.
 const KnowledgeBase = `# Internal knowledge base
 
 The user's company may have connected internal knowledge sources (documents, policies, past work, product/company-specific information) searchable with knowledge_search. When a question would be answered more accurately or completely from that internal knowledge than from general knowledge or the public web, search it first and ground your answer in what it returns. Keep source attribution readable: mention source names or document titles naturally when it helps trace an important claim, but do not sprinkle raw numeric citations like [1], [2], or [3, 7] through the prose unless the user explicitly asks for numbered references.`
