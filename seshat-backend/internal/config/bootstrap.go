@@ -78,27 +78,6 @@ import (
 // compose stack under deploy/.
 const defaultServerURL = "http://localhost:8081"
 
-// serverReachable does a short, best-effort health check against
-// defaultServerURL, deciding at boot whether this run connects to
-// seshat-server or falls back to fully standalone/local mode. Checked once
-// per process start (see helps/seshat-architecture-target.md §1 on why this
-// is a boot-time decision, not a live toggle) - restart the app to pick up
-// a server that just came up, or drop out of connected mode if it's gone.
-func serverReachable(ctx context.Context, url string) bool {
-	reqCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, url+"/health", nil)
-	if err != nil {
-		return false
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return false
-	}
-	defer resp.Body.Close()
-	return resp.StatusCode < 500
-}
-
 func discoverElectronBrowserRemoteControlURL(ctx context.Context) string {
 	port := strings.TrimSpace(os.Getenv("SESHAT_ELECTRON_REMOTE_DEBUG_PORT"))
 	if port == "" {
@@ -354,9 +333,23 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// cloudAutomationPolicyStore above - a thin stateless wrapper around the
 	// shared *db.DB, safe to construct once.
 	cloudAutomationVersionStore := cloudautomation.NewVersionStore(database)
+	// Reused later for the automation Service/Worker, same reasoning as the
+	// two stores above. Also read right below to decide standalone vs
+	// connected identity mode.
+	cloudAutomationStore := cloudautomation.NewStore(database)
+	// Connected mode is decided by whether this device has actually been
+	// paired to an organization (Service.Connect/RegisterAndConnect - a
+	// deliberate user action that validates a real device token with
+	// seshat-server before ever persisting anything), never by whether
+	// something merely answers on defaultServerURL right now. That used to
+	// be the check here, and it's wrong: defaultServerURL is also the local
+	// Docker Compose address anyone developing SeshatCloud runs on their own
+	// machine, so a developer with that stack up for unrelated work got
+	// silently flipped into connected mode, with no pairing, no token, and
+	// no way to use this device at all.
 	serverURL := ""
-	if serverReachable(ctx, defaultServerURL) {
-		serverURL = defaultServerURL
+	if conn, err := cloudAutomationStore.Load(ctx); err == nil && conn != nil {
+		serverURL = conn.ServerURL
 	}
 	if serverURL != "" {
 		// No organization id configured here - seshat-server enforces at
@@ -1081,7 +1074,8 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// and internal/cloudautomation's package doc. The executor closure
 	// captures backendApp so the cloudautomation package never needs to
 	// import query/settings directly, mirroring the old scheduler's pattern.
-	cloudAutomationStore := cloudautomation.NewStore(database)
+	// cloudAutomationStore itself was already constructed above, where the
+	// standalone-vs-connected decision needs to read it.
 	cloudAutomationExecutor := cloudautomation.JobExecutor(func(ctx context.Context, p cloudautomation.ExecParams) (string, error) {
 		principal := &backendauth.Principal{
 			User: backendauth.User{ID: p.UserID},
