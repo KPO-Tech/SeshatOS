@@ -5,6 +5,10 @@ export function isImageAttachment(file: Pick<ChatAttachment, 'category' | 'conte
   return file.category === 'images' || Boolean(file.content_type?.startsWith('image/'))
 }
 
+export function isPDFAttachment(file: Pick<ChatAttachment, 'content_type' | 'filename'>): boolean {
+  return file.content_type === 'application/pdf' || fileExtension(file.filename) === 'pdf'
+}
+
 // page_preview_urls/preview_url are set once, client-side, at attach time
 // (PDF page-1 render, or the browser's own blob: URL for an image) and
 // persist as message metadata from then on. hydratedURL is a lazily-fetched

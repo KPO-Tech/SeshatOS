@@ -8,7 +8,12 @@ export type PDFPagePreview = {
   dataURL: string
 }
 
-export async function renderPDFPagePreviews(file: File, maxPages = 10): Promise<PDFPagePreview[]> {
+// Accepts a plain Blob, not just a File - the only thing used is
+// .arrayBuffer(), which Blob already has. This lets a caller that fetched
+// raw bytes back from the server (no original File object anymore, e.g.
+// AttachmentThumb rehydrating a preview after an app restart) reuse this
+// directly instead of needing to fake up a File.
+export async function renderPDFPagePreviews(file: Blob, maxPages = 10): Promise<PDFPagePreview[]> {
   const data = await file.arrayBuffer()
   const pdfDocument = await pdfjs.getDocument({ data }).promise
   const pageCount = Math.min(pdfDocument.numPages, maxPages)

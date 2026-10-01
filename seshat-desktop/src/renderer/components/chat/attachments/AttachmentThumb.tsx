@@ -5,7 +5,8 @@ import { AttachmentTypeIcon } from '@renderer/components/AttachmentTypeIcon'
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
 import { useUIStore } from '@renderer/stores/ui'
 import { isDocumentReadFailed, isDocumentReadProcessing, type ChatAttachment } from './attachmentTypes'
-import { attachmentPreviewURL, fetchAttachmentTextPreview, isImageAttachment, resolveAttachmentOpenAction } from './attachmentPreview'
+import { attachmentPreviewURL, fetchAttachmentTextPreview, isImageAttachment, isPDFAttachment, resolveAttachmentOpenAction } from './attachmentPreview'
+import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -43,6 +44,7 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const [hydratedURL, setHydratedURL] = useState<string | undefined>()
   const isImage = isImageAttachment(file)
+  const isPDF = isPDFAttachment(file)
   const previewURL = attachmentPreviewURL(file, hydratedURL)
 
   // Image attachments carry a client-only blob:/data: URL created at attach
@@ -66,6 +68,31 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
     })()
     return () => { cancelled = true }
   }, [isImage, previewURL, file.id, file.local_path, file.upload_status])
+
+  // Same restart problem as images above, but a PDF's page-1 render
+  // (page_preview_urls[0]) was never a blob: URL in the first place - it's
+  // only missing after a restart because metadata.attachments on a reloaded
+  // historical message doesn't carry it. Re-render page 1 client-side from
+  // the server-persisted original bytes instead of falling back to the
+  // generic file icon (previously the only attachment type this rehydration
+  // covered was images).
+  useEffect(() => {
+    if (!isPDF || previewURL || file.upload_status === 'uploading') return
+    let cancelled = false
+    void (async () => {
+      try {
+        const dataUrl = file.local_path && window.nexus?.readFileDataURL
+          ? await window.nexus.readFileDataURL(file.local_path)
+          : await api.getFileDataURL(`/files/${file.id}/content`)
+        const blob = await fetch(dataUrl).then((res) => res.blob())
+        const [firstPage] = await renderPDFPagePreviews(blob, 1)
+        if (!cancelled && firstPage) setHydratedURL(firstPage.dataURL)
+      } catch {
+        // Best-effort - leave the icon fallback in place.
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isPDF, previewURL, file.id, file.local_path, file.upload_status])
 
   const isUploading = file.upload_status === 'uploading'
   const isFailed = file.upload_status === 'failed'
