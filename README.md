@@ -12,6 +12,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Active%20Development-orange?style=for-the-badge">
   <img src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?style=for-the-badge&logo=go">
+  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white">
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black">
   <img src="https://img.shields.io/badge/Electron-37-47848F?style=for-the-badge&logo=electron">
   <img src="https://img.shields.io/badge/License-Apache--2.0%20%2B%20Commons%20Clause-blue?style=for-the-badge">
