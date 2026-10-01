@@ -235,6 +235,7 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 
 	apiV1.HandleFunc("/auth/login", app.handleLogin)
 	apiV1.HandleFunc("/auth/register", app.handleRegister)
+	apiV1.HandleFunc("/auth/local-session", app.handleAuthLocalSession)
 	apiV1.Handle("/auth/logout", app.authMiddleware(http.HandlerFunc(app.handleLogout)))
 	apiV1.Handle("/auth/me", app.authMiddleware(http.HandlerFunc(app.handleMe)))
 	apiV1.Handle("/auth/admin/ping", app.requireRole("admin", http.HandlerFunc(app.handleAdminPing)))

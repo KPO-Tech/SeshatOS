@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"strings"
 	"sync"
 	"time"
@@ -9,6 +11,14 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
+
+// implicitLocalEmail identifies the single auto-provisioned identity behind
+// standalone "continue without an account" mode - never shown to or typed
+// by the user, and never authenticated by password (see
+// EnsureImplicitSession). Fixed and well-known rather than per-install
+// random so a reinstalled/rebuilt desktop app can still recognize "this is
+// the implicit local user" against an existing database.
+const implicitLocalEmail = "local@seshatos.internal"
 
 // LocalProvider backs standalone mode: seshat-backend's own SQLite identity
 // store. Behavior is unchanged from before this package absorbed
@@ -167,6 +177,89 @@ func (p *LocalProvider) Register(ctx context.Context, email, password, displayNa
 	}
 
 	return p.Login(ctx, email, password)
+}
+
+// EnsureImplicitSession mints a session for the fixed, auto-provisioned
+// local identity that backs standalone "continue without an account" mode -
+// no password, no prior Register call, nothing the user ever sees or types.
+// Callers must gate access to this themselves (see the loopback-only check
+// in its HTTP handler): unlike Login, this method grants a full session
+// given only a context, so it must never be reachable from anything but
+// this device's own desktop app talking to its own local backend.
+//
+// The implicit user is created with no roles (member-equivalent, not
+// admin) the first time this is called - standalone mode has no Admin
+// Panel to need that for (see GOAL.md: Admin Panel is enterprise-only), so
+// there is no reason to over-privilege an account nobody administers.
+func (p *LocalProvider) EnsureImplicitSession(ctx context.Context) (*LoginResult, error) {
+	if p == nil || p.identity == nil {
+		return nil, bkerr.Unavailable("auth not configured", nil)
+	}
+
+	user, err := p.identity.GetUserByEmail(ctx, implicitLocalEmail)
+	if err != nil {
+		if err.Error() != "user not found" {
+			return nil, bkerr.Internal("failed to look up implicit local user", err)
+		}
+		randomPassword, genErr := randomHex(32)
+		if genErr != nil {
+			return nil, bkerr.Internal("failed to generate implicit account secret", genErr)
+		}
+		hash, hashErr := db.HashPassword(randomPassword)
+		if hashErr != nil {
+			return nil, bkerr.Internal("failed to hash implicit account secret", hashErr)
+		}
+		user, err = p.identity.CreateUser(ctx, db.CreateUserParams{
+			Email:        implicitLocalEmail,
+			DisplayName:  "Local",
+			PasswordHash: hash,
+			Status:       db.UserStatusActive,
+			Metadata: map[string]any{
+				"implicit_local": true,
+			},
+		})
+		if err != nil {
+			return nil, bkerr.Internal("failed to create implicit local user", err)
+		}
+	}
+
+	authSession, token, err := p.identity.CreateLoginSession(ctx, user.ID, 30*24*time.Hour, map[string]any{
+		"source": "local_implicit",
+	})
+	if err != nil {
+		return nil, bkerr.Internal("failed to create auth session", err)
+	}
+
+	roles, err := p.identity.ListUserRoles(ctx, user.ID)
+	if err != nil {
+		return nil, bkerr.Internal("failed to load user roles", err)
+	}
+	result := &LoginResult{
+		Token:     token,
+		ExpiresAt: authSession.ExpiresAt,
+		User: User{
+			ID:          user.ID,
+			Email:       user.Email,
+			DisplayName: user.DisplayName,
+			Status:      user.Status,
+		},
+		Roles: make([]string, 0, len(roles)),
+	}
+	for _, role := range roles {
+		result.Roles = append(result.Roles, role.Name)
+	}
+	return result, nil
+}
+
+// randomHex returns a cryptographically random hex string of n random
+// bytes (2n hex characters) - used only as a throwaway password hash input
+// for the implicit local account, which is never authenticated by password.
+func randomHex(n int) (string, error) {
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func (p *LocalProvider) Logout(ctx context.Context, principal *Principal) error {

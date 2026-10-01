@@ -88,6 +88,20 @@ func (s *Service) Login(ctx context.Context, email string, password string) (*Lo
 	return s.provider.Login(ctx, email, password)
 }
 
+// LocalImplicitSession mints a session for standalone mode's auto-provisioned
+// "no account" identity (see LocalProvider.EnsureImplicitSession) - fails in
+// connected mode, where there is no local identity to mint a session for.
+func (s *Service) LocalImplicitSession(ctx context.Context) (*LoginResult, error) {
+	if s == nil {
+		return nil, bkerr.Unavailable("auth not configured", nil)
+	}
+	local, ok := s.provider.(*LocalProvider)
+	if !ok {
+		return nil, bkerr.Forbidden("the local implicit session is only available in standalone mode", nil)
+	}
+	return local.EnsureImplicitSession(ctx)
+}
+
 func (s *Service) ResolvePrincipal(ctx context.Context, token string) (*Principal, error) {
 	if s == nil || s.provider == nil {
 		return nil, bkerr.Unavailable("auth not configured", nil)
