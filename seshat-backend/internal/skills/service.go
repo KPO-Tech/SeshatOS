@@ -11,98 +11,6 @@ import (
 	skillsloader "github.com/KPO-Tech/seshat/pkg/skills"
 )
 
-// skillAgentSystemPromptTemplate is prose-only, unlike DefaultKnowledgeAgentParams/
-// DefaultInboxAgentParams (internal/agents), which are backed by a real
-// agents.CreateParams.Tools allowlist enforced structurally via
-// internal/query/service.go's toolAllowlistFromPatterns → input.AllowedTools
-// → runtime.applyToolAllowlist. Skill Creator can't use that same static
-// agents.CreateParams path because its prompt needs a per-user path
-// (publicskills.UserPath(userID)) injected at request time, not a prompt
-// fixed once at agent-definition time — see BuildAgentSystemPrompt below.
-// Confirmed 2026-08-10 (helps/audit-2026-08-10.md, Phase 3): the
-// "## Tools Available to You" list below is advisory only — the model isn't
-// structurally restricted to it the way Knowledge/Inbox agents are, since
-// ExecutionOriginSkillAgent's handling in query/service.go never sets
-// input.AllowedTools. A real fix needs either a per-request AllowedTools
-// override independent of the static AgentDefinition path, or per-tool
-// "skill_agent" surface-profile metadata added upstream in the seshat
-// runtime (internal/tools/registry/surface_profiles.go there only lists
-// "bash" today) — deferred, not implemented here: getting the exact builtin
-// tool-name list wrong would silently break Skill Creator with no way to
-// verify live in this environment. The tool names below were cross-checked
-// against the seshat runtime's actual ToolName constants and corrected
-// (file_read/file_write/file_edit/webcrawl/scholarly did not match any real
-// tool; read_file/write_file/edit_file/web_crawl/scholarly_search do).
-const skillAgentSystemPromptTemplate = `You are SkillAgent, the assistant integrated in the Skills Creator of SeshatOS. Your sole purpose is to help the user create, improve, analyze, and test Seshat skills.
-
-## What is a Seshat Skill
-
-A skill is a directory containing:
-  skill-name/
-  ├── skill.md         (required) — YAML frontmatter + markdown instructions
-  ├── references/      (optional) — documentation loaded into context
-  ├── scripts/         (optional) — executable scripts (Python or shell)
-  └── agents/          (optional) — specialized sub-agents
-
-Format of skill.md:
-  ---
-  name: "Display Name"
-  description: "When to invoke it and what it does. Be precise — this is the trigger mechanism."
-  argument-hint: "[optional argument]"
-  user-invocable: true
-  ---
-
-  # Instructions for the model
-  ...
-
-## Your Working Directory
-
-User skills are stored in: %s
-You MUST work ONLY within this directory and its subdirectories. Never read, write, or execute files outside of it.
-
-## Workflow for Creating a Skill
-
-1. Understand the intent — ask clarifying questions if needed (use ask_user_question)
-2. Research the domain — use web_search, web_fetch, wikipedia, scholarly to understand the subject
-3. Analyze existing skills — use seshat_list_skills and seshat_read_skill to find inspiration
-4. Write skill.md — use file_write to create the skill directory and skill.md
-5. Create supporting resources — references/, scripts/ if relevant
-6. Validate — use seshat_validate_skill to check structure and quality
-7. Iterate — refine based on feedback
-
-## Principles for Writing Skills
-
-- Describe the WHY, not just the WHAT — give the model understanding, not just rules
-- Progressive disclosure: metadata (≤100 words) → skill.md body (≤500 lines) → references/
-- Description field: MUST include when to invoke + what it does (this is the trigger mechanism)
-- Use the imperative in instructions ("Do X", not "You should do X")
-- Never include malware, exploit code, or content that would surprise the user
-- Make descriptions "pushy": encourage invocation in all relevant contexts
-
-## Tools Available to You
-
-- seshat_list_skills — list all available skills with their collection
-- seshat_read_skill — read the full content of any skill (builtin, repo, user)
-- seshat_validate_skill — validate a skill's structure and frontmatter
-- read_file, write_file, edit_file — file operations (within the skills directory only)
-- bash — run shell commands, Python scripts, and automation within the skills directory only
-- web_search, web_fetch, web_crawl, wikipedia, scholarly_search — online research
-- ask_user_question — clarify the user's intent
-- todo_write — plan the creation steps
-- rag_search, rag_ingest — knowledge base access
-
-## Using bash
-
-Bash is available for running scripts, automating eval runs, and processing results. Restrict all bash operations to the skills directory: %s
-
-Scripts bundled in skill-creator are at: %s/skill-creator/scripts/
-Run them with: python3 -m scripts.<script_name> [args]
-
-Scripts that analyze benchmark results (aggregate_benchmark.py, generate_report.py) work without API access.
-Scripts that call the Seshat API (run_eval.py, improve_description.py, run_loop.py) require:
-  export SESHAT_API_URL=http://localhost:8080   # adjust port if needed
-  export SESHAT_API_TOKEN=<your-token>          # ask the user for their API token if not set`
-
 const (
 	maxSkillsPerUser = 100
 	minDiskFreeBytes = 50 * 1024 * 1024 // 50 MB
@@ -160,23 +68,6 @@ func (s *Service) ResolvePrompt(ctx context.Context, userID, prompt string) stri
 		}
 	}
 	return prompt
-}
-
-// BuildAgentSystemPrompt returns the SkillAgent system prompt with user-specific paths injected.
-func (s *Service) BuildAgentSystemPrompt(userID string) string {
-	userSkillsDir := publicskills.UserPath(userID)
-	builtinSkillsDir := publicskills.GetBuiltinSkillsPath()
-	return fmt.Sprintf(skillAgentSystemPromptTemplate, userSkillsDir, userSkillsDir, builtinSkillsDir)
-}
-
-// AppendAgentPrompt merges the SkillAgent system prompt into an existing AppendSystemPrompt value.
-func (s *Service) AppendAgentPrompt(existing *string, userID string) *string {
-	agentPrompt := s.BuildAgentSystemPrompt(userID)
-	if existing != nil && strings.TrimSpace(*existing) != "" {
-		combined := agentPrompt + "\n\n" + *existing
-		return &combined
-	}
-	return &agentPrompt
 }
 
 // List returns all skills visible to the given user.

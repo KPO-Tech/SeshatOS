@@ -81,7 +81,6 @@ type filesProvider interface {
 
 type skillsProvider interface {
 	ResolvePrompt(ctx context.Context, userID, prompt string) string
-	AppendAgentPrompt(existing *string, userID string) *string
 }
 
 // ─── ServiceConfig ─────────────────────────────────────────────────────────────
@@ -1447,12 +1446,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		input.SystemPromptOverride = &defaultPrompt
 	}
 
-	// Skill-agent mode appends its prompt on top of whatever system prompt is active.
-	if p.ExecutionOrigin == types.ExecutionOriginSkillAgent {
-		if s.skills != nil {
-			input.AppendSystemPrompt = s.skills.AppendAgentPrompt(input.AppendSystemPrompt, userID)
-		}
-	} else if input.AppendSystemPrompt == nil && p.AppendSystemPrompt != nil && *p.AppendSystemPrompt != "" {
+	if input.AppendSystemPrompt == nil && p.AppendSystemPrompt != nil && *p.AppendSystemPrompt != "" {
 		input.AppendSystemPrompt = p.AppendSystemPrompt
 	}
 

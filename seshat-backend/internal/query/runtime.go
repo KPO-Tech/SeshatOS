@@ -250,7 +250,7 @@ func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryRes
 		return nil, err
 	}
 	defer releaseClient()
-	session, err := r.loadOrCreateSession(ctx, client, input.SessionID, input.ExecutionOrigin)
+	session, err := r.loadOrCreateSession(ctx, client, input.SessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func (r *SDKRuntime) StreamPrompt(ctx context.Context, input QueryInput, onChunk
 
 	emitStage("session", "Resuming session")
 	sessionStart := time.Now()
-	session, err := r.loadOrCreateSession(ctx, client, input.SessionID, input.ExecutionOrigin)
+	session, err := r.loadOrCreateSession(ctx, client, input.SessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -607,22 +607,18 @@ func (r *SDKRuntime) LoadSessionMessages(ctx context.Context, sessionID string) 
 	return session.GetMessages(), nil
 }
 
-func (r *SDKRuntime) loadOrCreateSession(ctx context.Context, client *sdk.Client, sessionID string, origin types.ExecutionOrigin) (*sdk.Session, error) {
+func (r *SDKRuntime) loadOrCreateSession(ctx context.Context, client *sdk.Client, sessionID string) (*sdk.Session, error) {
 	if client == nil {
 		return nil, fmt.Errorf("query runtime not configured")
 	}
-	var additional map[string]any
-	if origin == types.ExecutionOriginSkillAgent {
-		additional = map[string]any{"tool_surface_profile": "skill_agent"}
-	}
 	if strings.TrimSpace(sessionID) != "" {
-		session, err := client.LoadSessionWithAdditional(ctx, sdk.SessionID(sessionID), additional)
+		session, err := client.LoadSession(ctx, sdk.SessionID(sessionID))
 		if err != nil {
 			return nil, fmt.Errorf("load session: %w", err)
 		}
 		return session, nil
 	}
-	session, err := client.CreateSessionWithAdditional(ctx, additional)
+	session, err := client.CreateSession(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("create session: %w", err)
 	}

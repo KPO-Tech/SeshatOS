@@ -156,64 +156,6 @@ func TestIsRestrictedSourceBuiltinPath(t *testing.T) {
 	}
 }
 
-// ─── BuildAgentSystemPrompt ───────────────────────────────────────────────────
-
-func TestBuildAgentSystemPromptContainsUserPath(t *testing.T) {
-	svc := NewService()
-	userID := "usr_testuser123"
-	prompt := svc.BuildAgentSystemPrompt(userID)
-	if !strings.Contains(prompt, "SkillAgent") {
-		t.Error("prompt should contain SkillAgent identity")
-	}
-	userPath := publicskills.UserPath(userID)
-	if !strings.Contains(prompt, userPath) {
-		t.Errorf("prompt should contain user path %q", userPath)
-	}
-}
-
-// ─── AppendAgentPrompt ────────────────────────────────────────────────────────
-
-func TestAppendAgentPromptNilExisting(t *testing.T) {
-	svc := NewService()
-	result := svc.AppendAgentPrompt(nil, "usr_test")
-	if result == nil {
-		t.Fatal("expected non-nil result")
-	}
-	if !strings.Contains(*result, "SkillAgent") {
-		t.Error("result should contain SkillAgent prompt")
-	}
-}
-
-func TestAppendAgentPromptEmptyExisting(t *testing.T) {
-	svc := NewService()
-	empty := ""
-	result := svc.AppendAgentPrompt(&empty, "usr_test")
-	if result == nil || !strings.Contains(*result, "SkillAgent") {
-		t.Error("expected SkillAgent prompt for empty existing string")
-	}
-}
-
-func TestAppendAgentPromptPrependsToExisting(t *testing.T) {
-	svc := NewService()
-	custom := "## Custom section"
-	result := svc.AppendAgentPrompt(&custom, "usr_test")
-	if result == nil {
-		t.Fatal("expected non-nil result")
-	}
-	if !strings.Contains(*result, "SkillAgent") {
-		t.Error("result should contain SkillAgent prompt")
-	}
-	if !strings.Contains(*result, custom) {
-		t.Error("result should preserve existing content")
-	}
-	// SkillAgent prompt should appear BEFORE existing content.
-	agentIdx := strings.Index(*result, "SkillAgent")
-	customIdx := strings.Index(*result, custom)
-	if agentIdx > customIdx {
-		t.Error("agent prompt should appear before existing content")
-	}
-}
-
 // ─── ResolvePrompt (fast paths) ───────────────────────────────────────────────
 
 func TestResolvePromptNoSlashPrefix(t *testing.T) {

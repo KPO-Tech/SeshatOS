@@ -49,19 +49,23 @@ main        production-ready, tagged releases only
 
 ## Desktop surface activation order
 
-`seshat-desktop` is being rebuilt chat-first, one surface at a time, on React + TypeScript + Tailwind. Only the `ACTIVE` surface takes feature work; `LOCKED` surfaces are frozen until their turn.
+`seshat-desktop` is being rebuilt chat-first, one surface at a time, on React + TypeScript + Tailwind. Only `ACTIVE` surfaces take feature work; `LOCKED` surfaces are frozen until their turn.
 
 | Surface | Status | Notes |
 |---|---|---|
-| Chat | ACTIVE | |
-| Settings | LOCKED | |
-| Admin Panel | LOCKED | Connected-mode only — appears only when this install is linked to the commercial cloud product; not part of standalone local use |
-| Scheduling | LOCKED | Connected-mode only, same as above |
-| Skills Creator | LOCKED | |
-| Knowledge UI | LOCKED | |
-| Automation, Inbox, Companion, Team | POST_MVP | |
+| Chat | ACTIVE | Main product surface. Finish first. |
+| Admin Panel | ACTIVE | Unlocked ahead of order by explicit decision — built in parallel with Chat/Settings. |
+| Store | ACTIVE | SeshatOS's own app catalog (Play Store/Microsoft Store style) — unlocked by explicit decision. Ships as a catalog of active vs. coming-soon platforms; each entry activates as its real platform lands. |
+| Settings | LOCKED | Next after Chat is DONE. |
+| Scheduling | LOCKED | MVP surface after Admin. |
+| Skills Creator | LOCKED | MVP surface after Scheduling. |
+| Knowledge UI | LOCKED | Last MVP surface, but the Knowledge capability stays available to Chat throughout. |
+| Automation | POST_MVP | Existing code is valuable but frozen for now. |
+| Inbox | POST_MVP | Frozen. Avoid chatbot-per-page expansion. |
+| Companion, Team | POST_MVP | Frozen. |
+| Other surfaces | POST_MVP | Frozen unless explicitly promoted. |
 
-Exceptions to the LOCKED rule: a shared-component migration the active surface genuinely needs, a bug fix blocking the active surface, or a security/correctness fix explicitly approved in the PR discussion. Do not otherwise touch a LOCKED or POST_MVP surface.
+Exceptions to the LOCKED rule: a shared-component migration an active surface genuinely needs, a bug fix blocking an active surface, or a security/correctness fix explicitly approved in the PR discussion. Do not otherwise touch a LOCKED or POST_MVP surface, and avoid new vertical agents, new workflow nodes, or new connector surfaces while Chat is the primary focus.
 
 A LOCKED surface can only move to ACTIVE once the surface ahead of it is actually done — fully migrated to Tailwind, no leftover mixed styling, loading/empty/error states handled, typecheck/lint/build/tests passing — not just "looks right visually."
 

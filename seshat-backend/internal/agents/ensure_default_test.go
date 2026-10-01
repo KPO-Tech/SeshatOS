@@ -27,18 +27,18 @@ func TestEnsureDefault_CreatesOnceThenNoOps(t *testing.T) {
 	svc := NewService(store, nil)
 	ctx := context.Background()
 
-	if err := svc.EnsureDefault(ctx, DefaultKnowledgeAgentParams()); err != nil {
+	if err := svc.EnsureDefault(ctx, DefaultInboxAgentParams()); err != nil {
 		t.Fatalf("EnsureDefault (first call): %v", err)
 	}
-	first, err := svc.GetBySlug(ctx, KnowledgeAgentSlug)
+	first, err := svc.GetBySlug(ctx, InboxAgentSlug)
 	if err != nil {
 		t.Fatalf("GetBySlug after first EnsureDefault: %v", err)
 	}
 
-	if err := svc.EnsureDefault(ctx, DefaultKnowledgeAgentParams()); err != nil {
+	if err := svc.EnsureDefault(ctx, DefaultInboxAgentParams()); err != nil {
 		t.Fatalf("EnsureDefault (second call): %v", err)
 	}
-	second, err := svc.GetBySlug(ctx, KnowledgeAgentSlug)
+	second, err := svc.GetBySlug(ctx, InboxAgentSlug)
 	if err != nil {
 		t.Fatalf("GetBySlug after second EnsureDefault: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestEnsureDefault_CreatesOnceThenNoOps(t *testing.T) {
 
 func TestEnsureDefault_NilStoreIsANoOp(t *testing.T) {
 	svc := NewService(nil, nil)
-	if err := svc.EnsureDefault(context.Background(), DefaultKnowledgeAgentParams()); err != nil {
+	if err := svc.EnsureDefault(context.Background(), DefaultInboxAgentParams()); err != nil {
 		t.Fatalf("expected EnsureDefault on a nil-store service to be a safe no-op, got: %v", err)
 	}
 }
