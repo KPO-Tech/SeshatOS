@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "rootDir": "src/main",
+    "outDir": ".tmp/ipc-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/main/ipc/validation.ts",
+    "src/main/ipc/validation.test.ts",
+    "src/main/ipc/network-errors.ts",
+    "src/main/ipc/network-errors.test.ts"
+  ]
+}

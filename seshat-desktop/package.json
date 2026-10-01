@@ -1,0 +1,125 @@
+{
+  "name": "seshat-desktop",
+  "version": "0.1.0",
+  "description": "SeshatOS Desktop Client",
+  "main": "out/main/index.js",
+  "private": true,
+  "author": {
+    "name": "KPO-Tech",
+    "email": "projectsengineer6@gmail.com"
+  },
+  "homepage": "https://github.com/KPO-Tech/seshat-ai",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "start": "node scripts/start-desktop-dev.mjs",
+    "dev": "node scripts/start-desktop-dev.mjs",
+    "build": "electron-vite build",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "lint": "oxlint src",
+    "test": "vitest run && npm run test:ipc",
+    "test:watch": "vitest",
+    "build:backend:win": "node ../scripts/build-desktop-sidecar.mjs windows amd64",
+    "build:backend:linux": "node ../scripts/build-desktop-sidecar.mjs linux amd64",
+    "build:backend:win:nativedoc": "node ../scripts/build-desktop-sidecar.mjs windows amd64 --nativedoc",
+    "build:backend:linux:nativedoc": "node ../scripts/build-desktop-sidecar.mjs linux amd64 --nativedoc",
+    "package": "npm run build && electron-builder",
+    "package:win": "npm run build:backend:win && npm run build && electron-builder --win nsis",
+    "package:linux": "npm run build:backend:linux && npm run build && electron-builder --linux AppImage deb",
+    "package:win:nativedoc": "npm run build:backend:win:nativedoc && npm run build && electron-builder --win nsis",
+    "package:linux:nativedoc": "npm run build:backend:linux:nativedoc && npm run build && electron-builder --linux AppImage deb",
+    "test:ipc": "tsc -p tsconfig.ipc-tests.json && node --test .tmp/ipc-tests/ipc/*.test.js"
+  },
+  "dependencies": {
+    "@icon-park/react": "^1.4.2",
+    "@seshat/connector-catalog": "file:../shared/connector-catalog",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-virtual": "^3.14.13",
+    "@types/papaparse": "^5.5.2",
+    "@vitejs/plugin-react": "^4.5.0",
+    "chart.js": "^4.5.1",
+    "docx-preview": "^0.4.0",
+    "electron-updater": "^6.6.2",
+    "exceljs": "^4.4.0",
+    "jszip": "^3.10.2",
+    "katex": "^0.16.47",
+    "mermaid": "^11.17.2",
+    "papaparse": "^5.7.0",
+    "pdfjs-dist": "^5.7.284",
+    "pptx-preview": "^1.0.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "react-router": "^8.4.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "simple-icons": "^16.31.0",
+    "tailwindcss": "^4.3.3",
+    "zod": "^3.25.76",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "oxlint": "^1.56.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.1",
+    "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "brace-expansion": "^5.0.8"
+  },
+  "build": {
+    "appId": "com.seshat.os",
+    "productName": "SeshatOS",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "!out/**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/backend",
+        "to": "backend"
+      },
+      {
+        "from": "build/install-docling.ps1",
+        "to": "install-docling.ps1"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "include": "build/installer.nsh"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "KPO-Tech",
+        "repo": "seshat-releases"
+      }
+    ]
+  },
+  "productName": "SeshatOS"
+}

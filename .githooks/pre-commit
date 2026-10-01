@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+GO_PACKAGES=(./seshat-backend/...)
+LINT_PACKAGES=(./seshat-backend/...)
+
+echo "→ gofmt check..."
+UNFORMATTED=$(find . -name "*.go" \
+  -not -path "./vendor/*" \
+  | xargs gofmt -l 2>/dev/null || true)
+if [ -n "$UNFORMATTED" ]; then
+    echo "✗ Files need formatting (run: make fmt):"
+    echo "$UNFORMATTED"
+    exit 1
+fi
+echo "  ✓ gofmt"
+
+echo "→ go vet..."
+if ! go vet "${GO_PACKAGES[@]}" 2>&1; then
+    echo "✗ go vet failed"
+    exit 1
+fi
+echo "  ✓ go vet"
+
+if command -v golangci-lint &>/dev/null; then
+    echo "→ golangci-lint (fast)..."
+    LINT_EXIT=0
+    LINT_OUT=$(golangci-lint run --fast --timeout=2m "${LINT_PACKAGES[@]}" 2>&1) || LINT_EXIT=$?
+    if [ $LINT_EXIT -ne 0 ]; then
+        if echo "$LINT_OUT" | grep -q "used to build golangci-lint is lower than the targeted Go version"; then
+            echo "  ⚠ golangci-lint skipped (version mismatch — run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)"
+        else
+            echo "$LINT_OUT"
+            echo "✗ golangci-lint failed"
+            exit 1
+        fi
+    else
+        echo "  ✓ golangci-lint"
+    fi
+fi
+
+echo "✓ pre-commit passed"

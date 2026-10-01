@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "./seshat-ui-compat.css";
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:root {
+  --type-xs: 11px;
+  --type-sm: 12px;
+  --type-md: 13px;
+  --type-base: 14px;
+  --type-lg: 16px;
+  --type-xl: 20px;
+  --type-title: 28px;
+  --type-hero: 42px;
+  --leading-tight: 1.18;
+  --leading-ui: 1.35;
+  --leading-copy: 1.55;
+  --sidebar-width: 224px;
+  --sidebar-collapsed-width: 56px;
+  /* Seshat identity: warm tinted dark surfaces, orange accent (ported from
+     seshat-ui tokens.css). Dark is the default; light overrides below. */
+  --surface-root: #2f2e34;
+  --surface-sidebar: #2c2a31;
+  --surface-panel: #3a3941;
+  --surface-muted: #4a4852;
+  --border-soft: #4d4a54;
+  --border-strong: #54515b;
+  --text-primary: #e7e2da;
+  --text-secondary: #b6aea3;
+  --text-muted: #918a82;
+  --accent-primary: #ef7c2f;
+  --accent-success: #6faf7b;
+  --accent-warning: #d6a15f;
+  --accent-danger: #c96b5c;
+  --accent-info: #7d9ccf;
+  --surface-hover: rgba(231, 226, 218, 0.05);
+  --surface-menu: rgba(44, 42, 49, 0.98);
+  --accent-subtle: rgba(239, 124, 47, 0.12);
+}
+
+:root[data-theme="light"] {
+  --surface-root: #f7f7f5;
+  --surface-sidebar: #efefee;
+  --surface-panel: #ffffff;
+  --surface-muted: #f1f1f0;
+  --border-soft: #e1e1df;
+  --border-strong: #d4d4d0;
+  --text-primary: #171717;
+  --text-secondary: #5f6368;
+  --text-muted: #8a8d91;
+  --accent-primary: #ef7c2f;
+  --accent-success: #41b883;
+  --accent-warning: #d99a25;
+  --accent-danger: #e05252;
+  --accent-info: #6485b8;
+  --surface-hover: rgba(23, 23, 23, 0.05);
+  --surface-menu: rgba(255, 255, 255, 0.98);
+  --accent-subtle: rgba(239, 124, 47, 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --surface-root: #f7f7f5;
+    --surface-sidebar: #efefee;
+    --surface-panel: #ffffff;
+    --surface-muted: #f1f1f0;
+    --border-soft: #e1e1df;
+    --border-strong: #d4d4d0;
+    --text-primary: #171717;
+    --text-secondary: #5f6368;
+    --text-muted: #8a8d91;
+    --accent-primary: #ef7c2f;
+    --accent-success: #41b883;
+    --accent-warning: #d99a25;
+    --accent-danger: #e05252;
+  --accent-info: #6485b8;
+    --surface-hover: rgba(23, 23, 23, 0.05);
+    --surface-menu: rgba(255, 255, 255, 0.98);
+    --accent-subtle: rgba(239, 124, 47, 0.12);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--type-base);
+  line-height: var(--leading-ui);
+  background: var(--surface-root);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.font-ui {
+  font-family: var(--font-ui);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}

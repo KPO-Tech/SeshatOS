@@ -1,0 +1,9 @@
+{
+  "name": "@seshat/connector-catalog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canonical connector-kind list, labels, brand-icon mapping, and MCP endpoint pre-fills - the single source of truth seshat-console and seshat-ui both consume, instead of five independently-maintained copies.",
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts"
+}

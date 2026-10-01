@@ -1,0 +1,64 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - errcheck
+    - gofmt
+    - misspell
+
+linters-settings:
+  errcheck:
+    exclude-functions:
+      - fmt.Fprintf
+      - fmt.Fprintln
+      - fmt.Printf
+      - fmt.Println
+      - (io.Writer).Write
+      - (*os.File).Close
+      - os.Remove
+      - os.RemoveAll
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    - linters: [errcheck]
+      text: "json.Unmarshal"
+    - linters: [errcheck]
+      text: "os.MkdirAll"
+    - linters: [errcheck]
+      text: "os.Chdir"
+    - linters: [errcheck]
+      text: "fmt.Sscanf"
+    - linters: [errcheck]
+      text: '\.Stop'
+    - linters: [errcheck]
+      text: '\.Notify'
+    - linters: [errcheck]
+      text: "BindEnv"
+    - linters: [errcheck]
+      text: 'w\.Write'
+    - linters: [errcheck]
+      path: '_test\.go'
+    - linters: [ineffassign]
+      path: '_test\.go'
+    - linters: [staticcheck]
+      path: '_test\.go'
+      text: "SA4006"
+    - linters: [staticcheck]
+      path: '_test\.go'
+      text: "SA1029|SA1012"
+    - linters: [staticcheck]
+      path: '_test\.go'
+      text: "SA9003"
+    - linters: [staticcheck]
+      path: '_test\.go'
+      text: "SA5011"

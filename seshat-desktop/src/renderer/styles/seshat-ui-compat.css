@@ -1,0 +1,226 @@
+/* Compatibility layer for the chat code migrated from seshat-ui.
+
+   seshat-ui's components use its own names (--color-bg, bg-app-bg, ...). Those
+   names are mapped onto this app's tokens (tailwind.css), so the copied code
+   follows the light/dark themes as-is. New and restructured code should use
+   the --surface-* / --text-* / --accent-* tokens directly; this file shrinks as
+   files are converted. */
+
+@theme inline {
+  --font-app-sans: var(--font-sans);
+  --font-app-serif: Georgia, serif;
+
+  --color-app-bg: var(--surface-root);
+  --color-app-surface: var(--surface-panel);
+  --color-app-surface-elevated: var(--surface-muted);
+  --color-app-border: var(--border-strong);
+  --color-app-border-subtle: var(--border-soft);
+  --color-app-text: var(--text-primary);
+  --color-app-text-secondary: var(--text-secondary);
+  --color-app-text-muted: var(--text-muted);
+  --color-app-primary: var(--accent-primary);
+  --color-app-primary-subtle: var(--accent-subtle);
+  --color-app-primary-hover: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  --color-app-success: var(--accent-success);
+  --color-app-warning: var(--accent-warning);
+  --color-app-error: var(--accent-danger);
+  --color-app-info: var(--accent-info);
+
+  --radius-app-xs: var(--radius-xs);
+  --radius-app-sm: var(--radius-sm);
+  --radius-app-md: var(--radius-md);
+  --radius-app-lg: var(--radius-lg);
+  --radius-app-xl: var(--radius-xl);
+  --radius-app-2xl: var(--radius-2xl);
+}
+
+:root {
+
+  /* Typography */
+
+  /* Type scale — compact, Claude Desktop-density target */
+  --font-size-2xs: 10px;
+  --font-size-xs:  11px;
+  --font-size-sm:  12px;
+  --font-size-base: 13px;
+  --font-size-md:  14px;
+  --font-size-lg:  15px;
+  --font-size-xl:  17px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 26px;
+  --font-size-4xl: 28px;
+
+  /* Icon scale */
+  --icon-size-xs: 12px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 18px;
+  --icon-size-xl: 20px;
+
+  /* Spacing scale */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 16px;
+  --space-8: 20px;
+
+  /* Border radius scale */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   10px;
+  --radius-xl:   12px;
+  --radius-2xl:  14px;
+  --radius-full: 9999px;
+
+
+  --color-code-bg: #1e1e1e;
+  --color-code-fg: #d4d4d4;
+
+  --color-bg: var(--surface-root);
+  --color-surface: var(--surface-panel);
+  --color-surface-elevated: var(--surface-muted);
+  --color-border: var(--border-strong);
+  --color-border-subtle: var(--border-soft);
+  --color-text: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-muted);
+  --color-primary: var(--accent-primary);
+  --color-cta: var(--accent-primary);
+  --color-primary-subtle: var(--accent-subtle);
+  --color-primary-hover: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  --color-accent: var(--accent-primary);
+  --color-glow-warm: var(--accent-subtle);
+  --color-hover: var(--surface-hover);
+  --color-active: var(--surface-hover);
+  --color-menu-bg: var(--surface-menu);
+  --color-success: var(--accent-success);
+  --color-warning: var(--accent-warning);
+  --color-error: var(--accent-danger);
+  --color-info: var(--accent-info);
+  --bg-base: var(--surface-root);
+  --bg-1: var(--surface-panel);
+  --bg-2: var(--surface-muted);
+  --danger: var(--accent-danger);
+  --brand: var(--accent-primary);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --shadow-large: 0 16px 48px rgba(0, 0, 0, 0.24);
+  --color-role-agent: #4f8cff;
+  --color-role-verifier: #10a37f;
+  --color-role-critic: #d97757;
+  --color-role-router: #8b6fd6;
+}
+
+/* Status colors as "r, g, b" triplets, for rgba(var(--color-x-rgb), alpha). */
+:root {
+  --color-success-rgb: 111, 175, 123;
+  --color-error-rgb: 201, 107, 92;
+  --color-info-rgb: 125, 156, 207;
+}
+:root[data-theme="light"] {
+  --color-success-rgb: 95, 155, 106;
+  --color-error-rgb: 185, 98, 86;
+  --color-info-rgb: 100, 133, 184;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+}
+.scrollbar-hide { scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+
+/* Third-party document viewers generate their own nested DOM, so these
+   scoped overrides stay in CSS instead of Tailwind component classes. */
+.pdf-viewer-container .pdfViewer .page {
+  margin: 10px;
+  border: none;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.pdf-viewer-container .pdfViewer:not(.scrollWrapped) .page {
+  margin: 12px auto;
+}
+
+.pdf-viewer-container .pdfViewer.scrollWrapped {
+  padding: 14px;
+}
+
+.docx-preview-scroll ::selection,
+.xlsx-preview-scroll ::selection {
+  background: #b4d7ff;
+  color: #1a1a1a;
+}
+
+.docx-preview-container .docx-preview-doc {
+  background: white;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-opacity {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.10; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.18; transform: translateX(-50%) scale(1.12); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes msg-live-activity-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.88); }
+  50%      { opacity: 1;   transform: scale(1); }
+}
+@keyframes msg-live-activity-fade {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes mode-badge-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes mode-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.fade-in { animation: fade-in 0.15s ease-out; }
+.streaming-cursor::after {
+  content: '▋';
+  display: inline-block;
+  animation: pulse-opacity 0.8s ease-in-out infinite;
+  color: var(--color-primary);
+  margin-left: 1px;
+}
+

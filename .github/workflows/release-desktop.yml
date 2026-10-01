@@ -1,0 +1,165 @@
+name: Release Desktop
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-backend:
+    name: Build backend (${{ matrix.suffix }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+            binary_name: seshat-backend
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64
+            binary_name: seshat-backend.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: |
+            go.work.sum
+            seshat-backend/go.sum
+
+      - name: Build seshat-backend
+        working-directory: seshat-backend
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          go build \
+            -trimpath \
+            -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
+            -o dist/${{ matrix.binary_name }} \
+            ./cmd/api
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-${{ matrix.suffix }}
+          path: seshat-backend/dist/${{ matrix.binary_name }}
+
+  package-linux:
+    name: Package Linux (AppImage, deb)
+    runs-on: ubuntu-latest
+    needs: build-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: seshat-desktop
+        run: npm ci
+
+      - name: Download backend binary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-linux-amd64
+          path: seshat-desktop/resources/backend
+
+      - name: Make backend binary executable
+        run: chmod +x seshat-desktop/resources/backend/seshat-backend
+
+      - name: Build renderer/main
+        working-directory: seshat-desktop
+        run: npm run build
+
+      - name: Package (AppImage + deb)
+        working-directory: seshat-desktop
+        run: npx electron-builder --linux AppImage deb --publish never
+
+      - name: Upload Linux installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-linux
+          path: |
+            seshat-desktop/dist/*.AppImage
+            seshat-desktop/dist/*.deb
+
+  package-windows:
+    name: Package Windows (NSIS)
+    runs-on: windows-latest
+    needs: build-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: seshat-desktop
+        run: npm ci
+
+      - name: Download backend binary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-windows-amd64
+          path: seshat-desktop/resources/backend
+
+      - name: Build renderer/main
+        working-directory: seshat-desktop
+        run: npm run build
+
+      - name: Package (NSIS)
+        working-directory: seshat-desktop
+        run: npx electron-builder --win nsis --publish never
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-windows
+          path: seshat-desktop/dist/*.exe
+
+  publish:
+    name: Publish GitHub Release
+    needs: [package-linux, package-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: dist/
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**
+          generate_release_notes: true
+
+      # Public mirror consumed by electron-updater at runtime (see
+      # seshat-desktop/package.json's build.publish) -- seshat-ai stays private,
+      # so this is the only repo the installed app is allowed to poll
+      # unauthenticated. No internal changelog/PR details here on purpose.
+      - name: Mirror release to the public update feed
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: KPO-Tech/seshat-releases
+          token: ${{ secrets.RELEASES_REPO_TOKEN }}
+          files: dist/**
+          generate_release_notes: false
+          body: "See the SeshatOS changelog for details."
