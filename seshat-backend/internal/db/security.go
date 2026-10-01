@@ -10,7 +10,22 @@ import (
 
 // bcryptCost matches the "cost 12 minimum" policy documented in SECURITY.md.
 // bcrypt.DefaultCost (10) is bcrypt's own library default, not this project's.
-const bcryptCost = 12
+// A var, not a const, so tests can lower it - see SetBcryptCostForTesting.
+// Production code must never call the setter.
+var bcryptCost = 12
+
+// SetBcryptCostForTesting lowers bcryptCost for the duration of a test run
+// and returns a function that restores the previous value. Cost 12 under
+// the race detector makes password-hashing-heavy test suites (internal/api,
+// which hashes a password per test fixture) slow enough to blow past go
+// test's default 10-minute timeout; cost has no bearing on what those tests
+// actually verify, so tests should call this (typically from TestMain) with
+// bcrypt.MinCost instead of paying the real-world security cost.
+func SetBcryptCostForTesting(cost int) (restore func()) {
+	previous := bcryptCost
+	bcryptCost = cost
+	return func() { bcryptCost = previous }
+}
 
 func HashPassword(plaintext string) (string, error) {
 	if plaintext == "" {
