@@ -60,3 +60,7 @@ See [`docs/development.md`](./docs/development.md) for the full setup reference,
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md) (the latter is also what AI coding agents working in this repo should read first).
+
+## Contact
+
+For licensing questions (reselling or offering SeshatOS as a hosted service - see the Commons Clause condition in [LICENSE](./LICENSE)), reach out at oastephaneamiche@gmail.com (temporary, pending a dedicated business address).
