@@ -135,12 +135,96 @@ class PermissionEvent(BaseModel):
     access: list[AccessEntry]
 
 
+class IdentityUser(BaseModel):
+    email: str
+    name: str | None = None
+
+
+class IdentityGroup(BaseModel):
+    """A group at the source and its members. Members are emails; a member that is itself a group
+    appears by its group email, so the server can resolve nesting."""
+
+    id: str
+    email: str | None = None
+    name: str | None = None
+    members: list[str] = Field(default_factory=list)
+
+
+class UserEvent(BaseModel):
+    type: Literal["user"] = "user"
+    user: IdentityUser
+
+
+class GroupEvent(BaseModel):
+    type: Literal["group"] = "group"
+    group: IdentityGroup
+
+
 Event = Annotated[
-    Union[DocumentEvent, DeletedEvent, FailureEvent, CheckpointEvent, SlimEvent, PermissionEvent],
+    Union[
+        DocumentEvent,
+        DeletedEvent,
+        FailureEvent,
+        CheckpointEvent,
+        SlimEvent,
+        PermissionEvent,
+        UserEvent,
+        GroupEvent,
+    ],
     Field(discriminator="type"),
 ]
 
 
+class PreviewRequest(ConnectorRequest):
+    resource_id: str
+
+
+class PreviewResponse(BaseModel):
+    """Where to open the original: a link at the source, or a short-lived download link."""
+
+    url: str | None = None
+    content_type: str | None = None
+
+
+class WebhookRequest(ConnectorRequest):
+    headers: dict[str, str] = Field(default_factory=dict)
+    body: str = ""
+
+
+class WebhookResponse(BaseModel):
+    """What the server should do about a push notification from the source."""
+
+    verified: bool
+    sync: bool = False  # the server should run an incremental sync
+    resource_ids: list[str] = Field(default_factory=list)  # the resources reported as changed, when known
+
+
+class FilterOptionsRequest(ConnectorRequest):
+    parent_id: str | None = None  # None lists the top level
+
+
+class FilterOption(BaseModel):
+    id: str
+    name: str
+    kind: Literal["folder", "drive", "space", "channel", "other"] = "folder"
+    has_children: bool = False
+
+
+class FilterOptionsResponse(BaseModel):
+    """What the Sources page offers to scope a source (folders, shared drives, spaces)."""
+
+    options: list[FilterOption] = Field(default_factory=list)
+
+
+# How access to a source's records is decided. "app": reaching the source grants every record in it, so
+# the server can skip a per-record check. "record": each record carries its own ACL and needs a check.
+# A connector that does not say is treated as "record", the safe default.
+PermissionModel = Literal["app", "record"]
+
+Capability = Literal["sync", "slim", "permissions", "identities", "preview", "webhook", "filters"]
+
+
 class ConnectorInfo(BaseModel):
     kind: str
-    capabilities: list[Literal["sync", "slim", "permissions"]]
+    capabilities: list[Capability]
+    permission_model: PermissionModel = "record"

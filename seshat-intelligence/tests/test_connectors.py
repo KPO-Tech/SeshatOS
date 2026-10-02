@@ -9,9 +9,14 @@ from pydantic import ValidationError
 from seshat_intelligence.connectors.base import (
     AnyEvent,
     Connector,
+    FiltersCapable,
+    IdentitiesCapable,
     PermissionsCapable,
+    PreviewCapable,
     SlimCapable,
     SyncCapable,
+    UpstreamError,
+    WebhookCapable,
 )
 from seshat_intelligence.connectors.models import (
     Checkpoint,
@@ -22,12 +27,20 @@ from seshat_intelligence.connectors.models import (
     DocumentEvent,
     Failure,
     FailureEvent,
+    FilterOption,
+    FilterOptionsResponse,
+    GroupEvent,
+    IdentityGroup,
+    IdentityUser,
     PermissionEvent,
     PermissionsRequest,
     SlimDocument,
+    PreviewResponse,
     SlimEvent,
     SyncRequest,
+    UserEvent,
     ValidateResponse,
+    WebhookResponse,
 )
 from seshat_intelligence.connectors.registry import ConnectorRegistry
 from seshat_intelligence.connectors.routes import router
@@ -55,6 +68,33 @@ class FakeConnector(Connector, SyncCapable, SlimCapable, PermissionsCapable):
                 yield PermissionEvent(id=resource_id, access=["public"])
 
 
+class Full(Connector, SyncCapable, IdentitiesCapable, PreviewCapable, WebhookCapable, FiltersCapable):
+    kind = "full"
+    permission_model = "app"
+
+    async def validate(self, request: ConnectorRequest) -> ValidateResponse:
+        return ValidateResponse(ok=True)
+
+    async def sync(self, request: SyncRequest) -> AsyncIterator[AnyEvent]:
+        yield CheckpointEvent(checkpoint=Checkpoint())
+
+    async def identities(self, request: ConnectorRequest) -> AsyncIterator[AnyEvent]:
+        yield UserEvent(user=IdentityUser(email="a@example.com", name="A"))
+        yield GroupEvent(group=IdentityGroup(id="g", email="g@example.com", members=["a@example.com"]))
+
+    async def preview(self, request):
+        if request.resource_id == "slow":
+            raise UpstreamError(429, "slow down", retry_after=12)
+        return PreviewResponse(url=f"https://source/{request.resource_id}", content_type="text/html")
+
+    async def handle_webhook(self, request):
+        ok = request.headers.get("x-token") == "secret"
+        return WebhookResponse(verified=ok, sync=ok, resource_ids=["r1"] if ok else [])
+
+    async def filter_options(self, request):
+        return FilterOptionsResponse(options=[FilterOption(id="f", name="Folder", has_children=request.parent_id is None)])
+
+
 class ValidateOnly(Connector):
     kind = "bare"
 
@@ -77,7 +117,7 @@ class Exploding(Connector, SyncCapable):
 def client() -> AsyncClient:
     app = FastAPI()
     registry = ConnectorRegistry()
-    for connector in (FakeConnector(), ValidateOnly(), Exploding()):
+    for connector in (FakeConnector(), ValidateOnly(), Exploding(), Full()):
         registry.register(connector)
     app.state.connector_registry = registry
     app.include_router(router)
@@ -108,9 +148,10 @@ async def test_lists_connectors_with_capabilities(client):
     async with client:
         data = (await client.get("/v1/connectors")).json()
     assert data == [
-        {"kind": "bare", "capabilities": []},
-        {"kind": "exploding", "capabilities": ["sync"]},
-        {"kind": "fake", "capabilities": ["sync", "slim", "permissions"]},
+        {"kind": "bare", "capabilities": [], "permission_model": "record"},
+        {"kind": "exploding", "capabilities": ["sync"], "permission_model": "record"},
+        {"kind": "fake", "capabilities": ["sync", "slim", "permissions"], "permission_model": "record"},
+        {"kind": "full", "capabilities": ["sync", "identities", "preview", "webhook", "filters"], "permission_model": "app"},
     ]
 
 
@@ -163,3 +204,23 @@ def test_duplicate_registration_is_refused():
     registry.register(FakeConnector())
     with pytest.raises(ValueError):
         registry.register(FakeConnector())
+
+
+async def test_identities_preview_webhook_and_filters_routes(client):
+    async with client:
+        identities = await client.post("/v1/connectors/full/identities", json={})
+        preview = await client.post("/v1/connectors/full/preview", json={"resource_id": "doc1"})
+        slow = await client.post("/v1/connectors/full/preview", json={"resource_id": "slow"})
+        good = await client.post("/v1/connectors/full/webhook", json={"headers": {"x-token": "secret"}, "body": "{}"})
+        bad = await client.post("/v1/connectors/full/webhook", json={"headers": {}})
+        top = await client.post("/v1/connectors/full/filters", json={})
+        unsupported = await client.post("/v1/connectors/fake/identities", json={})
+    events = lines(identities.text)
+    assert [e["type"] for e in events] == ["user", "group"]
+    assert events[1]["group"] == {"id": "g", "email": "g@example.com", "members": ["a@example.com"]}
+    assert preview.json() == {"url": "https://source/doc1", "content_type": "text/html"}
+    assert slow.status_code == 429 and slow.headers["retry-after"] == "12"
+    assert good.json() == {"verified": True, "sync": True, "resource_ids": ["r1"]}
+    assert bad.json() == {"verified": False, "sync": False, "resource_ids": []}
+    assert top.json() == {"options": [{"id": "f", "name": "Folder", "kind": "folder", "has_children": True}]}
+    assert unsupported.status_code == 501

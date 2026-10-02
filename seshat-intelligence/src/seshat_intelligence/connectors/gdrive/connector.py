@@ -15,6 +15,7 @@ server resolves them.
 from __future__ import annotations
 
 import hashlib
+import re
 from datetime import datetime
 from typing import Any, AsyncIterator
 
@@ -24,15 +25,20 @@ from pydantic import BaseModel, Field
 from seshat_intelligence.connectors.base import (
     AnyEvent,
     Connector,
+    FiltersCapable,
+    IdentitiesCapable,
     PermissionsCapable,
+    PreviewCapable,
     SlimCapable,
     SyncCapable,
+    UpstreamError,
 )
 from seshat_intelligence.connectors.extraction import ExtractionError, Extractor
 from seshat_intelligence.connectors.gdrive.acl import permissions_to_access
 from seshat_intelligence.connectors.gdrive.client import DriveClient, DriveError, RateLimited
 from seshat_intelligence.connectors.gdrive.filters import (
     EXPORT_MIME_TYPES,
+    FOLDER_MIME,
     MAX_FILE_BYTES,
     is_allowed_file,
     is_text_file,
@@ -46,12 +52,21 @@ from seshat_intelligence.connectors.models import (
     DocumentEvent,
     Failure,
     FailureEvent,
+    FilterOption,
+    FilterOptionsRequest,
+    FilterOptionsResponse,
+    GroupEvent,
+    IdentityGroup,
+    IdentityUser,
     PermissionEvent,
     PermissionsRequest,
+    PreviewRequest,
+    PreviewResponse,
     Section,
     SlimDocument,
     SlimEvent,
     SyncRequest,
+    UserEvent,
     ValidateResponse,
 )
 
@@ -60,6 +75,8 @@ DEFAULT_PAGE_BUDGET = 10
 PAGE_SIZE = 100
 MAX_RETRY_IDS = 200
 _SHARED = {"supportsAllDrives": "true", "includeItemsFromAllDrives": "true"}
+ADMIN_API_BASE = "https://admin.googleapis.com"
+_SAFE_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 class GDriveCheckpoint(BaseModel):
@@ -70,8 +87,10 @@ class GDriveCheckpoint(BaseModel):
     more: bool = False  # pages remain: the caller should come back for another pass
 
 
-class GDriveConnector(Connector, SyncCapable, SlimCapable, PermissionsCapable):
+class GDriveConnector(Connector, SyncCapable, SlimCapable, PermissionsCapable, IdentitiesCapable, PreviewCapable, FiltersCapable):
     kind = "gdrive"
+    # Each file carries its own sharing, so access is checked per record.
+    permission_model = "record"
 
     def __init__(self, extractor: Extractor | None = None, transport: httpx.AsyncBaseTransport | None = None) -> None:
         self._extractor = extractor
@@ -333,6 +352,93 @@ class GDriveConnector(Connector, SyncCapable, SlimCapable, PermissionsCapable):
             )
         finally:
             await client.aclose()
+
+    # -- identities --------------------------------------------------------------------------
+
+    async def identities(self, request: ConnectorRequest) -> AsyncIterator[AnyEvent]:
+        """Users, groups and group members from the Admin SDK Directory API, so the server can resolve
+        `group:` access entries. Needs a Google Workspace admin credential."""
+        config = {**request.config, "api_base": request.config.get("admin_api_base", ADMIN_API_BASE)}
+        client = DriveClient(request.credentials, config, transport=self._transport)
+        customer = str(request.config.get("customer_id", "my_customer"))
+        try:
+            async for users in self._pages(client, "/admin/directory/v1/users", {"customer": customer, "maxResults": "500", "fields": "nextPageToken,users(primaryEmail,name(fullName),suspended)"}, "users"):
+                for user in users:
+                    if user.get("suspended") or not user.get("primaryEmail"):
+                        continue
+                    yield UserEvent(user=IdentityUser(email=user["primaryEmail"], name=(user.get("name") or {}).get("fullName")))
+            groups = []
+            async for page in self._pages(client, "/admin/directory/v1/groups", {"customer": customer, "maxResults": "200", "fields": "nextPageToken,groups(id,email,name)"}, "groups"):
+                groups.extend(page)
+            for group in groups:
+                try:
+                    members: list[str] = []
+                    async for page in self._pages(client, f"/admin/directory/v1/groups/{group['id']}/members", {"maxResults": "200", "fields": "nextPageToken,members(email,type,status)"}, "members"):
+                        members.extend(m["email"] for m in page if m.get("email") and m.get("type") in ("USER", "GROUP") and m.get("status", "ACTIVE") == "ACTIVE")
+                except DriveError as exc:
+                    # Unknown members must not be reported as an empty group: that would mean nobody.
+                    yield FailureEvent(failure=Failure(id=group["id"], stage="permissions", code=f"drive_{exc.status}", message=f"could not list the members of {group.get('email', group['id'])}: {exc}", retryable=exc.status >= 500))
+                    continue
+                yield GroupEvent(group=IdentityGroup(id=group["id"], email=group.get("email"), name=group.get("name"), members=members))
+        except RateLimited as exc:
+            yield FailureEvent(failure=Failure(stage="permissions", code="rate_limited", message=str(exc), retryable=True, retry_after_seconds=exc.retry_after))
+        except DriveError as exc:
+            hint = " (a Google Workspace admin credential is required)" if exc.status in (401, 403) else ""
+            yield FailureEvent(failure=Failure(stage="permissions", code=f"drive_{exc.status}", message=f"{exc}{hint}", retryable=exc.status >= 500))
+        finally:
+            await client.aclose()
+
+    @staticmethod
+    async def _pages(client: DriveClient, path: str, params: dict[str, str], key: str) -> AsyncIterator[list[dict[str, Any]]]:
+        token: str | None = None
+        while True:
+            page_params = dict(params)
+            if token:
+                page_params["pageToken"] = token
+            body = await client.get_json(path, page_params)
+            yield body.get(key, [])
+            token = body.get("nextPageToken")
+            if not token:
+                return
+
+    # -- preview and filters -----------------------------------------------------------------
+
+    async def preview(self, request: PreviewRequest) -> PreviewResponse:
+        if not _SAFE_ID.match(request.resource_id):
+            raise UpstreamError(400, "invalid resource id")
+        client = self._client(request)
+        try:
+            file = await client.get_json(f"/drive/v3/files/{request.resource_id}", {"fields": "webViewLink,mimeType", **_SHARED})
+            return PreviewResponse(url=file.get("webViewLink"), content_type=file.get("mimeType"))
+        except RateLimited as exc:
+            raise UpstreamError(429, str(exc), exc.retry_after) from exc
+        except DriveError as exc:
+            raise UpstreamError(404 if exc.status == 404 else 502, str(exc)) from exc
+        finally:
+            await client.aclose()
+
+    async def filter_options(self, request: FilterOptionsRequest) -> FilterOptionsResponse:
+        """Shared drives and the folders under a parent, to scope a source to part of a drive."""
+        if request.parent_id is not None and not _SAFE_ID.match(request.parent_id):
+            raise UpstreamError(400, "invalid parent id")
+        client = self._client(request)
+        options: list[FilterOption] = []
+        try:
+            if request.parent_id is None and request.config.get("include_shared_drives", True):
+                async for page in self._pages(client, "/drive/v3/drives", {"pageSize": "100", "fields": "nextPageToken,drives(id,name)"}, "drives"):
+                    options.extend(FilterOption(id=d["id"], name=d["name"], kind="drive", has_children=True) for d in page)
+            parent = request.parent_id or "root"
+            query = f"'{parent}' in parents and mimeType = '{FOLDER_MIME}' and trashed = false"
+            params = {"q": query, "pageSize": "100", "fields": "nextPageToken,files(id,name)", **_SHARED}
+            async for page in self._pages(client, "/drive/v3/files", params, "files"):
+                options.extend(FilterOption(id=f["id"], name=f["name"], kind="folder", has_children=True) for f in page)
+        except RateLimited as exc:
+            raise UpstreamError(429, str(exc), exc.retry_after) from exc
+        except DriveError as exc:
+            raise UpstreamError(502, str(exc)) from exc
+        finally:
+            await client.aclose()
+        return FilterOptionsResponse(options=options)
 
 
 def _decode_checkpoint(checkpoint: Checkpoint | None) -> GDriveCheckpoint | None:

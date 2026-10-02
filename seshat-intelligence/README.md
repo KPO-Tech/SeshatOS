@@ -107,13 +107,28 @@ The worker side of the Knowledge connectors, per
 stateless: the caller (`seshat-server`) owns state, schedules, credentials and permission enforcement, and
 sends everything a call needs.
 
-- `GET /v1/connectors` - registered kinds and what each can do (`sync`, `slim`, `permissions`).
+- `GET /v1/connectors` - registered kinds, what each can do (`sync`, `slim`, `permissions`, `identities`,
+  `preview`, `webhook`, `filters`) and its `permission_model`.
 - `POST /v1/connectors/{kind}/validate` - check credentials and configuration.
 - `POST /v1/connectors/{kind}/sync` - `application/x-ndjson` stream: `document`, `deleted`, `failure`
   events, then one final `checkpoint`.
 - `POST /v1/connectors/{kind}/slim` - ids and ACLs without content, to detect deletions.
 - `POST /v1/connectors/{kind}/permissions` - confirmed ACLs for given ids; ids it could not confirm are
   omitted, never reported as unrestricted.
+- `POST /v1/connectors/{kind}/identities` - users and groups with their members, so the server can resolve
+  `group:` access entries. A group whose members could not be listed is reported as a failure, never emitted
+  as an empty group (empty would mean nobody).
+- `POST /v1/connectors/{kind}/preview` - where to open the original of one resource.
+- `POST /v1/connectors/{kind}/webhook` - verify a push notification and say whether the server should sync.
+- `POST /v1/connectors/{kind}/filters` - the folders, drives or spaces a source can be scoped to.
+
+`permission_model` is `app` when reaching the source grants every record in it (the server can skip a
+per-record check) or `record` when each record carries its own ACL. The default, for a connector that does
+not say, is `record`, the safe one.
+
+The OpenAPI schema is checked in as `openapi.json` and the Go client for `seshat-server` is generated from
+it. Regenerate it with `python scripts/export_openapi.py`; a test fails when it is out of date. The NDJSON
+endpoints are described as one `ConnectorEvent` per line.
 
 The contract is in `connectors/models.py`. Access entries are prefixed identities (`user:`, `group:`,
 `domain:`, `public`) and an unknown prefix is rejected. `access` absent means the source reports no ACL;
@@ -138,7 +153,10 @@ Google Drive, read only (`connectors/gdrive`, over httpx, no Google SDK). A port
   checkpoint, so the caller keeps its previous one.
 - A link-only share is not mapped to `public`.
 
-Group permissions are emitted as `group:<email>`; membership is resolved by the server.
+Group permissions are emitted as `group:<email>`; `identities` lists the Google Workspace users, groups and
+members (Admin SDK Directory API, needs an admin credential) so the server can resolve them. `filters` lists
+shared drives and folders, and `preview` returns the `webViewLink`. Webhooks are in the contract but not
+implemented for Drive yet.
 
 Binary formats (PDF, Office) go through an extractor passed to `GDriveConnector(extractor=...)`. The app
 wires `connectors/extraction.py`'s `router_extractor`, which uses the reading router described below. An

@@ -8,7 +8,15 @@ from httpx import ASGITransport, AsyncClient
 from seshat_intelligence.connectors.gdrive import GDriveConnector
 from seshat_intelligence.connectors.gdrive.acl import permissions_to_access
 from seshat_intelligence.connectors.gdrive.filters import is_allowed_file
-from seshat_intelligence.connectors.models import Checkpoint, ConnectorRequest, PermissionsRequest, SyncRequest
+from seshat_intelligence.connectors.base import UpstreamError
+from seshat_intelligence.connectors.models import (
+    Checkpoint,
+    ConnectorRequest,
+    FilterOptionsRequest,
+    PermissionsRequest,
+    PreviewRequest,
+    SyncRequest,
+)
 from seshat_intelligence.connectors.registry import ConnectorRegistry
 from seshat_intelligence.connectors.routes import router
 from fake_drive import DOC, FOLDER, FakeDrive, collect, file
@@ -244,7 +252,78 @@ async def test_routes_stream_a_gdrive_sync_as_ndjson(drive):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         listing = (await client.get("/v1/connectors")).json()
         response = await client.post("/v1/connectors/gdrive/sync", json={"credentials": {"access_token": "t"}})
-    assert listing == [{"kind": "gdrive", "capabilities": ["sync", "slim", "permissions"]}]
+    assert listing == [{"kind": "gdrive", "capabilities": ["sync", "slim", "permissions", "identities", "preview", "filters"], "permission_model": "record"}]
     events = [json.loads(line) for line in response.text.splitlines()]
     assert [e["type"] for e in events] == ["document", "checkpoint"]
     assert events[0]["document"]["access"] == ["user:a@example.com"]
+
+
+# -- identities, filters, preview ------------------------------------------------------------------
+
+
+def identities_request(**config):
+    return ConnectorRequest(config=config, credentials={"access_token": "admin"})
+
+
+async def test_identities_lists_users_groups_and_members(drive):
+    drive.users = [
+        {"primaryEmail": "alice@example.com", "name": {"fullName": "Alice A"}},
+        {"primaryEmail": "gone@example.com", "suspended": True},
+    ]
+    drive.groups = [{"id": "g1", "email": "eng@example.com", "name": "Engineering"}]
+    drive.members = {
+        "g1": [
+            {"email": "alice@example.com", "type": "USER", "status": "ACTIVE"},
+            {"email": "platform@example.com", "type": "GROUP", "status": "ACTIVE"},
+            {"email": "everyone@example.com", "type": "CUSTOMER"},
+            {"email": "left@example.com", "type": "USER", "status": "SUSPENDED"},
+        ]
+    }
+    events = await collect(connector(drive).identities(identities_request()))
+    assert [e.type for e in events] == ["user", "group"]  # the suspended user is not listed
+    assert (events[0].user.email, events[0].user.name) == ("alice@example.com", "Alice A")
+    group = events[1].group
+    assert (group.id, group.email) == ("g1", "eng@example.com")
+    assert group.members == ["alice@example.com", "platform@example.com"]  # a nested group appears by email
+
+
+async def test_a_group_whose_members_cannot_be_listed_is_reported_not_emitted_empty(drive):
+    drive.groups = [{"id": "g1", "email": "a@example.com"}, {"id": "g2", "email": "b@example.com"}]
+    drive.members = {"g1": 500, "g2": [{"email": "bob@example.com", "type": "USER"}]}
+    events = await collect(connector(drive).identities(identities_request()))
+    assert [e.type for e in events] == ["failure", "group"]
+    assert (events[0].failure.id, events[0].failure.retryable) == ("g1", True)
+    assert events[1].group.members == ["bob@example.com"]
+
+
+async def test_identities_without_admin_access_is_one_clear_failure(drive):
+    drive.admin_status = 403
+    events = await collect(connector(drive).identities(identities_request()))
+    assert [e.type for e in events] == ["failure"]
+    assert events[0].failure.retryable is False and "admin credential" in events[0].failure.message
+
+
+async def test_filter_options_lists_shared_drives_and_folders(drive):
+    drive.drives = [{"id": "d1", "name": "Company"}]
+    drive.folders = {"root": [{"id": "f1", "name": "Policies"}], "d1": [{"id": "f2", "name": "Legal"}]}
+    top = await connector(drive).filter_options(FilterOptionsRequest(credentials={"access_token": "t"}))
+    assert [(o.id, o.kind) for o in top.options] == [("d1", "drive"), ("f1", "folder")]
+    inside = await connector(drive).filter_options(FilterOptionsRequest(credentials={"access_token": "t"}, parent_id="d1"))
+    assert [(o.id, o.name) for o in inside.options] == [("f2", "Legal")]
+
+
+@pytest.mark.parametrize("parent", ["x' or '1'='1", "a b", "../x"])
+async def test_filter_options_rejects_ids_that_could_alter_the_query(drive, parent):
+    with pytest.raises(UpstreamError) as caught:
+        await connector(drive).filter_options(FilterOptionsRequest(credentials={"access_token": "t"}, parent_id=parent))
+    assert caught.value.status == 400
+    assert not drive.calls
+
+
+async def test_preview_returns_the_link_to_the_original(drive):
+    drive.files = {"1": file("1", "a.txt")}
+    result = await connector(drive).preview(PreviewRequest(credentials={"access_token": "t"}, resource_id="1"))
+    assert result.url == "https://drive/1"
+    with pytest.raises(UpstreamError) as missing:
+        await connector(drive).preview(PreviewRequest(credentials={"access_token": "t"}, resource_id="nope"))
+    assert missing.value.status == 404
