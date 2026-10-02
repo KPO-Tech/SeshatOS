@@ -128,8 +128,10 @@ function findModel(state: PersistedState, id: string): TitleModelInfo {
   return model
 }
 
+// GGUF files live with the other runtime models (models/deepdoc, ...); the
+// llama.cpp binary, state and log stay in llama/.
 function modelPath(model: TitleModelInfo) {
-  return join(llamaDir(), 'models', model.repo.replace('/', '__'), model.filename)
+  return join(resolveRuntimeRoot(), 'models', 'llama', model.repo.replace('/', '__'), model.filename)
 }
 
 function archiveName(): string | null {
