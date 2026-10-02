@@ -121,7 +121,7 @@ function rightPanelTotalLimit(windowWidth: number): number {
 // below runs inside store actions, not components, so it can't read the DOM.
 export const SIDEBAR_MIN_WIDTH = 208
 export const SIDEBAR_MAX_WIDTH = 360
-export const SIDEBAR_DEFAULT_WIDTH = 256
+export const SIDEBAR_DEFAULT_WIDTH = 240
 const SIDEBAR_COLLAPSED_WIDTH = 56
 let currentSidebarWidth = SIDEBAR_DEFAULT_WIDTH
 

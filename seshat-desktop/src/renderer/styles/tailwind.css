@@ -20,7 +20,7 @@
   --leading-tight: 1.18;
   --leading-ui: 1.35;
   --leading-copy: 1.55;
-  --sidebar-width: 256px;
+  --sidebar-width: 240px;
   --sidebar-collapsed-width: 56px;
   /* Seshat identity: warm tinted dark surfaces, orange accent (ported from
      seshat-ui tokens.css). Dark is the default; light overrides below. */
