@@ -3,7 +3,6 @@ package documentreading
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/KPO-Tech/seshat/pkg/documentreader"
@@ -199,32 +198,6 @@ func toConversionResult(result Result) *documentreader.ConversionResult {
 
 func usableMarkdown(markdown string) bool {
 	return strings.TrimSpace(markdown) != "" && !textquality.IsGarbledText(markdown)
-}
-
-func ConvertFileLocal(ctx context.Context, filePath string) (*documentreader.ConversionResult, error) {
-	result, ok, err := Convert(ctx, filePath, nil)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, fmt.Errorf("document reader: no extractable text for %s", filePath)
-	}
-	return toConversionResult(result), nil
-}
-
-func ConvertBytesLocal(ctx context.Context, data []byte, filename string) (*documentreader.ConversionResult, error) {
-	result, ok, err := ConvertBytes(ctx, data, filename, nil)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, fmt.Errorf("document reader: no extractable text for %s", filename)
-	}
-	return toConversionResult(result), nil
-}
-
-func ReadFileBytes(filePath string) ([]byte, error) {
-	return os.ReadFile(filePath)
 }
 
 var _ documentreader.Converter = (*PolicyConverter)(nil)

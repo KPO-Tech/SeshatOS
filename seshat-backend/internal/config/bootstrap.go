@@ -43,7 +43,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/onedrive"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/s3"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/sharepoint"
-	knowledgeAgentTools "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/tool"
+	knowledgeTools "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/tool"
 	mcpAction "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/mcp/action"
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
@@ -1079,7 +1079,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// *knowledge.Service or connected-mode *cloudknowledge.RemoteService),
 	// which only exists after seshat.NewApp runs its own fallback logic.
 	if backendApp.Knowledge != nil {
-		if err := queryClient.RegisterTool(knowledgeAgentTools.NewSearchTool(backendApp.Knowledge)); err != nil {
+		if err := queryClient.RegisterTool(knowledgeTools.NewSearchTool(backendApp.Knowledge)); err != nil {
 			fmt.Fprintf(os.Stderr, "[API] Avertissement: knowledge_search tool non enregistré: %v\n", err)
 		}
 	}

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"net/http"
 	"sync"
 	"time"
 )
@@ -61,20 +60,4 @@ func (l *RateLimiter) Allow(userID string) bool {
 	}
 	w.count++
 	return w.count <= l.max
-}
-
-// Middleware wraps a handler with per-user rate limiting.
-// Requires the auth principal to be set in context (must run after authMiddleware).
-func (l *RateLimiter) Middleware(next http.Handler) http.Handler {
-	if l == nil {
-		return next
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		principal, ok := authPrincipalFromContext(r.Context())
-		if ok && principal != nil && !l.Allow(principal.User.ID) {
-			writeJSONError(w, http.StatusTooManyRequests, "rate limit exceeded")
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }

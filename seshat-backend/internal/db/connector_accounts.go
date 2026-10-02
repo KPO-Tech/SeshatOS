@@ -10,9 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// ConnectorAccountStatus values mirror ChannelAccountStatus's - a connector
-// account goes through the same pending/connected/error/disconnected
-// lifecycle as an inbox channel account.
+// ConnectorAccountStatus values: a connector account goes through a
+// pending/connected/error/disconnected lifecycle.
 const (
 	ConnectorAccountStatusPending      = "pending"
 	ConnectorAccountStatusConnected    = "connected"

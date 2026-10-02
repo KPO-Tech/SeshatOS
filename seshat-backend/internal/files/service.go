@@ -283,20 +283,6 @@ func visualPagesFromReadResult(result documentreading.ReadResult) []int {
 	return pages
 }
 
-// resolveWorkspacePath joins a workspace-relative path (always
-// server-generated, never user input) onto absWorkspace and rejects the
-// result if it would land outside absWorkspace.
-func resolveWorkspacePath(absWorkspace, rel string) (string, error) {
-	joined, err := filepath.Abs(filepath.Join(absWorkspace, rel))
-	if err != nil {
-		return "", err
-	}
-	if joined != absWorkspace && !strings.HasPrefix(joined, absWorkspace+string(filepath.Separator)) {
-		return "", fmt.Errorf("path escapes workspace")
-	}
-	return joined, nil
-}
-
 // DeleteFile removes the blob and DB record, enforcing ownership.
 func (s *Service) DeleteFile(ctx context.Context, principal *backendauth.Principal, fileID string) error {
 	if s == nil || s.files == nil {

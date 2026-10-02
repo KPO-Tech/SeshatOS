@@ -1589,7 +1589,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 
 // toolAllowlistFromPatterns turns GetToolPatterns() into an exact-name
 // allowlist. A bare "*" (AgentDefinition.Tools == nil) means fully
-// unrestricted. Any other glob (e.g. "inbox_*") isn't supported by this
+// unrestricted. Any other glob (e.g. "mcp_*") isn't supported by this
 // exact-match filter yet - fail OPEN (no restriction) rather than silently
 // blocking every tool for an agent whose pattern can't be correctly
 // evaluated; extend this if a future agent definition actually needs

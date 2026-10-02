@@ -836,27 +836,6 @@ func (s *Service) readDocumentResult(ctx context.Context, input documentreading.
 	return documentreading.ReadResult{}, false
 }
 
-// extractText attempts to extract UTF-8 text from the blob.
-// For plain text content types it returns the raw bytes; otherwise it tries
-// a best-effort conversion.
-func extractText(data []byte, contentType, _ string) string {
-	return documentreading.ExtractPlainText(data, contentType)
-}
-
-// isPrintable reports whether s looks like real text rather than binary
-// data. utf8.ValidString is the load-bearing check: arbitrary binary (a
-// PDF's compressed stream data, for instance) essentially never forms
-// valid UTF-8 over any meaningful length, so this alone rejects almost all
-// non-text blobs. Without it, ranging over an invalid byte sequence
-// replaces each bad run with U+FFFD (>= 32), so the old "r >= 32" check
-// scored raw binary as ~100% printable - this is exactly what let a raw,
-// un-extracted PDF get silently indexed as "text" instead of the ingestion
-// job failing. The printable-character ratio on top catches the rarer
-// case of valid-but-not-really-text UTF-8 (e.g. mostly control characters).
-func isPrintable(s string) bool {
-	return documentreading.IsPrintableText(s)
-}
-
 func corpusFromDB(r db.Corpus) *Corpus {
 	return &Corpus{
 		ID:          r.ID,

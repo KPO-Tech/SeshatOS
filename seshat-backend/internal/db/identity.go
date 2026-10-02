@@ -665,13 +665,6 @@ func cloneJSONMap(value map[string]any) (map[string]any, error) {
 	return cloned, nil
 }
 
-func nullIfEmpty(value string) any {
-	if value == "" {
-		return nil
-	}
-	return value
-}
-
 func newIdentityID(prefix string) string {
 	var randomBytes [8]byte
 	if _, err := rand.Read(randomBytes[:]); err != nil {
