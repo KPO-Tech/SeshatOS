@@ -1,5 +1,7 @@
 # Architecture — SeshatOS
 
+Decisions on what is Go and what is Python: [decisions/0001-go-python-boundary.md](decisions/0001-go-python-boundary.md).
+
 This document describes the current repository layout and the package boundaries inside the local product backend, and between it and the open-source `seshat` runtime.
 
 ---
