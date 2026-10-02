@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
 import type { Session } from '@renderer/api/types'
 import { normalizeSessionMessages } from '@renderer/lib/chat'
+import { restoredUsageFromSession } from '@renderer/lib/restoredUsage'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { useSessionStore, type ChatSession, type ChatAttachment } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
@@ -85,6 +86,11 @@ export function useConversationSessionLoad({
             workspacePath: detail.workspace_path,
             projectPath: detail.project_path,
           })
+          const restored = restoredUsageFromSession(detail)
+          // A live turn's own figures are fresher than the stored ones.
+          if (restored && useSessionStore.getState().getAgentState(detail.session_id).turnNumber === 0) {
+            useSessionStore.getState().updateAgentState(detail.session_id, restored)
+          }
           if (detail.permission_mode) {
             useUIStore.getState().setPermissionMode(detail.permission_mode as import('@renderer/stores/ui').UIPermissionMode)
           }

@@ -117,7 +117,7 @@ export function Sidebar() {
 
         {!collapsed && (
           <div
-            className="absolute inset-y-0 right-0 z-10 w-1.5 cursor-col-resize transition-colors hover:bg-[var(--accent-primary)]/40"
+            className="absolute inset-y-0 right-0 z-10 w-1.5 cursor-col-resize"
             role="separator"
             aria-orientation="vertical"
             aria-label="Resize sidebar"

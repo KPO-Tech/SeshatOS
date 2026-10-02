@@ -142,6 +142,7 @@ export type Session = {
   execution_origin?: string
   workspace_path?: string
   project_path?: string
+  total_turns?: number
 }
 
 export type ProviderModel = {

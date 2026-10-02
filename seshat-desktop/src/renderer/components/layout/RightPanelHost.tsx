@@ -100,7 +100,7 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
 
   return (
     <div className="relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]" style={{ width: `${column.width}px` }}>
-      <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize transition-colors duration-150 hover:bg-app-primary-subtle active:bg-app-primary-subtle" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />
+      <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />
       {column.panels.map((panel, index) => (
         <div
           key={panel.id}
@@ -115,7 +115,7 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
           />
           {column.panels.length === 2 && index === 0 && (
             <div
-              className="absolute bottom-[-4px] left-0 right-0 z-20 h-2 cursor-row-resize transition-colors duration-150 hover:bg-app-primary-subtle active:bg-app-primary-subtle"
+              className="absolute bottom-[-4px] left-0 right-0 z-20 h-2 cursor-row-resize"
               onMouseDown={(e) => onSplitDragStart(e, e.currentTarget.parentElement?.parentElement?.clientHeight ?? 600)}
               aria-label="Drag to resize"
             />
