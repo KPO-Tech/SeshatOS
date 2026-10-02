@@ -7,6 +7,7 @@ from seshat_intelligence.api.schemas import HealthResponse
 from seshat_intelligence.config import Settings, get_settings
 from seshat_intelligence.connectors.extraction import pool_extractor
 from seshat_intelligence.connectors.gdrive import GDriveConnector
+from seshat_intelligence.connectors.light_extraction import LightExtractor, tiered_extractor
 from seshat_intelligence.connectors.registry import ConnectorRegistry
 from seshat_intelligence.connectors.routes import router as connectors_router
 from seshat_intelligence.documents.chunking_pool import ChunkingPool
@@ -27,19 +28,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     conversion_pool = ConversionPool(settings.document_provider, settings.conversion_max_workers)
     chunking_pool = ChunkingPool(settings.chunking_max_workers)
     store = DocumentStore(settings.storage_dir)
+    light_extractor = LightExtractor()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
         conversion_pool.shutdown()
         chunking_pool.shutdown()
+        light_extractor.shutdown()
 
     app = FastAPI(title="Seshat Intelligence", version="0.1.0", lifespan=lifespan)
     app.state.document_store = store
     app.state.convert_document = ConvertDocument(conversion_pool, store)
     app.state.chunk_document = ChunkDocument(chunking_pool)
     app.state.connector_registry = ConnectorRegistry()
-    app.state.connector_registry.register(GDriveConnector(extractor=pool_extractor(conversion_pool)))
+    app.state.connector_registry.register(GDriveConnector(extractor=tiered_extractor(light_extractor, pool_extractor(conversion_pool))))
 
     @app.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:

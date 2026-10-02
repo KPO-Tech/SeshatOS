@@ -141,9 +141,16 @@ Google Drive, read only (`connectors/gdrive`, over httpx, no Google SDK). A port
 Group permissions are emitted as `group:<email>`; membership is resolved by the server.
 
 Binary formats (PDF, Office) go through an extractor passed to `GDriveConnector(extractor=...)`. The app
-wires `connectors/extraction.py`'s `pool_extractor`, which reuses the document conversion pool
-(Docling or Marker), so conversion runs in the pool's worker processes and the event loop stays free
-while a connector streams. Without an extractor such files are reported as `unsupported_format`. A failed
+wires two tiers (`connectors/extraction.py`, `connectors/light_extraction.py`):
+
+1. **Light tier**, no model: PDFium for PDFs with a text layer, python-docx for DOCX (headings, paragraphs
+   and tables in order), python-pptx for PPTX (text, tables and notes per slide). Office files are checked
+   for zip bombs first (member size, total size, compression ratio, compression type); a PDFium hang or
+   crash is bounded by a deadline in a worker process that is replaced on failure; an encrypted PDF is
+   reported, and an owner-password-only PDF is read.
+2. **Heavy tier**, the document conversion pool (Docling or Marker), used only when the light tier declines:
+   a scanned PDF (fewer than 20 characters per page), or a format it does not handle. Conversion runs in the
+   pool's worker processes, so the event loop stays free while a connector streams. Without an extractor such files are reported as `unsupported_format`. A failed
 conversion is a non-retryable `parse` failure (`extraction_failed`); a crashing extractor is a retryable
 one (`extractor_error`) and the file is carried in `retry_ids`.
 
