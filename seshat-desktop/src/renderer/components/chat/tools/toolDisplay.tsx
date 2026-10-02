@@ -156,6 +156,10 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
   speech_to_text: { label: 'Speech To Text', groupable: false, render: SttToolView },
 
   rag_search: { label: 'RAG Search', render: RagSearchToolView },
+  // The tool Chat's agent actually uses to search every accessible corpus
+  // (see seshat-backend internal/knowledge/tool) - same result shape, so it
+  // shares RagSearchToolView's source cards.
+  knowledge_search: { label: 'Knowledge Search', groupable: false, render: RagSearchToolView, snippet: (t) => compact(str(t, 'query'), 40) },
   rag_ingest: { label: 'Ingest', silent: true, snippet: (t) => str(t, 'corpus_id') },
 
   // Internal discovery & control.
