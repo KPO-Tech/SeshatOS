@@ -1,9 +1,17 @@
+import pytest
 from fpdf import FPDF
 
 from seshat_intelligence.providers.docling import DoclingProvider
-from seshat_intelligence.providers.marker import MarkerProvider
 
 SAMPLE_MARKDOWN = b"# Provider Test\n\nChecking the **DocumentProvider** abstraction end to end.\n"
+
+
+def _marker_provider():
+    # Marker is an optional install (see pyproject extras), so its tests skip without it.
+    pytest.importorskip("marker")
+    from seshat_intelligence.providers.marker import MarkerProvider
+
+    return MarkerProvider()
 
 
 def _sample_pdf_bytes() -> bytes:
@@ -27,7 +35,7 @@ def test_docling_provider_converts_markdown():
 
 
 def test_marker_provider_converts_pdf():
-    provider = MarkerProvider()
+    provider = _marker_provider()
     result = provider.convert_bytes("sample.pdf", _sample_pdf_bytes())
     assert result.status == "success"
     # Marker's own layout detection classified the first line as a heading
@@ -41,7 +49,7 @@ def test_marker_provider_converts_pdf():
 
 
 def test_marker_provider_rejects_non_pdf():
-    provider = MarkerProvider()
+    provider = _marker_provider()
     result = provider.convert_bytes("sample.md", SAMPLE_MARKDOWN)
     assert result.status == "failure"
     assert result.errors
