@@ -132,7 +132,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
             <span className={cx(sectionLabelClass, 'shrink-0')}>Plan</span>
             <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
               <span
-                className="block h-full rounded-full bg-[var(--color-accent)] transition-[width] duration-200"
+                className="block h-full rounded-full bg-[var(--accent-primary)] transition-[width] duration-200"
                 style={{ width: `${Math.round((plan.completedCount / plan.items.length) * 100)}%` }}
               />
             </span>
@@ -153,7 +153,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
                     <span
                       className={cx(
                         'mt-1.5 size-[7px] shrink-0 rounded-full',
-                        item.status === 'in_progress' ? 'bg-[var(--color-accent)]' : item.status === 'failed' ? 'bg-app-error' : 'bg-app-text-muted',
+                        item.status === 'in_progress' ? 'bg-[var(--accent-primary)]' : item.status === 'failed' ? 'bg-app-error' : 'bg-app-text-muted',
                       )}
                     />
                   )}
@@ -165,7 +165,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
               {planArtifact && (
                 <button
                   type="button"
-                  className="mt-1 flex w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[10.5px] font-semibold text-[var(--color-accent)] hover:underline"
+                  className="mt-1 flex w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[10.5px] font-semibold text-[var(--accent-primary)] hover:underline"
                   onClick={() => openRightPanel({ kind: 'markdown', title: 'Implementation Plan', sessionId, markdown: planArtifact })}
                 >
                   View full plan
@@ -180,7 +180,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
           bezel, inset frame) so it reads as "the computer" at a glance. Stats
           is home; Web and Tools are its two pages; a focused tool's live
           detail takes over the same frame from Tools. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[color-mix(in_srgb,var(--color-bg)_92%,black)]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[color-mix(in_srgb,var(--surface-root)_92%,black)]">
         <div className="flex shrink-0 items-center gap-2 border-b border-app-border-subtle bg-app-surface px-3 py-2">
           {focusedTool ? (
             <>
@@ -188,7 +188,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
                 {toolIcon(focusedTool.name)}
               </span>
               <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">{toolLabel(focusedTool.name)}</span>
-              <span className={cx('shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', focusedTool.source === 'live' ? 'text-[var(--color-accent)]' : 'text-app-text-muted')}>
+              <span className={cx('shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', focusedTool.source === 'live' ? 'text-[var(--accent-primary)]' : 'text-app-text-muted')}>
                 {focusedTool.source === 'live' ? 'live' : 'past'}
               </span>
             </>
@@ -218,7 +218,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
             type="button"
             aria-label="Home"
             disabled={view === 'home' && !focusedTool}
-            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
+            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
             onClick={goHome}
           >
             <Home size={12} />
@@ -234,7 +234,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
                 </p>
                 <button
                   type="button"
-                  className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold text-[var(--color-accent)] hover:underline"
+                  className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold text-[var(--accent-primary)] hover:underline"
                   onClick={() => openSubagentPanel(focusedTool)}
                 >
                   Open sub-agent view
@@ -269,7 +269,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
                       <span className="truncate text-[11.5px] font-semibold text-app-text">{site.domain}</span>
                       <span className="truncate text-[10.5px] text-app-text-muted">{site.url}</span>
                     </span>
-                    <span className={cx('ml-auto shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', site.status === 'running' || site.status === 'pending' ? 'text-[var(--color-accent)]' : 'text-app-text-muted')}>
+                    <span className={cx('ml-auto shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', site.status === 'running' || site.status === 'pending' ? 'text-[var(--accent-primary)]' : 'text-app-text-muted')}>
                       {site.source === 'live' ? 'live' : 'past'}
                     </span>
                   </button>
@@ -295,7 +295,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
                       className={cx(
                         'grid w-full cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-app-md border border-l-[3px] border-app-border-subtle bg-white/[0.02] p-2 text-left text-inherit',
                         'hover:border-r-[rgba(239,124,47,0.28)] hover:border-t-[rgba(239,124,47,0.28)] hover:border-b-[rgba(239,124,47,0.28)] hover:bg-[rgba(239,124,47,0.055)]',
-                        isSubagent ? '!border-l-[var(--color-role-router)]' : isRunning ? '!border-l-[var(--color-accent)]' : '!border-l-transparent',
+                        isSubagent ? '!border-l-[var(--color-role-router)]' : isRunning ? '!border-l-[var(--accent-primary)]' : '!border-l-transparent',
                       )}
                       onClick={() => setFocusedId(tool.id)}
                     >

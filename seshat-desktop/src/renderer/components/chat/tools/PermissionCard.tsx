@@ -40,9 +40,9 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
   }
 
   return (
-    <div className="flex w-full flex-col gap-2.5 rounded-[11px] border border-[color-mix(in_srgb,var(--color-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_5%,transparent)] px-[11px] py-2.5">
+    <div className="flex w-full flex-col gap-2.5 rounded-[11px] border border-[color-mix(in_srgb,var(--accent-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-warning)_5%,transparent)] px-[11px] py-2.5">
       <div className="flex items-start gap-2.5">
-        <div className="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]">
+        <div className="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[color-mix(in_srgb,var(--accent-warning)_12%,transparent)] text-[var(--accent-warning)]">
           <Caution size={13} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
@@ -62,7 +62,7 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
       <div className="flex justify-end gap-1.5">
         {onDeny && (
           <button
-            className="cursor-pointer whitespace-nowrap rounded-md border border-app-border-subtle bg-transparent px-[11px] py-1 text-[11px] font-semibold text-app-text-muted transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-app-text"
+            className="cursor-pointer whitespace-nowrap rounded-md border border-app-border-subtle bg-transparent px-[11px] py-1 text-[11px] font-semibold text-app-text-muted transition-all duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text"
             type="button"
             onClick={() => onDeny(tool.id)}
           >
@@ -72,7 +72,7 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
         {onApprove && (
           <>
             <button
-              className="cursor-pointer whitespace-nowrap rounded-md border border-app-border-subtle bg-transparent px-[11px] py-1 text-[11px] font-semibold text-app-text-muted transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-app-text"
+              className="cursor-pointer whitespace-nowrap rounded-md border border-app-border-subtle bg-transparent px-[11px] py-1 text-[11px] font-semibold text-app-text-muted transition-all duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text"
               type="button"
               onClick={handleAlwaysAllow}
             >

@@ -187,7 +187,7 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
           />
           {loading ? <Sync size={11} className="animate-spin text-app-text-muted" /> : null}
           <button
-            className="flex shrink-0 cursor-pointer items-center rounded-[5px] border border-app-border bg-app-surface px-1.5 py-[3px] text-app-text-muted hover:bg-[var(--color-hover)]"
+            className="flex shrink-0 cursor-pointer items-center rounded-[5px] border border-app-border bg-app-surface px-1.5 py-[3px] text-app-text-muted hover:bg-[var(--surface-hover)]"
             onClick={onClose}
             tabIndex={-1}
             type="button"

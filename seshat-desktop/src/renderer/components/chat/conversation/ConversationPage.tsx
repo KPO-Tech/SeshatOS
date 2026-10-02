@@ -153,7 +153,7 @@ export function ConversationPage() {
     if (sessionLoading) {
       return (
         <div className="conv-empty">
-          <span className="size-5 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)]" />
+          <span className="size-5 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent-primary)]" />
         </div>
       )
     }

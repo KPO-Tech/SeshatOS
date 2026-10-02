@@ -13,7 +13,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function lineIcon(toolName: string, isRunning: boolean, isError: boolean) {
   if (isRunning) {
-    return <span className="size-2.5 shrink-0 animate-spin rounded-full border-[1.5px] border-[rgba(239,124,47,0.2)] border-t-[var(--color-accent)]" />
+    return <span className="size-2.5 shrink-0 animate-spin rounded-full border-[1.5px] border-[rgba(239,124,47,0.2)] border-t-[var(--accent-primary)]" />
   }
   return (
     <span className={cx('relative inline-flex shrink-0 items-center justify-center text-app-text-muted', isError && 'text-app-text-secondary')}>
@@ -107,7 +107,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
     <div
       className={cx(
         'inline-flex w-full select-none items-center gap-1.5 rounded-md py-[3px] pr-[5px] text-[10.5px] leading-snug text-app-text-muted',
-        clickable ? 'cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-surface)_42%,transparent)] hover:text-app-text-secondary' : 'cursor-default',
+        clickable ? 'cursor-pointer hover:bg-[color-mix(in_srgb,var(--surface-panel)_42%,transparent)] hover:text-app-text-secondary' : 'cursor-default',
       )}
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}

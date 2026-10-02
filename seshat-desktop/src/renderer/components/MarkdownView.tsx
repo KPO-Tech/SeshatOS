@@ -61,7 +61,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         </button>
         <button
           type="button"
-          className="inline-flex cursor-pointer items-center gap-[5px] rounded-md border border-app-border-subtle bg-transparent px-[9px] py-1 text-[11px] text-app-text-muted transition-[background,border-color,color] duration-100 hover:border-app-border hover:bg-[var(--color-hover)] hover:text-app-text"
+          className="inline-flex cursor-pointer items-center gap-[5px] rounded-md border border-app-border-subtle bg-transparent px-[9px] py-1 text-[11px] text-app-text-muted transition-[background,border-color,color] duration-100 hover:border-app-border hover:bg-[var(--surface-hover)] hover:text-app-text"
           onClick={copy}
         >
           {copied ? <Check size={12} /> : <Copy size={12} />}

@@ -111,10 +111,10 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
   const hasCustomAnswer = Boolean(customAnswer.trim())
 
   return (
-    <div className="mx-auto mb-2.5 flex w-[min(780px,calc(100%-32px))] shrink-0 flex-col overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--color-primary)_26%,var(--color-border-subtle))] bg-[color-mix(in_srgb,var(--color-surface-elevated)_62%,var(--color-bg))] shadow-[0_14px_34px_rgba(31,27,23,0.07)]">
+    <div className="mx-auto mb-2.5 flex w-[min(780px,calc(100%-32px))] shrink-0 flex-col overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_26%,var(--border-soft))] bg-[color-mix(in_srgb,var(--surface-muted)_62%,var(--surface-root))] shadow-[0_14px_34px_rgba(31,27,23,0.07)]">
       <div className="flex min-h-12 items-center justify-between gap-3.5 border-b border-app-border-subtle px-3 py-[9px] max-[760px]:flex-col max-[760px]:items-start">
         <div className="inline-flex min-w-0 items-center gap-2 text-[13px] font-bold text-app-text">
-          <span className="inline-flex size-6 items-center justify-center rounded-md border border-[color-mix(in_srgb,var(--color-primary)_22%,var(--color-border-subtle))] bg-[color-mix(in_srgb,var(--color-primary)_10%,var(--color-bg))] text-[14px] font-[750] text-[var(--color-accent)]">?</span>
+          <span className="inline-flex size-6 items-center justify-center rounded-md border border-[color-mix(in_srgb,var(--accent-primary)_22%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_10%,var(--surface-root))] text-[14px] font-[750] text-[var(--accent-primary)]">?</span>
           <span>Ask User</span>
         </div>
         {questions.length > 1 && (
@@ -129,10 +129,10 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
                     'relative inline-flex max-w-[120px] items-center gap-1 truncate py-0.5 pl-[18px] pr-2 text-[10px] font-[650] [&+&]:border-l [&+&]:border-app-border-subtle',
                     "before:absolute before:left-1 before:size-2 before:rounded-full before:border before:content-['']",
                     isCurrent
-                      ? 'text-[var(--color-accent)] before:border-app-primary before:bg-app-primary'
+                      ? 'text-[var(--accent-primary)] before:border-app-primary before:bg-app-primary'
                       : isDone
-                        ? 'text-app-success before:border-[color-mix(in_srgb,var(--color-success)_45%,var(--color-border))] before:bg-[color-mix(in_srgb,var(--color-success)_18%,var(--color-bg))]'
-                        : 'text-app-text-muted before:border-[var(--color-border)] before:bg-app-bg',
+                        ? 'text-app-success before:border-[color-mix(in_srgb,var(--accent-success)_45%,var(--border-strong))] before:bg-[color-mix(in_srgb,var(--accent-success)_18%,var(--surface-root))]'
+                        : 'text-app-text-muted before:border-[var(--border-strong)] before:bg-app-bg',
                   )}
                   title={q.header || q.question}
                 >
@@ -151,7 +151,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
         <div className="text-[13px] font-[650] leading-[1.4] text-app-text">{question.question}</div>
 
         {pastAnswer !== undefined ? (
-          <div className="grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-2 rounded-[5px] bg-[color-mix(in_srgb,var(--color-success)_8%,var(--color-bg))] px-2 py-1.5">
+          <div className="grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-2 rounded-[5px] bg-[color-mix(in_srgb,var(--accent-success)_8%,var(--surface-root))] px-2 py-1.5">
             <span className="text-[9px] font-bold uppercase tracking-[0.05em] text-app-success">Your answer</span>
             <span className="min-w-0 truncate text-[11px] text-app-text">{pastAnswer}</span>
           </div>
@@ -168,15 +168,15 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
                       className={cx(
                         'grid min-h-[42px] w-full grid-cols-[18px_minmax(0,1fr)] items-center gap-2.5 rounded-[7px] border px-2.5 py-2 text-left transition-[border-color,background,box-shadow] duration-[120ms] max-[760px]:items-start',
                         selected
-                          ? 'border-[color-mix(in_srgb,var(--color-primary)_34%,var(--color-border-subtle))] bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-bg))]'
-                          : 'border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_92%,var(--color-surface))] hover:border-[color-mix(in_srgb,var(--color-primary)_18%,var(--color-border-subtle))] hover:bg-[color-mix(in_srgb,var(--color-surface-elevated)_38%,var(--color-bg))]',
+                          ? 'border-[color-mix(in_srgb,var(--accent-primary)_34%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--surface-root))]'
+                          : 'border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_92%,var(--surface-panel))] hover:border-[color-mix(in_srgb,var(--accent-primary)_18%,var(--border-soft))] hover:bg-[color-mix(in_srgb,var(--surface-muted)_38%,var(--surface-root))]',
                       )}
                       onClick={() => toggleValue(option.label)}
                     >
                       <span
                         className={cx(
                           'size-[13px] shrink-0 rounded-full border-[1.5px]',
-                          selected ? 'border-[var(--color-primary)] bg-[var(--color-primary)] shadow-[inset_0_0_0_4px_var(--color-bg)]' : 'border-[var(--color-border)] bg-app-bg',
+                          selected ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] shadow-[inset_0_0_0_4px_var(--surface-root)]' : 'border-[var(--border-strong)] bg-app-bg',
                         )}
                         aria-hidden="true"
                       />
@@ -193,14 +193,14 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
             )}
             <label
               className={cx(
-                'grid min-h-[38px] grid-cols-[18px_minmax(0,1fr)] items-center gap-2.5 rounded-[7px] border px-2.5 py-1.5 transition-[border-color,background] duration-[120ms] focus-within:border-[color-mix(in_srgb,var(--color-primary)_34%,var(--color-border-subtle))] focus-within:bg-[color-mix(in_srgb,var(--color-primary)_6%,var(--color-bg))]',
-                'border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_92%,var(--color-surface))]',
+                'grid min-h-[38px] grid-cols-[18px_minmax(0,1fr)] items-center gap-2.5 rounded-[7px] border px-2.5 py-1.5 transition-[border-color,background] duration-[120ms] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_34%,var(--border-soft))] focus-within:bg-[color-mix(in_srgb,var(--accent-primary)_6%,var(--surface-root))]',
+                'border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_92%,var(--surface-panel))]',
               )}
             >
               <span
                 className={cx(
                   'size-[13px] shrink-0 rounded-full border-[1.5px]',
-                  hasCustomAnswer ? 'border-[var(--color-primary)] bg-[var(--color-primary)] shadow-[inset_0_0_0_4px_var(--color-bg)]' : 'border-[var(--color-border)] bg-app-bg',
+                  hasCustomAnswer ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] shadow-[inset_0_0_0_4px_var(--surface-root)]' : 'border-[var(--border-strong)] bg-app-bg',
                 )}
                 aria-hidden="true"
               />
@@ -223,7 +223,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
       <div className="flex justify-between gap-2 px-3 pb-3">
         <button
           type="button"
-          className="min-w-16 cursor-pointer rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_76%,var(--color-surface))] px-3 py-1.5 text-[11px] font-[650] text-app-text-muted disabled:cursor-default disabled:opacity-40"
+          className="min-w-16 cursor-pointer rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_76%,var(--surface-panel))] px-3 py-1.5 text-[11px] font-[650] text-app-text-muted disabled:cursor-default disabled:opacity-40"
           onClick={goPrev}
           disabled={viewIndex === 0}
         >

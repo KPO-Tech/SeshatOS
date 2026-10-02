@@ -85,7 +85,7 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
               key={tab.id}
               type="button"
               className={[
-                'flex max-w-[180px] shrink-0 cursor-pointer items-center gap-1.5 rounded-[7px] border border-transparent px-2 py-1.5 text-left text-[var(--font-size-2xs)] font-semibold text-app-text-muted transition-colors duration-150 hover:bg-[var(--color-hover)] hover:text-app-text',
+                'flex max-w-[180px] shrink-0 cursor-pointer items-center gap-1.5 rounded-[7px] border border-transparent px-2 py-1.5 text-left text-[var(--font-size-2xs)] font-semibold text-app-text-muted transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text',
                 tab.id === state?.activeTabId ? 'border-app-border-subtle bg-app-bg text-app-text' : '',
               ].join(' ')}
               onClick={() => void browserApi?.switchTab(contextId, tab.id).then(setState)}
@@ -94,7 +94,7 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
               <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{tab.label}</span>
               {tabs.length > 1 && (
                 <span
-                  className="ml-1 flex size-[18px] shrink-0 items-center justify-center rounded-[5px] text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text"
+                  className="ml-1 flex size-[18px] shrink-0 items-center justify-center rounded-[5px] text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
                   role="button"
                   aria-label="Close tab"
                   onClick={(event) => closeTab(event, tab.id)}
@@ -104,19 +104,19 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
               )}
             </button>
           ))}
-          <button type="button" className="flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-[7px] border border-app-border-subtle bg-app-bg text-app-text-secondary transition-colors duration-150 hover:bg-[var(--color-hover)] hover:text-app-text" onClick={() => void browserApi?.newTab(contextId).then(setState)} aria-label="New tab">
+          <button type="button" className="flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-[7px] border border-app-border-subtle bg-app-bg text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={() => void browserApi?.newTab(contextId).then(setState)} aria-label="New tab">
             <AddOne size={12} />
           </button>
         </div>
       )}
       <div className="flex shrink-0 items-center gap-1 border-b border-app-border-subtle bg-app-surface px-2 py-1.5">
-        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--color-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.back(contextId).then(setState)} disabled={!activeTab?.canGoBack} aria-label="Back">
+        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.back(contextId).then(setState)} disabled={!activeTab?.canGoBack} aria-label="Back">
           <Left size={12} />
         </button>
-        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--color-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.forward(contextId).then(setState)} disabled={!activeTab?.canGoForward} aria-label="Forward">
+        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.forward(contextId).then(setState)} disabled={!activeTab?.canGoForward} aria-label="Forward">
           <Right size={12} />
         </button>
-        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--color-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.reload(contextId).then(setState)} aria-label="Reload">
+        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.reload(contextId).then(setState)} aria-label="Reload">
           <Refresh size={12} />
         </button>
         <form

@@ -247,9 +247,9 @@ export function ChatInput({
   useEffect(() => { setSlashIdx(0) }, [slashQuery])
 
   return (
-    <div className="relative rounded-[18px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--color-surface)_92%,var(--color-bg))] px-3.5 pb-2.5 pt-3 shadow-[0_14px_34px_rgba(31,27,23,0.09)] transition-[border-color,box-shadow] duration-[180ms] ease-in-out focus-within:border-[color-mix(in_srgb,var(--color-primary)_42%,var(--color-border-subtle))] focus-within:shadow-[0_18px_42px_rgba(31,27,23,0.12),0_0_0_2px_color-mix(in_srgb,var(--color-primary)_14%,transparent)]">
+    <div className="relative rounded-[18px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] px-3.5 pb-2.5 pt-3 shadow-[0_14px_34px_rgba(31,27,23,0.09)] transition-[border-color,box-shadow] duration-[180ms] ease-in-out focus-within:border-[color-mix(in_srgb,var(--accent-primary)_42%,var(--border-soft))] focus-within:shadow-[0_18px_42px_rgba(31,27,23,0.12),0_0_0_2px_color-mix(in_srgb,var(--accent-primary)_14%,transparent)]">
       {showSlash && filtered.length > 0 && (
-        <div className="absolute inset-x-0 bottom-[calc(100%+8px)] z-[200] max-h-[280px] overflow-y-auto overflow-x-hidden rounded-[10px] border border-[var(--color-border)] bg-app-bg shadow-[0_8px_32px_rgba(0,0,0,0.18)]" ref={dropdownRef}>
+        <div className="absolute inset-x-0 bottom-[calc(100%+8px)] z-[200] max-h-[280px] overflow-y-auto overflow-x-hidden rounded-[10px] border border-[var(--border-strong)] bg-app-bg shadow-[0_8px_32px_rgba(0,0,0,0.18)]" ref={dropdownRef}>
           {filtered.map((sk, i) => (
             <button
               key={sk.Name}
@@ -260,7 +260,7 @@ export function ChatInput({
               onMouseDown={e => { e.preventDefault(); selectSkill(sk) }}
               onMouseEnter={() => setSlashIdx(i)}
             >
-              <span className="shrink-0 font-mono text-[13px] font-bold text-[var(--color-cta)]">/{sk.Name}</span>
+              <span className="shrink-0 font-mono text-[13px] font-bold text-[var(--accent-primary)]">/{sk.Name}</span>
               {sk.Description && <span className="truncate text-[12px] text-app-text-muted">{sk.Description}</span>}
             </button>
           ))}
@@ -269,7 +269,7 @@ export function ChatInput({
 
       {/* Corpus chip */}
       {selectedCorpus && onCorpusChange && (
-        <div className="mb-2 inline-flex items-center gap-1.5 rounded-[7px] border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] py-[3px] pl-1.5 pr-2 text-[12px] font-semibold text-[var(--color-primary)]">
+        <div className="mb-2 inline-flex items-center gap-1.5 rounded-[7px] border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] py-[3px] pl-1.5 pr-2 text-[12px] font-semibold text-[var(--accent-primary)]">
           <span className="text-[13px] leading-none">@</span>
           <span className="max-w-[200px] truncate">{selectedCorpus.name}</span>
           <button
@@ -326,7 +326,7 @@ export function ChatInput({
       <div className="mt-2.5 flex items-center justify-between gap-2.5" ref={selectorsRef}>
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <button
-            className="flex size-7 items-center justify-center rounded-[7px] border-0 bg-transparent p-0 text-app-text-muted transition-[color,transform] duration-150 hover:bg-[var(--color-hover)] hover:text-app-text-secondary disabled:cursor-progress disabled:opacity-55"
+            className="flex size-7 items-center justify-center rounded-[7px] border-0 bg-transparent p-0 text-app-text-muted transition-[color,transform] duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text-secondary disabled:cursor-progress disabled:opacity-55"
             type="button"
             aria-label="Attach files"
             disabled={isUploadingAttachments}
@@ -347,7 +347,7 @@ export function ChatInput({
           />
           <div className="flex min-w-0 max-w-[180px] items-center gap-1">
             <button
-              className={cx(TOOL_ICON_CSS, projectPath && '!text-[var(--color-primary)]')}
+              className={cx(TOOL_ICON_CSS, projectPath && '!text-[var(--accent-primary)]')}
               aria-label={projectPath ? `Project: ${projectPath}` : 'Set project folder'}
               onClick={async () => {
                 const result = await window.nexus?.dialog?.openDirectory?.()
@@ -373,19 +373,19 @@ export function ChatInput({
           </div>
           <div className="relative" ref={corpusDropdownRef}>
             <button
-              className={cx(TOOL_ICON_CSS, selectedCorpusId && '!text-[var(--color-primary)]')}
+              className={cx(TOOL_ICON_CSS, selectedCorpusId && '!text-[var(--accent-primary)]')}
               aria-label="Attach knowledge base"
               onClick={() => setCorpusDropdownOpen(v => !v)}
             >
               <AtSign size={13} />
             </button>
             {corpusDropdownOpen && (
-              <div className="absolute bottom-[calc(100%+8px)] left-0 z-[200] flex max-w-[280px] min-w-[220px] flex-col overflow-hidden rounded-[10px] border border-[var(--color-border)] bg-app-bg shadow-[0_8px_28px_rgba(0,0,0,0.18)]">
+              <div className="absolute bottom-[calc(100%+8px)] left-0 z-[200] flex max-w-[280px] min-w-[220px] flex-col overflow-hidden rounded-[10px] border border-[var(--border-strong)] bg-app-bg shadow-[0_8px_28px_rgba(0,0,0,0.18)]">
                 <div className="border-b border-app-border-subtle px-3.5 pb-1.5 pt-2 text-[11px] font-extrabold uppercase tracking-[0.06em] text-app-text-muted">Knowledge bases</div>
                 {corpusLoadError ? (
                   <div className="flex flex-col items-start gap-1.5 p-3.5 text-[13px] text-app-text-muted">
                     <span>Couldn't load knowledge bases.</span>
-                    <button type="button" onClick={loadCorpora} className="font-semibold text-[var(--color-primary)] hover:underline">
+                    <button type="button" onClick={loadCorpora} className="font-semibold text-[var(--accent-primary)] hover:underline">
                       Retry
                     </button>
                   </div>
@@ -406,7 +406,7 @@ export function ChatInput({
                         setCorpusDropdownOpen(false)
                       }}
                     >
-                      <span className={cx(selected && 'font-bold text-[var(--color-primary)]')}>{c.name}</span>
+                      <span className={cx(selected && 'font-bold text-[var(--accent-primary)]')}>{c.name}</span>
                       {c.chunk_count > 0 && <span className="whitespace-nowrap text-[11px] text-app-text-muted">{c.chunk_count} chunks</span>}
                     </button>
                   )
@@ -439,8 +439,8 @@ export function ChatInput({
           {onExecutionModeChange && (
             <button
               className={cx(
-                'flex h-7 shrink-0 cursor-pointer items-center gap-[5px] rounded-app-md border-0 bg-transparent px-2 text-[11px] font-semibold transition-colors duration-150 hover:bg-[var(--color-hover)]',
-                executionMode === 'plan' ? 'text-[#60a5fa]' : 'text-[var(--color-primary)]',
+                'flex h-7 shrink-0 cursor-pointer items-center gap-[5px] rounded-app-md border-0 bg-transparent px-2 text-[11px] font-semibold transition-colors duration-150 hover:bg-[var(--surface-hover)]',
+                executionMode === 'plan' ? 'text-[#60a5fa]' : 'text-[var(--accent-primary)]',
               )}
               onClick={() => {
                 const current = executionMode === 'plan' ? 'plan' : 'execute'
@@ -449,7 +449,7 @@ export function ChatInput({
               }}
               type="button"
             >
-              <span className={cx('size-[5px] shrink-0 rounded-full', executionMode === 'plan' ? 'bg-[#60a5fa]' : 'bg-[var(--color-primary)]')} />
+              <span className={cx('size-[5px] shrink-0 rounded-full', executionMode === 'plan' ? 'bg-[#60a5fa]' : 'bg-[var(--accent-primary)]')} />
               <span>{EXECUTION_LABEL[executionMode === 'plan' ? 'plan' : 'execute']}</span>
             </button>
           )}
@@ -506,7 +506,7 @@ export function ChatInput({
           </button>
           {isStreaming ? (
             <button
-              className="flex size-[30px] items-center justify-center rounded-[9px] border border-[var(--color-primary-hover)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition-all duration-200 hover:bg-[var(--color-primary-hover)]"
+              className="flex size-[30px] items-center justify-center rounded-[9px] border border-[var(--accent-hover)] bg-[var(--accent-subtle)] text-[var(--accent-primary)] transition-all duration-200 hover:bg-[var(--accent-hover)]"
               onClick={onStop}
               type="button"
               aria-label="Stop"
@@ -518,8 +518,8 @@ export function ChatInput({
               className={cx(
                 'flex size-[30px] items-center justify-center rounded-[9px] border-0 transition-all duration-200',
                 canSend
-                  ? 'cursor-pointer bg-[var(--color-primary)] text-white hover:-translate-y-px hover:bg-[var(--color-primary-hover)]'
-                  : 'cursor-not-allowed bg-[color-mix(in_srgb,var(--color-surface)_82%,var(--color-bg))] text-app-text-muted',
+                  ? 'cursor-pointer bg-[var(--accent-primary)] text-white hover:-translate-y-px hover:bg-[var(--accent-hover)]'
+                  : 'cursor-not-allowed bg-[color-mix(in_srgb,var(--surface-panel)_82%,var(--surface-root))] text-app-text-muted',
               )}
               onClick={() => canSend && onSend()}
               type="button"

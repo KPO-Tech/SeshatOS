@@ -15,8 +15,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 const THUMB_CSS = 'relative flex h-full w-full flex-col items-center justify-center gap-[3px] overflow-hidden rounded-app-md border bg-app-surface p-1 text-app-text-secondary cursor-pointer'
 
 function borderClassFor(file: ChatAttachment): string {
-  if (isImageAttachment(file)) return 'border-[color-mix(in_srgb,var(--color-primary)_34%,transparent)]'
-  if (file.category === 'documents') return 'border-[color-mix(in_srgb,var(--color-success)_32%,transparent)]'
+  if (isImageAttachment(file)) return 'border-[color-mix(in_srgb,var(--accent-primary)_34%,transparent)]'
+  if (file.category === 'documents') return 'border-[color-mix(in_srgb,var(--accent-success)_32%,transparent)]'
   return 'border-app-border-subtle'
 }
 
@@ -164,13 +164,13 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
           </span>
         )}
         {isDocumentFailed && !isFailed && (
-          <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-full bg-[var(--color-error)]" />
+          <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-full bg-[var(--accent-danger)]" />
         )}
       </button>
       {onRemove && (
         <button
           type="button"
-          className="absolute -right-1.5 -top-1.5 z-[2] flex size-4 items-center justify-center rounded-full border border-app-border-subtle bg-app-surface p-0 text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text-secondary"
+          className="absolute -right-1.5 -top-1.5 z-[2] flex size-4 items-center justify-center rounded-full border border-app-border-subtle bg-app-surface p-0 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary"
           onMouseDown={(e) => { e.preventDefault(); onRemove(file.id) }}
           aria-label="Remove attachment"
         >

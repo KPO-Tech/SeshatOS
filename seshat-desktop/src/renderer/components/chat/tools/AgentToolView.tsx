@@ -17,15 +17,15 @@ const STATUS_BORDER_CSS: Record<ToolStatus, string> = {
 }
 
 const STATUS_ICON_CSS: Record<ToolStatus, string> = {
-  running: 'bg-[rgba(239,124,47,0.12)] text-[var(--color-accent)]',
+  running: 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]',
   completed: 'bg-[rgba(var(--color-success-rgb),0.12)] text-app-success',
   failed: 'bg-[rgba(var(--color-error-rgb),0.12)] text-app-error',
-  pending: 'bg-[rgba(239,124,47,0.12)] text-[var(--color-accent)]',
-  awaiting_approval: 'bg-[rgba(239,124,47,0.12)] text-[var(--color-accent)]',
+  pending: 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]',
+  awaiting_approval: 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]',
 }
 
 const STATUS_TEXT_CSS: Record<ToolStatus, string> = {
-  running: 'text-[var(--color-accent)]',
+  running: 'text-[var(--accent-primary)]',
   completed: 'text-app-success',
   failed: 'text-app-error',
   pending: 'text-app-text-muted',
@@ -126,7 +126,7 @@ function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
   return (
     <div
       className={cx(
-        'flex min-w-[220px] max-w-full flex-1 basis-0 cursor-pointer flex-col overflow-hidden rounded-lg border bg-app-surface transition-[border-color,background] duration-150 ease-in-out hover:border-[rgba(239,124,47,0.3)] hover:bg-[var(--color-hover)]',
+        'flex min-w-[220px] max-w-full flex-1 basis-0 cursor-pointer flex-col overflow-hidden rounded-lg border bg-app-surface transition-[border-color,background] duration-150 ease-in-out hover:border-[rgba(239,124,47,0.3)] hover:bg-[var(--surface-hover)]',
         STATUS_BORDER_CSS[derivedStatus],
       )}
       role="button"
@@ -175,7 +175,7 @@ function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
       </div>
 
       <div className="flex items-center justify-between border-t border-app-border-subtle px-[9px] py-1.5">
-        <span className="flex items-center gap-[3px] text-[10px] font-[650] text-[var(--color-accent)]">View activity →</span>
+        <span className="flex items-center gap-[3px] text-[10px] font-[650] text-[var(--accent-primary)]">View activity →</span>
         <div className="flex items-center gap-1.5">
           {tokens > 0 && (
             <span className="text-[10px] text-app-text-muted">{fmtTokens(tokens)}</span>

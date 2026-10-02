@@ -17,20 +17,20 @@ function cx(...classes: Array<string | false | null | undefined>) {
 type SubagentLifecycle = 'running' | 'completed' | 'failed'
 
 const STATUS_DOT_CSS: Record<SubagentLifecycle, string> = {
-  running: 'bg-[var(--color-accent)] [animation:mode-dot-pulse_1.4s_ease-in-out_infinite]',
+  running: 'bg-[var(--accent-primary)] [animation:mode-dot-pulse_1.4s_ease-in-out_infinite]',
   completed: 'bg-app-success',
   failed: 'bg-app-error',
 }
 
 const STATUS_TEXT_CSS: Record<SubagentLifecycle, string> = {
-  running: 'text-[var(--color-accent)]',
+  running: 'text-[var(--accent-primary)]',
   completed: 'text-app-success',
   failed: 'text-app-error',
 }
 
 const ACTIVITY_DOT_CSS: Record<ToolActivity['stage'], string> = {
-  pending: 'bg-[var(--color-accent)]',
-  running: 'bg-[var(--color-accent)]',
+  pending: 'bg-[var(--accent-primary)]',
+  running: 'bg-[var(--accent-primary)]',
   completed: 'bg-app-success',
   failed: 'bg-app-error',
 }
@@ -101,7 +101,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
     return (
       <div className="flex h-full flex-col overflow-hidden">
         <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
-          <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--color-accent)] [animation:spin_0.9s_linear_infinite]" />
+          <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
           <span className="text-[11px]">Waiting for sub-agent…</span>
         </div>
       </div>
@@ -123,7 +123,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
           {subagent.status === 'running' && subagent.agentId && (
             <button
               type="button"
-              className="ml-auto flex cursor-pointer items-center gap-1 rounded-full border border-[var(--color-border)] bg-transparent py-[3px] pl-[7px] pr-2 text-[10px] font-semibold tracking-[0.02em] text-app-text-secondary transition-[color,border-color,background] duration-150 disabled:cursor-default disabled:opacity-60 enabled:hover:border-app-error enabled:hover:bg-[rgba(var(--color-error-rgb),0.08)] enabled:hover:text-app-error"
+              className="ml-auto flex cursor-pointer items-center gap-1 rounded-full border border-[var(--border-strong)] bg-transparent py-[3px] pl-[7px] pr-2 text-[10px] font-semibold tracking-[0.02em] text-app-text-secondary transition-[color,border-color,background] duration-150 disabled:cursor-default disabled:opacity-60 enabled:hover:border-app-error enabled:hover:bg-[rgba(var(--color-error-rgb),0.08)] enabled:hover:text-app-error"
               disabled={cancelling}
               onClick={handleCancel}
             >
@@ -161,7 +161,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
           <button
             className={cx(
               'flex flex-1 items-center justify-center gap-1 border-0 border-b-2 border-b-transparent bg-transparent py-1.5 text-[10px] font-semibold text-app-text-muted transition-colors duration-150 cursor-pointer',
-              tab === 'activity' ? 'border-b-[var(--color-accent)] text-[var(--color-accent)]' : 'hover:text-app-text-secondary',
+              tab === 'activity' ? 'border-b-[var(--accent-primary)] text-[var(--accent-primary)]' : 'hover:text-app-text-secondary',
             )}
             type="button"
             onClick={() => handleTabClick('activity')}
@@ -172,7 +172,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
             className={cx(
               'flex flex-1 items-center justify-center gap-1 border-0 border-b-2 border-b-transparent bg-transparent py-1.5 text-[10px] font-semibold text-app-text-muted transition-colors duration-150',
               tab === 'output'
-                ? 'cursor-pointer border-b-[var(--color-accent)] text-[var(--color-accent)]'
+                ? 'cursor-pointer border-b-[var(--accent-primary)] text-[var(--accent-primary)]'
                 : hasTerminalOutputState ? 'cursor-pointer hover:text-app-text-secondary' : 'cursor-not-allowed opacity-[0.38]',
             )}
             type="button"
@@ -190,7 +190,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
           <div className="flex flex-1 flex-col gap-2 p-2.5">
             {streaming.length === 0 && subagent.status === 'running' && (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
-                <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--color-accent)] [animation:spin_0.9s_linear_infinite]" />
+                <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
                 <span className="text-[11px]">Agent is starting…</span>
               </div>
             )}
@@ -218,8 +218,8 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
               return <StreamBlockView key={`${toolUseId}-block-${i}`} block={item.block} sessionId={sessionId} />
             })}
             {subagent.activeTool && (
-              <div className="flex items-center gap-1.5 rounded-md border border-[rgba(239,124,47,0.25)] bg-[rgba(239,124,47,0.06)] px-[7px] py-1.5 text-[10px] text-[var(--color-accent)]">
-                <div className="size-3 shrink-0 rounded-full border-2 border-[rgba(239,124,47,0.25)] border-t-[var(--color-accent)] [animation:spin_0.9s_linear_infinite]" />
+              <div className="flex items-center gap-1.5 rounded-md border border-[rgba(239,124,47,0.25)] bg-[rgba(239,124,47,0.06)] px-[7px] py-1.5 text-[10px] text-[var(--accent-primary)]">
+                <div className="size-3 shrink-0 rounded-full border-2 border-[rgba(239,124,47,0.25)] border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
                 <span>
                   <strong>{subagent.activeTool.toolName}</strong>
                   {subagent.activeTool.message ? ` — ${subagent.activeTool.message}` : ''}
@@ -231,7 +231,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
                 <span className="text-[10px] font-bold uppercase text-app-text-muted">Tool log</span>
                 {subagent.activityLog.slice(-10).reverse().map((entry, index) => (
                   <div key={`${entry.toolName}-${entry.startedAt}-${index}`} className="grid grid-cols-[8px_minmax(0,1fr)_auto] items-start gap-[7px] py-1">
-                    <span className={cx('mt-[5px] size-1.5 rounded-full', ACTIVITY_DOT_CSS[entry.stage] ?? 'bg-[var(--color-border)]')} />
+                    <span className={cx('mt-[5px] size-1.5 rounded-full', ACTIVITY_DOT_CSS[entry.stage] ?? 'bg-[var(--border-strong)]')} />
                     <span className="flex min-w-0 flex-col gap-px">
                       <span className="text-[10.5px] font-semibold text-app-text">{entry.toolName.replace(/_/g, ' ')}</span>
                       {entry.message && <span className="truncate text-[10px] text-app-text-muted">{entry.message}</span>}

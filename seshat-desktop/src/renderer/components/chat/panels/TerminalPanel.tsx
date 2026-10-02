@@ -104,7 +104,7 @@ export function TerminalPanel({ sessionId, focusToolId }: { sessionId?: string; 
       >
         {commands.length === 0 ? (
           <div className="flex items-center gap-2 text-app-text-muted">
-            <span className="size-2 rounded-full bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]" />
+            <span className="size-2 rounded-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--accent-primary)]" />
             {connected ? 'Waiting for the agent to run a command...' : 'Connecting...'}
           </div>
         ) : (
@@ -132,7 +132,7 @@ function CommandBlock({ command, showCursor, highlighted }: { command: TerminalC
   return (
     <div
       data-command-id={command.id}
-      className={cx('-mx-2 rounded-md px-2 pb-2 transition-colors duration-500', highlighted && 'bg-[color-mix(in_srgb,var(--color-accent)_16%,transparent)]')}
+      className={cx('-mx-2 rounded-md px-2 pb-2 transition-colors duration-500', highlighted && 'bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)]')}
     >
       <div className="flex items-baseline gap-1.5">
         <PromptLabel cwd={command.cwd} />
@@ -154,7 +154,7 @@ function CommandBlock({ command, showCursor, highlighted }: { command: TerminalC
 
 function PromptLabel({ cwd }: { cwd?: string | null }) {
   return (
-    <span className="shrink-0 whitespace-nowrap font-semibold text-[var(--color-primary)]">
+    <span className="shrink-0 whitespace-nowrap font-semibold text-[var(--accent-primary)]">
       {cwd ? <span className="font-normal text-app-text-muted">{cwd} </span> : null}
       $
     </span>

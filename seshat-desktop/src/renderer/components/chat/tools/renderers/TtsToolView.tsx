@@ -52,7 +52,7 @@ export function TtsToolView({ tool, result }: ToolViewProps) {
           <div className="flex flex-col gap-1.5">
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <audio
-              className="h-9 w-full rounded-md outline-none [accent-color:var(--color-accent)] [&::-webkit-media-controls-panel]:bg-app-surface"
+              className="h-9 w-full rounded-md outline-none [accent-color:var(--accent-primary)] [&::-webkit-media-controls-panel]:bg-app-surface"
               controls
               src={audioSrc}
             />

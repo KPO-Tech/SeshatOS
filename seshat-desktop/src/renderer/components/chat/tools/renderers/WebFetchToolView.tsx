@@ -3,8 +3,8 @@ import { CodeBox, HCARD_HEADER_STAT_CSS, HeaderCard, ProseBox } from '../common'
 import type { ToolViewProps } from '../types'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 
-const FAVICON_CSS = 'inline-flex size-[15px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-surface)_74%,var(--color-bg))]'
-const HOSTNAME_LINK_CSS = 'min-w-0 shrink truncate text-app-text no-underline hover:text-[var(--color-accent)] hover:underline'
+const FAVICON_CSS = 'inline-flex size-[15px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-panel)_74%,var(--surface-root))]'
+const HOSTNAME_LINK_CSS = 'min-w-0 shrink truncate text-app-text no-underline hover:text-[var(--accent-primary)] hover:underline'
 
 export function WebFetchToolView({ tool, result, sessionId, expanded }: ToolViewProps) {
   const url = (tool.input.url as string) ?? ''

@@ -8,7 +8,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
-const SCROLL_THIN = '[scrollbar-width:thin] [scrollbar-color:var(--color-border-subtle)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-thumb]:rounded'
+const SCROLL_THIN = '[scrollbar-width:thin] [scrollbar-color:var(--border-soft)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-thumb]:rounded'
 
 // ─── Backend payload shapes ─────────────────────────────────────────────────
 // Mirrors github.com/KPO-Tech/seshat's edit_file/write_file tool output
@@ -228,15 +228,15 @@ export function DiffView({
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-lg border border-b-0 border-app-border-subtle bg-[rgba(255,255,255,0.03)] px-[9px] py-1.5">
           <span className="min-w-0 flex-1 truncate font-['JetBrains_Mono','Fira_Code',monospace] text-[11px] text-app-text-muted" title={filePath}>{filePath}</span>
           <span className="flex items-center gap-1.5 font-['JetBrains_Mono','Fira_Code',monospace] text-[10px] font-bold">
-            <span className="text-[var(--color-success)]">+{addCount}</span>
-            <span className="text-[var(--color-error)]">−{delCount}</span>
+            <span className="text-[var(--accent-success)]">+{addCount}</span>
+            <span className="text-[var(--accent-danger)]">−{delCount}</span>
           </span>
         </div>
       )}
       {expanded && (
         <div className="flex items-center justify-end gap-1.5 pb-1.5 font-['JetBrains_Mono','Fira_Code',monospace] text-[10px] font-bold">
-          <span className="text-[var(--color-success)]">+{addCount}</span>
-          <span className="text-[var(--color-error)]">−{delCount}</span>
+          <span className="text-[var(--accent-success)]">+{addCount}</span>
+          <span className="text-[var(--accent-danger)]">−{delCount}</span>
         </div>
       )}
       <div
@@ -264,8 +264,8 @@ export function DiffView({
               row.type === 'add' && 'bg-[rgba(var(--color-success-rgb),0.08)]',
             )}
           >
-            <span className="w-[34px] shrink-0 select-none pr-1 text-right text-[var(--color-text-disabled)]">{row.oldLineNo ?? ''}</span>
-            <span className="w-[34px] shrink-0 select-none pr-1 text-right text-[var(--color-text-disabled)]">{row.newLineNo ?? ''}</span>
+            <span className="w-[34px] shrink-0 select-none pr-1 text-right text-[var(--text-muted)]">{row.oldLineNo ?? ''}</span>
+            <span className="w-[34px] shrink-0 select-none pr-1 text-right text-[var(--text-muted)]">{row.newLineNo ?? ''}</span>
             <span className="w-3.5 shrink-0 select-none text-center font-bold" aria-hidden>
               {row.type === 'add' ? '+' : row.type === 'del' ? '−' : ' '}
             </span>

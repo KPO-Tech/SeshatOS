@@ -1,0 +1,30 @@
+/* Semantic Tailwind palette: text-app-text, bg-app-surface, border-app-border-subtle, ...
+   Every value resolves to the design tokens in tailwind.css, so these utilities follow
+   the light/dark themes automatically. */
+@theme inline {
+  --font-app-sans: var(--font-sans);
+  --font-app-serif: Georgia, serif;
+
+  --color-app-bg: var(--surface-root);
+  --color-app-surface: var(--surface-panel);
+  --color-app-surface-elevated: var(--surface-muted);
+  --color-app-border: var(--border-strong);
+  --color-app-border-subtle: var(--border-soft);
+  --color-app-text: var(--text-primary);
+  --color-app-text-secondary: var(--text-secondary);
+  --color-app-text-muted: var(--text-muted);
+  --color-app-primary: var(--accent-primary);
+  --color-app-primary-subtle: var(--accent-subtle);
+  --color-app-primary-hover: var(--accent-hover);
+  --color-app-success: var(--accent-success);
+  --color-app-warning: var(--accent-warning);
+  --color-app-error: var(--accent-danger);
+  --color-app-info: var(--accent-info);
+
+  --radius-app-xs: var(--radius-xs);
+  --radius-app-sm: var(--radius-sm);
+  --radius-app-md: var(--radius-md);
+  --radius-app-lg: var(--radius-lg);
+  --radius-app-xl: var(--radius-xl);
+  --radius-app-2xl: var(--radius-2xl);
+}

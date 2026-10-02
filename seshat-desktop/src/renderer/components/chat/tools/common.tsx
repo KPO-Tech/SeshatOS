@@ -9,17 +9,17 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 // Thin, near-invisible scrollbar shared by every code/prose box here -
 // visible on scroll instead of the browser's default bulky bar.
-const SCROLL_THIN = '[scrollbar-width:thin] [scrollbar-color:var(--color-border-subtle)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-thumb]:rounded-[3px]'
+const SCROLL_THIN = '[scrollbar-width:thin] [scrollbar-color:var(--border-soft)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-thumb]:rounded-[3px]'
 
-const COPY_BUTTON_CSS = 'absolute right-1.5 top-1.5 flex items-center rounded-[5px] border border-app-border-subtle bg-[rgba(255,255,255,0.07)] px-[5px] py-[3px] text-app-text-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:bg-[var(--color-hover)] hover:text-app-text'
+const COPY_BUTTON_CSS = 'absolute right-1.5 top-1.5 flex items-center rounded-[5px] border border-app-border-subtle bg-[rgba(255,255,255,0.07)] px-[5px] py-[3px] text-app-text-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:bg-[var(--surface-hover)] hover:text-app-text'
 
 // Text pieces used inside a <HeaderCard header={…}> strip. Exported as
 // class strings (not wrapper components) because every caller mixes them
 // with its own tag (a <span>, an <a>, a filename vs. a match count) - a
 // component would need as many props as there are callers.
 export const HCARD_HEADER_PATH_CSS = 'overflow-hidden text-ellipsis text-app-text-muted'
-export const HCARD_HEADER_LINK_CSS = 'min-w-0 overflow-hidden text-ellipsis text-app-text no-underline hover:text-[var(--color-accent)] hover:underline'
-export const HCARD_HEADER_STAT_CSS = 'ml-auto shrink-0 pl-2 text-[10px] font-medium text-[var(--color-text-disabled)]'
+export const HCARD_HEADER_LINK_CSS = 'min-w-0 overflow-hidden text-ellipsis text-app-text no-underline hover:text-[var(--accent-primary)] hover:underline'
+export const HCARD_HEADER_STAT_CSS = 'ml-auto shrink-0 pl-2 text-[10px] font-medium text-[var(--text-muted)]'
 
 // Shared by GlobToolView and ListDirectoryToolView - both always render
 // their file list nested inside a HeaderCard, so no border/background of
@@ -34,15 +34,15 @@ export const FILEPATH_CSS = 'truncate font-[\'JetBrains_Mono\',\'Fira_Code\',mon
 export const ASK_NOTE_CSS = 'text-[11px] leading-[1.35] text-app-text-muted'
 export const ASK_QUESTION_CSS = 'text-[11px] leading-[1.35] text-app-text'
 export const ASK_ANSWER_VALUE_CSS = 'text-[11px] leading-[1.35] text-app-text'
-export const ASK_SUMMARY_CSS = 'flex flex-col overflow-hidden rounded-b-md border border-t-0 border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_90%,var(--color-surface))]'
+export const ASK_SUMMARY_CSS = 'flex flex-col overflow-hidden rounded-b-md border border-t-0 border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_90%,var(--surface-panel))]'
 export const ASK_QA_CSS = 'grid grid-cols-[34px_minmax(0,1fr)] gap-3 border-t border-app-border-subtle px-3.5 py-3 first:border-t-0'
-export const ASK_QA_INDEX_CSS = 'mt-px inline-flex size-[25px] items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-primary)_9%,var(--color-bg))] text-[11px] font-bold text-app-text-secondary'
+export const ASK_QA_INDEX_CSS = 'mt-px inline-flex size-[25px] items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_9%,var(--surface-root))] text-[11px] font-bold text-app-text-secondary'
 export const ASK_QA_COPY_CSS = 'flex min-w-0 flex-col gap-[7px]'
-export const ASK_CARD_CSS = 'flex flex-col gap-1.5 rounded-[5px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_78%,var(--color-surface))] px-2 py-[7px]'
+export const ASK_CARD_CSS = 'flex flex-col gap-1.5 rounded-[5px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_78%,var(--surface-panel))] px-2 py-[7px]'
 // The combined result of the original `tb-ask-card tb-ask-card--pending`
 // pair (the pending variant overrides padding/background, not a full
 // restyle) - see ErrorPre above for the same reasoning.
-export const ASK_CARD_PENDING_CSS = 'flex flex-col gap-1.5 rounded-[5px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_82%,var(--color-surface))] px-2 py-1.5'
+export const ASK_CARD_PENDING_CSS = 'flex flex-col gap-1.5 rounded-[5px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_82%,var(--surface-panel))] px-2 py-1.5'
 export const ASK_PENDING_NOTE_CSS = 'text-[11px] italic text-app-text-muted'
 
 export function Section({ label, children }: { label: string; children: ReactNode }) {
@@ -68,8 +68,8 @@ export function HeaderCard({ header, children }: { header: ReactNode; children: 
     // `tb-hcard` carries no CSS of its own anymore - kept as a bare marker
     // class so ToolLineItem's `[&>.tb-hcard:first-child]:…` can still flatten
     // this card's top corners when it's the first thing in an expanded body.
-    <div className="tb-hcard overflow-hidden rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_72%,var(--color-surface))]">
-      <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap border-b border-app-border-subtle bg-[color-mix(in_srgb,var(--color-surface-elevated)_70%,var(--color-bg))] px-2.5 py-[7px] text-[12px] font-[650] text-app-text">
+    <div className="tb-hcard overflow-hidden rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_72%,var(--surface-panel))]">
+      <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap border-b border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-muted)_70%,var(--surface-root))] px-2.5 py-[7px] text-[12px] font-[650] text-app-text">
         {header}
       </div>
       <div>{children}</div>
@@ -117,7 +117,7 @@ export function CodeBox({
         'group relative overflow-hidden',
         bare && 'rounded-none border-0 bg-transparent',
         !bare && isError && 'rounded-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.06)]',
-        !bare && !isError && 'rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--color-bg)_84%,black)]',
+        !bare && !isError && 'rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_84%,black)]',
       )}
     >
       {language ? (
@@ -134,7 +134,7 @@ export function CodeBox({
           {content}
         </SyntaxHighlighter>
       ) : (
-        <pre className={cx('m-0 overflow-auto px-[9px] py-2 font-mono text-[11px] leading-[1.5] text-app-text-secondary', expanded ? 'max-h-none whitespace-pre' : 'max-h-[220px] whitespace-pre-wrap break-all', isError && 'text-[var(--color-error)]')}>
+        <pre className={cx('m-0 overflow-auto px-[9px] py-2 font-mono text-[11px] leading-[1.5] text-app-text-secondary', expanded ? 'max-h-none whitespace-pre' : 'max-h-[220px] whitespace-pre-wrap break-all', isError && 'text-[var(--accent-danger)]')}>
           {content}
         </pre>
       )}
@@ -192,7 +192,7 @@ export function ProseBox({ content, copyable, bare, expanded }: { content: strin
 // duplicated in 16 renderers.
 export function ErrorPre({ content }: { content: string }) {
   return (
-    <pre className="m-0 max-h-[220px] overflow-y-auto whitespace-pre-wrap break-words rounded-app-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.08)] px-3 py-[10px] font-['JetBrains_Mono','Fira_Code',monospace] text-[12px] leading-normal text-[var(--color-error)]">
+    <pre className="m-0 max-h-[220px] overflow-y-auto whitespace-pre-wrap break-words rounded-app-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.08)] px-3 py-[10px] font-['JetBrains_Mono','Fira_Code',monospace] text-[12px] leading-normal text-[var(--accent-danger)]">
       {content}
     </pre>
   )
@@ -234,6 +234,6 @@ const LINE_NUMBER_STYLE: CSSProperties = {
   minWidth: '2.5em',
   paddingRight: '1em',
   textAlign: 'right',
-  color: 'var(--color-text-disabled)',
+  color: 'var(--text-muted)',
   userSelect: 'none',
 }

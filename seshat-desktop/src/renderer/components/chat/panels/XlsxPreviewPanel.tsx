@@ -113,8 +113,8 @@ export function XlsxPreviewPanel({ fileId, filename }: Props) {
                 className={cx(
                   'cursor-pointer rounded-md border px-2.5 py-1 text-[11px]',
                   active
-                    ? 'border-[var(--color-primary,var(--color-accent))] bg-[color-mix(in_srgb,var(--color-primary,var(--color-accent))_12%,var(--color-surface))] text-app-text'
-                    : 'border-app-border-subtle bg-app-surface text-app-text-secondary hover:bg-[var(--color-hover)] hover:text-app-text',
+                    ? 'border-[var(--accent-primary,var(--accent-primary))] bg-[color-mix(in_srgb,var(--accent-primary,var(--accent-primary))_12%,var(--surface-panel))] text-app-text'
+                    : 'border-app-border-subtle bg-app-surface text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text',
                 )}
                 onClick={() => setActiveSheet(i)}
               >

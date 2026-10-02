@@ -106,7 +106,7 @@ function ThinkingBlock({
         )}
         <button
           type="button"
-          className="ml-auto inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent not-italic text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--color-hover)] hover:text-app-text group-hover:opacity-100"
+          className="ml-auto inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent not-italic text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
           aria-label="Copy"
           onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(thinking) }}
         >
@@ -418,7 +418,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
         {copyText && !hasVisibleTool && (
           <div className={cx('-mt-1 flex items-center gap-[7px] opacity-0 transition-opacity duration-200 group-hover:opacity-100', isUser && 'flex-row-reverse')}>
             <button
-              className="flex cursor-pointer items-center rounded-app-xs border-0 bg-transparent p-0.5 text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text-secondary"
+              className="flex cursor-pointer items-center rounded-app-xs border-0 bg-transparent p-0.5 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary"
               aria-label="Copy"
               type="button"
               onClick={() => {
@@ -433,7 +433,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                 failed one. */}
             {isUser && onRetryMessage && (
               <button
-                className="flex cursor-pointer items-center rounded-app-xs border-0 bg-transparent p-0.5 text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text-secondary"
+                className="flex cursor-pointer items-center rounded-app-xs border-0 bg-transparent p-0.5 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary"
                 aria-label="Retry"
                 title="Send this message again"
                 type="button"

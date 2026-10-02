@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--color-bg) 68%, var(--color-surface));
+  background-color: color-mix(in srgb, var(--surface-root) 68%, var(--surface-panel));
   min-height: 0;
   overflow: hidden;
 }
@@ -43,7 +43,7 @@
   padding: 0 16px 14px;
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--color-bg) 66%, var(--color-surface)) 72%,
+    color-mix(in srgb, var(--surface-root) 66%, var(--surface-panel)) 72%,
     transparent
   );
   flex-shrink: 0;
@@ -61,5 +61,5 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }

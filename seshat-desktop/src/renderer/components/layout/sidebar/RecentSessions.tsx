@@ -156,7 +156,7 @@ export function RecentSessions({ sessions, onOpenSession, onDeleteAll }: Props) 
                         className={cx(
                           'size-[5px] shrink-0 rounded-full border transition-colors duration-150',
                           isBusy
-                            ? 'animate-pulse border-[var(--color-accent)] bg-[var(--color-accent)]'
+                            ? 'animate-pulse border-[var(--accent-primary)] bg-[var(--accent-primary)]'
                             : 'border-[var(--text-muted)] bg-transparent',
                         )}
                         aria-hidden="true"

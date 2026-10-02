@@ -1,38 +1,5 @@
-/* Compatibility layer for the chat code migrated from seshat-ui.
-
-   seshat-ui's components use its own names (--color-bg, bg-app-bg, ...). Those
-   names are mapped onto this app's tokens (tailwind.css), so the copied code
-   follows the light/dark themes as-is. New and restructured code should use
-   the --surface-* / --text-* / --accent-* tokens directly; this file shrinks as
-   files are converted. */
-
-@theme inline {
-  --font-app-sans: var(--font-sans);
-  --font-app-serif: Georgia, serif;
-
-  --color-app-bg: var(--surface-root);
-  --color-app-surface: var(--surface-panel);
-  --color-app-surface-elevated: var(--surface-muted);
-  --color-app-border: var(--border-strong);
-  --color-app-border-subtle: var(--border-soft);
-  --color-app-text: var(--text-primary);
-  --color-app-text-secondary: var(--text-secondary);
-  --color-app-text-muted: var(--text-muted);
-  --color-app-primary: var(--accent-primary);
-  --color-app-primary-subtle: var(--accent-subtle);
-  --color-app-primary-hover: color-mix(in srgb, var(--accent-primary) 18%, transparent);
-  --color-app-success: var(--accent-success);
-  --color-app-warning: var(--accent-warning);
-  --color-app-error: var(--accent-danger);
-  --color-app-info: var(--accent-info);
-
-  --radius-app-xs: var(--radius-xs);
-  --radius-app-sm: var(--radius-sm);
-  --radius-app-md: var(--radius-md);
-  --radius-app-lg: var(--radius-lg);
-  --radius-app-xl: var(--radius-xl);
-  --radius-app-2xl: var(--radius-2xl);
-}
+/* Design scale, shared status colors, scrollbars, third-party viewer overrides and
+   keyframes. Color tokens live in tailwind.css. */
 
 :root {
 
@@ -77,36 +44,10 @@
   --radius-full: 9999px;
 
 
+  --accent-hover: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+
   --color-code-bg: #1e1e1e;
   --color-code-fg: #d4d4d4;
-
-  --color-bg: var(--surface-root);
-  --color-surface: var(--surface-panel);
-  --color-surface-elevated: var(--surface-muted);
-  --color-border: var(--border-strong);
-  --color-border-subtle: var(--border-soft);
-  --color-text: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-text-muted: var(--text-muted);
-  --color-text-disabled: var(--text-muted);
-  --color-primary: var(--accent-primary);
-  --color-cta: var(--accent-primary);
-  --color-primary-subtle: var(--accent-subtle);
-  --color-primary-hover: color-mix(in srgb, var(--accent-primary) 18%, transparent);
-  --color-accent: var(--accent-primary);
-  --color-glow-warm: var(--accent-subtle);
-  --color-hover: var(--surface-hover);
-  --color-active: var(--surface-hover);
-  --color-menu-bg: var(--surface-menu);
-  --color-success: var(--accent-success);
-  --color-warning: var(--accent-warning);
-  --color-error: var(--accent-danger);
-  --color-info: var(--accent-info);
-  --bg-base: var(--surface-root);
-  --bg-1: var(--surface-panel);
-  --bg-2: var(--surface-muted);
-  --danger: var(--accent-danger);
-  --brand: var(--accent-primary);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.12);
   --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.18);
   --shadow-large: 0 16px 48px rgba(0, 0, 0, 0.24);
@@ -220,7 +161,7 @@
   content: '▋';
   display: inline-block;
   animation: pulse-opacity 0.8s ease-in-out infinite;
-  color: var(--color-primary);
+  color: var(--accent-primary);
   margin-left: 1px;
 }
 

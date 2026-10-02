@@ -184,18 +184,18 @@ const CSS = `
 .pdet-root {
   display: flex; flex-direction: column;
   width: 100%; height: 100%;
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: var(--surface-panel);
+  color: var(--text-primary);
   overflow: hidden;
 }
 
 .pdet-back-row { flex-shrink: 0; padding: 18px 24px 0; }
 .pdet-back {
   display: inline-flex; align-items: center; gap: 6px;
-  border: none; background: transparent; color: var(--color-text-muted);
+  border: none; background: transparent; color: var(--text-muted);
   font-size: 11px; font-weight: 700; cursor: pointer; padding: 0;
 }
-.pdet-back:hover { color: var(--color-text); }
+.pdet-back:hover { color: var(--text-primary); }
 
 .pdet-header {
   flex-shrink: 0;
@@ -206,17 +206,17 @@ const CSS = `
 .pdet-header-icon {
   display: flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-  background: rgba(239, 124, 47, 0.12); color: var(--color-primary);
+  background: rgba(239, 124, 47, 0.12); color: var(--accent-primary);
 }
-.pdet-title { margin: 0; font-size: 17px; font-weight: 700; color: var(--color-text); }
-.pdet-path { margin: 3px 0 0; font-size: 11px; color: var(--color-text-muted); font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+.pdet-title { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.pdet-path { margin: 3px 0 0; font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 
 .pdet-new-btn {
   flex-shrink: 0;
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 13px; border-radius: 7px;
   border: 1px solid rgba(239, 124, 47, 0.3);
-  background: rgba(239, 124, 47, 0.1); color: var(--color-primary);
+  background: rgba(239, 124, 47, 0.1); color: var(--accent-primary);
   font-size: 11.5px; font-weight: 700; cursor: pointer;
 }
 .pdet-new-btn:hover { background: rgba(239, 124, 47, 0.16); }
@@ -226,27 +226,27 @@ const CSS = `
 
 .pdet-empty {
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 8px; max-width: 380px; margin: 60px auto 0; color: var(--color-text-muted);
+  gap: 8px; max-width: 380px; margin: 60px auto 0; color: var(--text-muted);
 }
-.pdet-empty h2 { font-size: 14px; font-weight: 700; color: var(--color-text); margin: 4px 0 0; }
+.pdet-empty h2 { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 4px 0 0; }
 .pdet-empty p { font-size: 11px; line-height: 1.6; margin: 0; }
-.pdet-empty a { color: var(--color-primary); }
+.pdet-empty a { color: var(--accent-primary); }
 
 .pdet-count {
   font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--color-text-muted); margin-bottom: 12px; padding: 0 2px;
+  color: var(--text-muted); margin-bottom: 12px; padding: 0 2px;
 }
 
 .pdet-list { display: flex; flex-direction: column; gap: 8px; }
 
 .pdet-row {
   display: flex; align-items: stretch; gap: 8px;
-  border: 1px solid var(--color-border-subtle); border-radius: 12px;
-  background: var(--color-bg);
+  border: 1px solid var(--border-soft); border-radius: 12px;
+  background: var(--surface-root);
   padding: 3px;
   transition: border-color 0.15s;
 }
-.pdet-row:hover { border-color: var(--color-border); }
+.pdet-row:hover { border-color: var(--border-strong); }
 .pdet-row.active { border-color: rgba(239, 124, 47, 0.3); }
 
 .pdet-row-main {
@@ -255,20 +255,20 @@ const CSS = `
   border: none; background: transparent; cursor: pointer;
   padding: 12px 14px; text-align: left; border-radius: 9px;
 }
-.pdet-row-main:hover { background: var(--color-hover); }
+.pdet-row-main:hover { background: var(--surface-hover); }
 
 .pdet-row-title {
-  font-size: 12.5px; line-height: 1.5; color: var(--color-text);
+  font-size: 12.5px; line-height: 1.5; color: var(--text-primary);
   min-width: 0; flex: 1;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.pdet-row-date { font-size: 10px; color: var(--color-text-muted); flex-shrink: 0; white-space: nowrap; }
+.pdet-row-date { font-size: 10px; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; }
 
 .pdet-rename {
   flex: 1; min-width: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(239, 124, 47, 0.22);
-  color: var(--color-text);
+  color: var(--text-primary);
   border-radius: 8px;
   padding: 8px 11px;
   font-size: 12px;
@@ -278,20 +278,20 @@ const CSS = `
 
 .pdet-row-actions { display: flex; gap: 3px; flex-shrink: 0; padding-right: 4px; }
 .pdet-icon-btn {
-  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--color-border-subtle);
-  background: transparent; color: var(--color-text-muted);
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-soft);
+  background: transparent; color: var(--text-muted);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.pdet-icon-btn:hover { background: var(--color-hover); color: var(--color-text); }
-.pdet-icon-btn--danger:hover { background: rgba(var(--color-error-rgb), 0.1); color: var(--color-error); }
+.pdet-icon-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+.pdet-icon-btn--danger:hover { background: rgba(var(--color-error-rgb), 0.1); color: var(--accent-danger); }
 
 .pdet-row-confirm { display: flex; gap: 6px; flex-shrink: 0; padding-right: 6px; }
 .pdet-confirm-cancel {
-  background: transparent; border: 1px solid var(--color-border-subtle); color: var(--color-text-muted);
+  background: transparent; border: 1px solid var(--border-soft); color: var(--text-muted);
   padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; white-space: nowrap;
 }
 .pdet-confirm-delete {
-  background: rgba(var(--color-error-rgb), 0.12); border: 1px solid rgba(var(--color-error-rgb), 0.3); color: var(--color-error);
+  background: rgba(var(--color-error-rgb), 0.12); border: 1px solid rgba(var(--color-error-rgb), 0.3); color: var(--accent-danger);
   padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 `

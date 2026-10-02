@@ -5,10 +5,10 @@ import { fmtDuration, parseWebSearchHits } from '../helpers'
 import type { ToolViewProps } from '../types'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 
-const LINKS_CSS = '[scrollbar-width:thin] [scrollbar-color:var(--color-border-subtle)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-app-border-subtle flex flex-col overflow-y-auto'
+const LINKS_CSS = '[scrollbar-width:thin] [scrollbar-color:var(--border-soft)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-app-border-subtle flex flex-col overflow-y-auto'
 const LINKS_CSS_CAPPED = `${LINKS_CSS} max-h-[220px]`
-const LINK_ITEM_CSS = 'flex items-center gap-2.5 border-0 border-b border-app-border-subtle px-2.5 py-2 no-underline transition-colors duration-150 last:border-b-0 hover:bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)]'
-const LINK_FAVICON_CSS = 'inline-flex size-[18px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-surface)_74%,var(--color-bg))]'
+const LINK_ITEM_CSS = 'flex items-center gap-2.5 border-0 border-b border-app-border-subtle px-2.5 py-2 no-underline transition-colors duration-150 last:border-b-0 hover:bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)]'
+const LINK_FAVICON_CSS = 'inline-flex size-[18px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-panel)_74%,var(--surface-root))]'
 
 export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolViewProps) {
   const query = typeof tool.input.query === 'string' ? tool.input.query : ''
@@ -75,7 +75,7 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
           {!expanded && hits.length > 5 && (
             <button
               type="button"
-              className="flex w-full items-center border-0 border-t border-app-border-subtle bg-transparent pb-[9px] pl-[38px] pr-2.5 pt-2 text-left text-[11px] text-app-text-muted transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] hover:text-app-text-secondary"
+              className="flex w-full items-center border-0 border-t border-app-border-subtle bg-transparent pb-[9px] pl-[38px] pr-2.5 pt-2 text-left text-[11px] text-app-text-muted transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)] hover:text-app-text-secondary"
               onClick={() => setShowAll((value) => !value)}
             >
               {showAll ? 'Show fewer sources' : `View all sources (${hits.length})`}
@@ -95,7 +95,7 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
 function Favicon({ domain, fallback }: { domain: string; fallback: string }) {
   const [failed, setFailed] = useState(false)
   if (!domain || failed) {
-    return <span className={`${LINK_FAVICON_CSS} bg-[color-mix(in_srgb,var(--color-accent)_88%,black)] text-[9px] font-bold text-white`}>{fallback}</span>
+    return <span className={`${LINK_FAVICON_CSS} bg-[color-mix(in_srgb,var(--accent-primary)_88%,black)] text-[9px] font-bold text-white`}>{fallback}</span>
   }
   return (
     <span className={LINK_FAVICON_CSS} aria-hidden="true">

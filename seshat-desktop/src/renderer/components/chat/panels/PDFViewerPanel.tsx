@@ -219,8 +219,8 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
   }
 
   const toolbarBtnCx = (active?: boolean) => cx(
-    'flex size-[22px] items-center justify-center rounded-md border border-app-border-subtle bg-app-surface p-0 text-app-text-secondary enabled:cursor-pointer enabled:hover:bg-[var(--color-hover)] enabled:hover:text-app-text disabled:cursor-default disabled:opacity-40',
-    active && '!border-[rgba(255,122,24,0.45)] !bg-[rgba(255,122,24,0.16)] !text-[var(--color-accent)]',
+    'flex size-[22px] items-center justify-center rounded-md border border-app-border-subtle bg-app-surface p-0 text-app-text-secondary enabled:cursor-pointer enabled:hover:bg-[var(--surface-hover)] enabled:hover:text-app-text disabled:cursor-default disabled:opacity-40',
+    active && '!border-[rgba(255,122,24,0.45)] !bg-[rgba(255,122,24,0.16)] !text-[var(--accent-primary)]',
   )
 
   return (
@@ -237,7 +237,7 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
         <div className="flex items-center gap-0.5 rounded-[7px] border border-app-border-subtle bg-app-surface p-0.5" aria-label="PDF layout">
           <button
             type="button"
-            className={cx('h-5 min-w-[48px] rounded-[5px] border-0 bg-transparent px-2 text-[11px] text-app-text-secondary', layoutMode === 'pages' && '!bg-[rgba(255,122,24,0.16)] !text-[var(--color-accent)]')}
+            className={cx('h-5 min-w-[48px] rounded-[5px] border-0 bg-transparent px-2 text-[11px] text-app-text-secondary', layoutMode === 'pages' && '!bg-[rgba(255,122,24,0.16)] !text-[var(--accent-primary)]')}
             onClick={() => setLayout('pages')}
             disabled={status !== 'ready'}
           >
@@ -245,7 +245,7 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
           </button>
           <button
             type="button"
-            className={cx('h-5 min-w-[48px] rounded-[5px] border-0 bg-transparent px-2 text-[11px] text-app-text-secondary', layoutMode === 'width' && '!bg-[rgba(255,122,24,0.16)] !text-[var(--color-accent)]')}
+            className={cx('h-5 min-w-[48px] rounded-[5px] border-0 bg-transparent px-2 text-[11px] text-app-text-secondary', layoutMode === 'width' && '!bg-[rgba(255,122,24,0.16)] !text-[var(--accent-primary)]')}
             onClick={() => setLayout('width')}
             disabled={status !== 'ready'}
           >

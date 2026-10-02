@@ -181,10 +181,10 @@ export function FilesPanel({
         {activeKindBadge && (
           <span className={cx('shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', activeKindColor)}>{activeKindBadge}</span>
         )}
-        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--color-hover)] hover:text-app-text" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
+        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
           <WindowMaximizeIcon />
         </button>
-        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--color-hover)] hover:text-app-text" onClick={onClose} aria-label="Close">
+        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onClose} aria-label="Close">
           <WindowCloseIcon />
         </button>
       </div>
@@ -222,7 +222,7 @@ export function FilesPanel({
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTabId(tab.id) } }}
                     className={cx(
                       'flex shrink-0 cursor-pointer items-center gap-1.5 border-r border-app-border-subtle py-1.5 pl-3 pr-1.5 text-[11.5px]',
-                      active ? 'border-b-2 border-b-[var(--color-accent)] bg-app-bg text-app-text' : 'border-b-2 border-b-transparent bg-app-surface text-app-text-muted',
+                      active ? 'border-b-2 border-b-[var(--accent-primary)] bg-app-bg text-app-text' : 'border-b-2 border-b-transparent bg-app-surface text-app-text-muted',
                     )}
                     style={{ maxWidth: 150 }}
                   >
@@ -231,7 +231,7 @@ export function FilesPanel({
                       type="button"
                       aria-label="Close tab"
                       onClick={(e) => { e.stopPropagation(); closeTab(tab.id) }}
-                      className="flex size-[15px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text"
+                      className="flex size-[15px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
                     >
                       <Close size={9} />
                     </button>
@@ -294,7 +294,7 @@ function TreeChildren({
                 tabIndex={0}
                 onClick={() => onToggleFolder(entryPath)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleFolder(entryPath) } }}
-                className="flex cursor-pointer items-center gap-1.5 py-[3px] pr-2.5 text-[12px] text-app-text-secondary hover:bg-[var(--color-hover)]"
+                className="flex cursor-pointer items-center gap-1.5 py-[3px] pr-2.5 text-[12px] text-app-text-secondary hover:bg-[var(--surface-hover)]"
                 style={{ paddingLeft: 10 + depth * 14 }}
               >
                 <Right size={9} className={cx('shrink-0 transition-transform duration-100', isOpen && 'rotate-90')} />
@@ -324,8 +324,8 @@ function TreeChildren({
             onClick={() => onOpenFile(entryPath)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenFile(entryPath) } }}
             className={cx(
-              'flex cursor-pointer items-center gap-1.5 py-[3px] pr-2.5 text-[12px] hover:bg-[var(--color-hover)]',
-              isActive ? 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-app-text' : 'text-app-text-secondary',
+              'flex cursor-pointer items-center gap-1.5 py-[3px] pr-2.5 text-[12px] hover:bg-[var(--surface-hover)]',
+              isActive ? 'bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-app-text' : 'text-app-text-secondary',
             )}
             style={{ paddingLeft: 10 + depth * 14 + 15 }}
           >

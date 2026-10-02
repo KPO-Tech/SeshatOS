@@ -17,7 +17,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function lineIcon(toolName: string, isRunning: boolean, isError: boolean) {
   if (isRunning) {
-    return <span className="size-2.5 shrink-0 animate-spin rounded-full border-[1.5px] border-[rgba(239,124,47,0.2)] border-t-[var(--color-accent)]" />
+    return <span className="size-2.5 shrink-0 animate-spin rounded-full border-[1.5px] border-[rgba(239,124,47,0.2)] border-t-[var(--accent-primary)]" />
   }
   return (
     <span className={cx('relative inline-flex shrink-0 items-center justify-center text-app-text-muted', isError && 'text-app-text-secondary')}>
@@ -108,7 +108,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
           // Its expanded body below keeps its own full border/corners
           // (HeaderCard, DiffView already supply that) instead of the row
           // and body pretending to share one continuous outline.
-          'group inline-flex min-h-0 w-full cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[10.5px] leading-snug text-app-text-muted transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--color-surface)_42%,transparent)] hover:text-app-text-secondary',
+          'group inline-flex min-h-0 w-full cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[10.5px] leading-snug text-app-text-muted transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--surface-panel)_42%,transparent)] hover:text-app-text-secondary',
           isBigRow && 'min-h-10',
         )}
         role="button"
@@ -125,13 +125,13 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
         {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">failed</span>}
         {meta && <span className="ml-auto shrink-0 text-[10px] text-app-text-muted">{meta}</span>}
         {isCompleted && (
-          <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-success)_12%,var(--color-bg))] text-app-success" title="Completed" aria-label="Completed">
+          <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-success)_12%,var(--surface-root))] text-app-success" title="Completed" aria-label="Completed">
             <CheckOne size={10} />
           </span>
         )}
         <button
           type="button"
-          className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--color-hover)] hover:text-app-text group-hover:opacity-100"
+          className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
           aria-label="Copy"
           onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(copyText) }}
         >
@@ -311,7 +311,7 @@ function HTMLPreviewTrigger({ tool, filePath }: { tool: ToolUseBlock; filePath: 
     <div className="mt-2 flex items-center gap-2">
       <button
         type="button"
-        className="cursor-pointer rounded-md border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] px-3 py-1.5 text-[12px] font-semibold text-[var(--color-accent)] disabled:cursor-default disabled:opacity-60"
+        className="cursor-pointer rounded-md border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent-primary)] disabled:cursor-default disabled:opacity-60"
         onClick={() => void openPreview()}
         disabled={previewing}
       >

@@ -8,7 +8,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 }
 
 const BADGE_CSS: Record<PlanDocument['status'], string> = {
-  pending: 'bg-[rgba(239,124,47,0.15)] text-[var(--color-accent)]',
+  pending: 'bg-[rgba(239,124,47,0.15)] text-[var(--accent-primary)]',
   validated: 'bg-[rgba(var(--color-success-rgb),0.12)] text-app-success',
   rejected: 'bg-[rgba(var(--color-error-rgb),0.1)] text-app-error',
 }
@@ -60,7 +60,7 @@ export const PlanArtifactCard = memo(function PlanArtifactCard({ plan, sessionId
         role="button"
         tabIndex={0}
       >
-        <div className="flex shrink-0 flex-col items-center justify-center border-r border-app-border-subtle bg-[rgba(239,124,47,0.07)] px-2.5 py-2.5 text-[var(--color-accent)]">
+        <div className="flex shrink-0 flex-col items-center justify-center border-r border-app-border-subtle bg-[rgba(239,124,47,0.07)] px-2.5 py-2.5 text-[var(--accent-primary)]">
           <DocDetail size={16} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[3px] px-2.5 py-2">

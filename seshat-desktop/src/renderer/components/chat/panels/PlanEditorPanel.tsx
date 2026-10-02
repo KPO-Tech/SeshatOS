@@ -13,12 +13,12 @@ function cx(...classes: Array<string | false | null | undefined>) {
 }
 
 const BADGE_CSS: Record<PlanStatus, string> = {
-  pending: 'bg-[rgba(239,124,47,0.15)] text-[var(--color-accent)]',
+  pending: 'bg-[rgba(239,124,47,0.15)] text-[var(--accent-primary)]',
   validated: 'bg-[rgba(var(--color-success-rgb),0.12)] text-app-success',
   rejected: 'bg-[rgba(var(--color-error-rgb),0.1)] text-app-error',
 }
 
-const FRAME_BTN_CSS = 'inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text'
+const FRAME_BTN_CSS = 'inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text'
 
 
 type Annotation = {
@@ -219,7 +219,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
   const minimalHeader = (
     <div className="flex shrink-0 flex-col gap-1.5 border-b border-app-border-subtle px-[11px] py-2.5">
       <div className="flex items-center gap-1.5">
-        <DocDetail size={13} className="shrink-0 text-[var(--color-accent)]" />
+        <DocDetail size={13} className="shrink-0 text-[var(--accent-primary)]" />
         <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-app-text">Implementation Plan</span>
         {onToggleMaximize && (
           <button className={FRAME_BTN_CSS} type="button" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
@@ -253,7 +253,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
             {actionError ?? 'No plan content yet.'}
           </span>
           {isDocumentBacked && (
-            <button type="button" className="inline-flex cursor-pointer items-center gap-1 rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-1 text-[10px] font-medium text-app-text-muted transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-app-text" onClick={() => void loadFull()}>
+            <button type="button" className="inline-flex cursor-pointer items-center gap-1 rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-1 text-[10px] font-medium text-app-text-muted transition-all duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={() => void loadFull()}>
               Retry
             </button>
           )}
@@ -402,13 +402,13 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex shrink-0 flex-col gap-1.5 border-b border-app-border-subtle px-[11px] py-2.5">
         <div className="flex items-center gap-1.5">
-          <DocDetail size={13} className="shrink-0 text-[var(--color-accent)]" />
+          <DocDetail size={13} className="shrink-0 text-[var(--accent-primary)]" />
           <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-app-text">{humanSlug}</span>
           {isDocumentBacked && !isReadonly && (
             <button
               className={cx(
                 'inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 transition-all duration-150',
-                editMode ? 'bg-[rgba(239,124,47,0.12)] text-[var(--color-accent)]' : 'bg-transparent text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text',
+                editMode ? 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]' : 'bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text',
               )}
               type="button"
               onClick={() => setEditMode((v) => !v)}
@@ -432,7 +432,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
         {plan && <div className="text-[10px] text-app-text-muted">{plan.filename} · v{plan.version}</div>}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-color:var(--color-border-subtle)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-color:var(--border-soft)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1">
         {editMode ? (
           <textarea
             className="box-border w-full flex-1 resize-none border-0 bg-transparent px-[13px] py-[11px] font-['JetBrains_Mono','Fira_Code',monospace] text-[11px] leading-[1.6] text-app-text outline-none [min-height:300px]"
@@ -452,7 +452,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                 <div key={i} className="group relative rounded-md pl-5 transition-colors duration-[120ms] hover:bg-[rgba(239,124,47,0.05)]">
                   <button
                     type="button"
-                    className="absolute left-0 top-1 flex size-[17px] scale-[0.8] cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--color-accent)] text-[12px] font-bold leading-none text-white opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-[opacity,transform] duration-[120ms] group-hover:scale-100 group-hover:opacity-100"
+                    className="absolute left-0 top-1 flex size-[17px] scale-[0.8] cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--accent-primary)] text-[12px] font-bold leading-none text-white opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-[opacity,transform] duration-[120ms] group-hover:scale-100 group-hover:opacity-100"
                     aria-label="Comment on this section"
                     onClick={(e) => openLineComment(e, block)}
                   >
@@ -472,7 +472,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
               >
                 {showAnnotationForm ? (
                   <div className="flex w-[280px] flex-col gap-1.5 rounded-lg border border-app-border-subtle bg-[rgba(38,36,44,0.98)] p-[7px]">
-                    <div className="truncate border-l-2 border-[var(--color-accent)] pl-1.5 text-[10px] italic text-app-text-muted">"{pendingQuote}"</div>
+                    <div className="truncate border-l-2 border-[var(--accent-primary)] pl-1.5 text-[10px] italic text-app-text-muted">"{pendingQuote}"</div>
                     <textarea
                       className="box-border w-full resize-none rounded-[5px] border border-app-border-subtle bg-[rgba(255,255,255,0.04)] px-1.5 py-[5px] text-[10px] text-app-text outline-none transition-colors duration-150 [font-family:inherit] focus:border-[rgba(239,124,47,0.4)]"
                       autoFocus
@@ -486,10 +486,10 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                       }}
                     />
                     <div className="flex justify-end gap-[5px]">
-                      <button type="button" className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-[3px] text-[10px] text-app-text-muted hover:bg-[var(--color-hover)] hover:text-app-text" onClick={closeFloat}>Cancel</button>
+                      <button type="button" className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-[3px] text-[10px] text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={closeFloat}>Cancel</button>
                       <button
                         type="button"
-                        className="cursor-pointer rounded-[5px] border-0 bg-[var(--color-accent)] px-[7px] py-[3px] text-[10px] font-semibold text-white transition-opacity duration-[120ms] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="cursor-pointer rounded-[5px] border-0 bg-[var(--accent-primary)] px-[7px] py-[3px] text-[10px] font-semibold text-white transition-opacity duration-[120ms] disabled:cursor-not-allowed disabled:opacity-40"
                         onClick={addAnnotation}
                         disabled={!annotationInput.trim()}
                       >
@@ -500,7 +500,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                 ) : (
                   <button
                     type="button"
-                    className="cursor-pointer whitespace-nowrap rounded-md border-0 bg-[var(--color-accent)] px-2 py-1 text-[10px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[rgba(239,124,47,0.9)]"
+                    className="cursor-pointer whitespace-nowrap rounded-md border-0 bg-[var(--accent-primary)] px-2 py-1 text-[10px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[rgba(239,124,47,0.9)]"
                     onClick={() => setShowAnnotationForm(true)}
                   >
                     ✎ Comment
@@ -527,7 +527,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
           {annotations.map((a) => (
             <div key={a.id} className="flex items-start gap-1.5 rounded-md border border-[rgba(239,124,47,0.15)] bg-[rgba(239,124,47,0.05)] px-[7px] py-1.5">
               <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                <div className="truncate border-l-2 border-[var(--color-accent)] pl-[5px] text-[10px] italic text-app-text-muted">"{a.quote}"</div>
+                <div className="truncate border-l-2 border-[var(--accent-primary)] pl-[5px] text-[10px] italic text-app-text-muted">"{a.quote}"</div>
                 <div className="text-[10px] leading-[1.45] text-app-text">{a.comment}</div>
               </div>
               <button
