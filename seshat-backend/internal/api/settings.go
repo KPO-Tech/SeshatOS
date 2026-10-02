@@ -244,6 +244,11 @@ func (a *App) handleProviderSettingByID(w http.ResponseWriter, r *http.Request) 
 		if a.capabilityLinkStore != nil {
 			_ = a.capabilityLinkStore.DeleteByProviderSettingID(r.Context(), id)
 		}
+		// Models cached or added for the provider have no foreign key to it, so
+		// they would otherwise stay in the table forever.
+		if a.modelStore != nil {
+			_ = a.modelStore.DeleteBySettingID(r.Context(), id)
+		}
 		a.backend.Audit.Log(r.Context(), backendaudit.LogParams{
 			ActorUserID:  principal.User.ID,
 			Action:       backendaudit.ActionSettingsDelete,

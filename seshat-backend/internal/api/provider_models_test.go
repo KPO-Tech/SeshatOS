@@ -1,10 +1,14 @@
 package api
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )
 
 // TestModelsListReturnsTheLiveSDKCatalog is a regression test for the
@@ -78,5 +82,44 @@ func TestModelsListRequiresAuthentication(t *testing.T) {
 	fx.router.ServeHTTP(rec, req)
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 with no Authorization header, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestDeletingProviderRemovesItsModels(t *testing.T) {
+	app, _ := newSettingsTestApp(t, nil)
+	router := CreateRouter(defaultAPIConfig, app)
+	token := loginAs(t, router, "admin@settings.test", "adminpass")
+
+	body, _ := json.Marshal(map[string]string{"provider": "openai", "name": "My OpenAI", "base_url": "https://api.openai.com/v1", "model_id": "gpt-4o", "api_key": "sk-test-secret"})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/settings/providers", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create provider: %d %s", rec.Code, rec.Body.String())
+	}
+	var created struct {
+		ID string `json:"id"`
+	}
+	_ = json.NewDecoder(rec.Body).Decode(&created)
+
+	ctx := context.Background()
+	if _, err := app.modelStore.Create(ctx, db.CreateProviderModelParams{ProviderSettingID: created.ID, ModelID: "custom-model", DisplayName: "Custom"}); err != nil {
+		t.Fatalf("create model: %v", err)
+	}
+	if models, _ := app.modelStore.ListBySettingID(ctx, created.ID); len(models) == 0 {
+		t.Fatal("expected the model to exist before deleting the provider")
+	}
+
+	del := httptest.NewRequest(http.MethodDelete, "/api/v1/settings/providers/"+created.ID, nil)
+	del.Header.Set("Authorization", "Bearer "+token)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, del)
+	if rec.Code != http.StatusOK && rec.Code != http.StatusNoContent {
+		t.Fatalf("delete provider: %d %s", rec.Code, rec.Body.String())
+	}
+	if models, _ := app.modelStore.ListBySettingID(ctx, created.ID); len(models) != 0 {
+		t.Fatalf("expected the provider's models to be removed, got %d", len(models))
 	}
 }
