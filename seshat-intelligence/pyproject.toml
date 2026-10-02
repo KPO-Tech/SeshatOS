@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "docling>=2.0.0",
     "fastapi>=0.141.1",
+    "httpx>=0.28.1",
     "marker-pdf>=2.0.0",
     "pydantic-settings>=2.15.0",
     "python-multipart>=0.0.32",
@@ -15,7 +16,6 @@ dependencies = [
 [dependency-groups]
 dev = [
     "fpdf2>=2.8.8",
-    "httpx>=0.28.1",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
 ]
