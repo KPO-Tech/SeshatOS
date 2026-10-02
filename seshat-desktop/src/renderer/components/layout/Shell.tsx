@@ -104,7 +104,7 @@ export function Shell() {
             isAdminRoute
               ? 'relative flex flex-1 overflow-hidden'
               : [
-                  'relative flex flex-1 overflow-hidden transition-[padding-left] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                  'relative flex flex-1 overflow-hidden transition-[padding-left] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] [html[data-sidebar-resizing]_&]:transition-none',
                   collapsed ? 'pl-[var(--sidebar-collapsed-width)]' : 'pl-[var(--sidebar-width)]'
                 ].join(' ')
           }

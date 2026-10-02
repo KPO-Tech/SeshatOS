@@ -5,7 +5,7 @@ import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { SearchModal } from '@renderer/components/layout/SearchModal'
 import { SessionHistoryModal } from '@renderer/components/layout/SessionHistoryModal'
 import { useSessionStore } from '@renderer/stores/session'
-import { useUIStore } from '@renderer/stores/ui'
+import { SIDEBAR_DEFAULT_WIDTH, useUIStore } from '@renderer/stores/ui'
 import { RecentSessions } from './RecentSessions'
 import { SidebarFooterMenu } from './SidebarFooterMenu'
 import { SidebarItem } from './SidebarItem'
@@ -17,6 +17,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export function Sidebar() {
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
+  const setSidebarWidth = useUIStore((state) => state.setSidebarWidth)
   const sessions = useSessionStore((state) => state.sessions)
   const activeId = useSessionStore((state) => state.activeId)
   const setActive = useSessionStore((state) => state.setActive)
@@ -68,12 +69,28 @@ export function Sidebar() {
     }
   }
 
+  function startResize(event: React.PointerEvent<HTMLDivElement>) {
+    event.preventDefault()
+    const root = document.documentElement
+    root.setAttribute('data-sidebar-resizing', '')
+    function onMove(move: PointerEvent) {
+      setSidebarWidth(move.clientX)
+    }
+    function onUp() {
+      root.removeAttribute('data-sidebar-resizing')
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
   const item = (path: string) => pathname === path || pathname.startsWith(`${path}/`)
 
   return (
     <>
       <aside
-        className="absolute inset-y-0 left-0 z-[40] flex flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] transition-[width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+        className="absolute inset-y-0 left-0 z-[40] flex flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] transition-[width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] [html[data-sidebar-resizing]_&]:transition-none"
         style={{ width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)' }}
       >
         <div className={cx('flex flex-col gap-px px-2 pb-1 pt-3.5', collapsed && 'items-center')}>
@@ -97,6 +114,17 @@ export function Sidebar() {
         </div>
 
         <SidebarFooterMenu collapsed={collapsed} />
+
+        {!collapsed && (
+          <div
+            className="absolute inset-y-0 right-0 z-10 w-1.5 cursor-col-resize transition-colors hover:bg-[var(--accent-primary)]/40"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize sidebar"
+            onPointerDown={startResize}
+            onDoubleClick={() => setSidebarWidth(SIDEBAR_DEFAULT_WIDTH)}
+          />
+        )}
       </aside>
 
       <SessionHistoryModal

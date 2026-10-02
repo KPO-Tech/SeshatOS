@@ -116,10 +116,23 @@ function rightPanelTotalLimit(windowWidth: number): number {
   return rightPanelColumnLimit(windowWidth) * RIGHT_PANEL_STACK_LIMIT
 }
 
-// Matches tokens.css's --sidebar-width/--sidebar-collapsed-width - not read
-// from the DOM since this clamp runs inside a store action, not a component.
-const SIDEBAR_WIDTH = 224
+// The user can drag the sidebar edge between these bounds. The current value
+// is mirrored here (and into --sidebar-width) because the right-panel clamp
+// below runs inside store actions, not components, so it can't read the DOM.
+export const SIDEBAR_MIN_WIDTH = 208
+export const SIDEBAR_MAX_WIDTH = 360
+export const SIDEBAR_DEFAULT_WIDTH = 256
 const SIDEBAR_COLLAPSED_WIDTH = 56
+let currentSidebarWidth = SIDEBAR_DEFAULT_WIDTH
+
+function clampSidebarWidth(width: number): number {
+  return Math.round(Math.max(SIDEBAR_MIN_WIDTH, Math.min(width, SIDEBAR_MAX_WIDTH)))
+}
+
+function applySidebarWidth(width: number) {
+  currentSidebarWidth = width
+  if (typeof document !== 'undefined') document.documentElement.style.setProperty('--sidebar-width', `${width}px`)
+}
 // The chat pane has to stay readable at this floor, not just wide enough
 // for its narrowest controls. 460 is the width the chat pane actually renders at
 // once the right panel column hits its own static SOLO max (RIGHT_PANEL_WIDTH_SOLO.max,
@@ -155,7 +168,7 @@ const CHAT_MIN_FRACTION = 0.25
 // on a small window, which is exactly the case that was breaking.
 function clampRightPanelWidth(width: number, windowWidth: number, sidebarCollapsed: boolean, columnCount: number): number {
   const range = columnCount > 1 ? RIGHT_PANEL_WIDTH_SHARED : RIGHT_PANEL_WIDTH_SOLO
-  const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
+  const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : currentSidebarWidth
   const available = windowWidth - sidebarWidth
   const chatFloor = Math.max(MIN_CHAT_PANE_WIDTH, available * CHAT_MIN_FRACTION)
   const dynamicMax = Math.max(240, available - chatFloor)
@@ -165,7 +178,7 @@ function clampRightPanelWidth(width: number, windowWidth: number, sidebarCollaps
 }
 
 function defaultRightPanelWidth(kind: RightPanelKind, windowWidth: number, sidebarCollapsed: boolean): number {
-  const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
+  const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : currentSidebarWidth
   const available = Math.max(0, windowWidth - sidebarWidth)
   const preferred = READABLE_PANEL_KINDS.has(kind)
     ? available * 0.5
@@ -178,6 +191,7 @@ export type LightboxImage = { url: string; filename: string }
 type UIState = {
   theme: Theme
   sidebarCollapsed: boolean
+  sidebarWidth: number
   rightColumns: RightPanelColumn[]
   maximizedPanelId: string | null
   lightboxImage: LightboxImage | null
@@ -205,6 +219,7 @@ type UIState = {
   closeLightbox: () => void
   toggleSidebar: () => void
   setSidebarCollapsed: (v: boolean) => void
+  setSidebarWidth: (width: number) => void
   setWindowWidth: (width: number) => void
   openRightPanel: (panel: RightPanelPayload) => void
   closeRightPanel: (id: string) => void
@@ -230,6 +245,7 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       theme: 'dark',
       sidebarCollapsed: false,
+      sidebarWidth: SIDEBAR_DEFAULT_WIDTH,
       rightColumns: [],
       maximizedPanelId: null,
       lightboxImage: null,
@@ -246,6 +262,11 @@ export const useUIStore = create<UIState>()(
 
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
+      setSidebarWidth: (width) => {
+        const next = clampSidebarWidth(width)
+        applySidebarWidth(next)
+        set({ sidebarWidth: next })
+      },
 
       setWindowWidth: (width) =>
         set((s) => {
@@ -532,9 +553,13 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'seshat-ui-prefs',
+      onRehydrateStorage: () => (state) => {
+        if (state) applySidebarWidth(clampSidebarWidth(state.sidebarWidth ?? SIDEBAR_DEFAULT_WIDTH))
+      },
       partialize: (s) => ({
         theme: s.theme,
         sidebarCollapsed: s.sidebarCollapsed,
+        sidebarWidth: s.sidebarWidth,
         permissionMode: s.permissionMode,
         thinkingExpansion: s.thinkingExpansion,
         askUserAnswers: s.askUserAnswers,
