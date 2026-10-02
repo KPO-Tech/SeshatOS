@@ -5,6 +5,8 @@ from fastapi import FastAPI
 
 from seshat_intelligence.api.schemas import HealthResponse
 from seshat_intelligence.config import Settings, get_settings
+from seshat_intelligence.connectors.registry import ConnectorRegistry
+from seshat_intelligence.connectors.routes import router as connectors_router
 from seshat_intelligence.documents.chunking_pool import ChunkingPool
 from seshat_intelligence.documents.conversion_pool import ConversionPool
 from seshat_intelligence.documents.routes import router as documents_router
@@ -34,10 +36,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.document_store = store
     app.state.convert_document = ConvertDocument(conversion_pool, store)
     app.state.chunk_document = ChunkDocument(chunking_pool)
+    app.state.connector_registry = ConnectorRegistry()
 
     @app.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
         return HealthResponse()
 
     app.include_router(documents_router)
+    app.include_router(connectors_router)
     return app

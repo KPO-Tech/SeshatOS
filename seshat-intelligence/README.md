@@ -100,6 +100,27 @@ This endpoint is stateless - it returns chunks, nothing is persisted.
 Chunk caching/storage stays seshat's Go RAG pipeline's job
 (`internal/rag/chunk_cache.go`), not this service's.
 
+## connectors
+
+The worker side of the Knowledge connectors, per
+[docs/decisions/0001-go-python-boundary.md](../docs/decisions/0001-go-python-boundary.md). The service is
+stateless: the caller (`seshat-server`) owns state, schedules, credentials and permission enforcement, and
+sends everything a call needs.
+
+- `GET /v1/connectors` - registered kinds and what each can do (`sync`, `slim`, `permissions`).
+- `POST /v1/connectors/{kind}/validate` - check credentials and configuration.
+- `POST /v1/connectors/{kind}/sync` - `application/x-ndjson` stream: `document`, `deleted`, `failure`
+  events, then one final `checkpoint`.
+- `POST /v1/connectors/{kind}/slim` - ids and ACLs without content, to detect deletions.
+- `POST /v1/connectors/{kind}/permissions` - confirmed ACLs for given ids; ids it could not confirm are
+  omitted, never reported as unrestricted.
+
+The contract is in `connectors/models.py`. Access entries are prefixed identities (`user:`, `group:`,
+`domain:`, `public`) and an unknown prefix is rejected. `access` absent means the source reports no ACL;
+an empty list means nobody. A connector subclasses `Connector` and mixes in the capabilities it supports
+(`connectors/base.py`), then registers in `ConnectorRegistry`. Errors raised mid-stream become a final
+`failure` event, since the HTTP status is already sent.
+
 ## What this service is (and isn't)
 
 seshat already has a mature RAG pipeline in Go (`internal/rag/`,
