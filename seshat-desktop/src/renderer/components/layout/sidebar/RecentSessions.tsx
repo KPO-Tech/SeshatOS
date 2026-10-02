@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { CheckOne, Delete, Down, Edit, FileTextOne, MoreOne, Right, Share } from '@icon-park/react'
+import { CheckOne, Delete, Down, Edit, FileTextOne, History, MoreOne, Right, Share } from '@icon-park/react'
 import { api } from '@renderer/api/client'
 import { deleteSession } from '@renderer/lib/deleteSession'
 import { conversationFileName, serializeConversationMarkdown } from '@renderer/lib/conversationExport'
-import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
+import { isUntitledSessionTitle, UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { useSessionStore, type ChatSession } from '@renderer/stores/session'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -16,15 +16,13 @@ const menuButtonClass = 'flex w-full cursor-pointer items-center gap-1.5 whitesp
 type Props = {
   sessions: ChatSession[]
   onOpenSession: (id: string) => void
-  onDeleteAll: () => void
+  onOpenHistory: () => void
 }
 
-// Recents block of the sidebar: the list, per-chat rename / delete menu, and
-// a bulk-delete for whatever's currently listed here (Home's own tasks, or
-// just the open project's, per Sidebar's own scoping - never every session
-// everywhere, which is what the old dedicated History page's "Delete all"
-// did instead, deleting project conversations along with everything else).
-export function RecentSessions({ sessions, onOpenSession, onDeleteAll }: Props) {
+// Recents block of the sidebar: the latest chats of the current scope (Home, or
+// the open project) with a per-chat rename / export / delete menu. Browsing
+// everything and bulk operations live in the history modal.
+export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props) {
   const activeId = useSessionStore((state) => state.activeId)
   const updateSession = useSessionStore((state) => state.updateSession)
   const agentStates = useSessionStore((state) => state.agentStates)
@@ -105,26 +103,25 @@ export function RecentSessions({ sessions, onOpenSession, onDeleteAll }: Props) 
           {open ? <Down size={12} /> : <Right size={12} />}
         </button>
         <button
-          className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-[var(--text-muted)] transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--accent-danger)] disabled:pointer-events-none disabled:opacity-40"
+          className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-[var(--text-muted)] transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
           type="button"
-          aria-label="Delete all"
-          title="Delete all"
-          disabled={sessions.length === 0}
-          onClick={onDeleteAll}
+          aria-label="History"
+          title="History"
+          onClick={onOpenHistory}
         >
-          <Delete size={13} />
+          <History size={13} />
         </button>
       </div>
 
       {open && (
-        <div className="mt-1 flex flex-col gap-0.5 overflow-visible pl-2 pr-0.5">
+        <div className="mt-1 flex flex-col gap-px overflow-visible">
           {sessions.map((session) => {
             const active = session.id === activeId
             const menuOpen = menuSessionId === session.id
             const agentState = agentStates[session.id]
             const isBusy = Boolean(agentState?.isThinking || agentState?.activeTool)
             return (
-              <div key={session.id} className={cx('group relative flex items-center overflow-visible rounded-md p-px', active && 'bg-[var(--surface-hover)]')}>
+              <div key={session.id} className={cx('group relative flex items-center overflow-visible rounded-md', active ? 'bg-[var(--surface-hover)]' : 'hover:bg-[var(--surface-hover)]')}>
                 {editingId === session.id ? (
                   <input
                     className="w-full min-w-0 rounded-[7px] border border-[var(--accent-primary)]/30 bg-[var(--surface-hover)] px-2 py-[5px] text-[12px] text-[var(--text-primary)] outline-none"
@@ -146,27 +143,21 @@ export function RecentSessions({ sessions, onOpenSession, onDeleteAll }: Props) 
                   <>
                     <button
                       className={cx(
-                        'flex min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-[6px] border-0 bg-transparent px-1.5 py-[3px] text-left text-[11px] leading-none text-[var(--text-secondary)] transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]',
-                        active && 'font-semibold'
+                        'flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-[5px] text-left text-[12.5px] leading-5 transition-colors duration-150',
+                        active ? 'font-medium text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       )}
                       onClick={() => onOpenSession(session.id)}
                       type="button"
                     >
-                      <span
-                        className={cx(
-                          'size-[5px] shrink-0 rounded-full border transition-colors duration-150',
-                          isBusy
-                            ? 'animate-pulse border-[var(--accent-primary)] bg-[var(--accent-primary)]'
-                            : 'border-[var(--text-muted)] bg-transparent',
-                        )}
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap [-webkit-mask-image:linear-gradient(to_right,black_85%,transparent_100%)] [mask-image:linear-gradient(to_right,black_85%,transparent_100%)]">{session.title || UNTITLED_SESSION_TITLE}</span>
+                      {isBusy && <span className="size-[5px] shrink-0 animate-pulse rounded-full bg-[var(--accent-primary)]" aria-hidden="true" />}
+                      <span className={cx('min-w-0 flex-1 truncate', isUntitledSessionTitle(session.title) && 'italic text-[var(--text-muted)]')}>
+                        {session.title || UNTITLED_SESSION_TITLE}
+                      </span>
                     </button>
-                    <div className="sb-recent-menu-wrap relative shrink-0">
+                    <div className="sb-recent-menu-wrap absolute right-1 top-1/2 -translate-y-1/2">
                       <button
                         className={cx(
-                          'flex size-4 cursor-pointer items-center justify-center border-0 bg-transparent text-[var(--text-muted)] opacity-0 transition duration-150 hover:text-[var(--text-primary)] group-hover:opacity-100',
+                          'flex size-5 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-[var(--surface-hover)] text-[var(--text-muted)] opacity-0 transition duration-150 hover:text-[var(--text-primary)] group-hover:opacity-100',
                           menuOpen && 'text-[var(--text-primary)] opacity-100'
                         )}
                         type="button"

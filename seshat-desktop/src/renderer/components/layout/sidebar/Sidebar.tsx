@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { ApplicationOne, Browser, Plus, Puzzle, Search, Time, Workbench } from '@icon-park/react'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { SearchModal } from '@renderer/components/layout/SearchModal'
-import { deleteSession } from '@renderer/lib/deleteSession'
+import { SessionHistoryModal } from '@renderer/components/layout/SessionHistoryModal'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 import { RecentSessions } from './RecentSessions'
@@ -24,6 +24,7 @@ export function Sidebar() {
   const { pathname, search } = useLocation()
   const { connected } = useSettingsMenu()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const projectContextPath = useMemo(
     () => resolveProjectContextPath(
@@ -37,6 +38,7 @@ export function Sidebar() {
     [pathname, search, sessions]
   )
   const recentSessions = useMemo(() => selectRecentSessions(sessions, projectContextPath), [sessions, projectContextPath])
+  const scopedSessions = useMemo(() => selectRecentSessions(sessions, projectContextPath, Number.MAX_SAFE_INTEGER), [sessions, projectContextPath])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -59,16 +61,8 @@ export function Sidebar() {
     navigate(`/conversation/${id}`)
   }
 
-  // Scoped to whatever Tasks is currently showing - Home's own conversations
-  // when there's no project context, or just the open project's - never
-  // every session everywhere.
-  async function deleteAllInScope() {
-    const scoped = selectRecentSessions(sessions, projectContextPath, Number.MAX_SAFE_INTEGER)
-    if (scoped.length === 0) return
-    const scopeLabel = projectContextPath ? 'this project' : 'Home'
-    if (!window.confirm(`Delete all ${scoped.length} conversation${scoped.length === 1 ? '' : 's'} in ${scopeLabel}? This cannot be undone.`)) return
-    await Promise.all(scoped.map((s) => deleteSession(s.id).catch(() => {})))
-    if (activeId && scoped.some((s) => s.id === activeId)) {
+  function handleHistoryDeleted(ids: string[]) {
+    if (activeId && ids.includes(activeId)) {
       setActive(null)
       navigate('/')
     }
@@ -99,12 +93,20 @@ export function Sidebar() {
         </div>
 
         <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 py-2">
-          {!collapsed && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onDeleteAll={() => void deleteAllInScope()} />}
+          {!collapsed && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onOpenHistory={() => setHistoryOpen(true)} />}
         </div>
 
         <SidebarFooterMenu collapsed={collapsed} />
       </aside>
 
+      <SessionHistoryModal
+        open={historyOpen}
+        sessions={scopedSessions}
+        scopeLabel={projectContextPath ? 'project' : 'Home'}
+        onClose={() => setHistoryOpen(false)}
+        onOpenSession={openSession}
+        onDeleted={handleHistoryDeleted}
+      />
       <SearchModal open={searchOpen} sessions={sessions} onClose={() => setSearchOpen(false)} onSelect={openSession} />
     </>
   )
