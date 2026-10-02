@@ -7,6 +7,7 @@ from seshat_intelligence.api.schemas import HealthResponse
 from seshat_intelligence.config import Settings, get_settings
 from seshat_intelligence.connectors.extraction import router_extractor
 from seshat_intelligence.connectors.gdrive import GDriveConnector
+from seshat_intelligence.connectors.openapi import add_event_schemas
 from seshat_intelligence.connectors.registry import ConnectorRegistry
 from seshat_intelligence.connectors.routes import router as connectors_router
 from seshat_intelligence.documents.chunking_pool import ChunkingPool
@@ -62,4 +63,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(documents_router)
     app.include_router(reading_router)
     app.include_router(connectors_router)
+    base_openapi = app.openapi
+
+    def openapi() -> dict:
+        if app.openapi_schema is None:
+            app.openapi_schema = add_event_schemas(base_openapi())
+        return app.openapi_schema
+
+    app.openapi = openapi  # type: ignore[method-assign]
     return app
+

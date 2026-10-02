@@ -80,5 +80,5 @@ async def test_app_registers_the_drive_connector_and_the_read_endpoint(tmp_path)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         listing = (await client.get("/v1/connectors")).json()
         schema = (await client.get("/openapi.json")).json()
-    assert listing == [{"kind": "gdrive", "capabilities": ["sync", "slim", "permissions"]}]
+    assert listing == [{"kind": "gdrive", "capabilities": ["sync", "slim", "permissions", "identities", "preview", "filters"], "permission_model": "record"}]
     assert "/v1/documents/read" in schema["paths"]

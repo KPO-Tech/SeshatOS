@@ -9,9 +9,14 @@ from pydantic import BaseModel
 from seshat_intelligence.connectors.base import (
     AnyEvent,
     Connector,
+    FiltersCapable,
+    IdentitiesCapable,
     PermissionsCapable,
+    PreviewCapable,
     SlimCapable,
     SyncCapable,
+    UpstreamError,
+    WebhookCapable,
     capabilities_of,
 )
 from seshat_intelligence.connectors.models import (
@@ -19,9 +24,15 @@ from seshat_intelligence.connectors.models import (
     ConnectorRequest,
     Failure,
     FailureEvent,
+    FilterOptionsRequest,
+    FilterOptionsResponse,
     PermissionsRequest,
+    PreviewRequest,
+    PreviewResponse,
     SyncRequest,
     ValidateResponse,
+    WebhookRequest,
+    WebhookResponse,
 )
 from seshat_intelligence.connectors.registry import ConnectorRegistry
 
@@ -43,6 +54,11 @@ def _require(connector: Connector, capability: type, name: str) -> None:
         raise HTTPException(status_code=501, detail=f"connector {connector.kind!r} does not support {name}")
 
 
+def _upstream(exc: UpstreamError) -> HTTPException:
+    headers = {"Retry-After": str(int(exc.retry_after))} if exc.retry_after is not None else None
+    return HTTPException(status_code=exc.status, detail=str(exc), headers=headers)
+
+
 def _line(event: BaseModel) -> bytes:
     return event.model_dump_json(exclude_none=True).encode() + b"\n"
 
@@ -60,7 +76,11 @@ async def _ndjson(events: AsyncIterator[AnyEvent], stage: str) -> AsyncIterator[
 @router.get("", response_model=list[ConnectorInfo])
 async def list_connectors(request: Request) -> list[ConnectorInfo]:
     registry: ConnectorRegistry = request.app.state.connector_registry
-    return [ConnectorInfo(kind=kind, capabilities=capabilities_of(registry.get(kind))) for kind in registry.kinds()]
+    infos = []
+    for kind in registry.kinds():
+        connector = registry.get(kind)
+        infos.append(ConnectorInfo(kind=kind, capabilities=capabilities_of(connector), permission_model=connector.permission_model))
+    return infos
 
 
 @router.post("/{kind}/validate", response_model=ValidateResponse)
@@ -87,3 +107,37 @@ async def permissions(kind: str, body: PermissionsRequest, request: Request) -> 
     connector = _connector(request, kind)
     _require(connector, PermissionsCapable, "permission refresh")
     return StreamingResponse(_ndjson(connector.permissions(body), "permissions"), media_type=NDJSON)
+
+
+@router.post("/{kind}/identities")
+async def identities(kind: str, body: ConnectorRequest, request: Request) -> StreamingResponse:
+    connector = _connector(request, kind)
+    _require(connector, IdentitiesCapable, "identity listing")
+    return StreamingResponse(_ndjson(connector.identities(body), "permissions"), media_type=NDJSON)
+
+
+@router.post("/{kind}/preview", response_model=PreviewResponse)
+async def preview(kind: str, body: PreviewRequest, request: Request) -> PreviewResponse:
+    connector = _connector(request, kind)
+    _require(connector, PreviewCapable, "preview")
+    try:
+        return await connector.preview(body)
+    except UpstreamError as exc:
+        raise _upstream(exc) from exc
+
+
+@router.post("/{kind}/webhook", response_model=WebhookResponse)
+async def webhook(kind: str, body: WebhookRequest, request: Request) -> WebhookResponse:
+    connector = _connector(request, kind)
+    _require(connector, WebhookCapable, "webhooks")
+    return await connector.handle_webhook(body)
+
+
+@router.post("/{kind}/filters", response_model=FilterOptionsResponse)
+async def filters(kind: str, body: FilterOptionsRequest, request: Request) -> FilterOptionsResponse:
+    connector = _connector(request, kind)
+    _require(connector, FiltersCapable, "filter options")
+    try:
+        return await connector.filter_options(body)
+    except UpstreamError as exc:
+        raise _upstream(exc) from exc

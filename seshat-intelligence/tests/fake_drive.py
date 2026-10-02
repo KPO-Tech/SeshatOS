@@ -22,6 +22,12 @@ class FakeDrive:
         self.changes = []  # change pages: {"changes": [...], "next": token|None, "new_start": token|None}
         self.start_token = "start-1"
         self.rate_limit = False
+        self.users = []  # admin directory users
+        self.groups = []  # admin directory groups
+        self.members = {}  # group id -> list of member dicts, or an int status for an error
+        self.drives = []  # shared drives
+        self.folders = {}  # parent id -> list of folder metadata
+        self.admin_status = None  # make the admin directory answer with this status
         self.calls = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
@@ -37,6 +43,23 @@ class FakeDrive:
             return httpx.Response(200, json={"user": {"emailAddress": "me@example.com"}})
         if path == "/drive/v3/changes/startPageToken":
             return httpx.Response(200, json={"startPageToken": self.start_token})
+        if path.startswith("/admin/directory/v1/"):
+            if self.admin_status:
+                return httpx.Response(self.admin_status, json={})
+            if path == "/admin/directory/v1/users":
+                return httpx.Response(200, json={"users": self.users})
+            if path == "/admin/directory/v1/groups":
+                return httpx.Response(200, json={"groups": self.groups})
+            group_id = path.split("/")[5]
+            outcome = self.members.get(group_id, [])
+            if isinstance(outcome, int):
+                return httpx.Response(outcome, json={})
+            return httpx.Response(200, json={"members": outcome})
+        if path == "/drive/v3/drives":
+            return httpx.Response(200, json={"drives": self.drives})
+        if path == "/drive/v3/files" and "in parents" in params.get("q", ""):
+            parent = params["q"].split("'")[1]
+            return httpx.Response(200, json={"files": self.folders.get(parent, [])})
         if path == "/drive/v3/changes":
             page = self.changes[int(params["pageToken"].removeprefix("c"))] if params["pageToken"].startswith("c") else self.changes[0]
             body = {"changes": page["changes"]}
