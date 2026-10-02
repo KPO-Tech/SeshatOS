@@ -55,7 +55,7 @@ export type ToolDisplayEntry = {
   category?: ToolCategory
   /** Terse status line (SilentToolView) instead of a full card - no user-visible input/output worth showing. */
   silent?: boolean
-  /** Can fold into a collapsed multi-tool run (QuietToolGroup). Defaults true. */
+  /** Can join a multi-tool run's timeline (QuietToolGroup) instead of getting its own card. Defaults true. */
   groupable?: boolean
   /** Full-card body when expanded. Omitted -> GenericToolView (raw input/output JSON). */
   render?: ToolViewComponent

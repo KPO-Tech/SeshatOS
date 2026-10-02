@@ -232,7 +232,7 @@ export function groupBlocks(blocks: GroupableBlock[], messageId: string): Render
       }
       // A lone tool (nothing simultaneous next to it - just text before or
       // after) gets the full standalone card via the normal 'block' path
-      // below, not the collapsed quiet-group summary line. Grouping is only
+      // below, not a quiet-group timeline. Grouping is only
       // useful once there are 2+ tools running back-to-back with no text
       // separating them.
       if (group.length > 1) {

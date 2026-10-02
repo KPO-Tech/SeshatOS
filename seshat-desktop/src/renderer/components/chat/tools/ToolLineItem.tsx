@@ -6,7 +6,7 @@ import type { ToolUseBlock } from '@renderer/api/types'
 import { ErrorPre } from './common'
 import { DiffView, resolveDiffRows } from './DiffView'
 import { basename, fmtDuration, parseAskUserAnswers, resolveAskUserQuestions } from './helpers'
-import { summarizeQuietGroup, toolResultSubtitle, toolStatus } from './quietGroupPhrase'
+import { summarizeTool, toolResultSubtitle, toolStatus } from './quietGroupPhrase'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
 import type { ToolBlockProps } from './types'
@@ -58,7 +58,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   // Only ever true while live/erroring - clicking a row opens the tool's
   // own panel instead of toggling this in place (see toggle() below).
   const expanded = autoExpand || isRunning || isError
-  const label = isPreviewTool ? toolLabel(tool.name) : summarizeQuietGroup([tool])
+  const label = isPreviewTool ? toolLabel(tool.name) : summarizeTool(tool)
   const detail = isPreviewTool ? previewDetail(tool) : ''
   const meta = isPreviewTool ? previewMeta(tool) : ''
   const isDiffTool = isEditTool(tool.name) || isWriteTool(tool.name)
