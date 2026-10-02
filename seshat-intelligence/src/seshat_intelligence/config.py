@@ -51,6 +51,22 @@ class Settings(BaseSettings):
     # documents where a missed borderless table or chart is not acceptable (invoices, financial reports).
     pdf_mode: Literal["pages", "whole"] = "pages"
     min_chars_per_page: int = 20
+    # How Docling is set up (see providers/docling_setup.py). The profile says which models are used:
+    # minimal is Docling's own default (layout and tables), standard adds the accurate table mode and the
+    # picture classifier, full adds formulas as LaTeX and code with its line breaks. scripts/prepare_models.py
+    # downloads what a profile needs and says which one suits the machine.
+    docling_profile: Literal["minimal", "standard", "full"] = "minimal"
+    # "pypdfium" reads PDF text correctly where Docling's own reader splits words and accents.
+    docling_pdf_backend: Literal["pypdfium", "docling-parse"] = "pypdfium"
+    docling_device: Literal["auto", "cpu", "cuda", "mps"] = "auto"
+    docling_num_threads: int = 4
+    # "auto" lets Docling pick an installed engine. easyocr reads the languages below (BCP-47 codes).
+    docling_ocr: Literal["auto", "rapidocr", "easyocr", "none"] = "auto"
+    docling_ocr_languages: list[str] = ["fr", "en"]
+    # Where prepared models live. Unset, Docling uses the Hugging Face cache.
+    docling_artifacts_path: Path | None = None
+    # True: never download at run time. A model that was not prepared is an error.
+    docling_offline: bool = False
     # An image must cover at least this share of the page to make it need an engine.
     min_image_area_ratio: float = 0.1
 

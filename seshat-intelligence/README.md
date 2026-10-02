@@ -277,6 +277,36 @@ its own module next to `docling.py` in `providers/`; a new chunker
 implementation gets its own module next to `docling.py` in
 `providers/chunker/`.
 
+## Preparing the models
+
+Docling needs models, and nothing should be downloaded in the middle of a request. `scripts/prepare_models.py`
+lists what a profile needs, downloads what is missing, and checks offline that it all loads:
+
+```bash
+uv run python scripts/prepare_models.py                       # the plan: hardware, profile, what is there, what is missing
+uv run python scripts/prepare_models.py --download --verify   # fetch what is missing, then convert a tiny PDF offline
+uv run python scripts/prepare_models.py --profile full --device cuda --artifacts-path /models/docling --download --verify
+```
+
+Nothing is downloaded without `--download`. The profile (`SESHAT_INTELLIGENCE_DOCLING_PROFILE`):
+
+| Profile | Models | Size | Adds |
+|---|---|---|---|
+| `minimal` (default) | layout, TableFormer | 522 MB | what Docling does by default |
+| `standard` | + picture classifier | 556 MB | accurate table mode, picture labels |
+| `full` | + CodeFormulaV2 | 1196 MB | formulas as LaTeX, code with its line breaks |
+
+`--profile auto` picks one from the hardware: `full` on a CUDA card with 6 GB or more, `standard` otherwise,
+`minimal` below 8 GB of memory. OCR (RapidOCR) ships inside the Python package; `--ocr easyocr --ocr-languages fr en`
+adds EasyOCR's models. By default models go to Docling's own cache; `--artifacts-path DIR` puts them in a directory
+for a server image, and the service then needs `SESHAT_INTELLIGENCE_DOCLING_ARTIFACTS_PATH` set to it.
+`SESHAT_INTELLIGENCE_DOCLING_OFFLINE=true` makes the service refuse to download at run time.
+
+The service reads PDFs with pdfium (`SESHAT_INTELLIGENCE_DOCLING_PDF_BACKEND`, default `pypdfium`). Docling's own PDF
+reader splits words at kerning gaps and breaks accented letters on some fonts. What Docling returns is then cleaned of
+defects that come from PDF encoding (an accent left apart from its letter, ligature glyphs, soft hyphens); see
+`providers/hygiene.py`. Keep `docling-parse` below 7.22 if you switch back to its reader: 7.22 changes characters and splits words.
+
 ## Running it
 
 ```bash
