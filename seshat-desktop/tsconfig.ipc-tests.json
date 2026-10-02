@@ -14,6 +14,8 @@
     "src/main/ipc/validation.ts",
     "src/main/ipc/validation.test.ts",
     "src/main/ipc/network-errors.ts",
-    "src/main/ipc/network-errors.test.ts"
+    "src/main/ipc/network-errors.test.ts",
+    "src/main/ipc/title-model-guard.ts",
+    "src/main/ipc/title-model-guard.test.ts"
   ]
 }

@@ -23,6 +23,35 @@ type WhisperProgress = {
   totalBytes: number
 }
 
+type LlamaModelInfo = {
+  id: string
+  label: string
+  repo: string
+  filename: string
+  approxSizeBytes: number
+  description: string
+  custom?: boolean
+}
+
+type LlamaStatus = {
+  supported: boolean
+  binaryReady: boolean
+  running: boolean
+  enabled: boolean
+  provisioned: boolean
+  port?: number
+  activeModelId: string
+  downloadedModelIds: string[]
+  models: LlamaModelInfo[]
+}
+
+type LlamaProgress = {
+  phase: 'binary' | 'model'
+  modelId?: string
+  receivedBytes: number
+  totalBytes: number
+}
+
 type EnvVarDef = {
   key: string
   label: string
@@ -160,6 +189,21 @@ const nexusBridge = {
       const handler = (_event: Electron.IpcRendererEvent, progress: WhisperProgress) => listener(progress)
       ipcRenderer.on('whisper:progress', handler)
       return () => ipcRenderer.removeListener('whisper:progress', handler)
+    },
+  },
+  llama: {
+    status: (): Promise<LlamaStatus> => ipcRenderer.invoke('llama:status'),
+    provision: (): Promise<LlamaStatus> => ipcRenderer.invoke('llama:provision'),
+    downloadModel: (modelId: string): Promise<LlamaStatus> => ipcRenderer.invoke('llama:download-model', modelId),
+    addCustomModel: (repo: string, filename: string): Promise<LlamaStatus> => ipcRenderer.invoke('llama:add-custom-model', repo, filename),
+    activateModel: (modelId: string): Promise<LlamaStatus> => ipcRenderer.invoke('llama:activate-model', modelId),
+    deleteModel: (modelId: string): Promise<LlamaStatus> => ipcRenderer.invoke('llama:delete-model', modelId),
+    enable: (): Promise<LlamaStatus> => ipcRenderer.invoke('llama:enable'),
+    disable: (): Promise<LlamaStatus> => ipcRenderer.invoke('llama:disable'),
+    onProgress: (listener: (progress: LlamaProgress) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, progress: LlamaProgress) => listener(progress)
+      ipcRenderer.on('llama:progress', handler)
+      return () => ipcRenderer.removeListener('llama:progress', handler)
     },
   },
   envVars: {

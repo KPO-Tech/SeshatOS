@@ -57,6 +57,7 @@ type SDKRuntime struct {
 	baseConfig            *sdk.ClientConfig
 	terminalRelay         *TerminalRelay
 	resolveLocalSTT       func(ctx context.Context) *sdk.SpeechToTextConfig
+	resolveLocalTitle     func(ctx context.Context) *LocalTitleEndpoint
 	resolveBrowser        func(ctx context.Context) string
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
 	resolveSandboxMode    func(ctx context.Context) (sdk.SandboxKind, bool)
@@ -92,6 +93,7 @@ type clientCacheKey struct {
 	apiKey   string
 	baseURL  string
 	browser  string
+	title    string
 }
 
 // cachedRuntimeClient pairs a cached client with when it was last handed out,
@@ -139,6 +141,23 @@ func (r *SDKRuntime) SetTerminalRelay(relay *TerminalRelay) {
 // SetTerminalRelay above.
 func (r *SDKRuntime) SetLocalSTTResolver(resolve func(ctx context.Context) *sdk.SpeechToTextConfig) {
 	r.resolveLocalSTT = resolve
+}
+
+// LocalTitleEndpoint is an OpenAI-compatible server (llama.cpp's llama-server)
+// running a small non-reasoning model used only to name sessions.
+type LocalTitleEndpoint struct {
+	BaseURL string
+	Model   string
+}
+
+// SetLocalTitleResolver attaches a per-request resolver for the local title
+// model (see api.handleLocalTitleConfig). When it returns non-nil, session
+// titles are generated there instead of by the chat model, which keeps naming
+// off the critical path and works with any chat provider.
+func (r *SDKRuntime) SetLocalTitleResolver(resolve func(ctx context.Context) *LocalTitleEndpoint) {
+	r.mu.Lock()
+	r.resolveLocalTitle = resolve
+	r.mu.Unlock()
 }
 
 // SetSandboxModeResolver attaches the per-request resolver for Settings >
@@ -653,6 +672,9 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 	if cfg.ProviderConfig != nil {
 		key.baseURL = cfg.ProviderConfig.BaseURL
 	}
+	if cfg.TitleProviderConfig != nil {
+		key.title = cfg.TitleProviderConfig.BaseURL + "|" + cfg.TitleModel.Model
+	}
 
 	r.clientCacheMu.Lock()
 	r.evictExpiredClientsLocked()
@@ -724,6 +746,7 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	r.mu.RLock()
 	cfg := cloneClientConfig(r.baseConfig)
 	resolveLocalSTT := r.resolveLocalSTT
+	resolveLocalTitle := r.resolveLocalTitle
 	resolveBrowser := r.resolveBrowser
 	resolveBrowserSession := r.resolveBrowserSession
 	resolveSandboxMode := r.resolveSandboxMode
@@ -750,7 +773,26 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 			cfg.SpeechToText = localSTT
 		}
 	}
+	if resolveLocalTitle != nil {
+		if endpoint := resolveLocalTitle(ctx); endpoint != nil {
+			applyLocalTitleEndpoint(cfg, endpoint)
+		}
+	}
 	return cfg
+}
+
+func applyLocalTitleEndpoint(cfg *sdk.ClientConfig, endpoint *LocalTitleEndpoint) {
+	provider := types.APIProvider("openai")
+	providerConfig := providers.GetProviderConfig(provider)
+	if providerConfig == nil {
+		providerConfig = &providers.Config{Provider: provider}
+	}
+	providerConfig.Provider = provider
+	providerConfig.BaseURL = endpoint.BaseURL
+	// llama-server ignores the key, but the OpenAI client refuses to build without one.
+	providerConfig.APIKey = "local"
+	cfg.TitleModel = sdk.ModelIdentifier{Provider: provider, Model: endpoint.Model}
+	cfg.TitleProviderConfig = providerConfig
 }
 
 func (r *SDKRuntime) buildClientConfig(ctx context.Context, providerCfg RuntimeProviderConfig) *sdk.ClientConfig {

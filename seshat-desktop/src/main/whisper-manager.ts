@@ -1,9 +1,8 @@
 import { spawn, type ChildProcess } from 'child_process'
 import { createWriteStream, existsSync } from 'fs'
 import { mkdir, chmod, readdir, stat, readFile, writeFile, unlink, rm, rename } from 'fs/promises'
-import { join, relative, resolve as resolvePath } from 'path'
-import { createServer } from 'net'
-import JSZip from 'jszip'
+import { join } from 'path'
+import { downloadToFile, extractArchive, findFreePort, waitUntilReady } from './local-runtime-utils'
 import { resolveRuntimeRoot } from './runtime'
 import { callBackendAsCurrentUser } from './ipc/backend'
 
@@ -13,8 +12,6 @@ import { callBackendAsCurrentUser } from './ipc/backend'
 const WHISPER_RELEASE_TAG = 'v1.9.1'
 const WHISPER_RELEASE_BASE = `https://github.com/ggml-org/whisper.cpp/releases/download/${WHISPER_RELEASE_TAG}`
 const MODEL_BASE_URL = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main'
-const READY_POLL_INTERVAL_MS = 500
-const READY_TIMEOUT_MS = 30_000
 const ACTIVE_MODEL_FILE = 'active-model.json'
 
 // Multilingual, non-quantized tiers only for now - quantized (q5/q8) variants
@@ -137,82 +134,6 @@ export async function getWhisperStatus(): Promise<WhisperStatus> {
   }
 }
 
-async function downloadToFile(url: string, destPath: string, onProgress?: (receivedBytes: number, totalBytes: number) => void) {
-  const res = await fetch(url)
-  if (!res.ok || !res.body) {
-    throw new Error(`download failed (${res.status}): ${url}`)
-  }
-  const totalBytes = Number(res.headers.get('content-length') ?? 0)
-  let receivedBytes = 0
-
-  await mkdir(join(destPath, '..'), { recursive: true })
-  const fileStream = createWriteStream(destPath)
-  const reader = res.body.getReader()
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      receivedBytes += value.byteLength
-      await new Promise<void>((resolve, reject) => {
-        fileStream.write(value, (err) => (err ? reject(err) : resolve()))
-      })
-      onProgress?.(receivedBytes, totalBytes)
-    }
-  } finally {
-    reader.releaseLock()
-    await new Promise<void>((resolve) => fileStream.end(resolve))
-  }
-}
-
-// Windows .zip assets are extracted with the bundled jszip (pure JS, already
-// a project dependency) instead of shelling out to whatever `tar` resolves
-// to on PATH - on Windows that's fragile in practice: pre-1803 builds ship
-// no tar.exe at all, Git/MSYS/Cygwin can shadow it with a GNU tar that can't
-// read zip, and antivirus quarantining a freshly-written unsigned .exe/.dll
-// mid-extraction kills the child process with a bare, undiagnosable exit
-// code. Linux's .tar.gz asset still goes through system tar, which is
-// universal and reliable there.
-async function extractZipArchive(archivePath: string, destDir: string): Promise<void> {
-  const buffer = await readFile(archivePath)
-  const zip = await JSZip.loadAsync(buffer)
-  const destRoot = resolvePath(destDir)
-  for (const entry of Object.values(zip.files)) {
-    const outPath = resolvePath(destDir, entry.name)
-    // Zip-slip guard: refuse any entry whose resolved path escapes destDir.
-    const rel = relative(destRoot, outPath)
-    if (rel.startsWith('..')) {
-      throw new Error(`refusing to extract entry outside destination: ${entry.name}`)
-    }
-    if (entry.dir) {
-      await mkdir(outPath, { recursive: true })
-      continue
-    }
-    await mkdir(join(outPath, '..'), { recursive: true })
-    const content = await entry.async('nodebuffer')
-    await writeFile(outPath, content)
-  }
-}
-
-function extractTarArchive(archivePath: string, destDir: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn('tar', ['-xf', archivePath, '-C', destDir])
-    let stderr = ''
-    child.stderr?.on('data', (chunk) => { stderr += chunk.toString() })
-    child.on('error', reject)
-    child.on('exit', (code) => {
-      if (code === 0) resolve()
-      else reject(new Error(`tar extraction failed (code ${code}): ${stderr}`))
-    })
-  })
-}
-
-function extractArchive(archivePath: string, destDir: string): Promise<void> {
-  if (archivePath.toLowerCase().endsWith('.zip')) {
-    return extractZipArchive(archivePath, destDir)
-  }
-  return extractTarArchive(archivePath, destDir)
-}
-
 async function ensureBinaryDownloaded(onProgress?: (p: WhisperProgress) => void): Promise<void> {
   const asset = platformAsset()
   if (!asset) {
@@ -318,38 +239,6 @@ export async function deleteModel(modelId: WhisperModelId): Promise<void> {
   }
 }
 
-function findFreePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = createServer()
-    server.unref()
-    server.on('error', reject)
-    server.listen(0, '127.0.0.1', () => {
-      const address = server.address()
-      const port = typeof address === 'object' && address ? address.port : null
-      server.close(() => {
-        if (port) resolve(port)
-        else reject(new Error('could not determine a free port'))
-      })
-    })
-  })
-}
-
-async function waitUntilReady(port: number): Promise<void> {
-  const deadline = Date.now() + READY_TIMEOUT_MS
-  while (Date.now() < deadline) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/`, { method: 'GET' })
-      // whisper-server answers on any route (even 404s for GET /) once it's
-      // actually listening; a thrown fetch error means "not up yet".
-      if (res) return
-    } catch {
-      // not listening yet
-    }
-    await new Promise((resolve) => setTimeout(resolve, READY_POLL_INTERVAL_MS))
-  }
-  throw new Error('whisper-server did not become ready in time')
-}
-
 /** Spawns whisper-server (if not already running) using the active model, and tells seshat-backend where it is. */
 export async function enableLocalWhisper(): Promise<void> {
   if (serverProcess) return
@@ -391,7 +280,7 @@ export async function enableLocalWhisper(): Promise<void> {
   serverPort = port
 
   try {
-    await waitUntilReady(port)
+    await waitUntilReady(port, 'whisper-server')
   } catch (error) {
     child.kill('SIGTERM')
     serverProcess = null

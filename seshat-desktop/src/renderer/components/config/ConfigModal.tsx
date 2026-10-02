@@ -11,11 +11,13 @@ import { MultimodalConfig } from './multimodal/MultimodalConfig'
 import { ProvidersConfig } from './providers/ProvidersConfig'
 import { SkillsConfig } from './skills/SkillsConfig'
 import { StorageConfig } from './storage/StorageConfig'
+import { TitlesConfig } from './titles/TitlesConfig'
 import { WebSearchConfig } from './web-search/WebSearchConfig'
 
 export type ConfigSection =
   | 'providers'
   | 'models'
+  | 'titles'
   | 'web-search'
   | 'knowledge'
   | 'multimodal'
@@ -36,6 +38,7 @@ type Props = {
 const sections: Array<{ id: ConfigSection; label: string; icon: IconName; group: string; description: string }> = [
   { id: 'providers', label: 'Providers', icon: 'provider', group: 'AI Runtime', description: 'Configure OpenAI, Anthropic, Mistral, Ollama, and custom compatible providers.' },
   { id: 'models', label: 'Models', icon: 'model', group: 'AI Runtime', description: 'Choose defaults, model catalogs, aliases, and fallback behavior.' },
+  { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
   { id: 'multimodal', label: 'Multimodal', icon: 'media', group: 'Knowledge', description: 'Image generation, voice input, Whisper models, and local media capabilities.' },
@@ -108,6 +111,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
             <div className="mt-5 border-t border-[var(--border-soft)] pt-6">
               {activeSection === 'providers' && <ProvidersConfig />}
               {activeSection === 'models' && <ModelsConfig />}
+              {activeSection === 'titles' && <TitlesConfig />}
               {activeSection === 'web-search' && <WebSearchConfig />}
               {activeSection === 'knowledge' && <KnowledgeConfig />}
               {activeSection === 'multimodal' && <MultimodalConfig />}
@@ -118,7 +122,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'agents' && <AgentsConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
               {activeSection === 'automation' && <AutomationConfig />}
-              {activeSection !== 'providers' && activeSection !== 'models' && activeSection !== 'web-search' && activeSection !== 'knowledge' && activeSection !== 'multimodal' && activeSection !== 'mcp' && activeSection !== 'connectors' && activeSection !== 'environment' && activeSection !== 'storage' && activeSection !== 'agents' && activeSection !== 'skills' && activeSection !== 'automation' && <ConfigOverview active={active} />}
+              {activeSection !== 'providers' && activeSection !== 'models' && activeSection !== 'titles' && activeSection !== 'web-search' && activeSection !== 'knowledge' && activeSection !== 'multimodal' && activeSection !== 'mcp' && activeSection !== 'connectors' && activeSection !== 'environment' && activeSection !== 'storage' && activeSection !== 'agents' && activeSection !== 'skills' && activeSection !== 'automation' && <ConfigOverview active={active} />}
             </div>
           </div>
         </section>
@@ -173,6 +177,10 @@ const configDetails: Record<ConfigSection, { source: string; scope: string[] }> 
   providers: {
     source: 'seshat-ui/pages/settings/ProvidersView.tsx',
     scope: ['Provider catalog', 'API key or OAuth connection', 'Connection tests', 'Default provider/model readiness']
+  },
+  titles: {
+    source: 'llama-manager.ts, whisper-manager pattern',
+    scope: ['Local title model', 'Model catalog', 'Custom GGUF']
   },
   models: {
     source: 'seshat-ui Home and Conversation model selectors',

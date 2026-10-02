@@ -186,3 +186,14 @@ func TestInteractiveMaxTokensForModelFallsBackForUnknownModels(t *testing.T) {
 		t.Fatalf("expected conservative fallback max output 4096, got %d", got)
 	}
 }
+
+func TestApplyLocalTitleEndpoint(t *testing.T) {
+	cfg := sdk.DefaultClientConfig()
+	applyLocalTitleEndpoint(cfg, &LocalTitleEndpoint{BaseURL: "http://127.0.0.1:9000", Model: "qwen2.5-0.5b-instruct"})
+	if cfg.TitleModel.Model != "qwen2.5-0.5b-instruct" || cfg.TitleModel.Provider != "openai" {
+		t.Fatalf("unexpected title model %+v", cfg.TitleModel)
+	}
+	if cfg.TitleProviderConfig == nil || cfg.TitleProviderConfig.BaseURL != "http://127.0.0.1:9000" || cfg.TitleProviderConfig.APIKey == "" {
+		t.Fatalf("unexpected title provider config %+v", cfg.TitleProviderConfig)
+	}
+}

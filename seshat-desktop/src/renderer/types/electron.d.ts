@@ -63,6 +63,17 @@ interface Window {
       disable: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
     }
+    llama?: {
+      status: () => Promise<LlamaStatus>
+      provision: () => Promise<LlamaStatus>
+      downloadModel: (modelId: string) => Promise<LlamaStatus>
+      addCustomModel: (repo: string, filename: string) => Promise<LlamaStatus>
+      activateModel: (modelId: string) => Promise<LlamaStatus>
+      deleteModel: (modelId: string) => Promise<LlamaStatus>
+      enable: () => Promise<LlamaStatus>
+      disable: () => Promise<LlamaStatus>
+      onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
+    }
     envVars?: {
       catalog: () => Promise<Array<{ key: string; label: string; description: string; group: string; groupLabel: string; helpUrl?: string; hidden?: boolean }>>
       status: () => Promise<Record<string, boolean>>
@@ -147,4 +158,26 @@ type TerminalRelayEvent = {
   message?: string
   exitCode?: number
   durationMs?: number
+}
+
+interface LlamaModelInfo {
+  id: string
+  label: string
+  repo: string
+  filename: string
+  approxSizeBytes: number
+  description: string
+  custom?: boolean
+}
+
+interface LlamaStatus {
+  supported: boolean
+  binaryReady: boolean
+  running: boolean
+  enabled: boolean
+  provisioned: boolean
+  port?: number
+  activeModelId: string
+  downloadedModelIds: string[]
+  models: LlamaModelInfo[]
 }

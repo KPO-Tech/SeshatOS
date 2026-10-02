@@ -46,6 +46,7 @@ type App struct {
 	nativeDocDownload    *nativeDocDownloadState
 	rerankerStore        *db.RerankerConfigStore
 	localSTTStore        *db.LocalSTTConfigStore
+	localTitleStore      *db.LocalTitleConfigStore
 	sandboxConfigStore   *db.SandboxConfigStore
 	storageConfigStore   *db.StorageConfigStore
 	dataflowSecrets      *dataflowsecrets.Service
@@ -119,6 +120,7 @@ type AppConfig struct {
 	DocumentReaderStore   *db.DocumentReaderConfigStore
 	RerankerStore         *db.RerankerConfigStore
 	LocalSTTStore         *db.LocalSTTConfigStore
+	LocalTitleStore       *db.LocalTitleConfigStore
 	SandboxConfigStore    *db.SandboxConfigStore
 	StorageConfigStore    *db.StorageConfigStore
 	DataflowSecrets       *dataflowsecrets.Service
@@ -180,6 +182,7 @@ func NewApp(cfg AppConfig) *App {
 		documentReaderStore:   cfg.DocumentReaderStore,
 		rerankerStore:         cfg.RerankerStore,
 		localSTTStore:         cfg.LocalSTTStore,
+		localTitleStore:       cfg.LocalTitleStore,
 		sandboxConfigStore:    cfg.SandboxConfigStore,
 		storageConfigStore:    cfg.StorageConfigStore,
 		dataflowSecrets:       cfg.DataflowSecrets,

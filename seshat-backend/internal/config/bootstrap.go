@@ -448,6 +448,12 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return nil, nil, fmt.Errorf("init reranker config store: %w", err)
 	}
 
+	localTitleConfigStore, err := db.NewLocalTitleConfigStore(database)
+	if err != nil {
+		_ = cleanup()
+		return nil, nil, fmt.Errorf("init local title config store: %w", err)
+	}
+
 	localSTTConfigStore, err := db.NewLocalSTTConfigStore(database)
 	if err != nil {
 		_ = cleanup()
@@ -952,6 +958,16 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		}
 	})
 
+	// The Electron main process points this at a small local llama-server once
+	// it is running (see api.handleLocalTitleConfig); no restart needed.
+	runtime.SetLocalTitleResolver(func(ctx context.Context) *backendquery.LocalTitleEndpoint {
+		cfg, err := localTitleConfigStore.Get(ctx)
+		if err != nil || cfg == nil || !cfg.Enabled || cfg.BaseURL == "" || cfg.Model == "" {
+			return nil
+		}
+		return &backendquery.LocalTitleEndpoint{BaseURL: cfg.BaseURL, Model: cfg.Model}
+	})
+
 	// Settings > Environment lets the user choose Docker-sandboxed vs direct
 	// host execution for the bash tool (see db.SandboxConfigStore) - no
 	// stored choice (a fresh install) resolves to SandboxModeLocal, not the
@@ -1149,6 +1165,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		DocumentReaderStore:   documentReaderConfigStore,
 		RerankerStore:         rerankerConfigStore,
 		LocalSTTStore:         localSTTConfigStore,
+		LocalTitleStore:       localTitleConfigStore,
 		SandboxConfigStore:    sandboxConfigStore,
 		StorageConfigStore:    storageConfigStore,
 		DataflowSecrets:       dataflowSecretsService,

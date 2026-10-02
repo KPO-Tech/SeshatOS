@@ -341,6 +341,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gSandboxConfig{})
 			},
 		},
+		{
+			ID:    "20261002_049_local_title_config",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gLocalTitleConfig{})
+			},
+		},
 	}
 }
 

@@ -5,10 +5,12 @@ import { registerFilesystemHandlers } from './ipc/filesystem'
 import { registerSecureStoreHandlers } from './ipc/secure-store'
 import { registerBackendHandlers } from './ipc/backend'
 import { registerWhisperHandlers } from './ipc/whisper'
+import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
 import { resolveRuntimeRoot } from './runtime'
 import { startBackendSidecar, stopBackendSidecar } from './backend-process'
 import { stopWhisperServerProcess } from './whisper-manager'
+import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
 import { isExternalOpenAllowed } from './url-safety'
 import { applyContentSecurityPolicy } from './content-security-policy'
@@ -127,6 +129,7 @@ app.whenReady().then(async () => {
   registerSecureStoreHandlers(ipcMain)
   registerBackendHandlers(ipcMain)
   registerWhisperHandlers(ipcMain)
+  registerLlamaHandlers(ipcMain)
   registerEnvVarsHandlers(ipcMain)
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
@@ -160,6 +163,11 @@ app.whenReady().then(async () => {
 
   createWindow()
   setupAutoUpdater()
+  // Installs llama.cpp and the default title model on first launch, in the
+  // background; chat works meanwhile and titles fall back to the chat model.
+  startLlamaOnLaunch(broadcastLlamaProgress).catch((error) => {
+    console.warn('[llama] local title model unavailable:', error instanceof Error ? error.message : error)
+  })
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -174,5 +182,6 @@ app.on('will-quit', () => {
   browserPanel.destroy()
   stopAllTerminalRelays()
   stopWhisperServerProcess()
+  stopLlamaServerProcess()
   void stopBackendSidecar()
 })
