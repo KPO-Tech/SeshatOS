@@ -143,21 +143,23 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
                   <>
                     <button
                       className={cx(
-                        'flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-[5px] text-left text-[12.5px] leading-5 transition-colors duration-150',
+                        'flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent py-[5px] pl-2 pr-0 text-left text-[12.5px] leading-5 transition-colors duration-150',
                         active ? 'font-medium text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       )}
                       onClick={() => onOpenSession(session.id)}
                       type="button"
                     >
-                      {isBusy && <span className="size-[5px] shrink-0 animate-pulse rounded-full bg-[var(--accent-primary)]" aria-hidden="true" />}
                       <span className={cx('min-w-0 flex-1 truncate', isUntitledSessionTitle(session.title) && 'italic text-[var(--text-muted)]')}>
                         {session.title || UNTITLED_SESSION_TITLE}
                       </span>
                     </button>
-                    <div className="sb-recent-menu-wrap absolute right-1 top-1/2 -translate-y-1/2">
+                    <div className="sb-recent-menu-wrap relative flex size-5 shrink-0 items-center justify-center">
+                      {isBusy && !menuOpen && (
+                        <span className="size-[6px] animate-pulse rounded-full bg-[var(--accent-primary)] group-hover:hidden" title="Running" aria-label="Running" />
+                      )}
                       <button
                         className={cx(
-                          'flex size-5 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-[var(--surface-hover)] text-[var(--text-muted)] opacity-0 transition duration-150 hover:text-[var(--text-primary)] group-hover:opacity-100',
+                          'absolute inset-0 flex cursor-pointer items-center justify-center border-0 bg-transparent text-[var(--text-muted)] opacity-0 transition duration-150 hover:text-[var(--text-primary)] group-hover:opacity-100',
                           menuOpen && 'text-[var(--text-primary)] opacity-100'
                         )}
                         type="button"
