@@ -33,6 +33,7 @@ Two long-running services, in two languages:
   replacement passes the same parity tests.
 - Document parsing, OCR, layout, chunking.
 - Embeddings, reranking and any other model inference, evaluation jobs.
+- Media and voice capabilities as they are built: image generation, audio (speech to text, text to speech), call center services. Real-time voice may still need its own process role, or its own service, because a long-lived streaming workload behaves differently from batch work; that is the case where the two-service rule gets revisited.
 - Tools that are easier in Python. They are exposed to the agent through MCP, which `seshat` already
   speaks, so no new protocol is needed.
 
