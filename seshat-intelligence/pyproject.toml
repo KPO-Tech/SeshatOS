@@ -37,4 +37,5 @@ packages = ["src/seshat_intelligence"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["benchmarks"]
 asyncio_mode = "auto"
