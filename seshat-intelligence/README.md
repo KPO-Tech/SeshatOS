@@ -138,10 +138,14 @@ Google Drive, read only (`connectors/gdrive`, over httpx, no Google SDK). A port
   checkpoint, so the caller keeps its previous one.
 - A link-only share is not mapped to `public`.
 
-Group permissions are emitted as `group:<email>`; membership is resolved by the server. Binary formats
-need an extractor passed to `GDriveConnector(extractor=...)`; without one they are reported as
-`unsupported_format` rather than dropped. Wiring that extractor to the document conversion pool is the
-next step.
+Group permissions are emitted as `group:<email>`; membership is resolved by the server.
+
+Binary formats (PDF, Office) go through an extractor passed to `GDriveConnector(extractor=...)`. The app
+wires `connectors/extraction.py`'s `pool_extractor`, which reuses the document conversion pool
+(Docling or Marker), so conversion runs in the pool's worker processes and the event loop stays free
+while a connector streams. Without an extractor such files are reported as `unsupported_format`. A failed
+conversion is a non-retryable `parse` failure (`extraction_failed`); a crashing extractor is a retryable
+one (`extractor_error`) and the file is carried in `retry_ids`.
 
 ## What this service is (and isn't)
 
