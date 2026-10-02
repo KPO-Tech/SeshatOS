@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime
-from typing import Any, AsyncIterator, Awaitable, Callable
+from typing import Any, AsyncIterator
 
 import httpx
 from pydantic import BaseModel, Field
@@ -28,6 +28,7 @@ from seshat_intelligence.connectors.base import (
     SlimCapable,
     SyncCapable,
 )
+from seshat_intelligence.connectors.extraction import ExtractionError, Extractor
 from seshat_intelligence.connectors.gdrive.acl import permissions_to_access
 from seshat_intelligence.connectors.gdrive.client import DriveClient, DriveError, RateLimited
 from seshat_intelligence.connectors.gdrive.filters import (
@@ -53,9 +54,6 @@ from seshat_intelligence.connectors.models import (
     SyncRequest,
     ValidateResponse,
 )
-
-# bytes, mime type, file name -> extracted text, or None when the format is not supported.
-Extractor = Callable[[bytes, str, str], Awaitable[str | None]]
 
 FILE_FIELDS = "id,name,mimeType,modifiedTime,trashed,size,webViewLink"
 DEFAULT_PAGE_BUDGET = 10
@@ -226,6 +224,15 @@ class GDriveConnector(Connector, SyncCapable, SlimCapable, PermissionsCapable):
         except DriveError as exc:
             retry.append(file_id)
             yield FailureEvent(failure=Failure(id=file_id, stage="fetch", code=f"drive_{exc.status}", message=str(exc), retryable=exc.status >= 500))
+            return
+        except ExtractionError as exc:
+            yield FailureEvent(failure=Failure(id=file_id, stage="parse", code="extraction_failed", message=str(exc), retryable=False))
+            return
+        except RateLimited:
+            raise
+        except Exception as exc:  # noqa: BLE001 - an extractor crash must not end the whole sync
+            retry.append(file_id)
+            yield FailureEvent(failure=Failure(id=file_id, stage="parse", code="extractor_error", message=str(exc), retryable=True))
             return
         if text is None:
             yield FailureEvent(failure=Failure(id=file_id, stage="parse", code="unsupported_format", message=f"no extractor for {name}", retryable=False))
