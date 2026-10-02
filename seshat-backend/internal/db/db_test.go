@@ -2235,7 +2235,7 @@ func TestProviderModelStore_CreateAndGet(t *testing.T) {
 		t.Fatalf("expected default source %q, got %q", "user", pm.Source)
 	}
 
-	fetched, err := store.GetByID(ctx, pm.ID)
+	fetched, err := store.GetByIDForSetting(ctx, ps.ID, pm.ID)
 	if err != nil {
 		t.Fatalf("GetByID: %v", err)
 	}
@@ -2318,7 +2318,7 @@ func TestProviderModelStore_Update(t *testing.T) {
 
 	newName := "GPT-3.5 Turbo"
 	newCtx := 16385
-	updated, err := store.Update(ctx, pm.ID, UpdateProviderModelParams{
+	updated, err := store.UpdateForSetting(ctx, ps.ID, pm.ID, UpdateProviderModelParams{
 		DisplayName:   &newName,
 		ContextWindow: &newCtx,
 	})
@@ -2363,7 +2363,7 @@ func TestProviderModelStore_Delete(t *testing.T) {
 		ModelID:           "to-delete",
 	})
 
-	if err := store.Delete(ctx, pm.ID); err != nil {
+	if err := store.DeleteForSetting(ctx, ps.ID, pm.ID); err != nil {
 		t.Fatalf("Delete: %v", err)
 	}
 

@@ -353,21 +353,6 @@ func (p *LocalProvider) CreateUser(ctx context.Context, principal *Principal, pa
 	return &result, nil
 }
 
-func (p *LocalProvider) GetUser(ctx context.Context, principal *Principal, userID string) (*User, error) {
-	if p == nil || p.identity == nil {
-		return nil, bkerr.Unavailable("identity store not configured", nil)
-	}
-	if err := EnsureAdmin(principal); err != nil {
-		return nil, err
-	}
-	user, err := p.identity.GetUserByID(ctx, userID)
-	if err != nil {
-		return nil, bkerr.NotFound("user not found", err)
-	}
-	result := userFromDB(user)
-	return &result, nil
-}
-
 func (p *LocalProvider) UpdateUser(ctx context.Context, principal *Principal, userID string, params UpdateUserParams) (*User, error) {
 	if p == nil || p.identity == nil {
 		return nil, bkerr.Unavailable("identity store not configured", nil)

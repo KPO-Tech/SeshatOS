@@ -112,10 +112,6 @@ func (s *ProviderModelStore) Create(ctx context.Context, p CreateProviderModelPa
 	return providerModelFromRow(row), nil
 }
 
-func (s *ProviderModelStore) GetByID(ctx context.Context, id string) (*ProviderModel, error) {
-	return s.getByScope(ctx, id, "")
-}
-
 func (s *ProviderModelStore) GetByIDForSetting(ctx context.Context, settingID, id string) (*ProviderModel, error) {
 	return s.getByScope(ctx, id, settingID)
 }
@@ -149,10 +145,6 @@ func (s *ProviderModelStore) ListBySettingID(ctx context.Context, settingID stri
 		result = append(result, *providerModelFromRow(r))
 	}
 	return result, nil
-}
-
-func (s *ProviderModelStore) Update(ctx context.Context, id string, p UpdateProviderModelParams) (*ProviderModel, error) {
-	return s.updateByScope(ctx, "", id, p)
 }
 
 func (s *ProviderModelStore) UpdateForSetting(ctx context.Context, settingID, id string, p UpdateProviderModelParams) (*ProviderModel, error) {
@@ -194,10 +186,6 @@ func (s *ProviderModelStore) updateByScope(ctx context.Context, settingID, id st
 		return nil, err
 	}
 	return s.getByScope(ctx, id, settingID)
-}
-
-func (s *ProviderModelStore) Delete(ctx context.Context, id string) error {
-	return s.deleteByScope(ctx, "", id)
 }
 
 func (s *ProviderModelStore) DeleteForSetting(ctx context.Context, settingID, id string) error {

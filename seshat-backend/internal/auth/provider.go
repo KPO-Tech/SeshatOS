@@ -65,7 +65,6 @@ type Provider interface {
 	ListUsersPaginated(ctx context.Context, principal *Principal, params db.ListUsersParams) ([]db.User, int64, error)
 	ListUsers(ctx context.Context, principal *Principal) ([]User, error)
 	CreateUser(ctx context.Context, principal *Principal, params CreateUserParams) (*User, error)
-	GetUser(ctx context.Context, principal *Principal, userID string) (*User, error)
 	UpdateUser(ctx context.Context, principal *Principal, userID string, params UpdateUserParams) (*User, error)
 	DeleteUser(ctx context.Context, principal *Principal, userID string) error
 	// DisableSelf disables the calling principal's own account. Distinct

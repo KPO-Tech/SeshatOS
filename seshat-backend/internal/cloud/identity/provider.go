@@ -237,18 +237,6 @@ func (p *Provider) CreateUser(ctx context.Context, principal *auth.Principal, pa
 	return &result, nil
 }
 
-func (p *Provider) GetUser(ctx context.Context, principal *auth.Principal, userID string) (*auth.User, error) {
-	if err := auth.EnsureAdmin(principal); err != nil {
-		return nil, err
-	}
-	user, err := p.client.GetUser(ctx, principal.AuthSession.ID, userID)
-	if err != nil {
-		return nil, cloudhttp.Translate(err)
-	}
-	result := userFromRemote(*user)
-	return &result, nil
-}
-
 func (p *Provider) UpdateUser(ctx context.Context, principal *auth.Principal, userID string, params auth.UpdateUserParams) (*auth.User, error) {
 	if err := auth.EnsureAdmin(principal); err != nil {
 		return nil, err

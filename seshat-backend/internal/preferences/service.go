@@ -2,8 +2,6 @@ package preferences
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
@@ -85,17 +83,4 @@ func (s *Service) ValidatePermissionMode(raw string) bool {
 	}
 	_, ok := types.NormalizePermissionMode(raw)
 	return ok
-}
-
-// ParsePermissionMode is a helper used by HTTP handlers.
-func ParsePermissionMode(raw string) (types.PermissionMode, bool, error) {
-	trimmed := strings.TrimSpace(raw)
-	if trimmed == "" {
-		return "", false, nil
-	}
-	mode, ok := types.NormalizePermissionMode(trimmed)
-	if !ok {
-		return "", false, fmt.Errorf("invalid permission_mode %q", raw)
-	}
-	return mode, true, nil
 }

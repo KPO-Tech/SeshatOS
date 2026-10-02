@@ -173,29 +173,6 @@ func TestValidatePermissionModeInvalid(t *testing.T) {
 	}
 }
 
-// ─── ParsePermissionMode ─────────────────────────────────────────────────────
-
-func TestParsePermissionModeEmpty(t *testing.T) {
-	mode, set, err := ParsePermissionMode("")
-	if err != nil || set || mode != "" {
-		t.Errorf("empty: expected ('', false, nil), got (%q, %v, %v)", mode, set, err)
-	}
-}
-
-func TestParsePermissionModeValid(t *testing.T) {
-	mode, set, err := ParsePermissionMode("never")
-	if err != nil || !set || mode == "" {
-		t.Errorf("valid: expected (non-empty, true, nil), got (%q, %v, %v)", mode, set, err)
-	}
-}
-
-func TestParsePermissionModeInvalid(t *testing.T) {
-	_, _, err := ParsePermissionMode("not-a-mode")
-	if err == nil {
-		t.Error("expected error for invalid permission mode")
-	}
-}
-
 // ─── ResolvePermissionModes defaults ─────────────────────────────────────────
 
 func TestResolvePermissionModesNilServiceAutomationDefaults(t *testing.T) {

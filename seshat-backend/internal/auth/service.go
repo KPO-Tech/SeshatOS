@@ -200,13 +200,6 @@ func (s *Service) CreateUser(ctx context.Context, principal *Principal, params C
 	return s.provider.CreateUser(ctx, principal, params)
 }
 
-func (s *Service) GetUser(ctx context.Context, principal *Principal, userID string) (*User, error) {
-	if s == nil || s.provider == nil {
-		return nil, bkerr.Unavailable("auth not configured", nil)
-	}
-	return s.provider.GetUser(ctx, principal, userID)
-}
-
 func (s *Service) UpdateUser(ctx context.Context, principal *Principal, userID string, params UpdateUserParams) (*User, error) {
 	if s == nil || s.provider == nil {
 		return nil, bkerr.Unavailable("auth not configured", nil)

@@ -245,20 +245,6 @@ func (s *SessionOwnershipStore) SearchByTitle(ctx context.Context, userID, needl
 	return results, nil
 }
 
-func (s *SessionOwnershipStore) ListAll(ctx context.Context) ([]SessionOwnership, error) {
-	var rows []gSessionOwnership
-	if err := s.db.GormDB().WithContext(ctx).
-		Order("updated_at_unix DESC").
-		Find(&rows).Error; err != nil {
-		return nil, fmt.Errorf("list all session ownership: %w", err)
-	}
-	results := make([]SessionOwnership, 0, len(rows))
-	for _, r := range rows {
-		results = append(results, sessionOwnershipFromGorm(r))
-	}
-	return results, nil
-}
-
 func (s *SessionOwnershipStore) Delete(ctx context.Context, sessionID string) error {
 	if err := s.db.GormDB().WithContext(ctx).
 		Delete(&gSessionOwnership{}, "session_id = ?", sessionID).Error; err != nil {
