@@ -3,10 +3,12 @@ from __future__ import annotations
 from io import BytesIO
 
 from docling.datamodel.base_models import ConversionStatus
-from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 
+from seshat_intelligence.config import get_settings
 from seshat_intelligence.providers.base import ConvertedDocument
+from seshat_intelligence.providers.docling_setup import build_converter
+from seshat_intelligence.providers.hygiene import clean_text
 
 
 class DoclingProvider:
@@ -23,7 +25,7 @@ class DoclingProvider:
     """
 
     def __init__(self) -> None:
-        self._converter = DocumentConverter()
+        self._converter = build_converter(get_settings())
 
     def convert_bytes(self, filename: str, data: bytes) -> ConvertedDocument:
         stream = DocumentStream(name=filename, stream=BytesIO(data))
@@ -35,7 +37,7 @@ class DoclingProvider:
 
         return ConvertedDocument(
             status=result.status.value,
-            markdown=result.document.export_to_markdown(),
+            markdown=clean_text(result.document.export_to_markdown()),
             raw=result.document.export_to_dict(),
             errors=errors,
         )

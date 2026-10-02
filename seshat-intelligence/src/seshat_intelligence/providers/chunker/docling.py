@@ -4,10 +4,12 @@ from io import BytesIO
 
 from docling.chunking import HybridChunker
 from docling.datamodel.base_models import ConversionStatus
-from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 
+from seshat_intelligence.config import get_settings
 from seshat_intelligence.providers.chunker.base import ChunkingFailed, ChunkResult
+from seshat_intelligence.providers.docling_setup import build_converter
+from seshat_intelligence.providers.hygiene import clean_text
 
 
 class DoclingHybridChunker:
@@ -22,7 +24,7 @@ class DoclingHybridChunker:
     """
 
     def __init__(self) -> None:
-        self._converter = DocumentConverter()
+        self._converter = build_converter(get_settings())
         self._chunker = HybridChunker()
 
     def chunk_bytes(self, filename: str, data: bytes) -> list[ChunkResult]:
@@ -33,8 +35,8 @@ class DoclingHybridChunker:
 
         out: list[ChunkResult] = []
         for index, chunk in enumerate(self._chunker.chunk(result.document)):
-            text = self._chunker.contextualize(chunk)
-            raw_text = chunk.text if chunk.text != text else None
+            text = clean_text(self._chunker.contextualize(chunk))
+            raw_text = clean_text(chunk.text) if clean_text(chunk.text) != text else None
             page_numbers = sorted(
                 {
                     prov.page_no
