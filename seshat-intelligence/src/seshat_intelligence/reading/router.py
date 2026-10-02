@@ -15,7 +15,12 @@ the engines instead, and if that fails too the result is not ok. A partial docum
 misses a page is the failure this design exists to avoid.
 
 Engines are tried in the order the policy gives, and the next one gets a second opinion when a result
-is empty or garbled. Some content is invisible to this routing (borderless tables, vector charts, which
+is empty or garbled. Three reading modes choose how all of this is used:
+
+- "custom" (default): the routing above, with the engine policy.
+- "docling": Docling alone, directly, for every file that is not plain text. No native routing.
+- "marker": Marker alone, directly, for PDFs; every other format is read by the custom native reader
+  with no engine behind it (Marker reads only PDFs), so a format that needs an engine is reported. Some content is invisible to this routing (borderless tables, vector charts, which
 need a layout model to find), so `pdf_mode="whole"` sends every PDF to the engines.
 """
 
@@ -36,6 +41,7 @@ from seshat_intelligence.reading.quality import is_garbled_text
 logger = logging.getLogger(__name__)
 
 PdfMode = Literal["pages", "whole"]
+ReadingMode = Literal["custom", "docling", "marker"]
 _USABLE_STATUS = {"success", "partial_success"}
 _TEXT_EXTENSIONS = {".txt", ".md"}
 _OFFICE_EXTENSIONS = {".docx", ".pptx", ".xlsx"}
@@ -62,47 +68,66 @@ class ReadingRouter:
         engines: Engines,
         pool: LightPool | None = None,
         pdf_mode: PdfMode = "pages",
+        mode: ReadingMode = "custom",
         min_chars_per_page: int = MIN_CHARS_PER_PAGE,
         min_image_area_ratio: float = MIN_IMAGE_AREA_RATIO,
     ) -> None:
         self._engines = engines
         self._pool = pool or LightPool()
         self._pdf_mode = pdf_mode
+        self._mode = mode
         self._min_chars = min_chars_per_page
         self._min_image_ratio = min_image_area_ratio
 
     def shutdown(self) -> None:
         self._pool.shutdown()
 
-    async def read(self, filename: str, data: bytes, pdf_mode: PdfMode | None = None) -> ReadResult:
+    async def read(self, filename: str, data: bytes, pdf_mode: PdfMode | None = None, mode: ReadingMode | None = None) -> ReadResult:
         extension = os.path.splitext(filename)[1].lower()
         if extension in _TEXT_EXTENSIONS:
             return ReadResult(ok=True, markdown=data.decode("utf-8", errors="replace"), source="native")
+        mode = mode or self._mode
+        if mode == "docling":
+            return await self._read_whole(extension, filename, data, only=["docling"])
+        if mode == "marker":
+            if extension == ".pdf":
+                return await self._read_whole(extension, filename, data, only=["marker"])
+            only: list[str] | None = []  # the custom native reader, with no engine behind it
+        else:
+            only = None
         if extension in _OFFICE_EXTENSIONS:
-            return await self._read_office(extension, filename, data)
+            return await self._read_office(extension, filename, data, only)
         if extension == ".pdf":
             return await self._read_pdf(filename, data, pdf_mode or self._pdf_mode)
-        return await self._read_whole(extension, filename, data)
+        return await self._read_whole(extension, filename, data, only=only)
 
     # -- office ------------------------------------------------------------------------------
 
-    async def _read_office(self, extension: str, filename: str, data: bytes) -> ReadResult:
+    async def _read_office(self, extension: str, filename: str, data: bytes, only: list[str] | None = None) -> ReadResult:
         try:
             text = await self._pool.run(office_text, extension, data)
         except UnsafeFile as exc:
             return ReadResult(ok=False, reason=str(exc))  # never offered to an engine
         except ReadError as exc:
             logger.info("native read of %s failed (%s); trying the engines", filename, exc)
-            return await self._read_whole(extension, filename, data)
+            return await self._read_whole(extension, filename, data, only=only)
         if len(text.strip()) >= self._min_chars and not is_garbled_text(text):
             return ReadResult(ok=True, markdown=text, source="native")
-        return await self._read_whole(extension, filename, data)
+        return await self._read_whole(extension, filename, data, only=only)
 
     # -- engines -----------------------------------------------------------------------------
 
-    async def _convert(self, extension: str, filename: str, data: bytes) -> tuple[str, str] | None:
-        """The first usable markdown among the engines in policy order, with the engine that made it."""
-        for engine in self._engines.order_for(extension):
+    def _candidates(self, extension: str, only: list[str] | None) -> list[str]:
+        """The engines to try: the policy order, or, when `only` is given, just those of them that are
+        available (an empty list means no engine at all)."""
+        if only is None:
+            return self._engines.order_for(extension)
+        available = self._engines.available()
+        return [engine for engine in only if engine in available]
+
+    async def _convert(self, extension: str, filename: str, data: bytes, only: list[str] | None = None) -> tuple[str, str] | None:
+        """The first usable markdown among the engines in order, with the engine that made it."""
+        for engine in self._candidates(extension, only):
             try:
                 converted = await self._engines.convert(engine, filename, data)
             except Exception as exc:  # noqa: BLE001 - a crashed engine is one failed attempt
@@ -113,10 +138,11 @@ class ReadingRouter:
             logger.info("engine %s gave no usable text for %s (%s)", engine, filename, converted.status)
         return None
 
-    async def _read_whole(self, extension: str, filename: str, data: bytes) -> ReadResult:
-        if not self._engines.order_for(extension):
-            return ReadResult(ok=False, reason=f"no conversion engine is available for {extension or 'this file'}")
-        outcome = await self._convert(extension, filename, data)
+    async def _read_whole(self, extension: str, filename: str, data: bytes, only: list[str] | None = None) -> ReadResult:
+        if not self._candidates(extension, only):
+            wanted = " or ".join(only) if only else "a conversion engine"
+            return ReadResult(ok=False, reason=f"{wanted} is not available for {extension or 'this file'}")
+        outcome = await self._convert(extension, filename, data, only)
         if outcome is None:
             return ReadResult(ok=False, reason="no engine produced usable text")
         markdown, engine = outcome

@@ -20,6 +20,8 @@ class Engines(Protocol):
 
     def order_for(self, extension: str) -> list[str]: ...
 
+    def available(self) -> list[str]: ...
+
     async def convert(self, engine: str, filename: str, data: bytes) -> ConvertedDocument: ...
 
 
@@ -35,6 +37,9 @@ class EnginePolicy:
     def __init__(self, enabled: Sequence[str], pdf: str = "auto") -> None:
         self._enabled = list(dict.fromkeys(enabled))
         self._pdf = pdf
+
+    def available(self) -> list[str]:
+        return list(self._enabled)
 
     def order_for(self, extension: str) -> list[str]:
         if extension != ".pdf":
@@ -66,6 +71,9 @@ class PoolEngines:
 
     def order_for(self, extension: str) -> list[str]:
         return self._policy.order_for(extension)
+
+    def available(self) -> list[str]:
+        return self._policy.available()
 
     async def convert(self, engine: str, filename: str, data: bytes) -> ConvertedDocument:
         pool = self._pools.get(engine)

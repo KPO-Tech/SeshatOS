@@ -34,6 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     router = ReadingRouter(
         engines,
         pdf_mode=settings.pdf_mode,
+        mode=settings.reading_mode,
         min_chars_per_page=settings.min_chars_per_page,
         min_image_area_ratio=settings.min_image_area_ratio,
     )
