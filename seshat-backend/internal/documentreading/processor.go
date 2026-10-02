@@ -70,12 +70,6 @@ type ReadResult struct {
 	Errors       []string
 }
 
-type PageReadResult struct {
-	Page     int    `json:"page"`
-	Source   string `json:"source,omitempty"`
-	HasImage bool   `json:"has_image,omitempty"`
-}
-
 const (
 	StatusReady       = "ready"
 	StatusUnavailable = "unavailable"
