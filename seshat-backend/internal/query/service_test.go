@@ -508,3 +508,19 @@ func TestUpdateSessionMetadataAllowsProviderSwitchBeforeFirstTurn(t *testing.T) 
 		t.Fatalf("expected provider selection to update to %q, got %q", newProviderID, after.ProviderSettingID)
 	}
 }
+
+func TestIsSessionUntitled(t *testing.T) {
+	ctx := context.Background()
+	ownership := newTestOwnershipStore(t)
+	for id, title := range map[string]string{"a": "Unnamed session", "b": "Untitled conversation", "c": "Real title"} {
+		if _, err := ownership.Create(ctx, db.CreateSessionOwnershipParams{SessionID: id, UserID: "u", Title: title}); err != nil {
+			t.Fatalf("create ownership: %v", err)
+		}
+	}
+	svc := NewService(ServiceConfig{Ownership: ownership})
+	for id, want := range map[string]bool{"a": true, "b": true, "c": false, "missing": false} {
+		if got := svc.IsSessionUntitled(ctx, id); got != want {
+			t.Errorf("IsSessionUntitled(%q) = %v, want %v", id, got, want)
+		}
+	}
+}

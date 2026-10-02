@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
 import type { Session } from '@renderer/api/types'
 import { normalizeSessionMessages } from '@renderer/lib/chat'
+import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { useSessionStore, type ChatSession, type ChatAttachment } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 
@@ -74,7 +75,7 @@ export function useConversationSessionLoad({
           if (!sessions.find((s) => s.id === detail.session_id)) return
           upsertSession({
             id: detail.session_id,
-            title: detail.title || 'Untitled conversation',
+            title: detail.title || UNTITLED_SESSION_TITLE,
             messages: normalizeSessionMessages(detail.messages ?? []),
             createdAt: new Date((detail.created_at ?? 0) * 1000).toISOString(),
             providerSettingId: detail.provider_setting_id,

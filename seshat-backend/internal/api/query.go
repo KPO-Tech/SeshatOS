@@ -415,11 +415,16 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 			})
 		},
 	})
+	// aiTitled closes once the runtime has produced a real title for this
+	// session. It is nil when no broker is configured.
+	var aiTitled chan struct{}
 	if app.titleBroker != nil {
 		titleCh, unsubscribeTitle := app.titleBroker.Subscribe(streamInput.SessionID)
 		defer unsubscribeTitle()
 		titleRelayDone := make(chan struct{})
 		defer close(titleRelayDone)
+		aiTitled = make(chan struct{})
+		var aiTitledOnce sync.Once
 		go func() {
 			for {
 				select {
@@ -427,6 +432,7 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 					if !ok {
 						return
 					}
+					aiTitledOnce.Do(func() { close(aiTitled) })
 					data, err := json.Marshal(map[string]string{
 						"session_id": streamInput.SessionID,
 						"title":      title,
@@ -441,15 +447,6 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}()
-	}
-	if title, err := app.backend.Query.EnsureInitialSessionTitle(r.Context(), principal, streamInput.SessionID, req.Prompt); err == nil && title != "" {
-		data, err := json.Marshal(map[string]string{
-			"session_id": streamInput.SessionID,
-			"title":      title,
-		})
-		if err == nil {
-			writeSSE("session_titled", data)
-		}
 	}
 	// Inject the event emitter and the user's sub-agent depth preference.
 	baseCtx := app.enrichContextWithAgentPrefs(r.Context(), principal)
@@ -511,6 +508,47 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeSSE("done", finalData)
+
+	app.ensureFallbackSessionTitle(r.Context(), principal, streamInput.SessionID, req.Prompt, aiTitled, func(title string) {
+		data, err := json.Marshal(map[string]any{
+			"session_id":  streamInput.SessionID,
+			"title":       title,
+			"provisional": true,
+		})
+		if err == nil {
+			writeSSE("session_titled", data)
+		}
+	})
+}
+
+// titleFallbackGrace is how long a finished turn waits for the runtime's own
+// title before falling back to one derived from the prompt.
+const titleFallbackGrace = 2 * time.Second
+
+// ensureFallbackSessionTitle covers the case where the runtime's title
+// generation failed or is unusually slow. Sessions stay unnamed while the
+// agent works; only once the turn is over, and the real title still has not
+// arrived, is a title derived from the prompt applied. A real title that lands
+// later still replaces it.
+func (app *App) ensureFallbackSessionTitle(ctx context.Context, principal *backendauth.Principal, sessionID, prompt string, aiTitled <-chan struct{}, emit func(title string)) {
+	if !app.backend.Query.IsSessionUntitled(ctx, sessionID) {
+		return
+	}
+	if aiTitled != nil {
+		timer := time.NewTimer(titleFallbackGrace)
+		defer timer.Stop()
+		select {
+		case <-aiTitled:
+			return
+		case <-timer.C:
+		case <-ctx.Done():
+			return
+		}
+	}
+	title, err := app.backend.Query.EnsureInitialSessionTitle(ctx, principal, sessionID, prompt)
+	if err == nil && title != "" {
+		emit(title)
+	}
 }
 
 // triggerMemoryExtraction fires async entity extraction from the conversation

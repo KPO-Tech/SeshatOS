@@ -72,6 +72,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
     const userMessageId = crypto.randomUUID()
     const currentSession = store.sessions.find((session) => session.id === sessionId)
     const isFirstMessage = Boolean(currentSession && currentSession.messages.length === 0 && isUntitledSessionTitle(currentSession.title))
+    let receivedGeneratedTitle = false
     store.updateSession(sessionId, { updatedAt: nowIso })
     store.addMessage(sessionId, {
       id: userMessageId,
@@ -205,6 +206,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               },
               (titleEvent) => {
                 if (titleEvent.session_id === sessionId && titleEvent.title) {
+                  if (!titleEvent.provisional) receivedGeneratedTitle = true
                   store.updateSession(sessionId, { title: titleEvent.title })
                 }
               },
@@ -245,6 +247,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               },
               (titleEvent) => {
                 if (titleEvent.session_id === sessionId && titleEvent.title) {
+                  if (!titleEvent.provisional) receivedGeneratedTitle = true
                   store.updateSession(sessionId, { title: titleEvent.title })
                 }
               },
@@ -347,7 +350,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
       // completed (committed), since an aborted/failed turn never reaches
       // that point server-side either.
       if (committed && isFirstMessage) {
-        void pollForGeneratedTitle(sessionId)
+        void pollForGeneratedTitle(sessionId, () => receivedGeneratedTitle)
       }
     }
   }, [sessionId])

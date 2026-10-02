@@ -836,10 +836,22 @@ func (s *Service) UpdateSessionMetadata(ctx context.Context, principal *backenda
 	return nil
 }
 
-// EnsureInitialSessionTitle gives a new chat a readable title before the first
-// assistant tokens arrive. The SDK can still replace it later with its richer
-// async title, but users should not stare at "Untitled conversation" during
-// the first generation.
+// IsSessionUntitled reports whether the session still carries no real title.
+func (s *Service) IsSessionUntitled(ctx context.Context, sessionID string) bool {
+	if s == nil || s.ownership == nil {
+		return false
+	}
+	ownership, err := s.ownership.GetBySessionID(ctx, strings.TrimSpace(sessionID))
+	if err != nil {
+		return false
+	}
+	return isUntitledSessionTitle(ownership.Title)
+}
+
+// EnsureInitialSessionTitle is the last-resort title for a session whose
+// runtime-generated title never arrived: it derives one from the prompt. It
+// never overwrites an existing title, and a real title written later still
+// replaces it.
 func (s *Service) EnsureInitialSessionTitle(ctx context.Context, principal *backendauth.Principal, sessionID, prompt string) (string, error) {
 	if s == nil {
 		return "", bkerr.Unavailable("query service not configured", nil)
@@ -874,7 +886,7 @@ func (s *Service) EnsureInitialSessionTitle(ctx context.Context, principal *back
 func isUntitledSessionTitle(title string) bool {
 	normalized := strings.ToLower(strings.TrimSpace(title))
 	switch normalized {
-	case "", "untitled conversation", "new chat":
+	case "", "untitled conversation", "unnamed session", "new chat":
 		return true
 	default:
 		return strings.HasPrefix(normalized, "untitled_session_")

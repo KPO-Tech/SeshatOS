@@ -66,4 +66,6 @@ export type DonePayload = {
 export type SessionTitledPayload = {
   session_id?: string
   title?: string
+  // Derived from the prompt as a last resort; a generated title may still replace it.
+  provisional?: boolean
 }
