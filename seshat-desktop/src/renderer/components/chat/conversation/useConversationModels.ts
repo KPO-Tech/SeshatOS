@@ -65,6 +65,12 @@ export function useConversationModels({ sessionId, session, updateSession, onSav
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null)
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ProviderModel[]>>({})
+  const providersVersion = useProvidersStore((s) => s.version)
+  useEffect(() => {
+    // Provider configuration changed (see refreshProviders): cached lists,
+    // including ones cached as empty after a failed fetch, are stale.
+    setModelsByProvider({})
+  }, [providersVersion])
   const [loadingModelProviderIds, setLoadingModelProviderIds] = useState<string[]>([])
   const [modelLoadError, setModelLoadError] = useState<string | null>(null)
   const [modelRetryNonce, setModelRetryNonce] = useState(0)

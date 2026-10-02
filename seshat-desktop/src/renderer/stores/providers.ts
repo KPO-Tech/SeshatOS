@@ -6,9 +6,14 @@ type ProvidersState = {
   providers: ProviderSetting[]
   loading: boolean
   selectedModelId: string | null
+  // Bumped whenever the provider configuration changes (see refreshProviders)
+  // so anything caching per-provider model lists can discard them. Not
+  // persisted: it only has to differ within one run.
+  version: number
 
   setProviders: (providers: ProviderSetting[]) => void
   setLoading: (v: boolean) => void
+  bumpVersion: () => void
   selectModel: (modelId: string | null) => void
   updateProvider: (id: string, data: Partial<ProviderSetting>) => void
   removeProvider: (id: string) => void
@@ -21,9 +26,11 @@ export const useProvidersStore = create<ProvidersState>()(
       providers: [],
       loading: false,
       selectedModelId: null,
+      version: 0,
 
       setProviders: (providers) => set({ providers }),
       setLoading: (v) => set({ loading: v }),
+      bumpVersion: () => set((s) => ({ version: s.version + 1 })),
       selectModel: (modelId) => set({ selectedModelId: modelId }),
 
       updateProvider: (id, data) =>

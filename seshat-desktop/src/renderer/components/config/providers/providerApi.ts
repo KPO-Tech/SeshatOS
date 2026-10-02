@@ -1,5 +1,13 @@
 import { api } from '@renderer/api/client'
+import { refreshProviders } from '@renderer/hooks/useProviders'
 import type { ProviderCatalogEntry, ProviderModel, ProviderOAuthChallenge, ProviderSetting } from './providerTypes'
+
+// Every mutation below ends here so the rest of the app (model picker in Home
+// and conversations) sees the change without a restart.
+function afterChange<T>(result: T): T {
+  void refreshProviders()
+  return result
+}
 
 export async function fetchProviderCatalog() {
   const result = await api.get<{ providers: ProviderCatalogEntry[]; count: number }>('/models')
@@ -18,7 +26,7 @@ export async function createProviderSetting(params: {
   api_key?: string
   base_url?: string
 }) {
-  return api.post<ProviderSetting>('/settings/providers', params)
+  return api.post<ProviderSetting>('/settings/providers', params).then(afterChange)
 }
 
 export async function fetchProviderModels(settingId: string) {
@@ -28,11 +36,12 @@ export async function fetchProviderModels(settingId: string) {
 
 export async function syncProviderModels(settingId: string) {
   const result = await api.post<{ models: ProviderModel[]; count: number; synced: boolean }>(`/settings/providers/${settingId}/models/sync`, {})
+  afterChange(null)
   return result.models ?? []
 }
 
 export function setDefaultProvider(settingId: string) {
-  return api.post<ProviderSetting>(`/settings/providers/${settingId}/set-default`, {})
+  return api.post<ProviderSetting>(`/settings/providers/${settingId}/set-default`, {}).then(afterChange)
 }
 
 export function updateProviderSetting(settingId: string, params: {
@@ -42,11 +51,11 @@ export function updateProviderSetting(settingId: string, params: {
   base_url?: string
   model_id?: string
 }) {
-  return api.put<ProviderSetting>(`/settings/providers/${settingId}`, params)
+  return api.put<ProviderSetting>(`/settings/providers/${settingId}`, params).then(afterChange)
 }
 
 export function deleteProviderSetting(settingId: string) {
-  return api.delete(`/settings/providers/${settingId}`)
+  return api.delete(`/settings/providers/${settingId}`).then(afterChange)
 }
 
 export function createProviderModel(settingId: string, params: {
@@ -56,7 +65,7 @@ export function createProviderModel(settingId: string, params: {
   max_output?: number
   is_default?: boolean
 }) {
-  return api.post<ProviderModel>(`/settings/providers/${settingId}/models`, params)
+  return api.post<ProviderModel>(`/settings/providers/${settingId}/models`, params).then(afterChange)
 }
 
 export function startProviderOAuth(settingId: string) {
@@ -64,11 +73,11 @@ export function startProviderOAuth(settingId: string) {
 }
 
 export function pollProviderOAuth(settingId: string) {
-  return api.post<ProviderSetting>(`/settings/providers/${settingId}/oauth/poll`, {})
+  return api.post<ProviderSetting>(`/settings/providers/${settingId}/oauth/poll`, {}).then(afterChange)
 }
 
 export function disconnectProviderOAuth(settingId: string) {
-  return api.delete<ProviderSetting>(`/settings/providers/${settingId}/oauth`)
+  return api.delete<ProviderSetting>(`/settings/providers/${settingId}/oauth`).then(afterChange)
 }
 
 export function fetchSystemStatus() {
