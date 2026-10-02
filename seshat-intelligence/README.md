@@ -166,11 +166,17 @@ backs the connectors. It follows the routing of the Go engine (`seshat/internal/
   companies). `pdf_provider_policy` is `auto` (Docling first, Marker as a second opinion when an answer is
   empty or garbled), `docling` or `marker`. No per-document-type rule is built in until there is a measurement
   behind it.
+- **Reading modes** (`reading_mode` setting, or a per-request `mode` field):
+  `custom` (default) is everything above. `docling` sends every file that is not plain text straight to Docling,
+  with no native routing. `marker` sends PDFs straight to Marker and reads every other format with the custom
+  native reader above, with no engine behind it, because Marker reads only PDFs: a format that needs an engine
+  (an image, HTML, a thin Office file) is reported instead of being read. `marker` needs the extra and
+  `ENABLED_PROVIDERS` to list it; a mode whose engine is not available answers `ok: false` with that reason.
 - **`pdf_mode="whole"`** (setting or per request) sends every PDF to the engines. Borderless tables and vector
   charts are invisible to the page routing, so use it where missing one is not acceptable (invoices,
   financial reports).
 
-Settings: `SESHAT_INTELLIGENCE_ENABLED_PROVIDERS`, `..._PDF_PROVIDER_POLICY`, `..._PDF_MODE`,
+Settings: `SESHAT_INTELLIGENCE_READING_MODE`, `..._ENABLED_PROVIDERS`, `..._PDF_PROVIDER_POLICY`, `..._PDF_MODE`,
 `..._MIN_CHARS_PER_PAGE`, `..._MIN_IMAGE_AREA_RATIO`.
 
 ## What this service is (and isn't)

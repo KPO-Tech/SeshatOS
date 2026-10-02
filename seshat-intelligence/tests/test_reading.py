@@ -21,13 +21,17 @@ class FakeEngines:
     """Engines that record every call. `outcomes` maps an engine to a callable (filename, pages) ->
     ConvertedDocument, or to an exception to raise."""
 
-    def __init__(self, order=("docling",), outcomes=None):
+    def __init__(self, order=("docling",), outcomes=None, available=None):
         self.order = list(order)
         self.outcomes = outcomes or {}
+        self.engines = list(available) if available is not None else list(order)
         self.calls = []  # (engine, filename, page_count)
 
     def order_for(self, extension):
         return list(self.order)
+
+    def available(self):
+        return list(self.engines)
 
     async def convert(self, engine, filename, data):
         pages = len(pdfium.PdfDocument(data)) if filename.endswith(".pdf") else 0
@@ -200,6 +204,62 @@ async def test_a_corrupt_pdf_is_reported(make_router):
     assert not result.ok
 
 
+# -- reading modes ---------------------------------------------------------------------------------
+
+
+async def test_docling_mode_sends_every_file_straight_to_docling(make_router):
+    engines = FakeEngines(order=("docling", "marker"), available=["docling", "marker"])
+    router = make_router(engines, mode="docling")
+    await router.read("a.pdf", make_pdf(["text", "text"]))
+    await router.read("p.docx", make_docx())
+    await router.read("page.html", b"<p>x</p>")
+    assert engines.calls == [("docling", "a.pdf", 2), ("docling", "p.docx", 0), ("docling", "page.html", 0)]
+    assert (await router.read("n.md", b"# note")).source == "native"  # plain text never needs an engine
+
+
+async def test_docling_mode_reports_when_docling_is_not_available(make_router):
+    result = await make_router(FakeEngines(order=("marker",), available=["marker"]), mode="docling").read("a.pdf", make_pdf(["text"]))
+    assert not result.ok and "docling is not available" in result.reason
+
+
+async def test_marker_mode_sends_pdfs_to_marker_and_reads_other_formats_with_the_custom_reader(make_router):
+    engines = FakeEngines(order=("docling", "marker"), available=["docling", "marker"])
+    router = make_router(engines, mode="marker")
+    pdf = await router.read("a.pdf", make_pdf(["text", "text"]))
+    assert pdf.ok and pdf.engines_used == ["marker"] and engines.calls == [("marker", "a.pdf", 2)]
+    docx = await router.read("p.docx", make_docx())
+    assert docx.ok and docx.source == "native" and "# Refund policy" in docx.markdown
+    xlsx = await router.read("s.xlsx", make_xlsx())
+    assert xlsx.ok and xlsx.source == "native"
+    assert len(engines.calls) == 1  # Docling was never used, even though it is available
+
+
+async def test_marker_mode_has_no_engine_behind_the_custom_reader(make_router):
+    from docx import Document
+
+    empty = io.BytesIO()
+    Document().save(empty)
+    engines = FakeEngines(order=("docling", "marker"), available=["docling", "marker"])
+    router = make_router(engines, mode="marker")
+    thin = await router.read("empty.docx", empty.getvalue())
+    assert not thin.ok and engines.calls == []
+    html = await router.read("page.html", b"<p>x</p>")
+    assert not html.ok and engines.calls == []
+
+
+async def test_marker_mode_reports_when_marker_is_not_available(make_router):
+    result = await make_router(FakeEngines(order=("docling",), available=["docling"]), mode="marker").read("a.pdf", make_pdf(["text"]))
+    assert not result.ok and "marker is not available" in result.reason
+
+
+async def test_mode_can_be_chosen_per_request(make_router):
+    engines = FakeEngines(order=("docling", "marker"), available=["docling", "marker"])
+    router = make_router(engines)  # custom by default
+    assert (await router.read("a.pdf", make_pdf(["text"]))).source == "native"
+    assert (await router.read("a.pdf", make_pdf(["text"]), mode="docling")).engines_used == ["docling"]
+    assert (await router.read("a.pdf", make_pdf(["text"]), mode="marker")).engines_used == ["marker"]
+
+
 # -- office, text and other formats ----------------------------------------------------------------
 
 
@@ -254,7 +314,7 @@ async def test_plain_text_and_other_formats(make_router):
     page = await router.read("page.html", b"<html><body>hello</body></html>")
     assert page.source == "engine" and engines.calls == [("docling", "page.html", 0)]
     none = await make_router(FakeEngines(order=())).read("page.html", b"<p>x</p>")
-    assert not none.ok and "no conversion engine" in none.reason
+    assert not none.ok and "conversion engine is not available" in none.reason
 
 
 # -- the worker pool -------------------------------------------------------------------------------
@@ -281,8 +341,10 @@ async def test_read_endpoint_reports_how_each_page_was_read(make_router):
         response = await client.post("/v1/documents/read", files={"file": ("a.pdf", make_pdf(["text", "scan"]), "application/pdf")})
         empty = await client.post("/v1/documents/read", files={"file": ("a.pdf", b"", "application/pdf")})
         whole = await client.post("/v1/documents/read", files={"file": ("a.pdf", make_pdf(["text"]), "application/pdf")}, data={"pdf_mode": "whole"})
+        direct = await client.post("/v1/documents/read", files={"file": ("a.pdf", make_pdf(["text"]), "application/pdf")}, data={"mode": "docling"})
     body = response.json()
     assert body["ok"] is True and body["source"] == "mixed" and body["engines_used"] == ["docling"]
     assert [(p["page"], p["source"], p["reason"]) for p in body["pages"]] == [(1, "native", ""), (2, "engine", "image")]
     assert empty.status_code == 400
     assert whole.json()["source"] == "engine"
+    assert direct.json()["engines_used"] == ["docling"]

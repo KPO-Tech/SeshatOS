@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # installed is ignored with a warning. Marker is an optional install (see pyproject extras) because
     # its model weights carry a commercial-use license limit.
     enabled_providers: list[DocumentProviderName] = ["docling"]
+    # How a file is read. "custom" (default) is the native-first routing with the policy below.
+    # "docling" sends every file that is not plain text straight to Docling. "marker" sends PDFs straight
+    # to Marker (install the extra and list it in enabled_providers) and reads every other format with the
+    # custom native reader, since Marker reads only PDFs. Can be overridden per request.
+    reading_mode: Literal["custom", "docling", "marker"] = "custom"
     # PDFs: "docling" or "marker" uses that engine alone, "auto" tries Docling then Marker as a second
     # opinion. Anything that is not a PDF goes to Docling.
     pdf_provider_policy: Literal["auto", "docling", "marker"] = "auto"

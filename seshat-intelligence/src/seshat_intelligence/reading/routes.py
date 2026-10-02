@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from fastapi import APIRouter, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 
 from seshat_intelligence.reading.models import PageResult, ReadResult
+from seshat_intelligence.reading.router import PdfMode, ReadingMode
 
 router = APIRouter(prefix="/v1/documents", tags=["reading"])
 
@@ -48,12 +47,17 @@ def to_response(filename: str, result: ReadResult) -> ReadResponse:
 
 
 @router.post("/read", response_model=ReadResponse)
-async def read_document(request: Request, file: UploadFile, pdf_mode: Literal["pages", "whole"] | None = Form(default=None)) -> ReadResponse:
+async def read_document(
+    request: Request,
+    file: UploadFile,
+    pdf_mode: PdfMode | None = Form(default=None),
+    mode: ReadingMode | None = Form(default=None),
+) -> ReadResponse:
     """Read a file into markdown by the cheapest path that gives usable text, and say how each page
     was read. `ok` false means no usable text was produced; the reason says why."""
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="uploaded file is empty")
     filename = file.filename or "upload.bin"
-    result = await request.app.state.reading_router.read(filename, data, pdf_mode)
+    result = await request.app.state.reading_router.read(filename, data, pdf_mode, mode)
     return to_response(filename, result)
