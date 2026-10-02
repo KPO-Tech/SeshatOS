@@ -3414,7 +3414,6 @@ dependencies = [
     { name = "docling" },
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "marker-pdf" },
     { name = "pydantic-settings" },
     { name = "pypdf" },
     { name = "pypdfium2" },
@@ -3422,6 +3421,11 @@ dependencies = [
     { name = "python-multipart" },
     { name = "python-pptx" },
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+marker = [
+    { name = "marker-pdf" },
 ]
 
 [package.dev-dependencies]
@@ -3436,7 +3440,7 @@ requires-dist = [
     { name = "docling", specifier = ">=2.0.0" },
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "marker-pdf", specifier = ">=2.0.0" },
+    { name = "marker-pdf", marker = "extra == 'marker'", specifier = ">=2.0.0" },
     { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "pypdf", specifier = ">=5.0.0" },
     { name = "pypdfium2", specifier = ">=4.30.0" },
@@ -3445,6 +3449,7 @@ requires-dist = [
     { name = "python-pptx", specifier = ">=1.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.54.0" },
 ]
+provides-extras = ["marker"]
 
 [package.metadata.requires-dev]
 dev = [

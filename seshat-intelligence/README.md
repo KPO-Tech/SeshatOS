@@ -141,18 +141,37 @@ Google Drive, read only (`connectors/gdrive`, over httpx, no Google SDK). A port
 Group permissions are emitted as `group:<email>`; membership is resolved by the server.
 
 Binary formats (PDF, Office) go through an extractor passed to `GDriveConnector(extractor=...)`. The app
-wires two tiers (`connectors/extraction.py`, `connectors/light_extraction.py`):
+wires `connectors/extraction.py`'s `router_extractor`, which uses the reading router described below. An
+unreadable file is a non-retryable `parse` failure (`extraction_failed`) carrying the router's reason; a
+crashing extractor is a retryable one (`extractor_error`) and the file is carried in `retry_ids`.
 
-1. **Light tier**, no model: PDFium for PDFs with a text layer, python-docx for DOCX (headings, paragraphs
-   and tables in order), python-pptx for PPTX (text, tables and notes per slide). Office files are checked
-   for zip bombs first (member size, total size, compression ratio, compression type); a PDFium hang or
-   crash is bounded by a deadline in a worker process that is replaced on failure; an encrypted PDF is
-   reported, and an owner-password-only PDF is read.
-2. **Heavy tier**, the document conversion pool (Docling or Marker), used only when the light tier declines:
-   a scanned PDF (fewer than 20 characters per page), or a format it does not handle. Conversion runs in the
-   pool's worker processes, so the event loop stays free while a connector streams. Without an extractor such files are reported as `unsupported_format`. A failed
-conversion is a non-retryable `parse` failure (`extraction_failed`); a crashing extractor is a retryable
-one (`extractor_error`) and the file is carried in `retry_ids`.
+## reading
+
+`POST /v1/documents/read` (multipart `file`, optional form field `pdf_mode`) reads a file into markdown by
+the cheapest path that gives usable text, and reports how each page was read (`reading/`). The same router
+backs the connectors. It follows the routing of the Go engine (`seshat/internal/documentreading` and
+`pdfsmart`), which stays the default for local use; this is the cloud-side counterpart.
+
+- **Office** (DOCX, PPTX, XLSX): read natively; an engine only when the text is thin or garbled. Zip bombs are
+  refused and never offered to an engine.
+- **PDF, page by page**: a page keeps its own text layer unless it carries a meaningful image (at least 10% of
+  the page, so a repeated logo does not count), has fewer than 20 characters, or has garbled text (`(cid:N)`
+  placeholders, or more than 5% private-use characters). Only those pages go to an engine, consecutive ones in
+  a single call so a table spanning pages stays whole. PDFium runs in a worker process under a deadline.
+- **Safety contract**: the result is `ok` only if every page that needed text got some. Otherwise the pages are
+  discarded and the whole document goes to the engines, and if that fails too the result is not `ok`. A
+  partial document that silently misses a page is the failure this is built to avoid.
+- **Engines**: Docling for every format, Marker for PDFs only and optional (`pip install
+  "seshat-intelligence[marker]"`, because its model weights are free only for research, personal use and small
+  companies). `pdf_provider_policy` is `auto` (Docling first, Marker as a second opinion when an answer is
+  empty or garbled), `docling` or `marker`. No per-document-type rule is built in until there is a measurement
+  behind it.
+- **`pdf_mode="whole"`** (setting or per request) sends every PDF to the engines. Borderless tables and vector
+  charts are invisible to the page routing, so use it where missing one is not acceptable (invoices,
+  financial reports).
+
+Settings: `SESHAT_INTELLIGENCE_ENABLED_PROVIDERS`, `..._PDF_PROVIDER_POLICY`, `..._PDF_MODE`,
+`..._MIN_CHARS_PER_PAGE`, `..._MIN_IMAGE_AREA_RATIO`.
 
 ## What this service is (and isn't)
 

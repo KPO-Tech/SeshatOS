@@ -35,6 +35,19 @@ class Settings(BaseSettings):
     # document_provider is configured).
     conversion_max_workers: int = 2
     chunking_max_workers: int = 2
+    # Reading router (see reading/router.py). Engines that may be used; one that is listed but not
+    # installed is ignored with a warning. Marker is an optional install (see pyproject extras) because
+    # its model weights carry a commercial-use license limit.
+    enabled_providers: list[DocumentProviderName] = ["docling"]
+    # PDFs: "docling" or "marker" uses that engine alone, "auto" tries Docling then Marker as a second
+    # opinion. Anything that is not a PDF goes to Docling.
+    pdf_provider_policy: Literal["auto", "docling", "marker"] = "auto"
+    # "pages" reads each page by the cheapest path; "whole" sends every PDF to the engines, for
+    # documents where a missed borderless table or chart is not acceptable (invoices, financial reports).
+    pdf_mode: Literal["pages", "whole"] = "pages"
+    min_chars_per_page: int = 20
+    # An image must cover at least this share of the page to make it need an engine.
+    min_image_area_ratio: float = 0.1
 
 
 def get_settings() -> Settings:
