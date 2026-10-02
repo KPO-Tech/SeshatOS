@@ -121,6 +121,28 @@ an empty list means nobody. A connector subclasses `Connector` and mixes in the 
 (`connectors/base.py`), then registers in `ConnectorRegistry`. Errors raised mid-stream become a final
 `failure` event, since the HTTP status is already sent.
 
+### gdrive
+
+Google Drive, read only (`connectors/gdrive`, over httpx, no Google SDK). A port of the Go connector in
+`seshat/pkg/connectors/gdrive.go` that closes its known gaps:
+
+- A file whose permissions cannot be read is **not emitted**, because emitting it with no ACL would open
+  it to the whole corpus. It is reported as a `permissions` failure and carried in the checkpoint
+  (`retry_ids`) to be retried on the next call.
+- Removed, trashed, or no longer allowed files are reported as `deleted` events; `slim` lists the ids
+  currently visible so the server can reconcile.
+- The checkpoint is typed (`phase`, `list_token`, `changes_token`, `retry_ids`, `more`). A bootstrap is
+  split across calls by `page_budget` pages, and the change feed token is captured before listing so
+  changes made during the listing are not lost.
+- A rate limit ends the stream with a `rate_limited` failure carrying `retry_after_seconds` and **no**
+  checkpoint, so the caller keeps its previous one.
+- A link-only share is not mapped to `public`.
+
+Group permissions are emitted as `group:<email>`; membership is resolved by the server. Binary formats
+need an extractor passed to `GDriveConnector(extractor=...)`; without one they are reported as
+`unsupported_format` rather than dropped. Wiring that extractor to the document conversion pool is the
+next step.
+
 ## What this service is (and isn't)
 
 seshat already has a mature RAG pipeline in Go (`internal/rag/`,

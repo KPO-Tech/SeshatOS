@@ -58,6 +58,8 @@ class Failure(BaseModel):
     code: str
     message: str
     retryable: bool = False
+    # Set when the source asked us to back off (for example an HTTP Retry-After).
+    retry_after_seconds: float | None = None
 
 
 class Checkpoint(BaseModel):
