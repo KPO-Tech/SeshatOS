@@ -145,7 +145,9 @@ async def test_garbled_text_layer_goes_to_the_engine(make_router):
 
 
 async def test_an_engine_answer_that_is_garbled_gets_a_second_opinion(make_router):
-    garbled = lambda name, pages: ConvertedDocument(status="success", markdown="(cid:1)(cid:2) broken")
+    def garbled(name, pages):
+        return ConvertedDocument(status="success", markdown="(cid:1)(cid:2) broken")
+
     engines = FakeEngines(order=("docling", "marker"), outcomes={"docling": garbled})
     result = await make_router(engines).read("a.pdf", make_pdf(["text", "scan"]))
     assert result.ok and result.engines_used == ["marker"]

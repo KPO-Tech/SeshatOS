@@ -1,8 +1,8 @@
 import httpx
 import pytest
+from fake_drive import FakeDrive, collect, file
 from httpx import ASGITransport, AsyncClient
 
-from fake_drive import FakeDrive, collect, file
 from seshat_intelligence.api.app import create_app
 from seshat_intelligence.config import Settings
 from seshat_intelligence.connectors.extraction import ExtractionError, router_extractor

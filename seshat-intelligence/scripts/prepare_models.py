@@ -31,7 +31,6 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -170,11 +169,12 @@ def verify(args: argparse.Namespace, profile: str) -> bool:
 
 
 def verify_only(args: argparse.Namespace, profile: str) -> int:
-    from seshat_intelligence.providers.docling_setup import build_converter
+    from io import BytesIO
 
     from docling.datamodel.base_models import ConversionStatus
     from docling_core.types.io import DocumentStream
-    from io import BytesIO
+
+    from seshat_intelligence.providers.docling_setup import build_converter
 
     converter = build_converter(settings_for(args, profile))
     result = converter.convert(DocumentStream(name="check.pdf", stream=BytesIO(tiny_pdf())), raises_on_error=False)
