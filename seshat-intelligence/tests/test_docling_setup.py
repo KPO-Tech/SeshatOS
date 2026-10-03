@@ -1,5 +1,3 @@
-import importlib.util
-from pathlib import Path
 from types import SimpleNamespace
 
 import pypdf
@@ -15,15 +13,8 @@ from seshat_intelligence.providers.docling_setup import (
     profile_size_mb,
     recommend_profile,
 )
-
-SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "prepare_models.py"
-
-
-def load_script():
-    spec = importlib.util.spec_from_file_location("prepare_models", SCRIPT)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+from seshat_intelligence.setup import models as setup_models
+from seshat_intelligence.setup.models import ModelSetup, is_present, plan_models
 
 
 def test_profiles_only_name_known_models_and_grow():
@@ -96,31 +87,25 @@ def test_the_recommended_profile_fits_the_machine(hardware, expected):
 
 
 def test_the_check_pdf_is_a_readable_pdf_with_its_text():
-    script = load_script()
     from io import BytesIO
 
-    reader = pypdf.PdfReader(BytesIO(script.tiny_pdf()))
+    reader = pypdf.PdfReader(BytesIO(setup_models.tiny_pdf()))
     assert len(reader.pages) == 1 and "Model check" in reader.pages[0].extract_text()
 
 
 def test_presence_in_an_artifacts_directory_is_by_model_folder(tmp_path):
-    script = load_script()
-    assert script.is_present("layout", tmp_path) is False
+    assert is_present("layout", tmp_path) is False
     (tmp_path / MODELS["layout"].folder).mkdir()
-    assert script.is_present("layout", tmp_path) is True
-    assert script.is_present("code_formula", tmp_path) is False
+    assert is_present("layout", tmp_path) is True
+    assert is_present("code_formula", tmp_path) is False
 
 
-def test_the_plan_lists_what_is_missing_and_downloads_nothing(tmp_path, capsys, monkeypatch):
-    script = load_script()
+def test_the_plan_lists_what_is_missing(tmp_path):
     (tmp_path / MODELS["layout"].folder).mkdir()
-    calls = []
-    monkeypatch.setattr(script, "download", lambda *a, **k: calls.append(a))
 
-    code = script.main(["--profile", "full", "--artifacts-path", str(tmp_path)])
+    plan = plan_models(ModelSetup("full", artifacts_path=tmp_path))
 
-    out = capsys.readouterr().out
-    assert code == 0 and not calls
-    assert "present" in out and "MISSING" in out and "code_formula" in out
-    assert f"To download: {profile_size_mb('full') - MODELS['layout'].size_mb} MB" in out
-    assert "Nothing was downloaded" in out
+    present = {model.key: model.present for model in plan.models}
+    assert present == {"layout": True, "tableformer": False, "picture_classifier": False, "code_formula": False}
+    assert plan.missing_mb == profile_size_mb("full") - MODELS["layout"].size_mb
+    assert plan.ready is False

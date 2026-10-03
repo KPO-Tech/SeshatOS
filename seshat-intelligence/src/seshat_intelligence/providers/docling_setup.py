@@ -1,5 +1,5 @@
 """How Docling is set up here: which models a profile needs, how its pipeline is configured, and what the
-machine can run. The service and the model preparation script (scripts/prepare_models.py) both read this, so
+machine can run. The service and the `seshat-intelligence` command both read this, so
 what is prepared is exactly what is used.
 
 Nothing here loads a model: building the options is cheap, and the heavy imports of docling happen only

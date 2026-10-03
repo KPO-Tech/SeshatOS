@@ -16,6 +16,9 @@ dependencies = [
     "uvicorn[standard]>=0.54.0",
 ]
 
+[project.scripts]
+seshat-intelligence = "seshat_intelligence.setup.cli:main"
+
 [project.optional-dependencies]
 # Marker code is Apache-2.0 but its model weights are free only for research, personal use and small
 # companies; install it only if that fits (pip install "seshat-intelligence[marker]").
