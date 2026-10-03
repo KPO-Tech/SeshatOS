@@ -27,7 +27,6 @@ type ConversationComposerProps = {
   attachmentError: string | null
   setAttachmentError: (error: string | null) => void
   hasUploadingAttachments: boolean
-  hasProcessingDocuments: boolean
   clearAttachments: () => void
   uploadedFileIds: string[]
   sentAttachments: ChatAttachment[]
@@ -62,7 +61,6 @@ export function ConversationComposer({
   attachmentError,
   setAttachmentError,
   hasUploadingAttachments,
-  hasProcessingDocuments,
   clearAttachments,
   uploadedFileIds,
   sentAttachments,
@@ -91,10 +89,6 @@ export function ConversationComposer({
           onSend={() => {
             if (hasUploadingAttachments) {
               setAttachmentError('Wait for attachments to finish uploading before sending.')
-              return
-            }
-            if (hasProcessingDocuments) {
-              setAttachmentError('Wait for document reading to finish before sending.')
               return
             }
             const prompt = inputValue.trim() || (attachments.length > 0 ? 'Please analyze the attached file(s).' : '')
