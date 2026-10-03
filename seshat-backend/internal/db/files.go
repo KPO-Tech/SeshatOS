@@ -18,19 +18,18 @@ const (
 // File is the product-layer record for an uploaded file.
 // The blob lives in ArtifactStore; this record owns the metadata and access policy.
 type File struct {
-	ID           string
-	UserID       string
-	WorkspaceID  string // empty if not workspace-scoped
-	SessionID    string // empty if not session-scoped
-	Category     string // "images", "documents", "audio", "other" — set for session uploads
-	LocalPath    string // workspace-relative path (e.g. uploads/images/photo.jpg) — set for session uploads
-	MarkdownPath string // workspace-relative path to the document-reader .md file (empty if not converted)
-	Filename     string
-	ContentType  string
-	Size         int64
-	StorageKey   string // key in ArtifactStore
-	SHA256       string
-	Status       string
+	ID          string
+	UserID      string
+	WorkspaceID string // empty if not workspace-scoped
+	SessionID   string // empty if not session-scoped
+	Category    string // "images", "documents", "audio", "other" — set for session uploads
+	LocalPath   string // workspace-relative path (e.g. uploads/images/photo.jpg) — set for session uploads
+	Filename    string
+	ContentType string
+	Size        int64
+	StorageKey  string // key in ArtifactStore
+	SHA256      string
+	Status      string
 	// UserMessageIndex, when set, is the 0-based position of this file's
 	// owning user message within its session's transcript at the moment it
 	// was attached to a turn. Nil until AttachToMessage records it. Callers
@@ -43,17 +42,16 @@ type File struct {
 }
 
 type CreateFileParams struct {
-	UserID       string
-	WorkspaceID  string
-	SessionID    string // optional; session-scoped upload
-	Category     string // optional; "images", "documents", "audio", "other"
-	LocalPath    string // optional; workspace-relative path
-	MarkdownPath string // optional; workspace-relative path to converted .md
-	Filename     string
-	ContentType  string
-	Size         int64
-	StorageKey   string
-	SHA256       string
+	UserID      string
+	WorkspaceID string
+	SessionID   string // optional; session-scoped upload
+	Category    string // optional; "images", "documents", "audio", "other"
+	LocalPath   string // optional; workspace-relative path
+	Filename    string
+	ContentType string
+	Size        int64
+	StorageKey  string
+	SHA256      string
 }
 
 // ─── GORM private model ───────────────────────────────────────────────────────
@@ -65,7 +63,6 @@ type gFile struct {
 	SessionID        *string `gorm:"column:session_id;size:64;index"`
 	Category         *string `gorm:"column:category;size:32"`
 	LocalPath        *string `gorm:"column:local_path;size:1024"`
-	MarkdownPath     *string `gorm:"column:markdown_path;size:1024"`
 	Filename         string  `gorm:"not null"`
 	ContentType      string  `gorm:"column:content_type;not null;default:''"`
 	Size             int64   `gorm:"not null;default:0"`
@@ -103,9 +100,6 @@ func fileFromGorm(g gFile) File {
 	}
 	if g.LocalPath != nil {
 		f.LocalPath = *g.LocalPath
-	}
-	if g.MarkdownPath != nil {
-		f.MarkdownPath = *g.MarkdownPath
 	}
 	f.UserMessageIndex = g.UserMessageIndex
 	return f
@@ -159,9 +153,6 @@ func (s *FileStore) Create(ctx context.Context, params CreateFileParams) (*File,
 	if params.LocalPath != "" {
 		row.LocalPath = &params.LocalPath
 	}
-	if params.MarkdownPath != "" {
-		row.MarkdownPath = &params.MarkdownPath
-	}
 
 	if err := s.db.GormDB().WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, fmt.Errorf("create file: %w", err)
@@ -181,26 +172,6 @@ func (s *FileStore) GetByID(ctx context.Context, id string) (*File, error) {
 	}
 	f := fileFromGorm(row)
 	return &f, nil
-}
-
-func (s *FileStore) SetMarkdownPath(ctx context.Context, id string, markdownPath string) error {
-	markdownPath = strings.TrimSpace(markdownPath)
-	if strings.TrimSpace(id) == "" {
-		return fmt.Errorf("file id is required")
-	}
-	if markdownPath == "" {
-		return fmt.Errorf("markdown path is required")
-	}
-	if err := s.db.GormDB().WithContext(ctx).
-		Model(&gFile{}).
-		Where("id = ? AND status = ?", id, FileStatusActive).
-		Updates(map[string]any{
-			"markdown_path":   markdownPath,
-			"updated_at_unix": time.Now().UTC().Unix(),
-		}).Error; err != nil {
-		return fmt.Errorf("set file markdown path: %w", err)
-	}
-	return nil
 }
 
 func (s *FileStore) ListByUserID(ctx context.Context, userID string) ([]File, error) {

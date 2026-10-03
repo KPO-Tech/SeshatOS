@@ -196,26 +196,12 @@ func writeFileContent(w http.ResponseWriter, r *http.Request, contentType, filen
 	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(data))
 }
 
-// handleFileMarkdown serves the document-reader converted markdown text for a file
-// that has one - the same conversion the upload pipeline already paid for,
-// reused here (and by the agent's Read tool sidecar cache) instead of
-// reconverting. 404s if the file has no markdown conversion recorded.
+// handleFileMarkdown handles GET /api/v1/files/:id/markdown: the text of a document for the preview. The
+// document is read when this is asked for, not when it was attached, and the result is kept.
 func (app *App) handleFileMarkdown(w http.ResponseWriter, r *http.Request, _ any, fileID string) {
 	principal, _ := authPrincipalFromContext(r.Context())
 
-	f, err := app.backend.Files.GetFile(r.Context(), principal, fileID)
-	if err != nil {
-		writeBackendError(w, err)
-		return
-	}
-	workspacePath := ""
-	if app.backend.Query != nil && f.SessionID != "" {
-		if resolved, wsErr := app.backend.Query.EnsureSessionWorkspace(r.Context(), principal, f.SessionID); wsErr == nil {
-			workspacePath = resolved
-		}
-	}
-
-	markdown, _, err := app.backend.Files.ReadMarkdown(r.Context(), principal, fileID, workspacePath)
+	markdown, _, err := app.backend.Files.ReadMarkdown(r.Context(), principal, fileID)
 	if err != nil {
 		writeBackendError(w, err)
 		return
@@ -317,46 +303,34 @@ func (app *App) handleSessionFiles(w http.ResponseWriter, r *http.Request, princ
 // --- response helpers ---
 
 type fileResponse struct {
-	ID                      string `json:"id"`
-	UserID                  string `json:"user_id"`
-	WorkspaceID             string `json:"workspace_id,omitempty"`
-	SessionID               string `json:"session_id,omitempty"`
-	Category                string `json:"category,omitempty"`
-	LocalPath               string `json:"local_path,omitempty"`
-	MarkdownPath            string `json:"markdown_path,omitempty"`
-	DocumentReadStatus      string `json:"document_read_status,omitempty"`
-	DocumentReadEngine      string `json:"document_read_engine,omitempty"`
-	DocumentReadPages       int    `json:"document_read_pages,omitempty"`
-	DocumentReadImages      int    `json:"document_read_images,omitempty"`
-	DocumentReadVisualPages []int  `json:"document_read_visual_pages,omitempty"`
-	Filename                string `json:"filename"`
-	ContentType             string `json:"content_type"`
-	Size                    int64  `json:"size"`
-	SHA256                  string `json:"sha256,omitempty"`
-	CreatedAt               int64  `json:"created_at"`
-	UpdatedAt               int64  `json:"updated_at"`
+	ID          string `json:"id"`
+	UserID      string `json:"user_id"`
+	WorkspaceID string `json:"workspace_id,omitempty"`
+	SessionID   string `json:"session_id,omitempty"`
+	Category    string `json:"category,omitempty"`
+	LocalPath   string `json:"local_path,omitempty"`
+	Filename    string `json:"filename"`
+	ContentType string `json:"content_type"`
+	Size        int64  `json:"size"`
+	SHA256      string `json:"sha256,omitempty"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 func toFileResponse(f backendfiles.File) fileResponse {
 	return fileResponse{
-		ID:                      f.ID,
-		UserID:                  f.UserID,
-		WorkspaceID:             f.WorkspaceID,
-		SessionID:               f.SessionID,
-		Category:                f.Category,
-		LocalPath:               f.LocalPath,
-		MarkdownPath:            f.MarkdownPath,
-		DocumentReadStatus:      f.DocumentReadStatus,
-		DocumentReadEngine:      f.DocumentReadEngine,
-		DocumentReadPages:       f.DocumentReadPages,
-		DocumentReadImages:      f.DocumentReadImages,
-		DocumentReadVisualPages: f.DocumentReadVisualPages,
-		Filename:                f.Filename,
-		ContentType:             f.ContentType,
-		Size:                    f.Size,
-		SHA256:                  f.SHA256,
-		CreatedAt:               f.CreatedAt.Unix(),
-		UpdatedAt:               f.UpdatedAt.Unix(),
+		ID:          f.ID,
+		UserID:      f.UserID,
+		WorkspaceID: f.WorkspaceID,
+		SessionID:   f.SessionID,
+		Category:    f.Category,
+		LocalPath:   f.LocalPath,
+		Filename:    f.Filename,
+		ContentType: f.ContentType,
+		Size:        f.Size,
+		SHA256:      f.SHA256,
+		CreatedAt:   f.CreatedAt.Unix(),
+		UpdatedAt:   f.UpdatedAt.Unix(),
 	}
 }
 

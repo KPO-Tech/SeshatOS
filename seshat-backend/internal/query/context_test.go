@@ -49,12 +49,11 @@ func TestBuildAttachmentContext_ListsFilesWithoutInliningContent(t *testing.T) {
 				LocalPath:   "uploads/documents/notes.txt",
 			},
 			"pdf-1": {
-				ID:           "pdf-1",
-				Filename:     "brief.pdf",
-				ContentType:  "application/pdf",
-				Size:         2048,
-				LocalPath:    "uploads/documents/brief.pdf",
-				MarkdownPath: "uploads/documents/brief.pdf.md",
+				ID:          "pdf-1",
+				Filename:    "brief.pdf",
+				ContentType: "application/pdf",
+				Size:        2048,
+				LocalPath:   "uploads/documents/brief.pdf",
 			},
 		},
 		data: map[string][]byte{
@@ -69,9 +68,9 @@ func TestBuildAttachmentContext_ListsFilesWithoutInliningContent(t *testing.T) {
 		`filename="notes.txt"`,
 		`workspace_path="uploads/documents/notes.txt"`,
 		`filename="brief.pdf"`,
-		`markdown_path="uploads/documents/brief.pdf.md"`,
-		`document_reader_status="converted"`,
-		"Use read_file on the workspace path",
+		`workspace_path="uploads/documents/brief.pdf"`,
+		"read them with read_file on the workspace path",
+		"in parts with the pages parameter",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("expected %q in block, got:\n%s", want, got)
@@ -79,6 +78,12 @@ func TestBuildAttachmentContext_ListsFilesWithoutInliningContent(t *testing.T) {
 	}
 	if strings.Contains(got, "secret text from the attachment") {
 		t.Fatalf("did not expect attachment contents to be inlined, got:\n%s", got)
+	}
+	// Attaching converts nothing, so the prompt has no conversion state to report.
+	for _, gone := range []string{"markdown_path", "document_reader_status", "document_reader_engine", "visual_pages"} {
+		if strings.Contains(got, gone) {
+			t.Fatalf("%q belongs to the old import-time conversion, got:\n%s", gone, got)
+		}
 	}
 }
 
