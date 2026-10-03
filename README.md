@@ -51,7 +51,7 @@ Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condit
 git clone <this-repo>
 cd seshatos
 cp .env.example .env   # fill in at least one provider API key
-make setup              # first-time setup: Node deps + docling + build
+make setup              # first-time setup: Node deps + build
 make dev                 # start the local backend + desktop app
 ```
 

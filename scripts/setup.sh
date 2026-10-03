@@ -7,19 +7,13 @@
 #   2. Installs ripgrep (required at runtime by the engine's glob/grep tools)
 #   3. Verifies Node.js 22+ and bun (or npm)
 #   4. Installs Node dependencies (bun install)
-#   5. Installs uv and docling-serve (optional — skip with SKIP_PYTHON=1)
-#   6. Builds seshat-backend and the Electron app
+#   5. Builds seshat-backend and the Electron app
 #
 # Usage:
 #   ./scripts/setup.sh
-#   SKIP_PYTHON=1 ./scripts/setup.sh     # skip docling setup
-#   DOCLING_EXTRAS=gpu ./scripts/setup.sh
 #
 # Environment variables:
 #   SESHAT_RUNTIME_ROOT   Override data dir (default: ~/.config/seshat)
-#   DOCLING_EXTRAS       pip extras for docling-serve (e.g. "gpu")
-#   PYTHON_VERSION       Python version for the venv (default: 3.11)
-#   SKIP_PYTHON          Set to 1 to skip the Python/docling setup step
 
 set -euo pipefail
 
@@ -162,16 +156,7 @@ step "Installing Node dependencies..."
 )
 ok "Node dependencies installed"
 
-# ── 5. Python venv + docling-serve (optional) ─────────────────────────────────
-if [ "${SKIP_PYTHON:-}" = "1" ]; then
-    warn "Skipping Python/docling setup (SKIP_PYTHON=1)"
-    warn "Run this script again later without SKIP_PYTHON to enable document conversion."
-else
-    step "Setting up Python environment (docling-serve)..."
-    "$REPO_ROOT/scripts/install-python-env.sh"
-fi
-
-# ── 6. Build Go binary + UI ────────────────────────────────────────────────────
+# ── 5. Build Go binary + UI ────────────────────────────────────────────────────
 step "Building seshat-backend..."
 (
     cd "$BACKEND_DIR"
