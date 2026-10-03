@@ -274,18 +274,43 @@ its own module next to `docling.py` in `providers/`; a new chunker
 implementation gets its own module next to `docling.py` in
 `providers/chunker/`.
 
-## Preparing the models
+## Setting it up
 
-Docling needs models, and nothing should be downloaded in the middle of a request. `scripts/prepare_models.py`
-lists what a profile needs, downloads what is missing, and checks offline that it all loads:
+Nothing installs this service for you: you do it on purpose, with one command that does the same thing on a
+laptop, a server or a new machine, and says what it did. After `uv sync` (which gives you Python and the
+packages), `seshat-intelligence` checks the machine and installs what is missing:
 
 ```bash
-uv run python scripts/prepare_models.py                       # the plan: hardware, profile, what is there, what is missing
-uv run python scripts/prepare_models.py --download --verify   # fetch what is missing, then convert a tiny PDF offline
-uv run python scripts/prepare_models.py --profile full --device cuda --artifacts-path /models/docling --download --verify
+uv sync
+uv run --no-sync seshat-intelligence check              # is this machine ready, and if not what to run
+uv run --no-sync seshat-intelligence install --verify   # the GPU build of PyTorch, the models, then a check
+uv run --no-sync seshat-intelligence serve              # run the service
 ```
 
-Nothing is downloaded without `--download`. The profile (`SESHAT_INTELLIGENCE_DOCLING_PROFILE`):
+`install` is safe to run again: what is there is kept, and a download that stops resumes where it stopped.
+What it does, in order:
+
+1. **PyTorch for the GPU.** Docling runs on PyTorch, and which build you get depends on where it is installed from:
+   Windows gets the CPU build from PyPI, and Linux gets a CUDA build whatever the machine. If an NVIDIA driver is
+   there and torch cannot use it, it picks the newest CUDA build the driver supports among those PyTorch publishes
+   for the installed torch version, downloads it (resumable, checksum verified) and installs `torch` and
+   `torchvision` together. `--no-gpu` keeps the build you have. This is also the step that takes time: a CUDA build
+   is a few GB.
+2. **The models** of the profile, below. Nothing is downloaded in the middle of a request.
+3. **A check**: with `--verify`, a tiny PDF is converted in a process that may not reach the network.
+
+After the GPU build, run the service with `uv run --no-sync` (or the environment's own `python`): a plain `uv run`
+syncs the environment back to the lock file and replaces the build.
+
+For a program that drives this (an installer, the backend, a CI step), `--json` writes one JSON document to stdout
+and progress to stderr. `check` returns `ok`, the `hardware`, the `torch` build, the `models` with what is missing,
+and a list of `problems`, each with a `code`, a `severity` (`error` or `warning`) and the `fix` command. The exit
+code is 0 when there is no error; a GPU that is there but unused is only a warning. `--dry-run` says what `install`
+would do and does nothing.
+
+### Models
+
+The profile (`--profile`, and `SESHAT_INTELLIGENCE_DOCLING_PROFILE` for the service):
 
 | Profile | Models | Size | Adds |
 |---|---|---|---|
@@ -293,11 +318,26 @@ Nothing is downloaded without `--download`. The profile (`SESHAT_INTELLIGENCE_DO
 | `standard` | + picture classifier | 556 MB | accurate table mode, picture labels |
 | `full` | + CodeFormulaV2 | 1196 MB | formulas as LaTeX, code with its line breaks |
 
-`--profile auto` picks one from the hardware: `full` on a CUDA card with 6 GB or more, `standard` otherwise,
-`minimal` below 8 GB of memory. OCR (RapidOCR) ships inside the Python package; `--ocr easyocr --ocr-languages fr en`
-adds EasyOCR's models. By default models go to Docling's own cache; `--artifacts-path DIR` puts them in a directory
-for a server image, and the service then needs `SESHAT_INTELLIGENCE_DOCLING_ARTIFACTS_PATH` set to it.
-`SESHAT_INTELLIGENCE_DOCLING_OFFLINE=true` makes the service refuse to download at run time.
+`--profile auto` (the default of the command) picks one from the hardware: `full` on a CUDA card with 6 GB or more,
+`standard` otherwise, `minimal` below 8 GB of memory. OCR (RapidOCR) ships inside the Python package;
+`--ocr easyocr --ocr-languages fr en` adds EasyOCR's models. By default models go to Docling's own cache;
+`--artifacts-path DIR` puts them in a directory (a server image, a portable install), and the service then needs
+`SESHAT_INTELLIGENCE_DOCLING_ARTIFACTS_PATH` set to it. `SESHAT_INTELLIGENCE_DOCLING_OFFLINE=true` makes the service
+refuse to download at run time.
+
+### Docker
+
+The `Dockerfile` builds an image with the dependencies and the models inside, so it starts with no network:
+
+```bash
+docker build -t seshat-intelligence .                                                  # CPU, standard profile
+docker build -t seshat-intelligence-gpu --build-arg TORCH_INDEX=cu130 --build-arg PROFILE=full .
+docker run -p 5100:5100 seshat-intelligence
+docker run --gpus all -p 5100:5100 seshat-intelligence-gpu                             # needs the NVIDIA container toolkit
+```
+
+`TORCH_INDEX` is the PyTorch index (`cpu`, or `cuNNN` for a CUDA build the host driver supports; `nvidia-smi` shows
+the newest CUDA it can run). The build converts a test page offline, and CI builds the image and asks it for `/health`.
 
 The service reads PDFs with pdfium (`SESHAT_INTELLIGENCE_DOCLING_PDF_BACKEND`, default `pypdfium`). Docling's own PDF
 reader splits words at kerning gaps and breaks accented letters on some fonts. What Docling returns is then cleaned of
@@ -308,7 +348,7 @@ defects that come from PDF encoding (an accent left apart from its letter, ligat
 
 ```bash
 uv sync
-uv run main.py
+uv run --no-sync seshat-intelligence serve   # or: uv run main.py
 ```
 
 Starts on `127.0.0.1:5100` by default (override with

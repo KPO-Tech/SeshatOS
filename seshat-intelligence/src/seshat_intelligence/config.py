@@ -7,13 +7,7 @@ DocumentProviderName = Literal["docling", "marker"]
 
 
 class Settings(BaseSettings):
-    """Runtime configuration, all overridable via SESHAT_INTELLIGENCE_* env vars.
-
-    storage_dir mirrors docling-serve's own managed-venv convention (a
-    directory under the Seshat runtime root) rather than inventing a new
-    location - see seshat/internal/python/docling.go for the Go-side
-    counterpart this service is meant to sit alongside.
-    """
+    """Runtime configuration, all overridable via SESHAT_INTELLIGENCE_* env vars."""
 
     model_config = SettingsConfigDict(env_prefix="SESHAT_INTELLIGENCE_")
 
@@ -53,7 +47,7 @@ class Settings(BaseSettings):
     min_chars_per_page: int = 20
     # How Docling is set up (see providers/docling_setup.py). The profile says which models are used:
     # minimal is Docling's own default (layout and tables), standard adds the accurate table mode and the
-    # picture classifier, full adds formulas as LaTeX and code with its line breaks. scripts/prepare_models.py
+    # picture classifier, full adds formulas as LaTeX and code with its line breaks. `seshat-intelligence install`
     # downloads what a profile needs and says which one suits the machine.
     docling_profile: Literal["minimal", "standard", "full"] = "minimal"
     # "pypdfium" reads PDF text correctly where Docling's own reader splits words and accents.
