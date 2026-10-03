@@ -1,6 +1,6 @@
 # 0002 - Chat gives the agent the file, not a conversion
 
-Status: accepted, 2026-10-02. Step 1 (inventory) is below; steps 2 to 4 are not started.
+Status: accepted, 2026-10-02. Step 1 (inventory) and step 2 (the Read tool, in seshat v1.2.58) are done. Attaching a file no longer converts it (steps 3 and 4 for the backend and the desktop); see "What changed". Attaching by path without a copy, and the Read tool's own sidecar support, are not done.
 
 ## Context
 
@@ -71,3 +71,12 @@ What exists today, from reading the code.
   than return nothing.
 - The path reference only exists on a machine that has the file. The cloud gets a copy and an id.
 - The backend setting for the document reader stays; only the import-time use goes.
+
+## What changed
+
+Attaching a file converts nothing. The upload writes the file into the session workspace and the agent reads it with its Read tool; the composer no longer waits and the thumbnail has no reading state.
+
+- Removed: `files.convertSessionFileAsync` and the `.md` and `.document.json` files it wrote, the `markdown_path` and `document_read_*` fields (backend types, API responses, message attachments, desktop types), the `document_reader_status` annotation of the prompt, the desktop polling and its send block, `documentreading.NewReadSidecar` and the read-failure record. The `markdown_path` column stays in existing databases, unused.
+- Changed: `GET /files/:id/markdown` (the document preview) reads the document when it is asked for and keeps the result in the store, and the prompt block lists the path, type and size of each file and says how the Read tool reads a long document.
+- Kept: the read-result cache (`SaveReadResult`, `LoadReadResult`), now filled by the preview and by Knowledge ingestion only; the processor and the policy converter, used by the Read tool and Knowledge; the document reader setting.
+- Not done: attaching a local file by its path, with its size, modification time and hash, and without a copy; and removing the `.md` and `.document.json` sidecar support from the Read tool in the seshat repo, which nothing writes any more.

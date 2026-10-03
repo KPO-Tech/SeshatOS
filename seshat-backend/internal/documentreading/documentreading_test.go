@@ -456,33 +456,6 @@ func TestReadResultCacheRoundTrip(t *testing.T) {
 	}
 }
 
-func TestReadFailureCacheRoundTrip(t *testing.T) {
-	t.Parallel()
-
-	provider, err := storage.NewLocalProviderWithConfig(storage.Config{
-		Provider:  storage.ProviderLocal,
-		LocalPath: t.TempDir(),
-	})
-	if err != nil {
-		t.Fatalf("NewLocalProviderWithConfig: %v", err)
-	}
-	store := storage.NewArtifactStore(provider)
-
-	if err := SaveReadFailure(context.Background(), store, "file_123", "ocr runtime unavailable"); err != nil {
-		t.Fatalf("SaveReadFailure: %v", err)
-	}
-	got, ok, err := LoadReadFailure(context.Background(), store, "file_123")
-	if err != nil {
-		t.Fatalf("LoadReadFailure: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected cached read failure")
-	}
-	if got.SourceFileID != "file_123" || got.Error != "ocr runtime unavailable" || got.UpdatedAt.IsZero() {
-		t.Fatalf("unexpected cached read failure: %#v", got)
-	}
-}
-
 func TestDynamicHybridChunkerUsesPolicyExternalChunker(t *testing.T) {
 	t.Parallel()
 

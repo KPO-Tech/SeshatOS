@@ -1,5 +1,3 @@
-export type DocumentReadStatus = 'processing' | 'converted' | 'failed' | 'not_available_or_failed'
-
 // The one attachment shape, used both before a file is sent (composer drafts,
 // where upload_status/error are meaningful) and after (persisted message
 // metadata, where they're simply absent - every field below is optional, so
@@ -11,11 +9,6 @@ export type ChatAttachment = {
   size?: number
   category?: 'images' | 'documents' | 'other'
   local_path?: string
-  document_read_status?: DocumentReadStatus
-  document_read_engine?: string
-  document_read_pages?: number
-  document_read_images?: number
-  document_read_visual_pages?: number[]
   preview_url?: string
   page_preview_urls?: string[]
   upload_status?: 'uploading' | 'uploaded' | 'failed'
@@ -39,14 +32,6 @@ export function isPDFFile(file: File): boolean {
   return file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
 }
 
-export function isDocumentReadProcessing(file: Pick<ChatAttachment, 'document_read_status'>): boolean {
-  return file.document_read_status === 'processing'
-}
-
-export function isDocumentReadFailed(file: Pick<ChatAttachment, 'document_read_status'>): boolean {
-  return file.document_read_status === 'failed' || file.document_read_status === 'not_available_or_failed'
-}
-
 export function sentAttachment(file: ChatAttachment) {
   return {
     id: file.id,
@@ -55,11 +40,6 @@ export function sentAttachment(file: ChatAttachment) {
     size: file.size,
     category: file.category,
     local_path: file.local_path,
-    document_read_status: file.document_read_status,
-    document_read_engine: file.document_read_engine,
-    document_read_pages: file.document_read_pages,
-    document_read_images: file.document_read_images,
-    document_read_visual_pages: file.document_read_visual_pages,
     preview_url: file.preview_url,
     page_preview_urls: file.page_preview_urls,
   }

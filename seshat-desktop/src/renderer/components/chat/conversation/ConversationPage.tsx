@@ -78,7 +78,6 @@ export function ConversationPage() {
     handleAttachFiles,
     handleRemoveAttachment,
     hasUploadingAttachments,
-    hasProcessingDocuments,
     uploadedFileIds,
     sentAttachments,
   } = useDraftAttachments(id)
@@ -206,7 +205,6 @@ export function ConversationPage() {
         attachmentError={attachmentError}
         setAttachmentError={setAttachmentError}
         hasUploadingAttachments={hasUploadingAttachments}
-        hasProcessingDocuments={hasProcessingDocuments}
         clearAttachments={clearAttachments}
         uploadedFileIds={uploadedFileIds}
         sentAttachments={sentAttachments}

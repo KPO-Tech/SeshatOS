@@ -4,7 +4,7 @@ import { api } from '@renderer/api/client'
 import { AttachmentTypeIcon } from '@renderer/components/AttachmentTypeIcon'
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
 import { useUIStore } from '@renderer/stores/ui'
-import { isDocumentReadFailed, isDocumentReadProcessing, type ChatAttachment } from './attachmentTypes'
+import type { ChatAttachment } from './attachmentTypes'
 import { attachmentPreviewURL, fetchAttachmentTextPreview, isImageAttachment, isPDFAttachment, resolveAttachmentOpenAction } from './attachmentPreview'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 
@@ -96,27 +96,8 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
 
   const isUploading = file.upload_status === 'uploading'
   const isFailed = file.upload_status === 'failed'
-  const isReadingDocument = isDocumentReadProcessing(file)
-  const isDocumentFailed = isDocumentReadFailed(file)
   const sizeLabel = formatSize(file.size)
-  const documentDetail = file.document_read_status === 'converted'
-    ? [
-        file.document_read_pages ? `${file.document_read_pages} page${file.document_read_pages === 1 ? '' : 's'}` : null,
-        file.document_read_images ? `${file.document_read_images} image${file.document_read_images === 1 ? '' : 's'}` : null,
-        file.document_read_visual_pages?.length ? `visual pages ${file.document_read_visual_pages.join(',')}` : null,
-      ].filter(Boolean).join(', ')
-    : ''
-  const statusLabel = isUploading
-    ? 'Uploading...'
-    : isFailed
-      ? file.error || 'Upload failed'
-      : isReadingDocument
-        ? 'Reading document...'
-        : isDocumentFailed
-          ? 'Document read failed'
-          : file.document_read_status === 'converted'
-            ? documentDetail ? `Document ready (${documentDetail})` : 'Document ready'
-            : sizeLabel
+  const statusLabel = isUploading ? 'Uploading...' : isFailed ? file.error || 'Upload failed' : sizeLabel
   const tooltip = [file.filename, statusLabel].filter(Boolean).join(' - ')
 
   async function handleOpen() {
@@ -144,8 +125,8 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
         className={cx(
           THUMB_CSS,
           borderClassFor(file),
-          (isUploading || isReadingDocument) && 'opacity-60',
-          (isFailed || isDocumentFailed) && 'border-[rgba(var(--color-error-rgb),0.5)]'
+          isUploading && 'opacity-60',
+          isFailed && 'border-[rgba(var(--color-error-rgb),0.5)]'
         )}
         onClick={() => void handleOpen()}
         aria-label={tooltip || file.filename}
@@ -158,13 +139,10 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
             <span className="w-full truncate text-center text-[7px] leading-[1.15] text-app-text-muted">{file.filename}</span>
           </>
         )}
-        {(isUploading || isReadingDocument) && (
+        {isUploading && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.25)] text-white">
             <LoadingOne size={14} className="animate-[spin_0.9s_linear_infinite]" />
           </span>
-        )}
-        {isDocumentFailed && !isFailed && (
-          <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-full bg-[var(--accent-danger)]" />
         )}
       </button>
       {onRemove && (

@@ -404,11 +404,6 @@ export type FileItem = {
   filename: string
   content_type: string
   size: number
-  document_read_status?: 'processing' | 'converted' | 'failed' | 'not_available_or_failed'
-  document_read_engine?: string
-  document_read_pages?: number
-  document_read_images?: number
-  document_read_visual_pages?: number[]
   created_at: number
 }
 
