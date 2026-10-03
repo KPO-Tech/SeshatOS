@@ -70,15 +70,15 @@ def fake_torch(cuda: bool = False, mps: bool = False):
 
 
 def test_hardware_detection_prefers_cuda_then_mps_then_cpu():
-    assert detect_hardware(fake_torch(cuda=True)).device == "cuda"
-    assert detect_hardware(fake_torch(cuda=True)).vram_gb == 8.0
-    assert detect_hardware(fake_torch(mps=True)).device == "mps"
-    assert detect_hardware(fake_torch()).device == "cpu"
+    assert detect_hardware(fake_torch(cuda=True), gpu=None).device == "cuda"
+    assert detect_hardware(fake_torch(cuda=True), gpu=None).vram_gb == 8.0
+    assert detect_hardware(fake_torch(mps=True), gpu=None).device == "mps"
+    assert detect_hardware(fake_torch(), gpu=None).device == "cpu"
 
 
 def test_a_broken_gpu_stack_means_cpu_not_a_failed_plan():
     broken = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: 1 / 0), backends=None)
-    assert detect_hardware(broken).device == "cpu"
+    assert detect_hardware(broken, gpu=None).device == "cpu"
 
 
 @pytest.mark.parametrize(
@@ -124,3 +124,38 @@ def test_the_plan_lists_what_is_missing_and_downloads_nothing(tmp_path, capsys, 
     assert "present" in out and "MISSING" in out and "code_formula" in out
     assert f"To download: {profile_size_mb('full') - MODELS['layout'].size_mb} MB" in out
     assert "Nothing was downloaded" in out
+
+
+def test_a_gpu_that_torch_cannot_use_is_reported_not_ignored():
+    hardware = detect_hardware(fake_torch(), gpu=("GTX 1650 Ti", 4.0))
+    assert hardware.device == "cpu"
+    assert hardware.unused_gpu == "GTX 1650 Ti (4.0 GB)"
+    assert detect_hardware(fake_torch(), gpu=None).unused_gpu is None
+
+
+def test_nvidia_gpu_reads_the_driver_output(monkeypatch):
+    from seshat_intelligence.providers import docling_setup
+
+    done = SimpleNamespace(stdout="NVIDIA GeForce GTX 1650 Ti with Max-Q Design, 4096\n")
+    monkeypatch.setattr(docling_setup.subprocess, "run", lambda *a, **k: done)
+    assert docling_setup.nvidia_gpu() == ("NVIDIA GeForce GTX 1650 Ti with Max-Q Design", 4.0)
+    monkeypatch.setattr(docling_setup.subprocess, "run", lambda *a, **k: SimpleNamespace(stdout=""))
+    assert docling_setup.nvidia_gpu() is None
+
+
+def test_the_gpu_install_command_targets_the_running_interpreter_and_the_cuda_index():
+    script = load_script()
+    command = script.gpu_install_command("/venv/bin/python", "cu126")
+    assert command[:3] == ["uv", "pip", "install"]
+    assert command[command.index("--python") + 1] == "/venv/bin/python"
+    assert command[command.index("--index-url") + 1] == "https://download.pytorch.org/whl/cu126"
+    assert "torch" in command and "torchvision" in command
+
+
+def test_install_gpu_runs_the_command_and_stops(monkeypatch, capsys):
+    script = load_script()
+    ran = []
+    monkeypatch.setattr(script.subprocess, "run", lambda command, **k: ran.append(command) or SimpleNamespace(returncode=0))
+    assert script.main(["--install-gpu"]) == 0
+    assert ran and ran[0][:3] == ["uv", "pip", "install"]
+    assert "--no-sync" in capsys.readouterr().out

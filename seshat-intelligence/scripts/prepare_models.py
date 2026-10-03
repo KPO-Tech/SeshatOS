@@ -48,6 +48,26 @@ from seshat_intelligence.providers.docling_setup import (  # noqa: E402
 )
 
 MANIFEST_NAME = "seshat-models.json"
+CUDA_INDEX = "cu126"  # the CUDA 12.6 builds run on every NVIDIA card from Turing (GTX 16xx, RTX) on, with a current driver
+
+
+def gpu_install_command(python: str, index: str = CUDA_INDEX) -> list[str]:
+    """The command that replaces a CPU-only torch with a CUDA build, in the interpreter that runs the service."""
+    return [
+        "uv", "pip", "install", "--python", python,
+        "--reinstall-package", "torch", "--reinstall-package", "torchvision",
+        "torch", "torchvision", "--index-url", f"https://download.pytorch.org/whl/{index}",
+    ]  # fmt: skip
+
+
+def install_gpu(args: argparse.Namespace) -> int:
+    command = gpu_install_command(sys.executable, args.cuda_index)
+    print("Installing the CUDA build of torch (about 2.5 GB):\n  " + " ".join(command), flush=True)
+    code = subprocess.run(command, check=False).returncode
+    if code == 0:
+        print("\nDone. `uv run` re-syncs the environment to uv.lock and would put the CPU build back:")
+        print("start the service with `uv run --no-sync main.py` (or the environment's own python).")
+    return code
 
 
 def tiny_pdf() -> bytes:
@@ -104,6 +124,9 @@ def print_plan(args: argparse.Namespace, profile: str, hardware, recommended: st
     if hardware.vram_gb:
         print(f"           {hardware.vram_gb} GB of video memory")
     print(f"           {hardware.cpu_count} CPU threads, {hardware.ram_gb or '?'} GB of memory")
+    if hardware.unused_gpu:
+        print(f"           GPU found but NOT usable here: {hardware.unused_gpu}. This Python's torch is a CPU build;")
+        print("           run this script with --install-gpu to install the CUDA build (a few GB), then again to plan.")
     print(f"Profile  : {profile} ({PROFILES[profile].description})   recommended here: {recommended}")
     print(f"Models in: {where}")
     print()
@@ -228,12 +251,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--artifacts-path", type=Path, default=None)
     parser.add_argument("--ocr", choices=["auto", "rapidocr", "easyocr", "none"], default="auto")
     parser.add_argument("--ocr-languages", nargs="+", default=["fr", "en"])
+    parser.add_argument("--install-gpu", action="store_true", help="install the CUDA build of torch (a few GB) and stop")
+    parser.add_argument("--cuda-index", default=CUDA_INDEX, help="PyTorch wheel index, for example cu126 or cu130")
     parser.add_argument("--offline", action="store_true", help="build the converter without any network access")
     parser.add_argument("--download", action="store_true", help="download what is missing (the default only lists it)")
     parser.add_argument("--verify", action="store_true", help="after that, convert a tiny PDF offline")
     parser.add_argument("--verify-only", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
+    if args.install_gpu:
+        return install_gpu(args)
     hardware = detect_hardware()
     recommended = recommend_profile(hardware)
     profile = recommended if args.profile == "auto" else args.profile

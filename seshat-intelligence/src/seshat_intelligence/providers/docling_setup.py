@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import platform
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -112,14 +113,34 @@ def profile_size_mb(profile: str) -> int:
 
 @dataclass(frozen=True)
 class Hardware:
+    """What Docling will run on. `device` is what it can actually use; `unused_gpu` names a GPU that is
+    there but that this Python cannot use (a CPU-only build of torch), so the plan can say how to use it."""
+
     device: Literal["cuda", "mps", "cpu"]
     name: str
     vram_gb: float | None
     cpu_count: int
     ram_gb: float | None
+    unused_gpu: str | None = None
 
 
-def detect_hardware(torch_module: Any | None = None) -> Hardware:
+def nvidia_gpu() -> tuple[str, float] | None:
+    """The first NVIDIA GPU the driver reports, with its memory in GB, without needing torch."""
+    try:
+        done = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        name, memory = [part.strip() for part in done.stdout.splitlines()[0].rsplit(",", 1)]
+        return name, round(float(memory) / 1024, 1)
+    except (OSError, subprocess.SubprocessError, IndexError, ValueError):
+        return None
+
+
+def detect_hardware(torch_module: Any | None = None, gpu: tuple[str, float] | None | bool = True) -> Hardware:
     """What Docling can run on here. `torch_module` is for tests; by default torch is imported if there is one."""
     cpu_count = os.cpu_count() or 1
     ram_gb: float | None = None
@@ -130,6 +151,8 @@ def detect_hardware(torch_module: Any | None = None) -> Hardware:
     except ImportError:
         pass
 
+    if gpu is True:
+        gpu = nvidia_gpu()
     torch = torch_module
     if torch is None:
         try:
@@ -146,7 +169,8 @@ def detect_hardware(torch_module: Any | None = None) -> Hardware:
                 return Hardware("mps", platform.processor() or "Apple silicon", None, cpu_count, ram_gb)
         except Exception:  # noqa: BLE001 - a broken GPU stack means "no GPU", not a failed plan
             pass
-    return Hardware("cpu", platform.processor() or platform.machine(), None, cpu_count, ram_gb)
+    unused = f"{gpu[0]} ({gpu[1]} GB)" if gpu else None
+    return Hardware("cpu", platform.processor() or platform.machine(), None, cpu_count, ram_gb, unused)
 
 
 def recommend_profile(hardware: Hardware) -> Profile:
