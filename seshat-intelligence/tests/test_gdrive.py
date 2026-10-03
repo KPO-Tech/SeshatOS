@@ -2,13 +2,14 @@ import json
 
 import httpx
 import pytest
+from fake_drive import DOC, FOLDER, FakeDrive, collect, file
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from seshat_intelligence.connectors.base import UpstreamError
 from seshat_intelligence.connectors.gdrive import GDriveConnector
 from seshat_intelligence.connectors.gdrive.acl import permissions_to_access
 from seshat_intelligence.connectors.gdrive.filters import is_allowed_file
-from seshat_intelligence.connectors.base import UpstreamError
 from seshat_intelligence.connectors.models import (
     Checkpoint,
     ConnectorRequest,
@@ -19,7 +20,7 @@ from seshat_intelligence.connectors.models import (
 )
 from seshat_intelligence.connectors.registry import ConnectorRegistry
 from seshat_intelligence.connectors.routes import router
-from fake_drive import DOC, FOLDER, FakeDrive, collect, file
+
 
 @pytest.fixture
 def drive():
