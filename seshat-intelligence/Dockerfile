@@ -17,6 +17,10 @@ FROM python:3.11-slim AS build
 ARG TORCH_INDEX=cpu
 ARG PROFILE=standard
 
+# Libraries the PDF and image readers load (OpenCV needs them to import, so the build stage has them too).
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libxcb1 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1
 
@@ -43,9 +47,9 @@ RUN seshat-intelligence install --no-gpu --device cpu --profile ${PROFILE} --art
 FROM python:3.11-slim
 
 # Libraries the PDF and image readers load.
-RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --uid 10001 seshat
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libxcb1 \
+    && rm -rf /var/lib/apt/lists/*
+RUN useradd --create-home --uid 10001 seshat
 
 COPY --from=build /opt/venv /opt/venv
 COPY --from=build /models /models
