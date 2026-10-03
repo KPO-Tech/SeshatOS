@@ -46,10 +46,7 @@ hardcoded. Two real implementations exist today:
 
 - `providers/docling.py` - wraps Docling as an internal Python library
   (`from docling.document_converter import DocumentConverter`), not as a
-  separate HTTP server - that's the difference from the `docling-serve`
-  setup `seshat-backend` uses today (see `seshat/internal/python/docling.go`).
-  `docling-serve` stays available and unaffected in the meantime; this is a
-  separate, new service `seshat-backend` isn't calling yet. Broad format
+  separate HTTP server. Broad format
   support (PDF, Office, Markdown, HTML, images, ...). Default provider.
 - `providers/marker.py` - wraps Marker (`marker.converters.pdf.PdfConverter`).
   PDF-only, different layout-detection behavior (e.g. classifies headings

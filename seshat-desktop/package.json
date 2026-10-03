@@ -92,10 +92,6 @@
       {
         "from": "resources/backend",
         "to": "backend"
-      },
-      {
-        "from": "build/install-docling.ps1",
-        "to": "install-docling.ps1"
       }
     ],
     "linux": {

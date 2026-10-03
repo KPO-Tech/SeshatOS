@@ -1,11 +1,9 @@
 # SeshatOS - Development Makefile
 #
-#   make setup          -> first-time setup (Node deps + docling + build)
+#   make setup          -> first-time setup (Node deps + build)
 #   make dev            -> start local backend + Electron UI
 #   make build          -> compile the local backend binary
 #   make test           -> run all Go tests in the workspace
-#   make install-python -> install / update docling-serve
-#   make start-docling  -> start docling-serve manually
 #
 # Windows: works from PowerShell, cmd, or Git Bash. Two separate things need
 # fixing, both handled below from a bare "Git for Windows installed" state:
@@ -72,8 +70,7 @@ UI_PKG_MGR := $(shell $(SHELL) -c 'command -v bun >/dev/null 2>&1 && echo bun ||
         fmt vet lint tidy hooks \
         ui-install ui-build ui-dev ui-package-win ui-package-linux \
         desktop-install desktop-build desktop-dev desktop-package-win desktop-package-linux \
-        install-python start-docling \
-        logs logs-last logs-docling \
+        logs logs-last \
         clean clean-all clean-tmp
 
 .DEFAULT_GOAL := help
@@ -230,28 +227,10 @@ desktop-package-linux: desktop-install ## Package a Linux AppImage + .deb (run o
 
 # Setup
 
-setup: setup-legacy desktop-build ## First-time setup (system deps + docling + desktop build)
+setup: setup-legacy desktop-build ## First-time setup (system deps + desktop build)
 
 setup-legacy: ## Legacy setup script path (system deps + desktop-only build)
 	@bash scripts/setup.sh
-
-# Python / docling (optional feature)
-# install-python creates the managed venv and installs docling-serve.
-# Called automatically by `make setup`. Use to install or update docling.
-#
-# Options (env vars):
-#   DOCLING_EXTRAS=gpu      -> GPU-accelerated conversion
-#   PYTHON_VERSION=3.12     -> specific Python version
-
-install-python: ## Install / update docling-serve in the managed venv
-	@bash scripts/install-python-env.sh
-
-# Start docling-serve manually.
-# The backend auto-starts it at launch when the venv is installed.
-# Use this only to run it as a standalone process.
-
-start-docling: ## Start docling-serve manually (auto-started by the backend)
-	@bash scripts/start-docling.sh
 
 # Logs
 
@@ -272,16 +251,6 @@ logs-last: ## Show the last 200 lines of the backend log
 	   tail -200 "$$LOG"; \
 	 else \
 	   printf "\033[33m[logs]\033[0m no log file at %s.\n" "$$LOG"; \
-	 fi
-
-logs-docling: ## Tail the docling-serve log in real time (Ctrl-C to exit)
-	@RUNTIME_ROOT=$${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}; \
-	 LOG="$$RUNTIME_ROOT/logs/docling.log"; \
-	 if [ -f "$$LOG" ]; then \
-	   printf "\033[32m[logs]\033[0m %s\n\n" "$$LOG"; \
-	   tail -f "$$LOG"; \
-	 else \
-	   printf "\033[33m[logs]\033[0m no docling log at %s - start the backend first.\n" "$$LOG"; \
 	 fi
 
 # Cleanup

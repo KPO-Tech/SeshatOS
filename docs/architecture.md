@@ -90,7 +90,6 @@ cmd/api
 - Process startup and shutdown
 - Config loading
 - HTTP server boot
-- Docling auto-start for local desktop usage
 
 `internal/api/`
 - Parse requests and validate inputs

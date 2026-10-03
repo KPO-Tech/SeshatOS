@@ -7,18 +7,13 @@
 #      engine's glob/grep tools, which shell out to `rg` directly
 #   4. Verifies Node.js 22+ and bun (or npm)
 #   5. Installs Node dependencies
-#   6. Installs uv and docling-serve (optional - skip with $env:SKIP_PYTHON = "1")
-#   7. Builds seshat-backend.exe and the Electron app
+#   6. Builds seshat-backend.exe and the Electron app
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
-#   $env:SKIP_PYTHON = "1"; powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 #
 # Environment variables:
 #   SESHAT_RUNTIME_ROOT   Override data dir (default: %APPDATA%\seshat)
-#   DOCLING_EXTRAS        pip extras for docling-serve (e.g. "gpu")
-#   PYTHON_VERSION        Python version for the venv (default: 3.11)
-#   SKIP_PYTHON           Set to 1 to skip the Python/docling setup step
 
 $ErrorActionPreference = "Stop"
 
@@ -137,43 +132,6 @@ if ($pkgManager -eq "bun") {
     npm install --legacy-peer-deps
 }
 Write-Ok "Node dependencies installed"
-
-# â”€â”€ 6. Python venv + docling-serve (optional) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-if ($env:SKIP_PYTHON -eq "1") {
-    Write-Warn "Skipping Python/docling setup (SKIP_PYTHON=1)"
-    Write-Warn "Run this script again later without SKIP_PYTHON to enable document conversion."
-} else {
-    Write-Step "Setting up Python environment (docling-serve)..."
-
-    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-        Write-Info "Installing uv..."
-        try {
-            Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
-            $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
-        } catch {
-            Write-Fail "Failed to install uv: $_`nInstall manually: https://docs.astral.sh/uv/getting-started/installation/"
-        }
-    }
-    Write-Ok "uv $(uv --version)"
-
-    $pythonVersion = if ($env:PYTHON_VERSION) { $env:PYTHON_VERSION } else { "3.11" }
-    $venvDir = Join-Path $env:SESHAT_RUNTIME_ROOT ".venv"
-    $doclingBin = Join-Path $venvDir "Scripts\docling-serve.exe"
-
-    if (-not (Test-Path $doclingBin)) {
-        Write-Info "Creating Python $pythonVersion venv at $venvDir..."
-        New-Item -ItemType Directory -Force -Path $env:SESHAT_RUNTIME_ROOT | Out-Null
-        uv venv $venvDir --python $pythonVersion --seed
-
-        $pyBin = Join-Path $venvDir "Scripts\python.exe"
-        $pkg = if ($env:DOCLING_EXTRAS) { "docling-serve[$env:DOCLING_EXTRAS]" } else { "docling-serve" }
-        Write-Info "Installing $pkg..."
-        uv pip install --python $pyBin $pkg
-        Write-Ok "docling-serve installed"
-    } else {
-        Write-Ok "docling-serve (already installed)"
-    }
-}
 
 # â”€â”€ 7. Build Go binaries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Write-Step "Building seshat-backend..."
