@@ -3,7 +3,7 @@ module github.com/KPO-Tech/SeshatOS/seshat-backend
 go 1.26.6
 
 require (
-	github.com/KPO-Tech/seshat v1.2.61
+	github.com/KPO-Tech/seshat v1.2.62
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
