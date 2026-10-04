@@ -3,7 +3,7 @@ module github.com/KPO-Tech/SeshatOS/seshat-backend
 go 1.26.6
 
 require (
-	github.com/KPO-Tech/seshat v1.2.67
+	github.com/KPO-Tech/seshat v1.2.69
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
@@ -102,6 +102,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.28 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/qdrant/go-client v1.18.3 // indirect
+	github.com/razvandimescu/gopdf v0.11.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/richardlehane/mscfb v1.0.7 // indirect
 	github.com/richardlehane/msoleps v1.0.6 // indirect
