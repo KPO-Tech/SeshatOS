@@ -466,7 +466,7 @@ func TestDynamicHybridChunkerUsesPolicyExternalChunker(t *testing.T) {
 				ChunkIndex: 0,
 				Text:       "hybrid chunk",
 			}},
-		}, false)
+		}, true) // the external reader is preferred: its chunker is used
 	})
 	if !chunker.IsAvailable(context.Background()) {
 		t.Fatal("expected dynamic hybrid chunker to be available")
@@ -511,5 +511,43 @@ func TestExtensionSetsAreDisjointAndConsistent(t *testing.T) {
 	}
 	if !AllConvertibleExtensions[".pdf"] {
 		t.Error(`".pdf" must be in AllConvertibleExtensions`)
+	}
+}
+
+// Without the setting that prefers the external reader, a document is chunked from the text the readers wrote (the
+// markdown chunker), not by the external service: that one reads the file again with its own parser and ignores
+// what the native readers made of it.
+func TestDynamicHybridChunkerIsNotUsedUnlessTheExternalReaderIsPreferred(t *testing.T) {
+	t.Parallel()
+
+	chunker := NewDynamicHybridChunker(func(context.Context) documentreader.Converter {
+		return NewPolicyConverter(fakeHybridConverter{
+			fakeConverter: fakeConverter{markdown: "converted"},
+			chunks:        []documentreader.Chunk{{ChunkIndex: 0, Text: "hybrid chunk"}},
+		}, false)
+	})
+	if chunker.IsAvailable(context.Background()) {
+		t.Fatal("the external chunker must not be used when the external reader is not preferred")
+	}
+}
+
+// A PDF's text for indexing has the page markers; its markdown, which people read, has none.
+func TestProcessor_ReadBytesMarksThePagesOfAPDFForIndexingOnly(t *testing.T) {
+	t.Parallel()
+
+	processor := NewProcessor(func(context.Context) documentreader.Converter { return nil })
+	result, ok, err := processor.ReadBytes(context.Background(), ReadInput{
+		Filename:    "report.pdf",
+		ContentType: "application/pdf",
+		Data:        readTestdata(t, "text_layer.pdf"),
+	})
+	if err != nil || !ok {
+		t.Fatalf("ok=%v err=%v", ok, err)
+	}
+	if strings.Contains(result.Markdown, "<!--") {
+		t.Errorf("Markdown carries a page marker:\n%.200s", result.Markdown)
+	}
+	if !strings.HasPrefix(result.Text, "<!-- page 1 -->") {
+		t.Errorf("Text, which is indexed, must start with the marker of page 1:\n%.200s", result.Text)
 	}
 }
