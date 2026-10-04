@@ -1,180 +1,267 @@
 """Does a chunking strategy put the passage that answers a question in the top results?
 
-For every strategy it finds, in CHUNK_BENCH_DIR/chunks_{old,new,docling}.jsonl, it indexes the chunks of all the documents
-together and asks the questions of questions.json, with BM25, with a dense model (all-MiniLM-L6-v2, a chunk scored by its best
-256-token window so that a long chunk is not cut) and with both fused (reciprocal rank). A chunk answers a question when it is
-from the right document and holds every string of one answer group (compared without spaces or punctuation). A question
-whose answer is in no chunk of a strategy counts as a miss. See README.md for how the chunk files are made."""
+It reads every CHUNK_BENCH_DIR/chunks_*.jsonl (one JSON line {"strategy", "doc", "index", "text"} per chunk), indexes the
+chunks of all the documents together, once per strategy, and asks the questions of questions.json with BM25, with a dense
+model (all-MiniLM-L6-v2, a chunk scored by its best 220-token window so that a long chunk is not cut by the model) and with
+both fused (reciprocal rank). A chunk answers a question when it is from the right document and holds every string of one
+answer group (matching.is_answer). A question whose answer is in no chunk of a strategy counts as a miss.
 
+Three things are reported, because the first alone favours big chunks (few of them cover a lot of text):
 
+* hit@1/3/5 and MRR: is the answering chunk among the first results, whatever its size.
+* hit within a budget of context tokens: is the answering chunk among the results that fit in N tokens. This is what a
+  reader of the results pays, and the fair way to compare chunk sizes.
+* the difference to a baseline strategy, with a 95% interval. The questions of a document are not independent, so the interval
+  comes from resampling documents (a cluster bootstrap), not questions. A difference whose interval holds 0 is not a result.
+
+See README.md for how the chunk files are made."""
+
+import argparse
+import glob
 import json
 import math
 import os
-import re
 import sys
 from collections import Counter, defaultdict
 
 import numpy as np
-import torch
-from transformers import AutoModel, AutoTokenizer
+from matching import is_answer, tokens
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SP = os.environ.get("CHUNK_BENCH_DIR", ".")
-QUESTIONS = json.load(open(os.path.join(HERE, "questions.json"), encoding="utf-8"))
-
-RENAME = {("old", "heading1024"): "old_heading1024", ("old", "paragraph"): "paragraph(default)", ("new", "heading512"): "new_heading512", ("new", "heading1024"): "new_heading1024"}
-chunks = defaultdict(list)  # strategy -> list of dict
-for tag in ("old", "new", "docling"):
-    try:
-        for line in open(os.path.join(SP, f"chunks_{tag}.jsonl"), encoding="utf-8"):
-            c = json.loads(line)
-            name = RENAME.get((tag, c["strategy"]), c["strategy"])
-            if tag == "new" and c["strategy"] == "paragraph":
-                continue  # same code as before
-            chunks[name].append(c)
-    except FileNotFoundError:
-        print("missing", tag, file=sys.stderr)
-
-LIG = {"\ufb01": "fi", "\ufb02": "fl", "\ufb00": "ff", "\u2019": "'", "\u2018": "'", "\u201c": '"', "\u201d": '"', "\u2013": "-", "\u2014": "-", "\u00a0": " "}
+EMBEDDER = "sentence-transformers/all-MiniLM-L6-v2"
+RETRIEVERS = ("bm25", "dense", "hybrid")
+RRF_K = 60  # reciprocal rank fusion: 1 / (RRF_K + rank)
+BOOTSTRAPS = 5000
 
 
-def norm(s):
-    # Compared without spaces or punctuation: a reader that writes "non - GAAP" or "TensorRTTLLM" has not lost the answer.
-    for k, v in LIG.items():
-        s = s.replace(k, v)
-    return re.sub(r"[\W_]+", "", s.lower())
+def load_chunks():
+    chunks = defaultdict(list)
+    files = sorted(glob.glob(os.path.join(SP, "chunks_*.jsonl")))
+    if not files:
+        sys.exit(f"no chunks_*.jsonl in {SP}")
+    for path in files:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                chunk = json.loads(line)
+                chunks[chunk["strategy"]].append(chunk)
+    return chunks
 
 
-def tokens(s):
-    return re.findall(r"[\w]+", s.lower())
+def chunk_tokens(chunk):
+    # The same estimate as the chunkers (a token is about four characters), so that sizes match the profile names.
+    return len(chunk["text"]) / 4
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-tok = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
-model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2").to(device).eval()
+class Dense:
+    def __init__(self):
+        import torch
+        from transformers import AutoModel, AutoTokenizer
+
+        self.torch = torch
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.tok = AutoTokenizer.from_pretrained(EMBEDDER)
+        self.model = AutoModel.from_pretrained(EMBEDDER).to(self.device).eval()
+
+    def embed(self, texts, batch=64):
+        torch = self.torch
+        out = []
+        with torch.no_grad():
+            for i in range(0, len(texts), batch):
+                enc = self.tok(texts[i : i + batch], padding=True, truncation=True, max_length=256, return_tensors="pt").to(self.device)
+                hidden = self.model(**enc).last_hidden_state
+                mask = enc["attention_mask"].unsqueeze(-1).float()
+                pooled = (hidden * mask).sum(1) / mask.sum(1)
+                out.append(torch.nn.functional.normalize(pooled, dim=1).cpu())
+        return torch.cat(out).numpy()
+
+    def windows(self, text, size=220, stride=110):
+        ids = self.tok(text, add_special_tokens=False)["input_ids"]
+        if len(ids) <= size:
+            return [text]
+        parts = []
+        for start in range(0, len(ids), stride):
+            parts.append(self.tok.decode(ids[start : start + size]))
+            if start + size >= len(ids):
+                break
+        return parts
+
+    def chunk_scores(self, texts, question_vectors):
+        """scores[q, c]: the best similarity between question q and a window of chunk c."""
+        windows, first = [], []
+        for text in texts:
+            first.append(len(windows))
+            windows.extend(self.windows(text))
+        window_vectors = self.embed(windows)
+        sims = question_vectors @ window_vectors.T  # (questions, windows); windows of one chunk are contiguous
+        return np.maximum.reduceat(sims, first, axis=1)
 
 
-@torch.no_grad()
-def embed(texts, bs=64):
-    out = []
-    for i in range(0, len(texts), bs):
-        enc = tok(texts[i : i + bs], padding=True, truncation=True, max_length=256, return_tensors="pt").to(device)
-        h = model(**enc).last_hidden_state
-        m = enc["attention_mask"].unsqueeze(-1).float()
-        v = (h * m).sum(1) / m.sum(1)
-        out.append(torch.nn.functional.normalize(v, dim=1).cpu())
-    return torch.cat(out)
+class BM25:
+    def __init__(self, texts, k1=1.5, b=0.75):
+        docs = [tokens(t) for t in texts]
+        self.k1, self.b, self.n = k1, b, len(docs)
+        self.lengths = np.array([len(d) for d in docs], dtype=float)
+        self.avg_length = self.lengths.mean() if self.n else 0.0
+        self.postings = defaultdict(list)  # term -> [(chunk, term frequency)]
+        for i, doc in enumerate(docs):
+            for term, tf in Counter(doc).items():
+                self.postings[term].append((i, tf))
 
-
-def windows(text, size=220, stride=110):
-    ids = tok(text, add_special_tokens=False)["input_ids"]
-    if len(ids) <= size:
-        return [text]
-    parts = []
-    for s in range(0, len(ids), stride):
-        parts.append(tok.decode(ids[s : s + size]))
-        if s + size >= len(ids):
-            break
-    return parts
-
-
-def bm25_scores(docs_tokens, query_tokens, k1=1.5, b=0.75):
-    N = len(docs_tokens)
-    avgdl = sum(len(d) for d in docs_tokens) / max(N, 1)
-    df = Counter()
-    for d in docs_tokens:
-        df.update(set(d))
-    scores = np.zeros(N)
-    for i, d in enumerate(docs_tokens):
-        tf = Counter(d)
-        dl = len(d)
-        s = 0.0
-        for t in query_tokens:
-            if t not in tf:
+    def scores(self, query):
+        scores = np.zeros(self.n)
+        for term in set(tokens(query)):
+            posting = self.postings.get(term)
+            if not posting:
                 continue
-            idf = math.log(1 + (N - df[t] + 0.5) / (df[t] + 0.5))
-            s += idf * tf[t] * (k1 + 1) / (tf[t] + k1 * (1 - b + b * dl / avgdl))
-        scores[i] = s
-    return scores
+            idf = math.log(1 + (self.n - len(posting) + 0.5) / (len(posting) + 0.5))
+            for i, tf in posting:
+                scores[i] += idf * tf * (self.k1 + 1) / (tf + self.k1 * (1 - self.b + self.b * self.lengths[i] / self.avg_length))
+        return scores
 
 
-def relevant(chunk, q):
-    if chunk["doc"] != q["doc"]:
-        return False
-    t = norm(chunk["text"])
-    return any(all(norm(a) in t for a in group) for group in q["answers"])
+def rank_with_cost(scores, relevant, costs):
+    """The rank of the first answering chunk and the tokens of all the results up to and including it (None, None: a miss)."""
+    order = np.argsort(-scores, kind="stable")
+    hits = np.flatnonzero(relevant[order])
+    if not len(hits):
+        return None, None
+    first = int(hits[0])
+    return first + 1, float(costs[order[: first + 1]].sum())
 
 
-qvecs = embed([q["q"] for q in QUESTIONS])
-
-results = {}
-for name, cs in chunks.items():
-    texts = [c["text"] for c in cs]
-    btok = [tokens(t) for t in texts]
-    # dense with windows: embed every window, chunk score = max over its windows
-    win_texts, owner = [], []
-    for i, t in enumerate(texts):
-        for w in windows(t):
-            win_texts.append(w)
-            owner.append(i)
-    wv = embed(win_texts)
-    owner = np.array(owner)
-    rel = [[relevant(c, q) for c in cs] for q in QUESTIONS]
-    answerable = [any(r) for r in rel]
-    metrics = {}
-    ranks = {}
-    for retr in ("bm25", "dense", "hybrid"):
-        hits = Counter()
-        rr = 0.0
-        n = 0
-        ranks[retr] = {}
-        for qi, q in enumerate(QUESTIONS):
-            n += 1
-            if not answerable[qi]:
-                ranks[retr][q['id']] = None
-                continue  # the answer is in no chunk of this strategy: a miss
-            b = bm25_scores(btok, tokens(q["q"]))
-            sims = (wv @ qvecs[qi]).numpy()
-            d = np.full(len(cs), -1.0)
-            for wi, o in enumerate(owner):
-                if sims[wi] > d[o]:
-                    d[o] = sims[wi]
-            if retr == "bm25":
-                score = b
-            elif retr == "dense":
-                score = d
-            else:  # reciprocal rank fusion
-                rb = np.argsort(-b).argsort()
-                rd = np.argsort(-d).argsort()
-                score = 1 / (60 + rb) + 1 / (60 + rd)
-            order = np.argsort(-score)
-            rank = next((r + 1 for r, idx in enumerate(order) if rel[qi][idx]), None)
-            ranks[retr][q['id']] = rank
-            if rank:
-                rr += 1 / rank
-                for k in (1, 3, 5):
-                    if rank <= k:
-                        hits[k] += 1
-        metrics[retr] = {"hit@1": hits[1] / n, "hit@3": hits[3] / n, "hit@5": hits[5] / n, "mrr": rr / n}
-    lens = [len(t) / 4 for t in texts]
-    results[name] = {
-        "chunks": len(cs),
-        "avg_tokens": sum(lens) / len(lens),
-        "answerable": f"{sum(answerable)}/{len(QUESTIONS)}",
-        "metrics": metrics,
-        "ranks": ranks,
+def evaluate_strategy(chunks, questions, dense, question_vectors):
+    texts = [c["text"] for c in chunks]
+    costs = np.array([chunk_tokens(c) for c in chunks])
+    relevant = np.array([[is_answer(c, q) for c in chunks] for q in questions])  # (questions, chunks)
+    bm25 = BM25(texts)
+    dense_scores = dense.chunk_scores(texts, question_vectors)
+    results = {r: [] for r in RETRIEVERS}
+    for qi, question in enumerate(questions):
+        b = bm25.scores(question["q"])
+        d = dense_scores[qi]
+        # Reciprocal rank fusion of the two rankings.
+        rb = np.argsort(np.argsort(-b, kind="stable"), kind="stable")
+        rd = np.argsort(np.argsort(-d, kind="stable"), kind="stable")
+        fused = 1 / (RRF_K + rb) + 1 / (RRF_K + rd)
+        for name, scores in (("bm25", b), ("dense", d), ("hybrid", fused)):
+            if not relevant[qi].any():
+                results[name].append((None, None))
+            else:
+                results[name].append(rank_with_cost(scores, relevant[qi], costs))
+    return {
+        "chunks": len(chunks),
+        "avg_tokens": float(costs.mean()),
+        "answerable": int(relevant.any(axis=1).sum()),
+        "ranks": {name: [r for r, _ in rs] for name, rs in results.items()},
+        "costs": {name: [c for _, c in rs] for name, rs in results.items()},
     }
 
-order = ["paragraph(default)", "old_heading1024", "new_heading1024", "new_heading512", "docling_default", "docling512"]
-print(f"{'strategy':20s} {'chunks':>6s} {'avgTok':>6s} {'answerable':>10s} | " + " | ".join(f"{r:^26s}" for r in ("bm25", "dense", "hybrid")))
-print(f"{'':20s} {'':>6s} {'':>6s} {'':>10s} | " + " | ".join(f"{'@1   @3   @5   MRR':^26s}" for _ in range(3)))
-for name in order:
-    if name not in results:
-        continue
-    r = results[name]
-    cells = []
-    for retr in ("bm25", "dense", "hybrid"):
-        m = r["metrics"][retr]
-        cells.append(f"{m['hit@1']:.2f} {m['hit@3']:.2f} {m['hit@5']:.2f} {m['mrr']:.2f}".center(26))
-    print(f"{name:20s} {r['chunks']:6d} {r['avg_tokens']:6.0f} {r['answerable']:>10s} | " + " | ".join(cells))
-json.dump(results, open(os.path.join(SP, "results.json"), "w"), indent=1)
+
+def per_question(result, retriever, metric, budgets):
+    """One number per question for a metric: "hit@K" and "hit@Ntok" are 0 or 1, "mrr" is 1/rank."""
+    ranks, costs = result["ranks"][retriever], result["costs"][retriever]
+    if metric == "mrr":
+        return np.array([1 / r if r else 0.0 for r in ranks])
+    if metric.endswith("tok"):
+        budget = budgets[metric]
+        return np.array([1.0 if c is not None and c <= budget else 0.0 for c in costs])
+    k = int(metric.removeprefix("hit@"))
+    return np.array([1.0 if r and r <= k else 0.0 for r in ranks])
+
+
+def cluster_bootstrap(values_a, values_b, doc_ids, rng):
+    """Mean of a - b over the questions, with a 95% interval from resampling whole documents."""
+    diff = values_a - values_b
+    docs = sorted(set(doc_ids))
+    index = {d: np.flatnonzero(np.array(doc_ids) == d) for d in docs}
+    sums = np.array([diff[index[d]].sum() for d in docs])
+    counts = np.array([len(index[d]) for d in docs], dtype=float)
+    picks = rng.integers(0, len(docs), size=(BOOTSTRAPS, len(docs)))
+    boot = sums[picks].sum(axis=1) / counts[picks].sum(axis=1)
+    return diff.mean(), np.percentile(boot, 2.5), np.percentile(boot, 97.5)
+
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8")
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--baseline", default="profile", help="the strategy the others are compared with (default: profile)")
+    parser.add_argument("--budgets", default="1000,2000,4000", help="context budgets in tokens, comma separated")
+    parser.add_argument("--only", default="", help="strategies to evaluate, comma separated (default: all)")
+    args = parser.parse_args()
+
+    questions = json.load(open(os.path.join(HERE, "questions.json"), encoding="utf-8"))
+    budgets = {f"hit@{b}tok": int(b) for b in args.budgets.split(",")}
+    chunks = load_chunks()
+    if args.only:
+        chunks = {name: chunks[name] for name in args.only.split(",")}
+    docs = {c["doc"] for cs in chunks.values() for c in cs}
+    missing = sorted({q["doc"] for q in questions} - docs)
+    if missing:
+        sys.exit(f"no chunk for the documents of some questions: {missing}")
+
+    dense = Dense()
+    question_vectors = dense.embed([q["q"] for q in questions])
+    results = {}
+    for name in sorted(chunks, key=lambda n: sum(map(chunk_tokens, chunks[n])) / len(chunks[n])):
+        print(f"evaluating {name} ({len(chunks[name])} chunks)", file=sys.stderr)
+        results[name] = evaluate_strategy(chunks[name], questions, dense, question_vectors)
+    names = list(results)
+    doc_ids = [q["doc"] for q in questions]
+    n = len(questions)
+    print(f"\n{n} questions on {len(set(doc_ids))} documents\n")
+
+    print("hit@1 hit@3 hit@5 MRR, every question counted (a question whose answer is in no chunk is a miss)\n")
+    print(f"{'strategy':14s} {'chunks':>6s} {'avg tok':>7s} {'answerable':>10s} | " + " | ".join(f"{r:^23s}" for r in RETRIEVERS))
+    for name in names:
+        r = results[name]
+        cells = []
+        for retriever in RETRIEVERS:
+            m = [per_question(r, retriever, k, budgets).mean() for k in ("hit@1", "hit@3", "hit@5", "mrr")]
+            cells.append(" ".join(f"{x:.2f}" for x in m).center(23))
+        print(f"{name:14s} {r['chunks']:6d} {r['avg_tokens']:7.0f} {r['answerable']:>7d}/{n} | " + " | ".join(cells))
+
+    print("\nanswering chunk within a budget of context tokens (the results are read in order until the budget is spent)\n")
+    print(f"{'strategy':14s} | " + " | ".join(f"{r + ' ' + ' '.join(str(b) for b in budgets.values()):^24s}" for r in RETRIEVERS))
+    for name in names:
+        cells = []
+        for retriever in RETRIEVERS:
+            m = [per_question(results[name], retriever, metric, budgets).mean() for metric in budgets]
+            cells.append(" ".join(f"{x:.2f}" for x in m).center(24))
+        print(f"{name:14s} | " + " | ".join(cells))
+
+    if args.baseline in results:
+        rng = np.random.default_rng(0)
+        metrics = ["hit@5", "mrr"] + list(budgets)
+        for retriever in RETRIEVERS:
+            print(
+                f"\ndifference to {args.baseline} with {retriever} (positive: better than {args.baseline}; 95% interval over documents; * when it excludes 0)\n"
+            )
+            print(f"{'strategy':14s} | " + " | ".join(f"{m:^24s}" for m in metrics))
+            for name in names:
+                if name == args.baseline:
+                    continue
+                cells = []
+                for metric in metrics:
+                    a = per_question(results[name], retriever, metric, budgets)
+                    b = per_question(results[args.baseline], retriever, metric, budgets)
+                    mean, low, high = cluster_bootstrap(a, b, doc_ids, rng)
+                    star = "*" if low > 0 or high < 0 else " "
+                    cells.append(f"{mean:+.3f} [{low:+.3f},{high:+.3f}]{star}".center(24))
+                print(f"{name:14s} | " + " | ".join(cells))
+    else:
+        print(f"\nno strategy named {args.baseline}: no comparison", file=sys.stderr)
+
+    per_doc = {}
+    for name in names:
+        per_doc[name] = {}
+        for doc in sorted(set(doc_ids)):
+            picks = [i for i, d in enumerate(doc_ids) if d == doc]
+            per_doc[name][doc] = {r: float(per_question(results[name], r, "hit@5", budgets)[picks].mean()) for r in RETRIEVERS}
+    out = {"questions": n, "strategies": results, "hit@5_by_document": per_doc}
+    with open(os.path.join(SP, "results.json"), "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=1)
+
+
+if __name__ == "__main__":
+    main()
