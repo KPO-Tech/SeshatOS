@@ -40,62 +40,64 @@ Everything lives in one directory, `CHUNK_BENCH_DIR`:
 4. `python benchmarks/chunk_bench/docling_chunks.py` (long: the conversion of the files takes about 35 minutes on one GPU).
 5. `python benchmarks/chunk_bench/check_questions.py`, then `python benchmarks/chunk_bench/evaluate.py` (about 4 minutes).
 
-## Result of 2026-10-04 (seshat v1.2.69, 192 questions, 19 documents)
+## Result of 2026-10-04 (seshat v1.2.70, 192 questions, 19 documents)
 
 hit@5 and MRR, every question counted:
 
 | strategy | chunks | avg tokens | BM25 | dense | both |
 |---|---|---|---|---|---|
-| paragraphs (the old default) | 5921 | 42 | .72 .60 | .69 .53 | .77 .61 |
-| docling chunker, default (256) | 1853 | 163 | .84 .71 | .69 .56 | .82 .69 |
-| structured, 256 | 1485 | 192 | .90 .76 | .76 .61 | .89 .74 |
-| structured, 384 | 954 | 284 | .89 .76 | .78 .62 | .90 .75 |
-| docling chunker, 512 | 1020 | 289 | .87 .74 | .81 .63 | .85 .75 |
-| **structured, 512 (the profile)** | 703 | 376 | .91 .78 | .85 .67 | .92 .76 |
-| docling chunker, 1024 | 676 | 431 | .90 .77 | .81 .67 | .88 .77 |
-| structured, 768 | 489 | 532 | .94 .79 | .88 .70 | .94 .80 |
-| structured, 1024 | 374 | 691 | .93 .80 | .84 .68 | .93 .80 |
-| structured, 2048 | 185 | 1385 | .94 .82 | .90 .77 | .96 .85 |
+| paragraphs (the old default) | 4714 | 53 | .73 .62 | .69 .53 | .77 .62 |
+| docling chunker, default (256) | 1853 | 163 | .85 .71 | .70 .57 | .82 .70 |
+| structured, 256 | 1486 | 193 | .90 .77 | .78 .62 | .90 .74 |
+| structured, 384 | 955 | 284 | .89 .77 | .79 .65 | .92 .76 |
+| docling chunker, 512 | 1020 | 289 | .88 .75 | .81 .63 | .86 .76 |
+| **structured, 512 (the profile)** | 701 | 377 | .92 .79 | .85 .68 | .90 .77 |
+| docling chunker, 1024 | 676 | 431 | .90 .78 | .81 .67 | .89 .78 |
+| structured, 768 | 488 | 532 | .95 .80 | .86 .73 | .96 .81 |
+| structured, 1024 | 372 | 694 | .93 .81 | .85 .70 | .93 .80 |
+| structured, 2048 | 185 | 1383 | .94 .82 | .89 .76 | .96 .83 |
 
 The answering chunk within N tokens of results (both retrievers fused):
 
 | strategy | 1000 | 2000 | 4000 |
 |---|---|---|---|
-| structured, 256 | .88 | .95 | .97 |
-| structured, 384 | .82 | .91 | .97 |
-| **structured, 512 (the profile)** | .84 | .90 | .95 |
-| structured, 768 | .76 | .88 | .95 |
-| structured, 1024 | .68 | .84 | .92 |
-| structured, 2048 | .13 | .72 | .88 |
+| structured, 256 | .89 | .95 | .97 |
+| structured, 384 | .84 | .93 | .96 |
+| **structured, 512 (the profile)** | .82 | .89 | .96 |
+| structured, 768 | .77 | .89 | .96 |
+| structured, 1024 | .68 | .83 | .93 |
+| structured, 2048 | .15 | .68 | .85 |
 
-### 512 or 1024?
+### 512, 768 or 1024?
 
-Keep 512. Against the profile, fused, over documents, 95% interval:
+1024 is not the answer, and 512 is a sound default; 768 is the one size that might be better. Against the profile, fused, over
+documents, 95% interval:
 
-- **Ranking only**: 1024 is a little better, but not enough to tell from noise (hit@5 +.02 [-.02,+.06]; MRR +.04 [-.01,+.07]).
-  Fewer, bigger chunks put more text in each result.
-- **At the same context**: 1024 is worse. Within 2000 tokens: -.06 [-.11,-.02]; within 1000: -.16 [-.23,-.09]; within 4000 the
-  difference narrows (-.04 [-.08,.00]). Reading the first results costs 1.8 times more tokens for the same chance of holding the
-  answer.
-- 768 is between the two and not distinguishable from 512 in hit@5 (+.03 [.00,+.06]), MRR, nor within 2000 or 4000 tokens; no
-  reason to move.
-- 256 is as good as 512 in hit@5 and better under a small budget (+.05 [+.02,+.08] within 2000 tokens, +.02 [+.01,+.04] within
-  4000), but cuts more passages (a chunk answering a question that needs a whole paragraph is rarer); this benchmark only asks
-  for short facts, so it cannot speak for it.
+- **1024**: ranks the answer a little better (hit@5 +.03 [.00,+.07]) but costs 1.8 times more tokens for it. At the same context it
+  is worse: within 2000 tokens -.05 [-.10,-.01], within 1000 -.14 [-.21,-.07].
+- **768**: better at ranking (hit@5 +.06 [+.02,+.10]; MRR +.03 [-.01,+.07], not clear) and the same at 2000 and 4000 tokens (+.01
+  [-.05,+.06], +.01 [-.02,+.03]); under the tightest budget it is a little worse (-.05 [-.12,+.02], not clear). The gain is on
+  one measure of the four, with the intervals of the others holding 0, so it is a lead, not a result. Before moving the profile it
+  should be tried with a better embedder and with questions that need a whole section.
+- **256**: as good as 512 in hit@5 (-.01 [-.04,+.03]) and better under a small budget (+.07 [+.01,+.13] within 1000 tokens, +.07
+  [+.02,+.12] within 2000), but it cuts more passages; this benchmark only asks for short facts, so it cannot speak for a question
+  that needs a paragraph.
 
 Other readings:
 
-- Cutting along the structure beats one chunk per paragraph by a wide margin (hit@5 .77 -> .92 fused), whatever the size.
+- Cutting along the structure beats one chunk per paragraph by a wide margin (hit@5 .77 -> .90 to .96 fused), whatever the size.
 - At 512 and 1024 the structured chunker is equal to docling's own chunker at the same size in MRR, and better in hit@5 at 512
-  (+.06 [+.02,+.11] fused), in milliseconds instead of minutes of conversion (docling needed 320 s for the financial
-  presentation; four of 192 answers are not in its text, which the native readers wrote).
+  with BM25 (+.04 [+.01,+.09]), in milliseconds instead of minutes of conversion (docling needed 320 s for the financial
+  presentation; three of 192 answers are not in its text, which the native readers wrote).
 - The dense model is a small one (MiniLM): numeric and specific questions are found by BM25 and missed by it. A host with a
   better embedder will see different numbers.
-- The documents were read without an engine, so a page with pictures ends with markers (`[Image 1 on page 3]`, 213 in the
-  corpus). They are part of the chunks, as they will be in a deployment with no engine. A first run, which read the PDFs from
-  their text layer with no markers, led to the same decision; there the MRR advantage of 1024 was just outside the noise.
+- The documents were read without an engine: a page with pictures ends with markers (`[Image 1 on page 3]`, a few hundred in the
+  corpus) that the chunks hold like any other line. Earlier runs, on text where two-column papers were read as lists of short
+  lines, hyphenated words were left in two and ligatures were dropped, already put 768 ahead of 512 in hit@5 (+.03 [.00,+.06]),
+  without being clear; reading the PDFs properly (seshat v1.2.70) made the gap clearer (+.06 [+.02,+.10]). A chunk size is only
+  as good as the text it cuts.
 
 Limits: the questions ask for short facts held by one passage, which suits small chunks; a question that needs a whole section
 would favour bigger ones. The answer strings were taken from the text of the native readers. Questions were written by a model
-from the text of the documents, not by users; the corpus is mostly scientific papers. Several documents hold text the reader
-garbles (the FOMC release has one-letter lines): they are kept, because it is the text the chunkers receive.
+from the text of the documents, not by users; the corpus is mostly scientific papers. Some documents still hold text the reader
+garbles (the table of the FOMC release has repeated cells): they are kept, because it is the text the chunkers receive.

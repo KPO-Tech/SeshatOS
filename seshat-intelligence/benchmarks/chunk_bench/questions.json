@@ -106,7 +106,7 @@
 
   {"id": "lm1", "doc": "layoutlm.pdf", "q": "How many images does the FUNSD dataset provide for fine-tuning?", "answers": [["149 images"]]},
   {"id": "lm2", "doc": "layoutlm.pdf", "q": "What F1 score does LayoutLM reach on FUNSD with text, layout and image together?", "answers": [["0.7927"]]},
-  {"id": "lm3", "doc": "layoutlm.pdf", "q": "How is the position of a word defined on the page?", "answers": [["bounding box can be precisely dened by (x0, y0, x1, y1)"]]},
+  {"id": "lm3", "doc": "layoutlm.pdf", "q": "How is the position of a word defined on the page?", "answers": [["bounding box can be precisely defined by (x0, y0, x1, y1)"]]},
   {"id": "lm4", "doc": "layoutlm.pdf", "q": "Which model produces the image embeddings of the tokens?", "answers": [["Faster R-CNN [19]"]]},
   {"id": "lm5", "doc": "layoutlm.pdf", "q": "What document classification accuracy does the best model reach on RVL-CDIP?", "answers": [["94.42%"]]},
   {"id": "lm6", "doc": "layoutlm.pdf", "q": "Which task is inspired by the masked language model and uses 2-D position embeddings?", "answers": [["we propose the Masked Visual-language Model"]]},
