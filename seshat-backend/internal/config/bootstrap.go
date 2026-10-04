@@ -586,7 +586,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	documentChunker := rag.NewCachedDocumentChunker(
 		rag.NewHybridDocumentChunkerForProfile(
 			documentreading.NewDynamicHybridChunker(resolveDocumentConverter),
-			rag.ChunkProfile{Name: rag.ChunkProfileStructured, MaxTokens: 1024, OverlapTokens: 128},
+			structuredChunkProfile(),
 			documentreader.ChunkOptions{},
 		),
 		documentChunkCache,
@@ -1485,4 +1485,14 @@ func sweepOrphanWorkspaces(ctx context.Context, svc *backendquery.Service, older
 	} else if n > 0 {
 		fmt.Printf("[API] orphan-workspace sweep: removed %d directory(ies)\n", n)
 	}
+}
+
+// structuredChunkProfile is the profile documents are chunked with: the SDK's own recommendation for text read as
+// markdown, so a change to it reaches every host.
+func structuredChunkProfile() rag.ChunkProfile {
+	profile, ok := rag.RecommendedChunkProfile(rag.ChunkProfileStructured)
+	if !ok {
+		return rag.DefaultChunkProfile()
+	}
+	return profile
 }

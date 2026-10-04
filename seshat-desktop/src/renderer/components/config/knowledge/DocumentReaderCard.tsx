@@ -210,7 +210,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
         <label className="flex items-center justify-between gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2">
           <span className="min-w-0">
             <span className="block text-[12px] font-semibold text-[var(--text-primary)]">Prefer external reader</span>
-            <span className="block truncate text-[11px] text-[var(--text-muted)]">External first, local fallback. Off means local first.</span>
+            <span className="block truncate text-[11px] text-[var(--text-muted)]">External first for reading and chunking, local fallback. Off: local first, chunks cut from the text the local readers write.</span>
           </span>
           <ToggleSwitch enabled={form.prefer_external} onChange={(preferExternal) => update('prefer_external', preferExternal)} />
         </label>
