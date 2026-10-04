@@ -34,9 +34,9 @@ func NewSeshatIntelligenceClientWithTimeout(baseURL string, timeout time.Duratio
 			}
 			return map[string]string{"max_tokens": strconv.Itoa(opts.MaxTokens)}
 		},
-		HealthPath:  "/health",
-		Timeout:     timeout,
-		UserAgent:   "seshat-backend-document-reader",
+		HealthPath: "/health",
+		Timeout:    timeout,
+		UserAgent:  "seshat-backend-document-reader",
 		ParseConvert: func(raw []byte) (*documentreader.ConversionResult, error) {
 			var response struct {
 				Status   string   `json:"status"`

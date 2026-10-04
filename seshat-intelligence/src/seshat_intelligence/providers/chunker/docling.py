@@ -3,8 +3,8 @@ from __future__ import annotations
 from io import BytesIO
 
 from docling.chunking import HybridChunker
-from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from docling.datamodel.base_models import ConversionStatus
+from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from docling_core.types.io import DocumentStream
 
 from seshat_intelligence.config import get_settings
