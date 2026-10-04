@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Form, HTTPException, Request, UploadFile
 
 from seshat_intelligence.documents.schemas import ChunkDocumentResponse, DocumentChunk, DocumentResponse
 from seshat_intelligence.documents.store import StoredDocument
@@ -55,13 +55,19 @@ async def delete_document(document_id: str, request: Request) -> None:
 
 
 @router.post("/chunks", response_model=ChunkDocumentResponse)
-async def chunk_document(request: Request, file: UploadFile) -> ChunkDocumentResponse:
+async def chunk_document(
+    request: Request,
+    file: UploadFile,
+    max_tokens: int | None = Form(default=None, ge=16, le=8192),
+) -> ChunkDocumentResponse:
+    """Cut a document into chunks that follow its structure. `max_tokens` is the size the host wants its chunks to
+    have, in tokens of the chunker's tokenizer (omitted: the tokenizer's own limit)."""
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="uploaded file is empty")
     filename = file.filename or "upload.bin"
     try:
-        results = await request.app.state.chunk_document.execute(filename, data)
+        results = await request.app.state.chunk_document.execute(filename, data, max_tokens)
     except ChunkingFailed as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return ChunkDocumentResponse(filename=filename, chunks=[_to_chunk(r) for r in results])

@@ -16,9 +16,9 @@ def _init_worker() -> None:
     _chunker = DoclingHybridChunker()
 
 
-def _chunk_in_worker(filename: str, data: bytes) -> list[ChunkResult]:
+def _chunk_in_worker(filename: str, data: bytes, max_tokens: int | None) -> list[ChunkResult]:
     assert _chunker is not None, "chunking worker was not initialized"
-    return _chunker.chunk_bytes(filename, data)
+    return _chunker.chunk_bytes(filename, data, max_tokens)
 
 
 class ChunkingPool:
@@ -37,9 +37,9 @@ class ChunkingPool:
     def __init__(self, max_workers: int) -> None:
         self._executor = ProcessPoolExecutor(max_workers=max_workers, initializer=_init_worker)
 
-    async def chunk(self, filename: str, data: bytes) -> list[ChunkResult]:
+    async def chunk(self, filename: str, data: bytes, max_tokens: int | None = None) -> list[ChunkResult]:
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(self._executor, _chunk_in_worker, filename, data)
+        return await loop.run_in_executor(self._executor, _chunk_in_worker, filename, data, max_tokens)
 
     def shutdown(self) -> None:
         self._executor.shutdown(cancel_futures=True)
