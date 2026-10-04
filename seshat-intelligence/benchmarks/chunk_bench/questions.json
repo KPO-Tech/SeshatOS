@@ -1,0 +1,50 @@
+[
+  {"id": "att1", "doc": "attention_is_all_you_need.pdf", "q": "How long did it take to train the big model and on how many GPUs?", "answers": [["8 P100 GPUs"]]},
+  {"id": "att2", "doc": "attention_is_all_you_need.pdf", "q": "For how many steps were the base models trained?", "answers": [["100,000 steps"]]},
+  {"id": "att3", "doc": "attention_is_all_you_need.pdf", "q": "What BLEU score does the model achieve on the WMT 2014 English-to-German translation task?", "answers": [["28.4 BLEU"]]},
+  {"id": "att4", "doc": "attention_is_all_you_need.pdf", "q": "How many identical layers does the encoder stack have?", "answers": [["identical layers"]]},
+  {"id": "att5", "doc": "attention_is_all_you_need.pdf", "q": "Where is dropout applied besides the sub-layer outputs?", "answers": [["apply dropout to the sums of the embeddings"]]},
+  {"id": "att6", "doc": "attention_is_all_you_need.pdf", "q": "What is the state-of-the-art BLEU score on English-to-French?", "answers": [["41.8"]]},
+
+  {"id": "nv1", "doc": "nvidia_q.pdf", "q": "What was the total revenue of the quarter and its year-over-year growth?", "answers": [["Total revenue up 265% Y/Y to $22.10B"]]},
+  {"id": "nv2", "doc": "nvidia_q.pdf", "q": "How much cash and debt did the company end the quarter with?", "answers": [["gross cash and $9.8B in debt"]]},
+  {"id": "nv3", "doc": "nvidia_q.pdf", "q": "Which open-source library accelerates LLMs on RTX PCs?", "answers": [["TensorRT-LLM for Windows"]]},
+  {"id": "nv4", "doc": "nvidia_q.pdf", "q": "Which Chinese carmaker will integrate DRIVE Orin?", "answers": [["Great Wall Motor"]]},
+  {"id": "nv5", "doc": "nvidia_q.pdf", "q": "What gross margin is expected for the next quarter?", "answers": [["76.3% GAAP and 77.0% non-GAAP"]]},
+  {"id": "nv6", "doc": "nvidia_q.pdf", "q": "What tax rate is expected?", "answers": [["17.0% GAAP and non-GAAP"]]},
+  {"id": "nv7", "doc": "nvidia_q.pdf", "q": "What operating expenses are expected for the next quarter?", "answers": [["$3.5 billion GAAP"]]},
+  {"id": "nv8", "doc": "nvidia_q.pdf", "q": "How many NVIDIA RTX PCs have shipped?", "answers": [["over 100M NVIDIA RTX PCs"]]},
+
+  {"id": "tf1", "doc": "tableformer.pdf", "q": "What share of FinTabNet tables require the generation of bounding boxes?", "answers": [["68% of the simple and 98% of the complex"]]},
+  {"id": "tf2", "doc": "tableformer.pdf", "q": "What are the simplest network architectures for table structure recognition called?", "answers": [["IETD"]]},
+  {"id": "tf3", "doc": "tableformer.pdf", "q": "What TEDS score does TableFormer reach on simple and complex tables overall?", "answers": [["95.4", "93.6"]]},
+
+  {"id": "dl1", "doc": "2206.01062.pdf", "q": "How many pages does the DocLayNet dataset contain?", "answers": [["80863"]]},
+  {"id": "dl2", "doc": "2206.01062.pdf", "q": "How many layout classes are annotated in DocLayNet?", "answers": [["11 distinct class"]]},
+  {"id": "dl3", "doc": "2206.01062.pdf", "q": "Which document categories do the DocLayNet pages come from?", "answers": [["Financial Reports, Manuals"]]},
+  {"id": "dl4", "doc": "2206.01062.pdf", "q": "Which YOLO version was used in the experiments?", "answers": [["YOLOv5x6"]]},
+  {"id": "dl5", "doc": "2206.01062.pdf", "q": "How far behind human inter-annotator agreement do the models fall?", "answers": [["approximately 10% behind"]]},
+
+  {"id": "wd1", "doc": "wiki_duck.html", "q": "What is a female duck called?", "answers": [["and the female is called a duck"]]},
+  {"id": "wd2", "doc": "wiki_duck.html", "q": "What is the comb-like structure along the edge of a duck's bill?", "answers": [["comb-like structure called a"]]},
+  {"id": "wd3", "doc": "wiki_duck.html", "q": "Why do diving ducks have more difficulty taking off?", "answers": [["diving ducks are heavier than dabbling ducks"]]},
+  {"id": "wd4", "doc": "wiki_duck.html", "q": "Which tribe contains the stifftails?", "answers": [["Oxyurini"]]},
+  {"id": "wd5", "doc": "wiki_duck.html", "q": "How many ducks are slaughtered each year for meat?", "answers": [["Approximately 3 billion ducks"]]},
+  {"id": "wd6", "doc": "wiki_duck.html", "q": "Which domestic duck breed is the smallest in the world?", "answers": [["smallest domestic duck breed"]]},
+  {"id": "wd7", "doc": "wiki_duck.html", "q": "Which predator catches adult ducks in flight?", "answers": [["peregrine falcon"]]},
+  {"id": "wd8", "doc": "wiki_duck.html", "q": "What did the LaughLab experiment conclude about animals and humor?", "answers": [["ducks attract the most humor"]]},
+  {"id": "wd9", "doc": "wiki_duck.html", "q": "How many subfamilies containing ducks have been suggested?", "answers": [["ranges from two to five"]]},
+  {"id": "wd10", "doc": "wiki_duck.html", "q": "Where does the English word duck come from?", "answers": [["a derivative of the verb"]]},
+  {"id": "wd11", "doc": "wiki_duck.html", "q": "Which ducks are almost flightless?", "answers": [["steamer duck"]]},
+
+  {"id": "st1", "doc": "Bug51170.docx", "q": "Com quantas assinaturas se obriga a Associação?", "answers": [["obriga-se com 2 assinaturas"]]},
+  {"id": "st2", "doc": "Bug51170.docx", "q": "Qual é a duração do mandato dos órgãos da CNIG?", "answers": [["mandato é de três anos"]]},
+  {"id": "st3", "doc": "Bug51170.docx", "q": "Com que antecedência são convocadas as reuniões da Assembleia Geral?", "answers": [["antecedência mínima de quinze dias"]]},
+  {"id": "st4", "doc": "Bug51170.docx", "q": "Quem tem direito a voto na Assembleia Geral?", "answers": [["terem direito a voto"]]},
+  {"id": "st5", "doc": "Bug51170.docx", "q": "Onde fica a sede da CNIG?", "answers": [["sede em Vale do Lobo"]]},
+  {"id": "st6", "doc": "Bug51170.docx", "q": "Quantas vezes por ano reúne ordinariamente a Assembleia Geral?", "answers": [["uma vez por ano"]]},
+
+  {"id": "pp1", "doc": "ececapstonespring2012.pptx", "q": "How big is the device compared to a notebook?", "answers": [["open notebook"]]},
+  {"id": "pp2", "doc": "ececapstonespring2012.pptx", "q": "What does the lap pad do with audio signals?", "answers": [["Lap pad that senses audio"]]},
+  {"id": "pp3", "doc": "ececapstonespring2012.pptx", "q": "What conditions does the client have?", "answers": [["Has Down Syndrome"]]}
+]
