@@ -2,7 +2,7 @@ module readdoc
 
 go 1.26.6
 
-require github.com/KPO-Tech/seshat v1.2.69
+require github.com/KPO-Tech/seshat v1.2.70
 
 require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
