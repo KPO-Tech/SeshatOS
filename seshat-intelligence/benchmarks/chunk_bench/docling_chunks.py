@@ -14,26 +14,16 @@ from seshat_intelligence.providers.hygiene import clean_text  # noqa: E402
 
 # CHUNK_BENCH_DIR/raw holds the original files (see README.md); the chunks go to CHUNK_BENCH_DIR/chunks_docling.jsonl.
 SP = os.environ.get("CHUNK_BENCH_DIR", ".")
-FILES = {
-    name: os.path.join("raw", name)
-    for name in (
-        "attention_is_all_you_need.pdf",
-        "nvidia_q.pdf",
-        "tableformer.pdf",
-        "2206.01062.pdf",
-        "wiki_duck.html",
-        "Bug51170.docx",
-        "ececapstonespring2012.pptx",
-    )
-}
-SIZES = {"docling_default": None, "docling512": 512}
+RAW = os.path.join(SP, "raw")
+SIZES = {"docling_default": None, "docling512": 512, "docling1024": 1024}
 
 chunker = DoclingHybridChunker()
 out = open(os.path.join(SP, "chunks_docling.jsonl"), "w", encoding="utf-8")
-for doc, rel in FILES.items():
-    data = open(os.path.join(SP, rel), "rb").read()
+for doc in sorted(os.listdir(RAW)):
+    with open(os.path.join(RAW, doc), "rb") as f:
+        data = f.read()
     start = time.time()
-    result = chunker._converter.convert(DocumentStream(name=os.path.basename(rel), stream=BytesIO(data)), raises_on_error=False)
+    result = chunker._converter.convert(DocumentStream(name=doc, stream=BytesIO(data)), raises_on_error=False)
     took = time.time() - start
     if result.status not in (ConversionStatus.SUCCESS, ConversionStatus.PARTIAL_SUCCESS):
         print(doc, "FAILED", flush=True)
