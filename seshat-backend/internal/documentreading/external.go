@@ -3,6 +3,7 @@ package documentreading
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +26,14 @@ func NewSeshatIntelligenceClientWithTimeout(baseURL string, timeout time.Duratio
 		FileField:   "file",
 		ConvertPath: "/v1/documents",
 		ChunkPath:   "/v1/documents/chunks",
+		// The chunk endpoint takes the size the chunks should have, in tokens of its own tokenizer. Without it the
+		// service cuts at its tokenizer's limit (256 tokens), whatever profile the host chunks with.
+		ChunkFields: func(opts documentreader.ChunkOptions) map[string]string {
+			if opts.MaxTokens <= 0 {
+				return nil
+			}
+			return map[string]string{"max_tokens": strconv.Itoa(opts.MaxTokens)}
+		},
 		HealthPath:  "/health",
 		Timeout:     timeout,
 		UserAgent:   "seshat-backend-document-reader",

@@ -38,5 +38,5 @@ class ChunkDocument:
     def __init__(self, pool: ChunkingPool) -> None:
         self._pool = pool
 
-    async def execute(self, filename: str, data: bytes) -> list[ChunkResult]:
-        return await self._pool.chunk(filename, data)
+    async def execute(self, filename: str, data: bytes, max_tokens: int | None = None) -> list[ChunkResult]:
+        return await self._pool.chunk(filename, data, max_tokens)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 
 from docling.chunking import HybridChunker
+from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from docling.datamodel.base_models import ConversionStatus
 from docling_core.types.io import DocumentStream
 
@@ -26,16 +27,29 @@ class DoclingHybridChunker:
     def __init__(self) -> None:
         self._converter = build_converter(get_settings())
         self._chunker = HybridChunker()
+        self._sized: dict[int, HybridChunker] = {}
 
-    def chunk_bytes(self, filename: str, data: bytes) -> list[ChunkResult]:
+    def _chunker_for(self, max_tokens: int | None) -> HybridChunker:
+        """The chunker that cuts at max_tokens tokens of the same tokenizer. The default one cuts at the
+        tokenizer's own limit (256 for the default model), which is smaller than a chunk worth indexing for
+        most documents: the host says what size it wants, and it is honoured here. One chunker per size is kept."""
+        if max_tokens is None:
+            return self._chunker
+        if max_tokens not in self._sized:
+            tokenizer = HuggingFaceTokenizer(tokenizer=self._chunker.tokenizer.get_tokenizer(), max_tokens=max_tokens)
+            self._sized[max_tokens] = HybridChunker(tokenizer=tokenizer)
+        return self._sized[max_tokens]
+
+    def chunk_bytes(self, filename: str, data: bytes, max_tokens: int | None = None) -> list[ChunkResult]:
+        chunker = self._chunker_for(max_tokens)
         stream = DocumentStream(name=filename, stream=BytesIO(data))
         result = self._converter.convert(stream, raises_on_error=False)
         if result.status not in (ConversionStatus.SUCCESS, ConversionStatus.PARTIAL_SUCCESS):
             raise ChunkingFailed([str(e.error_message) for e in result.errors])
 
         out: list[ChunkResult] = []
-        for index, chunk in enumerate(self._chunker.chunk(result.document)):
-            text = clean_text(self._chunker.contextualize(chunk))
+        for index, chunk in enumerate(chunker.chunk(result.document)):
+            text = clean_text(chunker.contextualize(chunk))
             raw_text = clean_text(chunk.text) if clean_text(chunk.text) != text else None
             page_numbers = sorted(
                 {
@@ -50,7 +64,7 @@ class DoclingHybridChunker:
                     index=index,
                     text=text,
                     raw_text=raw_text,
-                    num_tokens=self._chunker.tokenizer.count_tokens(text),
+                    num_tokens=chunker.tokenizer.count_tokens(text),
                     headings=list(chunk.meta.headings or []),
                     captions=list(chunk.meta.captions or []),
                     page_numbers=page_numbers,

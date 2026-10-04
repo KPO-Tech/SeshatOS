@@ -7,6 +7,19 @@
             "contentMediaType": "application/octet-stream",
             "title": "File",
             "type": "string"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "maximum": 8192.0,
+                "minimum": 16.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens"
           }
         },
         "required": [
@@ -1743,6 +1756,7 @@
     },
     "/v1/documents/chunks": {
       "post": {
+        "description": "Cut a document into chunks that follow its structure. `max_tokens` is the size the host wants its chunks to\nhave, in tokens of the chunker's tokenizer (omitted: the tokenizer's own limit).",
         "operationId": "chunk_document_v1_documents_chunks_post",
         "requestBody": {
           "content": {

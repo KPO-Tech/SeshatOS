@@ -78,6 +78,8 @@ selection (`standard` / `scanned_pdf` / ...).
 
 ### Document-aware chunking
 
+The optional form field `max_tokens` (16 to 8192) is the size the chunks should have, in tokens of the chunker's tokenizer. Without it the chunker cuts at its tokenizer's own limit, 256 tokens for the default model, which makes chunks smaller than most hosts want; seshat-backend sends the size of its chunk profile (512). On the 15-page paper of the corpus, `max_tokens=512` gives 41 chunks (median 316 tokens, largest 517) instead of 66 (median 190); one chunker is kept per size. There is no overlap option: docling's chunker has none.
+
 `POST /v1/documents/chunks` runs Docling's own `HybridChunker`
 (`providers/chunker/docling.py`) as a library call - the same document-aware
 chunking `docling-serve` exposes over HTTP at `/v1/chunk/hybrid/file`, which
