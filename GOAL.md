@@ -31,7 +31,6 @@ A capable, safe, self-hosted agent platform that one person or a small team can 
 - Multiple AI providers switchable per session
 - Sandboxed bash, filesystem, web, browser, RAG, MCP, sub-agents, skills
 - Local backend: auth, sessions, memories, preferences, plans, skills, knowledge/RAG, usage quotas, audit — scoped to the person(s) running this install, not a multi-tenant organization
-- A local document-intelligence service (`seshat-intelligence`) for OCR, layout analysis, and document conversion
 - Desktop app (`seshat-desktop`): chat, tool views, attachments, provider/model selection, settings — being rebuilt chat-first on React/Tailwind, replacing the previous UI
 
 **What we are finishing:**

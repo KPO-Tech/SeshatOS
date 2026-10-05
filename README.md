@@ -31,7 +31,6 @@ SeshatOS is the self-hosted desktop product built on top of [seshat](https://git
 
 - an Electron desktop app (`seshat-desktop`) — chat, tool execution, file attachments, provider/model selection
 - a local Go backend (`seshat-backend`) — the HTTP API the desktop talks to, session/memory persistence, knowledge/RAG
-- a local document-intelligence service (`seshat-intelligence`) — OCR, layout analysis, document conversion
 
 Everything here runs on your own machine, with your own provider API keys. No account, no org, no cloud required.
 

@@ -127,8 +127,8 @@ Recommended pattern:
 ## Document reading
 
 The Go reader built into the backend reads DOCX, PPTX, XLSX and PDFs with a text layer, and nothing has
-to be installed for it. For scans and complex layouts, run `seshat-intelligence` (Docling inside) yourself
-and point the backend at it with `DOCUMENT_READER_URL`; see `seshat-intelligence/README.md`.
+to be installed for it. For scans and complex layouts, run a document reading service yourself (Docling, or
+`seshat-intelligence` from SeshatCloud) and point the backend at it with `DOCUMENT_READER_URL`.
 
 SeshatOS does not install or start a Python environment: there is no `.venv` in the runtime root, and no
 step of `make setup` creates one. Setting up the Python service is something you do on purpose; a proper

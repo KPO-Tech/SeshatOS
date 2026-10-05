@@ -8,7 +8,6 @@
 seshatos/
   seshat-backend/        local backend and desktop API
   seshat-desktop/        Electron desktop UI
-  seshat-intelligence/   local document-intelligence service (Python)
   go.work                connects the Go module(s)
 ```
 
