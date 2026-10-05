@@ -4,7 +4,7 @@ It reads every CHUNK_BENCH_DIR/chunks_*.jsonl (one JSON line {"strategy", "doc",
 chunks of all the documents together, once per strategy, and asks the questions of questions.json with BM25, with a dense
 model (--embedder: all-MiniLM-L6-v2, which reads 256 tokens, so a chunk is scored by its best 220-token window; or bge-m3, which
 reads a whole chunk) and with both fused (reciprocal rank). A chunk answers a question when it is from the right document and holds every string of one
-answer group (matching.is_answer). A question whose answer is in no chunk of a strategy counts as a miss.
+answer group (matching.covers). A question whose answer is in no chunk of a strategy counts as a miss.
 
 Three things are reported, because the first alone favours big chunks (few of them cover a lot of text):
 
@@ -27,7 +27,7 @@ import sys
 from collections import Counter, defaultdict
 
 import numpy as np
-from matching import is_answer, tokens
+from matching import covers, evidence_items, tokens
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SP = os.environ.get("CHUNK_BENCH_DIR", ".")
@@ -179,23 +179,25 @@ class BM25:
         return scores
 
 
-def rank_with_cost(scores, relevant, costs):
-    """The rank of the first answering chunk and the tokens of all the results up to and including it (None, None: a miss)."""
+def passage_ranks(scores, relevant):
+    """For each passage the answer needs (a row of relevant), the rank of the first chunk that gives it, or None. Also returns the
+    order of the chunks."""
     order = np.argsort(-scores, kind="stable")
-    hits = np.flatnonzero(relevant[order])
-    if not len(hits):
-        return None, None
-    first = int(hits[0])
-    return first + 1, float(costs[order[: first + 1]].sum())
+    ranks = []
+    for row in relevant:
+        hits = np.flatnonzero(row[order])
+        ranks.append(int(hits[0]) + 1 if len(hits) else None)
+    return ranks, order
 
 
 def evaluate_strategy(chunks, questions, dense, question_vectors):
     texts = [c["text"] for c in chunks]
     costs = np.array([chunk_tokens(c) for c in chunks])
-    relevant = np.array([[is_answer(c, q) for c in chunks] for q in questions])  # (questions, chunks)
+    # relevant[q][p][c]: chunk c gives passage p of question q (one passage for a question with "answers").
+    relevant = [np.array([[covers(c, q["doc"], groups) for c in chunks] for groups in evidence_items(q)]) for q in questions]
     bm25 = BM25(texts)
     dense_scores = dense.chunk_scores(texts, question_vectors)
-    results = {r: [] for r in RETRIEVERS}
+    results = {r: {"passages": [], "rank": [], "cost": []} for r in RETRIEVERS}
     for qi, question in enumerate(questions):
         b = bm25.scores(question["q"])
         d = dense_scores[qi]
@@ -204,27 +206,39 @@ def evaluate_strategy(chunks, questions, dense, question_vectors):
         rd = np.argsort(np.argsort(-d, kind="stable"), kind="stable")
         fused = 1 / (RRF_K + rb) + 1 / (RRF_K + rd)
         for name, scores in (("bm25", b), ("dense", d), ("hybrid", fused)):
-            if not relevant[qi].any():
-                results[name].append((None, None))
+            ranks, order = passage_ranks(scores, relevant[qi])
+            results[name]["passages"].append(ranks)
+            # The answer is complete when its last passage is: the rank, and the tokens read up to there.
+            if None in ranks:
+                results[name]["rank"].append(None)
+                results[name]["cost"].append(None)
             else:
-                results[name].append(rank_with_cost(scores, relevant[qi], costs))
+                last = max(ranks)
+                results[name]["rank"].append(last)
+                results[name]["cost"].append(float(costs[order[:last]].sum()))
     return {
         "chunks": len(chunks),
         "avg_tokens": float(costs.mean()),
-        "answerable": int(relevant.any(axis=1).sum()),
-        "ranks": {name: [r for r, _ in rs] for name, rs in results.items()},
-        "costs": {name: [c for _, c in rs] for name, rs in results.items()},
+        "answerable": sum(1 for rows in relevant if rows.any(axis=1).all()),
+        "passages": {name: r["passages"] for name, r in results.items()},
+        "ranks": {name: r["rank"] for name, r in results.items()},
+        "costs": {name: r["cost"] for name, r in results.items()},
     }
 
 
 def per_question(result, retriever, metric, budgets):
-    """One number per question for a metric: "hit@K" and "hit@Ntok" are 0 or 1, "mrr" is 1/rank."""
+    """One number per question for a metric. "hit@K" is 1 when the whole answer is in the first K results (every passage it
+    needs), "cov@K" is the share of its passages that are, "hit@Ntok" is 1 when the whole answer is in the results that fit
+    in N tokens, "mrr" is 1 / the rank at which the answer is complete."""
     ranks, costs = result["ranks"][retriever], result["costs"][retriever]
     if metric == "mrr":
         return np.array([1 / r if r else 0.0 for r in ranks])
     if metric.endswith("tok"):
         budget = budgets[metric]
         return np.array([1.0 if c is not None and c <= budget else 0.0 for c in costs])
+    if metric.startswith("cov@"):
+        k = int(metric.removeprefix("cov@"))
+        return np.array([np.mean([1.0 if r and r <= k else 0.0 for r in rs]) for rs in result["passages"][retriever]])
     k = int(metric.removeprefix("hit@"))
     return np.array([1.0 if r and r <= k else 0.0 for r in ranks])
 
@@ -248,9 +262,11 @@ def main():
     parser.add_argument("--budgets", default="1000,2000,4000", help="context budgets in tokens, comma separated")
     parser.add_argument("--only", default="", help="strategies to evaluate, comma separated (default: all)")
     parser.add_argument("--embedder", default="minilm", choices=sorted(EMBEDDERS), help="the dense model (default: minilm)")
+    parser.add_argument("--questions", default="questions.json", help="the questions, in this directory (default: questions.json)")
     args = parser.parse_args()
 
-    questions = json.load(open(os.path.join(HERE, "questions.json"), encoding="utf-8"))
+    questions = json.load(open(os.path.join(HERE, args.questions), encoding="utf-8"))
+    multi = any(len(evidence_items(q)) > 1 for q in questions)
     budgets = {f"hit@{b}tok": int(b) for b in args.budgets.split(",")}
     chunks = load_chunks()
     if args.only:
@@ -272,7 +288,8 @@ def main():
     n = len(questions)
     print(f"\n{n} questions on {len(set(doc_ids))} documents, dense model: {EMBEDDERS[args.embedder]['model']}\n")
 
-    print("hit@1 hit@3 hit@5 MRR, every question counted (a question whose answer is in no chunk is a miss)\n")
+    what = "the whole answer (every passage it needs) in the first k results" if multi else "the answer in the first k results"
+    print(f"hit@1 hit@3 hit@5 MRR: {what}; every question counted (an answer that is in no chunk is a miss)\n")
     print(f"{'strategy':14s} {'chunks':>6s} {'avg tok':>7s} {'answerable':>10s} | " + " | ".join(f"{r:^23s}" for r in RETRIEVERS))
     for name in names:
         r = results[name]
@@ -293,7 +310,7 @@ def main():
 
     if args.baseline in results:
         rng = np.random.default_rng(0)
-        metrics = ["hit@5", "mrr"] + list(budgets)
+        metrics = (["hit@5", "cov@5", "mrr"] if multi else ["hit@5", "mrr"]) + list(budgets)
         for retriever in RETRIEVERS:
             print(
                 f"\ndifference to {args.baseline} with {retriever} (positive: better than {args.baseline}; 95% interval over documents; * when it excludes 0)\n"
@@ -320,7 +337,8 @@ def main():
             picks = [i for i, d in enumerate(doc_ids) if d == doc]
             per_doc[name][doc] = {r: float(per_question(results[name], r, "hit@5", budgets)[picks].mean()) for r in RETRIEVERS}
     out = {"questions": n, "strategies": results, "hit@5_by_document": per_doc}
-    with open(os.path.join(SP, f"results_{args.embedder}.json"), "w", encoding="utf-8") as f:
+    suffix = "" if args.questions == "questions.json" else "_" + os.path.splitext(args.questions)[0]
+    with open(os.path.join(SP, f"results_{args.embedder}{suffix}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
 
 

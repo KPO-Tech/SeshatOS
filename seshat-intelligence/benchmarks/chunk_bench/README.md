@@ -11,6 +11,10 @@ results for a natural question, and at what cost in context?
   punctuation or ligatures, so a hyphen cut across two lines of a column does not hide an answer.
 - `check_questions.py`: checks the questions against the text of the documents before any chunk is made (every answer exists,
   ids are unique). Run it after editing `questions.json`.
+- `questions_multi.json`: 49 questions whose answer is spread over 2 or 3 passages of a document (16 less than 256 tokens apart,
+  5 between 256 and 512, 28 farther). Each has `evidence`, a list of passages, each a list of strings one chunk must hold
+  together; the answer is complete when the chunks retrieved cover all of them. `evaluate.py --questions questions_multi.json`
+  reports hit@k as "the whole answer is in the first k results" and `cov@k` as the share of its passages that are.
 - `prepare_corpus.py`: reads `raw/` with the Go reader (`benchmarks/readdoc`) into `md/`.
 - `docling_chunks.py`: chunks the files of `raw/` with docling's chunker (`providers/chunker/docling.py`), at its default size,
   512 and 1024 tokens.
@@ -42,6 +46,7 @@ Everything lives in one directory, `CHUNK_BENCH_DIR`:
    `evaluate.py --embedder bge-m3` for the multilingual model (2.3 GB downloaded from Hugging Face on first use; about 10
    minutes per strategy on a 4 GB GPU, `--only profile,heading768` to choose; the vectors are kept in `embeddings_bge-m3.pkl`,
    so a stopped run goes on where it was).
+   Add `--questions questions_multi.json` for the questions that need several passages.
 
 ## Result of 2026-10-04 (seshat v1.2.70, 192 questions, 19 documents)
 
@@ -112,6 +117,31 @@ Against the profile, fused, 95% interval over documents:
 
 So the decision is: do not raise the size above 512. Whether to go below it depends on the questions the product is asked,
 which this set does not cover; the next measure to make is a set of questions whose answer needs more than one passage.
+
+### Questions that need several passages
+
+`questions_multi.json` (49 questions, 18 documents). A fixed number of results and a fixed amount of context do not say the
+same thing here: five chunks of 1024 tokens carry about three and a half times the text of five chunks of 256. Fused, against the profile, with
+bge-m3 (95% interval over documents; with 49 questions the intervals are wide):
+
+| strategy | hit@5 | MRR | within 1000 | within 2000 | within 4000 tokens |
+|---|---|---|---|---|---|
+| structured, 256 | -.12 [-.22,.00] | -.07 [-.13,-.01] | +.06 [.00,+.14] | +.14 [+.04,+.26] | +.06 [-.05,+.18] |
+| structured, 512 (the profile) | .59 | .38 | .41 | .55 | .78 |
+| structured, 768 | +.08 [-.04,+.24] | +.06 [-.02,+.14] | -.06 [-.23,+.10] | +.06 [-.07,+.23] | -.08 [-.20,+.06] |
+| structured, 1024 | +.10 [-.02,+.26] | +.11 [+.05,+.18] | -.08 [-.22,+.05] | +.04 [-.07,+.15] | -.08 [-.16,.00] |
+
+- **With a fixed number of results, bigger chunks complete more answers**: 1024 has +.08 [+.02,+.17] more of the passages in
+  the first five results and a better MRR, which is what one expects of chunks that carry more text.
+- **At equal context they do not**: 256 completes as many answers as 512 or more (+.14 within 2000 tokens), and 768 and 1024 are
+  not better than 512 at any budget (their differences are negative within 1000 and 4000 tokens, none clear).
+- With MiniLM the picture is the same, with a larger rank advantage for the big chunks (1024: hit@5 +.14 [+.04,+.28]) and no
+  advantage at equal context.
+
+So the size of the chunk and the number of results to retrieve go together: 256 with about twice as many results, or 512, give
+the reader the same text. What this set shows is that, at equal text, small chunks lose nothing on answers that need several
+passages. It does not show that they win everywhere: 28 of the 49 questions have their passages more than 512 tokens apart, which no
+chunk of 256 or 512 tokens holds (one of 1024 can), and the others are mostly short answers close together.
 
 Other readings:
 
