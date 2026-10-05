@@ -2,8 +2,8 @@
 
 It reads every CHUNK_BENCH_DIR/chunks_*.jsonl (one JSON line {"strategy", "doc", "index", "text"} per chunk), indexes the
 chunks of all the documents together, once per strategy, and asks the questions of questions.json with BM25, with a dense
-model (all-MiniLM-L6-v2, a chunk scored by its best 220-token window so that a long chunk is not cut by the model) and with
-both fused (reciprocal rank). A chunk answers a question when it is from the right document and holds every string of one
+model (--embedder: all-MiniLM-L6-v2, which reads 256 tokens, so a chunk is scored by its best 220-token window; or bge-m3, which
+reads a whole chunk) and with both fused (reciprocal rank). A chunk answers a question when it is from the right document and holds every string of one
 answer group (matching.is_answer). A question whose answer is in no chunk of a strategy counts as a miss.
 
 Three things are reported, because the first alone favours big chunks (few of them cover a lot of text):
@@ -18,9 +18,11 @@ See README.md for how the chunk files are made."""
 
 import argparse
 import glob
+import hashlib
 import json
 import math
 import os
+import pickle
 import sys
 from collections import Counter, defaultdict
 
@@ -29,7 +31,19 @@ from matching import is_answer, tokens
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SP = os.environ.get("CHUNK_BENCH_DIR", ".")
-EMBEDDER = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDERS = {
+    # English only, 256 tokens: a chunk is scored by its best 220-token window.
+    "minilm": {
+        "model": "sentence-transformers/all-MiniLM-L6-v2",
+        "pooling": "mean",
+        "max_length": 256,
+        "window": 220,
+        "half": False,
+        "batch_tokens": 16384,
+    },
+    # Multilingual, 8192 tokens: a chunk is read whole (up to max_length). Runs in half precision on a GPU with 4 GB.
+    "bge-m3": {"model": "BAAI/bge-m3", "pooling": "cls", "max_length": 4096, "window": None, "half": True, "batch_tokens": 4096},
+}
 RETRIEVERS = ("bm25", "dense", "hybrid")
 RRF_K = 60  # reciprocal rank fusion: 1 / (RRF_K + rank)
 BOOTSTRAPS = 5000
@@ -54,28 +68,70 @@ def chunk_tokens(chunk):
 
 
 class Dense:
-    def __init__(self):
+    """A dense retriever. A model that reads few tokens (MiniLM: 256) scores a chunk by its best window, so that a long chunk is
+    not cut by the model; one that reads a whole chunk (bge-m3: 8192) embeds it as it is."""
+
+    def __init__(self, name):
         import torch
         from transformers import AutoModel, AutoTokenizer
 
+        self.spec = EMBEDDERS[name]
         self.torch = torch
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.tok = AutoTokenizer.from_pretrained(EMBEDDER)
-        self.model = AutoModel.from_pretrained(EMBEDDER).to(self.device).eval()
+        self.tok = AutoTokenizer.from_pretrained(self.spec["model"])
+        self.model = AutoModel.from_pretrained(self.spec["model"]).eval()
+        if self.spec["half"] and self.device == "cuda":
+            self.model = self.model.half()
+        self.model = self.model.to(self.device)
+        # A slow model is read once per text: the vectors are kept in a file, so that a run that is stopped can go on.
+        self.cache_path = os.path.join(SP, f"embeddings_{name}.pkl")
+        self.cache = {}
+        if os.path.exists(self.cache_path):
+            with open(self.cache_path, "rb") as f:
+                self.cache = pickle.load(f)
 
-    def embed(self, texts, batch=64):
-        torch = self.torch
-        out = []
+    def save(self):
+        with open(self.cache_path, "wb") as f:
+            pickle.dump(self.cache, f)
+
+    def embed(self, texts):
+        """One normalised vector per text, in order; a text already read comes from the cache."""
+        keys = [hashlib.sha1(text.encode("utf-8")).hexdigest() for text in texts]
+        todo = sorted({k: t for k, t in zip(keys, texts) if k not in self.cache}.items())
+        if todo:
+            for (key, _), vector in zip(todo, self.embed_all([text for _, text in todo])):
+                self.cache[key] = vector
+        return np.stack([self.cache[k] for k in keys])
+
+    def embed_all(self, texts):
+        """One normalised vector per text, in order. Texts are read longest last, in batches of about batch_tokens tokens."""
+        torch, spec = self.torch, self.spec
+        lengths = [len(ids) for ids in self.tok(texts, truncation=True, max_length=spec["max_length"], add_special_tokens=True)["input_ids"]]
+        order = sorted(range(len(texts)), key=lambda i: lengths[i])
+        vectors = [None] * len(texts)
+        start = 0
         with torch.no_grad():
-            for i in range(0, len(texts), batch):
-                enc = self.tok(texts[i : i + batch], padding=True, truncation=True, max_length=256, return_tensors="pt").to(self.device)
-                hidden = self.model(**enc).last_hidden_state
-                mask = enc["attention_mask"].unsqueeze(-1).float()
-                pooled = (hidden * mask).sum(1) / mask.sum(1)
-                out.append(torch.nn.functional.normalize(pooled, dim=1).cpu())
-        return torch.cat(out).numpy()
+            while start < len(order):
+                end = start + 1
+                while end < len(order) and (end - start + 1) * lengths[order[end]] <= spec["batch_tokens"]:
+                    end += 1
+                batch = order[start:end]
+                enc = self.tok([texts[i] for i in batch], padding=True, truncation=True, max_length=spec["max_length"], return_tensors="pt").to(
+                    self.device
+                )
+                hidden = self.model(**enc).last_hidden_state.float()
+                if spec["pooling"] == "cls":
+                    pooled = hidden[:, 0]
+                else:
+                    mask = enc["attention_mask"].unsqueeze(-1).float()
+                    pooled = (hidden * mask).sum(1) / mask.sum(1)
+                pooled = torch.nn.functional.normalize(pooled, dim=1).cpu().numpy()
+                for row, i in enumerate(batch):
+                    vectors[i] = pooled[row]
+                start = end
+        return np.stack(vectors)
 
-    def windows(self, text, size=220, stride=110):
+    def windows(self, text, size, stride):
         ids = self.tok(text, add_special_tokens=False)["input_ids"]
         if len(ids) <= size:
             return [text]
@@ -87,11 +143,14 @@ class Dense:
         return parts
 
     def chunk_scores(self, texts, question_vectors):
-        """scores[q, c]: the best similarity between question q and a window of chunk c."""
+        """scores[q, c]: the similarity between question q and chunk c (its best window when the model cannot read it whole)."""
+        size = self.spec["window"]
+        if not size:
+            return question_vectors @ self.embed(texts).T
         windows, first = [], []
         for text in texts:
             first.append(len(windows))
-            windows.extend(self.windows(text))
+            windows.extend(self.windows(text, size, size // 2))
         window_vectors = self.embed(windows)
         sims = question_vectors @ window_vectors.T  # (questions, windows); windows of one chunk are contiguous
         return np.maximum.reduceat(sims, first, axis=1)
@@ -188,6 +247,7 @@ def main():
     parser.add_argument("--baseline", default="profile", help="the strategy the others are compared with (default: profile)")
     parser.add_argument("--budgets", default="1000,2000,4000", help="context budgets in tokens, comma separated")
     parser.add_argument("--only", default="", help="strategies to evaluate, comma separated (default: all)")
+    parser.add_argument("--embedder", default="minilm", choices=sorted(EMBEDDERS), help="the dense model (default: minilm)")
     args = parser.parse_args()
 
     questions = json.load(open(os.path.join(HERE, "questions.json"), encoding="utf-8"))
@@ -200,16 +260,17 @@ def main():
     if missing:
         sys.exit(f"no chunk for the documents of some questions: {missing}")
 
-    dense = Dense()
+    dense = Dense(args.embedder)
     question_vectors = dense.embed([q["q"] for q in questions])
     results = {}
     for name in sorted(chunks, key=lambda n: sum(map(chunk_tokens, chunks[n])) / len(chunks[n])):
         print(f"evaluating {name} ({len(chunks[name])} chunks)", file=sys.stderr)
         results[name] = evaluate_strategy(chunks[name], questions, dense, question_vectors)
+        dense.save()
     names = list(results)
     doc_ids = [q["doc"] for q in questions]
     n = len(questions)
-    print(f"\n{n} questions on {len(set(doc_ids))} documents\n")
+    print(f"\n{n} questions on {len(set(doc_ids))} documents, dense model: {EMBEDDERS[args.embedder]['model']}\n")
 
     print("hit@1 hit@3 hit@5 MRR, every question counted (a question whose answer is in no chunk is a miss)\n")
     print(f"{'strategy':14s} {'chunks':>6s} {'avg tok':>7s} {'answerable':>10s} | " + " | ".join(f"{r:^23s}" for r in RETRIEVERS))
@@ -259,7 +320,7 @@ def main():
             picks = [i for i, d in enumerate(doc_ids) if d == doc]
             per_doc[name][doc] = {r: float(per_question(results[name], r, "hit@5", budgets)[picks].mean()) for r in RETRIEVERS}
     out = {"questions": n, "strategies": results, "hit@5_by_document": per_doc}
-    with open(os.path.join(SP, "results.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(SP, f"results_{args.embedder}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
 
 

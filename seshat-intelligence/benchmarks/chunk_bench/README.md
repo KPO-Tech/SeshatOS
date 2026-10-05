@@ -38,7 +38,10 @@ Everything lives in one directory, `CHUNK_BENCH_DIR`:
    `profile` is the structured profile (512 tokens); `heading<N>` is the same chunker at N tokens. To compare with an older
    checkout, run it in a `git worktree` of that commit with `OUT=chunks_old.jsonl LABEL=old_`.
 4. `python benchmarks/chunk_bench/docling_chunks.py` (long: the conversion of the files takes about 35 minutes on one GPU).
-5. `python benchmarks/chunk_bench/check_questions.py`, then `python benchmarks/chunk_bench/evaluate.py` (about 4 minutes).
+5. `python benchmarks/chunk_bench/check_questions.py`, then `python benchmarks/chunk_bench/evaluate.py` (about 4 minutes), and
+   `evaluate.py --embedder bge-m3` for the multilingual model (2.3 GB downloaded from Hugging Face on first use; about 10
+   minutes per strategy on a 4 GB GPU, `--only profile,heading768` to choose; the vectors are kept in `embeddings_bge-m3.pkl`,
+   so a stopped run goes on where it was).
 
 ## Result of 2026-10-04 (seshat v1.2.70, 192 questions, 19 documents)
 
@@ -70,18 +73,45 @@ The answering chunk within N tokens of results (both retrievers fused):
 
 ### 512, 768 or 1024?
 
-1024 is not the answer, and 512 is a sound default; 768 is the one size that might be better. Against the profile, fused, over
-documents, 95% interval:
+1024 is not the answer, and 512 is a sound default. With MiniLM, 768 looked like it might be better; with a stronger embedder (next
+section) it is not, and 256 is. Against the profile, fused, over documents, 95% interval, with MiniLM:
 
 - **1024**: ranks the answer a little better (hit@5 +.03 [.00,+.07]) but costs 1.8 times more tokens for it. At the same context it
   is worse: within 2000 tokens -.05 [-.10,-.01], within 1000 -.14 [-.21,-.07].
 - **768**: better at ranking (hit@5 +.06 [+.02,+.10]; MRR +.03 [-.01,+.07], not clear) and the same at 2000 and 4000 tokens (+.01
   [-.05,+.06], +.01 [-.02,+.03]); under the tightest budget it is a little worse (-.05 [-.12,+.02], not clear). The gain is on
   one measure of the four, with the intervals of the others holding 0, so it is a lead, not a result. Before moving the profile it
-  should be tried with a better embedder and with questions that need a whole section.
+  should be tried with a better embedder (done below: the lead disappears) and with questions that need a whole section.
 - **256**: as good as 512 in hit@5 (-.01 [-.04,+.03]) and better under a small budget (+.07 [+.01,+.13] within 1000 tokens, +.07
   [+.02,+.12] within 2000), but it cuts more passages; this benchmark only asks for short facts, so it cannot speak for a question
   that needs a paragraph.
+
+### With a stronger embedder (bge-m3)
+
+MiniLM is small and English only. The same chunks, with `--embedder bge-m3` (BAAI/bge-m3, multilingual, reads a whole chunk up to
+4096 tokens, half precision on a 4 GB GPU, about 10 minutes per strategy):
+
+| strategy | BM25 hit@5 MRR | dense hit@5 MRR | both hit@5 MRR | both within 1000 / 2000 / 4000 tokens |
+|---|---|---|---|---|
+| structured, 256 | .90 .77 | .88 .77 | .95 .82 | .95 / .98 / .98 |
+| **structured, 512 (the profile)** | .92 .79 | .84 .70 | .91 .77 | .81 / .90 / .96 |
+| structured, 768 | .95 .80 | .83 .69 | .91 .79 | .74 / .85 / .94 |
+| structured, 1024 | .93 .81 | .84 .69 | .92 .80 | .70 / .81 / .91 |
+
+Against the profile, fused, 95% interval over documents:
+
+- **768 is not better than 512** any more: hit@5 +.01 [-.02,+.03], MRR +.02 [-.01,+.05], and worse at equal context (-.07
+  [-.11,-.03] within 1000 tokens, -.04 [-.08,-.01] within 2000). The lead seen with MiniLM came from that model.
+- **1024 is worse at equal context** (-.11 [-.19,-.04] within 1000, -.08 [-.13,-.04] within 2000, -.06 [-.10,-.02] within 4000) and
+  not better at ranking (hit@5 +.01 [-.02,+.04]).
+- **256 is better than 512**: hit@5 +.04 [+.01,+.07], and clearly under a budget (+.14 [+.08,+.21] within 1000 tokens, +.08
+  [+.04,+.13] within 2000). With the dense model alone the dense score of a chunk falls as chunks grow (hit@5 .88, .84, .83, .84):
+  a vector of a long chunk averages several subjects. This benchmark asks for short facts, which is where small chunks win by
+  construction, so it settles that bigger is not better, not that 256 is the right size: a question that needs a paragraph or a
+  section would say the opposite.
+
+So the decision is: do not raise the size above 512. Whether to go below it depends on the questions the product is asked,
+which this set does not cover; the next measure to make is a set of questions whose answer needs more than one passage.
 
 Other readings:
 
