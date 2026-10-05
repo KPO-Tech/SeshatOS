@@ -33,9 +33,20 @@ def tokens(text):
     return re.findall(r"\w+", text.lower())
 
 
-def is_answer(chunk, question):
-    """A chunk answers a question when it is from the right document and holds every string of one answer group."""
-    if chunk["doc"] != question["doc"]:
+def evidence_items(question):
+    """The passages an answer needs, each as the alternative groups of strings that one chunk may hold to give it.
+
+    A question with "answers" needs one passage: a chunk holding every string of any one of the groups. A question with
+    "evidence" needs all of its items, each a list of strings that one chunk must hold together: an answer that is spread over
+    several passages, which the chunks retrieved must cover between them."""
+    if "evidence" in question:
+        return [[item] for item in question["evidence"]]
+    return [question["answers"]]
+
+
+def covers(chunk, doc, groups):
+    """A chunk gives a passage when it is from the right document and holds every string of one of the groups."""
+    if chunk["doc"] != doc:
         return False
     text = norm(chunk["text"])
-    return any(all(norm(a) in text for a in group) for group in question["answers"])
+    return any(all(norm(a) in text for a in group) for group in groups)
