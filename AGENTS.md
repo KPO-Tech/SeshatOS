@@ -12,7 +12,6 @@ SeshatOS is the self-hosted local product built on top of [seshat](https://githu
 |---|---|---|
 | `seshat-backend/` | Go | local backend / desktop HTTP API |
 | `seshat-desktop/` | TypeScript / Electron | the desktop client, see its own `AGENTS.md` |
-| `seshat-intelligence/` | Python | document-intelligence service (OCR, layout analysis, conversion) |
 | `shared/connector-catalog/` | TypeScript | connector metadata consumed by the desktop app |
 
 `seshat` — the open-source runtime — is not vendored here. It's an external Go module,

@@ -12,7 +12,6 @@ This document describes the current repository layout and the package boundaries
 seshatos/
 ├── seshat-backend/        ← local backend / desktop HTTP API
 ├── seshat-desktop/        ← Electron desktop client
-├── seshat-intelligence/   ← local document-intelligence service (OCR, layout)
 └── shared/connector-catalog/  ← connector metadata consumed by the desktop app
 ```
 
