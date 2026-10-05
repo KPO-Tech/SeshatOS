@@ -190,7 +190,27 @@ def passage_ranks(scores, relevant):
     return ranks, order
 
 
-def evaluate_strategy(chunks, questions, dense, question_vectors):
+def fuse(keyword, dense, fusion, candidates, weight):
+    """The score of every chunk for the "hybrid" retriever.
+
+    "rrf" is reciprocal rank fusion of the two rankings, every chunk counting. "blend" is what the vector stores of seshat do (see
+    internal/vector/hybrid.go there): each ranking is read to its best `candidates` hits, a keyword ranking holds only the chunks
+    that match a word, each list is divided by its best score, the dense list is weighted 1 - weight and the keyword list weight."""
+    if fusion == "rrf":
+        rk = np.argsort(np.argsort(-keyword, kind="stable"), kind="stable")
+        rd = np.argsort(np.argsort(-dense, kind="stable"), kind="stable")
+        return 1 / (RRF_K + rk) + 1 / (RRF_K + rd)
+    score = np.zeros(len(keyword))
+    for values, share, only_matches in ((dense, 1 - weight, False), (keyword, weight, True)):
+        top = np.argsort(-values, kind="stable")[:candidates]
+        if only_matches:
+            top = top[values[top] > 0]
+        if len(top) and values[top].max() > 0:
+            score[top] += share * values[top] / values[top].max()
+    return score
+
+
+def evaluate_strategy(chunks, questions, dense, question_vectors, fusion="rrf", candidates=100, weight=0.5):
     texts = [c["text"] for c in chunks]
     costs = np.array([chunk_tokens(c) for c in chunks])
     # relevant[q][p][c]: chunk c gives passage p of question q (one passage for a question with "answers").
@@ -201,10 +221,7 @@ def evaluate_strategy(chunks, questions, dense, question_vectors):
     for qi, question in enumerate(questions):
         b = bm25.scores(question["q"])
         d = dense_scores[qi]
-        # Reciprocal rank fusion of the two rankings.
-        rb = np.argsort(np.argsort(-b, kind="stable"), kind="stable")
-        rd = np.argsort(np.argsort(-d, kind="stable"), kind="stable")
-        fused = 1 / (RRF_K + rb) + 1 / (RRF_K + rd)
+        fused = fuse(b, d, fusion, candidates, weight)
         for name, scores in (("bm25", b), ("dense", d), ("hybrid", fused)):
             ranks, order = passage_ranks(scores, relevant[qi])
             results[name]["passages"].append(ranks)
@@ -262,6 +279,9 @@ def main():
     parser.add_argument("--budgets", default="1000,2000,4000", help="context budgets in tokens, comma separated")
     parser.add_argument("--only", default="", help="strategies to evaluate, comma separated (default: all)")
     parser.add_argument("--embedder", default="minilm", choices=sorted(EMBEDDERS), help="the dense model (default: minilm)")
+    parser.add_argument("--fusion", default="rrf", choices=("rrf", "blend"), help="how the hybrid retriever combines its two rankings (default: rrf)")
+    parser.add_argument("--candidates", type=int, default=100, help="hits read from each ranking by --fusion blend (default: 100)")
+    parser.add_argument("--weight", type=float, default=0.5, help="the weight of the keyword ranking in --fusion blend (default: 0.5)")
     parser.add_argument("--questions", default="questions.json", help="the questions, in this directory (default: questions.json)")
     args = parser.parse_args()
 
@@ -281,12 +301,12 @@ def main():
     results = {}
     for name in sorted(chunks, key=lambda n: sum(map(chunk_tokens, chunks[n])) / len(chunks[n])):
         print(f"evaluating {name} ({len(chunks[name])} chunks)", file=sys.stderr)
-        results[name] = evaluate_strategy(chunks[name], questions, dense, question_vectors)
+        results[name] = evaluate_strategy(chunks[name], questions, dense, question_vectors, args.fusion, args.candidates, args.weight)
         dense.save()
     names = list(results)
     doc_ids = [q["doc"] for q in questions]
     n = len(questions)
-    print(f"\n{n} questions on {len(set(doc_ids))} documents, dense model: {EMBEDDERS[args.embedder]['model']}\n")
+    print(f"\n{n} questions on {len(set(doc_ids))} documents, dense model: {EMBEDDERS[args.embedder]['model']}, hybrid: {args.fusion}\n")
 
     what = "the whole answer (every passage it needs) in the first k results" if multi else "the answer in the first k results"
     print(f"hit@1 hit@3 hit@5 MRR: {what}; every question counted (an answer that is in no chunk is a miss)\n")
@@ -338,6 +358,7 @@ def main():
             per_doc[name][doc] = {r: float(per_question(results[name], r, "hit@5", budgets)[picks].mean()) for r in RETRIEVERS}
     out = {"questions": n, "strategies": results, "hit@5_by_document": per_doc}
     suffix = "" if args.questions == "questions.json" else "_" + os.path.splitext(args.questions)[0]
+    suffix += "" if args.fusion == "rrf" else "_" + args.fusion
     with open(os.path.join(SP, f"results_{args.embedder}{suffix}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
 

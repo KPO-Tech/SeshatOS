@@ -46,7 +46,8 @@ Everything lives in one directory, `CHUNK_BENCH_DIR`:
    `evaluate.py --embedder bge-m3` for the multilingual model (2.3 GB downloaded from Hugging Face on first use; about 10
    minutes per strategy on a 4 GB GPU, `--only profile,heading768` to choose; the vectors are kept in `embeddings_bge-m3.pkl`,
    so a stopped run goes on where it was).
-   Add `--questions questions_multi.json` for the questions that need several passages.
+   Add `--questions questions_multi.json` for the questions that need several passages, and `--fusion blend` for the way the
+   vector stores of seshat combine a keyword and a vector ranking (the default, `rrf`, keeps the tables of this file reproducible).
 
 ## Result of 2026-10-04 (seshat v1.2.70, 192 questions, 19 documents)
 
@@ -117,6 +118,27 @@ Against the profile, fused, 95% interval over documents:
 
 So the decision is: do not raise the size above 512. Whether to go below it depends on the questions the product is asked,
 which this set does not cover; the next measure to make is a set of questions whose answer needs more than one passage.
+
+### How the two rankings are combined (hybrid)
+
+The "both" columns above combine BM25 and the dense model by reciprocal rank fusion (RRF). The vector stores of seshat blend scores
+instead (`internal/vector/hybrid.go` there): each ranking is read to its best 100 hits (a keyword ranking holds only the chunks that
+match a word), divided by its best score, weighted, and added. `evaluate.py --fusion blend [--candidates N] [--weight W]` does the
+same, so that the choice was measured and not guessed. With bge-m3, 192 questions, the hybrid retriever only:
+
+| chunk size | RRF: hit@5, MRR, within 1000 / 2000 tokens | blend (100 candidates) | blend (20 candidates) |
+|---|---|---|---|
+| 256 | .95 .82, .95 / .98 | .95 .82, .94 / .97 | .95 .83, .93 / .96 |
+| 512 (the profile) | .91 .77, .81 / .90 | **.93 .81**, **.86 / .92** | .90 .79, .83 / .89 |
+| 768 | .91 .79, .74 / .85 | **.95 .84**, **.79 / .92** | .91 .81, .75 / .85 |
+| 1024 | .92 .80, .70 / .81 | .93 .81, .70 / .83 | .92 .79, .68 / .81 |
+
+Against RRF, over documents: at 512 tokens MRR +.036 [+.009,+.062] and +.057 [+.015,+.097] within 1000 tokens; at 768 hit@5 +.036
+[+.009,+.068], MRR +.052 [+.013,+.091] and +.068 [+.017,+.115] within 2000 tokens; nothing clear at 256 or 1024. Reading 100 candidates
+instead of 20 is worth +.031 [+.005,+.058] hit@5 at 512 and +.036 [+.010,+.066] at 768. On the 49 questions that need several passages
+it changes nothing clear. (Normalising by the best score, min-max or z-score gave the same results within the noise.) Blending does not change the choice of chunk
+size: within 2000 tokens 256 still gives the most answers (.97, against .92 at 512 and 768), and 768 now ranks them as well as 256 does
+(hit@5 .95).
 
 ### Questions that need several passages
 
