@@ -30,7 +30,7 @@ environment variable, build flag, or Settings field. The backend sidecar
 decides connected vs. standalone mode itself at boot, by probing a single URL
 compiled into the Go binary (`defaultServerURL` in
 `seshat-backend/internal/config/bootstrap.go`) — this is deliberate:
-`seshat-server` access is Seshat's paid managed-service tier, and a
+`seshat-server` access ([SeshatCloud](https://github.com/KPO-Tech/SeshatCloud)) is Seshat's paid managed-service tier, and a
 configurable target would let anyone redirect the app to a free self-hosted
 instance instead. If that URL isn't reachable within a couple seconds, the
 backend starts in standalone mode.

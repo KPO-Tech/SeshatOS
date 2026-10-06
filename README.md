@@ -20,6 +20,7 @@
 
 <p align="center">
   <a href="https://github.com/KPO-Tech/seshat"><b>⚙️ seshat (engine)</b></a> ·
+  <a href="https://github.com/KPO-Tech/SeshatCloud"><b>☁️ SeshatCloud (organizations)</b></a> ·
   <a href="https://github.com/KPO-Tech/seshat/discussions"><b>💬 Discussions</b></a>
 </p>
 
@@ -34,15 +35,42 @@ SeshatOS is the self-hosted desktop product built on top of [seshat](https://git
 
 Everything here runs on your own machine, with your own provider API keys. No account, no org, no cloud required.
 
+## Status
+
+SeshatOS is under active construction. The desktop is being rebuilt chat-first; the other surfaces follow in order.
+
+| Capability | Status |
+|---|---|
+| Chat with tools, files, providers, MCP and skills | Active, being stabilized |
+| Local backend: sessions, memory, plans, knowledge/RAG, audit, quotas | Available |
+| Knowledge search from the chat | Available |
+| Dedicated Knowledge, Scheduling, Skills and Admin screens | Planned, in order after Chat |
+| Automation, Inbox, Companion, Team | Roadmap (after the MVP) |
+
+## SeshatOS and SeshatCloud: two halves of one offer
+
+| | SeshatOS (this repository) | [SeshatCloud](https://github.com/KPO-Tech/SeshatCloud) |
+|---|---|---|
+| Scope | One person or a small team, on their own machine | An organization, administered centrally |
+| Runs | Locally, no account, no cloud required | Server + admin console, self-hosted via Docker Compose |
+| Identity | Local | Organizations, roles, SCIM, audit |
+| Automation | Scheduled tasks on your machine | Jobs that run independently of anyone's laptop |
+| Knowledge | Local knowledge/RAG | Org-scoped knowledge at scale, document-intelligence service |
+
+SeshatOS works on its own. SeshatCloud completes it when an organization needs shared administration and centrally governed automation. The connection is optional and one-directional (see below).
+
 ## Relationship to the Seshat engine and the commercial offering
 
 - **[seshat](https://github.com/KPO-Tech/seshat)** is the underlying agent runtime (tools, providers, permissions, multi-agent) — a separate repository, plain Apache-2.0, that SeshatOS consumes as a Go module.
 - **SeshatOS** (this repository) is the local, single-user/small-team product built on that runtime.
-- Seshat also offers a commercial cloud/multi-tenant product (organizations, team workspaces, admin controls, scheduled automation) that is a separate, not-yet-public codebase. `seshat-backend` can optionally connect to it ("connected mode") for identity/settings delegation, entirely over HTTP — none of that product's source is part of, or required by, this repository.
+- **[SeshatCloud](https://github.com/KPO-Tech/SeshatCloud)** is the multi-tenant layer (organizations, team workspaces, admin controls, scheduled automation), a separate source-available codebase. `seshat-backend` can optionally connect to it ("connected mode") for identity/settings delegation, entirely over HTTP — none of its source is part of, or required by, this repository.
+- The commercial activity around Seshat (AI consulting and integration) is presented at [seshat-ai.com](https://seshat-ai.com).
 
 ## License
 
 Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condition: free to use, self-host, modify, and redistribute for any purpose — including internal use by organizations of any size — except selling it (offering it as a paid product or service to third parties). See [LICENSE](./LICENSE).
+
+This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat) runtime is plain Apache-2.0. The license text is still a draft pending legal review.
 
 ## Getting started
 
