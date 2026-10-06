@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import logoSrc from '@renderer/assets/logo.png'
+import logoSrc from '@renderer/assets/logo.svg'
 import { Titlebar } from '@renderer/components/layout/Titlebar'
 
 type Props = {

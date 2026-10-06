@@ -30,7 +30,7 @@ seshat          → seshat-backend   (never)
 `seshat-backend` may import `seshat/pkg/*` freely. It must never import `seshat/internal/*`.
 
 `seshat-backend` can optionally run in "connected mode" against Seshat's commercial
-cloud offering (`seshat-server`, a separate private repository — not part of this one)
+cloud offering ([SeshatCloud](https://github.com/KPO-Tech/SeshatCloud), whose `seshat-server` is a separate source-available repository — not part of this one)
 for identity/settings/preferences delegation. That integration lives entirely behind
 HTTP calls in `internal/cloud/`; `seshat-server`'s own source is never a dependency of
 this repository.

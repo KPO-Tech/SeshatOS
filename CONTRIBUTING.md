@@ -213,4 +213,4 @@ PR checklist:
 - Changes that remove or weaken authentication/authorization checks.
 - Code that uses `//nolint` without an explanation comment.
 - New global mutable state.
-- Anything that would make this codebase depend on `seshat-server`'s private source.
+- Anything that would make this codebase depend on `seshat-server`'s source (SeshatCloud).
