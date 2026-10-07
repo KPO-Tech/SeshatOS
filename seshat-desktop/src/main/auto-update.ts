@@ -17,10 +17,9 @@ function broadcast(channel: string, payload: unknown) {
 }
 
 /**
- * Wires electron-updater against the public seshat-releases feed (see
- * seshat-ui/package.json's build.publish) — seshat-ai itself stays private,
- * so this is the only repo the installed app polls, unauthenticated, no
- * token embedded anywhere.
+ * Wires electron-updater against the GitHub releases of the public SeshatOS
+ * repository (see package.json's build.publish): the app polls it
+ * unauthenticated, no token embedded anywhere.
  *
  * No-op in dev mode (unpackaged) — same guard as startBackendSidecar().
  * Downloads happen automatically in the background, but nothing is ever

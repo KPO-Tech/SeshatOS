@@ -151,15 +151,3 @@ jobs:
           files: dist/**
           generate_release_notes: true
 
-      # Public mirror consumed by electron-updater at runtime (see
-      # seshat-desktop/package.json's build.publish) -- seshat-ai stays private,
-      # so this is the only repo the installed app is allowed to poll
-      # unauthenticated. No internal changelog/PR details here on purpose.
-      - name: Mirror release to the public update feed
-        uses: softprops/action-gh-release@v2
-        with:
-          repository: KPO-Tech/seshat-releases
-          token: ${{ secrets.RELEASES_REPO_TOKEN }}
-          files: dist/**
-          generate_release_notes: false
-          body: "See the SeshatOS changelog for details."

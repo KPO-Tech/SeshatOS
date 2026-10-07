@@ -1,8 +1,6 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo/reseau/orange/seshat-mark-on-dark.svg">
-    <img src="docs/brand/logo/reseau/orange/seshat-mark-on-light.svg" alt="SeshatOS" width="120">
-  </picture>
+  <img src="docs/brand/logo/reseau/orange/seshat-mark-on-light.svg#gh-light-mode-only" alt="SeshatOS" width="120">
+  <img src="docs/brand/logo/reseau/orange/seshat-mark-on-dark.svg#gh-dark-mode-only" alt="SeshatOS" width="120">
 </p>
 
 <h1 align="center">SeshatOS</h1>
