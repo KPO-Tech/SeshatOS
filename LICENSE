@@ -6,8 +6,8 @@ Copyright (c) 2026-present Stéphane Kpoviessi (Seshat)
  work) before this license governs any published release.
 ================================================================================
 
-This license applies to SeshatOS: the seshat-backend, seshat-desktop, and
-seshat-intelligence components in this repository. The seshat SDK
+This license applies to SeshatOS: the seshat-backend and seshat-desktop
+components in this repository. The seshat SDK
 (github.com/KPO-Tech/seshat) is a separate repository under a plain,
 unmodified Apache License 2.0 - no Commons Clause condition applies there.
 
@@ -37,7 +37,7 @@ functionality of the Software. Any license notice or attribution required
 by the License must also include this Commons Clause License Condition
 notice.
 
-Software: SeshatOS (seshat-backend, seshat-desktop, seshat-intelligence)
+Software: SeshatOS (seshat-backend, seshat-desktop)
 
 License: Apache License, Version 2.0
 

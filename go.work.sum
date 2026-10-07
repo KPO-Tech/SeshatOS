@@ -1,1 +1,3 @@
 cloud.google.com/go v0.121.0 h1:pgfwva8nGw7vivjZiRfrmglGWiCJBP+0OmDpenG/Fwg=
+github.com/razvandimescu/gopdf v0.11.2 h1:+s4awuV9IEunl25K5LxzPfIHzCrVJ04WCeenLadNIWQ=
+github.com/razvandimescu/gopdf v0.11.2/go.mod h1:9VUqgIPixEscL2mJ4GrFLhhFE8z/6qld9/tiyQKdMZQ=

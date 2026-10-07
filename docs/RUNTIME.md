@@ -19,8 +19,9 @@ moves everything at once.
 ├── secret.key                     ← server encryption key (auto-generated, keep private)
 ├── auth.json                      ← persisted auth/provider credentials (CLI mode)
 │
-├── sessions/                      ← per-session filesystem data
+├── workspaces/                    ← one directory per session (files attached, files written, plans, …)
 │   └── {session-id}/
+│       ├── uploads/               ← files the user attached (seshat-backend)
 │       ├── artifacts/
 │       │   ├── images/            ← AI-generated images (DALL-E, SD, …)
 │       │   ├── audio/             ← TTS output / STT input files
@@ -32,10 +33,10 @@ moves everything at once.
 │       │   └── other/             ← pasted binary attachments
 │       ├── plans/                 ← plan-mode markdown files
 │       ├── tools/                 ← browser downloads, tool-produced outputs
-│       ├── permissions.json       ← per-session tool permission overrides
 │       └── session.log            ← per-session diagnostic log
 │
 ├── data/
+│   ├── permissions/{session-id}.json ← tool permissions granted to a session (outside its directory on purpose)
 │   ├── hnsw/                      ← HNSW vector index files (local embedding store)
 │   ├── sessions/                  ← SDK filesystem session store (embedded mode only)
 │   └── desktop-bridge-secret      ← HMAC key for Electron ↔ backend handshake
@@ -50,13 +51,9 @@ moves everything at once.
 │   └── electron/                  ← Electron temp files
 │
 ├── logs/
-│   ├── app.log                    ← main backend / CLI log
-│   └── docling.log                ← docling-serve output (when auto-started)
+│   └── app.log                    ← main backend / CLI log
 │
 ├── storage/                       ← S3-compatible object storage (optional)
-│
-├── .venv/                         ← SeshatOS-managed Python venv (docling-serve)
-│   └── bin/docling-serve          ← document conversion server binary
 │
 └── electron/                      ← Electron app OS paths (desktop only)
     ├── user-data/                 ← Chromium profile, localStorage, IndexedDB
@@ -75,20 +72,20 @@ All canonical paths are resolved through `pkg/runtimepath`:
 |---|---|
 | `ResolveRoot(explicit)` | explicit → `SESHAT_RUNTIME_ROOT` → `~/.config/seshat` |
 | `BackendDBPath(root)` | `{root}/seshat.db` |
-| `SessionsDir(root)` | `{root}/sessions/` |
-| `SessionDir(root, id)` | `{root}/sessions/{id}/` |
-| `SessionArtifactsDir(root, id)` | `{root}/sessions/{id}/artifacts/` |
-| `SessionArtifactsImagesDir(root, id)` | `{root}/sessions/{id}/artifacts/images/` |
-| `SessionArtifactsAudioDir(root, id)` | `{root}/sessions/{id}/artifacts/audio/` |
-| `SessionArtifactsWebDir(root, id)` | `{root}/sessions/{id}/artifacts/web/` |
-| `SessionScreenshotsDir(root, id)` | `{root}/sessions/{id}/artifacts/screenshots/` |
-| `SessionPastesDir(root, id)` | `{root}/sessions/{id}/pastes/` |
-| `SessionPastesTextDir(root, id)` | `{root}/sessions/{id}/pastes/text/` |
-| `SessionPastesImagesDir(root, id)` | `{root}/sessions/{id}/pastes/images/` |
-| `SessionPastesOtherDir(root, id)` | `{root}/sessions/{id}/pastes/other/` |
-| `SessionPlansDir(root, id)` | `{root}/sessions/{id}/plans/` |
-| `SessionToolsDir(root, id)` | `{root}/sessions/{id}/tools/` |
-| `SessionLogPath(root, id)` | `{root}/sessions/{id}/session.log` |
+| `SessionsDir(root)` | `{root}/workspaces/` |
+| `SessionDir(root, id)` | `{root}/workspaces/{id}/` |
+| `SessionArtifactsDir(root, id)` | `{root}/workspaces/{id}/artifacts/` |
+| `SessionArtifactsImagesDir(root, id)` | `{root}/workspaces/{id}/artifacts/images/` |
+| `SessionArtifactsAudioDir(root, id)` | `{root}/workspaces/{id}/artifacts/audio/` |
+| `SessionArtifactsWebDir(root, id)` | `{root}/workspaces/{id}/artifacts/web/` |
+| `SessionScreenshotsDir(root, id)` | `{root}/workspaces/{id}/artifacts/screenshots/` |
+| `SessionPastesDir(root, id)` | `{root}/workspaces/{id}/pastes/` |
+| `SessionPastesTextDir(root, id)` | `{root}/workspaces/{id}/pastes/text/` |
+| `SessionPastesImagesDir(root, id)` | `{root}/workspaces/{id}/pastes/images/` |
+| `SessionPastesOtherDir(root, id)` | `{root}/workspaces/{id}/pastes/other/` |
+| `SessionPlansDir(root, id)` | `{root}/workspaces/{id}/plans/` |
+| `SessionToolsDir(root, id)` | `{root}/workspaces/{id}/tools/` |
+| `SessionLogPath(root, id)` | `{root}/workspaces/{id}/session.log` |
 | `PlansDir(root)` | `{root}/plans/` |
 | `SkillsDir(root)` | `{root}/skills/` |
 | `LogsDir(root)` | `{root}/logs/` |
@@ -106,13 +103,13 @@ All canonical paths are resolved through `pkg/runtimepath`:
 
 ## Session lifecycle and cascade delete
 
-A session has two representations that must be removed together:
+A session has three representations that must be removed together (seshat v1.2.59 moved everything of a session into `workspaces/{id}/`; at start the backend moves what older versions left in `sessions/{id}/` and removes `workspaces/*` directories no session points at):
 
 | Layer | Location | How to delete |
 |---|---|---|
 | **Database** | `seshat.db` — `sessions` table + related rows (messages, files, …) | `store.DeleteSession(ctx, id)` |
-| **Filesystem** | `sessions/{id}/` and all subdirectories | `os.RemoveAll(SessionDir(root, id))` |
-| **Object storage** | S3 prefix `sessions/{id}/` (when configured) | Provider-specific delete |
+| **Filesystem** | `workspaces/{id}/` and its permissions file `data/permissions/{id}.json` | `runtimepath.RemoveSessionData(root, id)` |
+| **Object storage** | S3 prefix `workspaces/{id}/` (when configured) | Provider-specific delete |
 
 The application is responsible for performing all three steps atomically. Leaving
 filesystem data after a DB delete causes orphaned artifacts; leaving a DB row after
@@ -122,70 +119,20 @@ Recommended pattern:
 1. Begin a DB transaction.
 2. Delete related rows (messages, files, plans, …) then the session row.
 3. Commit the transaction.
-4. Call `os.RemoveAll(SessionDir(root, id))`.
+4. Call `runtimepath.RemoveSessionData(root, id)`.
 5. If S3 is configured, delete the object prefix.
 
 ---
 
-## Docling (document conversion)
+## Document reading
 
-SeshatOS integrates [docling-serve](https://github.com/DS4SD/docling-serve) for
-converting DOCX, PPTX, XLSX, PDF, and audio files to text/markdown. It runs as an
-optional sidecar HTTP process on `127.0.0.1:5001`.
+The Go reader built into the backend reads DOCX, PPTX, XLSX and PDFs with a text layer, and nothing has
+to be installed for it. For scans and complex layouts, run a document reading service yourself (Docling, or
+`seshat-intelligence` from SeshatCloud) and point the backend at it with `DOCUMENT_READER_URL`.
 
-### Install
-
-```bash
-# From the repository root
-make install-python
-
-# Or directly:
-./scripts/install-python-env.sh
-```
-
-This creates `~/.config/seshat/.venv/` and installs `docling-serve` into it using
-`uv` (no system Python required).
-
-GPU acceleration:
-
-```bash
-DOCLING_EXTRAS=gpu ./scripts/install-python-env.sh
-```
-
-### Auto-start
-
-**Backend (HTTP API server / desktop app):** The local backend binary (`seshat-backend/cmd/api`) checks at
-startup whether `~/.config/seshat/.venv/bin/docling-serve` exists. If it does and
-`SESHAT_DOCLING_URL` / `docling_url` config is not set, it starts docling-serve
-automatically in the background and routes document-conversion requests to it.
-
-Startup is non-blocking — the server becomes ready while docling warms up (~5 s on a
-cold start). Tools that need docling (`read`, `read_document_url`) fall back to
-plain-text extraction until it responds.
-
-Logs go to `~/.config/seshat/logs/docling.log`. Set `SESHAT_DOCLING_VERBOSE=1` to
-print them to stderr instead.
-
-**Manual start:**
-
-```bash
-./scripts/start-docling.sh
-# or
-DOCLING_PORT=5002 ./scripts/start-docling.sh
-```
-
-### Environment variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `SESHAT_RUNTIME_ROOT` | `~/.config/seshat` | Runtime root (shared by all components) |
-| `SESHAT_DOCLING_URL` | *(auto)* | Override docling-serve URL; set to skip auto-start |
-| `SESHAT_DOCLING_VERBOSE` | — | If set, print docling logs to stderr |
-| `DOCLING_PORT` | `5001` | Port for manual `start-docling.sh` invocation |
-| `DOCLING_HOST` | `127.0.0.1` | Bind address for manual invocation |
-| `DOCLING_WORKERS` | `1` | Parallel conversion workers |
-| `DOCLING_EXTRAS` | — | pip extras for install (e.g. `gpu`) |
-| `PYTHON_VERSION` | `3.11` | Python version for venv creation |
+SeshatOS does not install or start a Python environment: there is no `.venv` in the runtime root, and no
+step of `make setup` creates one. Setting up the Python service is something you do on purpose; a proper
+configuration for it (check, install, GPU) is planned.
 
 ---
 

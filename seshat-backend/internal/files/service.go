@@ -4,12 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +28,8 @@ type Service struct {
 	documentProcessor        *documentreading.Processor
 }
 
-const sessionDocumentReadTimeout = 30 * time.Minute
+// documentReadTimeout bounds one on-demand read for the preview.
+const documentReadTimeout = 5 * time.Minute
 
 func NewService(files *db.FileStore, store storage.ArtifactStore) *Service {
 	return &Service{files: files, store: store}
@@ -92,7 +90,7 @@ func (s *Service) Upload(ctx context.Context, principal *backendauth.Principal, 
 		return nil, bkerr.Internal("record file metadata: "+err.Error(), err)
 	}
 
-	return s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
+	return fileFromDB(*record), nil
 }
 
 // ListFiles returns files visible to the principal.
@@ -117,7 +115,7 @@ func (s *Service) ListFiles(ctx context.Context, principal *backendauth.Principa
 
 	result := make([]File, 0, len(records))
 	for _, r := range records {
-		result = append(result, *s.enrichDocumentReadMetadata(ctx, fileFromDB(r)))
+		result = append(result, *fileFromDB(r))
 	}
 	return result, nil
 }
@@ -134,7 +132,7 @@ func (s *Service) GetFile(ctx context.Context, principal *backendauth.Principal,
 	if err := s.checkAccess(principal, record); err != nil {
 		return nil, err
 	}
-	return s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
+	return fileFromDB(*record), nil
 }
 
 // DownloadFile returns raw bytes of a file, enforcing ownership.
@@ -156,7 +154,7 @@ func (s *Service) DownloadFile(ctx context.Context, principal *backendauth.Princ
 	if err != nil {
 		return nil, nil, bkerr.Internal("read file blob: "+err.Error(), err)
 	}
-	return data, s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
+	return data, fileFromDB(*record), nil
 }
 
 // OpenFileReader returns a streaming reader for a file, enforcing ownership.
@@ -178,17 +176,19 @@ func (s *Service) OpenFileReader(ctx context.Context, principal *backendauth.Pri
 	if err != nil {
 		return nil, nil, bkerr.Internal("open file reader: "+err.Error(), err)
 	}
-	return reader, s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
+	return reader, fileFromDB(*record), nil
 }
 
-// ReadMarkdown returns the converted markdown text for a file that
-// has one (MarkdownPath set at upload time), enforcing ownership. workspacePath
-// is the caller-resolved workspace root for the file's session - the same
-// value UploadSessionFile was given when it wrote the sidecar in the first
-// place, since MarkdownPath is stored workspace-relative.
-func (s *Service) ReadMarkdown(ctx context.Context, principal *backendauth.Principal, fileID, workspacePath string) (string, *File, error) {
+// ReadMarkdown returns the text of a document for the preview. It is read when the preview asks for it,
+// not when the file is attached: attaching a file converts nothing, and the agent reads the file itself
+// with its own tools. The result is kept in the store, so opening the preview again, or putting the file
+// in Knowledge, does not read it twice.
+func (s *Service) ReadMarkdown(ctx context.Context, principal *backendauth.Principal, fileID string) (string, *File, error) {
 	if s == nil || s.files == nil {
 		return "", nil, bkerr.Unavailable("file store not configured", nil)
+	}
+	if s.store == nil {
+		return "", nil, bkerr.Unavailable("blob storage not configured", nil)
 	}
 	record, err := s.files.GetByID(ctx, fileID)
 	if err != nil {
@@ -197,38 +197,36 @@ func (s *Service) ReadMarkdown(ctx context.Context, principal *backendauth.Princ
 	if err := s.checkAccess(principal, record); err != nil {
 		return "", nil, err
 	}
-	if record.MarkdownPath == "" {
-		if markdown, ok := s.cachedReadResultMarkdown(ctx, record.ID); ok {
-			return markdown, s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
-		}
-		return "", nil, bkerr.NotFound("no markdown conversion available for this file", nil)
-	}
-	if workspacePath == "" {
-		if markdown, ok := s.cachedReadResultMarkdown(ctx, record.ID); ok {
-			return markdown, s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
-		}
-		return "", nil, bkerr.NotFound("workspace unavailable", nil)
+	file := fileFromDB(*record)
+	if markdown, ok := s.cachedReadResultMarkdown(ctx, record.ID); ok {
+		return markdown, file, nil
 	}
 
-	// MarkdownPath is always server-generated (never user input), but resolve
-	// defensively anyway: reject anything that would land outside workspacePath.
-	absWorkspace, err := filepath.Abs(workspacePath)
+	data, err := s.store.Get(ctx, record.StorageKey)
 	if err != nil {
-		return "", nil, bkerr.Internal("resolve workspace path: "+err.Error(), err)
+		return "", nil, bkerr.Internal("read file blob: "+err.Error(), err)
 	}
-	mdPath, err := filepath.Abs(filepath.Join(absWorkspace, record.MarkdownPath))
-	if err != nil || (mdPath != absWorkspace && !strings.HasPrefix(mdPath, absWorkspace+string(filepath.Separator))) {
-		return "", nil, bkerr.Internal("markdown path escapes workspace", err)
+	processor := s.documentProcessor
+	if processor == nil {
+		processor = documentreading.NewProcessor(s.resolveDocumentConverter)
 	}
-
-	data, err := os.ReadFile(mdPath)
+	readCtx, cancel := context.WithTimeout(ctx, documentReadTimeout)
+	defer cancel()
+	result, ok, err := processor.ReadBytes(readCtx, documentreading.ReadInput{
+		SourceFileID: record.ID,
+		Filename:     record.Filename,
+		ContentType:  record.ContentType,
+		Data:         data,
+		SHA256:       record.SHA256,
+	})
 	if err != nil {
-		if markdown, ok := s.cachedReadResultMarkdown(ctx, record.ID); ok {
-			return markdown, s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
-		}
-		return "", nil, bkerr.NotFound("markdown file not found on disk", err)
+		return "", nil, bkerr.Unavailable("the document could not be read: "+err.Error(), err)
 	}
-	return string(data), s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
+	if !ok || strings.TrimSpace(result.Markdown) == "" {
+		return "", nil, bkerr.NotFound("this file has no text to preview", nil)
+	}
+	_ = documentreading.SaveReadResult(ctx, s.store, record.ID, result)
+	return result.Markdown, file, nil
 }
 
 func (s *Service) cachedReadResultMarkdown(ctx context.Context, fileID string) (string, bool) {
@@ -237,50 +235,6 @@ func (s *Service) cachedReadResultMarkdown(ctx context.Context, fileID string) (
 		return "", false
 	}
 	return result.Markdown, true
-}
-
-func (s *Service) enrichDocumentReadMetadata(ctx context.Context, f *File) *File {
-	if f == nil {
-		return nil
-	}
-	convertible := documentreading.AllConvertibleExtensions[strings.ToLower(filepath.Ext(f.Filename))]
-	if f.MarkdownPath != "" {
-		f.DocumentReadStatus = "converted"
-	}
-	if result, ok, err := documentreading.LoadReadResult(ctx, s.store, f.ID); err == nil && ok {
-		f.DocumentReadStatus = "converted"
-		f.DocumentReadEngine = result.Engine
-		f.DocumentReadPages = result.PageCount
-		f.DocumentReadImages = len(result.Images)
-		f.DocumentReadVisualPages = visualPagesFromReadResult(result)
-		return f
-	}
-	if !convertible || f.DocumentReadStatus != "" {
-		return f
-	}
-	if _, ok, err := documentreading.LoadReadFailure(ctx, s.store, f.ID); err == nil && ok {
-		f.DocumentReadStatus = "failed"
-		return f
-	}
-	if time.Since(f.UpdatedAt) <= sessionDocumentReadTimeout+time.Minute {
-		f.DocumentReadStatus = "processing"
-	} else {
-		f.DocumentReadStatus = "failed"
-	}
-	return f
-}
-
-func visualPagesFromReadResult(result documentreading.ReadResult) []int {
-	pages := make([]int, 0)
-	seen := make(map[int]bool)
-	for _, page := range result.Pages {
-		if page.Page <= 0 || !page.HasImage || seen[page.Page] {
-			continue
-		}
-		seen[page.Page] = true
-		pages = append(pages, page.Page)
-	}
-	return pages
 }
 
 // DeleteFile removes the blob and DB record, enforcing ownership.
@@ -360,7 +314,6 @@ func fileFromDB(r db.File) *File {
 		SessionID:        r.SessionID,
 		Category:         r.Category,
 		LocalPath:        r.LocalPath,
-		MarkdownPath:     r.MarkdownPath,
 		Filename:         r.Filename,
 		ContentType:      r.ContentType,
 		Size:             r.Size,
@@ -483,85 +436,8 @@ func (s *Service) UploadSessionFile(ctx context.Context, principal *backendauth.
 		}
 		return nil, bkerr.Internal("record file metadata: "+err.Error(), err)
 	}
-	s.convertSessionFileAsync(record.ID, workspacePath, destPath, params.Filename, contentType, hash, append([]byte(nil), params.Data...))
 
-	return s.enrichDocumentReadMetadata(ctx, fileFromDB(*record)), nil
-}
-
-func (s *Service) convertSessionFileAsync(fileID, workspacePath, destPath, filename, contentType, sha256Hash string, data []byte) {
-	if s == nil || strings.TrimSpace(fileID) == "" || destPath == "" {
-		return
-	}
-	if !documentreading.AllConvertibleExtensions[strings.ToLower(filepath.Ext(filename))] {
-		return
-	}
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), sessionDocumentReadTimeout)
-		defer cancel()
-		processor := s.documentProcessor
-		if processor == nil {
-			processor = documentreading.NewProcessor(s.resolveDocumentConverter)
-		}
-		result, ok, err := processor.ReadFile(ctx, documentreading.ReadInput{
-			SourceFileID: fileID,
-			Filename:     filename,
-			ContentType:  contentType,
-			FilePath:     destPath,
-			Data:         data,
-			SHA256:       sha256Hash,
-		})
-		if err != nil {
-			log.Printf("[files] document read failed for %s (%s): %v", filename, fileID, err)
-			s.saveSessionFileReadFailure(ctx, fileID, err.Error())
-			return
-		}
-		if !ok {
-			s.saveSessionFileReadFailure(ctx, fileID, "document reader returned no result")
-			return
-		}
-		mdPath := strings.TrimSuffix(destPath, filepath.Ext(destPath)) + ".md"
-		if writeErr := os.WriteFile(mdPath, []byte(result.Markdown), 0o600); writeErr != nil {
-			log.Printf("[files] write markdown sidecar failed for %s (%s): %v", filename, fileID, writeErr)
-			s.saveSessionFileReadFailure(ctx, fileID, writeErr.Error())
-			return
-		}
-		sidecar := documentreading.NewReadSidecar(result)
-		if sidecarBody, sidecarErr := json.MarshalIndent(sidecar, "", "  "); sidecarErr == nil {
-			sidecarPath := strings.TrimSuffix(destPath, filepath.Ext(destPath)) + ".document.json"
-			if writeErr := os.WriteFile(sidecarPath, sidecarBody, 0o600); writeErr != nil {
-				log.Printf("[files] write document sidecar failed for %s (%s): %v", filename, fileID, writeErr)
-			}
-		}
-		if workspacePath != "" {
-			if rel, relErr := filepath.Rel(workspacePath, mdPath); relErr == nil {
-				if setErr := s.files.SetMarkdownPath(ctx, fileID, rel); setErr != nil {
-					log.Printf("[files] set markdown path failed for %s (%s): %v", filename, fileID, setErr)
-					s.saveSessionFileReadFailure(ctx, fileID, setErr.Error())
-				}
-			} else {
-				s.saveSessionFileReadFailure(ctx, fileID, relErr.Error())
-			}
-		}
-		for _, img := range result.Images {
-			imgPath := filepath.Join(filepath.Dir(destPath), img.Filename)
-			imgData, decErr := base64.StdEncoding.DecodeString(img.Base64)
-			if decErr == nil {
-				_ = os.WriteFile(imgPath, imgData, 0o600)
-			}
-		}
-		if s.store != nil {
-			_ = documentreading.SaveReadResult(ctx, s.store, fileID, result)
-		}
-	}()
-}
-
-func (s *Service) saveSessionFileReadFailure(ctx context.Context, fileID, message string) {
-	if s == nil || s.store == nil {
-		return
-	}
-	if err := documentreading.SaveReadFailure(ctx, s.store, fileID, message); err != nil {
-		log.Printf("[files] store document read failure failed for %s: %v", fileID, err)
-	}
+	return fileFromDB(*record), nil
 }
 
 // ListSessionFiles returns all active files attached to a session.
@@ -578,7 +454,7 @@ func (s *Service) ListSessionFiles(ctx context.Context, principal *backendauth.P
 	}
 	result := make([]File, 0, len(records))
 	for _, r := range records {
-		result = append(result, *s.enrichDocumentReadMetadata(ctx, fileFromDB(r)))
+		result = append(result, *fileFromDB(r))
 	}
 	return result, nil
 }
@@ -608,7 +484,7 @@ func (s *Service) ListMessageAttachments(ctx context.Context, sessionID string) 
 	}
 	result := make([]File, 0, len(records))
 	for _, r := range records {
-		result = append(result, *s.enrichDocumentReadMetadata(ctx, fileFromDB(r)))
+		result = append(result, *fileFromDB(r))
 	}
 	return result, nil
 }

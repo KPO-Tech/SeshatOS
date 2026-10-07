@@ -12,7 +12,6 @@ This document describes the current repository layout and the package boundaries
 seshatos/
 ├── seshat-backend/        ← local backend / desktop HTTP API
 ├── seshat-desktop/        ← Electron desktop client
-├── seshat-intelligence/   ← local document-intelligence service (OCR, layout)
 └── shared/connector-catalog/  ← connector metadata consumed by the desktop app
 ```
 
@@ -28,7 +27,7 @@ seshat           → seshat-backend   (never)
 ```
 
 `seshat-backend` can optionally run in "connected mode" against Seshat's commercial cloud
-offering (`seshat-server` — a separate, private repository, not part of this one) for
+offering ([SeshatCloud](https://github.com/KPO-Tech/SeshatCloud) — `seshat-server` lives in that separate source-available repository, not in this one) for
 identity/settings/preferences delegation and shared catalogs (agents/MCP/skills). That
 integration is entirely one-directional and HTTP-only, under `internal/cloud/`:
 `seshat-server`'s own source is never a build dependency of this repository, and
@@ -90,7 +89,6 @@ cmd/api
 - Process startup and shutdown
 - Config loading
 - HTTP server boot
-- Docling auto-start for local desktop usage
 
 `internal/api/`
 - Parse requests and validate inputs

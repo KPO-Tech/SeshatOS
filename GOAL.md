@@ -14,7 +14,7 @@ The dependency is strictly one-way: SeshatOS builds on `seshat`. `seshat` has no
 
 ### Where SeshatOS stops
 
-Seshat also offers a commercial, multi-tenant cloud platform — organizations, team workspaces, admin controls, org-wide scheduled automation — built as a separate product on the same `seshat` engine. That product's source is not part of this repository and is not required to run SeshatOS. `seshat-backend` can optionally run in a "connected mode" against it, purely over HTTP, for identity/settings delegation and shared catalogs — but a standalone SeshatOS install never needs it, and never gains multi-tenant organization/admin/scheduling surfaces on its own. If you need a team of people administered centrally, with scheduled automation running independently of anyone's laptop, that's the cloud product's job, not this one's. See the [README](README.md#relationship-to-the-seshat-engine-and-the-commercial-offering) for the exact boundary.
+Seshat also offers a commercial, multi-tenant cloud platform — organizations, team workspaces, admin controls, org-wide scheduled automation — built as a separate product, [SeshatCloud](https://github.com/KPO-Tech/SeshatCloud), on the same `seshat` engine. That product's source is not part of this repository and is not required to run SeshatOS. `seshat-backend` can optionally run in a "connected mode" against it, purely over HTTP, for identity/settings delegation and shared catalogs — but a standalone SeshatOS install never needs it, and never gains multi-tenant organization/admin/scheduling surfaces on its own. If you need a team of people administered centrally, with scheduled automation running independently of anyone's laptop, that's the cloud product's job, not this one's. See the [README](README.md#relationship-to-the-seshat-engine-and-the-commercial-offering) for the exact boundary.
 
 ---
 
@@ -31,7 +31,6 @@ A capable, safe, self-hosted agent platform that one person or a small team can 
 - Multiple AI providers switchable per session
 - Sandboxed bash, filesystem, web, browser, RAG, MCP, sub-agents, skills
 - Local backend: auth, sessions, memories, preferences, plans, skills, knowledge/RAG, usage quotas, audit — scoped to the person(s) running this install, not a multi-tenant organization
-- A local document-intelligence service (`seshat-intelligence`) for OCR, layout analysis, and document conversion
 - Desktop app (`seshat-desktop`): chat, tool views, attachments, provider/model selection, settings — being rebuilt chat-first on React/Tailwind, replacing the previous UI
 
 **What we are finishing:**

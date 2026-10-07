@@ -115,7 +115,7 @@ func newTestService(t *testing.T, database *db.DB, artifacts storage.ArtifactSto
 	return knowledge.NewService(corpusStore, fileStore, jobStore, artifacts, ragSvc)
 }
 
-func newTestServiceWithDocumentReader(t *testing.T, database *db.DB, artifacts storage.ArtifactStore, reader documentreader.Converter) *knowledge.Service {
+func newTestServiceWithDocumentReader(t *testing.T, database *db.DB, artifacts storage.ArtifactStore, reader documentreader.Converter, preferExternal bool) *knowledge.Service {
 	t.Helper()
 	corpusStore, err := db.NewCorpusStore(database)
 	require.NoError(t, err)
@@ -125,7 +125,7 @@ func newTestServiceWithDocumentReader(t *testing.T, database *db.DB, artifacts s
 	require.NoError(t, err)
 
 	resolve := func(context.Context) documentreader.Converter {
-		return documentreading.NewPolicyConverter(reader, false)
+		return documentreading.NewPolicyConverter(reader, preferExternal)
 	}
 	chunker := rag.NewHybridDocumentChunkerForProfile(
 		documentreading.NewDynamicHybridChunker(resolve),
@@ -342,7 +342,7 @@ func TestService_ProcessNextIngestionJob_UsesHybridDocumentChunkMetadata(t *test
 	ctx := context.Background()
 	database := openTestDB(t)
 	artifacts := newTestArtifactStore(t)
-	svc := newTestServiceWithDocumentReader(t, database, artifacts, fakeHybridReader{})
+	svc := newTestServiceWithDocumentReader(t, database, artifacts, fakeHybridReader{}, true)
 	principal := testPrincipal("user-hybrid")
 
 	corpus, err := svc.CreateCorpus(ctx, principal, knowledge.CreateCorpusParams{Name: "hybrid-docs"})
@@ -387,7 +387,7 @@ func TestService_ProcessNextIngestionJob_FallsBackWhenHybridChunkingFails(t *tes
 	ctx := context.Background()
 	database := openTestDB(t)
 	artifacts := newTestArtifactStore(t)
-	svc := newTestServiceWithDocumentReader(t, database, artifacts, fakeFailingHybridReader{})
+	svc := newTestServiceWithDocumentReader(t, database, artifacts, fakeFailingHybridReader{}, true)
 	principal := testPrincipal("user-hybrid-fallback")
 
 	corpus, err := svc.CreateCorpus(ctx, principal, knowledge.CreateCorpusParams{Name: "hybrid-fallback-docs"})
@@ -425,7 +425,51 @@ func TestService_ProcessNextIngestionJob_FallsBackWhenHybridChunkingFails(t *tes
 	require.NotEmpty(t, resp.Results)
 	require.Contains(t, resp.Results[0].Text, "Fallback chunk about revenue")
 	require.NotEqual(t, "document_hybrid", resp.Results[0].Metadata["chunker"])
-	require.Empty(t, resp.Results[0].Metadata["page_numbers"])
+	// The text the native chunker read had the page marked: it knows the chunk is on page 1.
+	require.Equal(t, "[1]", resp.Results[0].Metadata["page_numbers"])
+}
+
+// By default the document is chunked from the text the native readers wrote, even when an external reader that can
+// chunk is configured: the external chunker reads the file again, with its own parser.
+func TestService_ProcessNextIngestionJob_ChunksTheNativeTextUnlessTheExternalReaderIsPreferred(t *testing.T) {
+	ctx := context.Background()
+	database := openTestDB(t)
+	artifacts := newTestArtifactStore(t)
+	svc := newTestServiceWithDocumentReader(t, database, artifacts, fakeHybridReader{}, false)
+	principal := testPrincipal("user-native-chunks")
+
+	corpus, err := svc.CreateCorpus(ctx, principal, knowledge.CreateCorpusParams{Name: "native-chunks"})
+	require.NoError(t, err)
+
+	key := "files/user-native-chunks/report.pdf"
+	data := readDocumentFixture(t, "text_layer.pdf")
+	_, err = artifacts.Put(ctx, key, data, "application/pdf")
+	require.NoError(t, err)
+
+	fileStore, err := db.NewFileStore(database)
+	require.NoError(t, err)
+	f, err := fileStore.Create(ctx, db.CreateFileParams{
+		UserID:      principal.User.ID,
+		Filename:    "report.pdf",
+		ContentType: "application/pdf",
+		Size:        int64(len(data)),
+		StorageKey:  key,
+	})
+	require.NoError(t, err)
+
+	_, err = svc.AttachFile(ctx, principal, corpus.ID, f.ID)
+	require.NoError(t, err)
+	processed, err := svc.ProcessNextIngestionJob(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+
+	resp, err := svc.Search(ctx, principal, knowledge.SearchParams{CorpusID: corpus.ID, Query: "Sample Report", TopK: 5})
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Results)
+	require.NotEqual(t, "document_hybrid", resp.Results[0].Metadata["chunker"], "the external chunker must not be used")
+	require.NotContains(t, resp.Results[0].Text, "hybrid chunk")
+	require.Equal(t, "[1]", resp.Results[0].Metadata["page_numbers"])
+	require.NotContains(t, resp.Results[0].Text, "<!--", "a page marker must not reach the indexed text")
 }
 
 func TestService_ProcessNextIngestionJob_NoJobs(t *testing.T) {

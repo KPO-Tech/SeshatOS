@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/images/seshat.png" alt="SeshatOS" width="120">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo/reseau/orange/seshat-mark-on-dark.svg">
+    <img src="docs/brand/logo/reseau/orange/seshat-mark-on-light.svg" alt="SeshatOS" width="120">
+  </picture>
 </p>
 
 <h1 align="center">SeshatOS</h1>
@@ -19,7 +22,10 @@
 </p>
 
 <p align="center">
+  <a href="https://seshat-ai.com/en"><b>🌐 Website</b></a> ·
+  <a href="https://seshat-ai.com/en/docs"><b>📚 Documentation</b></a> ·
   <a href="https://github.com/KPO-Tech/seshat"><b>⚙️ seshat (engine)</b></a> ·
+  <a href="https://github.com/KPO-Tech/SeshatCloud"><b>☁️ SeshatCloud (organizations)</b></a> ·
   <a href="https://github.com/KPO-Tech/seshat/discussions"><b>💬 Discussions</b></a>
 </p>
 
@@ -31,19 +37,59 @@ SeshatOS is the self-hosted desktop product built on top of [seshat](https://git
 
 - an Electron desktop app (`seshat-desktop`) — chat, tool execution, file attachments, provider/model selection
 - a local Go backend (`seshat-backend`) — the HTTP API the desktop talks to, session/memory persistence, knowledge/RAG
-- a local document-intelligence service (`seshat-intelligence`) — OCR, layout analysis, document conversion
 
 Everything here runs on your own machine, with your own provider API keys. No account, no org, no cloud required.
+
+## Status
+
+SeshatOS is under active construction. The desktop is being rebuilt chat-first; the other surfaces follow in order.
+
+| Capability | Status |
+|---|---|
+| Chat with tools, files, providers, MCP and skills | Active, being stabilized |
+| Local backend: sessions, memory, plans, knowledge/RAG, audit, quotas | Available |
+| Knowledge search from the chat | Available |
+| Dedicated Knowledge, Scheduling, Skills and Admin screens | Planned, in order after Chat |
+| Automation, Inbox, Companion, Team | Roadmap (after the MVP) |
+
+## SeshatOS and SeshatCloud: two halves of one offer
+
+| | SeshatOS (this repository) | [SeshatCloud](https://github.com/KPO-Tech/SeshatCloud) |
+|---|---|---|
+| Scope | One person or a small team, on their own machine | An organization, administered centrally |
+| Runs | Locally, no account, no cloud required | Server + admin console, self-hosted via Docker Compose |
+| Identity | Local | Organizations, roles, SCIM, audit |
+| Automation | Scheduled tasks on your machine | Jobs that run independently of anyone's laptop |
+| Knowledge | Local knowledge/RAG | Org-scoped knowledge at scale, document-intelligence service |
+
+SeshatOS works on its own. SeshatCloud completes it when an organization needs shared administration and centrally governed automation. The connection is optional and one-directional (see below).
 
 ## Relationship to the Seshat engine and the commercial offering
 
 - **[seshat](https://github.com/KPO-Tech/seshat)** is the underlying agent runtime (tools, providers, permissions, multi-agent) — a separate repository, plain Apache-2.0, that SeshatOS consumes as a Go module.
 - **SeshatOS** (this repository) is the local, single-user/small-team product built on that runtime.
-- Seshat also offers a commercial cloud/multi-tenant product (organizations, team workspaces, admin controls, scheduled automation) that is a separate, not-yet-public codebase. `seshat-backend` can optionally connect to it ("connected mode") for identity/settings delegation, entirely over HTTP — none of that product's source is part of, or required by, this repository.
+- **[SeshatCloud](https://github.com/KPO-Tech/SeshatCloud)** is the multi-tenant layer (organizations, team workspaces, admin controls, scheduled automation), a separate source-available codebase. `seshat-backend` can optionally connect to it ("connected mode") for identity/settings delegation, entirely over HTTP — none of its source is part of, or required by, this repository.
+- The commercial activity around Seshat (AI consulting and integration) is presented at [seshat-ai.com](https://seshat-ai.com/en).
+- The engine is documented at [seshat-ai.com/en/docs](https://seshat-ai.com/en/docs): the [concepts](https://seshat-ai.com/en/docs/concepts/what-is-seshat) (architecture, memory, security and trust, skills and MCP, retrieval), the [Go SDK](https://seshat-ai.com/en/docs/sdk/go-sdk) and the [HTTP API of SeshatOS](https://seshat-ai.com/en/docs/sdk/http-api).
 
 ## License
 
 Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condition: free to use, self-host, modify, and redistribute for any purpose — including internal use by organizations of any size — except selling it (offering it as a paid product or service to third parties). See [LICENSE](./LICENSE).
+
+This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat) runtime is plain Apache-2.0. The license text is still a draft pending legal review.
+
+## Download
+
+Installers are attached to each [release](https://github.com/KPO-Tech/SeshatOS/releases/latest):
+
+| Platform | Installer |
+|---|---|
+| Windows (64-bit) | the `.exe` installer |
+| Linux (64-bit) | the `.AppImage` (any distribution) or the `.deb` (Debian, Ubuntu) |
+
+There is no macOS build yet. Every release also carries a `SHA256SUMS.txt` to check what you downloaded. The installers are not code-signed yet, so Windows SmartScreen may warn on the first launch.
+
+To build SeshatOS from source instead, see below.
 
 ## Getting started
 
@@ -51,11 +97,13 @@ Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condit
 git clone <this-repo>
 cd seshatos
 cp .env.example .env   # fill in at least one provider API key
-make setup              # first-time setup: Node deps + docling + build
+make setup              # first-time setup: Node deps + build
 make dev                 # start the local backend + desktop app
 ```
 
 See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.
+
+To run the Seshat engine on its own, in a terminal and without the desktop app, follow its [installation guide](https://seshat-ai.com/en/docs/getting-started/installation) and the [quick start](https://seshat-ai.com/en/docs/getting-started/quick-start).
 
 ## Vision
 
@@ -67,4 +115,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md) (the latte
 
 ## Contact
 
-For licensing questions (reselling or offering SeshatOS as a hosted service - see the Commons Clause condition in [LICENSE](./LICENSE)), reach out at oastephaneamiche@gmail.com (temporary, pending a dedicated business address).
+For licensing questions (reselling or offering SeshatOS as a hosted service - see the Commons Clause condition in [LICENSE](./LICENSE)), reach out at seshatsupport@seshat-ai.com.

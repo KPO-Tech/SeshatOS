@@ -70,12 +70,6 @@ type ReadResult struct {
 	Errors       []string
 }
 
-type PageReadResult struct {
-	Page     int    `json:"page"`
-	Source   string `json:"source,omitempty"`
-	HasImage bool   `json:"has_image,omitempty"`
-}
-
 const (
 	StatusReady       = "ready"
 	StatusUnavailable = "unavailable"
@@ -238,7 +232,9 @@ func applyConversion(result *ReadResult, converted Result) {
 		result.Engine = EngineLocalBasic
 	}
 	result.Markdown = converted.Markdown
-	result.Text = converted.Markdown
+	// Text is what gets indexed: a PDF's pages are marked in it, so a chunk can say which pages it comes from.
+	// Markdown stays clean for the people who read it.
+	result.Text = converted.TextForIndexing()
 	result.Images = converted.Images
 	result.PageCount = converted.PageCount
 	result.Pages = converted.Pages

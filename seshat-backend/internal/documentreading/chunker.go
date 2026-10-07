@@ -42,7 +42,10 @@ func (c *DynamicHybridChunker) current(ctx context.Context) documentreader.Hybri
 	if chunker, ok := converter.(documentreader.HybridChunker); ok {
 		return chunker
 	}
-	if policy, ok := converter.(*PolicyConverter); ok && policy.External != nil {
+	// An external chunker reads the file itself, with its own parser, and ignores what the native readers make of
+	// it (tables of every kind, page marks, decryption). It is used only when the settings say to prefer the
+	// external reader; otherwise the document is chunked from the text the readers wrote, on every host.
+	if policy, ok := converter.(*PolicyConverter); ok && policy.PreferExternal && policy.External != nil {
 		if chunker, ok := policy.External.(documentreader.HybridChunker); ok {
 			return chunker
 		}

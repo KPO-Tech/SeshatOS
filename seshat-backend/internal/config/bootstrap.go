@@ -59,6 +59,7 @@ import (
 	"github.com/KPO-Tech/seshat/pkg/rag"
 	ragembedder "github.com/KPO-Tech/seshat/pkg/rag/embedder"
 	"github.com/KPO-Tech/seshat/pkg/rag/reranker"
+	"github.com/KPO-Tech/seshat/pkg/runtimepath"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 	skillsloader "github.com/KPO-Tech/seshat/pkg/skills"
 	managedskills "github.com/KPO-Tech/seshat/pkg/skills/managed"
@@ -165,6 +166,14 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 			_ = cleanups[i]()
 		}
 		return nil
+	}
+
+	// Older versions kept a session's plans and permission grants in sessions/<id>, apart from its
+	// workspace; they are now one directory. Move what is there before anything reads it.
+	if n, err := runtimepath.MigrateLegacySessionDirs(""); err != nil {
+		fmt.Fprintf(os.Stderr, "[API] session directory migration: %v\n", err)
+	} else if n > 0 {
+		fmt.Printf("[API] session directory migration: moved %d session(s) to workspaces/\n", n)
 	}
 
 	otelShutdown, err := monitoring.InitTracer(ctx, "seshat")
@@ -577,7 +586,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	documentChunker := rag.NewCachedDocumentChunker(
 		rag.NewHybridDocumentChunkerForProfile(
 			documentreading.NewDynamicHybridChunker(resolveDocumentConverter),
-			rag.ChunkProfile{Name: rag.ChunkProfileStructured, MaxTokens: 1024, OverlapTokens: 128},
+			structuredChunkProfile(),
 			documentreader.ChunkOptions{},
 		),
 		documentChunkCache,
@@ -1126,6 +1135,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	const abandonedSessionGracePeriod = 24 * time.Hour
 	sweepCtx, stopSweep := context.WithCancel(context.Background())
 	go func() {
+		sweepOrphanWorkspaces(sweepCtx, backendApp.Query, abandonedSessionGracePeriod)
 		// Run once at startup too, not just on the hourly tick - this is a
 		// desktop app, so most sessions are shorter than an hour and would
 		// otherwise never live long enough to trigger the ticker even once.
@@ -1150,6 +1160,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 				} else if n > 0 {
 					fmt.Printf("[API] abandoned-session sweep: removed %d session(s)\n", n)
 				}
+				sweepOrphanWorkspaces(sweepCtx, backendApp.Query, abandonedSessionGracePeriod)
 			}
 		}
 	}()
@@ -1463,4 +1474,25 @@ func resolveCloudJobModel(ctx context.Context, settingsService *backendsettings.
 		}
 	}
 	return "", ""
+}
+
+// sweepOrphanWorkspaces removes session directories that belong to no session (see
+// query.Service.SweepOrphanWorkspaces).
+func sweepOrphanWorkspaces(ctx context.Context, svc *backendquery.Service, olderThan time.Duration) {
+	n, err := svc.SweepOrphanWorkspaces(ctx, runtimepath.WorkspacesDir(""), olderThan)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[API] orphan-workspace sweep: %v\n", err)
+	} else if n > 0 {
+		fmt.Printf("[API] orphan-workspace sweep: removed %d directory(ies)\n", n)
+	}
+}
+
+// structuredChunkProfile is the profile documents are chunked with: the SDK's own recommendation for text read as
+// markdown, so a change to it reaches every host.
+func structuredChunkProfile() rag.ChunkProfile {
+	profile, ok := rag.RecommendedChunkProfile(rag.ChunkProfileStructured)
+	if !ok {
+		return rag.DefaultChunkProfile()
+	}
+	return profile
 }

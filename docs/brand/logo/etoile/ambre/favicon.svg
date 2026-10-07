@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Seshat AI">
+  <rect width="100" height="100" rx="22" fill="#2F2E34"/>
+  <path d="M22,38 Q50,6 78,38" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M50.00,35.00 L56.07,51.39 L72.67,45.92 L63.65,60.88 L78.27,70.45 L60.95,72.73 L62.58,90.13 L50.00,78.00 L37.42,90.13 L39.05,72.73 L21.73,70.45 L36.35,60.88 L27.33,45.92 L43.93,51.39 Z" fill="#E8A33D" stroke="#E8A33D" stroke-width="2" stroke-linejoin="round"/>
+</svg>

@@ -29,23 +29,16 @@ const MD_EXTENSIONS = new Set(['md', 'markdown'])
 // misinterpret incidental "#"/"-" characters as syntax.
 const PLAIN_TEXT_EXTENSIONS = new Set(['txt', 'csv', 'tsv', 'json', 'yaml', 'yml', 'log'])
 const TEXT_PREVIEW_EXTENSIONS = new Set([...MD_EXTENSIONS, ...PLAIN_TEXT_EXTENSIONS])
-// Files with no dedicated native panel and no readable raw-byte preview -
-// the backend document reader converts these to markdown at upload time, so preview
-// that conversion instead. DOCX/PPTX/XLSX are NOT here even though the
-// backend also converts them: those get their own real client-side render
-// (see resolveAttachmentOpenAction), so fetching a markdown conversion for
-// them would be wasted work that's never shown.
-const MARKDOWN_CONVERTED_EXTENSIONS = new Set(['html', 'htm', 'tex'])
-const NATIVE_PANEL_EXTENSIONS = new Set(['pdf', 'docx', 'xlsx', 'pptx'])
+// Files with no native panel and no readable raw bytes: the backend reads them to markdown when the
+// preview is opened. DOCX, PPTX and XLSX have their own client-side render.
+const MARKDOWN_CONVERTED_EXTENSIONS = new Set(['html', 'htm', 'tex', 'wav', 'mp3'])
 
 export function isPlainTextFilename(filename: string): boolean {
   return PLAIN_TEXT_EXTENSIONS.has(fileExtension(filename))
 }
 
 function hasMarkdownPreview(file: ChatAttachment): boolean {
-  const ext = fileExtension(file.filename)
-  if (MARKDOWN_CONVERTED_EXTENSIONS.has(ext)) return true
-  return file.document_read_status === 'converted' && !isImageAttachment(file) && !NATIVE_PANEL_EXTENSIONS.has(ext)
+  return MARKDOWN_CONVERTED_EXTENSIONS.has(fileExtension(file.filename))
 }
 
 async function fetchTextContent(fileId: string, kind: 'direct' | 'markdown'): Promise<string> {

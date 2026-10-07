@@ -29,6 +29,15 @@ function configureRuntimePaths() {
 
 let mainWindow: BrowserWindow | null = null
 
+// Window and taskbar icon. The executable icon is not edited on Windows
+// (signAndEditExecutable is false), so the window carries the icon itself:
+// .ico on Windows, .png elsewhere. Packaged builds read it from the resources
+// folder (see extraResources); dev runs read it from build/.
+function resolveWindowIcon(): string {
+  const file = process.platform === 'win32' ? 'icon.ico' : 'icon.png'
+  return app.isPackaged ? join(process.resourcesPath, file) : join(__dirname, '../../build', file)
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -36,6 +45,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 720,
     show: false,
+    icon: resolveWindowIcon(),
     autoHideMenuBar: true,
     frame: false,
     // Windows 11's DWM rounds a frameless window's corners by default; this

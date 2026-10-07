@@ -6,9 +6,9 @@
   "private": true,
   "author": {
     "name": "KPO-Tech",
-    "email": "projectsengineer6@gmail.com"
+    "email": "seshatsupport@seshat-ai.com"
   },
-  "homepage": "https://github.com/KPO-Tech/seshat-ai",
+  "homepage": "https://seshat-ai.com/en",
   "engines": {
     "node": ">=22 <25"
   },
@@ -94,8 +94,12 @@
         "to": "backend"
       },
       {
-        "from": "build/install-docling.ps1",
-        "to": "install-docling.ps1"
+        "from": "build/icon.png",
+        "to": "icon.png"
+      },
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
       }
     ],
     "linux": {

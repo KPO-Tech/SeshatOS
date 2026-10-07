@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
@@ -670,6 +671,66 @@ func (s *Service) SweepAbandonedSessions(ctx context.Context, olderThan time.Dur
 		deleted++
 	}
 	return deleted, nil
+}
+
+// SweepOrphanWorkspaces removes the directories under root (the workspaces directory) that belong to no
+// session: not one the SDK knows and not one with an ownership row. Deleting a session removes its
+// directory, but older versions left directories behind (plans and grants were kept in a second directory
+// that was never deleted; sessions that failed half way left an empty one), and a directory with nothing
+// pointing at it is never reclaimed otherwise.
+//
+// Only a directory not modified for olderThan is removed, so one a session is about to use, or that was
+// just created for a session whose record is not written yet, is never touched. Files are not followed: a
+// name that is not a plain directory name is skipped. It returns how many directories it removed.
+func (s *Service) SweepOrphanWorkspaces(ctx context.Context, root string, olderThan time.Duration) (int, error) {
+	if s == nil || s.sessions == nil || strings.TrimSpace(root) == "" {
+		return 0, nil
+	}
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("read workspaces: %w", err)
+	}
+	sessions, err := s.sessions.ListSessions()
+	if err != nil {
+		return 0, fmt.Errorf("list sessions: %w", err)
+	}
+	known := make(map[string]bool, len(sessions))
+	for _, session := range sessions {
+		if session != nil {
+			known[session.ID.String()] = true
+		}
+	}
+	cutoff := time.Now().Add(-olderThan)
+	removed := 0
+	for _, entry := range entries {
+		name := entry.Name()
+		if !entry.IsDir() || entry.Type()&os.ModeSymlink != 0 || known[name] {
+			continue
+		}
+		if s.ownership != nil {
+			if _, err := s.ownership.GetBySessionID(ctx, name); err == nil {
+				continue
+			}
+		}
+		info, err := entry.Info()
+		if err != nil || info.ModTime().After(cutoff) {
+			continue
+		}
+		if s.files != nil {
+			if err := s.files.DeleteBySessionID(ctx, name); err != nil {
+				fmt.Fprintf(os.Stderr, "[query] orphan workspace %s files: %v\n", name, err)
+			}
+		}
+		if err := os.RemoveAll(filepath.Join(root, name)); err != nil {
+			fmt.Fprintf(os.Stderr, "[query] orphan workspace %s: %v\n", name, err)
+			continue
+		}
+		removed++
+	}
+	return removed, nil
 }
 
 func (s *Service) InterruptSession(ctx context.Context, principal *backendauth.Principal, sessionID string) error {
