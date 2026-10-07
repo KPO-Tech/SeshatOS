@@ -78,6 +78,19 @@ Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condit
 
 This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat) runtime is plain Apache-2.0. The license text is still a draft pending legal review.
 
+## Download
+
+Installers are attached to each [release](https://github.com/KPO-Tech/SeshatOS/releases/latest):
+
+| Platform | Installer |
+|---|---|
+| Windows (64-bit) | the `.exe` installer |
+| Linux (64-bit) | the `.AppImage` (any distribution) or the `.deb` (Debian, Ubuntu) |
+
+There is no macOS build yet. Every release also carries a `SHA256SUMS.txt` to check what you downloaded. The installers are not code-signed yet, so Windows SmartScreen may warn on the first launch.
+
+To build SeshatOS from source instead, see below.
+
 ## Getting started
 
 ```bash
