@@ -22,6 +22,8 @@
 </p>
 
 <p align="center">
+  <a href="https://seshat-ai.com/en"><b>🌐 Website</b></a> ·
+  <a href="https://seshat-ai.com/en/docs"><b>📚 Documentation</b></a> ·
   <a href="https://github.com/KPO-Tech/seshat"><b>⚙️ seshat (engine)</b></a> ·
   <a href="https://github.com/KPO-Tech/SeshatCloud"><b>☁️ SeshatCloud (organizations)</b></a> ·
   <a href="https://github.com/KPO-Tech/seshat/discussions"><b>💬 Discussions</b></a>
@@ -67,7 +69,8 @@ SeshatOS works on its own. SeshatCloud completes it when an organization needs s
 - **[seshat](https://github.com/KPO-Tech/seshat)** is the underlying agent runtime (tools, providers, permissions, multi-agent) — a separate repository, plain Apache-2.0, that SeshatOS consumes as a Go module.
 - **SeshatOS** (this repository) is the local, single-user/small-team product built on that runtime.
 - **[SeshatCloud](https://github.com/KPO-Tech/SeshatCloud)** is the multi-tenant layer (organizations, team workspaces, admin controls, scheduled automation), a separate source-available codebase. `seshat-backend` can optionally connect to it ("connected mode") for identity/settings delegation, entirely over HTTP — none of its source is part of, or required by, this repository.
-- The commercial activity around Seshat (AI consulting and integration) is presented at [seshat-ai.com](https://seshat-ai.com).
+- The commercial activity around Seshat (AI consulting and integration) is presented at [seshat-ai.com](https://seshat-ai.com/en).
+- The engine is documented at [seshat-ai.com/en/docs](https://seshat-ai.com/en/docs): the [concepts](https://seshat-ai.com/en/docs/concepts/what-is-seshat) (architecture, memory, security and trust, skills and MCP, retrieval), the [Go SDK](https://seshat-ai.com/en/docs/sdk/go-sdk) and the [HTTP API of SeshatOS](https://seshat-ai.com/en/docs/sdk/http-api).
 
 ## License
 
@@ -86,6 +89,8 @@ make dev                 # start the local backend + desktop app
 ```
 
 See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.
+
+To run the Seshat engine on its own, in a terminal and without the desktop app, follow its [installation guide](https://seshat-ai.com/en/docs/getting-started/installation) and the [quick start](https://seshat-ai.com/en/docs/getting-started/quick-start).
 
 ## Vision
 
