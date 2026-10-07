@@ -8,7 +8,7 @@
     "name": "KPO-Tech",
     "email": "seshatsupport@seshat-ai.com"
   },
-  "homepage": "https://github.com/KPO-Tech/seshat-ai",
+  "homepage": "https://seshat-ai.com/en",
   "engines": {
     "node": ">=22 <25"
   },
