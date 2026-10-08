@@ -3,7 +3,7 @@ module github.com/KPO-Tech/SeshatOS/seshat-backend
 go 1.26.6
 
 require (
-	github.com/KPO-Tech/seshat v1.3.2
+	github.com/KPO-Tech/seshat v1.3.3
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
@@ -14,7 +14,6 @@ require (
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sys v0.48.0
 	google.golang.org/api v0.298.0
-	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.2
@@ -143,6 +142,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
 	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.74.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
