@@ -17,7 +17,7 @@
 3. Keep other surfaces scoped unless they directly support Chat.
 4. Keep post-MVP features out of the main path unless the user explicitly asks for them.
 
-Before editing, check `D:\Documents\PROJECTS\ai\Discussions\mvp` when the task touches product scope.
+Before editing, check the MVP strategy (`docs/mvp/` in the `seshat-ai` repository) when the task touches product scope.
 
 ## Code Style
 
@@ -51,7 +51,6 @@ Before editing, check `D:\Documents\PROJECTS\ai\Discussions\mvp` when the task t
   - observable tools use live workspaces;
   - informational tools use compact cards;
   - delegated tools use agent activity cards.
-- See `docs/chat-tool-rendering.md` before changing tool rendering.
 
 ## Commits
 
