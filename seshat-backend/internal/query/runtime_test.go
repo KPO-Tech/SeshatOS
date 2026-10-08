@@ -197,3 +197,28 @@ func TestApplyLocalTitleEndpoint(t *testing.T) {
 		t.Fatalf("unexpected title provider config %+v", cfg.TitleProviderConfig)
 	}
 }
+
+// TestSDKRuntimeManagedPolicyChangeBuildsANewClient proves a change of the organization's rules is
+// not hidden by the client cache: a turn after the change must get a client built with the new rules.
+func TestSDKRuntimeManagedPolicyChangeBuildsANewClient(t *testing.T) {
+	runtime := newTestSDKRuntime(t)
+	policy := &sdk.ManagedPolicy{ForbiddenTools: []string{"bash"}}
+	runtime.SetManagedPolicyResolver(func(context.Context) *sdk.ManagedPolicy { return policy })
+
+	first, _, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	again, _, _ := runtime.clientForInput(context.Background(), QueryInput{})
+	if first != again {
+		t.Fatal("the same rules must reuse the cached client")
+	}
+	policy = &sdk.ManagedPolicy{ForbiddenTools: []string{"bash", "write_file"}}
+	changed, _, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	if changed == first {
+		t.Fatal("new rules must not be served by a client built with the old ones")
+	}
+}

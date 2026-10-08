@@ -17,7 +17,11 @@ type Service struct {
 	store    *Store
 	policies *PolicyStore
 	versions *VersionStore
+	rules    *RuleStore
 }
+
+// SetRules lets the service store the organization's rules brought by the heartbeat.
+func (s *Service) SetRules(rules *RuleStore) { s.rules = rules }
 
 func NewService(store *Store, policies *PolicyStore, versions *VersionStore) *Service {
 	return &Service{store: store, policies: policies, versions: versions}
@@ -47,6 +51,11 @@ func (s *Service) Connect(ctx context.Context, userID, serverURL, deviceToken st
 	if s.versions != nil {
 		if err := s.versions.Save(ctx, device.MinAppVersion, device.AppVersionOutdated); err != nil {
 			return nil, fmt.Errorf("save app version status: %w", err)
+		}
+	}
+	if s.rules != nil {
+		if err := s.rules.Save(ctx, device.Rules); err != nil {
+			return nil, fmt.Errorf("save organization rules: %w", err)
 		}
 	}
 
@@ -110,6 +119,11 @@ func (s *Service) Disconnect(ctx context.Context) error {
 	}
 	if s.versions != nil {
 		if err := s.versions.Clear(ctx); err != nil {
+			return err
+		}
+	}
+	if s.rules != nil {
+		if err := s.rules.Clear(ctx); err != nil {
 			return err
 		}
 	}

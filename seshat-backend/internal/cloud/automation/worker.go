@@ -18,6 +18,7 @@ type Worker struct {
 	store    *Store
 	policies *PolicyStore
 	versions *VersionStore
+	rules    *RuleStore
 	quit     chan struct{}
 	once     sync.Once
 }
@@ -26,6 +27,9 @@ type Worker struct {
 func NewWorker(store *Store, policies *PolicyStore, versions *VersionStore) *Worker {
 	return &Worker{store: store, policies: policies, versions: versions, quit: make(chan struct{})}
 }
+
+// SetRules lets the worker store the organization's rules brought by each heartbeat.
+func (w *Worker) SetRules(rules *RuleStore) { w.rules = rules }
 
 // Start begins heartbeating in the background.
 func (w *Worker) Start() {
@@ -77,6 +81,11 @@ func (w *Worker) tick() {
 	if w.versions != nil {
 		if err := w.versions.Save(ctx, device.MinAppVersion, device.AppVersionOutdated); err != nil {
 			log.Printf("[cloudautomation] save app version status: %v", err)
+		}
+	}
+	if w.rules != nil {
+		if err := w.rules.Save(ctx, device.Rules); err != nil {
+			log.Printf("[cloudautomation] save organization rules: %v", err)
 		}
 	}
 }
