@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?style=for-the-badge&logo=go">
   <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white">
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black">
-  <img src="https://img.shields.io/badge/Electron-37-47848F?style=for-the-badge&logo=electron">
+  <img src="https://img.shields.io/badge/Electron-43-47848F?style=for-the-badge&logo=electron">
   <img src="https://img.shields.io/badge/License-Apache--2.0%20%2B%20Commons%20Clause-blue?style=for-the-badge">
 </p>
 
@@ -47,7 +47,7 @@ SeshatOS is under active construction. The desktop is being rebuilt chat-first; 
 | Local backend: sessions, memory, plans, knowledge/RAG, audit, quotas | Available |
 | Knowledge search from the chat | Available |
 | Dedicated Knowledge, Scheduling, Skills and Admin screens | Planned, in order after Chat |
-| Automation, Inbox, Companion, Team | Roadmap (after the MVP) |
+| Inbox, Companion, Team | Roadmap (after the MVP) |
 
 ## SeshatOS and SeshatCloud: two halves of one offer
 
@@ -56,7 +56,7 @@ SeshatOS is under active construction. The desktop is being rebuilt chat-first; 
 | Scope | One person or a small team, on their own machine | An organization, administered centrally |
 | Runs | Locally, no account, no cloud required | Server + admin console, self-hosted via Docker Compose |
 | Identity | Local | Organizations, roles, SCIM, audit |
-| Automation | Scheduled tasks on your machine | Jobs that run independently of anyone's laptop |
+| Automation | Not part of SeshatOS: scheduled work runs in SeshatCloud | Jobs, schedules, triggers and runs, independent of anyone's laptop |
 | Knowledge | Local knowledge/RAG | Org-scoped knowledge at scale, document-intelligence service |
 
 SeshatOS works on its own. SeshatCloud completes it when an organization needs shared administration and centrally governed automation. The connection is optional and one-directional (see below).
