@@ -258,10 +258,3 @@ func TestServiceDisconnectClearsConnection(t *testing.T) {
 		t.Fatal("expected disconnect to clear the connection")
 	}
 }
-
-func TestServiceRecentRunsRequiresConnection(t *testing.T) {
-	service := newTestService(t)
-	if _, err := service.RecentRuns(context.Background()); err == nil {
-		t.Fatal("expected recent runs to fail when not connected")
-	}
-}

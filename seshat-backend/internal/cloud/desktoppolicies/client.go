@@ -3,7 +3,7 @@
 // for Admin Console's Desktop Policies tab. These bindings already actively
 // control this exact device's behavior (see seshat-ui's
 // hooks/useDesktopPolicies.ts, which reads the resolved bundle from
-// /automation/status and locks Settings/Providers accordingly) - but until
+// /cloud/status and locks Settings/Providers accordingly) - but until
 // now an org admin had no way to see or manage them without opening
 // seshat-console in a browser. See docs/helps/... "Admin Console"
 // architecture item.

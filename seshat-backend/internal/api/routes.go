@@ -104,7 +104,6 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/query", app.authMiddleware(http.HandlerFunc(app.handleQuery)))
 	apiV1.Handle("/transcribe", app.authMiddleware(http.HandlerFunc(app.handleTranscribe)))
 	apiV1.Handle("/query/stream", app.authMiddleware(http.HandlerFunc(app.handleQueryStream)))
-	apiV1.Handle("/workflows/run", app.authMiddleware(http.HandlerFunc(app.handleWorkflowRun)))
 
 	apiV1.Handle("/permissions/", app.authMiddleware(http.HandlerFunc(app.handlePermissionDecision)))
 	apiV1.Handle("/prompts/", app.authMiddleware(http.HandlerFunc(app.handlePromptResponse)))
@@ -169,8 +168,6 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/settings/local-stt", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleLocalSTTConfig))))
 	apiV1.Handle("/settings/local-title", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleLocalTitleConfig))))
 	apiV1.Handle("/settings/sandbox", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSandboxConfig))))
-	apiV1.Handle("/settings/dataflow-secrets", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleDataflowSecrets))))
-	apiV1.Handle("/settings/dataflow-secrets/{name}", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleDataflowSecretByName))))
 	apiV1.Handle("/settings/storage", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleStorageConfig))))
 	apiV1.Handle("/memories", app.authMiddleware(http.HandlerFunc(app.handleMemories)))
 	apiV1.Handle("/memories/", app.authMiddleware(http.HandlerFunc(app.handleMemoryByID)))
@@ -178,34 +175,12 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/plans", app.authMiddleware(http.HandlerFunc(app.handlePlans)))
 	apiV1.Handle("/plans/", app.authMiddleware(http.HandlerFunc(app.handlePlanByID)))
 
-	// Cloud automation: pairing, plus job management (create/edit/pause/
-	// delete/trigger) proxied to seshat-server using the caller's own
-	// session token, the same way seshat-console calls it. See
-	// helps/seshat-architecture-target.md.
-	apiV1.Handle("/automation/status", app.authMiddleware(http.HandlerFunc(app.handleAutomationStatus)))
-	apiV1.Handle("/automation/connect", app.authMiddleware(http.HandlerFunc(app.handleAutomationConnect)))
-	apiV1.Handle("/automation/register-device", app.authMiddleware(http.HandlerFunc(app.handleAutomationRegisterDevice)))
-	apiV1.Handle("/automation/disconnect", app.authMiddleware(http.HandlerFunc(app.handleAutomationDisconnect)))
-	apiV1.Handle("/automation/runs", app.authMiddleware(http.HandlerFunc(app.handleAutomationRuns)))
-	apiV1.Handle("/automation/devices", app.authMiddleware(http.HandlerFunc(app.handleAutomationDevices)))
-	apiV1.Handle("/automation/jobs", app.authMiddleware(http.HandlerFunc(app.handleAutomationJobs)))
-	// Registered as an exact pattern so it wins over the "/automation/jobs/"
-	// subtree pattern below (ServeMux picks the more specific match
-	// regardless of registration order) instead of falling into
-	// handleAutomationJobDispatch, which would otherwise treat "draft" as a
-	// job id.
-	apiV1.Handle("/automation/jobs/draft", app.authMiddleware(http.HandlerFunc(app.handleAutomationJobDraft)))
-	apiV1.Handle("/automation/jobs/", app.authMiddleware(http.HandlerFunc(app.handleAutomationJobDispatch)))
-	apiV1.Handle("/automation/dataflow/node-types", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowNodeTypes)))
-	apiV1.Handle("/automation/dataflow/templates", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowTemplates)))
-	apiV1.Handle("/automation/overview", app.authMiddleware(http.HandlerFunc(app.handleAutomationOverview)))
-	apiV1.Handle("/automation/variables", app.authMiddleware(http.HandlerFunc(app.handleAutomationVariables)))
-	apiV1.Handle("/automation/variables/", app.authMiddleware(http.HandlerFunc(app.handleAutomationVariableDispatch)))
-	apiV1.Handle("/automation/dataflow/preview-expression", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowPreviewExpression)))
-	apiV1.Handle("/automation/dataflow/test-connection", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowTestConnection)))
-	apiV1.Handle("/automation/dataflow/test-run", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowTestRun)))
-	apiV1.Handle("/automation/dataflow-secrets", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowSecrets)))
-	apiV1.Handle("/automation/dataflow-secrets/", app.authMiddleware(http.HandlerFunc(app.handleAutomationDataflowSecretDispatch)))
+	// Pairing this device with a seshat-server. Automation (jobs, schedules, runs)
+	// lives in SeshatCloud only: nothing here runs or manages a job.
+	apiV1.Handle("/cloud/status", app.authMiddleware(http.HandlerFunc(app.handleCloudStatus)))
+	apiV1.Handle("/cloud/connect", app.authMiddleware(http.HandlerFunc(app.handleCloudConnect)))
+	apiV1.Handle("/cloud/register-device", app.authMiddleware(http.HandlerFunc(app.handleCloudRegisterDevice)))
+	apiV1.Handle("/cloud/disconnect", app.authMiddleware(http.HandlerFunc(app.handleCloudDisconnect)))
 	apiV1.Handle("/admin/provider-settings", app.authMiddleware(http.HandlerFunc(app.handleAdminProviderSettings)))
 	apiV1.Handle("/admin/provider-settings/", app.authMiddleware(http.HandlerFunc(app.handleAdminProviderSettingDispatch)))
 	apiV1.Handle("/admin/connector-oauth-apps", app.authMiddleware(http.HandlerFunc(app.handleAdminConnectorOAuthApps)))

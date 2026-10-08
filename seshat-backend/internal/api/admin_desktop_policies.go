@@ -12,7 +12,7 @@ import (
 // Admin Console's Desktop Policies tab — these bindings already actively
 // control this exact device's behavior (see seshat-ui's
 // hooks/useDesktopPolicies.ts, which locks Settings/Providers based on the
-// resolved bundle synced via /automation/status) but until now had no
+// resolved bundle synced via /cloud/status) but until now had no
 // admin-facing visibility or management surface on the desktop app itself.
 // Same gabarit as adminTeamsClientForRequest/adminMembershipsClientForRequest.
 
