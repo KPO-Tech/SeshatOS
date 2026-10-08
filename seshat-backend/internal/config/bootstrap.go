@@ -515,7 +515,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return nil, nil, fmt.Errorf("init storage config store: %w", err)
 	}
 
-
 	userPreferencesStore, err := db.NewUserPreferencesStore(database)
 	if err != nil {
 		_ = cleanup()
