@@ -79,7 +79,7 @@ type App struct {
 	// always populated from bootstrap.go's defaultServerURL regardless of
 	// whether serverReachable actually succeeded - unlike
 	// connectedServerURL, this is needed even in standalone mode so the
-	// network diagnostics tool (see internal/netdiag) can explain *why* the
+	// network diagnostics tool (see seshat/pkg/netdiag) can explain *why* the
 	// boot-time reachability check failed, rather than having nothing to
 	// probe at all.
 	targetServerURL string
