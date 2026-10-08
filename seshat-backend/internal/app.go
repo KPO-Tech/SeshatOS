@@ -98,8 +98,10 @@ type Dependencies struct {
 	ResolveDocumentConverter func(ctx context.Context) documentreader.Converter
 	// New services
 	UserMemoryStore *db.UserMemoryStore
-	// LongTermMemoryStore is longterm.Store (an SDK interface) backed by the
-	// local *db.LongTermMemoryStore. See internal/memories.Service's own
+	// LongTermMemoryStore is longterm.Store (an SDK interface), not a
+	// concrete store type — bootstrap.go picks *db.LongTermMemoryStore
+	// (standalone) or *cloudlongterm.RemoteStore (connected) before
+	// constructing Dependencies. See internal/memories.Service's own
 	// longTermStore field for why this is an interface.
 	LongTermMemoryStore longterm.Store
 	LongTermExtractor   *longterm.Extractor
@@ -141,6 +143,11 @@ type Dependencies struct {
 	// local-only behavior — set only by bootstrap.go when connected mode is
 	// active (see internal/config/bootstrap.go).
 	PreferencesProvider preferences.Provider
+	// MemoriesProvider selects standalone vs connected flat-memory-list
+	// storage. nil = memories.NewLocalProvider(UserMemoryStore), i.e.
+	// today's local-only behavior — set only by bootstrap.go when connected
+	// mode is active (see internal/config/bootstrap.go).
+	MemoriesProvider memories.Provider
 	// KnowledgeGDrive/KnowledgeGDriveAccounts follow a bootstrap.go-owned,
 	// env-var-gated pattern - nil = the Google Drive Knowledge connector is
 	// disabled (no routes registered). See helps/roadmap.md Phase 1.
@@ -215,7 +222,11 @@ func NewApp(deps Dependencies) *App {
 	}
 	settingsService := settings.NewService(settingsProvider, localSettingsProvider)
 	webSearchService := websearch.NewService(deps.WebSearchSettings, deps.WebSearchLogs, deps.WebSearchProviderConfigs, settingsService, deps.WebSearchRunner, deps.WebSearchCloudClient)
-	memoriesService := memories.NewService(memories.NewLocalProvider(deps.UserMemoryStore), deps.LongTermMemoryStore, deps.LongTermExtractor)
+	memoriesProvider := deps.MemoriesProvider
+	if memoriesProvider == nil {
+		memoriesProvider = memories.NewLocalProvider(deps.UserMemoryStore)
+	}
+	memoriesService := memories.NewService(memoriesProvider, deps.LongTermMemoryStore, deps.LongTermExtractor)
 	preferencesProvider := deps.PreferencesProvider
 	if preferencesProvider == nil {
 		preferencesProvider = preferences.NewLocalProvider(deps.UserPreferencesStore)
