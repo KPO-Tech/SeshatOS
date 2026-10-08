@@ -32,7 +32,6 @@ import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 	"github.com/KPO-Tech/seshat/pkg/types"
 )
@@ -253,9 +252,6 @@ func (app *App) handleMessagesSync(
 	}
 
 	app.triggerMemoryExtraction(principal, result)
-	if principal != nil {
-		app.backend.Quota.Increment(r.Context(), principal, backendquotas.MetricQueries, 1)
-	}
 
 	usage := anthropicUsage{}
 	if result.Usage != nil {
@@ -415,9 +411,6 @@ func (app *App) handleMessagesStream(
 	}
 
 	app.triggerMemoryExtraction(principal, result)
-	if principal != nil {
-		app.backend.Quota.Increment(r.Context(), principal, backendquotas.MetricQueries, 1)
-	}
 
 	outputTokens := 0
 	inputTokens := 0

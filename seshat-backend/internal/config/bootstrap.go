@@ -30,7 +30,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/mcp"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/memories"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/preferences"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/quotas"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
@@ -48,7 +47,6 @@ import (
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	appconfig "github.com/KPO-Tech/seshat/pkg/config"
 	"github.com/KPO-Tech/seshat/pkg/documentreader"
@@ -330,7 +328,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	var hooksCloudClient *cloudhooks.Client
 	var memoriesProvider backendmemories.Provider
 	var agentsCloudClient *cloudagents.Client
-	var quotaProvider backendquotas.Provider
 	// Constructed here (not down in the "Cloud automation" section below,
 	// where the rest of cloudautomation's pieces are wired) because
 	// cloudsettings.NewProvider needs it immediately below - the same
@@ -376,7 +373,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		hooksCloudClient = cloudhooks.NewClient(serverURL)
 		memoriesProvider = cloudmemories.NewProvider(serverURL)
 		agentsCloudClient = cloudagents.NewClient(serverURL)
-		quotaProvider = cloudquotas.NewProvider(serverURL)
 		fmt.Printf("[API] Identité en mode connected (seshat-server: %s)\n", serverURL)
 	}
 
@@ -553,12 +549,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	if err != nil {
 		_ = cleanup()
 		return nil, nil, fmt.Errorf("init audit log store: %w", err)
-	}
-
-	usageCounterStore, err := db.NewUsageCounterStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init usage counter store: %w", err)
 	}
 
 	planDocumentStore, err := db.NewPlanDocumentStore(database)
@@ -1034,7 +1024,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		PreferencesProvider: preferencesProvider,
 		MemoriesProvider:    memoriesProvider,
 		AgentsCloudClient:   agentsCloudClient,
-		QuotaProvider:       quotaProvider,
 		DesktopPolicies:     cloudAutomationPolicyStore,
 		AuthConfig: backendauth.ServiceConfig{
 			EnableSignup:    config.EnableSignup,
@@ -1055,7 +1044,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		WebSearchProviderConfigs: searchProviderConfigStore,
 		WebSearchCloudClient:     webSearchCloudClient,
 		AuditLogStore:            auditLogStore,
-		UsageCounterStore:        usageCounterStore,
 		ArtifactStore:            artifactStore,
 		RAGService:               ragService,
 		Monitoring:               queryClient.GetMonitoring(),

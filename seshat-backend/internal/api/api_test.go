@@ -58,10 +58,6 @@ func newAuditTestApp(t *testing.T) (*App, *db.IdentityStore) {
 	if err != nil {
 		t.Fatalf("NewAuditLogStore: %v", err)
 	}
-	usageCounterStore, err := db.NewUsageCounterStore(database)
-	if err != nil {
-		t.Fatalf("NewUsageCounterStore: %v", err)
-	}
 
 	if _, err := identity.EnsureBootstrap(context.Background(), db.BootstrapOptions{
 		AdminEmail:           "admin@audit.test",
@@ -79,7 +75,6 @@ func newAuditTestApp(t *testing.T) (*App, *db.IdentityStore) {
 		backend: seshat.NewApp(seshat.Dependencies{
 			Identity:          identity,
 			AuditLogStore:     auditLogStore,
-			UsageCounterStore: usageCounterStore,
 		}),
 		db: database,
 	}
@@ -177,26 +172,6 @@ func TestAuditLogsEndpointScoped(t *testing.T) {
 		if entry["actor_user_id"] != bob.ID {
 			t.Fatalf("expected only bob's logs, got actor_user_id=%v", entry["actor_user_id"])
 		}
-	}
-}
-
-func TestQuotaEndpoint(t *testing.T) {
-	app, _ := newAuditTestApp(t)
-	router := CreateRouter(defaultAPIConfig, app)
-	token := loginAs(t, router, "admin@audit.test", "adminpass")
-
-	// Initially empty
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/quotas", nil)
-	req.Header.Set("Authorization", "Bearer "+token)
-	rec := httptest.NewRecorder()
-	router.ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("get quotas: got %d, body=%s", rec.Code, rec.Body.String())
-	}
-	var resp map[string]any
-	json.NewDecoder(rec.Body).Decode(&resp)
-	if _, ok := resp["user_id"]; !ok {
-		t.Fatalf("expected user_id in quota response, got %v", resp)
 	}
 }
 

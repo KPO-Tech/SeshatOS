@@ -7,7 +7,6 @@ import (
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
-	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 )
 
 // corpusResponse is the JSON shape returned to clients.
@@ -367,7 +366,6 @@ func (a *App) handleCorpusIngest(w http.ResponseWriter, r *http.Request, corpusI
 			IPAddress:    a.clientIP(r),
 			Metadata:     map[string]any{"file_id": body.FileID, "job_id": job.ID},
 		})
-		a.backend.Quota.Increment(r.Context(), principal, backendquotas.MetricIngestions, 1)
 	}
 	writeJSON(w, http.StatusAccepted, ingestionJobToResponse(*job))
 }

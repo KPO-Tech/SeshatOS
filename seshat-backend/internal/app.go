@@ -27,7 +27,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/plans"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
@@ -91,7 +90,6 @@ type Dependencies struct {
 	KnowledgeBackend    knowledge.Backend
 	EmbedderConfigStore *db.EmbedderConfigStore
 	AuditLogStore       *db.AuditLogStore     // nil = audit logging disabled
-	UsageCounterStore   *db.UsageCounterStore // nil = quota tracking disabled
 	ArtifactStore       storage.ArtifactStore // nil = blob storage disabled
 	RAGService          *rag.Service          // nil = embedder not configured
 	Monitoring          metrics.Snapshotter
@@ -151,12 +149,6 @@ type Dependencies struct {
 	// today's local-only behavior — set only by bootstrap.go when connected
 	// mode is active (see internal/config/bootstrap.go).
 	MemoriesProvider memories.Provider
-	// QuotaProvider selects standalone vs connected usage-counter storage.
-	// nil = quotas.NewLocalProvider(UsageCounterStore), i.e. today's
-	// local-only behavior — set only by bootstrap.go when connected mode is
-	// active (see internal/config/bootstrap.go). Pure counting either way,
-	// never an enforced limit.
-	QuotaProvider quotas.Provider
 	// KnowledgeGDrive/KnowledgeGDriveAccounts follow a bootstrap.go-owned,
 	// env-var-gated pattern - nil = the Google Drive Knowledge connector is
 	// disabled (no routes registered). See helps/roadmap.md Phase 1.
@@ -197,7 +189,6 @@ type App struct {
 	Settings    *settings.Service
 	WebSearch   *websearch.Service
 	Audit       *audit.Service
-	Quota       *quotas.Service
 	Metrics     *metrics.Service
 	Memories    *memories.Service
 	Plans       *plans.Service
@@ -279,10 +270,6 @@ func NewApp(deps Dependencies) *App {
 	}
 	skillsService := skills.NewService()
 	agentsService := agents.NewService(deps.AgentDefinitionStore, deps.AgentsCloudClient)
-	quotaProvider := deps.QuotaProvider
-	if quotaProvider == nil {
-		quotaProvider = quotas.NewLocalProvider(deps.UsageCounterStore)
-	}
 	return &App{
 		Auth: auth.NewService(authProvider, deps.Identity, deps.APIKeyStore, deps.AuthConfig, deps.DesktopPolicies),
 		Query: query.NewService(query.ServiceConfig{
@@ -303,7 +290,6 @@ func NewApp(deps Dependencies) *App {
 		Settings:  settingsService,
 		WebSearch: webSearchService,
 		Audit:     audit.NewService(deps.AuditLogStore),
-		Quota:     quotas.NewService(quotaProvider),
 		Metrics:   metrics.NewService(deps.Monitoring),
 		Memories:  memoriesService,
 		Plans:     plans.NewService(deps.PlanDocumentStore),

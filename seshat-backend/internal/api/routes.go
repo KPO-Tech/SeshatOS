@@ -154,7 +154,6 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/web/search/domain-catalog", app.authMiddleware(http.HandlerFunc(app.handleWebSearchDomainCatalog)))
 
 	apiV1.Handle("/audit/logs", app.authMiddleware(http.HandlerFunc(app.handleAuditLogs)))
-	apiV1.Handle("/quotas", app.authMiddleware(http.HandlerFunc(app.handleQuotas)))
 
 	apiV1.Handle("/settings/providers", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleProviderSettings))))
 	apiV1.Handle("/settings/providers/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleProviderSettingByID))))

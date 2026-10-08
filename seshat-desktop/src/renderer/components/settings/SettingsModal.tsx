@@ -3,7 +3,7 @@ import type { User } from '@renderer/api/types'
 import { applyTheme, getStoredTheme, notifyThemeChange, setStoredTheme, type ThemePreference } from '@renderer/lib/theme'
 import { SettingsContent } from './SettingsContent'
 
-export type SettingsSection = 'general' | 'account' | 'shortcuts' | 'memories' | 'usage' | 'data-controls' | 'about'
+export type SettingsSection = 'general' | 'account' | 'shortcuts' | 'memories' | 'data-controls' | 'about'
 
 type Props = {
   user: User
@@ -17,7 +17,6 @@ const sections: Array<{ id: SettingsSection; label: string; icon: IconName; grou
   { id: 'account', label: 'Account', icon: 'user', group: 'Settings' },
   { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard', group: 'Settings' },
   { id: 'memories', label: 'Memories', icon: 'database', group: 'Settings' },
-  { id: 'usage', label: 'Usage', icon: 'spark', group: 'Settings' },
   { id: 'data-controls', label: 'Data Controls', icon: 'shield', group: 'Settings' },
   { id: 'about', label: 'About', icon: 'info', group: 'SeshatOS' }
 ]
