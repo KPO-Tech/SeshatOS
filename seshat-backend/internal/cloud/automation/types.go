@@ -66,6 +66,9 @@ type Device struct {
 	Policies           map[string]bool `json:"policies,omitempty"`
 	MinAppVersion      *string         `json:"min_app_version,omitempty"`
 	AppVersionOutdated bool            `json:"app_version_outdated,omitempty"`
+	// Rules are the organization's rules for agents, only on a heartbeat answer (nil from a server
+	// that predates them).
+	Rules *DeviceRules `json:"rules,omitempty"`
 }
 
 // registerDeviceParams/registerDeviceResult mirror seshat-server's

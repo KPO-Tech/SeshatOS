@@ -1079,9 +1079,14 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// app version up to date while this machine is paired with a seshat-server.
 	// It runs no jobs (automation lives in SeshatCloud only).
 	cloudAutomationWorker := cloudautomation.NewWorker(cloudAutomationStore, cloudAutomationPolicyStore, cloudAutomationVersionStore)
+	cloudAutomationRuleStore := cloudautomation.NewRuleStore(database)
+	cloudAutomationWorker.SetRules(cloudAutomationRuleStore)
+	// What the organization imposes on every agent, as last received: kept while offline.
+	runtime.SetManagedPolicyResolver(cloudAutomationRuleStore.Policy)
 	cloudAutomationWorker.Start()
 	cleanups = append(cleanups, func() error { cloudAutomationWorker.Stop(); return nil })
 	cloudAutomationService := cloudautomation.NewService(cloudAutomationStore, cloudAutomationPolicyStore, cloudAutomationVersionStore)
+	cloudAutomationService.SetRules(cloudAutomationRuleStore)
 	fmt.Printf("[API] Heartbeat cloud démarré\n")
 
 	// Abandoned-session sweep: a session (plus any files attached to it) is

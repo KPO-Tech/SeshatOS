@@ -61,6 +61,7 @@ type SDKRuntime struct {
 	resolveBrowser        func(ctx context.Context) string
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
 	resolveSandboxMode    func(ctx context.Context) (sdk.SandboxKind, bool)
+	resolveManagedPolicy  func(ctx context.Context) *sdk.ManagedPolicy
 	mu                    sync.RWMutex
 
 	clientCacheMu sync.Mutex
@@ -94,6 +95,9 @@ type clientCacheKey struct {
 	baseURL  string
 	browser  string
 	title    string
+	// managed is the organization's rules a cached client was built with: a change of rules must
+	// not keep serving a client that still has the old ones.
+	managed string
 }
 
 // cachedRuntimeClient pairs a cached client with when it was last handed out,
@@ -158,6 +162,22 @@ func (r *SDKRuntime) SetLocalTitleResolver(resolve func(ctx context.Context) *Lo
 	r.mu.Lock()
 	r.resolveLocalTitle = resolve
 	r.mu.Unlock()
+}
+
+// SetManagedPolicyResolver attaches the source of the organization's rules for agents (what a
+// connected desktop received with its heartbeat). nil, or a nil result, means nothing is imposed.
+func (r *SDKRuntime) SetManagedPolicyResolver(resolve func(ctx context.Context) *sdk.ManagedPolicy) {
+	r.mu.Lock()
+	r.resolveManagedPolicy = resolve
+	r.mu.Unlock()
+}
+
+// managedPolicyKey identifies a policy in the client cache key.
+func managedPolicyKey(policy *sdk.ManagedPolicy) string {
+	if policy == nil {
+		return ""
+	}
+	return fmt.Sprintf("%q|%q", policy.Instructions, policy.ForbiddenTools)
 }
 
 // SetSandboxModeResolver attaches the per-request resolver for Settings >
@@ -668,6 +688,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 		model:    cfg.Model.Model,
 		apiKey:   cfg.APIKey,
 		browser:  strings.TrimSpace(cfg.BrowserRemoteControlURL),
+		managed:  managedPolicyKey(cfg.ManagedPolicy),
 	}
 	if cfg.ProviderConfig != nil {
 		key.baseURL = cfg.ProviderConfig.BaseURL
@@ -750,6 +771,7 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	resolveBrowser := r.resolveBrowser
 	resolveBrowserSession := r.resolveBrowserSession
 	resolveSandboxMode := r.resolveSandboxMode
+	resolveManagedPolicy := r.resolveManagedPolicy
 	r.mu.RUnlock()
 	if cfg == nil {
 		cfg = sdk.DefaultClientConfig()
@@ -759,6 +781,9 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	}
 	if resolveBrowserSession != nil {
 		cfg.BrowserSessionTargetResolver = resolveBrowserSession
+	}
+	if resolveManagedPolicy != nil {
+		cfg.ManagedPolicy = resolveManagedPolicy(ctx)
 	}
 	if resolveSandboxMode != nil {
 		if kind, ok := resolveSandboxMode(ctx); ok {
