@@ -26,9 +26,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/hooks"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/identity"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/knowledge"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/longterm"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/mcp"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/memories"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/preferences"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
@@ -43,7 +41,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/sharepoint"
 	knowledgeTools "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/tool"
 	mcpAction "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/mcp/action"
-	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
@@ -324,7 +321,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	var webSearchCloudClient *cloudwebsearch.Client
 	var mcpCloudClient *cloudmcp.Client
 	var hooksCloudClient *cloudhooks.Client
-	var memoriesProvider backendmemories.Provider
 	var agentsCloudClient *cloudagents.Client
 	// Constructed here (not down in the "Cloud automation" section below,
 	// where the rest of cloudautomation's pieces are wired) because
@@ -369,27 +365,21 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		webSearchCloudClient = cloudwebsearch.NewClient(serverURL)
 		mcpCloudClient = cloudmcp.NewClient(serverURL)
 		hooksCloudClient = cloudhooks.NewClient(serverURL)
-		memoriesProvider = cloudmemories.NewProvider(serverURL)
 		agentsCloudClient = cloudagents.NewClient(serverURL)
 		fmt.Printf("[API] Identité en mode connected (seshat-server: %s)\n", serverURL)
 	}
 
-	// Long-term memory store: db.LongTermMemoryStore (standalone) or
-	// cloudlongterm.RemoteStore (connected) — both implement the SDK's
-	// longterm.Store interface, so everything downstream (the query
-	// runtime's session context and internal/memories.Service) is agnostic
-	// to which one it got.
-	var longTermMemStore longterm.Store
-	if serverURL != "" {
-		longTermMemStore = cloudlongterm.NewRemoteStore(serverURL)
-	} else {
-		localLongTermMemStore, err := db.NewLongTermMemoryStore(database)
-		if err != nil {
-			_ = cleanup()
-			return nil, nil, fmt.Errorf("init long-term memory store: %w", err)
-		}
-		longTermMemStore = localLongTermMemStore
+	// Long-term memory is personal and always local: a person's memory is
+	// stored in this machine's database, in standalone and connected mode alike.
+	// The store implements the SDK's longterm.Store interface, so everything
+	// downstream (the query runtime's session context and
+	// internal/memories.Service) is agnostic to the concrete type.
+	localLongTermMemStore, err := db.NewLongTermMemoryStore(database)
+	if err != nil {
+		_ = cleanup()
+		return nil, nil, fmt.Errorf("init long-term memory store: %w", err)
 	}
+	var longTermMemStore longterm.Store = localLongTermMemStore
 
 	// Long-term memory extractor: creates a lightweight provider client dedicated to
 	// async entity/observation extraction at session end. Best-effort only.
@@ -1016,7 +1006,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		AuthProvider:        authProvider,
 		SettingsProvider:    settingsProvider,
 		PreferencesProvider: preferencesProvider,
-		MemoriesProvider:    memoriesProvider,
 		AgentsCloudClient:   agentsCloudClient,
 		DesktopPolicies:     cloudAutomationPolicyStore,
 		AuthConfig: backendauth.ServiceConfig{
