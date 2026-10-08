@@ -73,8 +73,8 @@ func newAuditTestApp(t *testing.T) (*App, *db.IdentityStore) {
 
 	app := &App{
 		backend: seshat.NewApp(seshat.Dependencies{
-			Identity:          identity,
-			AuditLogStore:     auditLogStore,
+			Identity:      identity,
+			AuditLogStore: auditLogStore,
 		}),
 		db: database,
 	}
