@@ -6,18 +6,14 @@ import (
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/longterm"
 	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat/pkg/types"
 )
 
 type Service struct {
 	provider Provider
-	// longTermStore is longterm.Store (an SDK interface), not a concrete
-	// store type — *db.LongTermMemoryStore (standalone) and
-	// cloudlongterm.RemoteStore (connected) both satisfy it, so this is a
-	// swap exactly like Provider above, just at the SDK's own interface
-	// boundary instead of a new one of our own.
+	// longTermStore is longterm.Store, the SDK's own interface; the backend
+	// passes the local *db.LongTermMemoryStore.
 	longTermStore longterm.Store
 	extractor     *longterm.Extractor
 }
@@ -66,10 +62,6 @@ func (s *Service) BuildContextBlock(ctx context.Context, principal *backendauth.
 		return "", nil
 	}
 	const maxTokens = 500
-	// The token is a no-op for the standalone LocalStore and only consumed
-	// by cloudlongterm.RemoteStore when connected — see ContextWithToken's
-	// doc comment for why this can't just be a parameter on Store itself.
-	ctx = cloudlongterm.ContextWithToken(ctx, principal.AuthSession.ID)
 	block, err := s.longTermStore.RetrieveForContext(ctx, principal.User.ID, prompt, maxTokens)
 	if err != nil {
 		return "", nil
@@ -82,16 +74,13 @@ func (s *Service) TriggerExtraction(principal *backendauth.Principal, messages [
 		return
 	}
 	userID := principal.User.ID
-	token := principal.AuthSession.ID
 	msgs := messages
 	go func() {
 		// A fresh background context, not derived from the request's own
 		// (which will already be cancelled by the time this async
-		// extraction runs) — the token still needs to be attached here
-		// too, since it doesn't travel with context.Background().
+		// extraction runs).
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
-		ctx = cloudlongterm.ContextWithToken(ctx, token)
 		_ = s.extractor.Extract(ctx, userID, msgs)
 	}()
 }
