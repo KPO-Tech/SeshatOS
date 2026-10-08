@@ -30,7 +30,6 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/workflows"
 	"github.com/KPO-Tech/seshat/pkg/documentreader"
 	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat/pkg/rag"
@@ -197,7 +196,6 @@ type App struct {
 	Preferences *preferences.Service
 	Skills      *skills.Service
 	Agents      *agents.Service
-	Workflows   *workflows.Service
 
 	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
@@ -313,7 +311,6 @@ func NewApp(deps Dependencies) *App {
 		ConnectorAccounts:       deps.ConnectorAccounts,
 		ActionConnectors:        deps.ActionConnectors,
 		KnowledgeConnectors:     deps.KnowledgeConnectors,
-		Workflows:               workflows.New(settingsService),
 		DesktopPolicies:         deps.DesktopPolicies,
 	}
 }

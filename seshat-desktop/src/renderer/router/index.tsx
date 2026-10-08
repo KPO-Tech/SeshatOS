@@ -1,7 +1,6 @@
 import { createHashRouter, Navigate, useParams } from 'react-router'
 import { Shell } from '@renderer/components/layout/Shell'
 import { PluginsPage } from '@renderer/components/plugins/PluginsPage'
-import { SchedulingPage } from '@renderer/components/scheduling/SchedulingPage'
 import { SkillsPage } from '@renderer/components/skills/SkillsPage'
 import { ConversationPage } from '@renderer/components/chat/conversation/ConversationPage'
 import { Home } from '@renderer/pages/Home'
@@ -32,7 +31,6 @@ export const router = createHashRouter([
       { path: 'conversation/:id', element: <ConversationRoute /> },
       { path: 'skills', element: <SkillsPage /> },
       { path: 'plugins', element: <PluginsPage /> },
-      { path: 'scheduling', element: <SchedulingPage /> },
       { path: 'store', element: <StorePage /> },
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'projects/:projectId', element: <ProjectDetailPage /> },

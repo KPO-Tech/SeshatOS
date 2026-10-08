@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { ApplicationOne, Browser, Plus, Puzzle, Search, Time, Workbench } from '@icon-park/react'
-import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
+import { ApplicationOne, Browser, Plus, Puzzle, Search, Workbench } from '@icon-park/react'
 import { SearchModal } from '@renderer/components/layout/SearchModal'
 import { SessionHistoryModal } from '@renderer/components/layout/SessionHistoryModal'
 import { useSessionStore } from '@renderer/stores/session'
@@ -23,7 +22,6 @@ export function Sidebar() {
   const setActive = useSessionStore((state) => state.setActive)
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
-  const { connected } = useSettingsMenu()
   const [searchOpen, setSearchOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
 
@@ -100,9 +98,6 @@ export function Sidebar() {
             <>
               <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
               <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
-              {connected && (
-                <SidebarItem icon={<Time theme="outline" size={16} />} label="Scheduling" collapsed={collapsed} active={item('/scheduling')} onClick={() => navigate('/scheduling')} />
-              )}
               <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />
               <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
             </>

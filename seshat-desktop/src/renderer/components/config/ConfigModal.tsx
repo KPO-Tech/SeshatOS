@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import type { User } from '@renderer/api/types'
 import { AgentsConfig } from './agents/AgentsConfig'
-import { AutomationConfig } from './automation/AutomationConfig'
+import { CloudConfig } from './cloud/CloudConfig'
 import { ConnectorsConfig } from './connectors/ConnectorsConfig'
 import { EnvironmentConfig } from './environment/EnvironmentConfig'
 import { KnowledgeConfig } from './knowledge/KnowledgeConfig'
@@ -27,7 +27,7 @@ export type ConfigSection =
   | 'storage'
   | 'agents'
   | 'skills'
-  | 'automation'
+  | 'cloud'
 
 type Props = {
   user: User
@@ -46,9 +46,9 @@ const sections: Array<{ id: ConfigSection; label: string; icon: IconName; group:
   { id: 'connectors', label: 'Connectors', icon: 'connectors', group: 'Workspace Runtime', description: 'External accounts and application connectors.' },
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },
   { id: 'storage', label: 'Storage', icon: 'storage', group: 'Workspace Runtime', description: 'Local filesystem, object storage, and cache locations.' },
-  { id: 'agents', label: 'Agents', icon: 'agent', group: 'Automation', description: 'Agent profiles, permissions, delegation defaults, and system instructions.' },
-  { id: 'skills', label: 'Skills', icon: 'skills', group: 'Automation', description: 'Skill repositories downloaded to this machine and the groups they provide.' },
-  { id: 'automation', label: 'Automation', icon: 'clock', group: 'Automation', description: 'Device registration, scheduled jobs, and background execution.' }
+  { id: 'agents', label: 'Agents', icon: 'agent', group: 'Agents', description: 'Agent profiles, permissions, delegation defaults, and system instructions.' },
+  { id: 'skills', label: 'Skills', icon: 'skills', group: 'Agents', description: 'Skill repositories downloaded to this machine and the groups they provide.' },
+  { id: 'cloud', label: 'SeshatCloud', icon: 'connectors', group: 'Workspace Runtime', description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
 ]
 
 export function ConfigModal({ user, initialSection = 'providers', onClose }: Props) {
@@ -121,8 +121,8 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'storage' && <StorageConfig />}
               {activeSection === 'agents' && <AgentsConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
-              {activeSection === 'automation' && <AutomationConfig />}
-              {activeSection !== 'providers' && activeSection !== 'models' && activeSection !== 'titles' && activeSection !== 'web-search' && activeSection !== 'knowledge' && activeSection !== 'multimodal' && activeSection !== 'mcp' && activeSection !== 'connectors' && activeSection !== 'environment' && activeSection !== 'storage' && activeSection !== 'agents' && activeSection !== 'skills' && activeSection !== 'automation' && <ConfigOverview active={active} />}
+              {activeSection === 'cloud' && <CloudConfig />}
+              {activeSection !== 'providers' && activeSection !== 'models' && activeSection !== 'titles' && activeSection !== 'web-search' && activeSection !== 'knowledge' && activeSection !== 'multimodal' && activeSection !== 'mcp' && activeSection !== 'connectors' && activeSection !== 'environment' && activeSection !== 'storage' && activeSection !== 'agents' && activeSection !== 'skills' && activeSection !== 'cloud' && <ConfigOverview active={active} />}
             </div>
           </div>
         </section>
@@ -218,9 +218,9 @@ const configDetails: Record<ConfigSection, { source: string; scope: string[] }> 
     source: 'seshat-ui agent/session settings and future agent store',
     scope: ['Agent profiles', 'Default instructions', 'Delegation permissions', 'Tool access defaults']
   },
-  automation: {
-    source: 'seshat-ui/pages/settings/CloudAutomationView.tsx',
-    scope: ['Device registration', 'Scheduled runs', 'Cloud automation connection', 'Run history']
+  cloud: {
+    source: 'seshat-desktop cloud connection',
+    scope: ['Device registration', 'Organization policies', 'Minimum app version']
   }
 }
 

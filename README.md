@@ -46,7 +46,7 @@ SeshatOS is under active construction. The desktop is being rebuilt chat-first; 
 | Chat with tools, files, providers, MCP and skills | Active, being stabilized |
 | Local backend: sessions, memory, plans, knowledge/RAG, audit | Available |
 | Knowledge search from the chat | Available |
-| Dedicated Knowledge, Scheduling, Skills and Admin screens | Planned, in order after Chat |
+| Dedicated Knowledge, Skills and Admin screens | Planned, in order after Chat |
 | Inbox, Companion, Team | Roadmap (after the MVP) |
 
 ## SeshatOS and SeshatCloud: two halves of one offer

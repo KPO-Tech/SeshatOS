@@ -57,10 +57,9 @@ main        production-ready, tagged releases only
 | Admin Panel | ACTIVE | Unlocked ahead of order by explicit decision — built in parallel with Chat/Settings. |
 | Store | ACTIVE | SeshatOS's own app catalog (Play Store/Microsoft Store style) — unlocked by explicit decision. Ships as a catalog of active vs. coming-soon platforms; each entry activates as its real platform lands. |
 | Settings | LOCKED | Next after Chat is DONE. |
-| Scheduling | LOCKED | MVP surface after Admin. |
-| Skills Creator | LOCKED | MVP surface after Scheduling. |
+| Skills Creator | LOCKED | MVP surface after Admin. |
 | Knowledge UI | LOCKED | Last MVP surface, but the Knowledge capability stays available to Chat throughout. |
-| Automation | POST_MVP | Existing code is valuable but frozen for now. |
+| Automation, Scheduling | NOT IN SESHATOS | Scheduled work lives in SeshatCloud only; do not add it back here. |
 | Inbox | POST_MVP | Frozen. Avoid chatbot-per-page expansion. |
 | Companion, Team | POST_MVP | Frozen. |
 | Other surfaces | POST_MVP | Frozen unless explicitly promoted. |

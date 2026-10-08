@@ -7,10 +7,10 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 )
 
-// These handlers cover pairing this device and read-only run visibility.
-// Job management (create/edit/pause/delete/trigger) lives in automation_jobs.go.
+// These handlers cover pairing this device with a seshat-server: the status,
+// the connection and the self-service registration. They run no jobs.
 
-func (a *App) cloudAutomationAvailable(w http.ResponseWriter) bool {
+func (a *App) cloudLinkAvailable(w http.ResponseWriter) bool {
 	if a.cloudAutomation == nil {
 		writeBackendError(w, bkerr.Unavailable("cloud automation is not available", nil))
 		return false
@@ -18,9 +18,9 @@ func (a *App) cloudAutomationAvailable(w http.ResponseWriter) bool {
 	return true
 }
 
-// handleAutomationStatus — GET /api/v1/automation/status
-func (a *App) handleAutomationStatus(w http.ResponseWriter, r *http.Request) {
-	if !a.cloudAutomationAvailable(w) {
+// handleCloudStatus — GET /api/v1/cloud/status
+func (a *App) handleCloudStatus(w http.ResponseWriter, r *http.Request) {
+	if !a.cloudLinkAvailable(w) {
 		return
 	}
 	status, err := a.cloudAutomation.Status(r.Context())
@@ -28,26 +28,17 @@ func (a *App) handleAutomationStatus(w http.ResponseWriter, r *http.Request) {
 		writeBackendError(w, bkerr.Internal(err.Error(), err))
 		return
 	}
-	// First status check while disconnected on an organization-connected
-	// backend: try a silent self-registration, which only actually takes
-	// effect if the organization has no device at all yet - see
-	// AutoRegisterFirstDevice's own doc comment.
-	if !status.Connected && a.connectedServerURL != "" {
-		if principal, ok := authPrincipalFromContext(r.Context()); ok {
-			status = a.cloudAutomation.AutoRegisterFirstDevice(r.Context(), principal.User.ID, a.connectedServerURL, principal.AuthSession.ID, principal.OrganizationID())
-		}
-	}
 	writeJSON(w, http.StatusOK, status)
 }
 
-type connectAutomationRequest struct {
+type connectCloudRequest struct {
 	ServerURL   string `json:"server_url"`
 	DeviceToken string `json:"device_token"`
 }
 
-// handleAutomationConnect — POST /api/v1/automation/connect
-func (a *App) handleAutomationConnect(w http.ResponseWriter, r *http.Request) {
-	if !a.cloudAutomationAvailable(w) {
+// handleCloudConnect — POST /api/v1/cloud/connect
+func (a *App) handleCloudConnect(w http.ResponseWriter, r *http.Request) {
+	if !a.cloudLinkAvailable(w) {
 		return
 	}
 	principal, ok := authPrincipalFromContext(r.Context())
@@ -55,7 +46,7 @@ func (a *App) handleAutomationConnect(w http.ResponseWriter, r *http.Request) {
 		writeBackendError(w, bkerr.Unauthorized("unauthorized", nil))
 		return
 	}
-	var req connectAutomationRequest
+	var req connectCloudRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeBackendError(w, bkerr.InvalidInput("invalid request body", err))
 		return
@@ -68,12 +59,12 @@ func (a *App) handleAutomationConnect(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, status)
 }
 
-// handleAutomationRegisterDevice: POST /api/v1/automation/register-device.
+// handleCloudRegisterDevice: POST /api/v1/cloud/register-device.
 // One-click pairing: registers this machine as a device using the caller's
 // existing authenticated session (no manual server_url/device_token entry),
 // only available when this backend is itself running in connected mode.
-func (a *App) handleAutomationRegisterDevice(w http.ResponseWriter, r *http.Request) {
-	if !a.cloudAutomationAvailable(w) {
+func (a *App) handleCloudRegisterDevice(w http.ResponseWriter, r *http.Request) {
+	if !a.cloudLinkAvailable(w) {
 		return
 	}
 	if a.connectedServerURL == "" {
@@ -105,9 +96,9 @@ func (a *App) handleAutomationRegisterDevice(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, status)
 }
 
-// handleAutomationDisconnect — POST /api/v1/automation/disconnect
-func (a *App) handleAutomationDisconnect(w http.ResponseWriter, r *http.Request) {
-	if !a.cloudAutomationAvailable(w) {
+// handleCloudDisconnect — POST /api/v1/cloud/disconnect
+func (a *App) handleCloudDisconnect(w http.ResponseWriter, r *http.Request) {
+	if !a.cloudLinkAvailable(w) {
 		return
 	}
 	if _, ok := authPrincipalFromContext(r.Context()); !ok {
@@ -119,22 +110,4 @@ func (a *App) handleAutomationDisconnect(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// handleAutomationRuns — GET /api/v1/automation/runs (read-only visibility
-// of runs assigned to this device; management stays in seshat-console).
-func (a *App) handleAutomationRuns(w http.ResponseWriter, r *http.Request) {
-	if !a.cloudAutomationAvailable(w) {
-		return
-	}
-	if _, ok := authPrincipalFromContext(r.Context()); !ok {
-		writeBackendError(w, bkerr.Unauthorized("unauthorized", nil))
-		return
-	}
-	runs, err := a.cloudAutomation.RecentRuns(r.Context())
-	if err != nil {
-		writeBackendError(w, bkerr.InvalidInput(err.Error(), err))
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"runs": runs, "count": len(runs)})
 }

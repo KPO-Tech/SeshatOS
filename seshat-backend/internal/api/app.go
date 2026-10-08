@@ -9,7 +9,6 @@ import (
 	seshat "github.com/KPO-Tech/SeshatOS/seshat-backend/internal"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/artifactpreview"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/dataflowsecrets"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
@@ -49,7 +48,6 @@ type App struct {
 	localTitleStore      *db.LocalTitleConfigStore
 	sandboxConfigStore   *db.SandboxConfigStore
 	storageConfigStore   *db.StorageConfigStore
-	dataflowSecrets      *dataflowsecrets.Service
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
 	longTermExtractor *longterm.Extractor
@@ -123,7 +121,6 @@ type AppConfig struct {
 	LocalTitleStore       *db.LocalTitleConfigStore
 	SandboxConfigStore    *db.SandboxConfigStore
 	StorageConfigStore    *db.StorageConfigStore
-	DataflowSecrets       *dataflowsecrets.Service
 	LongTermExtractor     *longterm.Extractor
 	RateLimiter           *RateLimiter
 	LoginRateLimiter      *RateLimiter
@@ -185,7 +182,6 @@ func NewApp(cfg AppConfig) *App {
 		localTitleStore:       cfg.LocalTitleStore,
 		sandboxConfigStore:    cfg.SandboxConfigStore,
 		storageConfigStore:    cfg.StorageConfigStore,
-		dataflowSecrets:       cfg.DataflowSecrets,
 		longTermExtractor:     cfg.LongTermExtractor,
 		rateLimiter:           cfg.RateLimiter,
 		loginRateLimiter:      cfg.LoginRateLimiter,
