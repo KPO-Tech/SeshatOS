@@ -86,6 +86,18 @@ Never import `internal/api/` from a service.
 
 ---
 
+## What belongs in SeshatOS
+
+A capability lives in SeshatOS or in SeshatCloud, not in both. It belongs here only if it needs the
+user's machine (files, shell, desktop, a local model or browser), must work offline for one person
+without an account, or holds data that must not leave the machine. Organizations, shared state,
+unattended execution, administration, quotas and the synchronisation of an organization's sources
+belong to SeshatCloud. Automation (jobs, schedules, triggers, runs) is SeshatCloud only: do not add a
+local scheduler or automation screen. When this product talks to SeshatCloud, its wire types come
+from the server's contract, never from a hand-written copy. Check these rules before adding a feature.
+
+---
+
 ## Adding a new backend domain
 
 Follow this pattern:
