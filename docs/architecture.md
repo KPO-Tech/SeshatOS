@@ -66,7 +66,6 @@ seshat-backend/
     ├── plans/                   ← plans attached to sessions
     ├── preferences/             ← permission mode and user prefs
     ├── query/                   ← runtime adapter over seshat SDK
-    ├── quotas/                  ← usage counters
     ├── settings/                ← providers, OAuth, storage config
     ├── skills/                  ← skill registry and resolution
     └── websearch/               ← web search providers and logs

@@ -466,7 +466,6 @@ func migrateBackendSchema(ctx context.Context, db *DB) error {
 		&gWebSearchSetting{},
 		&gWebSearchLog{},
 		&gAuditLog{},
-		&gUsageCounter{},
 	)
 }
 
