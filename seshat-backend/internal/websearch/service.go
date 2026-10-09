@@ -194,6 +194,12 @@ var providerCatalog = []ProviderCatalogEntry{
 	{Name: "jina", Label: "Jina AI", Description: "AI-native search with reader API", RequiresAPIKey: true, Priority: 30},
 	{Name: "langsearch", Label: "LangSearch", Description: "Free API key, AI-optimised results", RequiresAPIKey: true, Priority: 35},
 	{Name: "searxng", Label: "SearXNG", Description: "Self-hosted privacy-focused meta-search", RequiresBaseURL: true, DefaultBaseURL: "http://localhost:8080", Priority: 40},
+	// Research sources: the keys of the tools an agent uses to read reviews and opinions for a market study.
+	// Reddit keeps its client id in AuthUsername and its client secret as the API key.
+	{Name: "reddit", Label: "Reddit", Description: "Search and read public posts and comments (client id and secret of a Reddit app)", RequiresAPIKey: true, Priority: 900, Kind: KindResearch},
+	{Name: "youtube", Label: "YouTube", Description: "Search videos and read their comments (YouTube Data API key)", RequiresAPIKey: true, Priority: 910, Kind: KindResearch},
+	{Name: "google_places", Label: "Google Places", Description: "Reviews of businesses and places (Places API key, billed by Google)", RequiresAPIKey: true, Priority: 920, Kind: KindResearch},
+	{Name: "trustpilot", Label: "Trustpilot", Description: "Scores and reviews of companies (Trustpilot API key)", RequiresAPIKey: true, Priority: 930, Kind: KindResearch},
 }
 
 func catalogByName(name string) *ProviderCatalogEntry {
@@ -233,6 +239,7 @@ func (s *Service) ListProviders(ctx context.Context, principal *backendauth.Prin
 			RequiresBaseURL: cat.RequiresBaseURL,
 			DefaultBaseURL:  cat.DefaultBaseURL,
 			Priority:        cat.Priority,
+			Kind:            cat.Kind,
 		}
 		if row, ok := configured[cat.Name]; ok {
 			status.Enabled = row.Enabled
@@ -310,9 +317,65 @@ func (s *Service) UpsertProvider(ctx context.Context, principal *backendauth.Pri
 		RequiresBaseURL: cat.RequiresBaseURL,
 		DefaultBaseURL:  cat.DefaultBaseURL,
 		Priority:        cat.Priority,
+		Kind:            cat.Kind,
 		UpdatedAt:       row.UpdatedAt,
 	}
 	return status, nil
+}
+
+// ResearchKeys returns the credentials of the research tools for this person, in the names the engine takes
+// (sdk.ClientConfig.ResearchKeys): the ones they configured themselves, and for a source they did not, the ones
+// their organization (or the platform) gives them when this backend is connected to a seshat-server. A source with
+// nothing configured is left out, so its tools are not offered to the model. Never an error: a failure to read
+// a key only means that tool is not offered.
+func (s *Service) ResearchKeys(ctx context.Context, principal *backendauth.Principal) map[string]string {
+	keys := map[string]string{}
+	if s == nil || principal == nil {
+		return keys
+	}
+	add := func(provider, clientID, secret string) {
+		secret = strings.TrimSpace(secret)
+		if secret == "" {
+			return
+		}
+		switch provider {
+		case "reddit":
+			if clientID = strings.TrimSpace(clientID); clientID != "" {
+				keys["reddit_client_id"] = clientID
+				keys["reddit_client_secret"] = secret
+			}
+		case "youtube":
+			keys["youtube_api_key"] = secret
+		case "google_places":
+			keys["google_places_api_key"] = secret
+		case "trustpilot":
+			keys["trustpilot_api_key"] = secret
+		}
+	}
+	personal := map[string]bool{}
+	if s.providerConfigs != nil {
+		if rows, err := s.providerConfigs.ListByUserID(ctx, principal.User.ID); err == nil {
+			for _, row := range rows {
+				if cat := catalogByName(row.Provider); cat == nil || cat.Kind != KindResearch || !row.Enabled || !row.HasAPIKey {
+					continue
+				}
+				secret, err := s.providerConfigs.GetDecryptedAPIKey(ctx, principal.User.ID, row.Provider)
+				if err != nil {
+					continue
+				}
+				personal[row.Provider] = true
+				add(row.Provider, row.AuthUsername, secret)
+			}
+		}
+	}
+	if s.cloudClient != nil {
+		for _, cand := range s.resolveCloudProviders(ctx, principal.AuthSession.ID, principal.OrganizationID(), personal) {
+			if cat := catalogByName(cand.provider); cat != nil && cat.Kind == KindResearch {
+				add(cand.provider, cand.resolved.AuthUsername, cand.resolved.APIKey)
+			}
+		}
+	}
+	return keys
 }
 
 func (s *Service) TestProvider(ctx context.Context, principal *backendauth.Principal, providerName string) (*ProviderTestResult, error) {
@@ -529,8 +592,11 @@ func (s *Service) resolveProviders(ctx context.Context, principal *backendauth.P
 				if !row.Enabled {
 					continue
 				}
-				personallyEnabled[row.Provider] = true
 				cat := catalogByName(row.Provider)
+				if cat != nil && cat.Kind == KindResearch {
+					continue // a research source never answers a web search
+				}
+				personallyEnabled[row.Provider] = true
 				baseURL := row.BaseURL
 				if baseURL == "" && cat != nil {
 					baseURL = cat.DefaultBaseURL
@@ -548,6 +614,9 @@ func (s *Service) resolveProviders(ctx context.Context, principal *backendauth.P
 			}
 			if s.cloudClient != nil {
 				for _, cand := range s.resolveCloudProviders(ctx, principal.AuthSession.ID, principal.OrganizationID(), personallyEnabled) {
+					if cat := catalogByName(cand.provider); cat != nil && cat.Kind == KindResearch {
+						continue
+					}
 					configs = append(configs, SearchRunProvider{
 						Provider:     cand.provider,
 						BaseURL:      strings.TrimSpace(cand.resolved.BaseURL),

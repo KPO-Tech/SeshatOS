@@ -38,7 +38,11 @@ type QueryInput struct {
 	PermissionMode     types.PermissionMode  // effective tool approval mode for this turn/session
 	ExecutionOrigin    types.ExecutionOrigin // interactive vs automation provenance
 	WebSearchRunner    sdk.WebSearchRunnerFn // per-request DB-backed web search bridge, optional
-	AppendSystemPrompt *string               // per-request system prompt append (e.g. user preferences)
+	// ResearchKeys are this caller's credentials for the research tools (Reddit, YouTube, Google Places,
+	// Trustpilot), in the names sdk.ClientConfig.ResearchKeys takes: their own, else their organization's. A
+	// tool without its keys is not offered to the model. Populated in prepareRuntimeInput from the principal.
+	ResearchKeys       map[string]string
+	AppendSystemPrompt *string // per-request system prompt append (e.g. user preferences)
 	// AgentSlug identifies an agent profile (built-in or skill-derived) to
 	// apply for this session. When set, the agent's system prompt, model, and
 	// permission mode override the defaults unless already explicitly provided.

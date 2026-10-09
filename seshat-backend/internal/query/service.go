@@ -115,6 +115,8 @@ type defaultProviderResolver interface {
 // Nil means no DB-backed provider — the tool falls back to env vars.
 type webSearchProvider interface {
 	Search(ctx context.Context, principal *backendauth.Principal, params bkwebsearch.SearchParams) (*bkwebsearch.SearchResponse, error)
+	// ResearchKeys returns the caller's credentials for the research tools (see QueryInput.ResearchKeys).
+	ResearchKeys(ctx context.Context, principal *backendauth.Principal) map[string]string
 }
 
 func NewService(cfg ServiceConfig) *Service {
@@ -1149,6 +1151,7 @@ func (s *Service) prepareRuntimeInput(ctx context.Context, principal *backendaut
 	// Build a per-request web search runner that closes over the current principal
 	// so the tool enforces the user's quota and domain policy on every call.
 	if s.webSearch != nil && principal != nil {
+		runtimeInput.ResearchKeys = s.webSearch.ResearchKeys(ctx, principal)
 		ws := s.webSearch
 		p := principal
 		runtimeInput.WebSearchRunner = func(runCtx context.Context, query string, allowedDomains, blockedDomains []string) (webcore.SearchResponse, error) {

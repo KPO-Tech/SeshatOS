@@ -26,7 +26,9 @@ export function WebSearchConfig() {
   const [error, setError] = useState<string | null>(null)
 
   const catalogDomains = useMemo(() => allCatalogDomains(catalog), [catalog])
-  const readyProviders = providers.filter((provider) => provider.enabled && (!provider.requires_api_key || provider.has_api_key))
+  const searchProviders = providers.filter((provider) => provider.kind !== 'research')
+  const researchProviders = providers.filter((provider) => provider.kind === 'research')
+  const readyProviders = searchProviders.filter((provider) => provider.enabled && (!provider.requires_api_key || provider.has_api_key))
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -138,7 +140,7 @@ export function WebSearchConfig() {
       )}
 
       <section className="grid grid-cols-3 gap-2">
-        <Metric label="Providers" value={String(providers.length)} />
+        <Metric label="Providers" value={String(searchProviders.length)} />
         <Metric label="Ready" value={String(readyProviders.length)} />
         <Metric label="Active domains" value={String(activeDomains.size)} />
       </section>
@@ -157,15 +159,29 @@ export function WebSearchConfig() {
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {providers.length === 0 ? (
+              {searchProviders.length === 0 ? (
                 <ProviderEmptyState label="No search providers available." />
               ) : (
-                providers.map((provider) => (
+                searchProviders.map((provider) => (
                   <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
                 ))
               )}
             </div>
           </section>
+
+          {researchProviders.length > 0 && (
+            <section>
+              <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Research sources</h2>
+              <p className="mt-1 text-[12px] text-[var(--text-muted)]">
+                Keys for the tools an agent uses to read reviews and opinions for market studies and product comparisons. A tool is offered to the agent only once its key is saved. App Store reviews need no key.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {researchProviders.map((provider) => (
+                  <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
+                ))}
+              </div>
+            </section>
+          )}
 
           {catalog.length > 0 && (
             <DomainCatalog

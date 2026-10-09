@@ -2,8 +2,11 @@ package query
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -98,6 +101,9 @@ type clientCacheKey struct {
 	// managed is the organization's rules a cached client was built with: a change of rules must
 	// not keep serving a client that still has the old ones.
 	managed string
+	// research identifies the research keys a cached client was built with: a key that changed or was removed
+	// must not keep being used by a client that already holds it.
+	research string
 }
 
 // cachedRuntimeClient pairs a cached client with when it was last handed out,
@@ -178,6 +184,23 @@ func managedPolicyKey(policy *sdk.ManagedPolicy) string {
 		return ""
 	}
 	return fmt.Sprintf("%q|%q", policy.Instructions, policy.ForbiddenTools)
+}
+
+// researchKeysFingerprint identifies a set of keys (names and values) without keeping them readable.
+func researchKeysFingerprint(keys map[string]string) string {
+	if len(keys) == 0 {
+		return ""
+	}
+	names := make([]string, 0, len(keys))
+	for name := range keys {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	sum := sha256.New()
+	for _, name := range names {
+		fmt.Fprintf(sum, "%s=%s\n", name, keys[name])
+	}
+	return hex.EncodeToString(sum.Sum(nil))[:16]
 }
 
 // SetSandboxModeResolver attaches the per-request resolver for Settings >
@@ -674,6 +697,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 		cfg = r.buildClientConfig(ctx, *input.RuntimeProvider)
 	}
 	cfg.UserID = input.UserID
+	cfg.ResearchKeys = input.ResearchKeys
 
 	r.mu.RLock()
 	ragArtifacts, ragVectors, ragEmbedder, ragChunker, ragCorpora := r.ragArtifacts, r.ragVectors, r.ragEmbedder, r.ragChunker, r.ragCorpora
@@ -689,6 +713,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 		apiKey:   cfg.APIKey,
 		browser:  strings.TrimSpace(cfg.BrowserRemoteControlURL),
 		managed:  managedPolicyKey(cfg.ManagedPolicy),
+		research: researchKeysFingerprint(input.ResearchKeys),
 	}
 	if cfg.ProviderConfig != nil {
 		key.baseURL = cfg.ProviderConfig.BaseURL

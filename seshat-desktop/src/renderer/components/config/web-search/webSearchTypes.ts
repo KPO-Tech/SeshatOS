@@ -26,6 +26,9 @@ export type SearchProviderConfig = {
   priority: number
   updated_at?: number
   source?: string
+  // 'research' for the sources of the research tools (Reddit, YouTube, Google Places, Trustpilot); absent for a
+  // web search provider.
+  kind?: string
 }
 
 export type DomainCategory = {

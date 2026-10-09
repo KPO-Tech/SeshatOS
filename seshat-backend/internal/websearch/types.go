@@ -16,7 +16,14 @@ type ProviderCatalogEntry struct {
 	RequiresBaseURL bool
 	DefaultBaseURL  string
 	Priority        int
+	// Kind is "" for a web search provider and KindResearch for a source of the research tools (Reddit,
+	// YouTube, Google Places, Trustpilot). Research sources share this catalog and its configuration, but
+	// they are never asked to answer a web search.
+	Kind string
 }
+
+// KindResearch marks a catalog entry that feeds the research tools instead of web search.
+const KindResearch = "research"
 
 // ProviderStatus is the runtime state of a configured provider.
 type ProviderStatus struct {
@@ -30,6 +37,7 @@ type ProviderStatus struct {
 	RequiresBaseURL bool
 	DefaultBaseURL  string
 	Priority        int
+	Kind            string
 	UpdatedAt       time.Time
 	// Source is "organization"/"platform" when this provider isn't
 	// personally configured but was resolved from a connected seshat-server
