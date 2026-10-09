@@ -8,4 +8,12 @@ export type CloudStatus = {
   policies?: Record<string, boolean>
   min_app_version?: string
   app_version_outdated?: boolean
+  rules?: CloudOrganizationRules
+}
+
+// What the organization imposes on every agent on this desktop, as last received.
+export type CloudOrganizationRules = {
+  instructions: string
+  forbidden_tools: string[]
+  version?: string
 }
