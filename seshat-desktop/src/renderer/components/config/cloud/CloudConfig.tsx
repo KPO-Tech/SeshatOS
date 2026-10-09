@@ -96,6 +96,7 @@ export function CloudConfig() {
             <Info label="Connected since" value={formatDate(status.connected_at)} />
             <Info label="Policy bundle" value={String(Object.keys(status.policies ?? {}).length)} />
           </div>
+          {status.rules && <OrganizationRules rules={status.rules} />}
         </ConfigCard>
       ) : (
         <ConfigCard
@@ -121,6 +122,35 @@ export function CloudConfig() {
             </div>
           </div>
         </ConfigCard>
+      )}
+    </div>
+  )
+}
+
+// The organization's rules for agents, read-only: the administrator sets them in SeshatCloud. They
+// are kept while this desktop is offline and removed when it disconnects.
+function OrganizationRules({ rules }: { rules: NonNullable<CloudStatus['rules']> }) {
+  return (
+    <div className="mt-3 grid gap-2 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-3">
+      <div className="text-[12px] font-semibold text-[var(--text-primary)]">Organization rules for agents</div>
+      <div className="text-[11px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
+        Set by your administrator. They apply to every agent on this desktop and take precedence over your own settings.
+      </div>
+      {rules.instructions.trim() && (
+        <div>
+          <div className="text-[11px] font-semibold text-[var(--text-muted)]">Instructions</div>
+          <div className="mt-1 whitespace-pre-wrap text-[13px] text-[var(--text-primary)]">{rules.instructions}</div>
+        </div>
+      )}
+      {rules.forbidden_tools.length > 0 && (
+        <div>
+          <div className="text-[11px] font-semibold text-[var(--text-muted)]">Forbidden tools</div>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {rules.forbidden_tools.map((tool) => (
+              <code key={tool} className="rounded bg-[var(--surface-panel)] px-1.5 py-0.5 text-[12px] text-[var(--text-primary)]">{tool}</code>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

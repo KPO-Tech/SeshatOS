@@ -45,6 +45,9 @@ type Status struct {
 	// exists purely for the UI to show a banner.
 	MinAppVersion      *string `json:"min_app_version,omitempty"`
 	AppVersionOutdated bool    `json:"app_version_outdated"`
+	// Rules are the organization's rules for agents as last received (see RuleStore), so the user
+	// can see what their agents are held to. nil when none were received or none are imposed.
+	Rules *DeviceRules `json:"rules,omitempty"`
 }
 
 // Device mirrors seshat-server's Device schema — only the fields this

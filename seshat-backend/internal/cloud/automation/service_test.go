@@ -258,3 +258,38 @@ func TestServiceDisconnectClearsConnection(t *testing.T) {
 		t.Fatal("expected disconnect to clear the connection")
 	}
 }
+
+func TestServiceStatusShowsTheOrganizationRulesAndDisconnectClearsThem(t *testing.T) {
+	fakeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(Device{
+			ID: "dev_123", Name: "Alice's laptop", Status: "active",
+			Rules: &DeviceRules{Instructions: "No customer data outside.", ForbiddenTools: []string{"bash"}, Version: "v1"},
+		})
+	}))
+	defer fakeServer.Close()
+
+	database := openTestDB(t)
+	service := NewService(NewStore(database), NewPolicyStore(database), NewVersionStore(database))
+	service.SetRules(NewRuleStore(database))
+	ctx := context.Background()
+	if _, err := service.Connect(ctx, "usr_1", fakeServer.URL, "device-token-abc"); err != nil {
+		t.Fatalf("connect: %v", err)
+	}
+	status, err := service.Status(ctx)
+	if err != nil {
+		t.Fatalf("status: %v", err)
+	}
+	if status.Rules == nil || status.Rules.Instructions != "No customer data outside." || len(status.Rules.ForbiddenTools) != 1 {
+		t.Fatalf("expected Status to show the received rules, got %+v", status.Rules)
+	}
+	if err := service.Disconnect(ctx); err != nil {
+		t.Fatalf("disconnect: %v", err)
+	}
+	status, err = service.Status(ctx)
+	if err != nil {
+		t.Fatalf("status after disconnect: %v", err)
+	}
+	if status.Rules != nil {
+		t.Fatalf("a disconnected device must show no rules, got %+v", status.Rules)
+	}
+}

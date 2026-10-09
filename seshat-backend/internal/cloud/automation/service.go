@@ -140,12 +140,18 @@ func (s *Service) Status(ctx context.Context) (*Status, error) {
 	if s.versions != nil {
 		minAppVersion, appVersionOutdated = s.versions.Status(ctx)
 	}
+	var rules *DeviceRules
+	if s.rules != nil {
+		if stored := s.rules.Get(ctx); stored != nil && (strings.TrimSpace(stored.Instructions) != "" || len(stored.ForbiddenTools) > 0) {
+			rules = stored
+		}
+	}
 	conn, err := s.store.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if conn == nil {
-		return &Status{Connected: false, Policies: policies, MinAppVersion: minAppVersion, AppVersionOutdated: appVersionOutdated}, nil
+		return &Status{Connected: false, Policies: policies, MinAppVersion: minAppVersion, AppVersionOutdated: appVersionOutdated, Rules: rules}, nil
 	}
 	connectedAt := conn.ConnectedAt
 	return &Status{
@@ -158,5 +164,6 @@ func (s *Service) Status(ctx context.Context) (*Status, error) {
 		Policies:           policies,
 		MinAppVersion:      minAppVersion,
 		AppVersionOutdated: appVersionOutdated,
+		Rules:              rules,
 	}, nil
 }
