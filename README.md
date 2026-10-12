@@ -1,9 +1,10 @@
 <p align="center">
-  <img src="docs/brand/lockup-on-light.svg#gh-light-mode-only" alt="SeshatOS" width="360">
-  <img src="docs/brand/lockup-on-dark.svg#gh-dark-mode-only" alt="SeshatOS" width="360">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lockup-on-dark.svg">
+    <img src="docs/brand/lockup-on-light.svg" alt="SeshatOS" width="360">
+  </picture>
 </p>
 
-<h1 align="center">SeshatOS</h1>
 
 <p align="center">
   <b>SeshatOS is a self-hosted AI desktop app and local backend, built on the Seshat agent runtime.</b><br>
@@ -26,6 +27,8 @@
   <a href="https://github.com/KPO-Tech/SeshatCloud"><b>☁️ SeshatCloud (organizations)</b></a> ·
   <a href="https://github.com/KPO-Tech/seshat/discussions"><b>💬 Discussions</b></a>
 </p>
+
+<h1 align="center">SeshatOS</h1>
 
 ---
 
