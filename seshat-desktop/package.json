@@ -37,7 +37,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-virtual": "^3.14.13",
     "@types/papaparse": "^5.5.2",
-    "@vitejs/plugin-react": "^4.5.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "chart.js": "^4.5.1",
     "docx-preview": "^0.4.0",
     "electron-updater": "^6.6.2",
