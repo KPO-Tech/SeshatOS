@@ -69,6 +69,15 @@
   --color-info-rgb: 100, 133, 184;
 }
 
+/* Brand mark: one image per theme. Dark is the default theme. */
+.brand-mark-on-light { display: none; }
+:root[data-theme="light"] .brand-mark-on-light { display: block; }
+:root[data-theme="light"] .brand-mark-on-dark { display: none; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .brand-mark-on-light { display: block; }
+  :root:not([data-theme]) .brand-mark-on-dark { display: none; }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;

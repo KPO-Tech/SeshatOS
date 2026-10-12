@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import logoSrc from '@renderer/assets/logo.svg'
+import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { Titlebar } from '@renderer/components/layout/Titlebar'
 
 type Props = {
@@ -21,7 +21,7 @@ export function AuthLayout({ children, title, subtitle, mode }: Props) {
           <div className="flex flex-1 items-center justify-center">
             <div className="flex w-full max-w-[340px] flex-col items-center text-center">
               <div className="flex size-[86px] items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
-                <img src={logoSrc} alt="" className="size-[62px] object-contain" />
+                <SeshatLogo size={62} />
               </div>
 
               <div className="mt-6">
@@ -59,7 +59,7 @@ export function AuthLayout({ children, title, subtitle, mode }: Props) {
               <div className="mb-7 text-center">
                 <div className="mb-5 flex justify-center min-[760px]:hidden">
                   <div className="flex size-16 items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-                    <img src={logoSrc} alt="" className="size-11 object-contain" />
+                    <SeshatLogo size={44} />
                   </div>
                 </div>
                 <h1 className="m-0 text-[26px] font-semibold tracking-normal text-[var(--text-primary)]">{title}</h1>

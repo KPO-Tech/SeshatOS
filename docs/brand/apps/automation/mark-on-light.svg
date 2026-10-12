@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SeshatOS Automation">
+<defs>
+<linearGradient id="dark" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#231D19"/>
+  <stop offset="1" stop-color="#3B332D"/>
+</linearGradient>
+<linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#FF9B50"/>
+  <stop offset="0.48" stop-color="#EA7828"/>
+  <stop offset="1" stop-color="#C45A1F"/>
+</linearGradient>
+</defs>
+<path d="M 256 424 C 316 410 392 360 412 292" stroke="url(#dark)" stroke-width="16" fill="none" stroke-linecap="round"/>
+<path d="M 256 424 C 286 372 326 306 350 248" stroke="url(#orange)" stroke-width="16" fill="none" stroke-linecap="round"/>
+<path d="M 256 424 C 270 340 294 250 316 170" stroke="url(#dark)" stroke-width="16" fill="none" stroke-linecap="round"/>
+<circle cx="420" cy="270" r="21" fill="none" stroke="url(#dark)" stroke-width="10"/>
+<circle cx="354" cy="230" r="16" fill="none" stroke="url(#orange)" stroke-width="10"/>
+<circle cx="322" cy="148" r="15" fill="url(#dark)"/>
+<path d="M 256 424 C 196 410 120 360 100 292" stroke="url(#dark)" stroke-width="16" fill="none" stroke-linecap="round"/>
+<path d="M 256 424 C 226 372 186 306 162 248" stroke="url(#orange)" stroke-width="16" fill="none" stroke-linecap="round"/>
+<path d="M 256 424 C 242 340 218 250 196 170" stroke="url(#dark)" stroke-width="16" fill="none" stroke-linecap="round"/>
+<circle cx="92" cy="270" r="21" fill="none" stroke="url(#dark)" stroke-width="10"/>
+<circle cx="158" cy="230" r="16" fill="none" stroke="url(#orange)" stroke-width="10"/>
+<circle cx="190" cy="148" r="15" fill="url(#dark)"/>
+<path d="M 249 424 L 249 128 Q 249 118 256 118 Q 263 118 263 128 L 263 424 Z" fill="url(#orange)"/>
+<circle cx="256" cy="92" r="30" fill="url(#orange)"/>
+<circle cx="256" cy="424" r="22" fill="#813915"/>
+<circle cx="249" cy="417" r="6" fill="#E59A66" opacity="0.7"/>
+</svg>

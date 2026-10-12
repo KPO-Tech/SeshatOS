@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="docs/brand/logo/reseau/orange/seshat-mark-universal.svg" alt="SeshatOS" width="120">
+  <img src="docs/brand/lockup-on-light.svg#gh-light-mode-only" alt="SeshatOS" width="360">
+  <img src="docs/brand/lockup-on-dark.svg#gh-dark-mode-only" alt="SeshatOS" width="360">
 </p>
 
 <h1 align="center">SeshatOS</h1>

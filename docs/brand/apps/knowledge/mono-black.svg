@@ -1,15 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 10 80 80" role="img" aria-label="icône">
-  <path d="M50,72 C41,65 28,64 18,68 L18,32 C28,28 41,29 50,36 Z" stroke="#000000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M50,72 C59,65 72,64 82,68 L82,32 C72,28 59,29 50,36 Z" stroke="#000000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <g stroke="#000000" stroke-width="2.4" stroke-linecap="round" opacity=".75">
-    <line x1="50" y1="52" x2="31" y2="46"/>
-    <line x1="50" y1="52" x2="69" y2="46"/>
-    <line x1="50" y1="52" x2="34" y2="58"/>
-    <line x1="50" y1="52" x2="66" y2="58"/>
-  </g>
-  <circle cx="50" cy="52" r="5.2" fill="#000000"/>
-  <circle cx="31" cy="46" r="3.4" fill="#000000"/>
-  <circle cx="69" cy="46" r="3.4" fill="#000000"/>
-  <circle cx="34" cy="58" r="3.4" fill="#000000"/>
-  <circle cx="66" cy="58" r="3.4" fill="#000000"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 500" role="img" aria-label="SeshatOS Knowledge">
+<path d="M80 178 C57 171 37 180 37 201 L37 378 C37 398 48 403 66 397 C125 378 191 378 259 422" stroke="#111111" stroke-width="24" stroke-linejoin="round" fill="none" stroke-linecap="round"/>
+<path d="M580 178 C603 171 623 180 623 201 L623 378 C623 398 612 403 594 397 C535 378 469 378 401 422" stroke="#111111" stroke-width="24" stroke-linejoin="round" fill="none" stroke-linecap="round"/>
+<path d="M125 147 C177 119 225 153 257 199 C288 244 298 308 304 364" stroke="#111111" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M535 147 C483 119 435 153 403 199 C372 244 362 308 356 364" stroke="#111111" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M155 225 C218 251 271 304 298 361" stroke="#111111" stroke-width="21" fill="none" stroke-linecap="round"/>
+<path d="M505 225 C442 251 389 304 362 361" stroke="#111111" stroke-width="21" fill="none" stroke-linecap="round"/>
+<path d="M155 320 C209 330 246 350 273 380" stroke="#111111" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M505 320 C451 330 414 350 387 380" stroke="#111111" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M316 80 L344 80 L344 360 Q344 374 330 374 Q316 374 316 360 Z" fill="#111111"/>
+<circle cx="330" cy="52" r="39" fill="#111111"/>
+<circle cx="150" cy="217" r="31" fill="#111111"/>
+<circle cx="510" cy="217" r="31" fill="#111111"/>
+<circle cx="150" cy="312" r="29" fill="#111111"/>
+<circle cx="510" cy="312" r="29" fill="#111111"/>
+<circle cx="330" cy="448" r="34" fill="#111111"/>
 </svg>
