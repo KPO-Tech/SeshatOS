@@ -11,8 +11,8 @@ import (
 )
 
 // Service backs the local /cloud/* HTTP handlers (status, connect,
-// disconnect, recent runs). Job management itself is not exposed here — it
-// happens exclusively in seshat-console once connected.
+// disconnect). Job management is not exposed here — it happens exclusively in
+// seshat-console once connected.
 type Service struct {
 	store    *Store
 	policies *PolicyStore
@@ -29,8 +29,7 @@ func NewService(store *Store, policies *PolicyStore, versions *VersionStore) *Se
 
 // Connect validates the pasted device token by heartbeating with it, then
 // persists the connection. userID is whichever local seshat-backend user
-// performed this action — captured so the JobExecutor knows whose local
-// credentials/context to run claimed jobs under.
+// performed this action.
 func (s *Service) Connect(ctx context.Context, userID, serverURL, deviceToken string) (*Status, error) {
 	serverURL = strings.TrimSpace(serverURL)
 	deviceToken = strings.TrimSpace(deviceToken)

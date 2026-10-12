@@ -9,9 +9,11 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 )
 
-// Client is a thin HTTP client for seshat-server's device-authenticated
-// automation protocol (POST /device/heartbeat, /device/runs/claim,
-// /device/runs/{id}/job|start|heartbeat|complete|fail, GET /device/runs).
+// Client is a thin HTTP client for the one device-authenticated call this
+// desktop makes to seshat-server: POST /device/heartbeat, which reports
+// liveness and brings back what the organization governs here (policies,
+// minimum app version, organization rules). Claiming and reporting runs no
+// longer exists: automation runs in the Cloud only.
 type Client struct {
 	serverURL   string
 	deviceToken string
@@ -27,8 +29,7 @@ func NewClient(serverURL, deviceToken string) *Client {
 }
 
 // do sends a device-authenticated request and decodes a JSON response into
-// out (if non-nil). Returns the HTTP status code so callers can special-case
-// 204 (e.g. "nothing to claim") without treating it as an error.
+// out (if non-nil). Returns the HTTP status code.
 func (c *Client) do(ctx context.Context, method, path string, body, out any) (int, error) {
 	return cloudhttp.Do(ctx, c.httpClient, method, c.serverURL+path, c.deviceToken, body, out)
 }
