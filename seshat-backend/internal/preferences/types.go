@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 type UserPreferences struct {

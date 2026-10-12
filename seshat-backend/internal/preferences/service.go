@@ -5,7 +5,7 @@ import (
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 // Service is a thin orchestrator over an injected Provider (local or remote

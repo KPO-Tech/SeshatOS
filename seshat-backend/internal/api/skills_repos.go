@@ -11,8 +11,8 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/skillregistry"
-	skillsloader "github.com/KPO-Tech/seshat/pkg/skills"
-	"github.com/KPO-Tech/seshat/pkg/skills/skillrepos"
+	skillsloader "github.com/KPO-Tech/seshat-runtime/pkg/skills"
+	"github.com/KPO-Tech/seshat-runtime/pkg/skills/skillrepos"
 )
 
 // FeaturedSkillRepo describes a curated skill repository shown in the install catalog.

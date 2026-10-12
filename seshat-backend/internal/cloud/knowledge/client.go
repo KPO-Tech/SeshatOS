@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
-	"github.com/KPO-Tech/seshat/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 )
 
 // ─── Wire DTOs ──────────────────────────────────────────────────────────────

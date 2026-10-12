@@ -8,7 +8,7 @@ import (
 
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
-	"github.com/KPO-Tech/seshat/pkg/providers"
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 )
 
 type settingResponse struct {

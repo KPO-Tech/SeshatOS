@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/KPO-Tech/seshat/pkg/vector"
+	"github.com/KPO-Tech/seshat-runtime/pkg/vector"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"

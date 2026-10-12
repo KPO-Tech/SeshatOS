@@ -4,7 +4,7 @@ import (
 	"golang.org/x/oauth2"
 
 	googleOAuth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/oauth/google"
-	coreconnectors "github.com/KPO-Tech/seshat/pkg/connectors"
+	coreconnectors "github.com/KPO-Tech/seshat-runtime/pkg/connectors"
 )
 
 // Scopes requested from Google - read-only Drive access plus the account's

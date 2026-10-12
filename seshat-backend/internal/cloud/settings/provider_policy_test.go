@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/KPO-Tech/seshat/pkg/providers"
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"

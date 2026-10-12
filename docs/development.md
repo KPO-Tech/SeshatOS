@@ -21,12 +21,12 @@ use (
 
 The `seshat` engine is not a submodule and should not be referenced through a
 local `replace`. It is consumed as the published external module
-`github.com/KPO-Tech/seshat`.
+`github.com/KPO-Tech/seshat-runtime`.
 
 The backend module consumes:
 
 ```go
-require github.com/KPO-Tech/seshat v1.2.55
+require github.com/KPO-Tech/seshat-runtime v1.2.55
 ```
 
 ## Common Workflow
@@ -56,13 +56,13 @@ npm run dev
 ## Updating The Seshat Engine
 
 The `seshat` code lives in its own repository:
-`github.com/KPO-Tech/seshat`.
+`github.com/KPO-Tech/seshat-runtime`.
 
 To consume a new runtime change:
 
 1. Merge the runtime change in the `seshat` repo.
 2. Publish a new semver tag, for example `v1.2.56`.
-3. Run `go get github.com/KPO-Tech/seshat@vX.Y.Z` from `seshat-backend/`.
+3. Run `go get github.com/KPO-Tech/seshat-runtime@vX.Y.Z` from `seshat-backend/`.
 4. Commit the updated `go.mod` and `go.sum` files.
 
-Do not commit local `replace` directives for `github.com/KPO-Tech/seshat`.
+Do not commit local `replace` directives for `github.com/KPO-Tech/seshat-runtime`.

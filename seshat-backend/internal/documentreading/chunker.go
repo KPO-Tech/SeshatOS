@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
 )
 
 // DynamicHybridChunker adapts the current document-reader settings to the

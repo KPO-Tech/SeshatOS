@@ -12,8 +12,8 @@ package documentreading
 import (
 	"context"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	sdkreading "github.com/KPO-Tech/seshat/pkg/documentreading"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	sdkreading "github.com/KPO-Tech/seshat-runtime/pkg/documentreading"
 )
 
 // NativeExtensions lists formats converted locally, no external service needed.

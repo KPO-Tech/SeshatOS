@@ -12,7 +12,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 	cloudknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	ragembedder "github.com/KPO-Tech/seshat/pkg/rag/embedder"
+	ragembedder "github.com/KPO-Tech/seshat-runtime/pkg/rag/embedder"
 )
 
 type embedderConfigResponse struct {

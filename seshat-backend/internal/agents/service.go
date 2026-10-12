@@ -9,8 +9,8 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/agents"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	pkgagent "github.com/KPO-Tech/seshat/pkg/agent"
-	"github.com/KPO-Tech/seshat/pkg/types"
+	pkgagent "github.com/KPO-Tech/seshat-runtime/pkg/agent"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 	"gorm.io/gorm"
 )
 

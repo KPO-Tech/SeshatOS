@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
 )
 
 // The size a host chunks with reaches the service: without it the service cuts at its tokenizer's own limit.

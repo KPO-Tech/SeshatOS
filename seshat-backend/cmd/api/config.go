@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/api"
-	appconfig "github.com/KPO-Tech/seshat/pkg/config"
+	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
 )
 
 // defaultAPIConfig builds the HTTP server configuration from the app config.

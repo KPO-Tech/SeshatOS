@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	"github.com/KPO-Tech/seshat/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 )
 
 const (

@@ -35,7 +35,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 const sseProtocolVersion = "1"

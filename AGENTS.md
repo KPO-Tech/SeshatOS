@@ -6,7 +6,7 @@ Read this file before changing code in this repository.
 
 ## Project overview
 
-SeshatOS is the self-hosted local product built on top of [seshat](https://github.com/KPO-Tech/seshat), the open-source Go agent runtime.
+SeshatOS is the self-hosted local product built on top of [seshat](https://github.com/KPO-Tech/seshat-runtime), the open-source Go agent runtime.
 
 | Directory | Language | Role |
 |---|---|---|
@@ -15,9 +15,9 @@ SeshatOS is the self-hosted local product built on top of [seshat](https://githu
 | `shared/connector-catalog/` | TypeScript | connector metadata consumed by the desktop app |
 
 `seshat` — the open-source runtime — is not vendored here. It's an external Go module,
-`github.com/KPO-Tech/seshat`, required directly in `seshat-backend/go.mod`. Never add a
+`github.com/KPO-Tech/seshat-runtime`, required directly in `seshat-backend/go.mod`. Never add a
 local `replace` directive for it; bump the version with
-`go get github.com/KPO-Tech/seshat@vX.Y.Z` instead.
+`go get github.com/KPO-Tech/seshat-runtime@vX.Y.Z` instead.
 
 Dependency direction is one-way:
 
@@ -127,8 +127,8 @@ Do not:
 
 ## Rules for seshat
 
-- `seshat` is not part of this repository. It's an external Go module, `github.com/KPO-Tech/seshat`, developed in its own repo and pinned by version in `seshat-backend/go.mod`.
-- Never add a local `replace` directive for it. If the backend needs something missing from `seshat/pkg/*`, add it in the seshat repo first, tag a release, then bump the version here with `go get github.com/KPO-Tech/seshat@vX.Y.Z`.
+- `seshat` is not part of this repository. It's an external Go module, `github.com/KPO-Tech/seshat-runtime`, developed in its own repo and pinned by version in `seshat-backend/go.mod`.
+- Never add a local `replace` directive for it. If the backend needs something missing from `seshat/pkg/*`, add it in the seshat repo first, tag a release, then bump the version here with `go get github.com/KPO-Tech/seshat-runtime@vX.Y.Z`.
 
 ---
 

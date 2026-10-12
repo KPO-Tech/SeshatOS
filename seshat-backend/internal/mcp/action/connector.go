@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	sdkmcp "github.com/KPO-Tech/seshat/pkg/mcp"
+	sdkmcp "github.com/KPO-Tech/seshat-runtime/pkg/mcp"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"

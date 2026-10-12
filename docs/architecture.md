@@ -16,7 +16,7 @@ seshatos/
 ```
 
 `seshat` — the open-source Go runtime — is not part of this repository. It is consumed as an
-external module, `github.com/KPO-Tech/seshat`, declared directly in `seshat-backend/go.mod`.
+external module, `github.com/KPO-Tech/seshat-runtime`, declared directly in `seshat-backend/go.mod`.
 
 The dependency direction is intentionally one-way:
 
@@ -122,11 +122,11 @@ Allowed examples:
 
 ```go
 import (
-    "github.com/KPO-Tech/seshat/pkg/config"
-    "github.com/KPO-Tech/seshat/pkg/rag"
-    "github.com/KPO-Tech/seshat/pkg/sdk"
-    "github.com/KPO-Tech/seshat/pkg/storage"
-    "github.com/KPO-Tech/seshat/pkg/types"
+    "github.com/KPO-Tech/seshat-runtime/pkg/config"
+    "github.com/KPO-Tech/seshat-runtime/pkg/rag"
+    "github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+    "github.com/KPO-Tech/seshat-runtime/pkg/storage"
+    "github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 ```
 

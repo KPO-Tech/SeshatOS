@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // rulesCredentialKey is the row holding the organization's rules for agents (decision 0004 in

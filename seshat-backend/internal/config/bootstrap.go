@@ -47,22 +47,22 @@ import (
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
-	appconfig "github.com/KPO-Tech/seshat/pkg/config"
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	"github.com/KPO-Tech/seshat/pkg/mcp"
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
-	"github.com/KPO-Tech/seshat/pkg/monitoring"
-	"github.com/KPO-Tech/seshat/pkg/providers"
-	"github.com/KPO-Tech/seshat/pkg/rag"
-	ragembedder "github.com/KPO-Tech/seshat/pkg/rag/embedder"
-	"github.com/KPO-Tech/seshat/pkg/rag/reranker"
-	"github.com/KPO-Tech/seshat/pkg/runtimepath"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
-	skillsloader "github.com/KPO-Tech/seshat/pkg/skills"
-	managedskills "github.com/KPO-Tech/seshat/pkg/skills/managed"
-	"github.com/KPO-Tech/seshat/pkg/skills/skillrepos"
-	"github.com/KPO-Tech/seshat/pkg/storage"
-	"github.com/KPO-Tech/seshat/pkg/vector"
+	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/mcp"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
+	"github.com/KPO-Tech/seshat-runtime/pkg/monitoring"
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	ragembedder "github.com/KPO-Tech/seshat-runtime/pkg/rag/embedder"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag/reranker"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+	skillsloader "github.com/KPO-Tech/seshat-runtime/pkg/skills"
+	managedskills "github.com/KPO-Tech/seshat-runtime/pkg/skills/managed"
+	"github.com/KPO-Tech/seshat-runtime/pkg/skills/skillrepos"
+	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
+	"github.com/KPO-Tech/seshat-runtime/pkg/vector"
 )
 
 // defaultServerURL is the seshat-server this build talks to when it's
@@ -938,7 +938,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// server (see api.handleLocalSTTConfig, set by the Electron main
 	// process) instead of the operator's OPENAI_API_KEY default, without a
 	// restart. No API key needed - the engine no longer requires one when a
-	// custom BaseURL is set (KPO-Tech/seshat#101), and whisper-server
+	// custom BaseURL is set (KPO-Tech/seshat-runtime#101), and whisper-server
 	// doesn't check the Authorization header anyway.
 	runtime.SetLocalSTTResolver(func(ctx context.Context) *sdk.SpeechToTextConfig {
 		cfg, err := localSTTConfigStore.Get(ctx)

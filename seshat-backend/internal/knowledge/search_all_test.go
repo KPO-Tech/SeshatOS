@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	"github.com/KPO-Tech/seshat/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 )
 
 // fakeBackend is a minimal Backend stub for exercising SearchAll without a

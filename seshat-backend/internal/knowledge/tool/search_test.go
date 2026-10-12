@@ -7,8 +7,8 @@ import (
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
-	"github.com/KPO-Tech/seshat/pkg/rag"
-	"github.com/KPO-Tech/seshat/pkg/tools"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/tools"
 )
 
 // fakeBackend is a minimal knowledge.Backend stub - the merge/sort/trim

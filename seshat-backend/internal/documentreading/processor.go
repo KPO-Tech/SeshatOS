@@ -10,7 +10,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
 )
 
 // ConverterResolver returns the current document converter for one operation.
