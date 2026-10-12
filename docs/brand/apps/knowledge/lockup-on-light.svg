@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 330" role="img" aria-label="SeshatOS Knowledge">
+<defs>
+<linearGradient id="charcoal" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#231D19"/>
+  <stop offset="0.55" stop-color="#3B332D"/>
+  <stop offset="1" stop-color="#231D19"/>
+</linearGradient>
+<linearGradient id="arch-left" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#231D19"/>
+  <stop offset="0.25" stop-color="#231D19"/>
+  <stop offset="0.62" stop-color="#8A492B"/>
+  <stop offset="0.94" stop-color="#FF7C18"/>
+</linearGradient>
+<linearGradient id="arch-right" x1="1" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#231D19"/>
+  <stop offset="0.25" stop-color="#231D19"/>
+  <stop offset="0.62" stop-color="#8A492B"/>
+  <stop offset="0.94" stop-color="#FF7C18"/>
+</linearGradient>
+<linearGradient id="orange-vivid" x1="0" y1="0" x2="0.85" y2="1">
+  <stop offset="0" stop-color="#FF922F"/>
+  <stop offset="0.56" stop-color="#FA7416"/>
+  <stop offset="1" stop-color="#E95B0A"/>
+</linearGradient>
+<linearGradient id="node" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#231D19"/>
+  <stop offset="1" stop-color="#3B332D"/>
+</linearGradient>
+</defs>
+<g transform="translate(10 35) scale(0.52)">
+<path d="M80 178 C57 171 37 180 37 201 L37 378 C37 398 48 403 66 397 C125 378 191 378 259 422" stroke="url(#charcoal)" stroke-width="24" stroke-linejoin="round" fill="none" stroke-linecap="round"/>
+<path d="M580 178 C603 171 623 180 623 201 L623 378 C623 398 612 403 594 397 C535 378 469 378 401 422" stroke="url(#charcoal)" stroke-width="24" stroke-linejoin="round" fill="none" stroke-linecap="round"/>
+<path d="M125 147 C177 119 225 153 257 199 C288 244 298 308 304 364" stroke="url(#arch-left)" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M535 147 C483 119 435 153 403 199 C372 244 362 308 356 364" stroke="url(#arch-right)" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M155 225 C218 251 271 304 298 361" stroke="url(#orange-vivid)" stroke-width="21" fill="none" stroke-linecap="round"/>
+<path d="M505 225 C442 251 389 304 362 361" stroke="url(#orange-vivid)" stroke-width="21" fill="none" stroke-linecap="round"/>
+<path d="M155 320 C209 330 246 350 273 380" stroke="url(#orange-vivid)" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M505 320 C451 330 414 350 387 380" stroke="url(#orange-vivid)" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M316 80 L344 80 L344 360 Q344 374 330 374 Q316 374 316 360 Z" fill="#FA7416"/>
+<circle cx="330" cy="52" r="39" fill="url(#orange-vivid)"/>
+<circle cx="150" cy="217" r="31" fill="url(#orange-vivid)"/>
+<circle cx="510" cy="217" r="31" fill="url(#orange-vivid)"/>
+<circle cx="150" cy="312" r="29" fill="url(#orange-vivid)"/>
+<circle cx="510" cy="312" r="29" fill="url(#orange-vivid)"/>
+<circle cx="330" cy="448" r="34" fill="url(#node)"/>
+</g>
+<text x="400" y="150" font-family="Sora, Inter, Arial, sans-serif" font-size="96" font-weight="650" letter-spacing="-4"><tspan fill="#2A2420">Seshat</tspan><tspan fill="#EA7828">OS</tspan></text>
+<text x="404" y="225" font-family="Sora, Inter, Arial, sans-serif" font-size="66" font-weight="300" letter-spacing="-1" fill="#2A2420">Knowledge</text>
+<text x="408" y="278" font-family="Sora, Inter, Arial, sans-serif" font-size="18" font-weight="400" letter-spacing="5" fill="#3A322C">EXPLORE  ·  ORGANISE  ·  CONNECT</text>
+</svg>
