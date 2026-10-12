@@ -188,7 +188,9 @@ type searchProviderResponse struct {
 	RequiresBaseURL bool   `json:"requires_base_url"`
 	DefaultBaseURL  string `json:"default_base_url,omitempty"`
 	Priority        int    `json:"priority"`
-	UpdatedAt       int64  `json:"updated_at,omitempty"`
+	// Kind is "research" for the sources of the research tools; empty for a web search provider.
+	Kind      string `json:"kind,omitempty"`
+	UpdatedAt int64  `json:"updated_at,omitempty"`
 	// Source is "organization"/"platform" for providers resolved from a
 	// connected seshat-server rather than personally configured — see
 	// internal/cloudwebsearch.
@@ -211,6 +213,7 @@ func providerStatusToResponse(p backendwebsearch.ProviderStatus) searchProviderR
 		RequiresBaseURL: p.RequiresBaseURL,
 		DefaultBaseURL:  p.DefaultBaseURL,
 		Priority:        p.Priority,
+		Kind:            p.Kind,
 		Source:          p.Source,
 		UpdatedAt:       updatedAt,
 	}

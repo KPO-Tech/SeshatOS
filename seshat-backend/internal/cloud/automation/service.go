@@ -10,14 +10,18 @@ import (
 	"time"
 )
 
-// Service backs the local /automation/* HTTP handlers (status, connect,
+// Service backs the local /cloud/* HTTP handlers (status, connect,
 // disconnect, recent runs). Job management itself is not exposed here — it
 // happens exclusively in seshat-console once connected.
 type Service struct {
 	store    *Store
 	policies *PolicyStore
 	versions *VersionStore
+	rules    *RuleStore
 }
+
+// SetRules lets the service store the organization's rules brought by the heartbeat.
+func (s *Service) SetRules(rules *RuleStore) { s.rules = rules }
 
 func NewService(store *Store, policies *PolicyStore, versions *VersionStore) *Service {
 	return &Service{store: store, policies: policies, versions: versions}
@@ -47,6 +51,11 @@ func (s *Service) Connect(ctx context.Context, userID, serverURL, deviceToken st
 	if s.versions != nil {
 		if err := s.versions.Save(ctx, device.MinAppVersion, device.AppVersionOutdated); err != nil {
 			return nil, fmt.Errorf("save app version status: %w", err)
+		}
+	}
+	if s.rules != nil {
+		if err := s.rules.Save(ctx, device.Rules); err != nil {
+			return nil, fmt.Errorf("save organization rules: %w", err)
 		}
 	}
 
@@ -102,48 +111,6 @@ func (s *Service) RegisterAndConnect(ctx context.Context, userID, serverURL, use
 	return s.Connect(ctx, userID, serverURL, result.Token)
 }
 
-// AutoRegisterFirstDevice silently registers this machine as the
-// organization's automation device the moment its status is checked while
-// disconnected - but only when the organization has no device registered
-// anywhere yet. Once one exists (this machine or another), this never fires
-// again for that organization: moving automation to a different machine
-// stays the explicit, user-initiated RegisterAndConnect/Connect path, so a
-// second desktop signing into the same account can't silently steal
-// execution away from wherever it's already set up. Errors are swallowed -
-// this runs as a side effect of an ordinary status check, not a user action,
-// so a failed attempt just leaves the status disconnected, same as if this
-// didn't exist; the explicit "Register device" button is still there.
-func (s *Service) AutoRegisterFirstDevice(ctx context.Context, userID, serverURL, userToken, organizationID string) *Status {
-	fallback := func() *Status {
-		status, err := s.Status(ctx)
-		if err != nil {
-			return &Status{Connected: false, Policies: map[string]bool{}}
-		}
-		return status
-	}
-
-	if existing := fallback(); existing.Connected {
-		return existing
-	}
-	serverURL = strings.TrimSpace(serverURL)
-	userToken = strings.TrimSpace(userToken)
-	organizationID = strings.TrimSpace(organizationID)
-	if serverURL == "" || userToken == "" || organizationID == "" {
-		return fallback()
-	}
-
-	devices, err := NewJobsClient(serverURL).ListOrgDevices(ctx, userToken, organizationID)
-	if err != nil || len(devices) > 0 {
-		return fallback()
-	}
-
-	status, err := s.RegisterAndConnect(ctx, userID, serverURL, userToken, organizationID, "")
-	if err != nil {
-		return fallback()
-	}
-	return status
-}
-
 func (s *Service) Disconnect(ctx context.Context) error {
 	if s.policies != nil {
 		if err := s.policies.Clear(ctx); err != nil {
@@ -152,6 +119,11 @@ func (s *Service) Disconnect(ctx context.Context) error {
 	}
 	if s.versions != nil {
 		if err := s.versions.Clear(ctx); err != nil {
+			return err
+		}
+	}
+	if s.rules != nil {
+		if err := s.rules.Clear(ctx); err != nil {
 			return err
 		}
 	}
@@ -168,12 +140,18 @@ func (s *Service) Status(ctx context.Context) (*Status, error) {
 	if s.versions != nil {
 		minAppVersion, appVersionOutdated = s.versions.Status(ctx)
 	}
+	var rules *DeviceRules
+	if s.rules != nil {
+		if stored := s.rules.Get(ctx); stored != nil && (strings.TrimSpace(stored.Instructions) != "" || len(stored.ForbiddenTools) > 0) {
+			rules = stored
+		}
+	}
 	conn, err := s.store.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if conn == nil {
-		return &Status{Connected: false, Policies: policies, MinAppVersion: minAppVersion, AppVersionOutdated: appVersionOutdated}, nil
+		return &Status{Connected: false, Policies: policies, MinAppVersion: minAppVersion, AppVersionOutdated: appVersionOutdated, Rules: rules}, nil
 	}
 	connectedAt := conn.ConnectedAt
 	return &Status{
@@ -186,19 +164,6 @@ func (s *Service) Status(ctx context.Context) (*Status, error) {
 		Policies:           policies,
 		MinAppVersion:      minAppVersion,
 		AppVersionOutdated: appVersionOutdated,
+		Rules:              rules,
 	}, nil
-}
-
-// RecentRuns proxies seshat-server's device-scoped run list for local
-// visibility (read-only) — job/run management itself stays in seshat-console.
-func (s *Service) RecentRuns(ctx context.Context) ([]Run, error) {
-	conn, err := s.store.Load(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if conn == nil {
-		return nil, fmt.Errorf("not connected to a seshat-server instance")
-	}
-	client := NewClient(conn.ServerURL, conn.DeviceToken)
-	return client.MyRuns(ctx)
 }

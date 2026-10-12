@@ -1,15 +1,18 @@
 # Brand assets: SeshatOS logo and app icons
 
-These files are generated from the Seshat AI identity kit (private repository `seshat-ai`, `docs/strategie/identite`, `python build.py`). They are SVG and have no background. Do not edit them by hand: update the kit and copy the files again.
+These files are generated from the Seshat AI identity kit (private repository `seshat-ai`, `docs/strategie/identite`). Do not edit them by hand: change the kit, then run `python publish.py --apply` there to copy them again.
+
+Orange is the only brand colour. The light colour is a warm off-white, never pure white, and the dark is a warm near-black.
 
 | File | Use |
 |---|---|
-| `logo/<style>/<palette>/seshat-mark-on-light.svg` | Logo on a light background |
-| `logo/<style>/<palette>/seshat-mark-on-dark.svg` | Logo on a dark background |
-| `logo/<style>/<palette>/seshat-mark-universal.svg` | One deep orange, readable on both themes (use inside an interface) |
-| `logo/<style>/<palette>/seshat-mark-mono-black.svg` | One color, black |
-| `logo/<style>/<palette>/seshat-mark-mono-white.svg` | One color, white |
-| `logo/<style>/<palette>/seshat-app-icon.svg` | Square icon, dark tile |
-| `logo/<style>/<palette>/favicon.svg` | Browser icon, heavier strokes |
-| `logo/` | Styles: `reseau` (main logo), `emblem` (compact), `etoile` (v1); palettes: `orange` (desktop) and `ambre` |
-| `apps/knowledge/*.svg, apps/automation/*.svg` | App icons (dark, light and orange tiles, glyph on light or dark, mono, favicon) |
+| `mark-on-light.svg` | The mark on a light background |
+| `mark-on-dark.svg` | The mark on a dark background |
+| `lockup-on-light.svg` | Mark and name side by side, on a light background |
+| `lockup-on-dark.svg` | Mark and name side by side, on a dark background |
+| `mono-black.svg` | One colour, black (documents, print) |
+| `mono-white.svg` | One colour, warm off-white (photos, coloured backgrounds) |
+| `icon-light.svg` / `icon-dark.svg` / `icon-orange.svg` | Square app icon on a light, dark or orange tile |
+| `favicon.svg` | Browser icon, heavier strokes for 16 and 32 px |
+
+The `apps/knowledge/` and `apps/automation/` folders hold the same files for the Knowledge and Automation apps.

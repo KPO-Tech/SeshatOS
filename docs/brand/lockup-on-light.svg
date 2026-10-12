@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 320" role="img" aria-label="SeshatOS">
+<defs>
+<linearGradient id="dark" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#231D19"/>
+  <stop offset="1" stop-color="#3B332D"/>
+</linearGradient>
+<linearGradient id="warm" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#D69B76" stop-opacity="0.8"/>
+  <stop offset="1" stop-color="#D69B76" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#FF9B50"/>
+  <stop offset="0.48" stop-color="#EA7828"/>
+  <stop offset="1" stop-color="#C45A1F"/>
+</linearGradient>
+</defs>
+<g transform="translate(10 -40) scale(0.73)">
+<path d="M 89 338 C 59 271 76 172 133 116 C 170 78 213 65 256 65 C 300 65 346 83 381 120 C 436 178 452 272 423 339" fill="none" stroke="url(#dark)" stroke-width="17" stroke-linecap="round"/>
+<path d="M 118 283 C 122 189 178 120 225 108" fill="none" stroke="url(#warm)" stroke-width="10" stroke-linecap="round"/>
+<path d="M 394 282 C 390 189 334 120 287 108" fill="none" stroke="url(#warm)" stroke-width="10" stroke-linecap="round"/>
+<path d="M 256 402 C 250 338 248 266 251 158 L 261 158 C 264 267 262 339 256 402 Z" fill="url(#orange)"/>
+<path d="M 256 117 C 276 133 277 151 256 170 C 235 151 236 133 256 117 Z" fill="url(#orange)"/>
+<path d="M 244 400 C 222 327 199 262 174 211 C 196 220 212 235 225 263 C 237 290 243 343 244 400 Z" fill="url(#orange)"/>
+<path d="M 268 400 C 290 327 313 262 338 211 C 316 220 300 235 287 263 C 275 290 269 343 268 400 Z" fill="url(#orange)"/>
+<path d="M 233 399 C 205 348 172 302 123 272 C 145 268 163 273 183 287 C 207 304 225 351 233 399 Z" fill="url(#orange)"/>
+<path d="M 279 399 C 307 348 340 302 389 272 C 367 268 349 273 329 287 C 305 304 287 351 279 399 Z" fill="url(#orange)"/>
+<path d="M 178 212 C 162 205 155 190 155 175 C 176 178 189 190 187 207 Z" fill="url(#orange)"/>
+<path d="M 334 212 C 350 205 357 190 357 175 C 336 178 323 190 325 207 Z" fill="url(#orange)"/>
+<path d="M 126 273 C 109 271 99 260 92 247 C 113 245 127 253 137 267 Z" fill="url(#orange)"/>
+<path d="M 386 273 C 403 271 413 260 420 247 C 399 245 385 253 375 267 Z" fill="url(#orange)"/>
+<path d="M 226 350 C 211 305 195 278 184 267" fill="none" stroke="#F9A269" stroke-width="4" opacity="0.6" stroke-linecap="round"/>
+<path d="M 286 350 C 301 305 317 278 328 267" fill="none" stroke="#F9A269" stroke-width="4" opacity="0.6" stroke-linecap="round"/>
+<circle cx="256" cy="416" r="18" fill="#813915"/>
+<circle cx="250" cy="410" r="5" fill="#E59A66" opacity="0.7"/>
+</g>
+<text x="390" y="163" font-family="Sora, Inter, Arial, sans-serif" font-size="103" font-weight="650" letter-spacing="-4"><tspan fill="#2A2420">Seshat</tspan><tspan fill="#EA7828">OS</tspan></text>
+<text x="397" y="217" font-family="Sora, Inter, Arial, sans-serif" font-size="18" font-weight="400" letter-spacing="5" fill="#3A322C">OPEN  ·  INTELLIGENT  ·  SOVEREIGN</text>
+</svg>

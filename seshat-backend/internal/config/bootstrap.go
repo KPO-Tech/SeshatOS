@@ -30,11 +30,9 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/mcp"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/memories"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/preferences"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/quotas"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/dataflowsecrets"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
@@ -48,7 +46,6 @@ import (
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	appconfig "github.com/KPO-Tech/seshat/pkg/config"
 	"github.com/KPO-Tech/seshat/pkg/documentreader"
@@ -65,7 +62,6 @@ import (
 	managedskills "github.com/KPO-Tech/seshat/pkg/skills/managed"
 	"github.com/KPO-Tech/seshat/pkg/skills/skillrepos"
 	"github.com/KPO-Tech/seshat/pkg/storage"
-	enginetypes "github.com/KPO-Tech/seshat/pkg/types"
 	"github.com/KPO-Tech/seshat/pkg/vector"
 )
 
@@ -330,7 +326,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	var hooksCloudClient *cloudhooks.Client
 	var memoriesProvider backendmemories.Provider
 	var agentsCloudClient *cloudagents.Client
-	var quotaProvider backendquotas.Provider
 	// Constructed here (not down in the "Cloud automation" section below,
 	// where the rest of cloudautomation's pieces are wired) because
 	// cloudsettings.NewProvider needs it immediately below - the same
@@ -376,7 +371,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		hooksCloudClient = cloudhooks.NewClient(serverURL)
 		memoriesProvider = cloudmemories.NewProvider(serverURL)
 		agentsCloudClient = cloudagents.NewClient(serverURL)
-		quotaProvider = cloudquotas.NewProvider(serverURL)
 		fmt.Printf("[API] Identité en mode connected (seshat-server: %s)\n", serverURL)
 	}
 
@@ -517,8 +511,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return nil, nil, fmt.Errorf("init storage config store: %w", err)
 	}
 
-	dataflowSecretsService := dataflowsecrets.New(database)
-
 	userPreferencesStore, err := db.NewUserPreferencesStore(database)
 	if err != nil {
 		_ = cleanup()
@@ -553,12 +545,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	if err != nil {
 		_ = cleanup()
 		return nil, nil, fmt.Errorf("init audit log store: %w", err)
-	}
-
-	usageCounterStore, err := db.NewUsageCounterStore(database)
-	if err != nil {
-		_ = cleanup()
-		return nil, nil, fmt.Errorf("init usage counter store: %w", err)
 	}
 
 	planDocumentStore, err := db.NewPlanDocumentStore(database)
@@ -785,8 +771,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		LongTermMemory:          longTermMemStore,
 		DocumentConverter:       documentreading.NewProcessorConverter(resolveDocumentConverter),
 		DocumentPageRenderer:    documentreading.NewNativeDocPageRenderer(),
-		AutomationServiceURL:    strings.TrimSpace(config.AutomationServiceURL),
-		AutomationAPIKey:        strings.TrimSpace(os.Getenv("AUTOMATION_API_KEY")),
 		ImageGeneration:         defaultImageGenerationConfig(ctx, capabilityLinkStore, settingStore),
 		TextToSpeech:            defaultTextToSpeechConfig(ctx, capabilityLinkStore, settingStore),
 		SpeechToText:            defaultSpeechToTextConfig(ctx, capabilityLinkStore, settingStore),
@@ -1034,7 +1018,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		PreferencesProvider: preferencesProvider,
 		MemoriesProvider:    memoriesProvider,
 		AgentsCloudClient:   agentsCloudClient,
-		QuotaProvider:       quotaProvider,
 		DesktopPolicies:     cloudAutomationPolicyStore,
 		AuthConfig: backendauth.ServiceConfig{
 			EnableSignup:    config.EnableSignup,
@@ -1055,7 +1038,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		WebSearchProviderConfigs: searchProviderConfigStore,
 		WebSearchCloudClient:     webSearchCloudClient,
 		AuditLogStore:            auditLogStore,
-		UsageCounterStore:        usageCounterStore,
 		ArtifactStore:            artifactStore,
 		RAGService:               ragService,
 		Monitoring:               queryClient.GetMonitoring(),
@@ -1093,37 +1075,19 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		}
 	}
 
-	// Cloud automation: this machine executes execution_target=device jobs
-	// claimed from a connected seshat-server, using its own locally
-	// configured LLM credentials — see helps/seshat-architecture-target.md
-	// and internal/cloudautomation's package doc. The executor closure
-	// captures backendApp so the cloudautomation package never needs to
-	// import query/settings directly, mirroring the old scheduler's pattern.
-	// cloudAutomationStore itself was already constructed above, where the
-	// standalone-vs-connected decision needs to read it.
-	cloudAutomationExecutor := cloudautomation.JobExecutor(func(ctx context.Context, p cloudautomation.ExecParams) (string, error) {
-		principal := &backendauth.Principal{
-			User: backendauth.User{ID: p.UserID},
-		}
-		providerSettingID, modelID := resolveCloudJobModel(ctx, backendApp.Settings, principal, p.ModelOverride)
-		input, _ := backendApp.Query.BuildContextInput(ctx, backendquery.ContextBuildParams{
-			Principal:         principal,
-			Prompt:            p.Prompt,
-			ProviderSettingID: providerSettingID,
-			ModelID:           modelID,
-			ExecutionOrigin:   enginetypes.ExecutionOriginAutomation,
-		})
-		result, err := backendApp.Query.RunPrompt(ctx, principal, input)
-		if err != nil {
-			return "", err
-		}
-		return result.Content, nil
-	})
-	cloudAutomationWorker := cloudautomation.NewWorker(cloudAutomationStore, cloudAutomationPolicyStore, cloudAutomationVersionStore, cloudAutomationExecutor)
+	// The device heartbeat: keeps the organization's desktop policies and minimum
+	// app version up to date while this machine is paired with a seshat-server.
+	// It runs no jobs (automation lives in SeshatCloud only).
+	cloudAutomationWorker := cloudautomation.NewWorker(cloudAutomationStore, cloudAutomationPolicyStore, cloudAutomationVersionStore)
+	cloudAutomationRuleStore := cloudautomation.NewRuleStore(database)
+	cloudAutomationWorker.SetRules(cloudAutomationRuleStore)
+	// What the organization imposes on every agent, as last received: kept while offline.
+	runtime.SetManagedPolicyResolver(cloudAutomationRuleStore.Policy)
 	cloudAutomationWorker.Start()
 	cleanups = append(cleanups, func() error { cloudAutomationWorker.Stop(); return nil })
 	cloudAutomationService := cloudautomation.NewService(cloudAutomationStore, cloudAutomationPolicyStore, cloudAutomationVersionStore)
-	fmt.Printf("[API] Cloud automation worker démarré\n")
+	cloudAutomationService.SetRules(cloudAutomationRuleStore)
+	fmt.Printf("[API] Heartbeat cloud démarré\n")
 
 	// Abandoned-session sweep: a session (plus any files attached to it) is
 	// created the instant a file is attached, before the user ever sends a
@@ -1179,7 +1143,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		LocalTitleStore:       localTitleConfigStore,
 		SandboxConfigStore:    sandboxConfigStore,
 		StorageConfigStore:    storageConfigStore,
-		DataflowSecrets:       dataflowSecretsService,
 		LongTermExtractor:     longTermExtractor,
 		CloudAutomation:       cloudAutomationService,
 		RAGService:            ragService,
@@ -1451,29 +1414,6 @@ func splitTitleLocalArgs(raw string) []string {
 		}
 	}
 	return out
-}
-
-// resolveCloudJobModel maps a cloud job's model_override ("provider:model",
-// optional) onto this machine's own locally configured provider settings —
-// a device-targeted job runs with whoever connected this machine's own LLM
-// credentials, never credentials fetched from seshat-server. An empty
-// override, or no matching local provider, falls back to the default
-// provider/model the same as an ordinary chat turn would.
-func resolveCloudJobModel(ctx context.Context, settingsService *backendsettings.Service, principal *backendauth.Principal, modelOverride string) (providerSettingID, modelID string) {
-	provider, model, ok := strings.Cut(strings.TrimSpace(modelOverride), ":")
-	if !ok || provider == "" {
-		return "", ""
-	}
-	settingsList, err := settingsService.List(ctx, principal)
-	if err != nil {
-		return "", ""
-	}
-	for _, setting := range settingsList {
-		if strings.EqualFold(setting.Provider, provider) {
-			return setting.ID, model
-		}
-	}
-	return "", ""
 }
 
 // sweepOrphanWorkspaces removes session directories that belong to no session (see

@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Copy, Down, Time, CheckOne, Redo } from '@icon-park/react'
 import { MarkdownView } from '@renderer/components/MarkdownView'
-import { NexusLogo } from '@renderer/components/NexusLogo'
+import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useUIStore } from '@renderer/stores/ui'
 import { ToolBlock } from '../tools/ToolBlock'
 import { PermissionCard } from '../tools/PermissionCard'
@@ -263,7 +263,7 @@ const LIVE_ACTIVITY_TEXT_CSS = 'min-w-0 truncate text-[12px] font-medium text-in
 function LiveActivityBlock({ label, detail }: { label: string; detail?: string }) {
   return (
     <div className={LIVE_ACTIVITY_ROOT_CSS} aria-live="polite">
-      <NexusLogo size={16} className="shrink-0 [animation:msg-live-activity-pulse_1.8s_ease-in-out_infinite]" />
+      <SeshatLogo size={16} className="shrink-0 [animation:msg-live-activity-pulse_1.8s_ease-in-out_infinite]" />
       <span className={LIVE_ACTIVITY_TEXT_CSS} key={`${label}-${detail ?? ''}`}>
         {label}{detail ? ` - ${detail}` : '...'}
       </span>

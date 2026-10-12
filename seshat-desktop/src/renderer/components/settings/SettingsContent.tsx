@@ -7,7 +7,6 @@ import { GeneralSettings } from './GeneralSettings'
 import { MemoriesSettings } from './MemoriesSettings'
 import type { SettingsSection } from './SettingsModal'
 import { ShortcutsSettings } from './ShortcutsSettings'
-import { UsageSettings } from './UsageSettings'
 
 type Props = {
   section: SettingsSection
@@ -49,7 +48,6 @@ export function SettingsContent({
   if (section === 'shortcuts') return <ShortcutsSettings />
   if (section === 'memories') return <MemoriesSettings />
   if (section === 'data-controls') return <DataControlsSettings />
-  if (section === 'usage') return <UsageSettings />
   if (section === 'about') return <AboutSettings />
 
   return (

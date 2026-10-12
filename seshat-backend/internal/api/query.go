@@ -12,7 +12,6 @@ import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 	"github.com/KPO-Tech/seshat/pkg/contract"
 	"github.com/KPO-Tech/seshat/pkg/sdk"
 	"github.com/KPO-Tech/seshat/pkg/types"
@@ -166,9 +165,6 @@ func (app *App) handleQuery(w http.ResponseWriter, r *http.Request) {
 	// Async long-term memory extraction — best-effort, never blocks the response.
 	app.triggerMemoryExtraction(principal, result)
 
-	if principal != nil {
-		app.backend.Quota.Increment(r.Context(), principal, backendquotas.MetricQueries, 1)
-	}
 	writeJSON(w, http.StatusOK, queryResponse{
 		SessionID:   result.SessionID,
 		Content:     result.Content,
@@ -488,9 +484,6 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 	// Async long-term memory extraction — best-effort, never blocks the response.
 	app.triggerMemoryExtraction(principal, result)
 
-	if principal != nil {
-		app.backend.Quota.Increment(r.Context(), principal, backendquotas.MetricQueries, 1)
-	}
 	finalData, marshalErr := json.Marshal(queryResponse{
 		SessionID:   result.SessionID,
 		Content:     result.Content,

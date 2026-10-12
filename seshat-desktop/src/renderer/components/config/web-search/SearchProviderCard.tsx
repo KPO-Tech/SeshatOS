@@ -17,6 +17,9 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
   const [authPassword, setAuthPassword] = useState('')
   const [apiKeyChanged, setApiKeyChanged] = useState(false)
   const [authChanged, setAuthChanged] = useState(false)
+  const [clientIdChanged, setClientIdChanged] = useState(false)
+  const isResearch = provider.kind === 'research'
+  const isReddit = provider.provider === 'reddit'
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState<ProviderTestState>('idle')
@@ -46,13 +49,14 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
         enabled,
         api_key: authChanged ? authPassword : apiKeyChanged ? apiKey : undefined,
         base_url: provider.requires_base_url || baseUrl ? baseUrl : undefined,
-        auth_username: authChanged ? authUsername : undefined
+        auth_username: authChanged || clientIdChanged ? authUsername : undefined
       })
       setDirty(false)
       setApiKey('')
       setAuthPassword('')
       setApiKeyChanged(false)
       setAuthChanged(false)
+      setClientIdChanged(false)
       onSaved(updated)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Failed to save provider.')
@@ -110,7 +114,7 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
       <div className="mt-3 grid gap-2">
         {provider.requires_api_key && (
           <label className="grid gap-1.5">
-            <span className="text-[12px] font-semibold text-[var(--text-muted)]">{provider.provider === 'searxng' ? 'Password' : 'API key'}</span>
+            <span className="text-[12px] font-semibold text-[var(--text-muted)]">{provider.provider === 'searxng' ? 'Password' : isReddit ? 'Client secret' : 'API key'}</span>
             <div className="relative">
               <input
                 type="password"
@@ -133,6 +137,13 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
           </label>
         )}
 
+        {isReddit && (
+          <label className="grid gap-1.5">
+            <span className="text-[12px] font-semibold text-[var(--text-muted)]">Client ID</span>
+            <input value={authUsername} onChange={(event) => { setAuthUsername(event.target.value); setClientIdChanged(true); markDirty() }} placeholder="Client id of your Reddit app" className="h-9 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[13px] text-[var(--text-primary)] outline-none" />
+          </label>
+        )}
+
         {provider.provider === 'searxng' && (
           <label className="grid gap-1.5">
             <span className="text-[12px] font-semibold text-[var(--text-muted)]">Username</span>
@@ -149,9 +160,9 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        <button type="button" onClick={() => void handleTest()} disabled={testing === 'running' || saving} className="rounded-md border border-[var(--border-soft)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-45">
+        {!isResearch && <button type="button" onClick={() => void handleTest()} disabled={testing === 'running' || saving} className="rounded-md border border-[var(--border-soft)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-45">
           {testing === 'running' ? 'Testing...' : testing === 'ok' ? 'Connected' : testing === 'error' ? 'Failed' : 'Test'}
-        </button>
+        </button>}
         {dirty && (
           <button type="button" onClick={() => void handleSave()} disabled={saving} className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-panel)] disabled:opacity-45">
             {saving ? 'Saving...' : 'Save'}

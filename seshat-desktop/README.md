@@ -17,8 +17,5 @@ What we avoid:
 - importing the entire old UI before the new structure exists;
 - carrying old CSS surfaces unless they are being actively migrated to Tailwind.
 
-The MVP order lives in `D:\Documents\PROJECTS\ai\Discussions\mvp`.
+The MVP order lives in `docs/mvp/` of the `seshat-ai` repository.
 
-Visual identity decisions live in [`docs/visual-identity.md`](docs/visual-identity.md).
-
-Frontend strategy lives in [`../docs/frontend-strategy.md`](../docs/frontend-strategy.md): keep this desktop on Electron + React for now, and consider Svelte first for new standalone product surfaces such as Knowledge or Inbox.

@@ -12,7 +12,6 @@ import (
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
-	backendquotas "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/quotas"
 )
 
 const maxUploadSize = 100 << 20 // 100 MB
@@ -127,7 +126,6 @@ func (app *App) handleFileUpload(w http.ResponseWriter, r *http.Request, princip
 			IPAddress:    app.clientIP(r),
 			Metadata:     map[string]any{"filename": f.Filename, "size": f.Size},
 		})
-		app.backend.Quota.Increment(r.Context(), p, backendquotas.MetricFiles, 1)
 	}
 	writeJSON(w, http.StatusCreated, toFileResponse(*f))
 }
@@ -291,7 +289,6 @@ func (app *App) handleSessionFiles(w http.ResponseWriter, r *http.Request, princ
 				IPAddress:    app.clientIP(r),
 				Metadata:     map[string]any{"filename": f.Filename, "size": f.Size, "session_id": sessionID},
 			})
-			app.backend.Quota.Increment(r.Context(), p, backendquotas.MetricFiles, 1)
 		}
 		writeJSON(w, http.StatusCreated, toFileResponse(*f))
 

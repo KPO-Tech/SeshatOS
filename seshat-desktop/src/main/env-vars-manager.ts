@@ -8,7 +8,7 @@ import { getSecret, setSecret, deleteSecret } from './ipc/secure-store'
 // infra knobs the backend also reads from the environment (SESHAT_API_PORT,
 // SESHAT_VECTOR_DIM, ...) don't belong in a
 // "your API keys" UI and aren't listed.
-export type EnvVarGroup = 'gmail' | 'automation' | 'multimodal'
+export type EnvVarGroup = 'gmail' | 'multimodal'
 
 export type EnvVarDef = {
   key: string
@@ -44,13 +44,6 @@ export const ENV_VAR_CATALOG: EnvVarDef[] = [
     group: 'gmail',
     groupLabel: 'Gmail',
     helpUrl: 'https://console.cloud.google.com/apis/credentials',
-  },
-  {
-    key: 'AUTOMATION_API_KEY',
-    label: 'Automation Service API Key',
-    description: 'Auth key for the external automation service used by recurring/scheduled agent runs.',
-    group: 'automation',
-    groupLabel: 'Automation',
   },
   {
     key: 'OPENAI_API_KEY',

@@ -338,74 +338,6 @@ func TestAuditLogStoreValidation(t *testing.T) {
 	}
 }
 
-func TestUsageCounterStoreIncrement(t *testing.T) {
-	database := openTestDB(t)
-	store, err := NewUsageCounterStore(database)
-	if err != nil {
-		t.Fatalf("NewUsageCounterStore: %v", err)
-	}
-
-	ctx := context.Background()
-	now := time.Now()
-	dayKey := DayPeriodKey(now)
-	monthKey := MonthPeriodKey(now)
-
-	// First increment creates the row
-	if err := store.Increment(ctx, "user-1", "queries", dayKey, 1); err != nil {
-		t.Fatalf("Increment (create): %v", err)
-	}
-	count, err := store.Get(ctx, "user-1", "queries", dayKey)
-	if err != nil {
-		t.Fatalf("Get after create: %v", err)
-	}
-	if count != 1 {
-		t.Fatalf("expected count=1, got %d", count)
-	}
-
-	// Second increment updates the row
-	if err := store.Increment(ctx, "user-1", "queries", dayKey, 2); err != nil {
-		t.Fatalf("Increment (update): %v", err)
-	}
-	count, err = store.Get(ctx, "user-1", "queries", dayKey)
-	if err != nil {
-		t.Fatalf("Get after update: %v", err)
-	}
-	if count != 3 {
-		t.Fatalf("expected count=3, got %d", count)
-	}
-
-	// Get returns 0 for missing key
-	count, err = store.Get(ctx, "user-1", "queries", monthKey)
-	if err != nil {
-		t.Fatalf("Get missing key: %v", err)
-	}
-	if count != 0 {
-		t.Fatalf("expected count=0 for missing key, got %d", count)
-	}
-
-	// ListByUser returns existing entries
-	rows, err := store.ListByUser(ctx, "user-1", "", 10)
-	if err != nil {
-		t.Fatalf("ListByUser: %v", err)
-	}
-	if len(rows) != 1 {
-		t.Fatalf("expected 1 usage counter, got %d", len(rows))
-	}
-	if rows[0].Count != 3 {
-		t.Fatalf("expected list count=3, got %d", rows[0].Count)
-	}
-}
-
-func TestPeriodKeys(t *testing.T) {
-	ts := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
-	if got := DayPeriodKey(ts); got != "2026-05-14" {
-		t.Fatalf("DayPeriodKey: expected %q, got %q", "2026-05-14", got)
-	}
-	if got := MonthPeriodKey(ts); got != "2026-05" {
-		t.Fatalf("MonthPeriodKey: expected %q, got %q", "2026-05", got)
-	}
-}
-
 func TestCredentials_UpsertAndGet(t *testing.T) {
 	database := openTestDB(t)
 	ctx := context.Background()
@@ -552,7 +484,6 @@ func TestOpenSQLiteAutoMigratesSharedSchema(t *testing.T) {
 		"web_search_settings",
 		"web_search_logs",
 		"audit_logs",
-		"usage_counters",
 		// backend: migrations 003-013
 		"provider_models",
 		"api_keys",
@@ -2893,120 +2824,6 @@ func TestProviderSettingStore_CreateWithoutAPIKey(t *testing.T) {
 	}
 	if ps.HasAPIKey {
 		t.Fatal("expected HasAPIKey to be false for OAuth provider without key")
-	}
-}
-
-// ─── UsageCounterStore ────────────────────────────────────────────────────────
-
-func TestUsageCounterStore_IncrementAndGet(t *testing.T) {
-	database := openTestDB(t)
-	store, err := NewUsageCounterStore(database)
-	if err != nil {
-		t.Fatalf("NewUsageCounterStore: %v", err)
-	}
-
-	ctx := context.Background()
-	userID := "usage-user-001"
-	metric := "tokens_in"
-	period := DayPeriodKey(time.Now())
-
-	// Zero before any increment
-	count, err := store.Get(ctx, userID, metric, period)
-	if err != nil {
-		t.Fatalf("Get (initial): %v", err)
-	}
-	if count != 0 {
-		t.Fatalf("expected 0 before increment, got %d", count)
-	}
-
-	if err := store.Increment(ctx, userID, metric, period, 100); err != nil {
-		t.Fatalf("Increment: %v", err)
-	}
-	if err := store.Increment(ctx, userID, metric, period, 50); err != nil {
-		t.Fatalf("second Increment: %v", err)
-	}
-
-	count, err = store.Get(ctx, userID, metric, period)
-	if err != nil {
-		t.Fatalf("Get after increments: %v", err)
-	}
-	if count != 150 {
-		t.Fatalf("expected count 150, got %d", count)
-	}
-}
-
-func TestUsageCounterStore_DifferentPeriods(t *testing.T) {
-	database := openTestDB(t)
-	store, err := NewUsageCounterStore(database)
-	if err != nil {
-		t.Fatalf("NewUsageCounterStore: %v", err)
-	}
-
-	ctx := context.Background()
-	userID := "usage-period-user"
-	metric := "api_calls"
-
-	today := DayPeriodKey(time.Now())
-	yesterday := DayPeriodKey(time.Now().AddDate(0, 0, -1))
-	thisMonth := MonthPeriodKey(time.Now())
-
-	store.Increment(ctx, userID, metric, today, 10)
-	store.Increment(ctx, userID, metric, yesterday, 5)
-	store.Increment(ctx, userID, metric, thisMonth, 3)
-
-	todayCount, _ := store.Get(ctx, userID, metric, today)
-	if todayCount != 10 {
-		t.Fatalf("expected 10 for today, got %d", todayCount)
-	}
-
-	yesterdayCount, _ := store.Get(ctx, userID, metric, yesterday)
-	if yesterdayCount != 5 {
-		t.Fatalf("expected 5 for yesterday, got %d", yesterdayCount)
-	}
-}
-
-func TestUsageCounterStore_ListByUser(t *testing.T) {
-	database := openTestDB(t)
-	store, err := NewUsageCounterStore(database)
-	if err != nil {
-		t.Fatalf("NewUsageCounterStore: %v", err)
-	}
-
-	ctx := context.Background()
-	userID := "usage-list-user"
-	period := DayPeriodKey(time.Now())
-
-	store.Increment(ctx, userID, "tokens_in", period, 100)
-	store.Increment(ctx, userID, "tokens_out", period, 200)
-	store.Increment(ctx, userID, "api_calls", period, 5)
-
-	all, err := store.ListByUser(ctx, userID, "", 0)
-	if err != nil {
-		t.Fatalf("ListByUser: %v", err)
-	}
-	if len(all) < 3 {
-		t.Fatalf("expected at least 3 counters, got %d", len(all))
-	}
-
-	// Filter by metric
-	tokensIn, err := store.ListByUser(ctx, userID, "tokens_in", 10)
-	if err != nil {
-		t.Fatalf("ListByUser (filtered): %v", err)
-	}
-	for _, c := range tokensIn {
-		if c.Metric != "tokens_in" {
-			t.Fatalf("expected only tokens_in metric, got %q", c.Metric)
-		}
-	}
-}
-
-func TestUsageCounterStore_PeriodKeyFormats(t *testing.T) {
-	now := time.Date(2026, 5, 25, 12, 0, 0, 0, time.UTC)
-	if DayPeriodKey(now) != "2026-05-25" {
-		t.Fatalf("unexpected DayPeriodKey format: %q", DayPeriodKey(now))
-	}
-	if MonthPeriodKey(now) != "2026-05" {
-		t.Fatalf("unexpected MonthPeriodKey format: %q", MonthPeriodKey(now))
 	}
 }
 
