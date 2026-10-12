@@ -11,7 +11,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 const SCROLL_THIN = '[scrollbar-width:thin] [scrollbar-color:var(--border-soft)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar-thumb]:rounded'
 
 // ─── Backend payload shapes ─────────────────────────────────────────────────
-// Mirrors github.com/KPO-Tech/seshat's edit_file/write_file tool output
+// Mirrors github.com/KPO-Tech/seshat-runtime's edit_file/write_file tool output
 // (internal/tools/files/edit/edit.go, .../write/write.go) — note the mixed
 // casing is intentional and matches the Go JSON tags exactly: the outer
 // metadata map uses snake_case keys, but StructuredPatchHunk is a typed

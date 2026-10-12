@@ -9,7 +9,7 @@ import (
 
 	cloudhooks "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/hooks"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 type recordingRuntime struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/seshat/pkg/storage"
+	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
 )
 
 type storageConfigResponse struct {

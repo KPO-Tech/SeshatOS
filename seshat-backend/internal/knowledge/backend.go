@@ -4,7 +4,7 @@ import (
 	"context"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	"github.com/KPO-Tech/seshat/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 )
 
 // Backend is what internal/app.go's App.Knowledge holds, and what

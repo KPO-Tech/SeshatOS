@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // terminalRemoteExecutor adapts TerminalRelay to sdk.RemoteExecutor so a

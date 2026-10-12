@@ -26,7 +26,7 @@ func (c Capability) Valid() bool {
 // type strings this app actually has integration code for on that capability
 // today - deliberately not a speculative full matrix:
 //   - image: internal/config/bootstrap.go's defaultImageGenerationConfig.
-//     github.com/KPO-Tech/seshat/pkg/sdk's initImageGenerator has a real Go
+//     github.com/KPO-Tech/seshat-runtime/pkg/sdk's initImageGenerator has a real Go
 //     client for exactly two vendors ("openai", "gemini") - a hard SDK
 //     limit, not a config choice. Investigated adding z-ai (2026-08-13:
 //     GLM-image's /images/generations request/response shape is close
@@ -68,7 +68,7 @@ var capableProviders = map[Capability]map[string]bool{
 }
 
 // EmbedderDefaults is what a compatible chat provider needs for Knowledge's
-// embedder_config to work: github.com/KPO-Tech/seshat/internal/rag/embedder's
+// embedder_config to work: github.com/KPO-Tech/seshat-runtime/internal/rag/embedder's
 // dispatch is `switch provider { case "ollama": ...; default: openai-schema
 // POST {baseURL}/embeddings }` - i.e. anything other than the literal
 // "ollama" is treated as OpenAI-schema. So any vendor whose /embeddings

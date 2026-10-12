@@ -20,12 +20,12 @@ import (
 	backendprompt "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	bkwebsearch "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
-	"github.com/KPO-Tech/seshat/pkg/agent"
-	"github.com/KPO-Tech/seshat/pkg/rag"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
-	"github.com/KPO-Tech/seshat/pkg/types"
-	webcore "github.com/KPO-Tech/seshat/pkg/web"
-	"github.com/KPO-Tech/seshat/pkg/workspace"
+	"github.com/KPO-Tech/seshat-runtime/pkg/agent"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
+	webcore "github.com/KPO-Tech/seshat-runtime/pkg/web"
+	"github.com/KPO-Tech/seshat-runtime/pkg/workspace"
 )
 
 type Service struct {

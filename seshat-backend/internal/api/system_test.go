@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // TestHandleSystemStatusReportsDockerSandbox covers the combination logic

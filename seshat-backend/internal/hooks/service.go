@@ -18,7 +18,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	cloudhooks "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/hooks"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // RuntimeReloader is the subset of the query runtime needed to push a hook

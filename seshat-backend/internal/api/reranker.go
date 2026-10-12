@@ -9,7 +9,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	"github.com/KPO-Tech/seshat/pkg/rag/reranker"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag/reranker"
 )
 
 type rerankerConfigResponse struct {

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	"github.com/KPO-Tech/seshat/pkg/storage"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
 )
 
 type fakeConverter struct {

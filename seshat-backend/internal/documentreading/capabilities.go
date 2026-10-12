@@ -1,6 +1,6 @@
 package documentreading
 
-import "github.com/KPO-Tech/seshat/pkg/nativedoc"
+import "github.com/KPO-Tech/seshat-runtime/pkg/nativedoc"
 
 type Capabilities struct {
 	LocalBasicAvailable         bool

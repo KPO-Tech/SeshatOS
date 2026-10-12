@@ -12,7 +12,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/api"
 	seshatconfig "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/config"
-	appconfig "github.com/KPO-Tech/seshat/pkg/config"
+	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
 )
 
 // version is stamped at build time via -ldflags "-X main.version=vX.Y.Z"

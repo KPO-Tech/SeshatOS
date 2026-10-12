@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 )
 
 // ─── GORM models ──────────────────────────────────────────────────────────────

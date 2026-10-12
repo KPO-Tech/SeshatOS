@@ -3,8 +3,8 @@ package documentreading
 import (
 	"context"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	"github.com/KPO-Tech/seshat/pkg/pdfsmart"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/pdfsmart"
 )
 
 // The SDK reads a PDF's tables that have no ruling lines with a layout model when the document reader it is given

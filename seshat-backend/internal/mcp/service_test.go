@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
-	enginemcp "github.com/KPO-Tech/seshat/pkg/mcp"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	enginemcp "github.com/KPO-Tech/seshat-runtime/pkg/mcp"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // mockRuntime satisfies RuntimeReloader without a real SDK client.

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	"github.com/KPO-Tech/seshat/pkg/pdfsmart"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/pdfsmart"
 )
 
 // tableReader is a reader that, like the native one with its models, can say where the tables with no lines are.

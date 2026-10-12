@@ -7,7 +7,7 @@ import (
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	backendprompt "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
-	"github.com/KPO-Tech/seshat/pkg/agent"
+	"github.com/KPO-Tech/seshat-runtime/pkg/agent"
 )
 
 func TestToolAllowlistFromPatterns(t *testing.T) {

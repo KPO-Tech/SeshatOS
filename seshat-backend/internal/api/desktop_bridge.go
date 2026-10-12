@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
-	"github.com/KPO-Tech/seshat/pkg/runtimepath"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 )
 
 const desktopBridgeSecretFile = "desktop-bridge-secret"

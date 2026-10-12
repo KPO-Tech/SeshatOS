@@ -8,7 +8,7 @@ This document describes what SeshatOS is building, where the project is going, a
 
 **SeshatOS is a self-hosted agentic workspace** — the local desktop app and backend you run on your own machine to get a real AI agent that reads files, writes code, searches the web, and works with your documents, with no account and no cloud dependency required.
 
-It is built on top of **[seshat](https://github.com/KPO-Tech/seshat)** (Apache-2.0) — the open-source Go agent runtime: multi-turn execution, tools, providers, permissions, sandboxing, MCP, RAG, sub-agents, streaming. `seshat` ships a CLI developers can use directly; SeshatOS is the desktop product built as one of its consumers.
+It is built on top of **[seshat](https://github.com/KPO-Tech/seshat-runtime)** (Apache-2.0) — the open-source Go agent runtime: multi-turn execution, tools, providers, permissions, sandboxing, MCP, RAG, sub-agents, streaming. `seshat` ships a CLI developers can use directly; SeshatOS is the desktop product built as one of its consumers.
 
 The dependency is strictly one-way: SeshatOS builds on `seshat`. `seshat` has no knowledge of SeshatOS, and never will — see [docs/architecture.md](docs/architecture.md).
 
@@ -102,7 +102,7 @@ SeshatOS cannot build everything. The project is designed so the community can e
 - **Skills** are the primary extension mechanism — a Markdown file that teaches the agent how to work in a specific context. Anyone can write and publish skills; community skill repositories are installable from any URL.
 - **MCP servers** extend what agents can do. The MCP ecosystem already has thousands of servers (GitHub, Postgres, Slack, Docker, Notion, and more); SeshatOS is a first-class MCP client, so any compliant MCP server works without special integration work.
 - **Custom agents** — define specialized agents with their own instructions, tools, permission modes, and models.
-- **The SDK** — [seshat](https://github.com/KPO-Tech/seshat) ships a Go SDK and a stable HTTP + SSE API. SeshatOS's own backend is itself a consumer of that SDK, nothing more privileged. Anyone can build their own product on the same foundation.
+- **The SDK** — [seshat](https://github.com/KPO-Tech/seshat-runtime) ships a Go SDK and a stable HTTP + SSE API. SeshatOS's own backend is itself a consumer of that SDK, nothing more privileged. Anyone can build their own product on the same foundation.
 
 We actively want the community to push SeshatOS in directions we haven't anticipated. Skills, MCP, pluggable providers, and the SDK all exist to make that possible without needing our permission.
 

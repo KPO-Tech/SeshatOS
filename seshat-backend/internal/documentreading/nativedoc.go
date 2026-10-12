@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	"github.com/KPO-Tech/seshat/pkg/nativedoc"
-	"github.com/KPO-Tech/seshat/pkg/pdfsmart"
-	"github.com/KPO-Tech/seshat/pkg/runtimepath"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/nativedoc"
+	"github.com/KPO-Tech/seshat-runtime/pkg/pdfsmart"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 )
 
 const EnvNativeDocModelsDir = "SESHAT_NATIVEDOC_MODELS_DIR"

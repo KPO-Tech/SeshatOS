@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 )
 
 func TestAPIKeyStore_CreateAndResolve(t *testing.T) {

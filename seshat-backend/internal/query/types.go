@@ -2,9 +2,9 @@ package query
 
 import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	"github.com/KPO-Tech/seshat/pkg/contract"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/contract"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 // ImageAttachment carries base64-encoded image data for a single turn.

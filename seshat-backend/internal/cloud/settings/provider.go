@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/KPO-Tech/seshat/pkg/providers"
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"

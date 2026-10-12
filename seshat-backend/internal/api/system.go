@@ -8,7 +8,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 type systemStatusResponse struct {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
 )
 
 const ExternalConversionTimeout = 15 * time.Minute

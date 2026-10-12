@@ -11,7 +11,7 @@ runtime_script=""
 if [ -f "$repo_root/../seshat/scripts/setup-nativedoc-cgo.sh" ]; then
   runtime_script="$repo_root/../seshat/scripts/setup-nativedoc-cgo.sh"
 else
-  runtime_dir="$(cd "$repo_root/seshat-backend" && go list -m -f '{{.Dir}}' github.com/KPO-Tech/seshat)"
+  runtime_dir="$(cd "$repo_root/seshat-backend" && go list -m -f '{{.Dir}}' github.com/KPO-Tech/seshat-runtime)"
   runtime_script="$runtime_dir/scripts/setup-nativedoc-cgo.sh"
 fi
 

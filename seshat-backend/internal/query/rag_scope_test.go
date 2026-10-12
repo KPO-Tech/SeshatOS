@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	sdkrag "github.com/KPO-Tech/seshat/pkg/rag"
-	"github.com/KPO-Tech/seshat/pkg/vector"
+	sdkrag "github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/vector"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 )

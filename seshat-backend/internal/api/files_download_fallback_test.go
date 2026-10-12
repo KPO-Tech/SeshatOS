@@ -10,7 +10,7 @@ import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
-	"github.com/KPO-Tech/seshat/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 )
 
 // stubKnowledgeBackend implements knowledge.Backend with only DownloadFile
