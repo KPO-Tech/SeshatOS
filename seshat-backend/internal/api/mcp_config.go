@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	backendmcp "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/mcp"
-	"github.com/KPO-Tech/seshat/pkg/mcp"
-	"github.com/KPO-Tech/seshat/pkg/runtimepath"
+	"github.com/KPO-Tech/seshat-runtime/pkg/mcp"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 )
 
 // DefaultMCPJsonPath returns the canonical path for the local MCP JSON config.

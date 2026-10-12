@@ -6,7 +6,7 @@ import (
 
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 // attachmentPayload mirrors the frontend's MessageAttachment shape

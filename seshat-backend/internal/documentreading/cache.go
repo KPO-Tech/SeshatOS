@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/KPO-Tech/seshat/pkg/storage"
+	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
 )
 
 const ReadResultContentType = "application/vnd.seshat.document-read-result+json"

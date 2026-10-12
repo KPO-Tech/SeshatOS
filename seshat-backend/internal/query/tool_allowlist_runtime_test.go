@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/KPO-Tech/seshat/pkg/sdk"
-	"github.com/KPO-Tech/seshat/pkg/tools"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/tools"
 )
 
 // stubTool is the minimal sdk.Tool implementation needed to register a

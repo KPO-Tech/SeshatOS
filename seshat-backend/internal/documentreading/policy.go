@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	"github.com/KPO-Tech/seshat/pkg/textquality"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	"github.com/KPO-Tech/seshat-runtime/pkg/textquality"
 )
 
 // PolicyConverter implements documentreader.Converter with Seshat's desired

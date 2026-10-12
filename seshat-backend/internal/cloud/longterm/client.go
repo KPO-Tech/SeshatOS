@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 )
 
 // Client is a thin, stateless HTTP client for seshat-server's

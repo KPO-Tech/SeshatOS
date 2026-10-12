@@ -12,7 +12,7 @@ import (
 	"context"
 	"time"
 
-	coreconnectors "github.com/KPO-Tech/seshat/pkg/connectors"
+	coreconnectors "github.com/KPO-Tech/seshat-runtime/pkg/connectors"
 )
 
 // Kind identifies a connector implementation, e.g. "gdrive", "sharepoint",

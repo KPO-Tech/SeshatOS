@@ -7,8 +7,8 @@ import (
 
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
-	appconfig "github.com/KPO-Tech/seshat/pkg/config"
-	"github.com/KPO-Tech/seshat/pkg/providers"
+	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 )
 
 // ─── Response type ────────────────────────────────────────────────────────────

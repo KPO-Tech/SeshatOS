@@ -12,7 +12,7 @@ import (
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
-	"github.com/KPO-Tech/seshat/pkg/tools"
+	"github.com/KPO-Tech/seshat-runtime/pkg/tools"
 )
 
 // ToolName is the name the agent calls this tool by.

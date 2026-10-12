@@ -32,8 +32,8 @@ import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 // ─── Request types ────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 func newTestSDKRuntime(t *testing.T) *SDKRuntime {

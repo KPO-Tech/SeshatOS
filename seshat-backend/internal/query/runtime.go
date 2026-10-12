@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/KPO-Tech/seshat/pkg/providers"
-	"github.com/KPO-Tech/seshat/pkg/rag"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
-	"github.com/KPO-Tech/seshat/pkg/storage"
-	"github.com/KPO-Tech/seshat/pkg/types"
-	"github.com/KPO-Tech/seshat/pkg/vector"
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/vector"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"

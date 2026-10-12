@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	searchcore "github.com/KPO-Tech/seshat/pkg/web/search"
-	searchproviders "github.com/KPO-Tech/seshat/pkg/web/search/providers"
+	searchcore "github.com/KPO-Tech/seshat-runtime/pkg/web/search"
+	searchproviders "github.com/KPO-Tech/seshat-runtime/pkg/web/search/providers"
 )
 
 type DefaultRunner struct {

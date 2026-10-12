@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	backendwebsearch "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
-	webpolicy "github.com/KPO-Tech/seshat/pkg/web"
+	webpolicy "github.com/KPO-Tech/seshat-runtime/pkg/web"
 )
 
 type webSearchSettingsResponse struct {

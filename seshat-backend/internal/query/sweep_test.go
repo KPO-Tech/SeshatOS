@@ -9,7 +9,7 @@ import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 type sweepStubSessionManager struct {

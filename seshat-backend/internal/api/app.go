@@ -11,9 +11,9 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
-	"github.com/KPO-Tech/seshat/pkg/rag"
-	"github.com/KPO-Tech/seshat/pkg/sdk"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // App is the HTTP transport layer. It holds only infrastructure state;

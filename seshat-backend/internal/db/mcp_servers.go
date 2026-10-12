@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/KPO-Tech/seshat/pkg/mcp"
+	"github.com/KPO-Tech/seshat-runtime/pkg/mcp"
 )
 
 type gMCPServer struct {

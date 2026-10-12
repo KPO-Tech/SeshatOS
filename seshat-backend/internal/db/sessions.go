@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

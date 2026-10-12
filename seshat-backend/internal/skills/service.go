@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	publicskills "github.com/KPO-Tech/seshat/pkg/skills"
-	skillsloader "github.com/KPO-Tech/seshat/pkg/skills"
+	publicskills "github.com/KPO-Tech/seshat-runtime/pkg/skills"
+	skillsloader "github.com/KPO-Tech/seshat-runtime/pkg/skills"
 )
 
 const (

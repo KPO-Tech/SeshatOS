@@ -13,7 +13,7 @@ package cloudlongterm
 import (
 	"context"
 
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 )
 
 // RemoteStore implements longterm.Store against a remote seshat-server.

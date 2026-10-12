@@ -152,7 +152,7 @@ if err != nil { writeBackendError(w, err); return }
 
 ### seshat dependency
 
-`seshat` is consumed as an external Go module (`github.com/KPO-Tech/seshat`), not vendored in this repo. Never patch it via `replace` directives here. If you need something from the engine that isn't yet in `pkg/`, open a PR on the [seshat repo](https://github.com/KPO-Tech/seshat) first, then bump the version with `go get github.com/KPO-Tech/seshat@vX.Y.Z` in `seshat-backend/go.mod`.
+`seshat` is consumed as an external Go module (`github.com/KPO-Tech/seshat-runtime`), not vendored in this repo. Never patch it via `replace` directives here. If you need something from the engine that isn't yet in `pkg/`, open a PR on the [seshat repo](https://github.com/KPO-Tech/seshat-runtime) first, then bump the version with `go get github.com/KPO-Tech/seshat-runtime@vX.Y.Z` in `seshat-backend/go.mod`.
 
 ---
 
@@ -200,7 +200,7 @@ PR checklist:
 - [ ] Public API changes are reflected in `README.md` or `docs/`
 - [ ] Commit messages follow Conventional Commits
 - [ ] PR targets `dev`, not `main`
-- [ ] No local `replace` directive added for `github.com/KPO-Tech/seshat`
+- [ ] No local `replace` directive added for `github.com/KPO-Tech/seshat-runtime`
 
 ---
 
@@ -208,7 +208,7 @@ PR checklist:
 
 - Features that push business logic into `internal/api/` handlers.
 - Direct store access from handlers (always use a service).
-- Local `replace` directives pointing `github.com/KPO-Tech/seshat` at a filesystem copy.
+- Local `replace` directives pointing `github.com/KPO-Tech/seshat-runtime` at a filesystem copy.
 - Changes that remove or weaken authentication/authorization checks.
 - Code that uses `//nolint` without an explanation comment.
 - New global mutable state.

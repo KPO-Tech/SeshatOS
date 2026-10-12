@@ -30,10 +30,10 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
-	"github.com/KPO-Tech/seshat/pkg/documentreader"
-	longterm "github.com/KPO-Tech/seshat/pkg/memory/longterm"
-	"github.com/KPO-Tech/seshat/pkg/rag"
-	"github.com/KPO-Tech/seshat/pkg/storage"
+	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
+	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
 )
 
 // Dependencies holds the external dependencies wired by the transport layer.

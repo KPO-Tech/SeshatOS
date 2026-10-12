@@ -6,7 +6,7 @@ import (
 
 	backendplans "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/plans"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
-	"github.com/KPO-Tech/seshat/pkg/types"
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 func (app *App) handlePermissionDecision(w http.ResponseWriter, r *http.Request) {
