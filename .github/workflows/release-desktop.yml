@@ -50,7 +50,7 @@ jobs:
             ./cmd/api
 
       - name: Upload backend artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-${{ matrix.suffix }}
           path: seshat-backend/dist/${{ matrix.binary_name }}
@@ -88,7 +88,7 @@ jobs:
         run: npx electron-builder --linux AppImage deb --publish never
 
       - name: Upload Linux installers
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: installers-linux
           path: |
@@ -125,7 +125,7 @@ jobs:
         run: npx electron-builder --win nsis --publish never
 
       - name: Upload Windows installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: installers-windows
           path: seshat-desktop/dist/*.exe
