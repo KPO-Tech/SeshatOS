@@ -290,7 +290,7 @@ func NewApp(deps Dependencies) *App {
 		Audit:     audit.NewService(deps.AuditLogStore),
 		Metrics:   metrics.NewService(deps.Monitoring),
 		Memories:  memoriesService,
-		Plans:     plans.NewService(deps.PlanDocumentStore),
+		Plans:     plans.NewService(deps.PlanDocumentStore).WithApprovePlan(query.ApproveSessionPlan),
 		MCP: mcp.NewService(mcp.ServiceConfig{
 			Store:       deps.MCPServerStore,
 			Runtime:     deps.MCPRuntime,

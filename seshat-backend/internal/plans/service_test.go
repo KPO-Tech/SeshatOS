@@ -215,6 +215,50 @@ func TestPlanPatchStatus(t *testing.T) {
 	}
 }
 
+// Approving a plan ("validated") is the same decision the agent runtime gates
+// exit_plan_mode on, so the service must hand it to the injected approver. A
+// content-only patch or any other status must not.
+func TestPlanPatchValidatedRecordsApproval(t *testing.T) {
+	svc, store := openPlansService(t)
+	ctx := context.Background()
+	principal := makePrincipal("usr_approve")
+
+	var approved []string
+	svc.WithApprovePlan(func(sessionID string) { approved = append(approved, sessionID) })
+
+	doc, _ := store.Create(ctx, db.CreatePlanParams{
+		SessionID: "sess_approve",
+		UserID:    principal.User.ID,
+		Slug:      "approve-plan",
+	})
+
+	// A content-only patch is not an approval.
+	content := "revised"
+	if _, err := svc.Patch(ctx, principal, doc.ID, PatchParams{Content: &content}); err != nil {
+		t.Fatalf("Patch content: %v", err)
+	}
+	if len(approved) != 0 {
+		t.Fatalf("expected a content-only patch not to record approval, got %v", approved)
+	}
+
+	// A non-approval status is not an approval either.
+	completed := "completed"
+	if _, err := svc.Patch(ctx, principal, doc.ID, PatchParams{Status: &completed}); err != nil {
+		t.Fatalf("Patch status: %v", err)
+	}
+	if len(approved) != 0 {
+		t.Fatalf("expected a non-validated status not to record approval, got %v", approved)
+	}
+
+	validated := db.PlanStatusValidated
+	if _, err := svc.Patch(ctx, principal, doc.ID, PatchParams{Status: &validated}); err != nil {
+		t.Fatalf("Patch validated: %v", err)
+	}
+	if len(approved) != 1 || approved[0] != "sess_approve" {
+		t.Fatalf("expected approval recorded for sess_approve, got %v", approved)
+	}
+}
+
 func TestPlanPatchForbiddenForDifferentUser(t *testing.T) {
 	svc, store := openPlansService(t)
 	ctx := context.Background()
