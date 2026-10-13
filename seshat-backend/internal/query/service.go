@@ -119,6 +119,19 @@ type webSearchProvider interface {
 	ResearchKeys(ctx context.Context, principal *backendauth.Principal) map[string]string
 }
 
+// ApproveSessionPlan records the user's acceptance of the plan a session
+// submitted with submit_plan, so the runtime's plan-review gate stops refusing
+// the model's exit_plan_mode. A host that persists sessions has no live session
+// between turns, so the decision is recorded by session id instead (see
+// sdk.ApprovePlan). It is a no-op for an empty session id.
+func ApproveSessionPlan(sessionID string) {
+	sessionID = strings.TrimSpace(sessionID)
+	if sessionID == "" {
+		return
+	}
+	sdk.ApprovePlan(sdk.SessionID(sessionID))
+}
+
 func NewService(cfg ServiceConfig) *Service {
 	return &Service{
 		runtime:     cfg.Runtime,
