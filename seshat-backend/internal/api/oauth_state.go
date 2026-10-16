@@ -5,8 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"html"
 	"net/http"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/oauth2"
 	oauth2api "google.golang.org/api/oauth2/v2"
@@ -100,6 +102,21 @@ func randomState() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
+// maxOAuthResultMessageRunes bounds what the callback page prints. The
+// message can carry a string taken straight from the query, so a page that
+// echoes an unbounded one is a small denial of service of its own.
+const maxOAuthResultMessageRunes = 300
+
+// writeOAuthResultPage writes the HTML the browser lands on after a
+// provider redirects back to a local OAuth callback.
+//
+// Every value is escaped here, at the point of writing, rather than at the
+// call site: message carries a provider-supplied string from the query
+// (see the `?error=` branch of handleKnowledgeGDriveOAuthCallback and
+// handleKnowledgeSharePointOAuthCallback), and this function is the only
+// place that knows the text is going into HTML. An unescaped message is a
+// reflected XSS on the local origin - a page that sends the browser to this
+// callback with a script in the query runs it there.
 func writeOAuthResultPage(w http.ResponseWriter, ok bool, message string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if !ok {
@@ -109,8 +126,20 @@ func writeOAuthResultPage(w http.ResponseWriter, ok bool, message string) {
 	if !ok {
 		title = "Connection failed"
 	}
+	escapedTitle := html.EscapeString(title)
+	escapedMessage := html.EscapeString(truncateRunes(message, maxOAuthResultMessageRunes))
 	fmt.Fprintf(w, `<!doctype html><html><head><meta charset="utf-8"><title>%s</title></head>`+
 		`<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#111;color:#eee">`+
 		`<div style="text-align:center;max-width:420px"><h2>%s</h2><p>%s</p></div></body></html>`,
-		title, title, message)
+		escapedTitle, escapedTitle, escapedMessage)
+}
+
+// truncateRunes shortens s to at most max runes, appending an ellipsis when
+// it had to cut - on a rune boundary, so the page never renders half a
+// character.
+func truncateRunes(s string, max int) string {
+	if max <= 0 || utf8.RuneCountInString(s) <= max {
+		return s
+	}
+	return string([]rune(s)[:max]) + "…"
 }
