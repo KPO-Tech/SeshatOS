@@ -90,11 +90,12 @@ type App struct {
 	// sdk.SandboxAvailable() (system.go), which only ever checks Landlock
 	// and so can't reflect a Docker sandbox being used instead.
 	sandboxKind string
-	// transcribeAudio defaults to sdk.TranscribeAudio; overridden in tests to
-	// avoid a real network call. baseURL is empty for OpenAI's cloud API, or
-	// a local whisper-server URL when local transcription is configured
-	// (see local_stt.go) — apiKey is ignored in that case.
-	transcribeAudio func(ctx context.Context, apiKey string, audioData []byte, baseURL string) (*sdk.TranscriptionResult, error)
+	// transcribeAudio defaults to transcribeAudioWithTarget; overridden in
+	// tests to avoid a real network call. The target is resolved by
+	// resolveTranscriptionTarget — a local whisper-server URL when local
+	// transcription is configured (see local_stt.go), or a provider the
+	// runtime's audio catalog knows how to transcribe with.
+	transcribeAudio func(ctx context.Context, target transcriptionTarget, audioData []byte) (*sdk.TranscriptionResult, error)
 	// oauthStates tracks in-flight OAuth authorization requests across every
 	// redirect-based OAuth flow this app handles (Gmail, Google Drive, ...)
 	// - state -> issuing principal + expiry, for CSRF protection across the
@@ -200,11 +201,6 @@ func NewApp(cfg AppConfig) *App {
 		connectedServerURL:    cfg.ConnectedServerURL,
 		targetServerURL:       cfg.TargetServerURL,
 		sandboxKind:           cfg.SandboxKind,
-		transcribeAudio: func(ctx context.Context, apiKey string, audioData []byte, baseURL string) (*sdk.TranscriptionResult, error) {
-			if baseURL != "" {
-				return sdk.TranscribeAudio(ctx, apiKey, audioData, sdk.WithTranscribeBaseURL(baseURL))
-			}
-			return sdk.TranscribeAudio(ctx, apiKey, audioData)
-		},
+		transcribeAudio:       transcribeAudioWithTarget,
 	}
 }
