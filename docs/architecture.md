@@ -134,28 +134,31 @@ Forbidden:
 - importing `seshat/internal/*`
 - coupling the UI directly to Go packages or DB internals
 
-### The prompt package mirrors the runtime's prompt text
+### The prompt belongs to the runtime
 
-`seshat-backend/internal/prompt` holds the backend's own copy of the General
-Agent's system prompt. The runtime's version sits in an `internal/` package
-(`seshat-runtime/internal/prompt`), which cannot be imported from another module,
-so the two copies are kept in step by hand: when the runtime's wording changes,
-the change has to be mirrored here in the same round. `sections.go` mirrors
-`seshatcore.go` and names the source constant of each section; `build.go`
-assembles `DefaultCorePrompt()`, which is what the query service uses when a
-session has no custom agent, and `build_test.go` fails if a section is dropped
-or its order changes.
+`seshat-backend` does not carry its own copy of the General Agent's prompt. The
+runtime composes it (`seshat-runtime/internal/prompt`: `prompts/general.md` and
+`prompts/shared.md`, assembled by `agents.go`), and a session with no custom
+agent leaves `SystemPromptOverride` unset so that composition applies —
+including the dynamic context the runtime builds around the stable text:
+project instructions, git state, memory and the stage overlay. Those come back
+**empty** as soon as a custom prompt is set, because the runtime's
+`FetchSystemPromptParts` returns early on `CustomSystemPrompt`; that is why the
+backend no longer sets a default one. The copy it used to hold (`internal/prompt`,
+removed) was re-synced by hand and had drifted out of step with the runtime's
+own behaviour changes.
 
-`base.go` holds the working-discipline sections that were extracted so a future
-custom agent can compose its own prompt from named pieces instead of inheriting
-the whole General Agent prompt: working discipline, delegation, plan mode and
-task tracking. No production code composes an agent from those four yet — the
-only references are in `base_test.go`, which keeps their headings stable, keeps
-the coding-specific examples they were trimmed of out, and keeps them from
-collapsing into byte-identical copies of the mirrored sections. They are kept on
-purpose as the pieces per-agent prompts will be built from, not as content
-waiting to be wired in passing. `KnowledgeBase` is the exception: the General
-Agent always has `knowledge_search`, so `DefaultCorePrompt()` includes it.
+What the product owns is **appended**, never substituted:
+`internal/query/context.go` and `BuildContextInput` add the rendering
+capabilities of this UI, the narration guidance, the note saying which surface
+the agent is running on (the runtime's text is written for a terminal —
+"working in the user's terminal", "never a `#` heading"), and the internal
+knowledge base, the last only when `knowledge_search` is actually reachable for
+that agent.
+
+A custom agent's own system prompt still replaces the runtime's text entirely
+(`SystemPromptOverride`, from its definition), and the product blocks are
+appended to it too.
 
 ---
 

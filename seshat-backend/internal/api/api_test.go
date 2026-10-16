@@ -3659,12 +3659,13 @@ func TestBuildQueryInput_AppendSystemPromptPassedThrough(t *testing.T) {
 	}
 }
 
-// TestBuildQueryInput_AppendSystemPromptOnlyRenderingCapabilities verifies
-// that when no memories, preferences, or explicit system prompt are
-// configured, BuildContextInput injects nothing beyond the static
-// rendering-capabilities block (chart blocks / HTML preview) that's always
-// appended regardless of session state.
-func TestBuildQueryInput_AppendSystemPromptOnlyRenderingCapabilities(t *testing.T) {
+// TestBuildQueryInput_AppendSystemPromptOnlyStaticProductBlocks verifies that
+// when no memories, preferences, or explicit system prompt are configured,
+// BuildContextInput injects nothing beyond the static product blocks that are
+// always appended regardless of session state: the rendering capabilities
+// (chart blocks / HTML preview), the note saying which surface this is, and
+// the internal-knowledge-base instructions.
+func TestBuildQueryInput_AppendSystemPromptOnlyStaticProductBlocks(t *testing.T) {
 	app := newStreamApp(stubQueryRunner{})
 	empty := ""
 	input, _ := app.backend.Query.BuildContextInput(context.Background(), backendquery.ContextBuildParams{
@@ -3675,10 +3676,12 @@ func TestBuildQueryInput_AppendSystemPromptOnlyRenderingCapabilities(t *testing.
 		t.Fatal("expected the static rendering-capabilities block to always be present")
 	}
 	got := strings.TrimSpace(*input.AppendSystemPrompt)
-	if !strings.Contains(got, "Rich rendering available in this UI") {
-		t.Errorf("expected the rendering-capabilities block, got %q", got)
+	for _, want := range []string{"Rich rendering available in this UI", "Where you are running", "Internal knowledge base"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("expected the %q block, got %q", want, got)
+		}
 	}
-	if strings.Contains(got, "Knowledge Base Context") || strings.Contains(got, "user memories") {
+	if strings.Contains(got, "Knowledge Base Context") || strings.Contains(got, "User Memories") {
 		t.Errorf("expected no memories/RAG injection without memories/preferences configured, got %q", got)
 	}
 }

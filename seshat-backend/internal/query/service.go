@@ -17,7 +17,6 @@ import (
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
-	backendprompt "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	bkwebsearch "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
 	"github.com/KPO-Tech/seshat-runtime/pkg/agent"
@@ -1527,13 +1526,13 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	}
 
 	// No agent definition supplied its own system prompt (plain chat, or an
-	// agent_slug that didn't resolve to anything) - fall back to the
-	// product-owned General Agent prompt instead of silently letting the
-	// SDK's own internal default (seshat/internal/prompt) apply.
-	if input.SystemPromptOverride == nil {
-		defaultPrompt := backendprompt.DefaultCorePrompt()
-		input.SystemPromptOverride = &defaultPrompt
-	}
+	// agent_slug that didn't resolve to anything): leave SystemPromptOverride
+	// nil so the runtime composes its own General Agent prompt, and with it the
+	// project instructions, the git state, the memory block and the stage
+	// overlay. Setting an override here did not replace only the wording: the
+	// runtime's FetchSystemPromptParts returns as soon as a custom prompt is
+	// set and hands back empty context maps, so everything dynamic was dropped
+	// with it. Product content belongs in the append below.
 
 	if input.AppendSystemPrompt == nil && p.AppendSystemPrompt != nil && *p.AppendSystemPrompt != "" {
 		input.AppendSystemPrompt = p.AppendSystemPrompt
@@ -1546,6 +1545,17 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	// costs a fixed handful of tokens and applies to every surface.
 	input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
 	input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
+	// Surfaces: the runtime's prompt was written for its terminal UI, so the
+	// two instructions that are false here (where the agent is running, and how
+	// its answer is presented) are corrected rather than left to be followed.
+	input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, surfaceContextBlock)
+	// Product content the runtime's prompt has no equivalent for. It teaches
+	// knowledge_search, so it is added only when that tool is reachable -
+	// describing a tool the agent does not have is the defect the runtime's own
+	// prompt test guards against.
+	if allowsKnowledgeSearch(input.AllowedTools) {
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, knowledgeBaseBlock)
+	}
 
 	// Layer user preference block on top (appended, never overwritten).
 	if p.Principal != nil && s.preferences != nil {
