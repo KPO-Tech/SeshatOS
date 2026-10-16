@@ -193,10 +193,17 @@ function extractErrorMessage(payload: { status: number; data?: any; text?: strin
   return payload.text || `HTTP ${payload.status}`
 }
 
-async function performJSONRequest(path: string, method: string, body: unknown, token?: string) {
+async function performJSONRequest(
+  path: string,
+  method: string,
+  body: unknown,
+  token?: string,
+  extraHeaders?: Record<string, string>,
+) {
   await ensureBackendTrusted()
   const headers: Record<string, string> = {
     Accept: 'application/json',
+    ...extraHeaders,
   }
   let requestBody: string | undefined
   if (body !== undefined) {
@@ -469,7 +476,12 @@ export function registerBackendHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('auth:continue-without-account', async (event) => {
     assertTrustedSender(event)
-    const payload = await performJSONRequest('/auth/local-session', 'POST', undefined)
+    // The backend only mints this secret-less session for a caller that can read the desktop bridge secret,
+    // so that a web page reaching the loopback port cannot get one.
+    const secret = await ensureDesktopBridgeSecret()
+    const payload = await performJSONRequest('/auth/local-session', 'POST', undefined, undefined, {
+      'X-Seshat-Desktop-Proof': desktopBridgeProof(secret, 'auth/local-session'),
+    })
     if (!payload.ok) {
       throw new Error(extractErrorMessage(payload))
     }

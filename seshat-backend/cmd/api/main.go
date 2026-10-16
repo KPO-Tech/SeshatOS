@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -51,9 +53,10 @@ func main() {
 	defer func() { _ = cleanup() }()
 
 	apiCfg := defaultAPIConfig(config)
-	router := api.CreateRouter(apiCfg, app)
+	host := listenHost()
+	router := api.HostGuard(allowedHosts(host), api.CreateRouter(apiCfg, app))
 
-	ln, actualPort, err := listen(apiCfg.Port)
+	ln, actualPort, err := listen(host, apiCfg.Port)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[API] Impossible d'ouvrir un port d'ecoute: %v\n", err)
 		os.Exit(1)
@@ -93,14 +96,34 @@ func main() {
 // use, it falls back to an OS-assigned free port (":0") instead of failing
 // outright - a packaged desktop app can't assume its preferred port is free
 // on every user's machine. Returns the listener and the port actually bound.
-func listen(preferredPort int) (net.Listener, int, error) {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", preferredPort))
+func listen(host string, preferredPort int) (net.Listener, int, error) {
+	ln, err := net.Listen("tcp", net.JoinHostPort(host, strconv.Itoa(preferredPort)))
 	if err != nil {
 		fmt.Printf("[API] Port %d indisponible (%v), selection d'un port libre...\n", preferredPort, err)
-		ln, err = net.Listen("tcp", ":0")
+		ln, err = net.Listen("tcp", net.JoinHostPort(host, "0"))
 		if err != nil {
 			return nil, 0, err
 		}
 	}
 	return ln, ln.Addr().(*net.TCPAddr).Port, nil
+}
+
+// listenHost is the address the backend listens on: the loopback address, because its only client is the
+// desktop app on the same machine. SESHAT_API_HOST changes it (and must then be matched by an
+// authentication layer in front: the local session is still limited to loopback callers).
+func listenHost() string {
+	if host := strings.TrimSpace(os.Getenv("SESHAT_API_HOST")); host != "" {
+		return host
+	}
+	return "127.0.0.1"
+}
+
+// allowedHosts are the Host header values accepted besides the loopback names: the listen address when it
+// is a specific non-loopback one, and the names of SESHAT_API_ALLOWED_HOSTS.
+func allowedHosts(listen string) []string {
+	extra := api.ParseAllowedHosts(os.Getenv("SESHAT_API_ALLOWED_HOSTS"))
+	if ip := net.ParseIP(listen); ip != nil && !ip.IsLoopback() && !ip.IsUnspecified() {
+		extra = append(extra, listen)
+	}
+	return extra
 }

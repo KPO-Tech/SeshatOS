@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
@@ -12,11 +13,21 @@ import (
 // terminalUpgrader upgrades /terminal/ws/{sessionID} connections. Only
 // Electron's main process (not a browser page) ever connects here,
 // authenticated via the same Bearer-token scheme as every other endpoint —
-// Origin carries no trust signal for this client, so it isn't checked.
+// A browser always sends an Origin and a page of another site must not open this socket, so an Origin,
+// when present, has to be the backend's own host; Electron's main process sends none.
 var terminalUpgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
-	CheckOrigin:     func(r *http.Request) bool { return true },
+	CheckOrigin:     terminalOriginAllowed,
+}
+
+func terminalOriginAllowed(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	u, err := url.Parse(origin)
+	return err == nil && u.Host != "" && strings.EqualFold(u.Host, r.Host)
 }
 
 // handleTerminalWS handles GET /api/v1/terminal/ws/{sessionID}. Electron
