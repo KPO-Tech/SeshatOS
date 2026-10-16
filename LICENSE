@@ -8,7 +8,7 @@ Copyright (c) 2026-present Stéphane Kpoviessi (Seshat)
 
 This license applies to SeshatOS: the seshat-backend and seshat-desktop
 components in this repository. The seshat SDK
-(github.com/KPO-Tech/seshat) is a separate repository under a plain,
+(github.com/KPO-Tech/seshat-runtime) is a separate repository under a plain,
 unmodified Apache License 2.0 - no Commons Clause condition applies there.
 
 The Software is licensed under the Apache License, Version 2.0 (reproduced
