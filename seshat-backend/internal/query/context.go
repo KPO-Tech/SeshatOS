@@ -35,6 +35,53 @@ const narrationGuidanceBlock = `## Narrate as you work
 
 Before calling a tool, say in one short sentence what you're about to do and why - not a description of the tool call itself, just enough for someone watching to follow along (e.g. "Let me check how the auth middleware handles this." before reading a file, not "I will now call read_file on internal/auth/middleware.go"). You can skip the sentence for a rapid run of the same kind of trivial read/search you already explained once. Narrate before the call, not as a caption on its result afterward.`
 
+// surfaceContextBlock states where the agent is actually running. The
+// runtime's own prompt is written for its terminal UI - general.md opens with
+// "working in the user's terminal", and shared.md asks for sober markdown with
+// "never a `#` heading" - and this session is the desktop application, whose
+// answers are rendered as rich Markdown in a conversation panel. Two
+// instructions that are simply false here are corrected instead of being left
+// to be followed. Kept short - appended to every turn's system prompt, same as
+// renderingCapabilitiesBlock above.
+const surfaceContextBlock = "## Where you are running\n\n" +
+	"This session is the Seshat desktop application, not a terminal. Answers are rendered as rich " +
+	"Markdown in a conversation panel, so headings (including `#`), tables, lists, code blocks, " +
+	"math and Mermaid diagrams all display correctly and any terminal-specific presentation rule " +
+	"you were given does not apply here. Tool calls, files, plans and previews appear in panels " +
+	"beside the conversation."
+
+// knowledgeBaseBlock is product content: the runtime's prompt has no concept of
+// a connected internal knowledge base, and answers "a capability that is not in
+// your tool list" by telling the agent to say so. Added only when
+// knowledge_search is actually reachable - see allowsKnowledgeSearch.
+const knowledgeBaseBlock = "## Internal knowledge base\n\n" +
+	"The user's company may have connected internal knowledge sources (documents, policies, past " +
+	"work, product/company-specific information) searchable with knowledge_search. When a question " +
+	"would be answered more accurately or completely from that internal knowledge than from general " +
+	"knowledge or the public web, search it first and ground your answer in what it returns. Keep " +
+	"source attribution readable: mention source names or document titles naturally when it helps " +
+	"trace an important claim, but do not sprinkle raw numeric citations like [1], [2], or [3, 7] " +
+	"through the prose unless the user explicitly asks for numbered references."
+
+const knowledgeSearchToolName = "knowledge_search"
+
+// allowsKnowledgeSearch reports whether knowledge_search can be reached in
+// this session: an unrestricted agent can, and a restricted one only when the
+// tool is in its allowlist. A definition that restricts its tools is a product
+// decision about what the agent may do, and instructions about a tool outside
+// that decision must not be layered on top of it.
+func allowsKnowledgeSearch(allowedTools []string) bool {
+	if len(allowedTools) == 0 {
+		return true
+	}
+	for _, name := range allowedTools {
+		if name == knowledgeSearchToolName {
+			return true
+		}
+	}
+	return false
+}
+
 // buildRAGContext searches the given corpus for chunks relevant to the prompt
 // and formats them as a Markdown context block. Returns empty strings on any error.
 func buildRAGContext(ctx context.Context, principal *backendauth.Principal, knowledge knowledgeProvider, corpusID, prompt string) (string, []RAGSearchResult) {

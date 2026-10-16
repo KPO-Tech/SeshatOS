@@ -211,10 +211,31 @@ jobs:
 
           echo "Branch policy check passed."
 
+  # A seshat-runtime release lands with no commit here, so a stale pin stays
+  # invisible unless something looks for it. No path filter and no `needs: changes`
+  # on purpose: this is about the dependency, not about the files a pull request
+  # happens to touch. Dependabot's weekly pull requests are the heartbeat that
+  # keeps this job running on a repository where nothing else would.
+  runtime-pin:
+    name: Runtime pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: |
+            go.work.sum
+            seshat-backend/go.sum
+
+      - name: Check the seshat-runtime pin
+        run: bash scripts/check-runtime-pin.sh
+
   gate:
     name: Gate
     runs-on: ubuntu-latest
-    needs: [changes, build, test, lint, security, desktop, branch-policy]
+    needs: [changes, build, test, lint, security, desktop, runtime-pin, branch-policy]
     if: always()
     steps:
       - name: All checks passed
@@ -226,6 +247,7 @@ jobs:
              ! ok "${{ needs.security.result }}" || \
              ! ok "${{ needs.desktop.result }}" || \
              [[ "${{ needs.changes.result }}" != "success" ]] || \
+             [[ "${{ needs.runtime-pin.result }}" != "success" ]] || \
              [[ "${{ needs.branch-policy.result }}" != "success" ]]; then
             echo "One or more required checks failed."
             echo "  changes:       ${{ needs.changes.result }}"
@@ -234,6 +256,7 @@ jobs:
             echo "  lint:          ${{ needs.lint.result }}"
             echo "  security:      ${{ needs.security.result }}"
             echo "  desktop:       ${{ needs.desktop.result }}"
+            echo "  runtime-pin:   ${{ needs.runtime-pin.result }}"
             echo "  branch-policy: ${{ needs.branch-policy.result }}"
             exit 1
           fi
