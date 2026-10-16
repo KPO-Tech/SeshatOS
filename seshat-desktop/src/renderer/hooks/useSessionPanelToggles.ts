@@ -15,6 +15,7 @@ export function useSessionPanelToggles(sessionId?: string) {
   const computerOpen = useUIStore((s) => s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'computer' && p.sessionId === sessionId)))
   const browserOpen = useUIStore((s) => s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'browser' && p.sessionId === sessionId)))
   const terminalOpen = useUIStore((s) => s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'terminal' && p.sessionId === sessionId)))
+  const shellOpen = useUIStore((s) => s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'shell' && p.sessionId === sessionId)))
 
   const toggleComputer = useCallback(() => {
     if (computerOpen) closeRightPanel(rightPanelId('computer', sessionId))
@@ -31,5 +32,10 @@ export function useSessionPanelToggles(sessionId?: string) {
     else openRightPanel({ kind: 'terminal', title: 'Terminal', sessionId })
   }, [terminalOpen, closeRightPanel, openRightPanel, sessionId])
 
-  return { computerOpen, browserOpen, terminalOpen, toggleComputer, toggleBrowser, toggleTerminal }
+  const toggleShell = useCallback(() => {
+    if (shellOpen) closeRightPanel(rightPanelId('shell', sessionId))
+    else openRightPanel({ kind: 'shell', title: 'Shell', sessionId })
+  }, [closeRightPanel, openRightPanel, sessionId, shellOpen])
+
+  return { computerOpen, browserOpen, terminalOpen, shellOpen, toggleComputer, toggleBrowser, toggleTerminal, toggleShell }
 }

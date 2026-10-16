@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Computer, Globe, Shield, Terminal } from '@icon-park/react'
+import { CodeComputer, Computer, Globe, Shield, Terminal } from '@icon-park/react'
 import { api } from '@renderer/api/client'
 import { IconButton } from '@renderer/components/ui/IconButton'
 import { SelectorMenu, type SelectorOption } from '@renderer/components/ui/SelectorPill'
@@ -30,7 +30,7 @@ function permissionModeColor(mode: UIPermissionMode): 'green' | 'orange' | 'red'
 export function TitlebarSessionControls({ conversationId }: { conversationId: string | null }) {
   const permissionMode = useUIStore((s) => s.permissionMode)
   const setPermissionMode = useUIStore((s) => s.setPermissionMode)
-  const { computerOpen, browserOpen, terminalOpen, toggleComputer, toggleBrowser, toggleTerminal } =
+  const { computerOpen, browserOpen, terminalOpen, shellOpen, toggleComputer, toggleBrowser, toggleTerminal, toggleShell } =
     useSessionPanelToggles(conversationId ?? undefined)
   const [permissionOpen, setPermissionOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -57,6 +57,7 @@ export function TitlebarSessionControls({ conversationId }: { conversationId: st
           <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Computer" active={computerOpen} onClick={toggleComputer} />
           <IconButton icon={<Globe size={14} />} variant="ghost" size={26} title="Browser" active={browserOpen} onClick={toggleBrowser} />
           <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title="Terminal" active={terminalOpen} onClick={toggleTerminal} />
+          <IconButton icon={<CodeComputer size={14} />} variant="ghost" size={26} title="Shell" active={shellOpen} onClick={toggleShell} />
         </>
       )}
       <div className="relative">
