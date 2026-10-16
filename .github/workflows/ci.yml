@@ -230,7 +230,7 @@ jobs:
             seshat-backend/go.sum
 
       - name: Check the seshat-runtime pin
-        run: bash scripts/check-runtime-pin.sh seshat-backend
+        run: bash scripts/check-runtime-pin.sh
 
   gate:
     name: Gate
