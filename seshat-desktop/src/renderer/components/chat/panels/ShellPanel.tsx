@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Terminal } from '@xterm/xterm'
+import { FitAddon } from '@xterm/addon-fit'
+import '@xterm/xterm/css/xterm.css'
 import { useSessionStore } from '@renderer/stores/session'
 import { EmptyState } from './EmptyState'
 
@@ -6,125 +9,136 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
-type ShellLine = { id: number; stream: 'stdout' | 'stderr' | 'system'; text: string }
 type ShellStatus = 'idle' | 'starting' | 'running' | 'exited'
 
-// A shell the user drives themselves, as opposed to TerminalPanel, which is a
+// A real terminal for the user, as opposed to TerminalPanel, which is a
 // read-only live view of the commands the agent runs. Both exist on purpose:
 // the agent's own commands stay traceable on their own, and this one is a
-// working shell the user can type into.
+// shell the user drives.
 //
-// Backed by main/ipc/system.ts's terminal:* handlers, which run the shell
-// with piped stdio rather than a PTY. The shell echoes its own prompt and each
-// submitted line, so nothing is echoed locally. The cost of that choice is
-// real and worth stating: no ANSI colour, no line editing, and no full-screen
-// programs (vim, less, a REPL's own UI). A PTY would need a native module.
+// It is a real PTY (main/ipc/shell.ts, node-pty) rendered by xterm.js, so
+// colour, line editing, job control and full-screen programs all work the way
+// they do in a normal terminal. What the renderer sends back is the raw
+// keystroke stream, which is why there is no input field here.
 export function ShellPanel({ sessionId }: { sessionId?: string }) {
   const session = useSessionStore((s) => (sessionId ? s.sessions.find((item) => item.id === sessionId) : undefined))
   const cwd = session?.workspacePath
-  const [lines, setLines] = useState<ShellLine[]>([])
   const [status, setStatus] = useState<ShellStatus>('idle')
   const [shellLabel, setShellLabel] = useState('')
-  const [input, setInput] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const lineSeqRef = useRef(0)
-  const terminalIdRef = useRef<string | null>(null)
-  const startedForRef = useRef<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const termRef = useRef<Terminal | null>(null)
+  const fitRef = useRef<FitAddon | null>(null)
+  const idRef = useRef<string | null>(null)
+  const disposersRef = useRef<Array<() => void>>([])
 
-  const append = useCallback((stream: ShellLine['stream'], text: string) => {
-    if (!text) return
-    const id = lineSeqRef.current
-    lineSeqRef.current += 1
-    setLines((current) => [...current, { id, stream, text }])
+  const detach = useCallback(() => {
+    for (const dispose of disposersRef.current) dispose()
+    disposersRef.current = []
   }, [])
 
   const stop = useCallback(() => {
-    const id = terminalIdRef.current
-    terminalIdRef.current = null
-    setStatus('idle')
-    if (id) void window.nexus?.terminal?.stop(id).catch(() => undefined)
-  }, [])
+    const id = idRef.current
+    idRef.current = null
+    detach()
+    if (id) void window.nexus?.shell?.stop(id).catch(() => undefined)
+  }, [detach])
 
   const start = useCallback(() => {
-    const bridge = window.nexus?.terminal
+    const bridge = window.nexus?.shell
     if (!sessionId || !cwd) return
     if (!bridge) {
-      setError('This build has no terminal bridge.')
+      setError('This build has no shell bridge.')
       return
     }
 
+    const term = termRef.current
     const id = `shell:${sessionId}`
-    terminalIdRef.current = id
+    detach()
+    idRef.current = id
     setError(null)
     setStatus('starting')
-    setLines([])
-    lineSeqRef.current = 0
+    setShellLabel('')
+    term?.reset()
 
-    bridge.onEvent(id, (event) => {
-      if (event.type === 'data') {
-        append(event.stream === 'stderr' ? 'stderr' : 'stdout', event.data ?? '')
-        return
-      }
-      if (event.type === 'started') {
-        setShellLabel(event.shell ?? '')
+    disposersRef.current.push(
+      bridge.onData(id, (event) => termRef.current?.write(event.data)),
+      bridge.onExit(id, (event) => {
+        idRef.current = null
+        detach()
+        termRef.current?.write(`\r\n\x1b[2m[exited with code ${event.exitCode}]\x1b[0m\r\n`)
+        setStatus('exited')
+      }),
+    )
+
+    void bridge
+      .start({ id, cwd, cols: term?.cols ?? 80, rows: term?.rows ?? 24 })
+      .then((info) => {
+        setShellLabel(info.shell)
         setStatus('running')
-        return
-      }
-      if (event.type === 'exit') {
-        append('system', `\nShell exited${typeof event.code === 'number' ? ` with code ${event.code}` : ''}\n`)
-        terminalIdRef.current = null
+        termRef.current?.focus()
+      })
+      .catch((err: unknown) => {
+        idRef.current = null
+        detach()
+        setError(err instanceof Error ? err.message : 'The shell could not start.')
         setStatus('exited')
-        return
-      }
-      if (event.type === 'error') {
-        setError(event.message ?? 'The shell could not start.')
-        setStatus('exited')
-      }
+      })
+  }, [cwd, detach, sessionId])
+
+  // The terminal is created before the shell starts (this effect is declared
+  // first), because the shell is spawned with the size the terminal measured.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const term = new Terminal({
+      cursorBlink: true,
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+      fontSize: 11.5,
+      theme: terminalTheme(),
+    })
+    const fit = new FitAddon()
+    term.loadAddon(fit)
+    term.open(container)
+    try {
+      fit.fit()
+    } catch {
+      // The panel can mount with no measurable size yet.
+    }
+    termRef.current = term
+    fitRef.current = fit
+
+    const input = term.onData((data) => {
+      const id = idRef.current
+      if (id) void window.nexus?.shell?.write(id, data).catch(() => undefined)
     })
 
-    void bridge.start({ id, cwd }).catch((err: unknown) => {
-      terminalIdRef.current = null
-      setError(err instanceof Error ? err.message : 'The shell could not start.')
-      setStatus('exited')
+    const observer = new ResizeObserver(() => {
+      try {
+        fit.fit()
+      } catch {
+        // Same as above: nothing to fit while the panel is collapsed.
+      }
+      const id = idRef.current
+      if (id) void window.nexus?.shell?.resize(id, term.cols, term.rows).catch(() => undefined)
     })
-  }, [append, cwd, sessionId])
+    observer.observe(container)
 
-  // Started once per session: the workspace path arrives with the session
-  // load, so waiting for it is the difference between a shell in the project
-  // folder and one in the app's own directory.
+    return () => {
+      observer.disconnect()
+      input.dispose()
+      term.dispose()
+      termRef.current = null
+      fitRef.current = null
+    }
+  }, [])
+
   useEffect(() => {
     if (!sessionId || !cwd) return
-    if (startedForRef.current === sessionId) return
-    startedForRef.current = sessionId
     start()
-  }, [cwd, sessionId, start])
-
-  const stopRef = useRef(stop)
-  stopRef.current = stop
-  useEffect(() => () => stopRef.current(), [])
-
-  useEffect(() => {
-    const el = scrollRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [lines])
-
-  function submit() {
-    const bridge = window.nexus?.terminal
-    const id = terminalIdRef.current
-    if (!bridge || !id || status !== 'running') return
-    const command = input
-    setInput('')
-    void bridge.write(id, `${command}\n`).catch((err: unknown) => {
-      setError(err instanceof Error ? err.message : 'The command could not be sent.')
-    })
-  }
-
-  function restart() {
-    stop()
-    startedForRef.current = sessionId ?? null
-    start()
-  }
+    return () => stop()
+  }, [cwd, sessionId, start, stop])
 
   if (!cwd) {
     return (
@@ -149,14 +163,17 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
           </span>
           <button
             className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-1.5 py-[2px] text-[10.5px] text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
-            onClick={() => setLines([])}
+            onClick={() => termRef.current?.clear()}
             type="button"
           >
             Clear
           </button>
           <button
             className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-1.5 py-[2px] text-[10.5px] text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
-            onClick={restart}
+            onClick={() => {
+              stop()
+              start()
+            }}
             type="button"
           >
             Restart
@@ -164,45 +181,25 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
         </div>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="min-h-0 flex-1 overflow-auto bg-[var(--color-code-bg)] p-3 font-mono text-[11px] leading-5"
-      >
-        {lines.length === 0 && !error ? (
-          <div className="text-app-text-muted">Starting the shell...</div>
-        ) : (
-          lines.map((line) => (
-            <pre key={line.id} className={cx('m-0 whitespace-pre-wrap', lineClass(line.stream))}>{line.text}</pre>
-          ))
-        )}
-        {error && <pre className="m-0 mt-2 whitespace-pre-wrap text-app-error">{error}</pre>}
-      </div>
+      {error && (
+        <div className="shrink-0 border-b border-app-border-subtle px-3 py-1.5 font-mono text-[10.5px] text-app-error">{error}</div>
+      )}
 
-      <div className="flex shrink-0 items-center gap-2 border-t border-app-border-subtle px-3 py-2 font-mono text-[11px]">
-        <span className="min-w-0 max-w-[45%] truncate text-app-text-muted" title={cwd}>{cwd}</span>
-        <span className="shrink-0 font-semibold text-[var(--accent-primary)]">$</span>
-        <input
-          aria-label="Shell command"
-          className="min-w-0 flex-1 border-0 bg-transparent font-mono text-[11px] text-app-text outline-none placeholder:text-app-text-muted"
-          disabled={status !== 'running'}
-          onChange={(event) => setInput(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault()
-              submit()
-            }
-          }}
-          placeholder={status === 'running' ? 'Type a command and press Enter' : 'Shell is not running'}
-          spellCheck={false}
-          value={input}
-        />
-      </div>
+      <div className="min-h-0 flex-1 overflow-hidden p-2" ref={containerRef} />
     </div>
   )
 }
 
-function lineClass(stream: ShellLine['stream']) {
-  if (stream === 'stderr') return 'text-app-error'
-  if (stream === 'system') return 'text-app-text-muted'
-  return 'text-[var(--color-code-fg)]'
+// xterm needs concrete colours, so the app's own code tokens are read off the
+// document rather than duplicated here.
+function terminalTheme() {
+  const styles = getComputedStyle(document.documentElement)
+  const background = styles.getPropertyValue('--color-code-bg').trim() || '#1a1a1a'
+  const foreground = styles.getPropertyValue('--color-code-fg').trim() || '#d6d3d1'
+  return {
+    background,
+    foreground,
+    cursor: styles.getPropertyValue('--accent-primary').trim() || foreground,
+    selectionBackground: 'rgba(239, 124, 47, 0.3)',
+  }
 }

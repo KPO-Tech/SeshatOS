@@ -86,24 +86,14 @@ type BrowserPanelState = {
   }>
 }
 
-type TerminalEvent = {
-  id: string
-  type: 'started' | 'data' | 'error' | 'exit'
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  shell?: string
-  cwd?: string
-  pid?: number
-  code?: number | null
-  signal?: string | null
-}
+type ShellDataEvent = { id: string; data: string }
+type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
-// terminal-relay is separate from `terminal` above: `terminal` is a
-// general-purpose interactive shell session (not yet wired to any UI);
-// terminal-relay carries the agent's own bash-tool commands per session,
-// bridged to seshat-backend's TerminalRelay so the user watches them run
-// live - see main/ipc/terminal-relay.ts.
+// shell and terminal-relay are two different things on purpose. terminal-relay
+// carries the agent's own bash-tool commands per session, bridged to
+// seshat-backend's TerminalRelay so the user watches them run live - see
+// main/ipc/terminal-relay.ts. `shell` is a real PTY (main/ipc/shell.ts) that
+// the user drives themselves.
 type TerminalRelayEvent = {
   sessionId: string
   type: string
@@ -262,18 +252,27 @@ const nexusBridge = {
       return () => ipcRenderer.removeListener('seshat:browser:panel-closed', handler)
     },
   },
-  terminal: {
-    start: (payload: { id: string; cwd: string }): Promise<{ ok: boolean; id: string; shell: string; cwd: string; pid?: number }> =>
-      ipcRenderer.invoke('terminal:start', payload),
-    write: (id: string, data: string): Promise<void> => ipcRenderer.invoke('terminal:write', { id, data }),
-    stop: (id: string): Promise<void> => ipcRenderer.invoke('terminal:stop', id),
-    onEvent: (id: string, listener: (event: TerminalEvent) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalEvent) => {
+  shell: {
+    start: (payload: { id: string; cwd: string; cols: number; rows: number }): Promise<{ id: string; shell: string; cwd: string; pid?: number }> =>
+      ipcRenderer.invoke('shell:start', payload),
+    write: (id: string, data: string): Promise<void> => ipcRenderer.invoke('shell:write', { id, data }),
+    resize: (id: string, cols: number, rows: number): Promise<void> => ipcRenderer.invoke('shell:resize', { id, cols, rows }),
+    stop: (id: string): Promise<void> => ipcRenderer.invoke('shell:stop', id),
+    onData: (id: string, listener: (event: ShellDataEvent) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: ShellDataEvent) => {
         if (payload.id !== id) return
         listener(payload)
       }
-      ipcRenderer.on('terminal:event', handler)
-      return () => ipcRenderer.removeListener('terminal:event', handler)
+      ipcRenderer.on('shell:data', handler)
+      return () => ipcRenderer.removeListener('shell:data', handler)
+    },
+    onExit: (id: string, listener: (event: ShellExitEvent) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: ShellExitEvent) => {
+        if (payload.id !== id) return
+        listener(payload)
+      }
+      ipcRenderer.on('shell:exit', handler)
+      return () => ipcRenderer.removeListener('shell:exit', handler)
     },
   },
   terminalRelay: {

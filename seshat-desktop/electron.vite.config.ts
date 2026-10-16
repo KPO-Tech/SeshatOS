@@ -7,7 +7,9 @@ export default defineConfig({
   main: {
     build: {
       rollupOptions: {
-        external: ['electron']
+        // node-pty is a native module: it cannot be bundled, so it stays a
+        // runtime require and is shipped unpacked (see package.json build).
+        external: ['electron', 'node-pty']
       }
     }
   },
