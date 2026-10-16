@@ -134,6 +134,29 @@ Forbidden:
 - importing `seshat/internal/*`
 - coupling the UI directly to Go packages or DB internals
 
+### The prompt package mirrors the runtime's prompt text
+
+`seshat-backend/internal/prompt` holds the backend's own copy of the General
+Agent's system prompt. The runtime's version sits in an `internal/` package
+(`seshat-runtime/internal/prompt`), which cannot be imported from another module,
+so the two copies are kept in step by hand: when the runtime's wording changes,
+the change has to be mirrored here in the same round. `sections.go` mirrors
+`seshatcore.go` and names the source constant of each section; `build.go`
+assembles `DefaultCorePrompt()`, which is what the query service uses when a
+session has no custom agent, and `build_test.go` fails if a section is dropped
+or its order changes.
+
+`base.go` holds the working-discipline sections that were extracted so a future
+custom agent can compose its own prompt from named pieces instead of inheriting
+the whole General Agent prompt: working discipline, delegation, plan mode and
+task tracking. No production code composes an agent from those four yet — the
+only references are in `base_test.go`, which keeps their headings stable, keeps
+the coding-specific examples they were trimmed of out, and keeps them from
+collapsing into byte-identical copies of the mirrored sections. They are kept on
+purpose as the pieces per-agent prompts will be built from, not as content
+waiting to be wired in passing. `KnowledgeBase` is the exception: the General
+Agent always has `knowledge_search`, so `DefaultCorePrompt()` includes it.
+
 ---
 
 ## Request lifecycle in the local backend

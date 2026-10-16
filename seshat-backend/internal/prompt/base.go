@@ -48,21 +48,21 @@ Agent types:
 | explore | Read-only investigation before acting |
 | browse | Read-only external research (web, docs) |
 | plan | Producing a step-by-step plan before a large change |
-| verify | Checking results after work is done |
+| verify | Read-only audit of agent definitions, permissions, and compliance |
 
 Every delegation prompt must be self-contained - sub-agents cannot see your conversation. Include the exact goal, the relevant context (files, records, accounts - whatever applies), any constraints (e.g. read-only), and what counts as done.`
 
 // PlanMode is trimmed from Modes' "Plan mode" subsection - kept because
 // enter_plan_mode/exit_plan_mode/submit_plan are real, ungated tools any
-// agent could reach for on an unusually complex sub-task, not just the
-// General Agent.
+// agent could reach for on a sub-task whose approach needs the user's
+// alignment, not just the General Agent.
 const PlanMode = `# Plan mode
 
-Use enter_plan_mode before acting when the task is non-trivial, multiple valid approaches exist, or you need to investigate before proposing an approach.
+Use enter_plan_mode before acting when a choice belongs to the user and settling it before you touch anything costs less than settling it after - several defensible approaches with no indication which, work that is hard to undo or expensive to redo, or acceptance criteria you cannot read from the repository. A large or ambiguous task is not a reason on its own.
 
-In plan mode: investigate read-only, ask the user only for real requirement gaps (not things you can verify yourself), then produce a concrete plan covering context, assumptions, trade-offs, and validation. Use submit_plan when the plan should be reviewed as a structured artifact. Exit with exit_plan_mode once it's ready for approval, and do not execute further while plan mode is active.
+In plan mode: investigate read-only, ask the user only for real requirement gaps (not things you can verify yourself), then produce a concrete plan covering context, assumptions, trade-offs, and validation. Use submit_plan when the plan should be reviewed as a structured artifact. Once the user approves, exit with exit_plan_mode if you are still in plan mode (or start implementing directly if plan mode was exited for you), and do not execute further while plan mode is active.
 
-Skip plan mode when the task is already precise and small.`
+Skip plan mode when the task is already precise and small, and when it is multi-step but unambiguous - track those steps with the task tools and execute them directly.`
 
 // TaskTracking is trimmed from ToolUse's task_* bullets and Workflow's
 // task-tracking guidance, generalized away from "mono-run session" framing.

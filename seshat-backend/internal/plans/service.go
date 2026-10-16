@@ -11,10 +11,25 @@ import (
 
 type Service struct {
 	store *db.PlanDocumentStore
+	// approvePlan, when set, records a validated plan's approval in the agent
+	// runtime, so the model's exit_plan_mode stops being refused once the user
+	// has accepted the plan. Injected at construction (see app.go) to keep this
+	// package independent of the runtime; a nil callback simply skips the
+	// runtime record while plan documents still change status.
+	approvePlan func(sessionID string)
 }
 
 func NewService(store *db.PlanDocumentStore) *Service {
 	return &Service{store: store}
+}
+
+// WithApprovePlan injects the callback that records a plan's approval in the
+// agent runtime, and returns the service so it can be wired in one expression.
+func (s *Service) WithApprovePlan(fn func(sessionID string)) *Service {
+	if s != nil {
+		s.approvePlan = fn
+	}
+	return s
 }
 
 func (s *Service) ListBySession(ctx context.Context, principal *backendauth.Principal, sessionID string) ([]Plan, error) {
@@ -78,6 +93,13 @@ func (s *Service) Patch(ctx context.Context, principal *backendauth.Principal, p
 			return nil, bkerr.Internal(err.Error(), err)
 		}
 		doc.Status = *p.Status
+		// "validated" is the user approving the plan, and that same decision is
+		// what the runtime gates the model's exit_plan_mode on. The plan document
+		// alone is not enough: record the approval in the runtime too, or a
+		// submitted plan the user accepted leaves exit_plan_mode refused.
+		if *p.Status == db.PlanStatusValidated && s.approvePlan != nil {
+			s.approvePlan(doc.SessionID)
+		}
 	}
 	result := fromDB(doc)
 	return &result, nil
