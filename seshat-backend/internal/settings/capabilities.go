@@ -1,6 +1,10 @@
 package settings
 
-import "strings"
+import (
+	"strings"
+
+	audioproviders "github.com/KPO-Tech/seshat-runtime/pkg/audio/providers"
+)
 
 // Capability is a non-chat feature whose credential can be reused from an
 // already-configured chat provider (see internal/db/capability_links.go).
@@ -49,22 +53,24 @@ func (c Capability) Valid() bool {
 //     model), stability ai (not in this app's provider catalog at all, and
 //     its API is multipart/form-data rather than JSON - would need a whole
 //     new image.Generation client, not a config-only fix).
-//   - audio: defaultTextToSpeechConfig/defaultSpeechToTextConfig. The SDK's
-//     initTextToSpeechGenerator/initSpeechToTextTranscriber switch on the
-//     literal string "openai" only (default: nil) - unlike embeddings below,
-//     there's no vendor-agnostic fallthrough, so a second vendor could only
-//     be added by also passing Provider:"openai" with that vendor's own
-//     BaseURL (protocol tag, not identity) - not done, because verification
-//     (2026-08-13, WebSearch against live docs) found no other configured
-//     provider type (mistral, z-ai, gemini, minimax, kimi) exposes an
-//     OpenAI-schema-identical /audio/speech or /audio/transcriptions
-//     endpoint. Revisit if that changes.
+//   - audio: defaultTextToSpeechConfig/defaultSpeechToTextConfig. Which
+//     provider types can serve audio is no longer a list this file owns: the
+//     runtime ships the catalog it dispatches on
+//     (github.com/KPO-Tech/seshat-runtime/pkg/audio/providers - OpenAI,
+//     Groq, Mistral and ElevenLabs) and builds the right client per profile,
+//     an OpenAI-compatible one for the first three and its own ElevenLabs
+//     client for the last (pkg/sdk's initSpeechToTextTranscriber and
+//     initTextToSpeechGenerator). SupportsCapability asks that catalog
+//     instead of repeating it, so a provider added there works here without
+//     a change in this repo. This bullet previously read {"openai": true}
+//     with a note that the SDK knew only the literal string "openai"; that
+//     stopped being true when the catalog landed (v1.8.0), and the note is
+//     what kept the restriction alive after its reason was gone.
 //   - embeddings: see embedderDefaultsByProvider below - unlike audio, this
 //     one DOES have a generic fallthrough in the engine, so any wire-
 //     compatible vendor just needs a correct BaseURL+Model, no SDK change.
 var capableProviders = map[Capability]map[string]bool{
 	CapabilityImage: {"openai": true, "gemini": true},
-	CapabilityAudio: {"openai": true},
 }
 
 // EmbedderDefaults is what a compatible chat provider needs for Knowledge's
@@ -116,9 +122,17 @@ func EmbedderDefaultsFor(providerType string) (EmbedderDefaults, bool) {
 // SupportsCapability reports whether a configured provider's type is known
 // to support reuse for the given non-chat capability.
 func SupportsCapability(providerType string, capability Capability) bool {
-	if capability == CapabilityEmbeddings {
+	switch capability {
+	case CapabilityEmbeddings:
 		_, ok := EmbedderDefaultsFor(providerType)
 		return ok
+	case CapabilityAudio:
+		// The runtime's audio catalog is the single source of truth for
+		// which provider types speak speech-to-text or text-to-speech -
+		// see the audio bullet above.
+		profile, ok := audioproviders.ProfileFor(providerType)
+		return ok && (profile.STT != nil || profile.TTS != nil)
+	default:
+		return capableProviders[capability][strings.ToLower(strings.TrimSpace(providerType))]
 	}
-	return capableProviders[capability][strings.ToLower(strings.TrimSpace(providerType))]
 }
