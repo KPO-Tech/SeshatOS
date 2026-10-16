@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	"strings"
+
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	backendprompt "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/prompt"
 	"github.com/KPO-Tech/seshat-runtime/pkg/agent"
 )
 
@@ -92,21 +93,65 @@ func TestBuildContextInput_NoAgentSlugMeansNoRestriction(t *testing.T) {
 	}
 }
 
-func TestBuildContextInput_NoAgentSlugFallsBackToDefaultCorePrompt(t *testing.T) {
+// Plain chat must let the runtime compose its own General Agent prompt. An
+// override here would also discard the dynamic context (project instructions,
+// git state, memory) the runtime builds around it, since its
+// FetchSystemPromptParts returns early as soon as a custom prompt is set.
+func TestBuildContextInput_NoAgentSlugLeavesTheRuntimePromptInCharge(t *testing.T) {
 	svc := &Service{}
 	input, _ := svc.BuildContextInput(context.Background(), ContextBuildParams{
 		Prompt: "hello",
 	})
-	if input.SystemPromptOverride == nil {
-		t.Fatal("expected SystemPromptOverride to be populated with the default core prompt, got nil")
+	if input.SystemPromptOverride != nil {
+		t.Fatalf("expected no SystemPromptOverride for plain chat, got %q", *input.SystemPromptOverride)
 	}
-	want := backendprompt.DefaultCorePrompt()
-	if *input.SystemPromptOverride != want {
-		t.Fatalf("SystemPromptOverride did not match prompt.DefaultCorePrompt()")
+
+	// What the product does own still arrives, through the append.
+	if input.AppendSystemPrompt == nil {
+		t.Fatal("expected the product blocks to be appended")
+	}
+	for _, want := range []string{"Rich rendering available in this UI", "Where you are running", "Internal knowledge base"} {
+		if !strings.Contains(*input.AppendSystemPrompt, want) {
+			t.Fatalf("expected %q in the append, got %q", want, *input.AppendSystemPrompt)
+		}
 	}
 }
 
-func TestBuildContextInput_AgentSystemPromptWinsOverDefault(t *testing.T) {
+// The knowledge-base block teaches knowledge_search, so an agent whose
+// definition restricts its tools to a list without that tool must not be told
+// about it.
+func TestBuildContextInput_KnowledgeBaseBlockFollowsTheToolAllowlist(t *testing.T) {
+	cases := []struct {
+		name  string
+		tools []string
+		want  bool
+	}{
+		{"unrestricted agent is told about it", nil, true},
+		{"allowlist including it keeps it", []string{"knowledge_search", "web_search"}, true},
+		{"allowlist without it drops it", []string{"inbox_list_threads"}, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := &Service{
+				agents: fakeAgentsProvider{def: &agent.AgentDefinition{Tools: tc.tools}},
+			}
+			params := ContextBuildParams{Prompt: "hello"}
+			if tc.tools != nil {
+				params.AgentSlug = "some-agent"
+			}
+			input, _ := svc.BuildContextInput(context.Background(), params)
+			if input.AppendSystemPrompt == nil {
+				t.Fatal("expected the product blocks to be appended")
+			}
+			got := strings.Contains(*input.AppendSystemPrompt, "Internal knowledge base")
+			if got != tc.want {
+				t.Fatalf("knowledge-base block present = %v, want %v (append: %q)", got, tc.want, *input.AppendSystemPrompt)
+			}
+		})
+	}
+}
+
+func TestBuildContextInput_AgentSystemPromptIsTheOverride(t *testing.T) {
 	svc := &Service{
 		agents: fakeAgentsProvider{def: &agent.AgentDefinition{
 			GetSystemPrompt: func() string { return "you are a specialized agent" },
@@ -117,6 +162,9 @@ func TestBuildContextInput_AgentSystemPromptWinsOverDefault(t *testing.T) {
 		AgentSlug: "some-agent",
 	})
 	if input.SystemPromptOverride == nil || *input.SystemPromptOverride != "you are a specialized agent" {
-		t.Fatalf("expected the agent's own system prompt to win, got %v", input.SystemPromptOverride)
+		t.Fatalf("expected the agent's own system prompt to be the override, got %v", input.SystemPromptOverride)
+	}
+	if input.AppendSystemPrompt == nil || !strings.Contains(*input.AppendSystemPrompt, "Rich rendering available in this UI") {
+		t.Fatal("expected the product blocks to be appended for a custom agent too")
 	}
 }
