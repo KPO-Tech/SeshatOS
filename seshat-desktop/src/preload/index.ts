@@ -212,6 +212,10 @@ const nexusBridge = {
       return () => ipcRenderer.removeListener('llama:progress', handler)
     },
   },
+  sandbox: {
+    srtStatus: (): Promise<SrtStatus> => ipcRenderer.invoke('sandbox:srt-status'),
+    srtEnable: (): Promise<SrtStatus> => ipcRenderer.invoke('sandbox:srt-enable'),
+  },
   envVars: {
     catalog: (): Promise<EnvVarDef[]> => ipcRenderer.invoke('env-vars:catalog'),
     status: (): Promise<Record<string, boolean>> => ipcRenderer.invoke('env-vars:status'),
