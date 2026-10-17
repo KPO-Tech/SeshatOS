@@ -10,7 +10,8 @@ export function registerSandboxHandlers(ipcMain: IpcMain): void {
     return srtStatus()
   })
 
-  // Windows one-time setup (one UAC prompt). The backend decides whether to use srt when it starts, so it is
+  // Windows one-time setup (one UAC prompt). Ready but NOT offered in the UI for now: the Windows backend of srt is
+  // alpha, so users run the command themselves (see confinementView.ts) until it works reliably. The backend decides whether to use srt when it starts, so it is
   // restarted once the setup worked.
   ipcMain.handle('sandbox:srt-enable', async (event: IpcMainInvokeEvent) => {
     assertTrustedSender(event)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { confinementView } from './confinementView'
+import { confinementView, WINDOWS_SETUP_COMMAND } from './confinementView'
 
 const status = (state: SrtStatus['state']): SrtStatus => ({ state, platform: 'win32' })
 
@@ -16,9 +16,8 @@ describe('confinementView', () => {
     expect(confinementView(null, true).confined).toBe(true)
   })
 
-  it('offers the setup only when it is what is missing', () => {
-    expect(confinementView(status('needs-setup'), false).canEnable).toBe(true)
-    expect(confinementView(status('unavailable'), false).canEnable).toBe(false)
-    expect(confinementView(status('ready'), false).canEnable).toBe(false)
+  it('tells Windows users the command to run themselves and never sets it up on its own', () => {
+    expect(confinementView(status('needs-setup'), false).text).toContain(WINDOWS_SETUP_COMMAND)
+    expect(confinementView(status('needs-setup'), false).text).toContain('alpha')
   })
 })
