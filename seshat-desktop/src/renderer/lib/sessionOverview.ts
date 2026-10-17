@@ -1,0 +1,59 @@
+// What the session overview shows, as plain data. Each card appears only when it has something to say: a connectors card
+// with nothing connected, or an outputs card with no file, is not drawn at all.
+
+export type ContextUsage = {
+  used: number
+  /** The model's context window, when known. */
+  window: number | null
+  /** 0 to 100, or null without a window. */
+  percent: number | null
+}
+
+/**
+ * Tokens in the conversation after the last turn: what the model was sent (the whole context) plus what it answered,
+ * which is part of the next request. Null when nothing has been counted yet.
+ */
+export function contextUsage(inputTokens: number, outputTokens: number, windowTokens: number | null | undefined): ContextUsage | null {
+  const used = Math.max(0, inputTokens) + Math.max(0, outputTokens)
+  if (used === 0) return null
+  const window = windowTokens && windowTokens > 0 ? windowTokens : null
+  return { used, window, percent: window ? Math.min(100, Math.round((used / window) * 100)) : null }
+}
+
+/** 530700 gives "530.7k", 1000000 gives "1M". */
+export function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${Number((n / 1_000_000).toFixed(1))}M`
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`
+  return String(n)
+}
+
+export type EnvironmentRow = { label: string; value: string; tone?: 'warn' }
+
+/** The rows of the environment card: where commands run, the folder they run in, and whether anything confines them. */
+export function environmentRows(input: {
+  docker: boolean
+  workspacePath?: string
+  confinement?: { label: string; confined: boolean } | null
+}): EnvironmentRow[] {
+  const rows: EnvironmentRow[] = []
+  if (input.docker || input.workspacePath || input.confinement) {
+    rows.push({ label: 'Runs on', value: input.docker ? 'A Docker container' : 'This computer' })
+  }
+  if (input.workspacePath) rows.push({ label: 'Folder', value: input.workspacePath })
+  if (input.confinement) {
+    rows.push({ label: 'Commands', value: input.confinement.label, ...(input.confinement.confined ? {} : { tone: 'warn' as const }) })
+  }
+  return rows
+}
+
+export type ConnectorRow = { id: string; name: string; kind: string }
+
+/** The enabled connectors, by name, with the first `limit` shown and the rest counted. */
+export function connectorRows(servers: ReadonlyArray<{ id: string; name: string; display_name?: string; server_type?: string; enabled: boolean }>, limit = 4) {
+  const active = servers.filter((server) => server.enabled)
+  return {
+    shown: active.slice(0, limit).map((server): ConnectorRow => ({ id: server.id, name: server.display_name || server.name, kind: server.server_type ?? '' })),
+    hidden: Math.max(0, active.length - limit),
+    total: active.length
+  }
+}

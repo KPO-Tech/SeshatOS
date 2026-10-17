@@ -98,7 +98,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       useUIStore.getState().openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
       return
     }
-    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Computer', sessionId, focusToolId: tool.id })
+    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id })
   }
 
   const clickable = expandable || canOpenPlan

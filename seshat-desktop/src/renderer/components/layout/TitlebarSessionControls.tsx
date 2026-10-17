@@ -54,7 +54,7 @@ export function TitlebarSessionControls({ conversationId }: { conversationId: st
     <div className="flex items-center gap-0.5" ref={rootRef}>
       {conversationId && (
         <>
-          <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Computer" active={computerOpen} onClick={toggleComputer} />
+          <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Session" active={computerOpen} onClick={toggleComputer} />
           <IconButton icon={<Globe size={14} />} variant="ghost" size={26} title="Browser" active={browserOpen} onClick={toggleBrowser} />
           <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title="Terminal" active={terminalOpen} onClick={toggleTerminal} />
         </>
