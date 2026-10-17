@@ -6,6 +6,7 @@ import { useSessionStore } from '@renderer/stores/session'
 import { toolIcon } from '@renderer/components/chat/tools/helpers'
 import { renderToolBody, toolLabel, toolSnippet } from '@renderer/components/chat/tools/toolDisplay'
 import { toolStatus } from '@renderer/components/chat/tools/quietGroupPhrase'
+import { SessionOverview } from './SessionOverview'
 import type { StreamingBlock } from '@renderer/stores/session'
 import type { Message, ToolUseBlock } from '@renderer/api/types'
 
@@ -211,7 +212,7 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
               <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
                 <ChartHistogram size={12} />
               </span>
-              <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Stats</span>
+              <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Session</span>
             </>
           )}
           <button
@@ -319,28 +320,13 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-auto p-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Stat label="Turn" value={agentState.turnNumber > 0 ? `#${agentState.turnNumber}` : '-'} />
-              <Stat label="Input tokens" value={agentState.inputTokens > 0 ? fmt(agentState.inputTokens) : '-'} />
-              <Stat label="Output tokens" value={agentState.outputTokens > 0 ? fmt(agentState.outputTokens) : '-'} />
-              <Stat label="Total" value={
-                agentState.inputTokens + agentState.outputTokens > 0
-                  ? fmt(agentState.inputTokens + agentState.outputTokens)
-                  : '-'
-              } />
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button type="button" className="flex cursor-pointer items-center gap-2 rounded-app-md border border-app-border-subtle bg-white/[0.03] px-2.5 py-2 text-left hover:border-[rgba(239,124,47,0.28)] hover:bg-[rgba(239,124,47,0.055)]" onClick={() => setView('web')}>
-                <Globe size={13} className="shrink-0 text-app-text-secondary" />
-                <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-app-text">Web</span>
-                <span className="shrink-0 text-[10px] font-semibold text-app-text-muted">{sites.length}</span>
-              </button>
-              <button type="button" className="flex cursor-pointer items-center gap-2 rounded-app-md border border-app-border-subtle bg-white/[0.03] px-2.5 py-2 text-left hover:border-[rgba(239,124,47,0.28)] hover:bg-[rgba(239,124,47,0.055)]" onClick={() => setView('tools')}>
-                <History size={13} className="shrink-0 text-app-text-secondary" />
-                <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-app-text">Tools</span>
-                <span className="shrink-0 text-[10px] font-semibold text-app-text-muted">{tools.length}</span>
-              </button>
-            </div>
+            <SessionOverview
+              sessionId={sessionId}
+              webCount={sites.length}
+              toolCount={tools.length}
+              onOpenWeb={() => setView('web')}
+              onOpenTools={() => setView('tools')}
+            />
           </div>
         )}
       </div>
@@ -435,17 +421,4 @@ function workspaceToolSnippet(tool: ToolUseBlock): string {
     }
   }
   return tool._message ?? ''
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1 rounded-app-md border border-app-border-subtle bg-white/[0.03] px-2.5 py-2">
-      <span className="text-[10px] font-bold uppercase tracking-[0.06em] text-app-text-muted">{label}</span>
-      <span className="font-mono text-[var(--font-size-lg)] font-bold tabular-nums text-app-text">{value}</span>
-    </div>
-  )
-}
-
-function fmt(n: number) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
 }

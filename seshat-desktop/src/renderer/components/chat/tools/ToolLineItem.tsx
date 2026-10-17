@@ -94,7 +94,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
       return
     }
-    openRightPanel({ kind: 'computer', title: 'Computer', sessionId, focusToolId: tool.id })
+    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id })
   }
 
   return (

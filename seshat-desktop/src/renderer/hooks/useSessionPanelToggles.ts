@@ -20,7 +20,7 @@ export function useSessionPanelToggles(sessionId?: string) {
 
   const toggleComputer = useCallback(() => {
     if (computerOpen) closeRightPanel(rightPanelId('computer', sessionId))
-    else openRightPanel({ kind: 'computer', title: 'Computer', sessionId })
+    else openRightPanel({ kind: 'computer', title: 'Session', sessionId })
   }, [closeRightPanel, computerOpen, openRightPanel, sessionId])
 
   const toggleBrowser = useCallback(() => {

@@ -29,7 +29,7 @@ function categoryForTool(toolName: string | undefined): ToolPanelCategory | null
 }
 
 const PANEL_TITLE: Record<ToolPanelCategory, string> = {
-  computer: 'Computer',
+  computer: 'Session',
   // The agent's bash tool, live. The Terminal button of the titlebar is the user's own shell, a different panel.
   terminal: 'Agent commands',
   browser: 'Browser',
@@ -90,7 +90,7 @@ export function useConversationPanels({
     if (!sessionId || !computerOpen || !isWebInfoTool || !activeToolName) return
     const toolBlock = [...streaming].reverse().find((block) => block.type === 'tool_use' && block.name === activeToolName)
     if (toolBlock?.type !== 'tool_use') return
-    openRightPanel({ kind: 'computer', title: 'Computer', sessionId, focusToolId: toolBlock.id })
+    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: toolBlock.id })
   }, [activeToolName, isWebInfoTool, computerOpen, openRightPanel, sessionId, streaming])
 
   // Follows each read/write/edit call live while Files is showing, the same
