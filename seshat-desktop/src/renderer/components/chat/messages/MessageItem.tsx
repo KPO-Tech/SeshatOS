@@ -311,7 +311,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
     <div
       className={cx(
         'group flex w-full items-start gap-3',
-        isFirst ? 'mt-0' : compact ? 'mt-2' : 'mt-9',
+        isFirst ? 'mt-0' : compact ? 'mt-2' : 'mt-[var(--message-gap)]',
         isUser && 'flex-row-reverse',
       )}
     >

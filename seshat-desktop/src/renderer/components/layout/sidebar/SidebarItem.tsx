@@ -19,7 +19,7 @@ export function SidebarItem({ icon, label, shortcut, collapsed, active, onClick 
       type="button"
       onClick={onClick}
       className={cx(
-        'flex w-full cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-[13px] font-semibold text-[var(--text-secondary)] transition duration-100 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]',
+        'flex w-full cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg border-0 bg-transparent px-2.5 py-[var(--list-item-pad-y)] text-[13px] font-semibold text-[var(--text-secondary)] transition duration-100 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]',
         collapsed && 'mx-auto w-9 justify-center px-0 py-2',
         active && 'bg-[var(--accent-subtle)] text-[var(--accent-primary)] hover:bg-[var(--accent-subtle)] hover:text-[var(--accent-primary)]'
       )}

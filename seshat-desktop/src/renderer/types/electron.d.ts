@@ -78,6 +78,9 @@ interface Window {
       srtStatus: () => Promise<SrtStatus>
       srtEnable: () => Promise<SrtStatus>
     }
+    appearance?: {
+      setZoom: (factor: number) => void
+    }
     envVars?: {
       catalog: () => Promise<Array<{ key: string; label: string; description: string; group: string; groupLabel: string; helpUrl?: string; hidden?: boolean }>>
       status: () => Promise<Record<string, boolean>>
