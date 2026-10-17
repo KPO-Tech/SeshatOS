@@ -73,6 +73,34 @@ func desktopBridgeProof(secret []byte, nonce string) string {
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
+// localSessionProofHeader carries the proof that a request to /auth/local-session comes from the desktop
+// app and not from a web page that reached the loopback port: the HMAC of localSessionProofContext under
+// the desktop bridge secret, a file only the user's own processes can read.
+const (
+	localSessionProofHeader  = "X-Seshat-Desktop-Proof"
+	localSessionProofContext = "auth/local-session"
+	// allowUnprovenLocalSessionEnv lets a caller that cannot read the secret (the renderer in a plain
+	// browser during development) mint the local session as before. Never set it for a packaged app.
+	allowUnprovenLocalSessionEnv = "SESHAT_ALLOW_UNPROVEN_LOCAL_SESSION"
+)
+
+// localSessionProofValid reports whether r carries a valid desktop proof.
+func localSessionProofValid(r *http.Request) bool {
+	got, err := hex.DecodeString(strings.TrimSpace(r.Header.Get(localSessionProofHeader)))
+	if err != nil || len(got) == 0 {
+		return false
+	}
+	secret, err := ensureDesktopBridgeSecret()
+	if err != nil {
+		return false
+	}
+	want, err := hex.DecodeString(desktopBridgeProof(secret, localSessionProofContext))
+	if err != nil {
+		return false
+	}
+	return hmac.Equal(got, want)
+}
+
 func (app *App) handleDesktopHandshake(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

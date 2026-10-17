@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 )
@@ -27,6 +29,13 @@ func (app *App) handleAuthLocalSession(w http.ResponseWriter, r *http.Request) {
 	remoteIP := remoteAddrToIP(r.RemoteAddr)
 	if remoteIP == nil || !remoteIP.IsLoopback() {
 		writeJSONError(w, http.StatusForbidden, "this endpoint is only reachable from the local machine")
+		return
+	}
+
+	// Loopback alone is not proof: a web page can reach this port from the user's browser (DNS rebinding).
+	// The desktop app proves itself with a value derived from a secret file only it can read.
+	if !localSessionProofValid(r) && !strings.EqualFold(strings.TrimSpace(os.Getenv(allowUnprovenLocalSessionEnv)), "true") {
+		writeJSONError(w, http.StatusForbidden, "the local session is only available to the desktop app")
 		return
 	}
 

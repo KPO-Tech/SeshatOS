@@ -96,6 +96,12 @@ belong to SeshatCloud. Automation (jobs, schedules, triggers, runs) is SeshatClo
 local scheduler or automation screen. When this product talks to SeshatCloud, its wire types come
 from the server's contract, never from a hand-written copy. Check these rules before adding a feature.
 
+The `/api/v1/admin/*` routes of `seshat-backend` are not a second administration: they are thin proxies to
+`seshat-server` for a desktop connected to an organization (`internal/cloud/`), so that its admin screens show
+and edit the organization's own data. They hold no state of their own and answer "not connected to an
+organization server" in standalone mode. Do not add logic to them; a new administration capability is built in
+SeshatCloud and only proxied here.
+
 ---
 
 ## Adding a new backend domain
