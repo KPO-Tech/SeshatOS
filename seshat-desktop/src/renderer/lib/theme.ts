@@ -1,4 +1,5 @@
-import { isThemeId, presetsCss, themeById, type ColorScheme } from './themes'
+import { loadCustomThemes, saveCustomThemes } from './customThemes'
+import { allThemes, customThemesCss, isThemeId, presetsCss, setCustomThemes, themeById, type ColorScheme, type ThemeSeed } from './themes'
 
 /** "auto" follows the operating system (Seshat Dark or Seshat Light); anything else is the id of a theme in themes.ts. */
 export type ThemePreference = string
@@ -6,6 +7,35 @@ export type EffectiveTheme = ColorScheme
 
 const themeStorageKey = 'seshat.theme'
 const presetsStyleId = 'seshat-theme-presets'
+const customStyleId = 'seshat-theme-custom'
+
+let customLoaded = false
+
+/** Reads the themes the person made, once, and makes them known before any stored choice is checked. */
+function ensureCustomThemes() {
+  if (customLoaded) return
+  customLoaded = true
+  setCustomThemes(loadCustomThemes())
+}
+
+function writeCustomStylesheet() {
+  if (typeof document === 'undefined') return
+  let style = document.getElementById(customStyleId)
+  if (!style) {
+    style = document.createElement('style')
+    style.id = customStyleId
+    document.head.appendChild(style)
+  }
+  style.textContent = customThemesCss(allThemes().filter((theme) => theme.category === 'custom'))
+}
+
+/** Stores the themes the person made, writes their CSS and returns false when they could not be stored. */
+export function updateCustomThemes(list: readonly ThemeSeed[]): boolean {
+  customLoaded = true
+  const stored = saveCustomThemes(list)
+  writeCustomStylesheet()
+  return stored
+}
 
 export function isThemePreference(value: unknown): value is ThemePreference {
   return value === 'auto' || isThemeId(value)
@@ -13,6 +43,7 @@ export function isThemePreference(value: unknown): value is ThemePreference {
 
 export function getStoredTheme(): ThemePreference {
   if (typeof window === 'undefined') return 'auto'
+  ensureCustomThemes()
   try {
     const stored = window.localStorage.getItem(themeStorageKey)
     if (isThemePreference(stored)) return stored
@@ -52,7 +83,9 @@ export function schemeOf(theme: ThemePreference): ColorScheme {
 
 export function applyTheme(theme: ThemePreference) {
   if (typeof document === 'undefined') return
+  ensureCustomThemes()
   ensurePresetsStylesheet()
+  writeCustomStylesheet()
   const root = document.documentElement
   root.setAttribute('data-color-scheme', schemeOf(theme))
   if (theme === 'auto' || !isThemeId(theme)) {
