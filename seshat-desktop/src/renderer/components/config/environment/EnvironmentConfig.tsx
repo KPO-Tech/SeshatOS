@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ConfigCard, CustomSelect, SoftButton, StatusPill } from '../knowledge/KnowledgePrimitives'
 import { ProviderEmptyState } from '../providers/ProviderEmptyState'
+import { ConfinementCard } from './ConfinementCard'
 import { EnvVarRow } from './EnvVarRow'
 import type { EnvVarDef } from './environmentTypes'
 import { groupEnvVars } from './environmentUtils'
@@ -130,6 +131,8 @@ export function EnvironmentConfig() {
           {sandboxSaving && <div className="text-[11px] font-semibold text-[var(--text-muted)]">Saving...</div>}
         </div>
       </ConfigCard>
+
+      <ConfinementCard docker={sandboxMode === 'docker'} />
 
       {loading ? (
         <ProviderEmptyState label="Loading environment catalog..." />

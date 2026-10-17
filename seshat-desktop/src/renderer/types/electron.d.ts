@@ -74,6 +74,10 @@ interface Window {
       disable: () => Promise<LlamaStatus>
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
     }
+    sandbox?: {
+      srtStatus: () => Promise<SrtStatus>
+      srtEnable: () => Promise<SrtStatus>
+    }
     envVars?: {
       catalog: () => Promise<Array<{ key: string; label: string; description: string; group: string; groupLabel: string; helpUrl?: string; hidden?: boolean }>>
       status: () => Promise<Record<string, boolean>>
@@ -120,6 +124,12 @@ interface Window {
       onError: (listener: (payload: { message: string }) => void) => () => void
     }
   }
+}
+
+type SrtStatus = {
+  state: 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
+  platform: string
+  detail?: string
 }
 
 type BrowserPanelState = {

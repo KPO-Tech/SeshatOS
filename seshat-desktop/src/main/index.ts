@@ -7,6 +7,7 @@ import { registerBackendHandlers } from './ipc/backend'
 import { registerWhisperHandlers } from './ipc/whisper'
 import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
+import { registerSandboxHandlers } from './ipc/sandbox'
 import { resolveRuntimeRoot } from './runtime'
 import { startBackendSidecar, stopBackendSidecar } from './backend-process'
 import { stopWhisperServerProcess } from './whisper-manager'
@@ -141,6 +142,7 @@ app.whenReady().then(async () => {
   registerWhisperHandlers(ipcMain)
   registerLlamaHandlers(ipcMain)
   registerEnvVarsHandlers(ipcMain)
+  registerSandboxHandlers(ipcMain)
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
   registerTerminalRelayHandlers(ipcMain)
