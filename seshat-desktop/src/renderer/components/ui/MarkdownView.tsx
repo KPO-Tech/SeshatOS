@@ -249,7 +249,7 @@ type Props = {
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
-  chat: 'text-[13px] leading-[1.6]',
+  chat: 'text-[length:var(--chat-font-size)] leading-[1.6]',
   document: 'text-[14px] leading-7'
 }
 

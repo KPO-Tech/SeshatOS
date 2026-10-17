@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webFrame } from 'electron'
 
 type WhisperStatus = {
   supported: boolean
@@ -218,6 +218,12 @@ const nexusBridge = {
     set: (key: string, value: string): Promise<void> => ipcRenderer.invoke('env-vars:set', key, value),
     delete: (key: string): Promise<void> => ipcRenderer.invoke('env-vars:delete', key),
     restartBackend: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('env-vars:restart-backend'),
+  },
+  appearance: {
+    // Zoom of the whole window (1 = 100%). Chromium scales layout and text together.
+    setZoom: (factor: number): void => {
+      if (Number.isFinite(factor) && factor >= 0.5 && factor <= 2) webFrame.setZoomFactor(factor)
+    },
   },
   browser: {
     show: (contextId: string, bounds?: BrowserPanelBounds): Promise<BrowserPanelState> => ipcRenderer.invoke('seshat:browser:show', contextId, bounds),

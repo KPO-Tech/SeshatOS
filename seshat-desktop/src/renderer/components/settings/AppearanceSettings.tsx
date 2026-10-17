@@ -1,3 +1,15 @@
+import { useState } from 'react'
+import {
+  CONTENT_WIDTHS,
+  DEFAULT_APPEARANCE,
+  SPACINGS,
+  TEXT_SIZES,
+  ZOOMS,
+  applyAppearance,
+  getStoredAppearance,
+  setStoredAppearance,
+  type AppearancePrefs
+} from '@renderer/lib/appearance'
 import { THEMES, buildTokens, themeById, type ThemeSeed } from '@renderer/lib/themes'
 import type { ThemePreference } from '@renderer/lib/theme'
 import { Panel } from './SettingsPrimitives'
@@ -18,6 +30,14 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
   const dark = group((seed) => seed.scheme === 'dark' && !SESHAT_IDS.includes(seed.id))
   const light = group((seed) => seed.scheme === 'light' && !SESHAT_IDS.includes(seed.id))
   const current = theme === 'auto' ? 'System' : themeById(theme)?.label ?? 'Seshat Dark'
+  const [prefs, setPrefs] = useState<AppearancePrefs>(() => getStoredAppearance())
+  const update = (patch: Partial<AppearancePrefs>) => {
+    const next = { ...prefs, ...patch }
+    setPrefs(next)
+    setStoredAppearance(next)
+    applyAppearance(next)
+  }
+  const isDefault = JSON.stringify(prefs) === JSON.stringify(DEFAULT_APPEARANCE)
 
   return (
     <Panel title="Appearance">
@@ -47,8 +67,94 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
             </ThemeGroup>
           </div>
         </section>
+
+        <section>
+          <div className="flex items-center justify-between">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Text and layout</h2>
+            <button
+              type="button"
+              disabled={isDefault}
+              onClick={() => update(DEFAULT_APPEARANCE)}
+              className="rounded-md px-2.5 py-1 text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="mt-4 grid gap-5">
+            <Choice
+              title="Chat text size"
+              description="The size of the text of messages."
+              value={prefs.textSize}
+              options={TEXT_SIZES.map((o) => ({ value: o.value, label: o.label }))}
+              onChange={(textSize) => update({ textSize })}
+            />
+            <Choice
+              title="Interface size"
+              description="Zooms the whole window: menus, panels and text."
+              value={String(prefs.zoom)}
+              options={ZOOMS.map((z) => ({ value: String(z), label: `${z}%` }))}
+              onChange={(zoom) => update({ zoom: Number(zoom) })}
+            />
+            <Choice
+              title="Spacing"
+              description="Room between messages and between list items."
+              value={prefs.spacing}
+              options={SPACINGS.map((o) => ({ value: o.value, label: o.label }))}
+              onChange={(spacing) => update({ spacing })}
+            />
+            <Choice
+              title="Conversation width"
+              description="How wide messages and the composer can grow."
+              value={prefs.contentWidth}
+              options={CONTENT_WIDTHS.map((o) => ({ value: o.value, label: o.label }))}
+              onChange={(contentWidth) => update({ contentWidth })}
+            />
+          </div>
+        </section>
       </div>
     </Panel>
+  )
+}
+
+function Choice<T extends string>({
+  title,
+  description,
+  value,
+  options,
+  onChange
+}: {
+  title: string
+  description: string
+  value: T
+  options: Array<{ value: T; label: string }>
+  onChange: (value: T) => void
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</div>
+        <div className="text-[12px] text-[var(--text-muted)]">{description}</div>
+      </div>
+      <div role="radiogroup" aria-label={title} className="inline-flex rounded-lg border border-[var(--border-soft)] p-0.5">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={value === option.value}
+            onClick={() => onChange(option.value)}
+            className={[
+              'rounded-md px-3 py-1 text-[12px] font-semibold transition-colors',
+              value === option.value
+                ? 'bg-[var(--surface-muted)] text-[var(--text-primary)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            ].join(' ')}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
