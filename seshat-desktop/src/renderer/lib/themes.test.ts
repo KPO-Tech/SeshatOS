@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CODE_MIN_CONTRAST, THEMES, buildTokens, codeTokens, contrastRatio, ensureContrast, isThemeId, mix, presetsCss, themeById } from './themes'
+import { CODE_MIN_CONTRAST, THEMES, buildTokens, codeTokens, contrastRatio, effectiveSurfaces, ensureContrast, isThemeId, mix, presetsCss, themeById } from './themes'
 
 describe('theme registry', () => {
   it('has unique ids and the 28 appearances (Seshat two, 25 presets, plus the system one handled elsewhere)', () => {
@@ -19,13 +19,15 @@ describe('theme registry', () => {
 })
 
 describe('theme contrast', () => {
-  it.each(THEMES.map((theme) => [theme.id, theme] as const))('%s keeps its text readable', (_id, seed) => {
+  it.each(THEMES.map((theme) => [theme.id, theme] as const))('%s keeps its text readable on every surface it shows', (_id, seed) => {
     const tokens = buildTokens(seed)
-    expect(contrastRatio(tokens['--text-primary'], tokens['--surface-root'])).toBeGreaterThanOrEqual(7)
-    expect(contrastRatio(tokens['--text-primary'], tokens['--surface-panel'])).toBeGreaterThanOrEqual(7)
-    expect(contrastRatio(tokens['--text-secondary'], tokens['--surface-root'])).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio(tokens['--text-secondary'], tokens['--surface-panel'])).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio(tokens['--text-muted'], tokens['--surface-root'])).toBeGreaterThanOrEqual(3)
+    for (const surface of effectiveSurfaces(seed)) {
+      expect(contrastRatio(tokens['--text-primary'], surface.root)).toBeGreaterThanOrEqual(7)
+      expect(contrastRatio(tokens['--text-primary'], surface.panel)).toBeGreaterThanOrEqual(7)
+      expect(contrastRatio(tokens['--text-secondary'], surface.root)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(tokens['--text-secondary'], surface.panel)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(tokens['--text-muted'], surface.root)).toBeGreaterThanOrEqual(3)
+    }
   })
 
   // Primary buttons draw white text on the accent. Seshat's own orange (2.8) is the identity colour and stays as it is.
@@ -35,7 +37,9 @@ describe('theme contrast', () => {
 
   it.each(THEMES.map((theme) => [theme.id, theme] as const))('%s tells its surfaces apart from the background', (_id, seed) => {
     const tokens = buildTokens(seed)
-    expect(contrastRatio(tokens['--border-soft'], tokens['--surface-root'])).toBeGreaterThan(1.1)
+    for (const surface of effectiveSurfaces(seed)) {
+      expect(contrastRatio(tokens['--border-soft'], surface.root)).toBeGreaterThan(1.1)
+    }
   })
 })
 
@@ -65,7 +69,8 @@ describe('code colours', () => {
 
 describe('tokens', () => {
   it('give every theme the same complete set', () => {
-    const [first, ...rest] = THEMES.map((theme) => Object.keys(buildTokens(theme)).sort())
+    // --wallpaper is set only by the themes that have one.
+    const [first, ...rest] = THEMES.map((theme) => Object.keys(buildTokens(theme)).filter((key) => key !== '--wallpaper').sort())
     for (const keys of rest) expect(keys).toEqual(first)
     expect(first).toEqual(expect.arrayContaining(['--surface-root', '--text-primary', '--accent-primary', '--color-error-rgb']))
   })

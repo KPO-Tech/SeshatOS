@@ -101,7 +101,8 @@ body {
   font-family: var(--font-sans);
   font-size: var(--type-base);
   line-height: var(--leading-ui);
-  background: var(--surface-root);
+  /* A theme with a wallpaper sets --wallpaper; its surfaces are translucent so it shows through. */
+  background: var(--wallpaper, var(--surface-root));
 }
 
 button,
