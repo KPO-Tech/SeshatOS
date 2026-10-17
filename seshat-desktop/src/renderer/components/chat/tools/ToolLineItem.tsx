@@ -79,7 +79,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   // needed for them here.
   function toggle() {
     if (tool.name === 'bash') {
-      openRightPanel({ kind: 'terminal', title: 'Terminal', sessionId, focusToolId: tool.id })
+      openRightPanel({ kind: 'terminal', title: 'Agent commands', sessionId, focusToolId: tool.id })
       return
     }
     if (tool.name.startsWith('browser_')) {

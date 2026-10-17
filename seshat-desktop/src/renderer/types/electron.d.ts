@@ -106,11 +106,13 @@ interface Window {
       onPanelOpened: (contextId: string, listener: (state: BrowserPanelState) => void) => () => void
       onPanelClosed: (contextId: string, listener: (state: BrowserPanelState) => void) => () => void
     }
-    terminal?: {
-      start: (payload: { id: string; cwd: string }) => Promise<{ ok: boolean; id: string; shell: string; cwd: string; pid?: number }>
+    shell?: {
+      start: (payload: { id: string; cwd: string; cols: number; rows: number }) => Promise<{ id: string; shell: string; cwd: string; pid?: number }>
       write: (id: string, data: string) => Promise<void>
+      resize: (id: string, cols: number, rows: number) => Promise<void>
       stop: (id: string) => Promise<void>
-      onEvent: (id: string, listener: (event: TerminalEvent) => void) => () => void
+      onData: (id: string, listener: (event: ShellDataEvent) => void) => () => void
+      onExit: (id: string, listener: (event: ShellExitEvent) => void) => () => void
     }
     terminalRelay?: {
       connect: (sessionId: string) => Promise<{ ok: boolean; connected: boolean }>
@@ -147,18 +149,8 @@ type BrowserPanelState = {
   }>
 }
 
-type TerminalEvent = {
-  id: string
-  type: 'started' | 'data' | 'error' | 'exit'
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  shell?: string
-  cwd?: string
-  pid?: number
-  code?: number | null
-  signal?: string | null
-}
+type ShellDataEvent = { id: string; data: string }
+type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
 type TerminalRelayEvent = {
   sessionId: string

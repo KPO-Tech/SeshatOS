@@ -18,6 +18,7 @@ import { applyContentSecurityPolicy } from './content-security-policy'
 import { createBrowserPanel } from './browser-panel'
 import { createBrowserBridgeServer } from './browser-bridge'
 import { registerTerminalRelayHandlers, stopAllTerminalRelays } from './ipc/terminal-relay'
+import { registerShellHandlers, stopAllShellSessions } from './ipc/shell'
 
 function configureRuntimePaths() {
   const runtimeRoot = resolveRuntimeRoot()
@@ -146,6 +147,7 @@ app.whenReady().then(async () => {
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
   registerTerminalRelayHandlers(ipcMain)
+  registerShellHandlers(ipcMain)
 
   // Packaged Electron apps deny every permission request by default when no
   // handler is registered. The voice-input control needs the renderer's
@@ -193,6 +195,7 @@ app.on('will-quit', () => {
   browserBridge.stop()
   browserPanel.destroy()
   stopAllTerminalRelays()
+  stopAllShellSessions()
   stopWhisperServerProcess()
   stopLlamaServerProcess()
   void stopBackendSidecar()
