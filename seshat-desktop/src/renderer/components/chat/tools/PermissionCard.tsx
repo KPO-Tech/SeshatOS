@@ -2,6 +2,7 @@ import { Caution } from '@icon-park/react'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { useUIStore } from '@renderer/stores/ui'
 import { permissionSignature } from '@renderer/lib/permissionSignature'
+import { revealHidden } from '@renderer/lib/revealHidden'
 import { fallbackApprovalDescription, toolIcon } from './helpers'
 import { toolLabel } from './toolDisplay'
 
@@ -28,7 +29,8 @@ type Props = {
 export function PermissionCard({ tool, onApprove, onDeny }: Props) {
   const rememberApproval = useUIStore((s) => s.rememberApproval)
   const description = tool._approval?.description || fallbackApprovalDescription(tool)
-  const snippet = commandSnippet(tool)
+  // The person approves by reading: hidden and direction-changing characters are shown as «U+XXXX».
+  const snippet = revealHidden(commandSnippet(tool))
 
   function handleAlwaysAllow() {
     // Local memory is still useful as an instant, zero-round-trip UI
