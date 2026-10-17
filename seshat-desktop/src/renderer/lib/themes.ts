@@ -119,6 +119,48 @@ const STATUS: Record<ColorScheme, { success: string; warning: string; danger: st
   light: { success: '#41b883', warning: '#d99a25', danger: '#e05252', info: '#6485b8' }
 }
 
+// ── Code colours ──────────────────────────────────────────────────────────────
+
+// The base syntax palettes (in the spirit of VS Code's Dark+ and Light+), pulled a little toward each theme's accent so
+// code looks at home in it, then pushed toward the text colour until it reads on the code background.
+const SYNTAX: Record<ColorScheme, Record<'keyword' | 'string' | 'number' | 'function' | 'type' | 'variable' | 'tag', string>> = {
+  dark: { keyword: '#c586c0', string: '#ce9178', number: '#b5cea8', function: '#dcdcaa', type: '#4ec9b0', variable: '#9cdcfe', tag: '#569cd6' },
+  light: { keyword: '#af00db', string: '#a31515', number: '#098658', function: '#795e26', type: '#267f99', variable: '#001080', tag: '#800000' }
+}
+
+export const CODE_MIN_CONTRAST = 4.5
+
+/** Mixes `color` toward `toward` until it reaches `minRatio` against `bg` (or `toward` itself is all that is left). */
+export function ensureContrast(color: string, bg: string, toward: string, minRatio: number): string {
+  let out = color
+  for (let step = 1; step <= 10 && contrastRatio(out, bg) < minRatio; step++) out = mix(color, toward, step / 10)
+  return out
+}
+
+/** The code background of a theme: a little darker than a dark window, a faint tint on a light one. */
+export function codeBackground(seed: ThemeSeed): string {
+  return seed.scheme === 'dark' ? mix(seed.bg, '#000000', 0.16) : mix(seed.bg, seed.text, 0.05)
+}
+
+export function codeTokens(seed: ThemeSeed): ThemeTokens {
+  const bg = codeBackground(seed)
+  const base = SYNTAX[seed.scheme]
+  const tone = (color: string, flavour = 0.18) => ensureContrast(mix(color, seed.accent, flavour), bg, seed.text, CODE_MIN_CONTRAST)
+  return {
+    '--code-bg': bg,
+    '--code-fg': ensureContrast(seed.text, bg, seed.text, CODE_MIN_CONTRAST),
+    '--code-comment': ensureContrast(mix(seed.text, seed.bg, 0.46), bg, seed.text, 3.2),
+    '--code-punctuation': ensureContrast(mix(seed.text, seed.bg, 0.2), bg, seed.text, CODE_MIN_CONTRAST),
+    '--code-keyword': tone(base.keyword, 0.3),
+    '--code-string': tone(base.string),
+    '--code-number': tone(base.number),
+    '--code-function': tone(base.function),
+    '--code-type': tone(base.type),
+    '--code-variable': tone(base.variable),
+    '--code-tag': tone(base.tag)
+  }
+}
+
 function rgbTriplet(hex: string): string {
   return parseHex(hex).join(', ')
 }
@@ -147,14 +189,27 @@ export function buildTokens(seed: ThemeSeed): ThemeTokens {
     '--accent-subtle': rgba(seed.accent, 0.12),
     '--color-success-rgb': rgbTriplet(status.success),
     '--color-error-rgb': rgbTriplet(status.danger),
-    '--color-info-rgb': rgbTriplet(status.info)
+    '--color-info-rgb': rgbTriplet(status.info),
+    ...codeTokens(seed)
   }
 }
 
-/** The CSS of every preset (not Seshat's own two, which tailwind.css defines). */
+function block(selector: string, tokens: ThemeTokens): string {
+  const body = Object.entries(tokens).map(([name, value]) => `  ${name}: ${value};`).join('\n')
+  return `${selector} {\n${body}\n}`
+}
+
+/**
+ * The CSS of every preset (all their tokens), and the code colours of Seshat's own two themes (their other tokens are
+ * in tailwind.css). Seshat Dark is the default; Seshat Light applies on its own id and, with no theme chosen, when the
+ * system is light.
+ */
 export function presetsCss(): string {
-  return PRESETS.map((seed) => {
-    const body = Object.entries(buildTokens(seed)).map(([name, value]) => `  ${name}: ${value};`).join('\n')
-    return `:root[data-theme="${seed.id}"] {\n${body}\n}`
-  }).join('\n')
+  const [dark, light] = SESHAT
+  return [
+    block(':root', codeTokens(dark)),
+    block(':root[data-theme="light"]', codeTokens(light)),
+    `@media (prefers-color-scheme: light) {\n${block(':root:not([data-theme])', codeTokens(light))}\n}`,
+    ...PRESETS.map((seed) => block(`:root[data-theme="${seed.id}"]`, buildTokens(seed)))
+  ].join('\n')
 }
