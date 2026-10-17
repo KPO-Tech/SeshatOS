@@ -125,7 +125,7 @@ function MermaidBlock({ code }: { code: string }) {
     setSvg(null)
 
     import('mermaid').then(async ({ default: mermaid }) => {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      const isLight = document.documentElement.getAttribute('data-color-scheme') === 'light'
       mermaid.initialize({
         startOnLoad: false,
         theme: isLight ? 'default' : 'dark',
@@ -191,7 +191,7 @@ function ChartBlock({ code }: { code: string }) {
 
     import('chart.js/auto').then(({ default: Chart }) => {
       if (cancelled || !canvasRef.current) return
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      const isLight = document.documentElement.getAttribute('data-color-scheme') === 'light'
       const tickColor = isLight ? '#44403c' : '#d6d3d1'
       const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'
       // The chart type/shape only exists at runtime (parsed from the
