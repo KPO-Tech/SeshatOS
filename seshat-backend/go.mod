@@ -3,7 +3,7 @@ module github.com/KPO-Tech/SeshatOS/seshat-backend
 go 1.26.9
 
 require (
-	github.com/KPO-Tech/seshat-runtime v1.9.0
+	github.com/KPO-Tech/seshat-runtime v1.10.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
@@ -104,7 +104,6 @@ require (
 	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rs/dnscache v0.0.0-20230804202142-fc85eb664529 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
-	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
