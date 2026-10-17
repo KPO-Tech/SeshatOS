@@ -30,7 +30,8 @@ function categoryForTool(toolName: string | undefined): ToolPanelCategory | null
 
 const PANEL_TITLE: Record<ToolPanelCategory, string> = {
   computer: 'Computer',
-  terminal: 'Terminal',
+  // The agent's bash tool, live. The Terminal button of the titlebar is the user's own shell, a different panel.
+  terminal: 'Agent commands',
   browser: 'Browser',
   files: 'Files',
 }

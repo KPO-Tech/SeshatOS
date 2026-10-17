@@ -197,9 +197,11 @@ function renderPanelIcon(kind: RightPanelKind) {
     case 'browser':
       return <Globe size={11} />
     case 'terminal':
-      return <Terminal size={11} />
-    case 'shell':
+      // The agent's bash tool, live.
       return <CodeComputer size={11} />
+    case 'shell':
+      // The user's own terminal.
+      return <Terminal size={11} />
     case 'subagent':
       return <Robot size={11} />
     case 'computer':
