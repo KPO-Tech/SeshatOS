@@ -1,6 +1,6 @@
 import { Down, Time } from '@icon-park/react'
 import { useUIStore } from '@renderer/stores/ui'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SilentToolView } from './renderers/SilentToolView'
 import { ToolLineItem } from './ToolLineItem'
 import { THINKING_MARKDOWN_CLASS } from './thinkingMarkdownClass'

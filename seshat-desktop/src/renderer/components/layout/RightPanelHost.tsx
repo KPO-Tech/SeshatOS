@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { useUIStore } from '@renderer/stores/ui'
 import { useSessionStore } from '@renderer/stores/session'
 import { ComputerPanel } from '@renderer/components/chat/panels/ComputerPanel'

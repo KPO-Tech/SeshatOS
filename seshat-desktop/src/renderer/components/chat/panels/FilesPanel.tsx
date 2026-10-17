@@ -5,7 +5,7 @@ import { isFileTool, toolCategory, toolLabel } from '@renderer/components/chat/t
 import { basename, languageForPath, parseReadToolContent } from '@renderer/components/chat/tools/helpers'
 import { CodeBox, ErrorPre, Section } from '@renderer/components/chat/tools/common'
 import { DiffView, resolveDiffRows } from '@renderer/components/chat/tools/DiffView'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { EmptyState } from './EmptyState'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import type { StreamingBlock } from '@renderer/stores/session'

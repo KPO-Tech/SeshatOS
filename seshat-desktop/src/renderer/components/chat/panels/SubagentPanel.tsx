@@ -1,7 +1,7 @@
 import { memo, useRef, useEffect, useState } from 'react'
 import { CloseOne } from '@icon-park/react'
 import { useSessionStore } from '@renderer/stores/session'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { api } from '@renderer/api/client'
 import { ToolBlock } from '../tools/ToolBlock'
 import { AgentCardsRow } from '../tools/AgentToolView'

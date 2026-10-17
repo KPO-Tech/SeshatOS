@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { CheckOne, CloseOne, Edit, DocDetail } from '@icon-park/react'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import { api } from '@renderer/api/client'
 import { useChat } from '@renderer/hooks/useChat'

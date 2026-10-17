@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
+import { normalizeMathDelimiters, sealOpenFences } from '@renderer/lib/markdownText'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -243,30 +244,15 @@ type Props = {
   className?: string
   streaming?: boolean
   sessionId?: string
+  /** "chat" (default) is the compact size of messages and side panels; "document" is the larger one of a page read on its own. */
+  variant?: 'chat' | 'document'
 }
 
-// Close any unclosed code fences so the markdown parser never treats the
-// rest of the document as a code block mid-stream.
-function sealOpenFences(text: string): string {
-  const lines = text.split('\n')
-  let inFence = false
-  for (const line of lines) {
-    if (/^(`{3,}|~{3,})/.test(line)) {
-      inFence = !inFence
-    }
-  }
-  return inFence ? `${text}\n\`\`\`` : text
+const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
+  chat: 'text-[13px] leading-[1.6]',
+  document: 'text-[14px] leading-7'
 }
 
-function normalizeMathDelimiters(text: string): string {
-  const segments = text.split(/(^[ \t]*(?:`{3,}|~{3,})[\s\S]*?^[ \t]*(?:`{3,}|~{3,})[ \t]*$)/gm)
-  return segments.map((segment) => {
-    if (/^[ \t]*(?:`{3,}|~{3,})/.test(segment)) return segment
-    return segment
-      .replace(/\\\[([\s\S]*?)\\\]/g, (_match, math: string) => `$$\n${math.trim()}\n$$`)
-      .replace(/\\\(([^()\n]+?)\\\)/g, (_match, math: string) => `$${math.trim()}$`)
-  }).join('')
-}
 
 type CodeProps = {
   inline?: boolean
@@ -274,7 +260,7 @@ type CodeProps = {
   children?: ReactNode
 }
 
-export function MarkdownView({ children, className, streaming = false, sessionId }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat' }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
 
   // react-markdown uses the identity of each entry here as the React element
@@ -381,7 +367,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
         }), [streaming, sessionId])
 
   return (
-    <div className={cx('text-[14px] leading-7 text-[var(--text-primary)]', className)}>
+    <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
       <ReactMarkdown
         // KaTeX and Prism re-parse their whole input on every render; while
         // streaming, `content` changes on every token, which would mean
