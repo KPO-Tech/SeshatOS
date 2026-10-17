@@ -167,6 +167,21 @@ function PanelFrame({
     )
   }
 
+  // The session panel is cards, not a window: its home has no header, and its pages carry a slim one of their own.
+  if (panel.kind === 'computer') {
+    return (
+      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
+        <ComputerPanel
+          sessionId={panel.sessionId ?? ''}
+          focusToolId={panel.focusToolId}
+          isMaximized={isMaximized}
+          onClose={onClose}
+          onToggleMaximize={onToggleMaximize}
+        />
+      </aside>
+    )
+  }
+
   return (
     <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
       <div className="flex min-h-[46px] shrink-0 items-center justify-between gap-2 border-b border-app-border-subtle px-3 py-2">
