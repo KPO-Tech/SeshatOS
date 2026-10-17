@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in srgb, var(--surface-root) 68%, var(--surface-panel));
+  background-color: var(--chat-bg);
   min-height: 0;
   overflow: hidden;
 }

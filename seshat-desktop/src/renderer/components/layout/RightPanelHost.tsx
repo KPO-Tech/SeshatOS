@@ -170,7 +170,7 @@ function PanelFrame({
   // The session panel is cards, not a window: its home has no header, and its pages carry a slim one of their own.
   if (panel.kind === 'computer') {
     return (
-      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
+      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--chat-bg)]">
         <ComputerPanel
           sessionId={panel.sessionId ?? ''}
           focusToolId={panel.focusToolId}
