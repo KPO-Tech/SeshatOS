@@ -2,6 +2,7 @@ import type { User } from '@renderer/api/types'
 import type { ThemePreference } from '@renderer/lib/theme'
 import { AboutSettings } from './AboutSettings'
 import { AccountSettings } from './AccountSettings'
+import { AppearanceSettings } from './AppearanceSettings'
 import { DataControlsSettings } from './DataControlsSettings'
 import { GeneralSettings } from './GeneralSettings'
 import { MemoriesSettings } from './MemoriesSettings'
@@ -45,6 +46,7 @@ export function SettingsContent({
     return <AccountSettings user={user} displayName={displayName} onLogout={onLogout} />
   }
 
+  if (section === 'appearance') return <AppearanceSettings theme={theme} onThemeChange={onThemeChange} />
   if (section === 'shortcuts') return <ShortcutsSettings />
   if (section === 'memories') return <MemoriesSettings />
   if (section === 'data-controls') return <DataControlsSettings />
@@ -52,12 +54,10 @@ export function SettingsContent({
 
   return (
     <GeneralSettings
-      theme={theme}
       language={language}
       notifications={notifications}
       soundAlert={soundAlert}
       productUpdates={productUpdates}
-      onThemeChange={onThemeChange}
       onLanguageChange={onLanguageChange}
       onNotificationsChange={onNotificationsChange}
       onSoundAlertChange={onSoundAlertChange}
