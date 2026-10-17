@@ -52,6 +52,12 @@ type LlamaProgress = {
   totalBytes: number
 }
 
+type SrtStatus = {
+  state: 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
+  platform: string
+  detail?: string
+}
+
 type EnvVarDef = {
   key: string
   label: string
