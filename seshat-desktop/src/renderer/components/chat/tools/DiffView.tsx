@@ -1,6 +1,6 @@
 import { Copy } from '@icon-park/react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { codeTheme } from '@renderer/lib/codeTheme'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { languageForPath } from './helpers'
 
@@ -273,7 +273,7 @@ export function DiffView({
               {language ? (
                 <SyntaxHighlighter
                   language={language}
-                  style={vscDarkPlus}
+                  style={codeTheme as any}
                   PreTag="span"
                   CodeTag="span"
                   customStyle={{ background: 'transparent', padding: 0, margin: 0, display: 'inline' }}

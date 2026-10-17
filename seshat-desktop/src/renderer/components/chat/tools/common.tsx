@@ -1,7 +1,7 @@
 import { Copy } from '@icon-park/react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { codeTheme } from '@renderer/lib/codeTheme'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -117,13 +117,13 @@ export function CodeBox({
         'group relative overflow-hidden',
         bare && 'rounded-none border-0 bg-transparent',
         !bare && isError && 'rounded-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.06)]',
-        !bare && !isError && 'rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_84%,black)]',
+        !bare && !isError && 'rounded-md border border-app-border-subtle bg-[var(--code-bg)]',
       )}
     >
       {language ? (
         <SyntaxHighlighter
           language={language}
-          style={vscDarkPlus as any}
+          style={codeTheme as any}
           customStyle={expanded ? CODE_HIGHLIGHT_STYLE_EXPANDED : CODE_HIGHLIGHT_STYLE}
           codeTagProps={{ style: expanded ? CODE_HIGHLIGHT_CODE_STYLE_EXPANDED : CODE_HIGHLIGHT_CODE_STYLE }}
           className={SCROLL_THIN}

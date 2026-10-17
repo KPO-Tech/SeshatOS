@@ -46,8 +46,8 @@
 
   --accent-hover: color-mix(in srgb, var(--accent-primary) 18%, transparent);
 
-  --color-code-bg: #1e1e1e;
-  --color-code-fg: #d4d4d4;
+  --color-code-bg: var(--code-bg);
+  --color-code-fg: var(--code-fg);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.12);
   --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.18);
   --shadow-large: 0 16px 48px rgba(0, 0, 0, 0.24);

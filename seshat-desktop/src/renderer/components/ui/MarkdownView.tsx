@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 
@@ -64,7 +64,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   }
 
   return (
-    <div className="my-4 overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[#1e1e1e]">
+    <div className="my-4 overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--code-bg)]">
       <div className="flex items-center justify-between border-b border-[var(--border-soft)] bg-white/5 px-2.5 py-1.5">
         <button
           type="button"
@@ -86,7 +86,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
       </div>
       {!collapsed && (
         <SyntaxHighlighter
-          style={vscDarkPlus}
+          style={codeTheme as any}
           language={language}
           PreTag="div"
           customStyle={CODE_BLOCK_STYLE}
