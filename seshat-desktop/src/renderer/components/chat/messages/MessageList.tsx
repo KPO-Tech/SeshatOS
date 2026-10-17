@@ -1,7 +1,8 @@
-import type { RefObject } from 'react'
+import { useMemo, type RefObject } from 'react'
 import type { Virtualizer } from '@tanstack/react-virtual'
 import type { Message } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/stores/session'
+import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
 import { MessageItem } from '@renderer/components/chat/messages/MessageItem'
 
 type LiveActivity = {
@@ -42,6 +43,9 @@ export function MessageList({
   onSubmitToolPrompt,
   onRetryMessage,
 }: MessageListProps) {
+  // The files each turn created or edited, listed under the message that ends the turn.
+  const changedFiles = useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming])
+
   if (messages.length === 0) {
     return (
       <div className={`conv-messages${blurred ? ' conv-messages--blurred' : ''}`} ref={scrollRef}>
@@ -82,6 +86,7 @@ export function MessageList({
                 autoExpandTools={autoExpandTools}
                 liveActivity={showLiveActivity ? liveActivity : undefined}
                 justCompleted={showCompleted}
+                changedFiles={changedFiles.get(i)}
                 onApproveTool={onApproveTool}
                 onDenyTool={onDenyTool}
                 onSubmitToolPrompt={onSubmitToolPrompt}
