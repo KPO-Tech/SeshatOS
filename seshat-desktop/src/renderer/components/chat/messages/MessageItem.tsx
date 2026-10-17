@@ -13,6 +13,8 @@ import { breaksGroup } from '../tools/quietGroupPhrase'
 import { isAgentTool, isGroupable } from '../tools/toolDisplay'
 import { AttachmentThumb } from '../attachments/AttachmentThumb'
 import type { Message, ToolUseBlock, ToolStatus } from '@renderer/api/types'
+import type { ChangedFile } from '@renderer/lib/changedFiles'
+import { ChangedFiles } from './ChangedFiles'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -150,6 +152,8 @@ type Props = {
     detail?: string
   }
   justCompleted?: boolean
+  /** The files the agent created or edited during the turn this message ends. */
+  changedFiles?: ChangedFile[]
   onApproveTool?: (toolUseId: string, remember?: boolean) => void
   onDenyTool?: (toolUseId: string) => void
   onSubmitToolPrompt?: (promptId: string, value: unknown) => void
@@ -284,7 +288,7 @@ function CompletionFlash() {
   )
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage }: Props) {
   const isUser = message.role === 'user'
   const attachments = messageAttachments(message)
   if (isToolResultOnly(message)) return null
@@ -411,6 +415,8 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           }
           return null
         })}
+
+        {changedFiles && changedFiles.length > 0 && !liveActivity && <ChangedFiles files={changedFiles} sessionId={sessionId} />}
 
         {liveActivity && <LiveActivityBlock label={liveActivity.label} detail={liveActivity.detail} />}
         {!liveActivity && justCompleted && <CompletionFlash />}
