@@ -66,12 +66,13 @@ export function registerShellHandlers(ipcMain: IpcMain): void {
     // in development land on exactly one live shell.
     const existing = shellSessions.get(id)
     if (existing) {
+      // Out of the map first, so that its exit is not reported (see onExit below).
+      shellSessions.delete(id)
       try {
         existing.pty.kill()
       } catch {
         // Same as above: it may already be gone.
       }
-      shellSessions.delete(id)
     }
 
     const shell = resolveShellCommand()
@@ -88,7 +89,11 @@ export function registerShellHandlers(ipcMain: IpcMain): void {
       if (!event.sender.isDestroyed()) event.sender.send('shell:data', { id, data })
     })
     session.onExit(({ exitCode, signal }) => {
-      if (shellSessions.get(id)?.pty === session) shellSessions.delete(id)
+      // Only the shell that currently owns this id may report an exit. One that was replaced by a restart, or stopped
+      // on purpose, is gone from the map: telling the panel about it would make it show "exited" for the shell that
+      // took its place (the panel listens by id).
+      if (shellSessions.get(id)?.pty !== session) return
+      shellSessions.delete(id)
       if (!event.sender.isDestroyed()) event.sender.send('shell:exit', { id, exitCode, signal })
     })
 

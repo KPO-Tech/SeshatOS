@@ -96,3 +96,36 @@ test('refuses a sender that is not the app itself', async () => {
     await call(event, 'shell:start', { id: 'shell-untrusted', cwd: tmpdir(), cols: 80, rows: 24 })
   })
 })
+
+test('a shell that was replaced does not report an exit for the one that replaced it', async () => {
+  const { ipcMain, call } = fakeIpcMain()
+  registerShellHandlers(ipcMain)
+  const { event, sent } = fakeEvent()
+
+  try {
+    // React runs the panel's effect twice in development: start, stop, start with the same id. Two starts in flight
+    // is the same race. The first shell is killed to make room for the second, and its exit used to reach the
+    // panel, which then showed "exited" for a shell that was running.
+    await Promise.all([
+      call(event, 'shell:start', { id: 'shell-race', cwd: tmpdir(), cols: 80, rows: 24 }),
+      call(event, 'shell:start', { id: 'shell-race', cwd: tmpdir(), cols: 80, rows: 24 }),
+    ])
+    // The replacing shell is the live one once it has printed its first prompt.
+    await waitForOutput(sent, '>', 10_000)
+    // PowerShell is still loading its line editor when the first prompt appears; typing into it then garbles the input.
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    // $((1+2)) is arithmetic in bash and in PowerShell; the echoed command spells RACE$((1+2)), so RACE3 can only be output.
+    await call(event, 'shell:write', { id: 'shell-race', data: 'echo RACE$((1+2))\r' })
+
+    const output = await waitForOutput(sent, 'RACE3')
+    assert.ok(output.includes('RACE3'), 'the second shell must be the live one, got ' + JSON.stringify(output.slice(-300)) + JSON.stringify(sent.filter((m) => m.channel !== 'shell:data')))
+    assert.deepEqual(
+      sent.filter((message) => message.channel === 'shell:exit'),
+      [],
+      'no exit may be reported while a shell with that id is running',
+    )
+  } finally {
+    await call(event, 'shell:stop', 'shell-race')
+    stopAllShellSessions()
+  }
+})
