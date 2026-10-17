@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Copy, Down, Time, CheckOne, Redo } from '@icon-park/react'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useUIStore } from '@renderer/stores/ui'
 import { ToolBlock } from '../tools/ToolBlock'
