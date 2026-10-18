@@ -1,17 +1,45 @@
 import { describe, expect, it } from 'vitest'
 import { connectorRows, contextUsage, environmentRows, formatTokens } from './sessionOverview'
 
+describe('contextUsage with the figure the runtime reported', () => {
+  const live = { used: 90_000, window: 128_000, autoCompactAt: 107_100 }
+
+  it('prefers the figure reported during the turn to the totals of the last turn', () => {
+    expect(contextUsage(10_000, 1_000, 200_000, live)).toEqual({ used: 90_000, window: 128_000, percent: 70, compactAtPercent: 84 })
+  })
+
+  it('shows a figure even before any turn has completed', () => {
+    expect(contextUsage(0, 0, null, live)?.percent).toBe(70)
+  })
+
+  it('caps the percentages at 100', () => {
+    const over = contextUsage(0, 0, null, { used: 150_000, window: 128_000, autoCompactAt: 200_000 })
+    expect(over?.percent).toBe(100)
+    expect(over?.compactAtPercent).toBe(100)
+  })
+
+  it('has no compaction mark when the runtime did not say where it is', () => {
+    expect(contextUsage(0, 0, null, { used: 1000, window: 128_000, autoCompactAt: 0 })?.compactAtPercent).toBeNull()
+  })
+
+  it('ignores an empty or unusable figure and falls back to the last turn', () => {
+    expect(contextUsage(500, 100, 1000, { used: 0, window: 128_000, autoCompactAt: 1 })?.used).toBe(600)
+    expect(contextUsage(500, 100, 1000, { used: 5, window: 0, autoCompactAt: 1 })?.used).toBe(600)
+    expect(contextUsage(500, 100, 1000, null)?.used).toBe(600)
+  })
+})
+
 describe('contextUsage', () => {
   it('is nothing until tokens have been counted', () => {
     expect(contextUsage(0, 0, 1_000_000)).toBeNull()
   })
 
   it('adds the reply to the context and gives a percentage of the window', () => {
-    expect(contextUsage(500_000, 30_000, 1_000_000)).toEqual({ used: 530_000, window: 1_000_000, percent: 53 })
+    expect(contextUsage(500_000, 30_000, 1_000_000)).toEqual({ used: 530_000, window: 1_000_000, percent: 53, compactAtPercent: null })
   })
 
   it('still reports the tokens when the window is unknown', () => {
-    expect(contextUsage(1200, 300, undefined)).toEqual({ used: 1500, window: null, percent: null })
+    expect(contextUsage(1200, 300, undefined)).toEqual({ used: 1500, window: null, percent: null, compactAtPercent: null })
     expect(contextUsage(1200, 300, 0)?.window).toBeNull()
   })
 

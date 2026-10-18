@@ -72,7 +72,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }, [providerId, modelId])
 
   const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
-  const context = contextUsage(agentState.inputTokens, agentState.outputTokens, windowTokens)
+  const context = contextUsage(agentState.inputTokens, agentState.outputTokens, windowTokens, agentState.liveContext)
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0
@@ -107,11 +107,18 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
           )}
         </div>
         {context.percent !== null && (
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
+          <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
             <div
               className={cx('h-full rounded-full transition-[width] duration-300', high ? 'bg-[var(--accent-warning)]' : 'bg-[var(--accent-primary)]')}
               style={{ width: `${context.percent}%` }}
             />
+            {context.compactAtPercent !== null && (
+              <span
+                className="absolute inset-y-0 w-px bg-[var(--text-muted)] opacity-70"
+                style={{ left: `${context.compactAtPercent}%` }}
+                title={`The conversation is compacted by itself at ${context.compactAtPercent}%`}
+              />
+            )}
           </div>
         )}
         <div className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] text-[var(--text-muted)]">
