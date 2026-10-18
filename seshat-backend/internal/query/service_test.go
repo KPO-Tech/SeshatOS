@@ -2,7 +2,10 @@ package query
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -522,5 +525,73 @@ func TestIsSessionUntitled(t *testing.T) {
 		if got := svc.IsSessionUntitled(ctx, id); got != want {
 			t.Errorf("IsSessionUntitled(%q) = %v, want %v", id, got, want)
 		}
+	}
+}
+
+// archiveInspectorRuntime serves the messages of a session and, separately, the ones its compactions archived.
+type archiveInspectorRuntime struct {
+	stubInspectorRuntime
+	archive    map[string][]types.Message
+	archiveErr error
+}
+
+func (r *archiveInspectorRuntime) LoadSessionArchive(_ context.Context, sessionID string) ([]types.Message, error) {
+	if r.archiveErr != nil {
+		return nil, r.archiveErr
+	}
+	return r.archive[sessionID], nil
+}
+
+func textMessage(role types.Role, text string) types.Message {
+	return types.Message{Role: role, Content: []types.ContentBlock{types.TextContent{Text: text}}}
+}
+
+func TestSessionDetailCarriesTheArchivedMessagesOfACompactedSession(t *testing.T) {
+	manager := &stubSearchSessionManager{sessions: []*sdk.SessionInfo{{ID: "s1", CreatedAt: 1, UpdatedAt: 2}}}
+	runtime := &archiveInspectorRuntime{
+		stubInspectorRuntime: stubInspectorRuntime{messages: map[string][]types.Message{
+			"s1": {textMessage(types.RoleUser, "latest question")},
+		}},
+		archive: map[string][]types.Message{
+			"s1": {textMessage(types.RoleUser, "first question"), textMessage(types.RoleAssistant, "first answer")},
+		},
+	}
+	svc := NewService(ServiceConfig{Runtime: runtime, Sessions: manager})
+
+	detail, err := svc.GetSession(context.Background(), nil, "s1")
+	if err != nil {
+		t.Fatalf("GetSession: %v", err)
+	}
+	if len(detail.Messages) != 1 || len(detail.ArchivedMessages) != 2 {
+		t.Fatalf("messages %d, archived %d; want 1 current and 2 archived", len(detail.Messages), len(detail.ArchivedMessages))
+	}
+	if got := detail.ArchivedMessages[0].Content[0].(types.TextContent).Text; got != "first question" {
+		t.Errorf("the archive is oldest first, got %q first", got)
+	}
+}
+
+func TestASessionStillOpensWhenItsArchiveCannotBeRead(t *testing.T) {
+	manager := &stubSearchSessionManager{sessions: []*sdk.SessionInfo{{ID: "s1", CreatedAt: 1, UpdatedAt: 2}}}
+	runtime := &archiveInspectorRuntime{
+		stubInspectorRuntime: stubInspectorRuntime{messages: map[string][]types.Message{"s1": {textMessage(types.RoleUser, "hi")}}},
+		archiveErr:           errors.New("store unavailable"),
+	}
+	svc := NewService(ServiceConfig{Runtime: runtime, Sessions: manager})
+	detail, err := svc.GetSession(context.Background(), nil, "s1")
+	if err != nil {
+		t.Fatalf("a missing archive must not fail the session: %v", err)
+	}
+	if len(detail.Messages) != 1 || len(detail.ArchivedMessages) != 0 {
+		t.Errorf("messages %d, archived %d", len(detail.Messages), len(detail.ArchivedMessages))
+	}
+}
+
+func TestSessionDetailJSONOmitsTheArchiveWhenThereIsNone(t *testing.T) {
+	raw, err := json.Marshal(SessionDetail{Messages: []types.Message{textMessage(types.RoleUser, "x")}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), "archived_messages") {
+		t.Errorf("a session that was never compacted must not carry the field: %s", raw)
 	}
 }

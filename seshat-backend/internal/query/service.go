@@ -478,6 +478,12 @@ func (s *Service) GetSession(ctx context.Context, principal *backendauth.Princip
 		}
 		detail.Messages = messages
 	}
+	// The archive is a convenience for the scrollback: a session that cannot read it still opens.
+	if archive, ok := s.runtime.(SessionArchiveInspector); ok {
+		if archived, err := archive.LoadSessionArchive(ctx, sessionID); err == nil {
+			detail.ArchivedMessages = archived
+		}
+	}
 	return detail, nil
 }
 

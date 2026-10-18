@@ -54,6 +54,11 @@ type SessionInspector interface {
 	LoadSessionMessages(ctx context.Context, sessionID string) ([]types.Message, error)
 }
 
+// SessionArchiveInspector is an optional capability of a runtime: reading the messages that compactions archived.
+type SessionArchiveInspector interface {
+	LoadSessionArchive(ctx context.Context, sessionID string) ([]types.Message, error)
+}
+
 // SDKRuntime adapts sdk.Client to QueryRuntime + StreamingQueryRuntime + SessionManager.
 type SDKRuntime struct {
 	client                *sdk.Client
@@ -667,6 +672,22 @@ func (r *SDKRuntime) LoadSessionMessages(ctx context.Context, sessionID string) 
 		return nil, fmt.Errorf("load session: %w", err)
 	}
 	return session.GetMessages(), nil
+}
+
+// LoadSessionArchive returns the messages that compactions took out of the conversation the model sees, oldest first.
+func (r *SDKRuntime) LoadSessionArchive(ctx context.Context, sessionID string) ([]types.Message, error) {
+	if r == nil || r.client == nil {
+		return nil, fmt.Errorf("session store not available")
+	}
+	session, err := r.client.LoadSession(ctx, sdk.SessionID(sessionID))
+	if err != nil {
+		return nil, fmt.Errorf("load session: %w", err)
+	}
+	history, err := session.History()
+	if err != nil {
+		return nil, fmt.Errorf("load session history: %w", err)
+	}
+	return history.Archived, nil
 }
 
 func (r *SDKRuntime) loadOrCreateSession(ctx context.Context, client *sdk.Client, sessionID string) (*sdk.Session, error) {

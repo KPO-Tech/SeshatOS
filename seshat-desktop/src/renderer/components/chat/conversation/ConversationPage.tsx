@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import { useSessionStore, EMPTY_STREAMING, DEFAULT_AGENT_STATE } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 import { isRenderableMessage } from '../messages/MessageItem'
+import { withArchivedHistory } from '@renderer/lib/compactedHistory'
 import { ConversationComposer } from '../composer/ConversationComposer'
 import { useDraftAttachments } from '../composer/useDraftAttachments'
 import { useConversationModes } from './useConversationModes'
@@ -120,10 +121,12 @@ export function ConversationPage() {
   // conversation re-renders this component before navigate('/') takes
   // effect) - every hook below must still run the same way regardless, so
   // the "session not found" return sits after all of them, not before.
-  const visibleMessages = session ? session.messages.filter((message, index) => (
+  const currentMessages = session ? session.messages.filter((message, index) => (
     isRenderableMessage(message) ||
     (isStreaming && !pendingPermission && !pendingAskUser && message.role === 'assistant' && index === session.messages.length - 1)
   )) : []
+  // A compacted session shows what the compaction removed from the model's context above a divider.
+  const visibleMessages = withArchivedHistory(session?.archivedMessages, currentMessages, isRenderableMessage)
 
   const {
     handlePlanProceed,

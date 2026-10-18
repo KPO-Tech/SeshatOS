@@ -16,6 +16,7 @@ import type { Message, ToolUseBlock, ToolStatus } from '@renderer/api/types'
 import type { ChangedFile } from '@renderer/lib/changedFiles'
 import { ChangedFiles } from './ChangedFiles'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
+import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -288,7 +289,22 @@ function CompletionFlash() {
   )
 }
 
+function CompactionDivider({ text }: { text: string }) {
+  return (
+    <div className="my-[var(--message-gap)] flex w-full items-center gap-3 text-[11.5px] text-app-text-muted" role="separator" aria-label={text}>
+      <span className="h-px flex-1 bg-[var(--border-subtle)]" />
+      <span className="max-w-[70%] text-center">{text}</span>
+      <span className="h-px flex-1 bg-[var(--border-subtle)]" />
+    </div>
+  )
+}
+
 export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage }: Props) {
+  if (isCompactionDivider(message)) {
+    const first = message.content[0]
+    return <CompactionDivider text={first && first.type === 'text' ? first.text : ''} />
+  }
+  const archived = isArchivedMessage(message)
   const isUser = message.role === 'user'
   const attachments = messageAttachments(message)
   if (isToolResultOnly(message)) return null
@@ -317,6 +333,8 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
         'group flex w-full items-start gap-3',
         isFirst ? 'mt-0' : compact ? 'mt-2' : 'mt-[var(--message-gap)]',
         isUser && 'flex-row-reverse',
+        // Archived messages are history the model no longer sees: dimmed, not hidden.
+        archived && 'opacity-60',
       )}
     >
       <div className={cx('flex min-w-0 flex-1 flex-col gap-1.5', isUser && 'max-w-[85%] items-end')}>
