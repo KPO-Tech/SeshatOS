@@ -51,6 +51,13 @@ export type RuntimeEventPayload = {
     pre_compact_tokens: number
     post_compact_tokens: number
   }
+  context_usage_event?: {
+    used_tokens: number
+    window_tokens: number
+    auto_compact_at_tokens: number
+    blocking_limit_tokens?: number
+    source?: string
+  }
   error?: string
 }
 

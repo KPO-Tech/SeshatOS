@@ -7,17 +7,37 @@ export type ContextUsage = {
   window: number | null
   /** 0 to 100, or null without a window. */
   percent: number | null
+  /** Where on the bar (0 to 100) the conversation is compacted by itself, when the runtime said so. */
+  compactAtPercent: number | null
 }
+
+/** The size of the context as the runtime reported it during a turn. */
+export type LiveContextFigure = { used: number; window: number; autoCompactAt: number }
 
 /**
  * Tokens in the conversation after the last turn: what the model was sent (the whole context) plus what it answered,
  * which is part of the next request. Null when nothing has been counted yet.
  */
-export function contextUsage(inputTokens: number, outputTokens: number, windowTokens: number | null | undefined): ContextUsage | null {
+export function contextUsage(
+  inputTokens: number,
+  outputTokens: number,
+  windowTokens: number | null | undefined,
+  live?: LiveContextFigure | null,
+): ContextUsage | null {
+  // The runtime's own figure, reported during the turn, is fresher than the totals of the last completed turn, and its
+  // window is the one the compaction thresholds are computed from.
+  if (live && live.window > 0 && live.used > 0) {
+    return {
+      used: live.used,
+      window: live.window,
+      percent: Math.min(100, Math.round((live.used / live.window) * 100)),
+      compactAtPercent: live.autoCompactAt > 0 ? Math.min(100, Math.round((live.autoCompactAt / live.window) * 100)) : null,
+    }
+  }
   const used = Math.max(0, inputTokens) + Math.max(0, outputTokens)
   if (used === 0) return null
   const window = windowTokens && windowTokens > 0 ? windowTokens : null
-  return { used, window, percent: window ? Math.min(100, Math.round((used / window) * 100)) : null }
+  return { used, window, percent: window ? Math.min(100, Math.round((used / window) * 100)) : null, compactAtPercent: null }
 }
 
 /** 530700 gives "530.7k", 1000000 gives "1M". */

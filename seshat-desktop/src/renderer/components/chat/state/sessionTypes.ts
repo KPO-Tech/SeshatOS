@@ -87,6 +87,15 @@ export type AgentState = {
   isThinking: boolean
   pendingPermission: PendingPermission | null
   stage: { stage: string; label: string } | null
+  // The size of the context as the runtime last reported it (context.usage), updated during a turn: at the start of
+  // every iteration and when a response arrives. Null before any report, and after a compaction until the next one.
+  liveContext: LiveContext | null
+}
+
+export type LiveContext = {
+  used: number
+  window: number
+  autoCompactAt: number
 }
 
 export function defaultAgentState(): AgentState {
@@ -100,5 +109,6 @@ export function defaultAgentState(): AgentState {
     isThinking: false,
     pendingPermission: null,
     stage: null,
+    liveContext: null,
   }
 }

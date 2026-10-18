@@ -66,6 +66,19 @@ export function handleRuntimeEvent(
       if (event.compaction_event) {
         onCompaction(event.compaction_event.pre_compact_tokens, event.compaction_event.post_compact_tokens)
       }
+      // The figure described the conversation as it was before; the next report is the new one.
+      store.updateAgentState(sessionId, { liveContext: null })
+      break
+    }
+
+    // How full the context window is, reported while the turn runs rather than once it is over.
+    case 'context.usage': {
+      const usage = event.context_usage_event
+      if (usage && usage.window_tokens > 0) {
+        store.updateAgentState(sessionId, {
+          liveContext: { used: usage.used_tokens, window: usage.window_tokens, autoCompactAt: usage.auto_compact_at_tokens },
+        })
+      }
       break
     }
 
