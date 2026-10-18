@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { connectorRows, contextUsage, environmentRows, formatTokens } from './sessionOverview'
+import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction } from './sessionOverview'
 
 describe('contextUsage with the figure the runtime reported', () => {
   const live = { used: 90_000, window: 128_000, autoCompactAt: 107_100 }
@@ -100,5 +100,29 @@ describe('connectorRows', () => {
   it('is empty when nothing is connected', () => {
     expect(connectorRows([]).total).toBe(0)
     expect(connectorRows([{ id: '1', name: 'x', enabled: false }]).total).toBe(0)
+  })
+})
+
+describe('compaction on demand', () => {
+  it('says how far the conversation shrank', () => {
+    expect(compactionNote({ pre_tokens: 90_000, post_tokens: 30_500 })).toBe('Compacted: 90k to 30.5k tokens.')
+  })
+
+  it('takes the size after from the result and keeps the window and the automatic mark of the figure before', () => {
+    const before = { used: 100_000, window: 128_000, autoCompactAt: 107_100 }
+    expect(liveContextAfterCompaction({ pre_tokens: 100_000, post_tokens: 30_000 }, before, 200_000)).toEqual({
+      used: 30_000, window: 128_000, autoCompactAt: 107_100,
+    })
+  })
+
+  it('falls back to the known window of the model when there was no figure before', () => {
+    expect(liveContextAfterCompaction({ pre_tokens: 100_000, post_tokens: 30_000 }, null, 128_000)).toEqual({
+      used: 30_000, window: 128_000, autoCompactAt: 0,
+    })
+  })
+
+  it('draws nothing without a window or a size', () => {
+    expect(liveContextAfterCompaction({ pre_tokens: 1, post_tokens: 30_000 }, null, null)).toBeNull()
+    expect(liveContextAfterCompaction({ pre_tokens: 1, post_tokens: 0 }, null, 128_000)).toBeNull()
   })
 })

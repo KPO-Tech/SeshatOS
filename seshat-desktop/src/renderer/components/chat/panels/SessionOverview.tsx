@@ -7,7 +7,8 @@ import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
-import { connectorRows, contextUsage, environmentRows, formatTokens } from '@renderer/lib/sessionOverview'
+import { api, ApiError } from '@renderer/api/client'
+import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 
@@ -39,6 +40,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   const [confinement, setConfinement] = useState<{ label: string; confined: boolean } | null>(null)
   const [windowTokens, setWindowTokens] = useState<number | null>(null)
   const [servers, setServers] = useState<MCPServer[]>([])
+  const [compacting, setCompacting] = useState(false)
+  const [compactNote, setCompactNote] = useState<{ text: string; failed: boolean } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -70,6 +73,25 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
       .catch(() => undefined)
     return () => { cancelled = true }
   }, [providerId, modelId])
+
+  // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
+  // compaction rewrites the conversation that turn is using (the server refuses it too).
+  async function compactNow() {
+    if (compacting) return
+    setCompacting(true)
+    setCompactNote(null)
+    try {
+      const outcome = await api.post<CompactionOutcome>(`/sessions/${sessionId}/compact`)
+      const live = liveContextAfterCompaction(outcome, agentState.liveContext, windowTokens)
+      useSessionStore.getState().updateAgentState(sessionId, { liveContext: live })
+      setCompactNote({ text: compactionNote(outcome), failed: false })
+    } catch (error) {
+      const text = error instanceof ApiError || error instanceof Error ? error.message : 'Compaction failed.'
+      setCompactNote({ text, failed: true })
+    } finally {
+      setCompacting(false)
+    }
+  }
 
   const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
   const context = contextUsage(agentState.inputTokens, agentState.outputTokens, windowTokens, agentState.liveContext)
@@ -124,6 +146,22 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
         <div className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] text-[var(--text-muted)]">
           <span>Sent <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatTokens(agentState.inputTokens)}</b></span>
           <span>Replied <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatTokens(agentState.outputTokens)}</b></span>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            className="cursor-pointer rounded border border-[var(--border-subtle)] bg-transparent px-2 py-0.5 text-[11px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50"
+            disabled={compacting || agentState.isThinking}
+            onClick={() => { void compactNow() }}
+            title="Summarize the older part of the conversation now, instead of waiting for the automatic threshold"
+          >
+            {compacting ? 'Compacting…' : 'Compact now'}
+          </button>
+          {compactNote && (
+            <span className={cx('min-w-0 flex-1 text-[11px]', compactNote.failed ? 'text-[var(--accent-warning)]' : 'text-[var(--text-muted)]')} role="status">
+              {compactNote.text}
+            </span>
+          )}
         </div>
       </OverviewCard>
     )

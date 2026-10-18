@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -772,6 +773,39 @@ func (s *Service) InterruptSession(ctx context.Context, principal *backendauth.P
 		return bkerr.Internal("interrupt session: "+err.Error(), err)
 	}
 	return nil
+}
+
+// CompactSession compacts the conversation of a session now instead of waiting for the automatic threshold. It uses the
+// session's own provider settings, like a turn, and fails with a conflict while a turn is running, when the
+// conversation is too short to shrink, or when summarizing would leave it no smaller.
+func (s *Service) CompactSession(ctx context.Context, principal *backendauth.Principal, sessionID string) (*CompactionResult, error) {
+	if s == nil || s.runtime == nil {
+		return nil, bkerr.Unavailable("query runtime not configured", nil)
+	}
+	if strings.TrimSpace(sessionID) == "" {
+		return nil, bkerr.InvalidInput("session_id is required", nil)
+	}
+	if err := s.checkSessionAccess(ctx, principal, sessionID); err != nil {
+		return nil, err
+	}
+	compactor, ok := s.runtime.(SessionCompactor)
+	if !ok {
+		return nil, bkerr.Unavailable("compaction on demand is not supported by this runtime", nil)
+	}
+	runtimeInput, _, err := s.prepareRuntimeInput(ctx, principal, QueryInput{SessionID: sessionID})
+	if err != nil {
+		return nil, err
+	}
+	result, err := compactor.CompactSession(ctx, runtimeInput)
+	switch {
+	case errors.Is(err, sdk.ErrNothingToCompact):
+		return nil, bkerr.Conflict("the conversation is too short to compact", err)
+	case errors.Is(err, sdk.ErrCompactionWouldNotShrink):
+		return nil, bkerr.Conflict("compacting would not make the conversation smaller", err)
+	case err != nil:
+		return nil, bkerr.WrapOrInternal(err)
+	}
+	return &result, nil
 }
 
 // CancelSubagent cancels a running background sub-agent — one spawned via the
