@@ -136,6 +136,9 @@ export type Session = {
   created_at: number
   updated_at: number
   messages: Message[]
+  // Messages a compaction took out of what the model sees, oldest first. They are shown above `messages` so that a
+  // compacted session keeps its scrollback.
+  archived_messages?: Message[]
   provider_setting_id?: string
   model_id?: string
   permission_mode?: string

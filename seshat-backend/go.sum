@@ -20,6 +20,8 @@ github.com/AzureAD/microsoft-authentication-library-for-go v1.8.0 h1:Nljr4q1GRA/
 github.com/AzureAD/microsoft-authentication-library-for-go v1.8.0/go.mod h1:Y33QHnf0FfdVewFFISOGe20mkZbxX4H839o955/PoeI=
 github.com/KPO-Tech/seshat-runtime v1.10.0 h1:PKZps0x/ScAX0Kte/LznZrcanC7v4aCutM9yHobM6NU=
 github.com/KPO-Tech/seshat-runtime v1.10.0/go.mod h1:A6IiDoaGZXUVSY5kVumXf33KbWOrd1wroeiketyAUe0=
+github.com/KPO-Tech/seshat-runtime v1.10.2 h1:hCZxfLuA3td4knJAFtUK1asGkLpPDFi7D9AJxxfkWqk=
+github.com/KPO-Tech/seshat-runtime v1.10.2/go.mod h1:fdOdE6BO3PjB8CNoUVOkaguf3wiBMkXXSSvdRsNBJk4=
 github.com/Knetic/govaluate v3.0.0+incompatible h1:7o6+MAPhYTCF0+fdvoz1xDedhRb4f6s9Tn1Tt7/WTEg=
 github.com/Knetic/govaluate v3.0.0+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/PuerkitoBio/goquery v1.13.0 h1:mqHbjD7Jmnul4DTR24LKTjo1uUmHUh072kteGV+xpFM=

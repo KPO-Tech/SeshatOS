@@ -7,6 +7,9 @@ export type ChatSession = {
   id: string
   title: string
   messages: Message[]
+  // Messages a compaction removed from the model's context, oldest first; shown above `messages` (see
+  // lib/compactedHistory.ts). Only set when the session was loaded from the server.
+  archivedMessages?: Message[]
   createdAt: string
   updatedAt?: string
   providerSettingId?: string
