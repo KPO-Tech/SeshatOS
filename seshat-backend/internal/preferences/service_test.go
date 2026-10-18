@@ -248,3 +248,40 @@ func TestResolvePermissionModesFromSavedPreferences(t *testing.T) {
 		t.Errorf("expected Never from saved prefs, got %q", mode)
 	}
 }
+
+// ─── memory opt-in ────────────────────────────────────────────────────────────
+
+func TestMemoryIsOffUntilTheUserOptsIn(t *testing.T) {
+	svc := openPreferencesService(t)
+	ctx := context.Background()
+	principal := principalFor("usr_memory")
+
+	if svc.MemoryEnabled(ctx, principal) {
+		t.Fatal("memory must be off for a user who never chose")
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{PreferredName: "Ada"}); err != nil {
+		t.Fatal(err)
+	}
+	if svc.MemoryEnabled(ctx, principal) {
+		t.Fatal("saving other preferences must not turn memory on")
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{MemoryEnabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	if !svc.MemoryEnabled(ctx, principal) {
+		t.Fatal("memory should be on after the user opted in")
+	}
+	if svc.MemoryEnabled(ctx, principalFor("usr_other")) {
+		t.Fatal("one user's choice must not apply to another")
+	}
+}
+
+func TestMemoryIsOffWhenPreferencesCannotBeRead(t *testing.T) {
+	var svc *Service
+	if svc.MemoryEnabled(context.Background(), principalFor("u")) {
+		t.Fatal("a missing service must mean memory off")
+	}
+	if NewService(nil).MemoryEnabled(context.Background(), principalFor("u")) {
+		t.Fatal("a service without a provider must mean memory off")
+	}
+}

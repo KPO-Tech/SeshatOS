@@ -476,6 +476,9 @@ export type UserPreferences = {
   extra_context: string
   interactive_permission_mode?: string
   automation_permission_mode?: string
+  max_sub_agent_depth?: number
+  /** Opt-in to long-term memory (notes extracted from conversations and recalled into prompts). Off by default. */
+  memory_enabled?: boolean
   updated_at?: number
 }
 

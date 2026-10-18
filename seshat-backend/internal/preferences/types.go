@@ -19,7 +19,9 @@ type UserPreferences struct {
 	AutomationPermissionMode  string
 	// MaxSubAgentDepth overrides the server default (3) when > 0. Range: 1–5.
 	MaxSubAgentDepth int
-	UpdatedAt        time.Time
+	// MemoryEnabled reports whether the user opted in to long-term memory (extraction and recall). Off by default.
+	MemoryEnabled bool
+	UpdatedAt     time.Time
 }
 
 type UpsertParams struct {
@@ -32,6 +34,7 @@ type UpsertParams struct {
 	InteractivePermissionMode string
 	AutomationPermissionMode  string
 	MaxSubAgentDepth          int
+	MemoryEnabled             bool
 }
 
 // BuildSystemPromptBlock renders the preferences as a system prompt injection
