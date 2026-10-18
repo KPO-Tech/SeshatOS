@@ -595,3 +595,65 @@ func TestSessionDetailJSONOmitsTheArchiveWhenThereIsNone(t *testing.T) {
 		t.Errorf("a session that was never compacted must not carry the field: %s", raw)
 	}
 }
+
+// compactorRuntime is a runtime that can compact a session on demand.
+type compactorRuntime struct {
+	stubRuntime
+	result CompactionResult
+	err    error
+	gotID  string
+}
+
+func (r *compactorRuntime) CompactSession(_ context.Context, input QueryInput) (CompactionResult, error) {
+	r.gotID = input.SessionID
+	return r.result, r.err
+}
+
+func compactService(runtime QueryRuntime) *Service {
+	manager := &stubSearchSessionManager{sessions: []*sdk.SessionInfo{{ID: "s1", CreatedAt: 1, UpdatedAt: 2}}}
+	return NewService(ServiceConfig{Runtime: runtime, Sessions: manager})
+}
+
+func TestCompactSessionReturnsWhatTheRuntimeDid(t *testing.T) {
+	rt := &compactorRuntime{result: CompactionResult{PreTokens: 90_000, PostTokens: 30_000}}
+	got, err := compactService(rt).CompactSession(context.Background(), nil, "s1")
+	if err != nil {
+		t.Fatalf("CompactSession: %v", err)
+	}
+	if got.PreTokens != 90_000 || got.PostTokens != 30_000 || rt.gotID != "s1" {
+		t.Errorf("result %+v for session %q", got, rt.gotID)
+	}
+}
+
+func TestCompactSessionTurnsRuntimeRefusalsIntoConflicts(t *testing.T) {
+	for name, runtimeErr := range map[string]error{
+		"too short":        sdk.ErrNothingToCompact,
+		"would not shrink": sdk.ErrCompactionWouldNotShrink,
+	} {
+		rt := &compactorRuntime{err: runtimeErr}
+		_, err := compactService(rt).CompactSession(context.Background(), nil, "s1")
+		if bkerr.KindOf(err) != bkerr.ErrorKindConflict {
+			t.Errorf("%s: kind = %v, want a conflict the interface can show as a message", name, bkerr.KindOf(err))
+		}
+	}
+}
+
+func TestCompactSessionNeedsARuntimeThatCanCompactAndASessionID(t *testing.T) {
+	if _, err := compactService(&stubRuntime{}).CompactSession(context.Background(), nil, "s1"); bkerr.KindOf(err) != bkerr.ErrorKindUnavailable {
+		t.Errorf("a runtime without the capability: kind = %v", bkerr.KindOf(err))
+	}
+	if _, err := compactService(&compactorRuntime{}).CompactSession(context.Background(), nil, "  "); bkerr.KindOf(err) != bkerr.ErrorKindInvalidInput {
+		t.Errorf("a blank session id: kind = %v", bkerr.KindOf(err))
+	}
+	var nilService *Service
+	if _, err := nilService.CompactSession(context.Background(), nil, "s1"); bkerr.KindOf(err) != bkerr.ErrorKindUnavailable {
+		t.Errorf("a nil service: kind = %v", bkerr.KindOf(err))
+	}
+}
+
+func TestCompactSessionPassesOtherFailuresOn(t *testing.T) {
+	rt := &compactorRuntime{err: errors.New("provider down")}
+	if _, err := compactService(rt).CompactSession(context.Background(), nil, "s1"); err == nil {
+		t.Fatal("a failure of the runtime must reach the caller")
+	}
+}

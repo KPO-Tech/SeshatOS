@@ -54,6 +54,17 @@ type SessionInspector interface {
 	LoadSessionMessages(ctx context.Context, sessionID string) ([]types.Message, error)
 }
 
+// CompactionResult is what a compaction on demand did: the size of the conversation before and after, in tokens.
+type CompactionResult struct {
+	PreTokens  int `json:"pre_tokens"`
+	PostTokens int `json:"post_tokens"`
+}
+
+// SessionCompactor is an optional capability of a runtime: compacting a session's conversation now.
+type SessionCompactor interface {
+	CompactSession(ctx context.Context, input QueryInput) (CompactionResult, error)
+}
+
 // SessionArchiveInspector is an optional capability of a runtime: reading the messages that compactions archived.
 type SessionArchiveInspector interface {
 	LoadSessionArchive(ctx context.Context, sessionID string) ([]types.Message, error)
@@ -672,6 +683,32 @@ func (r *SDKRuntime) LoadSessionMessages(ctx context.Context, sessionID string) 
 		return nil, fmt.Errorf("load session: %w", err)
 	}
 	return session.GetMessages(), nil
+}
+
+// CompactSession compacts the conversation of a session now, with the session's own provider settings (the input
+// carries them, as for a turn). It refuses while a turn is running on the session: a compaction rewrites the
+// conversation that turn is using.
+func (r *SDKRuntime) CompactSession(ctx context.Context, input QueryInput) (CompactionResult, error) {
+	release, ok := r.tryAcquireSessionTurn(input.SessionID)
+	if !ok {
+		return CompactionResult{}, bkerr.Conflict("a turn is already in progress for this session", nil)
+	}
+	defer release()
+
+	client, releaseClient, err := r.clientForInput(ctx, input)
+	if err != nil {
+		return CompactionResult{}, err
+	}
+	defer releaseClient()
+	session, err := r.loadOrCreateSession(ctx, client, input.SessionID)
+	if err != nil {
+		return CompactionResult{}, err
+	}
+	out, err := session.Compact(ctx)
+	if err != nil {
+		return CompactionResult{}, err
+	}
+	return CompactionResult{PreTokens: out.PreTokens, PostTokens: out.PostTokens}, nil
 }
 
 // LoadSessionArchive returns the messages that compactions took out of the conversation the model sees, oldest first.

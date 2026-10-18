@@ -77,3 +77,25 @@ export function connectorRows(servers: ReadonlyArray<{ id: string; name: string;
     total: active.length
   }
 }
+
+export type CompactionOutcome = { pre_tokens: number; post_tokens: number }
+
+/** What to tell the user after a compaction they asked for: how far the conversation shrank. */
+export function compactionNote(outcome: CompactionOutcome): string {
+  return `Compacted: ${formatTokens(outcome.pre_tokens)} to ${formatTokens(outcome.post_tokens)} tokens.`
+}
+
+/**
+ * The context figure after a compaction on demand. The runtime reports its figures during a turn, and a compaction on
+ * demand happens between turns, so the new size comes from the result. The window and the automatic mark are those of
+ * the figure before, or the window the model is known to have; without a window there is nothing to draw.
+ */
+export function liveContextAfterCompaction(
+  outcome: CompactionOutcome,
+  before: LiveContextFigure | null | undefined,
+  windowTokens: number | null | undefined,
+): LiveContextFigure | null {
+  const window = before?.window && before.window > 0 ? before.window : windowTokens && windowTokens > 0 ? windowTokens : 0
+  if (window <= 0 || outcome.post_tokens <= 0) return null
+  return { used: outcome.post_tokens, window, autoCompactAt: before?.autoCompactAt ?? 0 }
+}

@@ -108,6 +108,7 @@ func (app *App) handleSessionSearch(w http.ResponseWriter, r *http.Request) {
 //   - PATCH / PUT  /api/v1/sessions/{id}
 //   - DELETE       /api/v1/sessions/{id}
 //   - POST         /api/v1/sessions/{id}/interrupt
+//   - POST         /api/v1/sessions/{id}/compact
 func (app *App) handleSessionByID(w http.ResponseWriter, r *http.Request) {
 	principal, _ := authPrincipalFromContext(r.Context())
 	trimmed := strings.Trim(strings.TrimPrefix(r.URL.Path, "/sessions/"), "/")
@@ -128,6 +129,20 @@ func (app *App) handleSessionByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	if action == "compact" {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		result, err := app.backend.Query.CompactSession(r.Context(), principal, sessionID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
 		return
 	}
 
