@@ -20,8 +20,10 @@ type userPreferencesResponse struct {
 	InteractivePermissionMode string `json:"interactive_permission_mode"`
 	AutomationPermissionMode  string `json:"automation_permission_mode"`
 	// MaxSubAgentDepth is the user-configured spawn depth limit (1–5). 0 = server default (3).
-	MaxSubAgentDepth int   `json:"max_sub_agent_depth"`
-	UpdatedAt        int64 `json:"updated_at,omitempty"`
+	MaxSubAgentDepth int `json:"max_sub_agent_depth"`
+	// MemoryEnabled is the user's opt-in to long-term memory (extraction and recall). Off by default.
+	MemoryEnabled bool  `json:"memory_enabled"`
+	UpdatedAt     int64 `json:"updated_at,omitempty"`
 }
 
 func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
@@ -39,6 +41,7 @@ func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
 		InteractivePermissionMode: p.InteractivePermissionMode,
 		AutomationPermissionMode:  p.AutomationPermissionMode,
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
+		MemoryEnabled:             p.MemoryEnabled,
 		UpdatedAt:                 p.UpdatedAt.Unix(),
 	}
 }
@@ -94,6 +97,8 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			InteractivePermissionMode string `json:"interactive_permission_mode"`
 			AutomationPermissionMode  string `json:"automation_permission_mode"`
 			MaxSubAgentDepth          int    `json:"max_sub_agent_depth"`
+			// MemoryEnabled is a pointer so a client that does not know the field leaves the stored choice alone.
+			MemoryEnabled *bool `json:"memory_enabled"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
@@ -110,6 +115,12 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		memoryEnabled := false
+		if body.MemoryEnabled != nil {
+			memoryEnabled = *body.MemoryEnabled
+		} else {
+			memoryEnabled = a.backend.Preferences.MemoryEnabled(r.Context(), principal)
+		}
 		saved, err := a.backend.Preferences.Upsert(r.Context(), principal, preferences.UpsertParams{
 			PreferredName:             body.PreferredName,
 			Profession:                body.Profession,
@@ -120,6 +131,7 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			InteractivePermissionMode: body.InteractivePermissionMode,
 			AutomationPermissionMode:  body.AutomationPermissionMode,
 			MaxSubAgentDepth:          body.MaxSubAgentDepth,
+			MemoryEnabled:             memoryEnabled,
 		})
 		if err != nil {
 			writeBackendError(w, err)

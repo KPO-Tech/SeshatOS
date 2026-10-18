@@ -348,6 +348,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gLocalTitleConfig{})
 			},
 		},
+		{
+			ID:    "20261018_050_user_preferences_memory_enabled",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
+			},
+		},
 	}
 }
 

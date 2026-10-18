@@ -556,6 +556,10 @@ func (app *App) triggerMemoryExtraction(principal *backendauth.Principal, result
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
+		// Memory stores facts from conversations: it only runs for users who opted in.
+		if !app.backend.Preferences.MemoryEnabled(backendauth.WithContext(ctx, principal), principal) {
+			return
+		}
 		_ = app.longTermExtractor.Extract(ctx, userID, msgs)
 	}()
 }

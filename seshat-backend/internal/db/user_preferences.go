@@ -22,8 +22,11 @@ type gUserPreferences struct {
 	InteractivePermissionMode string `gorm:"column:interactive_permission_mode;size:64;not null;default:'onRequest'"`
 	AutomationPermissionMode  string `gorm:"column:automation_permission_mode;size:64;not null;default:'never'"`
 	// MaxSubAgentDepth: 0 = use server default (currently 3). UI exposes 1–5.
-	MaxSubAgentDepth int   `gorm:"column:max_sub_agent_depth;not null;default:0"`
-	UpdatedAtUnix    int64 `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
+	MaxSubAgentDepth int `gorm:"column:max_sub_agent_depth;not null;default:0"`
+	// MemoryEnabled turns long-term memory on for this user: notes are extracted from conversations and recalled into
+	// prompts. Off until the user opts in.
+	MemoryEnabled bool  `gorm:"column:memory_enabled;not null;default:false"`
+	UpdatedAtUnix int64 `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
 }
 
 func (gUserPreferences) TableName() string { return "user_preferences" }
@@ -41,7 +44,9 @@ type UserPreferences struct {
 	// MaxSubAgentDepth overrides the server default (3) when > 0. Range: 1–5.
 	// 0 means "use server default". Set via Settings → Agent in the UI.
 	MaxSubAgentDepth int
-	UpdatedAt        time.Time
+	// MemoryEnabled reports whether the user opted in to long-term memory.
+	MemoryEnabled bool
+	UpdatedAt     time.Time
 }
 
 type UpsertUserPreferencesParams struct {
@@ -55,6 +60,7 @@ type UpsertUserPreferencesParams struct {
 	InteractivePermissionMode string
 	AutomationPermissionMode  string
 	MaxSubAgentDepth          int
+	MemoryEnabled             bool
 }
 
 type UserPreferencesStore struct {
@@ -98,6 +104,7 @@ func (s *UserPreferencesStore) Upsert(ctx context.Context, p UpsertUserPreferenc
 		InteractivePermissionMode: normalizeStoredPermissionMode(p.InteractivePermissionMode, types.PermissionModeOnRequest),
 		AutomationPermissionMode:  normalizeStoredPermissionMode(p.AutomationPermissionMode, types.PermissionModeNever),
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
+		MemoryEnabled:             p.MemoryEnabled,
 	}
 	err := s.db.gormDB.WithContext(ctx).
 		Clauses(clause.OnConflict{
@@ -106,7 +113,7 @@ func (s *UserPreferencesStore) Upsert(ctx context.Context, p UpsertUserPreferenc
 				"preferred_name", "profession", "about",
 				"working_style", "response_style", "extra_context",
 				"interactive_permission_mode", "automation_permission_mode",
-				"max_sub_agent_depth", "updated_at_unix",
+				"max_sub_agent_depth", "memory_enabled", "updated_at_unix",
 			}),
 		}).
 		Create(&row).Error
@@ -129,6 +136,7 @@ func userPreferencesFromModel(r gUserPreferences) UserPreferences {
 		InteractivePermissionMode: normalizeStoredPermissionMode(r.InteractivePermissionMode, types.PermissionModeOnRequest),
 		AutomationPermissionMode:  normalizeStoredPermissionMode(r.AutomationPermissionMode, types.PermissionModeNever),
 		MaxSubAgentDepth:          r.MaxSubAgentDepth,
+		MemoryEnabled:             r.MemoryEnabled,
 		UpdatedAt:                 time.Unix(r.UpdatedAtUnix, 0).UTC(),
 	}
 }

@@ -64,6 +64,7 @@ type memoriesProvider interface {
 type preferencesProvider interface {
 	BuildSystemPromptBlock(ctx context.Context, principal *backendauth.Principal) (string, error)
 	ResolvePermissionModes(ctx context.Context, principal *backendauth.Principal, origin types.ExecutionOrigin) (types.PermissionMode, error)
+	MemoryEnabled(ctx context.Context, principal *backendauth.Principal) bool
 }
 
 type knowledgeProvider interface {
@@ -1621,7 +1622,8 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	}
 
 	// Long-term memory: inject relevant entities found for the current prompt.
-	if p.Principal != nil && s.memories != nil {
+	// Only for users who opted in to long-term memory.
+	if p.Principal != nil && s.memories != nil && s.preferences != nil && s.preferences.MemoryEnabled(ctx, p.Principal) {
 		ltmStart := time.Now()
 		block, err := s.memories.BuildContextBlock(ctx, p.Principal, p.Prompt)
 		memLTMMs = time.Since(ltmStart).Milliseconds()
