@@ -355,6 +355,11 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
 			},
 		},
+		{
+			ID:    "20261020_051_provider_catalog",
+			Scope: migrationScopeBackend,
+			Run:   migrateProviderCatalog,
+		},
 	}
 }
 
