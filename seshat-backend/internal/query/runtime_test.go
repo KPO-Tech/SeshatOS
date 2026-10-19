@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
@@ -168,12 +169,15 @@ func TestSDKRuntimeTryAcquireSessionTurnAllowsEmptySessionID(t *testing.T) {
 }
 
 func TestInteractiveMaxTokensForModelUsesProviderCatalog(t *testing.T) {
-	got := InteractiveMaxTokensForModel(sdk.ModelIdentifier{
-		Provider: sdk.APIProviderZAi,
-		Model:    "glm-5.1",
-	})
-	if got != 128000 {
-		t.Fatalf("expected Z.ai catalog max output 128000, got %d", got)
+	model := sdk.ModelIdentifier{Provider: sdk.APIProviderZAi, Model: "glm-5.1"}
+	// The limit comes from the runtime's catalog (models.dev), which changes with its releases: compare with what the catalog says
+	// rather than with a number written here.
+	info, ok := providers.GetModelInfo(model.Provider, model.Model)
+	if !ok || info.MaxOutput <= 0 {
+		t.Fatalf("the catalog has no output limit for %s: %+v", model.Model, info)
+	}
+	if got := InteractiveMaxTokensForModel(model); got != info.MaxOutput {
+		t.Fatalf("expected the catalog max output %d, got %d", info.MaxOutput, got)
 	}
 }
 
