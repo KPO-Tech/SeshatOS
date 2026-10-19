@@ -20,6 +20,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 )
 
 type QueryRuntime interface {
@@ -912,7 +913,8 @@ func (r *SDKRuntime) buildClientConfig(ctx context.Context, providerCfg RuntimeP
 			modelID = cfg.Model.Model
 		}
 	}
-	provider := types.APIProvider(providerCfg.Provider)
+	// A setting made before the runtime v1.11 may carry a former built-in name (workers-ai): use the name the runtime has now.
+	provider := types.APIProvider(bksettings.CanonicalProvider(providerCfg.Provider))
 	providerConfig := providers.GetProviderConfig(provider)
 	if providerConfig == nil {
 		providerConfig = &providers.Config{Provider: provider}

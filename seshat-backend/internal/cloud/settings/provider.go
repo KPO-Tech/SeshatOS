@@ -132,7 +132,9 @@ func isKnownProvider(provider string) bool {
 			return true
 		}
 	}
-	return false
+	// A generic provider of the models.dev catalog that ships reviewed with the runtime is a known one: it is not a custom endpoint the
+	// organization has to allow. A provider that only a downloaded catalog knows is not.
+	return settings.IsVerifiedCatalogProvider(provider)
 }
 
 func (p *Provider) Update(ctx context.Context, principal *backendauth.Principal, id string, params settings.UpdateSettingParams) (*settings.ProviderSetting, error) {
