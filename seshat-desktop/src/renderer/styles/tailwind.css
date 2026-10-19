@@ -25,6 +25,8 @@
   --message-gap: 36px;
   --list-item-pad-y: 6px;
   --chat-max-width: 880px;
+  /* The background of the conversation, which the session panel shares so its cards float beside the chat. */
+  --chat-bg: color-mix(in srgb, var(--surface-root) 68%, var(--surface-panel));
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 56px;
   /* Seshat identity: warm tinted dark surfaces, orange accent (ported from

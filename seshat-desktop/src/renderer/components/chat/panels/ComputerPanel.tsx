@@ -137,7 +137,8 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-app-bg">
+    // No background of its own: the frame gives the panel the background of the chat (--chat-bg).
+    <div className="flex h-full min-h-0 flex-col">
       {/* Plan: collapsed progress bar by default, click to see the checklist inline */}
       {plan.items.length > 0 && (
         <div className="shrink-0 border-b border-app-border-subtle">
@@ -197,7 +198,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
           bezel, inset frame) so it reads as "the computer" at a glance. Stats
           is home; Web and Tools are its two pages; a focused tool's live
           detail takes over the same frame from Tools. */}
-      <div className={cx('flex min-h-0 flex-1 flex-col overflow-hidden', showHeader ? 'bg-[color-mix(in_srgb,var(--surface-root)_92%,black)]' : 'bg-app-surface')}>
+      <div className={cx('flex min-h-0 flex-1 flex-col overflow-hidden', showHeader && 'bg-[color-mix(in_srgb,var(--surface-root)_92%,black)]')}>
         {showHeader && (
           <div className="flex shrink-0 items-center gap-2 border-b border-app-border-subtle bg-app-surface px-3 py-2">
             {focusedTool ? (
