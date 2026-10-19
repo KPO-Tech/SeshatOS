@@ -8,6 +8,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -239,6 +240,32 @@ function ChartBlock({ code }: { code: string }) {
   )
 }
 
+// A remote image is the one markdown construct that makes the renderer fetch a
+// third-party URL on its own, exposing the user's IP and the existence of the
+// conversation to whoever hosts it. Message text is model output, and model
+// output may be influenced by untrusted content pulled in earlier, so only
+// inline data URLs are drawn. Anything else becomes a chip the user has to
+// click, and that click routes through the app browser like any other link.
+function RemoteImageChip({ src, alt, sessionId }: { src: string; alt?: string; sessionId?: string }) {
+  const remote = isRemoteImageSrc(src)
+
+  return (
+    <span className="my-3 inline-flex max-w-full items-center gap-2 rounded-md border border-app-border-subtle bg-app-surface px-2 py-1.5 text-xs text-app-text-muted">
+      <span className="min-w-0 truncate text-app-text-secondary">{alt?.trim() || 'Image'}</span>
+      <span className="min-w-0 flex-1 truncate font-mono text-[10px]" title={src}>{src}</span>
+      {remote && (
+        <button
+          type="button"
+          className="shrink-0 cursor-pointer rounded-[5px] border-0 bg-transparent px-1 text-xs font-semibold text-[var(--accent-primary)] hover:underline"
+          onClick={() => openInAppBrowser(src, sessionId)}
+        >
+          Open
+        </button>
+      )}
+    </span>
+  )
+}
+
 type Props = {
   children: string
   className?: string
@@ -340,6 +367,15 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           },
           blockquote({ children }) {
             return <blockquote className="my-4 border-l-4 border-[var(--accent-primary)] pl-3 text-[var(--text-secondary)]">{children}</blockquote>
+          },
+          // See RemoteImageChip: no <img> reaches the DOM except a data URL.
+          img({ src, alt }: any) {
+            const url = typeof src === 'string' ? src : ''
+            if (isRenderableImageSrc(url)) {
+              return <img src={url} alt={alt ?? ''} className="my-3 max-w-full rounded-md border border-app-border-subtle" />
+            }
+            if (!url) return <span className="text-app-text-muted">{alt ?? ''}</span>
+            return <RemoteImageChip src={url} alt={alt} sessionId={sessionId} />
           },
           // Plain markdown links otherwise render as a bare <a href> with no
           // target/onClick - in Electron that's a same-frame top-level
