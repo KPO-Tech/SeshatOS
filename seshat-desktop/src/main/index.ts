@@ -14,6 +14,13 @@ import { stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
 import { isExternalOpenAllowed } from './url-safety'
+import {
+  LOAD_WATCHDOG_MS,
+  SHOW_FALLBACK_MS,
+  buildLoadFailureUrl,
+  createLoadRetry,
+  isRetryNavigation
+} from './renderer-load-retry'
 import { applyContentSecurityPolicy } from './content-security-policy'
 import { createBrowserPanel } from './browser-panel'
 import { createBrowserBridgeServer } from './browser-bridge'
@@ -67,7 +74,15 @@ function createWindow() {
   mainWindow = win
 
   win.removeMenu()
-  win.on('ready-to-show', () => win.show())
+  // The window is shown once the renderer has painted. If the first load fails the paint never comes, so a timer shows the window
+  // anyway and the load is retried (see renderer-load-retry.ts).
+  const showFallback = setTimeout(() => {
+    if (!win.isDestroyed() && !win.isVisible()) win.show()
+  }, SHOW_FALLBACK_MS)
+  win.on('ready-to-show', () => {
+    clearTimeout(showFallback)
+    win.show()
+  })
   win.on('closed', () => {
     if (mainWindow === win) mainWindow = null
   })
@@ -95,11 +110,52 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL)
-  } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
+  let lastFailure = 'The app did not finish loading.'
+  let watchdog: ReturnType<typeof setTimeout> | null = null
+  const loadRenderer = () => {
+    if (watchdog) clearTimeout(watchdog)
+    watchdog = setTimeout(() => {
+      lastFailure = 'The app took too long to load.'
+      loadRetry.failed()
+    }, LOAD_WATCHDOG_MS)
+    const loading = process.env.ELECTRON_RENDERER_URL
+      ? win.loadURL(process.env.ELECTRON_RENDERER_URL)
+      : win.loadFile(join(__dirname, '../renderer/index.html'))
+    // A failed load is handled by did-fail-load below.
+    loading.catch(() => {})
   }
+  const loadRetry = createLoadRetry({
+    load: loadRenderer,
+    onGiveUp: () => {
+      if (win.isDestroyed()) return
+      if (watchdog) clearTimeout(watchdog)
+      void win.loadURL(buildLoadFailureUrl(lastFailure))
+      if (!win.isVisible()) win.show()
+    }
+  })
+
+  win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, _url, isMainFrame) => {
+    // -3 is a load that was replaced by another navigation, not a failure.
+    if (!isMainFrame || errorCode === -3) return
+    lastFailure = `${errorDescription} (${errorCode})`
+    loadRetry.failed()
+  })
+  win.webContents.on('did-finish-load', () => {
+    if (watchdog) clearTimeout(watchdog)
+    watchdog = null
+  })
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!isRetryNavigation(url)) return
+    event.preventDefault()
+    loadRetry.reset()
+    loadRenderer()
+  })
+  win.on('closed', () => {
+    if (watchdog) clearTimeout(watchdog)
+    loadRetry.cancel()
+  })
+
+  loadRenderer()
 }
 
 configureRuntimePaths()
