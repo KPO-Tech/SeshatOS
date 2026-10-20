@@ -1,19 +1,23 @@
-import type { ProviderCatalogEntry, ProviderForm, ProviderModel, ProviderRowModel, ProviderSetting } from './providerTypes'
+import type { ProviderChoice, ProviderForm, ProviderModel, ProviderRowModel, ProviderSetting } from './providerTypes'
 
-export function buildProviderRows(catalog: ProviderCatalogEntry[], settings: ProviderSetting[]): ProviderRowModel[] {
+// Main providers always get a row (so they can be set up from it); the catalog's others only once configured.
+export function buildProviderRows(choices: ProviderChoice[], settings: ProviderSetting[]): ProviderRowModel[] {
   const configuredByProvider = new Map(settings.map((setting) => [setting.provider, setting]))
   const seen = new Set<string>()
-  const rows = catalog.map((entry) => {
-    seen.add(entry.name)
-    return {
-      id: entry.name,
-      provider: entry.name,
-      name: entry.display_name,
-      description: entry.description || '',
-      authTypeLabel: authTypeLabel(entry.auth_type),
-      setting: configuredByProvider.get(entry.name) ?? null
-    }
-  })
+  const rows: ProviderRowModel[] = []
+  for (const choice of choices) {
+    const setting = configuredByProvider.get(choice.id) ?? null
+    if (!choice.main && !setting) continue
+    seen.add(choice.id)
+    rows.push({
+      id: choice.id,
+      provider: choice.id,
+      name: choice.name,
+      description: choice.description || '',
+      authTypeLabel: authTypeLabel(choice.auth_type),
+      setting
+    })
+  }
 
   for (const setting of settings) {
     if (seen.has(setting.provider)) continue
@@ -30,16 +34,38 @@ export function buildProviderRows(catalog: ProviderCatalogEntry[], settings: Pro
   return rows
 }
 
-export function initialProviderForm(entry?: ProviderCatalogEntry): ProviderForm {
-  const provider = entry?.name ?? ''
+export function initialProviderForm(entry?: ProviderChoice): ProviderForm {
+  const provider = entry?.id ?? ''
   const authKind = provider === 'codex' ? 'oauth' : provider === 'ollama' || entry?.auth_type === 'none' ? 'none' : 'api_key'
   return {
     provider,
-    name: entry?.display_name ?? '',
+    name: entry?.name ?? '',
     auth_kind: authKind,
     api_key: '',
-    base_url: provider === 'ollama' ? 'http://localhost:11434' : ''
+    // An unverified address is shown so the user confirms it before a key is sent to it.
+    base_url: provider === 'ollama' ? 'http://localhost:11434' : entry?.unverified ? entry.base_url ?? '' : ''
   }
+}
+
+export type ProviderMenuItem =
+  | { kind: 'choice'; choice: ProviderChoice }
+  | { kind: 'more'; count: number; expanded: boolean }
+
+/**
+ * What the provider menu lists: the main providers, then a "More providers" entry that opens the catalog's others. A search matches
+ * the name or id in both lists and opens the second one by itself.
+ */
+export function providerMenuItems(choices: ProviderChoice[], query: string, moreExpanded: boolean): ProviderMenuItem[] {
+  const needle = query.trim().toLowerCase()
+  const matches = (choice: ProviderChoice) => !needle || choice.name.toLowerCase().includes(needle) || choice.id.toLowerCase().includes(needle)
+  const main = choices.filter((choice) => choice.main && matches(choice))
+  const more = choices.filter((choice) => !choice.main && matches(choice))
+  const items: ProviderMenuItem[] = main.map((choice) => ({ kind: 'choice', choice }))
+  if (more.length === 0) return items
+  const expanded = moreExpanded || needle !== ''
+  items.push({ kind: 'more', count: more.length, expanded })
+  if (expanded) items.push(...more.map((choice): ProviderMenuItem => ({ kind: 'choice', choice })))
+  return items
 }
 
 export function upsertProviderSetting(settings: ProviderSetting[], next: ProviderSetting) {

@@ -45,6 +45,20 @@ export type ProviderCatalogEntry = {
   }>
 }
 
+// One provider a user can set up, from GET /settings/providers/catalog. Main providers are built into the runtime; the others come
+// from the models.dev catalog and, for the most part, have not been tried with a real key.
+export type ProviderChoice = {
+  id: string
+  name: string
+  description?: string
+  auth_type: string
+  key_env_vars?: string[]
+  base_url?: string
+  model_count: number
+  unverified?: boolean
+  main: boolean
+}
+
 export type ProviderForm = {
   provider: string
   name: string
