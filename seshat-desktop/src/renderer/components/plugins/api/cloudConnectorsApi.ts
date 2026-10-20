@@ -3,7 +3,7 @@ import { api } from '@renderer/api/client'
 // The subset of seshat-server's connector account (relayed by seshat-backend)
 // the plugin panels need. No organization id is ever sent from here: the local
 // backend injects it from the session.
-export type CloudConnectorAccount = {
+type CloudConnectorAccount = {
   id: string
   kind: string
   display_name: string

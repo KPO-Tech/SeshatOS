@@ -44,11 +44,10 @@ describe('selectRecentSessions', () => {
     session({ id: 'old', updatedAt: '2026-01-02T00:00:00Z' }),
     session({ id: 'new', updatedAt: '2026-03-01T00:00:00Z' }),
     session({ id: 'kb', source: 'knowledge' }),
-    session({ id: 'inbox', source: 'inbox' }),
     session({ id: 'proj', projectPath: 'C:\\work\\app', updatedAt: '2026-02-01T00:00:00Z' })
   ]
 
-  it('outside a project keeps only non-project chats, newest first, without knowledge or inbox', () => {
+  it('outside a project keeps only non-project chats, newest first, without knowledge ones', () => {
     expect(selectRecentSessions(sessions, null).map((s) => s.id)).toEqual(['new', 'old'])
   })
 

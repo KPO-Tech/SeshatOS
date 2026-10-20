@@ -1,7 +1,7 @@
 import { BRAND_ICONS } from './brandIcons'
 
 // Relative luminance of a "RRGGBB" hex, 0 (black) to 1 (white).
-export function hexLuminance(hex: string): number {
+function hexLuminance(hex: string): number {
   const channel = (offset: number) => {
     const value = parseInt(hex.slice(offset, offset + 2), 16) / 255
     return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4

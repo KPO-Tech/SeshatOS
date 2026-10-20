@@ -17,7 +17,6 @@ import {
   siStripe,
   siTelegram,
   siTrello,
-  siWhatsapp,
   siZendesk,
   type SimpleIcon
 } from 'simple-icons'
@@ -45,6 +44,5 @@ export const BRAND_ICONS: Record<string, SimpleIcon> = {
   stripe: siStripe,
   telegram: siTelegram,
   trello: siTrello,
-  whatsapp: siWhatsapp,
   zendesk: siZendesk
 }

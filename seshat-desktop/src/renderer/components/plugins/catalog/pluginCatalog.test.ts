@@ -13,26 +13,27 @@ describe('PLUGIN_CATALOG', () => {
     expect(PLUGIN_CATALOG.find((plugin) => plugin.id === 'gdrive')?.title).toBe(CONNECTOR_KIND_LABELS.gdrive)
   })
 
-  it('gives Gmail both a local inbox channel and an organization account', () => {
-    const gmail = PLUGIN_CATALOG.find((plugin) => plugin.id === 'gmail')!
-    expect(gmail.sources.map((source) => source.type)).toEqual(['inbox-oauth', 'cloud-oauth'])
+  it('gives Google Drive a local knowledge source and an organization account', () => {
+    const drive = PLUGIN_CATALOG.find((plugin) => plugin.id === 'gdrive')!
+    expect(drive.sources.map((source) => source.type)).toEqual(['knowledge', 'cloud-oauth'])
   })
 })
 
 describe('availableSources', () => {
-  const gmail = PLUGIN_CATALOG.find((plugin) => plugin.id === 'gmail')!
+  const drive = PLUGIN_CATALOG.find((plugin) => plugin.id === 'gdrive')!
 
   it('keeps organization connectors out of a local account', () => {
-    expect(availableSources(gmail, false).map((source) => source.type)).toEqual(['inbox-oauth'])
-    expect(availableSources(gmail, true)).toHaveLength(2)
+    expect(availableSources(drive, false).map((source) => source.type)).toEqual(['knowledge'])
+    expect(availableSources(drive, true)).toHaveLength(2)
   })
 })
 
 describe('pluginsFor', () => {
   it('hides plugins that only exist as organization connectors on a local account', () => {
     const local = pluginsFor(false).map((plugin) => plugin.id)
-    expect(local).toContain('whatsapp')
-    expect(local).toContain('gmail')
+    expect(local).toContain('gdrive')
+    expect(local).not.toContain('gmail')
+    expect(local).not.toContain('whatsapp')
     expect(local).not.toContain('stripe')
     expect(pluginsFor(true).map((plugin) => plugin.id)).toContain('stripe')
   })
