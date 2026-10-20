@@ -44,7 +44,7 @@ const allSections: SectionDef[] = [
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
-  { id: 'multimodal', label: 'Multimodal', icon: 'media', group: 'Knowledge', description: 'Image generation, voice input, Whisper models, and local media capabilities.' },
+  { id: 'multimodal', label: 'Multimodal', icon: 'media', group: 'Capabilities', description: 'Image generation, voice input, Whisper models, and local media capabilities.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
   { id: 'connectors', label: 'Connectors', icon: 'connectors', group: 'Workspace Runtime', description: 'External accounts and application connectors.' },
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },

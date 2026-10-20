@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   createProviderSetting,
   deleteProviderSetting,
-  fetchProviderCatalog,
+  fetchProviderChoices,
   fetchProviderModels,
   fetchProviderSettings,
   fetchSystemStatus,
@@ -12,11 +12,11 @@ import {
 import { ProviderEmptyState } from './ProviderEmptyState'
 import { ProviderRow } from './ProviderRow'
 import { ProviderSelect } from './ProviderSelect'
-import type { ProviderCatalogEntry, ProviderForm, ProviderModel, ProviderSetting } from './providerTypes'
+import type { ProviderChoice, ProviderForm, ProviderModel, ProviderSetting } from './providerTypes'
 import { buildProviderRows, initialProviderForm, isCodexProvider, upsertProviderSetting } from './providerUtils'
 
 export function ProvidersConfig() {
-  const [catalog, setCatalog] = useState<ProviderCatalogEntry[]>([])
+  const [catalog, setCatalog] = useState<ProviderChoice[]>([])
   const [settings, setSettings] = useState<ProviderSetting[]>([])
   const [systemMode, setSystemMode] = useState<'standalone' | 'connected' | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -33,16 +33,16 @@ export function ProvidersConfig() {
     setError(null)
     try {
       const [nextCatalog, nextSettings, status] = await Promise.all([
-        fetchProviderCatalog(),
+        fetchProviderChoices(),
         fetchProviderSettings(),
         fetchSystemStatus().catch(() => null)
       ])
       const localMode = status?.mode !== 'connected'
-      const visibleCatalog = localMode ? nextCatalog : nextCatalog.filter((entry) => !isCodexProvider(entry.name))
+      const visibleCatalog = localMode ? nextCatalog : nextCatalog.filter((entry) => !isCodexProvider(entry.id))
       setCatalog(nextCatalog)
       setSettings(localMode ? nextSettings : nextSettings.filter((setting) => !isCodexProvider(setting.provider)))
       setSystemMode(status?.mode ?? 'standalone')
-      setForm((current) => current.provider && visibleCatalog.some((entry) => entry.name === current.provider) ? current : initialProviderForm(visibleCatalog[0]))
+      setForm((current) => current.provider && visibleCatalog.some((entry) => entry.id === current.provider) ? current : initialProviderForm(visibleCatalog[0]))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load providers.')
     } finally {
@@ -55,15 +55,16 @@ export function ProvidersConfig() {
   }, [])
 
   const visibleCatalog = useMemo(() => (
-    systemMode === 'connected' ? catalog.filter((entry) => !isCodexProvider(entry.name)) : catalog
+    systemMode === 'connected' ? catalog.filter((entry) => !isCodexProvider(entry.id)) : catalog
   ), [catalog, systemMode])
   const rows = useMemo(() => buildProviderRows(visibleCatalog, settings), [visibleCatalog, settings])
-  const selectedCatalog = catalog.find((entry) => entry.name === form.provider)
+  const selectedCatalog = catalog.find((entry) => entry.id === form.provider)
   const isCodex = isCodexProvider(form.provider)
-  const canSave = form.provider && (form.auth_kind !== 'api_key' || form.api_key.trim().length > 0 || form.provider === 'ollama' || isCodex)
+  const needsBaseUrl = Boolean(selectedCatalog?.unverified)
+  const canSave = form.provider && (form.auth_kind !== 'api_key' || form.api_key.trim().length > 0 || form.provider === 'ollama' || isCodex) && (!needsBaseUrl || form.base_url.trim().length > 0)
 
   function handleProviderChange(provider: string) {
-    const entry = catalog.find((item) => item.name === provider)
+    const entry = catalog.find((item) => item.id === provider)
     setForm(initialProviderForm(entry))
     setProviderMenuOpen(false)
   }
@@ -75,10 +76,10 @@ export function ProvidersConfig() {
     try {
       const created = await createProviderSetting({
         provider: form.provider,
-        name: form.name || selectedCatalog?.display_name || form.provider,
+        name: form.name || selectedCatalog?.name || form.provider,
         auth_kind: form.provider === 'ollama' ? 'none' : isCodex ? 'oauth' : form.auth_kind,
         api_key: form.auth_kind === 'api_key' && !isCodex ? form.api_key : undefined,
-        base_url: !isCodex && form.base_url ? form.base_url : undefined
+        base_url: !isCodex && form.base_url && (needsBaseUrl || form.base_url !== selectedCatalog?.base_url) ? form.base_url : undefined
       })
       setSettings((current) => upsertProviderSetting(current, created))
       setExpandedId(isCodex ? created.id : expandedId)
@@ -168,7 +169,7 @@ export function ProvidersConfig() {
 
         <div className="mt-4 grid grid-cols-[1fr_1fr] gap-3">
           <ProviderSelect
-            catalog={visibleCatalog}
+            choices={visibleCatalog}
             value={form.provider}
             open={providerMenuOpen}
             onOpenChange={setProviderMenuOpen}
@@ -186,8 +187,8 @@ export function ProvidersConfig() {
           )}
           {!isCodex && (
             <label className="grid gap-1.5">
-              <span className="text-[12px] font-semibold text-[var(--text-muted)]">Base URL</span>
-              <input value={form.base_url} onChange={(event) => setForm((current) => ({ ...current, base_url: event.target.value }))} placeholder={form.provider === 'ollama' ? 'http://localhost:11434' : 'Provider default'} className="h-9 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[13px] text-[var(--text-primary)] outline-none" />
+              <span className="text-[12px] font-semibold text-[var(--text-muted)]">{needsBaseUrl ? 'Base URL (check it, your key is sent there)' : 'Base URL'}</span>
+              <input value={form.base_url} onChange={(event) => setForm((current) => ({ ...current, base_url: event.target.value }))} placeholder={form.provider === 'ollama' ? 'http://localhost:11434' : selectedCatalog?.base_url || 'Provider default'} className="h-9 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[13px] text-[var(--text-primary)] outline-none" />
             </label>
           )}
         </div>
@@ -196,7 +197,7 @@ export function ProvidersConfig() {
           <p className="text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
             {isCodex
               ? 'Codex uses a browser sign-in with your ChatGPT account. It is only available for local desktop accounts.'
-              : selectedCatalog?.description || 'Provider catalog is loaded from the local backend.'}
+              : providerHint(selectedCatalog)}
           </p>
           <button type="button" onClick={() => void handleAdd()} disabled={!canSave || saving} className="h-9 rounded-md bg-[var(--text-primary)] px-4 text-[13px] font-semibold text-[var(--surface-root)] disabled:cursor-not-allowed disabled:opacity-45">
             {saving ? 'Adding...' : isCodex ? 'Add OAuth provider' : 'Add'}
@@ -235,4 +236,11 @@ export function ProvidersConfig() {
       </section>
     </div>
   )
+}
+
+function providerHint(entry?: ProviderChoice) {
+  if (!entry) return 'Pick a provider to set up.'
+  if (entry.main) return entry.description || 'Built into the Seshat runtime.'
+  const untested = `Generic provider from the public models.dev catalog (${entry.model_count} models), not tested with a real key by Seshat.`
+  return entry.unverified ? `${untested} Its address comes from a downloaded catalog and was not reviewed.` : untested
 }

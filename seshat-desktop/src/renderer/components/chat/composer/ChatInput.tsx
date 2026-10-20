@@ -428,6 +428,7 @@ export function ChatInput({
               <SelectorMenu
                 placement={modelMenuPlacement}
                 className="min-w-[330px]"
+                searchable
                 options={modelOptions}
                 selectedId={selectedModelId}
                 onSelect={(id) => {
