@@ -92,7 +92,7 @@ export type AgentState = {
   liveContext: LiveContext | null
 }
 
-export type LiveContext = {
+type LiveContext = {
   used: number
   window: number
   autoCompactAt: number

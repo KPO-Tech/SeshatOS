@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type TerminalLine = {
+type TerminalLine = {
   id: string
   stream: 'stdout' | 'stderr' | 'system'
   text: string
@@ -50,11 +50,11 @@ export const useTerminalStore = create<TerminalState>()((set, get) => ({
   sessions: {},
   attachSession: async (sessionId) => {
     const id = sessionId.trim()
-    if (!id || attachedSessions.has(id) || !window.nexus?.terminalRelay) return
+    if (!id || attachedSessions.has(id) || !window.seshat?.terminalRelay) return
     attachedSessions.add(id)
     try {
-      window.nexus.terminalRelay.onEvent(id, (event) => get().ingestEvent(event))
-      const status = await window.nexus.terminalRelay.connect(id)
+      window.seshat.terminalRelay.onEvent(id, (event) => get().ingestEvent(event))
+      const status = await window.seshat.terminalRelay.connect(id)
       set((state) => ({
         sessions: {
           ...state.sessions,

@@ -25,7 +25,7 @@ type Connection struct {
 	ConnectedAt       time.Time
 }
 
-// Status is the redacted view returned to seshat-ui — never includes DeviceToken.
+// Status is the redacted view returned to the desktop app — never includes DeviceToken.
 type Status struct {
 	Connected         bool       `json:"connected"`
 	ServerURL         string     `json:"server_url,omitempty"`

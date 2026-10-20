@@ -16,7 +16,7 @@ export function AboutSettings() {
 
   useEffect(() => {
     let cancelled = false
-    void window.nexus?.getVersion().then((value) => { if (!cancelled) setVersion(value) }).catch(() => undefined)
+    void window.seshat?.getVersion().then((value) => { if (!cancelled) setVersion(value) }).catch(() => undefined)
     api.get<SystemStatus>('/system/status')
       .then((result) => {
         if (cancelled) return

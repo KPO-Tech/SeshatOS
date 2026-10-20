@@ -133,7 +133,7 @@ export type AdminWebSearchOrgPolicy = {
   blocked_domains: string[]
 }
 
-export type AuditEntry = {
+type AuditEntry = {
   id: string
   actor_user_id: string
   action: string

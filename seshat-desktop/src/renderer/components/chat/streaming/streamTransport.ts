@@ -18,11 +18,11 @@ export async function consumeElectronStream(
   onChunk: (payload: StreamEvent) => void,
   onSessionTitled: (payload: SessionTitledPayload) => void,
 ) {
-  if (!window.nexus?.http) {
+  if (!window.seshat?.http) {
     throw new Error('Electron HTTP bridge is unavailable')
   }
 
-  const startResult = await window.nexus.http.startStream({
+  const startResult = await window.seshat.http.startStream({
     path: '/query/stream',
     method: 'POST',
     body,
@@ -37,7 +37,7 @@ export async function consumeElectronStream(
 
   await new Promise<void>((resolve, reject) => {
     let settled = false
-    const unsubscribe = window.nexus.http!.onStreamEvent(streamId, ({ name, data }) => {
+    const unsubscribe = window.seshat.http!.onStreamEvent(streamId, ({ name, data }) => {
       if (settled) return
       if (name === 'error') {
         settled = true
@@ -70,7 +70,7 @@ export async function consumeElectronStream(
       settled = true
       unsubscribe()
       cleanupAbort()
-      void window.nexus?.http?.cancelStream(streamId).catch(() => {
+      void window.seshat?.http?.cancelStream(streamId).catch(() => {
         // noop
       })
       reject(new DOMException('Aborted', 'AbortError'))

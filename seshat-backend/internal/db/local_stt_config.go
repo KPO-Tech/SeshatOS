@@ -24,7 +24,7 @@ func (gLocalSTTConfig) TableName() string { return "local_stt_config" }
 
 // LocalSTTConfig is the persisted pointer to a locally running whisper.cpp
 // server, set by the Electron main process once it has downloaded the
-// binary/model and spawned whisper-server (see seshat-ui's whisper manager).
+// binary/model and spawned whisper-server (see the desktop app's whisper manager).
 // Empty BaseURL or Enabled=false means "no local server available" - the
 // caller falls back to a configured cloud provider.
 type LocalSTTConfig struct {

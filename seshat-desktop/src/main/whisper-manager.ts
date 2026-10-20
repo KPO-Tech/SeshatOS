@@ -46,7 +46,7 @@ function modelInfo(id: WhisperModelId): WhisperModelInfo {
   return MODEL_CATALOG.find((m) => m.id === id) ?? MODEL_CATALOG.find((m) => m.id === DEFAULT_ACTIVE_MODEL_ID)!
 }
 
-export type WhisperPhase = 'binary' | 'model'
+type WhisperPhase = 'binary' | 'model'
 
 export type WhisperProgress = {
   phase: WhisperPhase

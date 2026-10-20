@@ -39,7 +39,7 @@ func (c Capability) Valid() bool {
 //     that doesn't already end in it, so pointing the openai client at
 //     Z.ai's real host (https://api.z.ai/api/paas/v4, no /v1 segment
 //     anywhere in its API - confirmed via docs.z.ai and
-//     seshat-ui/.../ProvidersView.tsx's own default URL for z-ai) produces
+//     the desktop app/.../ProvidersView.tsx's own default URL for z-ai) produces
 //     .../v4/v1/images/generations instead of the real
 //     .../v4/images/generations - a 404, not a working integration. No
 //     BaseURL value satisfies both "survives ensureOpenAIBaseURL unchanged"

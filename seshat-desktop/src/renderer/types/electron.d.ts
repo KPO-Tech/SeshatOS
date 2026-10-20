@@ -1,5 +1,5 @@
 interface Window {
-  nexus: {
+  seshat: {
     getVersion: () => Promise<string>
     openPath: (p: string) => Promise<void>
     openLocalPath: (p: string) => Promise<void>

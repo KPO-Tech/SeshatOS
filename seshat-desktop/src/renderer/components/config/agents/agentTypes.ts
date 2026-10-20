@@ -1,4 +1,4 @@
-export type AgentSource = 'built-in' | 'user' | 'workflow' | 'organization' | string
+type AgentSource = 'built-in' | 'user' | 'workflow' | 'organization' | string
 
 export type AgentConfigEntry = {
   id?: string

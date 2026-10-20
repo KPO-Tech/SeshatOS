@@ -54,13 +54,13 @@ export function Titlebar({ left, afterNav, center = 'SeshatOS', right, onHome, o
 
       <div className="flex items-center gap-1" style={noDragStyle}>
         {right && <div className="flex items-center">{right}</div>}
-        <button className={systemButtonClass} onClick={() => void window.nexus?.window.minimize()} aria-label="Minimize" type="button">
+        <button className={systemButtonClass} onClick={() => void window.seshat?.window.minimize()} aria-label="Minimize" type="button">
           <WindowMinimizeIcon />
         </button>
-        <button className={systemButtonClass} onClick={() => void window.nexus?.window.maximize()} aria-label="Maximize or restore" type="button">
+        <button className={systemButtonClass} onClick={() => void window.seshat?.window.maximize()} aria-label="Maximize or restore" type="button">
           <WindowMaximizeIcon />
         </button>
-        <button className={`${systemButtonClass} hover:bg-[var(--accent-danger)] hover:text-white`} onClick={() => void window.nexus?.window.close()} aria-label="Close" type="button">
+        <button className={`${systemButtonClass} hover:bg-[var(--accent-danger)] hover:text-white`} onClick={() => void window.seshat?.window.close()} aria-label="Close" type="button">
           <WindowCloseIcon />
         </button>
       </div>

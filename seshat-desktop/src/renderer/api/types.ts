@@ -1,13 +1,13 @@
-// Types mirroring nexus-engine API surface
+// Types mirroring the SeshatOS backend API surface
 
-export type Role = 'user' | 'assistant' | 'system'
+type Role = 'user' | 'assistant' | 'system'
 
-export type TextBlock = {
+type TextBlock = {
   type: 'text'
   text: string
 }
 
-export type ThinkingBlock = {
+type ThinkingBlock = {
   type: 'thinking'
   thinking: string
 }
@@ -19,7 +19,7 @@ export type ToolApproval = {
   description?: string
 }
 
-export type PromptOption = {
+type PromptOption = {
   label: string
   value: unknown
   description?: string
@@ -139,14 +139,6 @@ export type ProviderModel = {
 }
 
 // ProviderSetting matches the backend settingResponse struct
-export type OAuthChallenge = {
-  status: string
-  user_code: string
-  verification_url: string
-  poll_interval_seconds: number
-  expires_at: number
-}
-
 export type ProviderSetting = {
   id: string
   user_id: string

@@ -58,8 +58,8 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
     let cancelled = false
     void (async () => {
       try {
-        const url = file.local_path && window.nexus?.readFileDataURL
-          ? await window.nexus.readFileDataURL(file.local_path)
+        const url = file.local_path && window.seshat?.readFileDataURL
+          ? await window.seshat.readFileDataURL(file.local_path)
           : await api.getFileDataURL(`/files/${file.id}/content`)
         if (!cancelled) setHydratedURL(url)
       } catch {
@@ -81,8 +81,8 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
     let cancelled = false
     void (async () => {
       try {
-        const dataUrl = file.local_path && window.nexus?.readFileDataURL
-          ? await window.nexus.readFileDataURL(file.local_path)
+        const dataUrl = file.local_path && window.seshat?.readFileDataURL
+          ? await window.seshat.readFileDataURL(file.local_path)
           : await api.getFileDataURL(`/files/${file.id}/content`)
         const blob = await fetch(dataUrl).then((res) => res.blob())
         const [firstPage] = await renderPDFPagePreviews(blob, 1)
@@ -111,10 +111,10 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
       if (text) {
         openRightPanel({ kind: 'markdown', title: file.filename, markdown: text.markdown, documentFileId: file.id, plainText: text.plainText })
       } else if (file.local_path) {
-        void window.nexus?.openPath?.(file.local_path)
+        void window.seshat?.openPath?.(file.local_path)
       }
     } else if (action.kind === 'external' && file.local_path) {
-      void window.nexus?.openPath?.(file.local_path)
+      void window.seshat?.openPath?.(file.local_path)
     }
   }
 

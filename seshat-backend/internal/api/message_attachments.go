@@ -10,7 +10,7 @@ import (
 )
 
 // attachmentPayload mirrors the frontend's MessageAttachment shape
-// (seshat-ui/src/renderer/stores/session.ts) - this is the JSON shape the UI
+// (seshat-desktop/src/renderer/stores/session.ts) - this is the JSON shape the UI
 // reads back out of message.metadata.attachments.
 type attachmentPayload struct {
 	ID          string `json:"id"`

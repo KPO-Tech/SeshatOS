@@ -87,7 +87,7 @@ export function FilesPanel({
   function loadDirectory(path: string) {
     if (dirCache[path]) return
     setDirCache((prev) => ({ ...prev, [path]: 'loading' }))
-    window.nexus?.fs?.listDirectory(path)
+    window.seshat?.fs?.listDirectory(path)
       .then((entries) => setDirCache((prev) => ({ ...prev, [path]: entries })))
       .catch(() => setDirCache((prev) => ({ ...prev, [path]: 'error' })))
   }
@@ -125,7 +125,7 @@ export function FilesPanel({
     setActiveTabId(id)
     if (!fileContent[path]) {
       setFileContent((prev) => ({ ...prev, [path]: 'loading' }))
-      window.nexus?.fs?.readTextFile(path)
+      window.seshat?.fs?.readTextFile(path)
         .then((text) => setFileContent((prev) => ({ ...prev, [path]: text })))
         .catch(() => setFileContent((prev) => ({ ...prev, [path]: 'error' })))
     }

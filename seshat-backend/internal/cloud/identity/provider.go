@@ -49,7 +49,7 @@ func (p *Provider) Login(ctx context.Context, email, password string) (*auth.Log
 		return nil, cloudhttp.Translate(err)
 	}
 	// Login's response has no explicit session expiry; fetch it once via Me
-	// so ExpiresAt (used by seshat-ui) is accurate rather than guessed.
+	// so ExpiresAt (used by the desktop app) is accurate rather than guessed.
 	me, err := p.client.Me(ctx, result.Token)
 	if err != nil {
 		return nil, cloudhttp.Translate(err)
@@ -79,7 +79,7 @@ func (p *Provider) Logout(ctx context.Context, principal *auth.Principal) error 
 
 // Register is always disabled in connected mode: seshat-server has no
 // self-serve signup, only Bootstrap (first server user, once) and admin-created
-// users (see helps/seshat-architecture-target.md §2c). Callers (seshat-ui's
+// users (see helps/seshat-architecture-target.md §2c). Callers (the desktop app's
 // Register screen) treat any 403 here as "ask your organization administrator".
 func (p *Provider) Register(ctx context.Context, email, password, displayName string) (*auth.LoginResult, error) {
 	return nil, bkerr.Forbidden("self-registration is disabled for this organization; ask your administrator for an account", nil)

@@ -4,7 +4,7 @@ import { AddOne, Close, Globe, Left, LoadingOne, Refresh, Right } from '@icon-pa
 // contextId scopes tabs/history to a single browsing session: the shared chat
 // panel, or each project/session-specific Browser tab.
 export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contextId?: string }) {
-  const browserApi = window.nexus?.browser
+  const browserApi = window.seshat?.browser
   const initialUrl = url || 'https://www.google.com/'
   const viewportRef = useRef<HTMLDivElement>(null)
   const [address, setAddress] = useState(initialUrl)

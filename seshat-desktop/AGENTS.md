@@ -1,6 +1,6 @@
 # Agent Instructions - seshat-desktop
 
-`seshat-desktop` is the clean SeshatOS desktop client. Treat it as the place where we rebuild the product carefully, without carrying over the structural debt from `seshat-ui`.
+`seshat-desktop` is the clean SeshatOS desktop client. Treat it as the place where we rebuild the product carefully, without carrying over the structural debt of the earlier desktop client.
 
 ## Product Boundary
 
@@ -8,7 +8,7 @@
 - Backend/runtime: Go services called through REST, SSE, and IPC-safe bridges.
 - Renderer code must not access the database directly.
 - Renderer code must not duplicate backend policy or security rules.
-- Do not copy broad chunks from `seshat-ui`. Reuse ideas, then rewrite the touched surface in the desktop architecture.
+- Do not copy broad chunks from the earlier desktop client. Reuse ideas, then rewrite the touched surface in the desktop architecture.
 
 ## Current Priority
 
@@ -66,4 +66,4 @@ Before editing, check the MVP strategy (`docs/mvp/` in the `seshat-ai` repositor
 - Do not leave TODO comments unless the user explicitly asks for a tracked TODO.
 - Do not introduce helper files with vague names like `utils.ts` if a more specific name is obvious.
 - Do not silently change product concepts that were already agreed on.
-- Do not use `seshat-ui` as a dumping ground for patterns. Treat it as reference material only.
+- Do not carry over patterns from the earlier desktop client without checking they still fit.

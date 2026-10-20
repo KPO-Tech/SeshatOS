@@ -12,7 +12,7 @@ export function ConfinementCard({ docker }: { docker: boolean }) {
   const [status, setStatus] = useState<SrtStatus | null>(null)
 
   const refresh = useCallback(async () => {
-    setStatus(await (window.nexus?.sandbox?.srtStatus() ?? Promise.resolve(null)).catch(() => null))
+    setStatus(await (window.seshat?.sandbox?.srtStatus() ?? Promise.resolve(null)).catch(() => null))
   }, [])
 
   useEffect(() => { void refresh() }, [refresh])

@@ -9,12 +9,12 @@
 
 export type ColorScheme = 'light' | 'dark'
 
-export type ThemeCategory = 'seshat' | 'dark' | 'light' | 'gradient' | 'custom'
+type ThemeCategory = 'seshat' | 'dark' | 'light' | 'gradient' | 'custom'
 
 /** A gradient behind the whole window: an angle and two to four colours. Built into CSS here, never taken as CSS from outside. */
-export type GradientWallpaper = { kind: 'gradient'; angle: number; stops: string[] }
+type GradientWallpaper = { kind: 'gradient'; angle: number; stops: string[] }
 /** A picture behind the whole window, as a data URL, dimmed by `dim` (0 to 0.8) so the interface stays readable. */
-export type ImageWallpaper = { kind: 'image'; dataUrl: string; dim: number }
+type ImageWallpaper = { kind: 'image'; dataUrl: string; dim: number }
 export type Wallpaper = GradientWallpaper | ImageWallpaper
 
 export type ThemeSeed = {

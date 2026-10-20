@@ -55,7 +55,7 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
   async function handleExport(session: ChatSession) {
     setMenuSessionId(null)
     const markdown = serializeConversationMarkdown(session)
-    await window.nexus?.saveFile?.(conversationFileName(session), markdown).catch(() => {})
+    await window.seshat?.saveFile?.(conversationFileName(session), markdown).catch(() => {})
   }
 
   async function handleShare(session: ChatSession) {

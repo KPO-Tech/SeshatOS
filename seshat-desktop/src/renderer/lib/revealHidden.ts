@@ -5,9 +5,11 @@
 // commands (internal/textsafe in seshat-runtime); this is the same rule for what the approval card shows, so a
 // request that gets through another way is still readable as what it is.
 
+// Control characters are the point of this pattern, and the invisible fillers are written as escapes so they stay readable.
 const HIDDEN =
-  // controls other than newline and tab, DEL, C1
-  /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]|\p{Cf}|[͏ᅟᅠ឴឵᠋-᠏ㅤ︀-️ﾠ￰-￸]|\p{Variation_Selector}/gu
+  // controls other than newline and tab, DEL, C1; format characters; invisible fillers; variation selectors
+  // eslint-disable-next-line no-control-regex, no-misleading-character-class
+  /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]|\p{Cf}|[\u034f\u115f\u1160\u17b4\u17b5\u180b-\u180f\u3164\ufe00-\ufe0f\uffa0\ufff0-\ufff8]|\p{Variation_Selector}/gu
 
 /** Replaces each invisible or control character with «U+XXXX». Visible text, newlines and tabs are unchanged. */
 export function revealHidden(text: string): string {

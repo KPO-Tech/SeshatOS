@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { ApplicationOne, Book, ChartHistogram, MailOpen, Peoples, Puzzle, Robot } from '@icon-park/react'
 
 // Every platform SeshatOS can host, active or not yet built - the same
-// taxonomy legacy seshat-ui already used for its own apps/ directory
+// taxonomy the earlier desktop client already used for its apps
 // (knowledge, automation, companion, inbox, team), plus the platforms
 // already live here under their own sidebar entries. One list, so Store
 // stays the single place that says what exists and what's still ahead.
