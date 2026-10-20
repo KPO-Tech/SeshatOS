@@ -12,6 +12,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/mcp"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	localconnectors "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector/local"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/hooks"
@@ -107,6 +108,8 @@ type Dependencies struct {
 	LongTermExtractor   *longterm.Extractor
 	PlanDocumentStore   *db.PlanDocumentStore
 	MCPServerStore      *db.MCPServerStore
+	// LocalConnectors serves the connectors of the local catalog (standalone mode only; nil when connected to an organization server).
+	LocalConnectors *localconnectors.Service
 	MCPRuntime          mcp.RuntimeReloader // nil = reload/status not available
 	// MCPCloudClient/MCPOrgServerApprovals enrich the local MCP runtime with
 	// a connected seshat-server's shared server catalog, once the user has
@@ -200,6 +203,7 @@ type App struct {
 	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
 	ConnectorAccounts       *db.ConnectorAccountStore
+	LocalConnectors         *localconnectors.Service
 	ActionConnectors        map[string]connector.ActionConnector
 	KnowledgeConnectors     map[string]connector.KnowledgeConnector
 
@@ -268,6 +272,19 @@ func NewApp(deps Dependencies) *App {
 	}
 	skillsService := skills.NewService()
 	agentsService := agents.NewService(deps.AgentDefinitionStore, deps.AgentsCloudClient)
+	mcpConfig := mcp.ServiceConfig{
+		Store:       deps.MCPServerStore,
+		Runtime:     deps.MCPRuntime,
+		CloudClient: deps.MCPCloudClient,
+		Approvals:   deps.MCPOrgServerApprovals,
+	}
+	if deps.LocalConnectors != nil {
+		mcpConfig.ExtraServers = deps.LocalConnectors.MCPConfigs
+	}
+	mcpService := mcp.NewService(mcpConfig)
+	if deps.LocalConnectors != nil {
+		deps.LocalConnectors.SetRuntime(localConnectorRuntime{mcpService})
+	}
 	return &App{
 		Auth: auth.NewService(authProvider, deps.Identity, deps.APIKeyStore, deps.AuthConfig, deps.DesktopPolicies),
 		Query: query.NewService(query.ServiceConfig{
@@ -291,12 +308,7 @@ func NewApp(deps Dependencies) *App {
 		Metrics:   metrics.NewService(deps.Monitoring),
 		Memories:  memoriesService,
 		Plans:     plans.NewService(deps.PlanDocumentStore).WithApprovePlan(query.ApproveSessionPlan),
-		MCP: mcp.NewService(mcp.ServiceConfig{
-			Store:       deps.MCPServerStore,
-			Runtime:     deps.MCPRuntime,
-			CloudClient: deps.MCPCloudClient,
-			Approvals:   deps.MCPOrgServerApprovals,
-		}),
+		MCP: mcpService,
 		Hooks: hooks.NewService(hooks.ServiceConfig{
 			Runtime:     deps.HooksRuntime,
 			CloudClient: deps.HooksCloudClient,
@@ -309,8 +321,20 @@ func NewApp(deps Dependencies) *App {
 		KnowledgeGDrive:         deps.KnowledgeGDrive,
 		KnowledgeGDriveAccounts: deps.KnowledgeGDriveAccounts,
 		ConnectorAccounts:       deps.ConnectorAccounts,
+		LocalConnectors:         deps.LocalConnectors,
 		ActionConnectors:        deps.ActionConnectors,
 		KnowledgeConnectors:     deps.KnowledgeConnectors,
 		DesktopPolicies:         deps.DesktopPolicies,
 	}
+}
+
+// localConnectorRuntime lets the local connectors reload the MCP servers. Standalone mode has no organization, so no token is needed.
+type localConnectorRuntime struct{ service *mcp.Service }
+
+func (r localConnectorRuntime) Reload(ctx context.Context) ([]mcp.ServerStatus, error) {
+	return r.service.Reload(ctx, "", "")
+}
+
+func (r localConnectorRuntime) ToolsByServer() map[string][]mcp.ToolInfo {
+	return r.service.ToolsByServer()
 }

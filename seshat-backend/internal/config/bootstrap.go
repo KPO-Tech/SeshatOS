@@ -33,6 +33,8 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	connectorgateway "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector/gateway"
+	localconnectors "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector/local"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
@@ -724,10 +726,33 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		}
 	}
 
+	// The connectors of the local catalog reach the runtime through a loopback gateway; only a machine that is not connected to an
+	// organization server uses them (an organization brings its own connectors).
+	var localConnectors *localconnectors.Service
+	if mcpCloudClient == nil {
+		gateway := connectorgateway.New(func(ctx context.Context, kind connector.Kind) (string, bool) {
+			return localConnectors.Secret(ctx, kind)
+		})
+		localConnectors = localconnectors.NewService(connectorAccountStore, gateway)
+		if gwErr := gateway.Start(); gwErr != nil {
+			fmt.Fprintln(os.Stderr, "[API] Avertissement connecteurs:", gwErr)
+			localConnectors = nil
+		} else {
+			cleanups = append(cleanups, func() error { gateway.Close(); return nil })
+		}
+	}
+
 	var startupMCPServers []sdk.MCPServerConfig
 	if dbServers, dbErr := mcpServerStore.ListEnabled(ctx); dbErr == nil && len(dbServers) > 0 {
 		startupMCPServers = append(startupMCPServers, dbMCPServersToSDKConfigs(dbServers)...)
 		fmt.Printf("[API] MCP: %d server(s) chargés depuis la DB\n", len(dbServers))
+	}
+
+	if localConnectors != nil {
+		if configs := localConnectors.MCPConfigs(ctx); len(configs) > 0 {
+			startupMCPServers = append(startupMCPServers, configs...)
+			fmt.Println("[API] Connecteurs:", len(configs), "connecteur(s) chargés")
+		}
 	}
 
 	browserRemoteControlURL := strings.TrimSpace(config.BrowserRemoteControlURL)
@@ -1056,6 +1081,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		LongTermExtractor:        longTermExtractor,
 		PlanDocumentStore:        planDocumentStore,
 		MCPServerStore:           mcpServerStore,
+		LocalConnectors:          localConnectors,
 		MCPRuntime:               runtime,
 		MCPCloudClient:           mcpCloudClient,
 		MCPOrgServerApprovals:    mcpOrgServerApprovalStore,
