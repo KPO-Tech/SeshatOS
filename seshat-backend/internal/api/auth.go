@@ -54,7 +54,7 @@ type authPrincipalResponse struct {
 	// enforces at most one per user - see auth.Principal.OrganizationID's
 	// doc comment), correctly resolved for connected mode too (where
 	// WorkspaceMemberships starts empty for a freshly connected account -
-	// see ResolvedOrganizationID). This is the ONLY source seshat-ui's
+	// see ResolvedOrganizationID). This is the ONLY source the desktop app's
 	// useOrganizationStore has for "which organization" - it used to expect
 	// a nonexistent "organizations" array here (copied from seshat-server's
 	// own, different /auth/me shape), which this endpoint never returned,

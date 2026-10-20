@@ -369,7 +369,7 @@ func TestAuthLoginMeLogoutFlow(t *testing.T) {
 }
 
 // TestAuthMeIncludesOrganizationID is a regression test for a bug found
-// live: seshat-ui's useOrganizationStore has no other way to learn "which
+// live: the desktop app's useOrganizationStore has no other way to learn "which
 // organization" than GET /auth/me, but this endpoint used to omit
 // organization info entirely (its DTO only carried workspace_memberships'
 // slugs, never an id) - every org-scoped feature in the desktop app
@@ -2717,7 +2717,7 @@ func TestPlans_MissingSessionID(t *testing.T) {
 	}
 }
 
-// TestPlans_RouteCompatibility verifies that all routes used by seshat-ui are still registered.
+// TestPlans_RouteCompatibility verifies that all routes used by the desktop app are still registered.
 func TestPlans_RouteCompatibility(t *testing.T) {
 	app, identity, store := newPlansTestApp(t)
 	router := CreateRouter(defaultAPIConfig, app)

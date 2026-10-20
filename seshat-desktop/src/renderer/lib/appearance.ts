@@ -90,5 +90,5 @@ export function applyAppearance(prefs: AppearancePrefs) {
   for (const [name, value] of Object.entries(appearanceVars(prefs))) root.style.setProperty(name, value)
   // The zoom is the window's (Chromium scales layout and text together), so it goes through the main-process bridge
   // when there is one; in a plain browser (tests, the dev server) it is simply not applied.
-  void window.nexus?.appearance?.setZoom(prefs.zoom / 100)
+  void window.seshat?.appearance?.setZoom(prefs.zoom / 100)
 }

@@ -48,7 +48,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     void currentSandboxMode()
       .then(async (mode) => {
         const isDocker = mode === 'docker'
-        const status = isDocker ? null : await (window.nexus?.sandbox?.srtStatus() ?? Promise.resolve(null)).catch(() => null)
+        const status = isDocker ? null : await (window.seshat?.sandbox?.srtStatus() ?? Promise.resolve(null)).catch(() => null)
         if (cancelled) return
         setDocker(isDocker)
         const view = isDocker || status ? confinementView(status, isDocker) : null

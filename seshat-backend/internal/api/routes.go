@@ -75,7 +75,7 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/skills/", app.authMiddleware(http.HandlerFunc(app.handleSkillsDispatch)))
 
 	// Read-only prerequisite check (Docker, the strix CLI, whether the skill
-	// repo is installed) for a future dedicated seshat-ui app — no side
+	// repo is installed) for a future dedicated desktop app — no side
 	// effects, so authMiddleware is enough, unlike /skills/repos's admin gate.
 
 	apiV1.Handle("/agents", app.authMiddleware(http.HandlerFunc(app.handleAgents)))
@@ -352,11 +352,11 @@ func corsMiddleware(allowedOrigins []string, next http.Handler) http.Handler {
 		if len(allowed) == 0 {
 			// Default: accept any localhost origin (127.0.0.1 or localhost, any
 			// port), deliberately, not just an oversight left unconfigured.
-			// seshat-ui's renderer talks to this API two ways: through the
+			// the desktop app's renderer talks to this API two ways: through the
 			// Electron main-process IPC bridge (not subject to CORS at all —
 			// it's not a browser fetch), or directly via browser fetch when
-			// window.nexus is unavailable ("browser dev mode", explicitly
-			// supported per seshat-ui/AGENTS.md) — that second path runs on
+			// window.seshat is unavailable ("browser dev mode", explicitly
+			// supported per seshat-desktop/AGENTS.md) — that second path runs on
 			// an arbitrary Vite dev-server port that isn't known ahead of
 			// time, so pinning a single allowed origin by default would break
 			// it on every port change.

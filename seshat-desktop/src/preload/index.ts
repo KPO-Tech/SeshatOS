@@ -107,7 +107,7 @@ type TerminalRelayEvent = {
   durationMs?: number
 }
 
-const nexusBridge = {
+const seshatBridge = {
   getVersion: () => ipcRenderer.invoke('app:version'),
   openPath: (p: string) => ipcRenderer.invoke('system:open-path', p),
   openLocalPath: (p: string) => ipcRenderer.invoke('system:open-local-path', p),
@@ -321,6 +321,6 @@ const nexusBridge = {
   },
 }
 
-contextBridge.exposeInMainWorld('nexus', nexusBridge)
+contextBridge.exposeInMainWorld('seshat', seshatBridge)
 
-export type NexusBridge = typeof nexusBridge
+export type SeshatBridge = typeof seshatBridge

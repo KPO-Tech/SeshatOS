@@ -32,7 +32,7 @@ export function useOAuthFlow() {
     setConnecting(true)
     try {
       const url = await start()
-      if (window.nexus?.openExternal) await window.nexus.openExternal(url)
+      if (window.seshat?.openExternal) await window.seshat.openExternal(url)
       else window.open(url, '_blank', 'noopener,noreferrer')
 
       let attempts = 0

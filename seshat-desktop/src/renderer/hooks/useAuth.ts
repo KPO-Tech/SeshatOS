@@ -6,8 +6,8 @@ export function useAuth() {
   const store = useAuthStore()
 
   async function login(credentials: LoginRequest) {
-    if (window.nexus?.auth) {
-      const session = await window.nexus.auth.login(credentials)
+    if (window.seshat?.auth) {
+      const session = await window.seshat.auth.login(credentials)
       store.setSession(session)
       return session.user
     }
@@ -18,8 +18,8 @@ export function useAuth() {
   }
 
   async function register(payload: RegisterRequest) {
-    if (window.nexus?.auth) {
-      const session = await window.nexus.auth.register(payload)
+    if (window.seshat?.auth) {
+      const session = await window.seshat.auth.register(payload)
       store.setSession(session)
       return session.user
     }
@@ -30,8 +30,8 @@ export function useAuth() {
   }
 
   async function continueWithoutAccount() {
-    if (window.nexus?.auth) {
-      const session = await window.nexus.auth.continueWithoutAccount()
+    if (window.seshat?.auth) {
+      const session = await window.seshat.auth.continueWithoutAccount()
       store.setSession(session)
       return session.user
     }
@@ -43,7 +43,7 @@ export function useAuth() {
 
   async function restoreSession() {
     try {
-      const session = await window.nexus?.auth?.restoreSession()
+      const session = await window.seshat?.auth?.restoreSession()
       if (session) {
         store.setSession(session)
         return
@@ -55,8 +55,8 @@ export function useAuth() {
 
   async function logout() {
     try {
-      if (window.nexus?.auth) {
-        await window.nexus.auth.logout()
+      if (window.seshat?.auth) {
+        await window.seshat.auth.logout()
       } else {
         await api.post('/auth/logout')
       }

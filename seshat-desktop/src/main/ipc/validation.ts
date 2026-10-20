@@ -44,7 +44,7 @@ export function assertLocalFilePath(value: unknown, label = 'File path'): string
 }
 
 // Stricter than assertLocalFilePath: also requires the path to resolve
-// inside this app's own data root (SESHAT_RUNTIME_ROOT/NEXUS_RUNTIME_ROOT,
+// inside this app's own data root (SESHAT_RUNTIME_ROOT,
 // or its default under the user's home directory — see resolveRuntimeRoot).
 //
 // Use this for handlers that read/open a path supplied by the renderer from

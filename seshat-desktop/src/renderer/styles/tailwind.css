@@ -30,7 +30,7 @@
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 56px;
   /* Seshat identity: warm tinted dark surfaces, orange accent (ported from
-     seshat-ui tokens.css). Dark is the default; light overrides below. */
+     the earlier client's tokens.css). Dark is the default; light overrides below. */
   --surface-root: #2f2e34;
   --surface-sidebar: #2c2a31;
   --surface-panel: #3a3941;

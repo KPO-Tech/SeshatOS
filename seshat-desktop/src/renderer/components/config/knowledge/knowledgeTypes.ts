@@ -45,7 +45,7 @@ export type SystemStatus = {
   document_hybrid_chunking_error?: string
 }
 
-export type StorageConfigData = {
+type StorageConfigData = {
   provider: string
   local_path?: string
   s3_endpoint?: string

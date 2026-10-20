@@ -41,11 +41,11 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
     const id = idRef.current
     idRef.current = null
     detach()
-    if (id) void window.nexus?.shell?.stop(id).catch(() => undefined)
+    if (id) void window.seshat?.shell?.stop(id).catch(() => undefined)
   }, [detach])
 
   const start = useCallback(() => {
-    const bridge = window.nexus?.shell
+    const bridge = window.seshat?.shell
     if (!sessionId || !cwd) return
     if (!bridge) {
       setError('This build has no shell bridge.')
@@ -111,7 +111,7 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
 
     const input = term.onData((data) => {
       const id = idRef.current
-      if (id) void window.nexus?.shell?.write(id, data).catch(() => undefined)
+      if (id) void window.seshat?.shell?.write(id, data).catch(() => undefined)
     })
 
     const observer = new ResizeObserver(() => {
@@ -121,7 +121,7 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
         // Same as above: nothing to fit while the panel is collapsed.
       }
       const id = idRef.current
-      if (id) void window.nexus?.shell?.resize(id, term.cols, term.rows).catch(() => undefined)
+      if (id) void window.seshat?.shell?.resize(id, term.cols, term.rows).catch(() => undefined)
     })
     observer.observe(container)
 

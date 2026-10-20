@@ -140,7 +140,7 @@ export function useConversationPanels({
     const navKey = target ? `${tool.toolName}:${target}` : null
     if (target && browserToolNavigationRef.current !== navKey) {
       browserToolNavigationRef.current = navKey
-      void window.nexus?.browser?.openUrl(target, 'builtin', sessionId).catch(() => undefined)
+      void window.seshat?.browser?.openUrl(target, 'builtin', sessionId).catch(() => undefined)
     }
   }, [agentState.activeTool, sessionId, streaming])
 

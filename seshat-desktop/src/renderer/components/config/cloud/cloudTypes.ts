@@ -12,7 +12,7 @@ export type CloudStatus = {
 }
 
 // What the organization imposes on every agent on this desktop, as last received.
-export type CloudOrganizationRules = {
+type CloudOrganizationRules = {
   instructions: string
   forbidden_tools: string[]
   version?: string

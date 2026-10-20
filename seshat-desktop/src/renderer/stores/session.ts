@@ -12,7 +12,6 @@ export type {
   ChatSession,
   PendingPermission,
   StreamingBlock,
-  SubagentState,
   ToolActivity,
 } from '@renderer/components/chat/state/sessionTypes'
 export { streamingToContentBlocks } from '@renderer/components/chat/state/streamingContent'

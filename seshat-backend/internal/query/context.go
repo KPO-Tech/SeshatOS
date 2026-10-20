@@ -23,7 +23,7 @@ const renderingCapabilitiesBlock = `## Rich rendering available in this UI
 
 // narrationGuidanceBlock asks the model to briefly narrate what it's about
 // to do before each tool call, instead of chaining tool calls silently and
-// only producing prose once everything is done. seshat-ui's chat renders
+// only producing prose once everything is done. The desktop app's chat renders
 // content blocks in the exact order the model produced them (see
 // MessageItem.tsx's groupBlocks), so without any narrating text between tool
 // calls there is nothing to interleave - a multi-tool turn reads as a wall

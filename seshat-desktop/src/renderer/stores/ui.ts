@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { renamedStorage } from '@renderer/lib/renamedStorage'
 import type { RAGSearchResult } from '@renderer/api/types'
 import { useSessionStore } from '@renderer/stores/session'
 
@@ -7,7 +8,7 @@ type Theme = 'light' | 'dark'
 export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'terminal' | 'shell' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
 export type UIPermissionMode = 'onRequest' | 'auto' | 'bypass'
 
-export type RightPanelFields = {
+type RightPanelFields = {
   kind: RightPanelKind
   title: string
   sourceLabel?: string
@@ -552,7 +553,8 @@ export const useUIStore = create<UIState>()(
       },
     }),
     {
-      name: 'seshat-ui-prefs',
+      name: 'seshat-prefs',
+      storage: renamedStorage('seshat-ui-prefs'),
       onRehydrateStorage: () => (state) => {
         if (state) applySidebarWidth(clampSidebarWidth(state.sidebarWidth ?? SIDEBAR_DEFAULT_WIDTH))
       },

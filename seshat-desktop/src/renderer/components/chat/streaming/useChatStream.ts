@@ -171,7 +171,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
             ...(opts?.providerSettingId ? { provider_setting_id: opts.providerSettingId } : {}),
             ...(opts?.modelId ? { model_id: opts.modelId } : {}),
           }
-          if (window.nexus?.http) {
+          if (window.seshat?.http) {
             await consumeElectronStream(
               body,
               abortController.signal,

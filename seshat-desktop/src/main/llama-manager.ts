@@ -69,7 +69,7 @@ type PersistedState = {
   customModels: TitleModelInfo[]
 }
 
-export type LlamaPhase = 'binary' | 'model'
+type LlamaPhase = 'binary' | 'model'
 
 export type LlamaProgress = {
   phase: LlamaPhase

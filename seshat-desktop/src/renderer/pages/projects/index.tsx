@@ -21,7 +21,7 @@ function fmtActivity(iso: string | null): string {
 
 // Local folders the user works with - see lib/projects.ts for what a
 // "project" actually is here (no backend entity, just a labeled path).
-// Deliberately not what the old seshat-ui version did: no embedded
+// Deliberately small: no embedded
 // terminal, no per-project settings - find a project, see what's in it,
 // jump into a conversation.
 export function ProjectsPage() {
@@ -45,7 +45,7 @@ export function ProjectsPage() {
   }, [projects, query])
 
   async function handleNewProject() {
-    const result = await window.nexus?.dialog?.openDirectory?.()
+    const result = await window.seshat?.dialog?.openDirectory?.()
     if (!result || result.canceled || !result.filePaths?.length) return
     const project = addProject(result.filePaths[0])
     navigate(`/projects/${encodeURIComponent(project.id)}`)

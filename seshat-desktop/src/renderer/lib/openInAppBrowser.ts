@@ -10,13 +10,13 @@ import type { MouseEvent } from 'react'
 // clicked from (browser-panel.ts's own `session:<id>` context convention),
 // so links clicked in different conversations don't share a tab. Falls back
 // to a normal external tab when the Electron bridge isn't available (web
-// build/dev mode without window.nexus).
+// build/dev mode without window.seshat).
 export function openInAppBrowser(url: string, sessionId?: string): void {
-  if (typeof window === 'undefined' || !window.nexus?.browser) {
+  if (typeof window === 'undefined' || !window.seshat?.browser) {
     window.open(url, '_blank', 'noopener,noreferrer')
     return
   }
-  void window.nexus.browser.openUrl(url, sessionId).catch(() => {
+  void window.seshat.browser.openUrl(url, sessionId).catch(() => {
     window.open(url, '_blank', 'noopener,noreferrer')
   })
 }

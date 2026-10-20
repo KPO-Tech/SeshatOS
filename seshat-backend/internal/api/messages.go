@@ -141,7 +141,7 @@ func (app *App) anthropicAuthMiddleware(next http.Handler) http.Handler {
 			token = k
 		}
 
-		// 2. Authorization: Bearer fallback (seshat-ui, curl, etc.)
+		// 2. Authorization: Bearer fallback (the desktop app, curl, etc.)
 		if token == "" {
 			hdr := strings.TrimSpace(r.Header.Get("Authorization"))
 			if strings.HasPrefix(hdr, "Bearer ") {

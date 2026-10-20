@@ -1,6 +1,6 @@
 export type CapabilityName = 'image' | 'audio' | 'embeddings'
 
-export type CapabilityCandidate = {
+type CapabilityCandidate = {
   id: string
   provider: string
   name: string

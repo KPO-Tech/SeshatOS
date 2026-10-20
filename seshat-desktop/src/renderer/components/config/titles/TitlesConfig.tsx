@@ -10,7 +10,7 @@ function errorMessage(error: unknown): string {
 }
 
 export function TitlesConfig() {
-  const llama = window.nexus?.llama
+  const llama = window.seshat?.llama
   const [status, setStatus] = useState<LlamaStatus | null>(null)
   const [backend, setBackend] = useState<LocalTitleConfig | null>(null)
   const [progress, setProgress] = useState<Progress | null>(null)

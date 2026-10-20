@@ -2,7 +2,7 @@
 
 Clean SeshatOS desktop frontend workspace.
 
-This is a fresh Electron + React + TypeScript + Tailwind CSS client. It intentionally starts small instead of copying the whole old `seshat-ui` surface.
+This is a fresh Electron + React + TypeScript + Tailwind CSS client. It intentionally starts small instead of copying the whole earlier desktop client.
 
 What we reuse progressively:
 

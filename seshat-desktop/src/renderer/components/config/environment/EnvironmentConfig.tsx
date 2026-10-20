@@ -26,8 +26,8 @@ export function EnvironmentConfig() {
     setNotice(null)
     try {
       const [nextCatalog, nextStatus, sandbox] = await Promise.all([
-        window.nexus?.envVars?.catalog() ?? Promise.resolve([]),
-        window.nexus?.envVars?.status() ?? Promise.resolve({}),
+        window.seshat?.envVars?.catalog() ?? Promise.resolve([]),
+        window.seshat?.envVars?.status() ?? Promise.resolve({}),
         fetchSandboxConfig(),
       ])
       setCatalog(nextCatalog)
@@ -65,14 +65,14 @@ export function EnvironmentConfig() {
   const configuredCount = visibleCatalog.filter((def) => status[def.key]).length
 
   async function refreshStatus() {
-    setStatus(await (window.nexus?.envVars?.status() ?? Promise.resolve({})))
+    setStatus(await (window.seshat?.envVars?.status() ?? Promise.resolve({})))
   }
 
   async function applyRestart() {
     setRestarting(true)
     setNotice(null)
     try {
-      const result = await window.nexus?.envVars?.restartBackend()
+      const result = await window.seshat?.envVars?.restartBackend()
       setNotice(result?.ok
         ? { tone: 'ok', text: 'Backend restarted. Environment changes are active.' }
         : { tone: 'error', text: result?.error ?? 'Backend restart is not available.' })

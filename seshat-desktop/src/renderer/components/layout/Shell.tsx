@@ -49,7 +49,7 @@ export function Shell() {
     const previousConversationId = previousConversationIdRef.current
     if (conversationId) {
       if (previousConversationId && previousConversationId !== conversationId) {
-        void window.nexus?.browser?.hide(`session:${previousConversationId}`).catch(() => undefined)
+        void window.seshat?.browser?.hide(`session:${previousConversationId}`).catch(() => undefined)
         useUIStore.getState().closeRightPanelsForSession(previousConversationId)
       }
       previousConversationIdRef.current = conversationId
@@ -68,7 +68,7 @@ export function Shell() {
 
     useUIStore.getState().closeAllRightPanels()
     for (const contextId of browserContexts) {
-      void window.nexus?.browser?.hide(contextId).catch(() => undefined)
+      void window.seshat?.browser?.hide(contextId).catch(() => undefined)
     }
     previousConversationIdRef.current = null
   }, [conversationId])

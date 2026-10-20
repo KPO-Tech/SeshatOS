@@ -297,7 +297,7 @@ func (a *App) handleProviderModelsSync(w http.ResponseWriter, r *http.Request, s
 
 // providerCatalogModel/providerCatalogEntry mirror seshat-server's
 // GET /provider-catalog response shape (internal/server/api/provider_catalog.go)
-// so seshat-console and seshat-ui can share the same mental model of "the
+// so seshat-console and the desktop app can share the same mental model of "the
 // dynamic catalog response" even though the two are separate Go modules.
 type providerCatalogModel struct {
 	ID            string `json:"id"`
@@ -317,7 +317,7 @@ type providerCatalogEntry struct {
 
 // handleModelsList returns, live from the SDK's own registry rather than a
 // hand-maintained copy, which providers/models this build of seshat
-// supports - seshat-ui previously hardcoded its own copy of this list
+// supports - the desktop app previously hardcoded its own copy of this list
 // (ProvidersView.tsx: SUPPORTED_PROVIDERS/PROVIDER_DEFAULT_URLS/
 // PROVIDER_DISPLAY_ORDER), which had already drifted out of sync with the
 // SDK once. Uses pkg/config.AvailableProviders (not the lower-level

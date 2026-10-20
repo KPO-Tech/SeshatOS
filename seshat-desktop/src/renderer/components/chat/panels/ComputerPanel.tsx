@@ -132,7 +132,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
 
   function visitSite(site: VisitedSite) {
     openRightPanel({ kind: 'browser', title: 'Browser', sessionId })
-    void window.nexus?.browser?.openUrl(site.url, 'builtin', sessionId).catch(() => undefined)
+    void window.seshat?.browser?.openUrl(site.url, 'builtin', sessionId).catch(() => undefined)
   }
 
   return (

@@ -351,7 +351,7 @@ export function ChatInput({
               className={cx(TOOL_ICON_CSS, projectPath && '!text-[var(--accent-primary)]')}
               aria-label={projectPath ? `Project: ${projectPath}` : 'Set project folder'}
               onClick={async () => {
-                const result = await window.nexus?.dialog?.openDirectory?.()
+                const result = await window.seshat?.dialog?.openDirectory?.()
                 if (result && !result.canceled && result.filePaths?.length) {
                   onProjectChange?.(result.filePaths[0])
                 }

@@ -132,106 +132,12 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'agents' && <AgentsConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
               {activeSection === 'cloud' && <CloudConfig />}
-              {activeSection !== 'providers' && activeSection !== 'models' && activeSection !== 'titles' && activeSection !== 'web-search' && activeSection !== 'knowledge' && activeSection !== 'multimodal' && activeSection !== 'mcp' && activeSection !== 'connectors' && activeSection !== 'environment' && activeSection !== 'storage' && activeSection !== 'agents' && activeSection !== 'skills' && activeSection !== 'cloud' && <ConfigOverview active={active} />}
             </div>
           </div>
         </section>
       </div>
     </div>
   )
-}
-
-function ConfigOverview({ active }: { active: (typeof sections)[number] }) {
-  const current = configDetails[active.id]
-  return (
-    <div className="space-y-5">
-      <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Migration source</h2>
-            <p className="mt-1 text-[12px] text-[var(--text-muted)]">{current.source}</p>
-          </div>
-          <span className="rounded-md bg-[var(--surface-muted)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
-            Planned
-          </span>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Scope</h2>
-        <div className="mt-3 grid gap-2">
-          {current.scope.map((item) => (
-            <div key={item} className="flex min-h-9 items-center gap-2.5 rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[13px] text-[var(--text-secondary)]">
-              <Icon name="check" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Implementation order</h2>
-        <p className="mt-2 text-[13px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-          This panel is ready as a stable shell. The detailed controls will be migrated from `seshat-ui` one section at a time, starting with providers because chat depends on model selection.
-        </p>
-      </section>
-    </div>
-  )
-}
-
-const configDetails: Record<ConfigSection, { source: string; scope: string[] }> = {
-  skills: {
-    source: 'seshat-ui/apps/skills-creator',
-    scope: ['Skill repositories', 'Install and remove', 'Skill groups']
-  },
-  providers: {
-    source: 'seshat-ui/pages/settings/ProvidersView.tsx',
-    scope: ['Provider catalog', 'API key or OAuth connection', 'Connection tests', 'Default provider/model readiness']
-  },
-  titles: {
-    source: 'llama-manager.ts, whisper-manager pattern',
-    scope: ['Local title model', 'Model catalog', 'Custom GGUF']
-  },
-  models: {
-    source: 'seshat-ui Home and Conversation model selectors',
-    scope: ['Default chat model', 'Provider model catalogs', 'Model aliases', 'Fallback behavior']
-  },
-  'web-search': {
-    source: 'seshat-ui/pages/settings/WebSearchView.tsx',
-    scope: ['Enable web search', 'Search providers', 'Allowed and blocked domains', 'Provider tests']
-  },
-  knowledge: {
-    source: 'seshat-ui/pages/settings/KnowledgeView.tsx',
-    scope: ['Corpora', 'Embedder settings', 'Reranker settings', 'Document reader settings']
-  },
-  multimodal: {
-    source: 'seshat-ui/pages/settings/CapabilitiesViews.tsx',
-    scope: ['Image generation', 'Voice input', 'Whisper model downloads', 'Local media capability status']
-  },
-  mcp: {
-    source: 'seshat-ui/pages/settings/McpView.tsx',
-    scope: ['MCP server registry', 'Enable/disable servers', 'Tool exposure policy', 'Runtime diagnostics']
-  },
-  connectors: {
-    source: 'seshat-ui/pages/settings/ConnectorsView.tsx',
-    scope: ['External connector accounts', 'Corpus target selection', 'Connector actions', 'Disconnect flow']
-  },
-  environment: {
-    source: 'seshat-ui/pages/settings/EnvironmentView.tsx',
-    scope: ['Encrypted env vars', 'API key catalog', 'Apply and restart backend', 'Configured status']
-  },
-  storage: {
-    source: 'seshat-ui/pages/settings/StorageView.tsx and MemoriesView StorageCard',
-    scope: ['Local storage mode', 'S3/MinIO later', 'Cache locations', 'Storage health']
-  },
-  agents: {
-    source: 'seshat-ui agent/session settings and future agent store',
-    scope: ['Agent profiles', 'Default instructions', 'Delegation permissions', 'Tool access defaults']
-  },
-  cloud: {
-    source: 'seshat-desktop cloud connection',
-    scope: ['Device registration', 'Organization policies', 'Minimum app version']
-  }
 }
 
 function groupedSections() {

@@ -15,7 +15,7 @@ export type Edition = {
   store: boolean
 }
 
-export const V1_EDITION: Edition = {
+const V1_EDITION: Edition = {
   accounts: false,
   cloud: false,
   knowledge: false,

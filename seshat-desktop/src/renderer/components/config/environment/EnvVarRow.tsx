@@ -19,7 +19,7 @@ export function EnvVarRow({
     if (!value.trim()) return
     setSaving(true)
     try {
-      await window.nexus?.envVars?.set(def.key, value.trim())
+      await window.seshat?.envVars?.set(def.key, value.trim())
       setValue('')
       setEditing(false)
       await onChanged()
@@ -31,7 +31,7 @@ export function EnvVarRow({
   async function remove() {
     setSaving(true)
     try {
-      await window.nexus?.envVars?.delete(def.key)
+      await window.seshat?.envVars?.delete(def.key)
       setValue('')
       setEditing(true)
       await onChanged()
@@ -50,7 +50,7 @@ export function EnvVarRow({
         <p className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
           {def.description}
           {def.helpUrl && (
-            <button type="button" onClick={() => void window.nexus?.openExternal(def.helpUrl!)} className="ml-1 font-semibold text-[var(--accent-primary)] hover:underline">
+            <button type="button" onClick={() => void window.seshat?.openExternal(def.helpUrl!)} className="ml-1 font-semibold text-[var(--accent-primary)] hover:underline">
               Get one
             </button>
           )}
