@@ -5,6 +5,7 @@ import { connectorCatalog } from '@renderer/components/config/connectors/connect
 import { fetchConnectorAccounts, fetchDriveAccounts } from '@renderer/components/config/connectors/connectorsApi'
 import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
+import { edition } from '@renderer/lib/edition'
 import { fetchMyConnectorAccounts } from './api/cloudConnectorsApi'
 import type { PluginSource } from './catalog/pluginCatalog'
 import type { PluginAccount } from './pluginsTypes'
@@ -46,7 +47,7 @@ function group<T>(items: T[], keyOf: (item: T) => string, toAccount: (item: T) =
 
 async function loadAll(): Promise<Loaded> {
   const status = await safe(api.get<SystemStatus>('/system/status'), { mode: 'standalone' } as SystemStatus)
-  const organization = status.mode === 'connected'
+  const organization = edition.cloud && status.mode === 'connected'
 
   const [cloud, servers, ...knowledge] = await Promise.all([
     organization ? safe(fetchMyConnectorAccounts(), []) : Promise.resolve([]),

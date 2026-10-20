@@ -13,6 +13,7 @@ import { SkillsConfig } from './skills/SkillsConfig'
 import { StorageConfig } from './storage/StorageConfig'
 import { TitlesConfig } from './titles/TitlesConfig'
 import { WebSearchConfig } from './web-search/WebSearchConfig'
+import { edition } from '@renderer/lib/edition'
 
 export type ConfigSection =
   | 'providers'
@@ -35,7 +36,9 @@ type Props = {
   onClose: () => void
 }
 
-const sections: Array<{ id: ConfigSection; label: string; icon: IconName; group: string; description: string }> = [
+type SectionDef = { id: ConfigSection; label: string; icon: IconName; group: string; description: string }
+
+const allSections: SectionDef[] = [
   { id: 'providers', label: 'Providers', icon: 'provider', group: 'AI Runtime', description: 'Configure OpenAI, Anthropic, Mistral, Ollama, and custom compatible providers.' },
   { id: 'models', label: 'Models', icon: 'model', group: 'AI Runtime', description: 'Choose defaults, model catalogs, aliases, and fallback behavior.' },
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
@@ -51,8 +54,15 @@ const sections: Array<{ id: ConfigSection; label: string; icon: IconName; group:
   { id: 'cloud', label: 'SeshatCloud', icon: 'connectors', group: 'Workspace Runtime', description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
 ]
 
+// Sections kept in code but hidden from this edition (see lib/edition.ts).
+const hiddenSections = new Set<ConfigSection>([
+  ...(edition.knowledge ? [] : (['knowledge'] as const)),
+  ...(edition.cloud ? [] : (['cloud'] as const))
+])
+const sections = allSections.filter((section) => !hiddenSections.has(section.id))
+
 export function ConfigModal({ user, initialSection = 'providers', onClose }: Props) {
-  const [activeSection, setActiveSection] = useState<ConfigSection>(initialSection)
+  const [activeSection, setActiveSection] = useState<ConfigSection>(hiddenSections.has(initialSection) ? 'providers' : initialSection)
   const displayName = user.display_name || user.email
   const active = sections.find((section) => section.id === activeSection) ?? sections[0]
 
@@ -62,7 +72,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
         <aside className="no-scrollbar w-[220px] shrink-0 overflow-y-auto border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-2.5">
           <div className="px-2 py-2">
             <div className="text-[15px] font-semibold text-[var(--text-primary)]">Config</div>
-            <div className="mt-1 truncate text-[11px] text-[var(--text-muted)]">{displayName}</div>
+            <div className="mt-1 truncate text-[11px] text-[var(--text-muted)]">{edition.accounts ? displayName : 'This device'}</div>
           </div>
 
           <nav className="mt-4 space-y-3">

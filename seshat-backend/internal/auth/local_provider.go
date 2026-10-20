@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
@@ -27,14 +26,6 @@ const implicitLocalEmail = "local@seshatos.internal"
 type LocalProvider struct {
 	identity *db.IdentityStore
 	config   ServiceConfig
-	// registerMu serializes Register's count-then-promote-to-admin sequence
-	// (see Register below) — without it, two concurrent first-ever
-	// registrations could both observe "I'm user #1" and both become admin,
-	// or under different timing both land as non-admin. A single seshat-backend
-	// process is exactly one local desktop API instance per AGENTS.md (never
-	// horizontally scaled/replicated), so an in-process mutex fully closes
-	// this rather than merely narrowing it.
-	registerMu sync.Mutex
 }
 
 func NewLocalProvider(identity *db.IdentityStore, cfg ServiceConfig) *LocalProvider {
@@ -104,79 +95,12 @@ func (p *LocalProvider) ResolvePrincipal(ctx context.Context, token string) (*Pr
 	return PrincipalFromDB(principal), nil
 }
 
+// Register is refused: this device has one local identity (see
+// EnsureImplicitSession) and no accounts are created on it. Organization
+// accounts are created by seshat-server and reach this backend through the
+// cloud identity provider, never through this one.
 func (p *LocalProvider) Register(ctx context.Context, email, password, displayName string) (*LoginResult, error) {
-	if p == nil || p.identity == nil {
-		return nil, bkerr.Unavailable("auth not configured", nil)
-	}
-	email = strings.TrimSpace(strings.ToLower(email))
-	if email == "" || password == "" {
-		return nil, bkerr.InvalidInput("email and password are required", nil)
-	}
-	if len(password) < 8 {
-		return nil, bkerr.InvalidInput("password must be at least 8 characters", nil)
-	}
-	if strings.TrimSpace(displayName) == "" {
-		displayName = email
-	}
-
-	hash, err := db.HashPassword(password)
-	if err != nil {
-		return nil, bkerr.Internal("failed to hash password", err)
-	}
-
-	// Serializes the whole count-sensitive sequence below against any other
-	// concurrent Register call (see registerMu's doc comment): the
-	// signup-disabled/first-admin-setup bypass check, user creation, and the
-	// "am I user #1" promotion decision all read or depend on the total user
-	// count, so two racing registrations both landing inside this section at
-	// once — not just the final count-then-assign step — is exactly the
-	// unsynchronized-read/write pattern that could double- or zero-admin the
-	// instance. Taken only after hashing (CPU-bound, unrelated to the race)
-	// so unrelated concurrent signups after an admin already exists aren't
-	// serialized on bcrypt, just on these few fast DB calls.
-	p.registerMu.Lock()
-	defer p.registerMu.Unlock()
-
-	// If signup is disabled, still allow if no users exist (first admin setup).
-	if !p.config.EnableSignup {
-		count, err := p.identity.CountUsers(ctx)
-		if err != nil {
-			return nil, bkerr.Internal("failed to check user count", err)
-		}
-		if count > 0 {
-			return nil, bkerr.Forbidden("signup is disabled", nil)
-		}
-	}
-
-	user, err := p.identity.CreateUser(ctx, db.CreateUserParams{
-		Email:        email,
-		DisplayName:  displayName,
-		PasswordHash: hash,
-		Status:       db.UserStatusActive,
-	})
-	if err != nil {
-		return nil, bkerr.InvalidInput("email already registered or invalid", err)
-	}
-
-	// First user becomes admin.
-	count, err := p.identity.CountUsers(ctx)
-	if err != nil {
-		return nil, bkerr.Internal("failed to check user count", err)
-	}
-
-	role := p.config.DefaultUserRole
-	if role == "" {
-		role = "member"
-	}
-	if count == 1 {
-		role = "admin"
-	}
-
-	if err := p.identity.AssignRoleToUser(ctx, user.ID, role); err != nil {
-		return nil, bkerr.Internal("failed to assign role", err)
-	}
-
-	return p.Login(ctx, email, password)
+	return nil, bkerr.Forbidden("accounts cannot be created on this device", nil)
 }
 
 // EnsureImplicitSession mints a session for the fixed, auto-provisioned

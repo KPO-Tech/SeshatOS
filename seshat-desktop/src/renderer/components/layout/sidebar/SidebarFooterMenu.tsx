@@ -3,6 +3,7 @@ import { Down, Logout, Message, Setting, SettingTwo, Shield } from '@icon-park/r
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
+import { edition } from '@renderer/lib/edition'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -47,7 +48,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
           <SeshatLogo size={collapsed ? 22 : 18} />
           {!collapsed && (
             <>
-              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left">{user?.display_name || 'SeshatOS'}</span>
+              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left">{edition.accounts ? user?.display_name || 'SeshatOS' : 'SeshatOS'}</span>
               <Down size={12} />
             </>
           )}
@@ -64,9 +65,13 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
             <MenuButton icon={<SettingTwo theme="outline" size={14} />} label="Settings" onClick={() => pick(() => go('settings'))} />
             <MenuButton icon={<Setting theme="outline" size={14} />} label="Config" onClick={() => pick(() => go('config'))} />
             <MenuButton icon={<Message theme="outline" size={14} />} label="Feedback" onClick={() => pick(() => go('feedback'))} />
-            {connected && <MenuButton icon={<Shield theme="outline" size={14} />} label="Admin" disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
-            <div className="my-0.5 h-px bg-[var(--border-soft)]" aria-hidden="true" />
-            <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" onClick={() => pick(() => void logout())} />
+            {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label="Admin" disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
+            {edition.accounts && (
+              <>
+                <div className="my-0.5 h-px bg-[var(--border-soft)]" aria-hidden="true" />
+                <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" onClick={() => pick(() => void logout())} />
+              </>
+            )}
           </div>
         )}
       </div>
