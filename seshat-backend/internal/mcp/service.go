@@ -36,13 +36,17 @@ type ServiceConfig struct {
 	// agents.Service's doc comment for why.
 	CloudClient *cloudmcp.Client
 	Approvals   *db.MCPOrgServerApprovalStore
+	// ExtraServers adds servers that live outside the mcp_servers table (the connectors of the local catalog, whose key is kept in
+	// their account), loaded with the others on every reload.
+	ExtraServers func(ctx context.Context) []sdk.MCPServerConfig
 }
 
 type Service struct {
-	store       *db.MCPServerStore
-	runtime     RuntimeReloader
-	cloudClient *cloudmcp.Client
-	approvals   *db.MCPOrgServerApprovalStore
+	extraServers func(ctx context.Context) []sdk.MCPServerConfig
+	store        *db.MCPServerStore
+	runtime      RuntimeReloader
+	cloudClient  *cloudmcp.Client
+	approvals    *db.MCPOrgServerApprovalStore
 
 	// mu guards cachedOrgCatalog only — the last org catalog fetched by
 	// ListOrgCatalog/Reload, kept around so Status() can tag org-sourced
@@ -55,7 +59,7 @@ type Service struct {
 func NewService(cfg ServiceConfig) *Service {
 	return &Service{
 		store: cfg.Store, runtime: cfg.Runtime,
-		cloudClient: cfg.CloudClient, approvals: cfg.Approvals,
+		cloudClient: cfg.CloudClient, approvals: cfg.Approvals, extraServers: cfg.ExtraServers,
 	}
 }
 
@@ -222,6 +226,9 @@ func (s *Service) Reload(ctx context.Context, token, organizationID string) ([]S
 	sdkConfigs := make([]sdk.MCPServerConfig, 0, len(servers))
 	for _, srv := range servers {
 		sdkConfigs = append(sdkConfigs, srv.ToSDKConfig())
+	}
+	if s.extraServers != nil {
+		sdkConfigs = append(sdkConfigs, s.extraServers(ctx)...)
 	}
 	for _, org := range s.approvedOrgServers(ctx, token, organizationID) {
 		sdkConfigs = append(sdkConfigs, orgServerToSDKConfig(org))

@@ -1,4 +1,4 @@
-export const LOAD_RETRY_DELAYS_MS = [500, 1000, 2000]
+const LOAD_RETRY_DELAYS_MS = [500, 1000, 2000]
 
 /** How long the window stays hidden while the renderer loads before it is shown anyway. */
 export const SHOW_FALLBACK_MS = 4000

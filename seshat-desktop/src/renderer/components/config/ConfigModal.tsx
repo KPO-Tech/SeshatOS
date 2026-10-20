@@ -56,7 +56,7 @@ const allSections: SectionDef[] = [
 
 // Sections kept in code but hidden from this edition (see lib/edition.ts).
 const hiddenSections = new Set<ConfigSection>([
-  ...(edition.knowledge ? [] : (['knowledge'] as const)),
+  ...(edition.knowledge ? [] : (['knowledge', 'connectors'] as const)),
   ...(edition.cloud ? [] : (['cloud'] as const))
 ])
 const sections = allSections.filter((section) => !hiddenSections.has(section.id))

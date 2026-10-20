@@ -12,7 +12,7 @@ This document describes the current repository layout and the package boundaries
 seshatos/
 ├── seshat-backend/        ← local backend / desktop HTTP API
 ├── seshat-desktop/        ← Electron desktop client
-└── shared/connector-catalog/  ← connector metadata consumed by the desktop app
+└── shared/connector-catalog/  ← connector metadata for the organization admin pages (local connectors come from the backend)
 ```
 
 `seshat` — the open-source Go runtime — is not part of this repository. It is consumed as an
@@ -55,6 +55,9 @@ seshat-backend/
     ├── audit/                   ← audit log service
     ├── auth/                    ← auth, sessions, API keys, RBAC
     ├── bkerr/                   ← typed backend errors
+    ├── connector/               ← connector contracts and the local catalog (see decisions/0004)
+    │   ├── gateway/             ← loopback gateway between the runtime and vendor MCP servers
+    │   └── local/               ← connecting a local connector with the person's own key
     ├── cloud/                   ← HTTP client glue for optional connected mode
     ├── db/                      ← stores, schema, migrations
     ├── documentreading/         ← local-first/external-fallback document conversion

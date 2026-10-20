@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MCPServerIcon } from '@renderer/components/config/mcp/MCPIcons'
 import { useDialogsStore } from '@renderer/stores/dialogs'
-import { PLUGIN_CATEGORIES, availableSources, matchesQuery, pluginsFor, type PluginCategory, type PluginDefinition } from './catalog/pluginCatalog'
+import type { LocalConnector } from './api/localConnectorsApi'
+import { groupConnectors, matchesQuery } from './connectorGroups'
 import { PluginCard } from './PluginCard'
 import { PluginDetailModal } from './PluginDetailModal'
-import { isHealthy } from './pluginsTypes'
-import { usePluginAccounts } from './usePluginAccounts'
+import { useLocalConnectors } from './useLocalConnectors'
 
 const CREATE_ENTRIES = ['Custom MCP', 'Import MCP by JSON', 'Add MCP by URL']
 
-type Filter = 'all' | PluginCategory | 'mcp'
+type Filter = 'all' | 'mcp' | string
 
 export function PluginsPage() {
-  const state = usePluginAccounts()
+  const state = useLocalConnectors()
   const openConfig = useDialogsStore((store) => store.openConfig)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
@@ -29,34 +29,27 @@ export function PluginsPage() {
     return () => document.removeEventListener('mousedown', close)
   }, [createOpen])
 
-  const plugins = useMemo(() => pluginsFor(state.organization).filter((plugin) => matchesQuery(plugin, query)), [state.organization, query])
+  const groups = useMemo(() => groupConnectors(state.connectors.filter((connector) => matchesQuery(connector, query))), [state.connectors, query])
   const mcpServers = useMemo(
     () => state.mcpServers.filter((server) => `${server.display_name ?? ''} ${server.name}`.toLowerCase().includes(query.trim().toLowerCase())),
     [state.mcpServers, query]
   )
-  const openPlugin = plugins.find((plugin) => plugin.id === openId) ?? null
+  const openConnector = state.connectors.find((connector) => connector.kind === openId) ?? null
 
-  function statusOf(plugin: PluginDefinition) {
-    const accounts = availableSources(plugin, state.organization).flatMap((source) => state.accountsFor(source))
-    return { connected: accounts.length > 0, needsAttention: accounts.some((account) => !isHealthy(account)) }
+  function statusOf(connector: LocalConnector) {
+    return { connected: connector.status !== 'disconnected', needsAttention: connector.status === 'error' }
   }
 
-  const visibleCategories = PLUGIN_CATEGORIES.filter((category) => filter === 'all' || filter === category.id)
+  const visibleGroups = groups.filter((group) => filter === 'all' || filter === group.id)
   const showMcp = filter === 'all' || filter === 'mcp'
-  const nothing = !state.loading && plugins.length === 0 && mcpServers.length === 0
+  const nothing = !state.loading && groups.length === 0 && mcpServers.length === 0
+  const filters = [{ id: 'all', label: 'All' }, ...groupConnectors(state.connectors).map((group) => ({ id: group.id, label: group.label })), { id: 'mcp', label: 'MCP servers' }]
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-4">
       <div className="flex shrink-0 items-center justify-between">
         <h1 className="text-[18px] font-semibold text-[var(--text-primary)]">Plugins</h1>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => openConfig('connectors')}
-            className="h-7 rounded-lg border border-[var(--border-soft)] px-3 text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-          >
-            Manage Connectors
-          </button>
           <div ref={createRef} className="relative">
             <button
               type="button"
@@ -101,7 +94,7 @@ export function PluginsPage() {
       </div>
 
       <div className="no-scrollbar mt-3 flex shrink-0 gap-1.5 overflow-x-auto">
-        {([{ id: 'all', label: 'All' }, ...PLUGIN_CATEGORIES, { id: 'mcp', label: 'MCP servers' }] as Array<{ id: Filter; label: string }>).map((item) => (
+        {filters.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -119,20 +112,16 @@ export function PluginsPage() {
         <div className="flex flex-1 items-center justify-center pb-16 text-[13px] font-semibold text-[var(--text-muted)]">No plugins match your search.</div>
       ) : (
         <div className="no-scrollbar mt-5 min-h-0 flex-1 space-y-7 overflow-y-auto pb-8">
-          {visibleCategories.map((category) => {
-            const items = plugins.filter((plugin) => plugin.category === category.id)
-            if (items.length === 0) return null
-            return (
-              <div key={category.id}>
-                <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{category.label}</h2>
-                <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-2.5">
-                  {items.map((plugin) => (
-                    <PluginCard key={plugin.id} title={plugin.title} description={plugin.description} brand={plugin.brand} {...statusOf(plugin)} onOpen={() => setOpenId(plugin.id)} />
-                  ))}
-                </div>
+          {visibleGroups.map((group) => (
+            <div key={group.id}>
+              <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{group.label}</h2>
+              <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-2.5">
+                {group.connectors.map((connector) => (
+                  <PluginCard key={connector.kind} title={connector.label} description={connector.description} brand={connector.kind} {...statusOf(connector)} onOpen={() => setOpenId(connector.kind)} />
+                ))}
               </div>
-            )
-          })}
+            </div>
+          ))}
 
           {showMcp && (
             <div>
@@ -159,7 +148,7 @@ export function PluginsPage() {
         </div>
       )}
 
-      {openPlugin && <PluginDetailModal plugin={openPlugin} state={state} onClose={() => setOpenId(null)} />}
+      {openConnector && <PluginDetailModal connector={openConnector} onChanged={() => void state.reload()} onClose={() => setOpenId(null)} />}
     </section>
   )
 }
