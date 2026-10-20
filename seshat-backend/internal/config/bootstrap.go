@@ -763,6 +763,10 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		BrowserExecutablePath:   strings.TrimSpace(config.BrowserExecutablePath),
 		// The desktop agent loads a short list of tools and finds the rest with tool_search, which keeps about 45% of the tool
 		// definitions out of every request (see agent_profile.go).
+		// The models.dev catalog downloaded earlier is read from the runtime's cache; downloading it again is the one call to the network
+		// the catalog makes, so it is off unless SESHAT_REFRESH_MODEL_CATALOG is set (see refreshModelCatalogEnabled).
+		CatalogCacheDir:        sdk.CatalogCacheDir(),
+		RefreshCatalog:         refreshModelCatalogEnabled(),
 		MainAgentTools:         desktopMainAgentTools(),
 		MainAgentDeferredTools: desktopMainAgentDeferredTools(),
 		EnableToolSearch:       true,
@@ -1440,4 +1444,12 @@ func structuredChunkProfile() rag.ChunkProfile {
 		return rag.DefaultChunkProfile()
 	}
 	return profile
+}
+
+// refreshModelCatalogEnabled reports whether the backend may download the public models.dev catalog (at most once a day) to learn the
+// models and providers that appeared since this version was built. Off by default: it sends nothing about the user, but it is a call to
+// the network the user did not ask for.
+func refreshModelCatalogEnabled() bool {
+	enabled, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("SESHAT_REFRESH_MODEL_CATALOG")))
+	return enabled
 }
