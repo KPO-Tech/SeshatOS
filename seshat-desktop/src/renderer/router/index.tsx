@@ -8,6 +8,7 @@ import { ProjectsPage } from '@renderer/pages/projects'
 import { ProjectDetailPage } from '@renderer/pages/projects/detail'
 import { AdminPage } from '@renderer/pages/admin'
 import { StorePage } from '@renderer/pages/store'
+import { edition } from '@renderer/lib/edition'
 
 // React Router reuses a route's element across navigations to the same
 // route pattern - switching from /conversation/A to /conversation/B keeps
@@ -31,10 +32,10 @@ export const router = createHashRouter([
       { path: 'conversation/:id', element: <ConversationRoute /> },
       { path: 'skills', element: <SkillsPage /> },
       { path: 'plugins', element: <PluginsPage /> },
-      { path: 'store', element: <StorePage /> },
+      ...(edition.store ? [{ path: 'store', element: <StorePage /> }] : []),
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'projects/:projectId', element: <ProjectDetailPage /> },
-      { path: 'admin/*', element: <AdminPage /> }
+      ...(edition.cloud ? [{ path: 'admin/*', element: <AdminPage /> }] : [])
     ]
   },
   { path: '*', element: <Navigate to="/" replace /> }

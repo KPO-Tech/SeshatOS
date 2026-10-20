@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { api } from '@renderer/api/client'
 import type { SystemStatus } from '@renderer/api/types'
+import { edition } from '@renderer/lib/edition'
 import { hasAdminAccess } from '@renderer/lib/authz'
 import { useAuthStore } from '@renderer/stores/auth'
 import { useDialogsStore } from '@renderer/stores/dialogs'
@@ -16,6 +17,7 @@ export function useSettingsMenu() {
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
+    if (!edition.cloud) return
     let cancelled = false
     api.get<SystemStatus>('/system/status')
       .then((status) => { if (!cancelled) setConnected(status.mode === 'connected') })
