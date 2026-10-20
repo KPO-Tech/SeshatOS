@@ -47,14 +47,14 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       {connected && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
+          <div className="min-w-0 flex-1">
             <div className="truncate text-[12.5px] font-semibold text-[var(--text-primary)]">{connector.label}</div>
-            <div className={['mt-0.5 flex items-center gap-1.5 text-[11px]', healthy ? 'text-[var(--accent-success)]' : 'text-[var(--accent-danger)]'].join(' ')}>
-              <span className="size-1.5 shrink-0 rounded-full bg-current" />
-              <span className="truncate">
+            <div className={['mt-0.5 flex items-start gap-1.5 text-[11px] leading-[16px]', healthy ? 'text-[var(--accent-success)]' : 'text-[var(--accent-danger)]'].join(' ')}>
+              <span className="mt-[5px] size-1.5 shrink-0 rounded-full bg-current" />
+              <span className="min-w-0 break-words">
                 {healthy ? `Connected, ${connector.tools.length} ${connector.tools.length === 1 ? 'tool' : 'tools'}` : connector.last_error || 'Needs attention'}
               </span>
             </div>
