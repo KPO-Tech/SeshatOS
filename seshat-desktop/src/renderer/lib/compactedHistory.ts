@@ -7,7 +7,7 @@ import type { Message } from '@renderer/api/types'
 
 export const COMPACTION_DIVIDER_ID = '__compaction_divider__'
 
-export const COMPACTION_DIVIDER_TEXT = 'Conversation compacted. The messages above are no longer sent to the model; a summary stands in for them.'
+const COMPACTION_DIVIDER_TEXT = 'Conversation compacted. The messages above are no longer sent to the model; a summary stands in for them.'
 
 /** A message shown from the archive: the same message, marked so the list can dim it. */
 function archived(message: Message): Message {

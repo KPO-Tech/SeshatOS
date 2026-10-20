@@ -5,8 +5,8 @@ import { connectorCatalog } from '@renderer/components/config/connectors/connect
 import { fetchConnectorAccounts, fetchDriveAccounts } from '@renderer/components/config/connectors/connectorsApi'
 import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
+import { edition } from '@renderer/lib/edition'
 import { fetchMyConnectorAccounts } from './api/cloudConnectorsApi'
-import { fetchInboxAccounts } from './api/inboxApi'
 import type { PluginSource } from './catalog/pluginCatalog'
 import type { PluginAccount } from './pluginsTypes'
 
@@ -22,7 +22,6 @@ export type PluginAccountsState = {
 type Loaded = {
   organization: boolean
   cloudByKind: Map<string, PluginAccount[]>
-  inboxByChannel: Map<string, PluginAccount[]>
   knowledgeByKind: Map<string, PluginAccount[]>
   mcpServers: MCPServer[]
 }
@@ -48,11 +47,10 @@ function group<T>(items: T[], keyOf: (item: T) => string, toAccount: (item: T) =
 
 async function loadAll(): Promise<Loaded> {
   const status = await safe(api.get<SystemStatus>('/system/status'), { mode: 'standalone' } as SystemStatus)
-  const organization = status.mode === 'connected'
+  const organization = edition.cloud && status.mode === 'connected'
 
-  const [cloud, inbox, servers, ...knowledge] = await Promise.all([
+  const [cloud, servers, ...knowledge] = await Promise.all([
     organization ? safe(fetchMyConnectorAccounts(), []) : Promise.resolve([]),
-    safe(fetchInboxAccounts(), []),
     safe(fetchMCPServers(), []),
     ...connectorCatalog
       .filter((item) => item.category === 'Knowledge')
@@ -71,7 +69,6 @@ async function loadAll(): Promise<Loaded> {
   return {
     organization,
     cloudByKind: group(cloud, (a) => a.kind, (a) => ({ id: a.id, label: a.display_name, status: a.status, lastError: a.last_error })),
-    inboxByChannel: group(inbox, (a) => a.channel, (a) => ({ id: a.id, label: a.display_name || a.external_account_id || a.channel, status: a.status, lastError: a.last_error })),
     knowledgeByKind,
     mcpServers: servers
   }
@@ -96,10 +93,6 @@ export function usePluginAccounts(): PluginAccountsState {
       case 'cloud-oauth':
       case 'cloud-key':
         return data.cloudByKind.get(source.kind) ?? []
-      case 'inbox-oauth':
-        return data.inboxByChannel.get(source.channel) ?? []
-      case 'whatsapp':
-        return data.inboxByChannel.get('whatsapp') ?? []
       case 'knowledge':
         return data.knowledgeByKind.get(source.kind) ?? []
     }

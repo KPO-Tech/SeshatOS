@@ -1,6 +1,6 @@
 import type { Message } from '@renderer/api/types'
 
-export type RestoredUsage = {
+type RestoredUsage = {
   turnNumber: number
   inputTokens: number
   outputTokens: number

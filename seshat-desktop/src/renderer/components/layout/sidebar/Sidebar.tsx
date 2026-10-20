@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { ApplicationOne, Browser, Plus, Puzzle, Search, Workbench } from '@icon-park/react'
 import { SearchModal } from '@renderer/components/layout/SearchModal'
 import { SessionHistoryModal } from '@renderer/components/layout/SessionHistoryModal'
+import { edition } from '@renderer/lib/edition'
 import { useSessionStore } from '@renderer/stores/session'
 import { SIDEBAR_DEFAULT_WIDTH, useUIStore } from '@renderer/stores/ui'
 import { RecentSessions } from './RecentSessions'
@@ -98,7 +99,7 @@ export function Sidebar() {
             <>
               <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
               <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
-              <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />
+              {edition.store && <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />}
               <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
             </>
           )}

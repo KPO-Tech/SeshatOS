@@ -1,6 +1,6 @@
 import type { ProviderModel, ProviderSetting } from '../providers/providerTypes'
 
-export type ModelChoice = {
+type ModelChoice = {
   id: string
   provider: ProviderSetting
   model: ProviderModel

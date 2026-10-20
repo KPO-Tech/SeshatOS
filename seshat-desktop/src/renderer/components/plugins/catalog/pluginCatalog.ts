@@ -16,17 +16,12 @@ export const PLUGIN_CATEGORIES: Array<{ id: PluginCategory; label: string }> = [
   { id: 'payments', label: 'Payments & delivery' }
 ]
 
-// Where a plugin can be connected from. One plugin can offer several (Gmail
-// is both a local inbox channel and an organization agent-action account).
+// Where a plugin can be connected from. One plugin can offer several.
 export type PluginSource =
   // seshat-server, per employee: OAuth against the app the organization registered.
   | { type: 'cloud-oauth'; kind: OAuthConnectorKind }
   // seshat-server, per employee: a pasted API key.
   | { type: 'cloud-key'; kind: AnyConnectorKind }
-  // seshat-backend inbox channel, OAuth, works on this device only.
-  | { type: 'inbox-oauth'; channel: 'gmail' | 'outlook' | 'teams' }
-  // seshat-backend inbox channel paired by scanning a QR code.
-  | { type: 'whatsapp' }
   // Knowledge sources, set up in Config > Connectors.
   | { type: 'knowledge'; kind: 'gdrive' | 'sharepoint' | 's3' }
 
@@ -74,13 +69,6 @@ const KIND_META: Record<AnyConnectorKind, Meta> = {
   postmark: { category: 'payments', description: 'Send transactional email through Postmark.' }
 }
 
-// Kinds that also exist as a local inbox channel on this device.
-const INBOX_CHANNELS: Partial<Record<AnyConnectorKind, 'gmail' | 'outlook' | 'teams'>> = {
-  gmail: 'gmail',
-  outlook: 'outlook',
-  teams: 'teams'
-}
-
 // Kinds that can be set up as a local knowledge source.
 const KNOWLEDGE_KINDS: Partial<Record<AnyConnectorKind, 'gdrive' | 'sharepoint'>> = {
   gdrive: 'gdrive',
@@ -89,9 +77,7 @@ const KNOWLEDGE_KINDS: Partial<Record<AnyConnectorKind, 'gdrive' | 'sharepoint'>
 
 function definitionFor(kind: AnyConnectorKind, isOAuth: boolean): PluginDefinition {
   const sources: PluginSource[] = []
-  const channel = INBOX_CHANNELS[kind]
   const knowledge = KNOWLEDGE_KINDS[kind]
-  if (channel) sources.push({ type: 'inbox-oauth', channel })
   if (knowledge) sources.push({ type: 'knowledge', kind: knowledge })
   sources.push(isOAuth ? { type: 'cloud-oauth', kind: kind as OAuthConnectorKind } : { type: 'cloud-key', kind })
   return {
@@ -105,7 +91,7 @@ function definitionFor(kind: AnyConnectorKind, isOAuth: boolean): PluginDefiniti
 }
 
 // Shown first within their category; the rest keep the shared catalog's order.
-const FEATURED = ['gmail', 'whatsapp', 'slack', 'gdrive', 'notion', 'github', 'gcalendar', 'hubspot', 'stripe']
+const FEATURED = ['gmail', 'slack', 'gdrive', 'notion', 'github', 'gcalendar', 'hubspot', 'stripe']
 
 function byFeatured(a: PluginDefinition, b: PluginDefinition): number {
   const rank = (plugin: PluginDefinition) => (FEATURED.includes(plugin.id) ? FEATURED.indexOf(plugin.id) : FEATURED.length)
@@ -115,14 +101,6 @@ function byFeatured(a: PluginDefinition, b: PluginDefinition): number {
 const ENTRIES: PluginDefinition[] = [
   ...OAUTH_CONNECTOR_KINDS.map((kind) => definitionFor(kind, true)),
   ...STATIC_CONNECTOR_KINDS.map((kind) => definitionFor(kind, false)),
-  {
-    id: 'whatsapp',
-    title: 'WhatsApp',
-    description: 'Pair a WhatsApp account by scanning a QR code, then let the inbox agent read and reply.',
-    category: 'messaging',
-    brand: 'whatsapp',
-    sources: [{ type: 'whatsapp' }]
-  },
   {
     id: 's3',
     title: 'S3-compatible storage',

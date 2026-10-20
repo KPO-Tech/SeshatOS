@@ -31,6 +31,3 @@ export function providerStatus(provider: SearchProviderConfig) {
   return { label: 'Ready', tone: 'success' as const }
 }
 
-export function providerInitials(provider: SearchProviderConfig) {
-  return (provider.label || provider.provider).slice(0, 2).toUpperCase()
-}

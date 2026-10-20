@@ -19,7 +19,7 @@ const ACTIVE_MODEL_FILE = 'active-model.json'
 // real download sizes as of whisper.cpp's ggerganov/whisper.cpp HF repo.
 export type WhisperModelId = 'tiny' | 'base' | 'small' | 'medium' | 'large-v3-turbo' | 'large-v3'
 
-export type WhisperModelInfo = {
+type WhisperModelInfo = {
   id: WhisperModelId
   filename: string
   label: string
@@ -55,7 +55,7 @@ export type WhisperProgress = {
   totalBytes: number
 }
 
-export type WhisperStatus = {
+type WhisperStatus = {
   supported: boolean
   running: boolean
   port?: number
@@ -120,7 +120,7 @@ function serverBinaryPath(): string | null {
   return join(whisperDir(), 'bin', asset.binaryRelPath)
 }
 
-export function isWhisperSupported(): boolean {
+function isWhisperSupported(): boolean {
   return platformAsset() !== null
 }
 

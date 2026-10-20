@@ -1,7 +1,7 @@
 // What the session overview shows, as plain data. Each card appears only when it has something to say: a connectors card
 // with nothing connected, or an outputs card with no file, is not drawn at all.
 
-export type ContextUsage = {
+type ContextUsage = {
   used: number
   /** The model's context window, when known. */
   window: number | null
@@ -12,7 +12,7 @@ export type ContextUsage = {
 }
 
 /** The size of the context as the runtime reported it during a turn. */
-export type LiveContextFigure = { used: number; window: number; autoCompactAt: number }
+type LiveContextFigure = { used: number; window: number; autoCompactAt: number }
 
 /**
  * Tokens in the conversation after the last turn: what the model was sent (the whole context) plus what it answered,
@@ -47,7 +47,7 @@ export function formatTokens(n: number): string {
   return String(n)
 }
 
-export type EnvironmentRow = { label: string; value: string; tone?: 'warn' }
+type EnvironmentRow = { label: string; value: string; tone?: 'warn' }
 
 /** The rows of the environment card: where commands run, the folder they run in, and whether anything confines them. */
 export function environmentRows(input: {
@@ -66,7 +66,7 @@ export function environmentRows(input: {
   return rows
 }
 
-export type ConnectorRow = { id: string; name: string; kind: string }
+type ConnectorRow = { id: string; name: string; kind: string }
 
 /** The enabled connectors, by name, with the first `limit` shown and the rest counted. */
 export function connectorRows(servers: ReadonlyArray<{ id: string; name: string; display_name?: string; server_type?: string; enabled: boolean }>, limit = 4) {

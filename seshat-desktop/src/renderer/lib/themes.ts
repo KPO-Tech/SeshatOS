@@ -32,7 +32,7 @@ export type ThemeSeed = {
   accent: string
 }
 
-export type ThemeTokens = Record<`--${string}`, string>
+type ThemeTokens = Record<`--${string}`, string>
 
 // Seshat's own two appearances. Their tokens live in tailwind.css, so they are listed here for the picker only.
 const SESHAT: ThemeSeed[] = [
@@ -91,7 +91,7 @@ export function allThemes(): readonly ThemeSeed[] {
 }
 
 /** The ids a person can pick, as stored. "auto" follows the operating system and is not a theme of its own. */
-export type ThemeId = (typeof THEMES)[number]['id']
+type ThemeId = (typeof THEMES)[number]['id']
 
 export function isThemeId(value: unknown): value is ThemeId {
   return typeof value === 'string' && allThemes().some((theme) => theme.id === value)
@@ -167,7 +167,7 @@ export function ensureContrast(color: string, bg: string, toward: string, minRat
 }
 
 /** The code background of a theme: a little darker than a dark window, a faint tint on a light one. */
-export function codeBackground(seed: ThemeSeed): string {
+function codeBackground(seed: ThemeSeed): string {
   return seed.scheme === 'dark' ? mix(seed.bg, '#000000', 0.16) : mix(seed.bg, seed.text, 0.05)
 }
 
@@ -196,7 +196,7 @@ function rgbTriplet(hex: string): string {
 
 /** Every token the interface reads, derived from the seed. */
 /** How opaque each surface stays when a wallpaper is behind it: the window lets the most through, raised panels the least. */
-export const WALLPAPER_ALPHA = { root: 0.72, sidebar: 0.8, panel: 0.86, muted: 0.9 } as const
+const WALLPAPER_ALPHA = { root: 0.72, sidebar: 0.8, panel: 0.86, muted: 0.9 } as const
 
 /** The CSS `background` of a wallpaper, built from checked values only. `fixed` keeps it still behind scrolling content (the window); a small preview wants it off. */
 export function wallpaperCss(seed: ThemeSeed, fixed = true): string {

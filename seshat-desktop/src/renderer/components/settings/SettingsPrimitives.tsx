@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type SettingsIconName =
+type SettingsIconName =
   | 'sliders'
   | 'user'
   | 'keyboard'
@@ -111,14 +111,6 @@ export function ToggleRow({ title, description, enabled = false, onChange }: { t
   )
 }
 
-export function EmptyState({ label }: { label: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-8 text-center text-[13px] font-semibold text-[var(--text-muted)]">
-      {label}
-    </div>
-  )
-}
-
 export function AboutLine({ title, value, tone = 'default', muted = false }: { title: string; value: string; tone?: 'default' | 'success' | 'muted'; muted?: boolean }) {
   return (
     <div className="flex min-h-10 items-center justify-between gap-8">
@@ -152,7 +144,7 @@ export function formatStatus(status: string) {
   return status.charAt(0).toUpperCase() + status.slice(1)
 }
 
-export function SettingsIcon({ name }: { name: SettingsIconName }) {
+function SettingsIcon({ name }: { name: SettingsIconName }) {
   const paths: Record<SettingsIconName, ReactNode> = {
     sliders: <path d="M4 7h12M4 13h12M7 5.5v3M13 11.5v3" />,
     user: <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 14a5.5 5.5 0 0 1 11 0" />,

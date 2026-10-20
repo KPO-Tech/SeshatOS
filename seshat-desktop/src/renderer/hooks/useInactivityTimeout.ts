@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { edition } from '@renderer/lib/edition'
 import { useAuthStore } from '@renderer/stores/auth'
 
 // Product decision (2026-08-13): 2 days. Long enough not to bounce someone
@@ -14,7 +15,8 @@ export function useInactivityTimeout(timeoutMs: number = DEFAULT_TIMEOUT_MS) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) return
+    // Without accounts there is nothing to sign out of: the local session would just reopen.
+    if (!isAuthenticated || !edition.accounts) return
 
     const resetTimer = () => {
       if (timerRef.current) clearTimeout(timerRef.current)

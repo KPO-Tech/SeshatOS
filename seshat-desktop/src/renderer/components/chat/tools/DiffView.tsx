@@ -33,7 +33,7 @@ type GitDiffMeta = {
   patch: string
 }
 
-export type DiffRow = {
+type DiffRow = {
   type: 'context' | 'add' | 'del'
   oldLineNo: number | null
   newLineNo: number | null
@@ -150,7 +150,7 @@ function computeLcsDiff(oldStr: string, newStr: string): DiffRow[] {
   return rows
 }
 
-export type ResolvedDiff = { rows: DiffRow[]; addCount: number; delCount: number }
+type ResolvedDiff = { rows: DiffRow[]; addCount: number; delCount: number }
 
 export function resolveDiffRows(tool: ToolUseBlock): ResolvedDiff | null {
   const metadata = tool._result?.metadata

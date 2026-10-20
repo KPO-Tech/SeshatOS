@@ -168,7 +168,7 @@ export type QuietGroupItem =
   | { kind: 'tool'; tool: ToolUseBlock }
   | { kind: 'thinking'; thinkingId: string; thinking: string }
 
-export type RenderItem =
+type RenderItem =
   | { kind: 'block'; block: Message['content'][number] | StreamingBlock; index: number }
   | { kind: 'agent-group'; tools: ToolUseBlock[] }
   | { kind: 'quiet-group'; items: QuietGroupItem[] }

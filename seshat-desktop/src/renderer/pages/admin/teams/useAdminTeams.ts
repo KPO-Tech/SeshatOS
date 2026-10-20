@@ -28,7 +28,7 @@ export function useAdminTeams() {
   return { teams, loading, error, refetch }
 }
 
-export type AdminTeamInput = { name: string; slug: string; description?: string; member_user_ids?: string[] }
+type AdminTeamInput = { name: string; slug: string; description?: string; member_user_ids?: string[] }
 
 export function createAdminTeam(params: AdminTeamInput): Promise<OrgTeam> {
   return api.post('/admin/teams', params)

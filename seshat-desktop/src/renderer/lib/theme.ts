@@ -76,7 +76,7 @@ function systemScheme(): ColorScheme {
 }
 
 /** Whether a theme is light or dark, which decides things a palette cannot (code highlighting, diagrams, the logo). */
-export function schemeOf(theme: ThemePreference): ColorScheme {
+function schemeOf(theme: ThemePreference): ColorScheme {
   if (theme === 'auto') return systemScheme()
   return themeById(theme)?.scheme ?? 'dark'
 }

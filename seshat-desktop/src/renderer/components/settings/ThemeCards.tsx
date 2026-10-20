@@ -33,7 +33,7 @@ export function ThemePreview({ seed, height = 68 }: { seed: ThemeSeed; height?: 
   )
 }
 
-export function cardClass(selected: boolean): string {
+function cardClass(selected: boolean): string {
   return [
     'group flex flex-col gap-2 rounded-lg border p-2 text-left transition-colors',
     selected ? 'border-[var(--text-primary)] bg-[var(--surface-muted)]' : 'border-[var(--border-soft)] hover:bg-[var(--surface-muted)]'

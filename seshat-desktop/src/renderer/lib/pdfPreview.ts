@@ -3,7 +3,7 @@ import { ensureDefaultPDFWorker } from './pdfWorker'
 
 ensureDefaultPDFWorker()
 
-export type PDFPagePreview = {
+type PDFPagePreview = {
   page: number
   dataURL: string
 }

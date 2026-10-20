@@ -98,7 +98,7 @@ export function parseCustomTheme(raw: unknown, id: string): ThemeSeed | null {
   return seedFromPalette(id, label, { surface: r.surface, accent: r.accent, text: r.text }, wallpaper)
 }
 
-export function newThemeId(): string {
+function newThemeId(): string {
   return `custom-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 }
 

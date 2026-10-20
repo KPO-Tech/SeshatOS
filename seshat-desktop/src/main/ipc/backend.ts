@@ -59,7 +59,7 @@ function buildBackendURL(path: string) {
   return `${resolveBackendOrigin()}/api/v1${normalized}`
 }
 
-export async function ensureBackendTrusted() {
+async function ensureBackendTrusted() {
   if (backendTrustPromise) {
     return backendTrustPromise
   }

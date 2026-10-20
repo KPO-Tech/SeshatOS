@@ -2,7 +2,7 @@ import { api } from '@renderer/api/client'
 
 export type SandboxMode = 'docker' | 'local'
 
-export type SandboxConfig = {
+type SandboxConfig = {
   mode: SandboxMode
   updated_at?: number
 }

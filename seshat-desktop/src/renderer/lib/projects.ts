@@ -2,7 +2,7 @@ import type { ChatSession } from '@renderer/stores/session'
 
 const PROJECTS_STORAGE_KEY = 'seshat.projects.v1'
 
-export type StoredProject = {
+type StoredProject = {
   id: string
   rootPath: string
   name?: string
@@ -33,7 +33,7 @@ export function projectIdForPath(path: string): string {
   return `path-${normalizeProjectPath(path).toLowerCase()}`
 }
 
-export function readStoredProjects(): StoredProject[] {
+function readStoredProjects(): StoredProject[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(PROJECTS_STORAGE_KEY) || '[]')
     if (!Array.isArray(parsed)) return []
@@ -81,11 +81,11 @@ export function resolveProjectContextPath(
   return null
 }
 
-// Chat sessions for the Recents list: no knowledge/inbox one-offs, and only
+// Chat sessions for the Recents list: no knowledge one-offs, and only
 // those of the current project (or the ones outside any project).
 export function selectRecentSessions(sessions: ChatSession[], projectContextPath: string | null, limit = 12): ChatSession[] {
   return sessions
-    .filter((s) => s.source !== 'knowledge' && s.source !== 'inbox')
+    .filter((s) => s.source !== 'knowledge')
     .filter((s) => {
       if (!projectContextPath) return !s.projectPath
       return normalizeProjectPath(s.projectPath ?? '').toLowerCase() === normalizeProjectPath(projectContextPath).toLowerCase()

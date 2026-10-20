@@ -119,8 +119,8 @@ function rightPanelTotalLimit(windowWidth: number): number {
 // The user can drag the sidebar edge between these bounds. The current value
 // is mirrored here (and into --sidebar-width) because the right-panel clamp
 // below runs inside store actions, not components, so it can't read the DOM.
-export const SIDEBAR_MIN_WIDTH = 208
-export const SIDEBAR_MAX_WIDTH = 360
+const SIDEBAR_MIN_WIDTH = 208
+const SIDEBAR_MAX_WIDTH = 360
 export const SIDEBAR_DEFAULT_WIDTH = 240
 const SIDEBAR_COLLAPSED_WIDTH = 56
 let currentSidebarWidth = SIDEBAR_DEFAULT_WIDTH
@@ -186,7 +186,7 @@ function defaultRightPanelWidth(kind: RightPanelKind, windowWidth: number, sideb
   return clampRightPanelWidth(preferred, windowWidth, sidebarCollapsed, 1)
 }
 
-export type LightboxImage = { url: string; filename: string }
+type LightboxImage = { url: string; filename: string }
 
 type UIState = {
   theme: Theme
