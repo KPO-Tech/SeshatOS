@@ -77,7 +77,6 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	// Read-only prerequisite check (Docker, the strix CLI, whether the skill
 	// repo is installed) for a future dedicated seshat-ui app — no side
 	// effects, so authMiddleware is enough, unlike /skills/repos's admin gate.
-	apiV1.Handle("/apps/strix/status", app.authMiddleware(http.HandlerFunc(app.handleAppsStrixStatus)))
 
 	apiV1.Handle("/agents", app.authMiddleware(http.HandlerFunc(app.handleAgents)))
 	apiV1.Handle("/agents/", app.authMiddleware(http.HandlerFunc(app.handleAgentBySlug)))
