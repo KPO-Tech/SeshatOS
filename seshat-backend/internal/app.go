@@ -110,7 +110,7 @@ type Dependencies struct {
 	MCPServerStore      *db.MCPServerStore
 	// LocalConnectors serves the connectors of the local catalog (standalone mode only; nil when connected to an organization server).
 	LocalConnectors *localconnectors.Service
-	MCPRuntime          mcp.RuntimeReloader // nil = reload/status not available
+	MCPRuntime      mcp.RuntimeReloader // nil = reload/status not available
 	// MCPCloudClient/MCPOrgServerApprovals enrich the local MCP runtime with
 	// a connected seshat-server's shared server catalog, once the user has
 	// explicitly approved each one — nil in standalone mode, set only by
@@ -308,7 +308,7 @@ func NewApp(deps Dependencies) *App {
 		Metrics:   metrics.NewService(deps.Monitoring),
 		Memories:  memoriesService,
 		Plans:     plans.NewService(deps.PlanDocumentStore).WithApprovePlan(query.ApproveSessionPlan),
-		MCP: mcpService,
+		MCP:       mcpService,
 		Hooks: hooks.NewService(hooks.ServiceConfig{
 			Runtime:     deps.HooksRuntime,
 			CloudClient: deps.HooksCloudClient,

@@ -43,10 +43,10 @@ type ServiceConfig struct {
 
 type Service struct {
 	extraServers func(ctx context.Context) []sdk.MCPServerConfig
-	store       *db.MCPServerStore
-	runtime     RuntimeReloader
-	cloudClient *cloudmcp.Client
-	approvals   *db.MCPOrgServerApprovalStore
+	store        *db.MCPServerStore
+	runtime      RuntimeReloader
+	cloudClient  *cloudmcp.Client
+	approvals    *db.MCPOrgServerApprovalStore
 
 	// mu guards cachedOrgCatalog only — the last org catalog fetched by
 	// ListOrgCatalog/Reload, kept around so Status() can tag org-sourced
