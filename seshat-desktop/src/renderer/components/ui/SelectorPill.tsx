@@ -10,13 +10,13 @@ function cx(...classes: Array<string | false | null | undefined>) {
 // descriptions (e.g. ChatInput's model menu) widen it via their own
 // className, since Tailwind can't shrink-to-fit content in a dropdown that
 // also needs a floor width.
-export const SELECTOR_MENU_CLASS =
+const SELECTOR_MENU_CLASS =
   'absolute left-0 top-[calc(100%+6px)] z-30 flex max-h-[min(252px,calc(100vh-190px))] min-w-[140px] max-w-[min(320px,calc(100vw-32px))] flex-col gap-0 overflow-y-auto rounded-app-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-root))] p-1 shadow-[0_18px_48px_rgba(31,27,23,0.17)] [scrollbar-color:color-mix(in_srgb,var(--text-muted)_28%,transparent)_transparent] [scrollbar-width:thin]'
 
-export const SELECTOR_MENU_ITEM_CLASS =
+const SELECTOR_MENU_ITEM_CLASS =
   'flex min-h-[30px] w-full min-w-0 cursor-pointer items-center justify-between gap-[7px] rounded-none border border-transparent bg-transparent px-[7px] py-1.5 text-left text-[var(--font-size-sm)] text-app-text hover:border-app-border-subtle hover:bg-[color-mix(in_srgb,var(--surface-muted)_48%,var(--surface-panel))] disabled:cursor-default disabled:opacity-60 disabled:hover:bg-transparent'
 
-export const SELECTOR_MENU_COPY_CLASS = 'min-w-0 flex-1 [&>span:first-child]:truncate'
+const SELECTOR_MENU_COPY_CLASS = 'min-w-0 flex-1 [&>span:first-child]:truncate'
 
 type Props = {
   label: string

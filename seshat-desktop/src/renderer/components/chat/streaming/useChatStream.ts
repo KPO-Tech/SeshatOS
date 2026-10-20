@@ -29,7 +29,7 @@ const RETRY_BASE_MS = 1000
 // detected disconnect. Mirrors OpenHands' own 150s watchdog precedent.
 const WATCHDOG_TIMEOUT_MS = 150_000
 
-export type SendMessageOptions = {
+type SendMessageOptions = {
   corpusId?: string | null
   fileIds?: string[]
   attachments?: ChatAttachment[]
@@ -38,7 +38,7 @@ export type SendMessageOptions = {
   modelId?: string | null
 }
 
-export type UseChatStreamOptions = {
+type UseChatStreamOptions = {
   onCompaction?: (preTokens: number, postTokens: number) => void
   onTurnSuccess?: () => void
 }

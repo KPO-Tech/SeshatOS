@@ -69,7 +69,6 @@ type ComputerPanelProps = {
  * Tools and a tool's live detail are pages with a slim header that has a way back, maximize and close.
  */
 export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onClose, onToggleMaximize }: ComputerPanelProps) {
-  const agentState = useSessionStore((s) => s.getAgentState(sessionId))
   const planArtifact = useSessionStore(
     (s) => s.sessions.find((session) => session.id === sessionId)?.planArtifact,
   )

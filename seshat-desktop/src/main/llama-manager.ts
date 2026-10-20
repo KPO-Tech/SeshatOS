@@ -18,7 +18,7 @@ const STATE_FILE = 'state.json'
 const REPORT_RETRY_INTERVAL_MS = 5_000
 const REPORT_MAX_ATTEMPTS = 120
 
-export type TitleModelInfo = {
+type TitleModelInfo = {
   id: string
   label: string
   repo: string
@@ -30,7 +30,7 @@ export type TitleModelInfo = {
 
 // Only non-reasoning instruct models belong here. A reasoning model burns its
 // output budget on a hidden chain of thought and never returns a title.
-export const MODEL_CATALOG: TitleModelInfo[] = [
+const MODEL_CATALOG: TitleModelInfo[] = [
   {
     id: 'qwen2.5-0.5b',
     label: 'Qwen2.5 0.5B Instruct',
@@ -78,7 +78,7 @@ export type LlamaProgress = {
   totalBytes: number
 }
 
-export type LlamaStatus = {
+type LlamaStatus = {
   supported: boolean
   binaryReady: boolean
   running: boolean
@@ -151,7 +151,7 @@ function archiveName(): string | null {
   return null
 }
 
-export function isLlamaSupported(): boolean {
+function isLlamaSupported(): boolean {
   return archiveName() !== null
 }
 
@@ -265,7 +265,7 @@ function reportWhenPossible(payload: { enabled: boolean; base_url: string; model
 }
 
 /** Spawns llama-server with the active model and points the backend at it. */
-export async function startLlamaServer(): Promise<void> {
+async function startLlamaServer(): Promise<void> {
   if (serverProcess) return
   const state = await readState()
   const binary = await serverBinaryPath()

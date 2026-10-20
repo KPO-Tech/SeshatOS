@@ -15,9 +15,9 @@ import { join } from 'node:path'
 // low-privilege local user and a network filter, and shows one UAC prompt: `enableSrt` runs it on request, never on
 // its own.
 
-export type SrtState = 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
+type SrtState = 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
 
-export interface SrtStatus {
+interface SrtStatus {
   state: SrtState
   platform: NodeJS.Platform
   /** What srt said when it could not confine, for the settings page. */
@@ -38,7 +38,7 @@ function cliPath(): string | null {
 }
 
 /** Writes the launcher (once per run) and returns its path, or null when the packaged CLI is missing. */
-export function ensureSrtLauncher(): string | null {
+function ensureSrtLauncher(): string | null {
   const cli = cliPath()
   if (!cli) return null
   const dir = join(app.getPath('userData'), 'bin')

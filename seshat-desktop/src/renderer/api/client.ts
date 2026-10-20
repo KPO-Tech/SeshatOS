@@ -1,6 +1,6 @@
 import { useAuthStore } from '@renderer/stores/auth'
 
-export const SESHAT_BASE = 'http://127.0.0.1:8090/api/v1'
+const SESHAT_BASE = 'http://127.0.0.1:8090/api/v1'
 
 type RequestOptions = {
   method?: string

@@ -197,7 +197,7 @@ function cloneStreamingBlocks(blocks: StreamingBlock[]) {
   }) as StreamingBlock[]
 }
 
-export function mergePartialToolInput(current: Record<string, unknown>, partialJSON: string) {
+function mergePartialToolInput(current: Record<string, unknown>, partialJSON: string) {
   const trimmed = partialJSON.trim()
   if (!trimmed) return current
   try {

@@ -1,4 +1,4 @@
-export type RagResult = {
+type RagResult = {
   index: number
   score: number
   corpus: string

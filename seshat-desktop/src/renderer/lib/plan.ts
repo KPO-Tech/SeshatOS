@@ -2,16 +2,16 @@ import type { Message, ToolStatus, ToolUseBlock } from '@renderer/api/types'
 import type { StreamingBlock } from '@renderer/stores/session'
 import { streamingToContentBlocks } from '@renderer/stores/session'
 
-export type PlanItemStatus = 'pending' | 'in_progress' | 'completed' | 'failed'
+type PlanItemStatus = 'pending' | 'in_progress' | 'completed' | 'failed'
 
-export type PlanItem = {
+type PlanItem = {
   id: string
   title: string
   detail?: string
   status: PlanItemStatus
 }
 
-export type PlanSnapshot = {
+type PlanSnapshot = {
   source: 'task' | null
   items: PlanItem[]
   completedCount: number

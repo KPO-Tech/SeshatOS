@@ -331,7 +331,7 @@ export function handleRuntimeEvent(
   }
 }
 
-export function handleSubagentEvent(
+function handleSubagentEvent(
   sessionId: string,
   event: RuntimeEventPayload,
   store: SessionStore,
