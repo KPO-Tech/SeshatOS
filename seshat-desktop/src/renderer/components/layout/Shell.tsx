@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { InternalExpansion } from '@icon-park/react'
+import { loadConnectorLabels } from '@renderer/components/chat/tools/connectorNames'
 import { useSessionsSync } from '@renderer/hooks/useSessionsSync'
 import { useUIStore } from '@renderer/stores/ui'
 import { DialogHost } from './DialogHost'
@@ -25,6 +26,11 @@ export function Shell() {
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
   useSessionsSync()
+
+  // The names of the connectors, so tool rows in chat say "GitHub" and not "connector-github".
+  useEffect(() => {
+    void loadConnectorLabels()
+  }, [])
 
   // The right panel needs the window width to size itself.
   useEffect(() => {

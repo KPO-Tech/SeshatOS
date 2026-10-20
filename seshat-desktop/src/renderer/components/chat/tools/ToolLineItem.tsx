@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { connectorKind, serverLabel } from './connectorNames'
 import { CheckOne, Copy, Down } from '@icon-park/react'
 import { api } from '@renderer/api/client'
 import { useUIStore } from '@renderer/stores/ui'
@@ -220,7 +221,7 @@ function previewMeta(tool: ToolUseBlock): string {
   const resultCount = result?.metadata?.result_count != null ? Number(result.metadata.result_count) : NaN
   if (tool.name === 'mcp' || tool.name.startsWith('mcp__')) {
     const parsed = parseMcpPreview(tool)
-    if (parsed.server) parts.push(`mcp - ${parsed.server}`)
+    if (parsed.server) parts.push(connectorKind(parsed.server) ? serverLabel(parsed.server) : `mcp - ${parsed.server}`)
   }
   if (provider) parts.push(provider)
   if (Number.isFinite(resultCount) && resultCount > 0) {

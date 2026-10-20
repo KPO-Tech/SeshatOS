@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
+import { serverLabel } from './connectorNames'
 import { FileTextOne, Write, Edit as EditIcon, Search, Terminal, Tool } from '@icon-park/react'
 import type { ToolUseBlock } from '@renderer/api/types'
 import type { ToolViewProps, ToolBlockProps } from './types'
@@ -354,7 +355,7 @@ function mcpDynamicLabel(name: string): string {
   const server = sepIndex >= 0 ? rest.slice(0, sepIndex) : ''
   const toolPart = sepIndex >= 0 ? rest.slice(sepIndex + 2) : rest
   const readableTool = toolPart.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-  return server ? `${server}: ${readableTool}` : readableTool
+  return server ? `${serverLabel(server)}: ${readableTool}` : readableTool
 }
 
 function getEntry(name: string): ToolDisplayEntry | undefined {
