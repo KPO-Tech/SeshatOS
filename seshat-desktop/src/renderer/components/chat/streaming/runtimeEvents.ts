@@ -15,6 +15,7 @@ import {
   updateStreamingTool,
 } from '@renderer/components/chat/streaming/streamToolState'
 import { findLatestToolUseByName } from '@renderer/lib/chat'
+import { streamedChars } from '@renderer/lib/sessionOverview'
 import { permissionSignature } from '@renderer/lib/permissionSignature'
 import { useSessionStore, type ToolActivity } from '@renderer/stores/session'
 import { streamingToContentBlocks } from '@renderer/stores/session'
@@ -76,7 +77,12 @@ export function handleRuntimeEvent(
       const usage = event.context_usage_event
       if (usage && usage.window_tokens > 0) {
         store.updateAgentState(sessionId, {
-          liveContext: { used: usage.used_tokens, window: usage.window_tokens, autoCompactAt: usage.auto_compact_at_tokens },
+          liveContext: {
+            used: usage.used_tokens,
+            window: usage.window_tokens,
+            autoCompactAt: usage.auto_compact_at_tokens,
+            atChars: streamedChars(store.streamingBySession?.[sessionId]),
+          },
         })
       }
       break

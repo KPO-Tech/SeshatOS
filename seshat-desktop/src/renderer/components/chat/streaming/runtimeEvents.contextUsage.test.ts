@@ -23,7 +23,21 @@ describe('context.usage', () => {
       type: 'context.usage',
       context_usage_event: { used_tokens: 52_000, window_tokens: 128_000, auto_compact_at_tokens: 107_100, source: 'reported' },
     } as RuntimeEventPayload)
-    expect(updateAgentState).toHaveBeenCalledWith('s1', { liveContext: { used: 52_000, window: 128_000, autoCompactAt: 107_100 } })
+    expect(updateAgentState).toHaveBeenCalledWith('s1', { liveContext: { used: 52_000, window: 128_000, autoCompactAt: 107_100, atChars: 0 } })
+  })
+
+  it('notes how much text had streamed when the figure was reported, to estimate what follows', () => {
+    const updateAgentState = vi.fn()
+    handleRuntimeEvent(
+      's1',
+      { type: 'context.usage', context_usage_event: { used_tokens: 52_000, window_tokens: 128_000, auto_compact_at_tokens: 107_100 } } as RuntimeEventPayload,
+      { updateAgentState, streamingBySession: { s1: [{ type: 'text', index: 0, text: 'x'.repeat(40) }], other: [{ type: 'text', index: 0, text: 'y'.repeat(999) }] } } as never,
+      () => undefined,
+      () => null,
+      () => undefined,
+      vi.fn(),
+    )
+    expect(updateAgentState).toHaveBeenCalledWith('s1', { liveContext: { used: 52_000, window: 128_000, autoCompactAt: 107_100, atChars: 40 } })
   })
 
   it('ignores a report without a window', () => {

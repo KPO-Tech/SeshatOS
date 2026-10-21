@@ -8,7 +8,7 @@ import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
 import { api, ApiError } from '@renderer/api/client'
-import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
+import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction, streamedChars, tokensSinceReport, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 
@@ -94,7 +94,14 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }
 
   const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
-  const context = contextUsage(agentState.inputTokens, agentState.outputTokens, windowTokens, agentState.liveContext)
+  const streamed = useSessionStore((s) => s.streamingBySession[sessionId])
+  const context = contextUsage(
+    agentState.inputTokens,
+    agentState.outputTokens,
+    windowTokens,
+    agentState.liveContext,
+    tokensSinceReport(streamedChars(streamed), agentState.liveContext),
+  )
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0

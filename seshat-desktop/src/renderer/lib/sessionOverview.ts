@@ -12,7 +12,38 @@ type ContextUsage = {
 }
 
 /** The size of the context as the runtime reported it during a turn. */
-type LiveContextFigure = { used: number; window: number; autoCompactAt: number }
+type LiveContextFigure = {
+  used: number
+  window: number
+  autoCompactAt: number
+  /** How much text had streamed in the turn when the runtime reported this figure, so what follows can be estimated. */
+  atChars?: number
+}
+
+/** The runtime sizes text at four bytes a token (bytesPerToken in its engine); the estimate between two reports uses the same ratio. */
+const CHARS_PER_TOKEN = 4
+
+type StreamedBlock = { type: string; text?: string; thinking?: string; _partialInput?: string }
+
+/**
+ * Characters the model has produced so far in the turn that count toward the context: its text and the arguments of the tool calls
+ * it is writing. Its reasoning is left out: measured against the figures the runtime reports, reasoning does not add to the context
+ * (counting it overshot by several times, then fell back at the next report).
+ */
+export function streamedChars(blocks: ReadonlyArray<StreamedBlock> | undefined): number {
+  let total = 0
+  for (const block of blocks ?? []) total += (block.text?.length ?? 0) + (block._partialInput?.length ?? 0)
+  return total
+}
+
+/**
+ * Tokens the model has written since the runtime last reported the size of the context. The runtime reports at the start and the
+ * end of each model call, so during a long answer its figure stands still; this keeps the gauge moving until the next report.
+ */
+export function tokensSinceReport(charsNow: number, live: LiveContextFigure | null | undefined): number {
+  if (!live) return 0
+  return Math.max(0, Math.ceil((charsNow - (live.atChars ?? 0)) / CHARS_PER_TOKEN))
+}
 
 /**
  * Tokens in the conversation after the last turn: what the model was sent (the whole context) plus what it answered,
@@ -23,14 +54,17 @@ export function contextUsage(
   outputTokens: number,
   windowTokens: number | null | undefined,
   live?: LiveContextFigure | null,
+  /** Tokens written since the runtime last reported (see tokensSinceReport). */
+  pendingTokens = 0,
 ): ContextUsage | null {
   // The runtime's own figure, reported during the turn, is fresher than the totals of the last completed turn, and its
   // window is the one the compaction thresholds are computed from.
   if (live && live.window > 0 && live.used > 0) {
+    const used = live.used + Math.max(0, pendingTokens)
     return {
-      used: live.used,
+      used,
       window: live.window,
-      percent: Math.min(100, Math.round((live.used / live.window) * 100)),
+      percent: Math.min(100, Math.round((used / live.window) * 100)),
       compactAtPercent: live.autoCompactAt > 0 ? Math.min(100, Math.round((live.autoCompactAt / live.window) * 100)) : null,
     }
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction } from './sessionOverview'
+import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction, streamedChars, tokensSinceReport } from './sessionOverview'
 
 describe('contextUsage with the figure the runtime reported', () => {
   const live = { used: 90_000, window: 128_000, autoCompactAt: 107_100 }
@@ -124,5 +124,42 @@ describe('compaction on demand', () => {
   it('draws nothing without a window or a size', () => {
     expect(liveContextAfterCompaction({ pre_tokens: 1, post_tokens: 30_000 }, null, null)).toBeNull()
     expect(liveContextAfterCompaction({ pre_tokens: 1, post_tokens: 0 }, null, 128_000)).toBeNull()
+  })
+})
+
+describe('the gauge between two reports of the runtime', () => {
+  const live = { used: 20_000, window: 200_000, autoCompactAt: 170_000, atChars: 1_000 }
+
+  it('counts the characters of the text and the tool arguments written so far, not the reasoning', () => {
+    expect(streamedChars([
+      { type: 'text', text: 'abcd' },
+      { type: 'thinking', thinking: 'a long reasoning that is not part of the context' },
+      { type: 'tool_use', _partialInput: '{"a":' },
+    ])).toBe(9)
+    expect(streamedChars(undefined)).toBe(0)
+  })
+
+  it('estimates the tokens written since the last report at four characters a token', () => {
+    expect(tokensSinceReport(1_000, live)).toBe(0)
+    expect(tokensSinceReport(1_400, live)).toBe(100)
+    expect(tokensSinceReport(1_401, live)).toBe(101)
+  })
+
+  it('estimates nothing without a report, and never a negative figure when a new turn starts streaming from zero', () => {
+    expect(tokensSinceReport(5_000, null)).toBe(0)
+    expect(tokensSinceReport(0, live)).toBe(0)
+  })
+
+  it('adds the estimate to the last reported figure', () => {
+    const usage = contextUsage(0, 0, 200_000, live, 4_000)
+    expect(usage).toMatchObject({ used: 24_000, window: 200_000, percent: 12, compactAtPercent: 85 })
+  })
+
+  it('stops at the full window', () => {
+    expect(contextUsage(0, 0, 200_000, live, 500_000)?.percent).toBe(100)
+  })
+
+  it('does not change the figure of a turn that has nothing pending', () => {
+    expect(contextUsage(0, 0, 200_000, live)?.used).toBe(20_000)
   })
 })

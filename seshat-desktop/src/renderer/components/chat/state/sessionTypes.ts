@@ -96,6 +96,8 @@ type LiveContext = {
   used: number
   window: number
   autoCompactAt: number
+  // Text streamed in the turn when this figure was reported, the base for estimating what is written after it.
+  atChars?: number
 }
 
 export function defaultAgentState(): AgentState {
