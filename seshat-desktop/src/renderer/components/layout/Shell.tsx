@@ -12,6 +12,7 @@ import { Sidebar } from './sidebar/Sidebar'
 import { ThemeToggleButton } from './ThemeToggleButton'
 import { Titlebar } from './Titlebar'
 import { TitlebarSessionControls } from './TitlebarSessionControls'
+import { UpdateBanner } from './UpdateBanner'
 
 export function Shell() {
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
@@ -126,6 +127,7 @@ export function Shell() {
       </div>
 
       <DialogHost />
+      <UpdateBanner />
     </div>
   )
 }
