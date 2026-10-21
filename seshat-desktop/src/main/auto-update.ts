@@ -30,6 +30,18 @@ export function setupAutoUpdater(): void {
   if (!app.isPackaged) {
     return
   }
+  // Squirrel.Mac only installs updates of a signed app, and the macOS build is not signed: the person downloads the new
+  // version from the site instead. The check-now handler still answers, so the renderer gets a reason and not a rejected call.
+  if (process.platform === 'darwin') {
+    ipcMain.handle('updates:check-now', (event) => {
+      assertTrustedSender(event)
+      return { ok: false, error: 'Automatic updates are not available on macOS yet: download the new version from the website.' }
+    })
+    ipcMain.handle('updates:quit-and-install', (event) => {
+      assertTrustedSender(event)
+    })
+    return
+  }
 
   const logPath = join(app.getPath('logs'), 'auto-update.log')
   const logStream = createWriteStream(logPath, { flags: 'a' })

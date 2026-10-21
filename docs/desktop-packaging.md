@@ -141,12 +141,16 @@ merged pull requests.
    version with the one in `latest.yml`.
 2. Tag `main` (`vX.Y.Z`) and push the tag.
 3. Open the release and check that it holds `SeshatOS-Setup-X.Y.Z.exe` (and its `.blockmap`), `latest.yml`, the AppImage,
-   `latest-linux.yml` and the deb.
+   `latest-linux.yml`, the deb, `SHA256SUMS.txt` and, when that job passed, the two macOS disk images
+   (`SeshatOS-X.Y.Z-mac-arm64.dmg`, `SeshatOS-X.Y.Z-mac-x64.dmg`).
+
+A tag with a dash (`v0.3.0-rc1`) is published as a pre-release.
 
 ### Automatic updates
 
 The app checks the GitHub releases of this repository (`build.publish`) ten seconds after start, downloads an update in the
-background and installs it only when the person asks. `electron-updater` reads `latest.yml` (Windows) and `latest-linux.yml`
+background and installs it only when the person asks: a small banner (`UpdateBanner`) says that the new version is ready and offers
+to restart into it. `electron-updater` reads `latest.yml` (Windows) and `latest-linux.yml`
 (AppImage) from the release, so a release that lacks them is invisible to the installed apps. The Windows installer has a fixed
 name (`nsis.artifactName`) because GitHub rewrites spaces in asset names to dots, which would make `latest.yml` point at a file
 that does not exist. The deb is not updated by the app.
@@ -158,3 +162,14 @@ certificate, `.pfx`, as a base64 string or a URL) and `WIN_CSC_KEY_PASSWORD`. Wi
 says so in a warning: Windows SmartScreen then asks for confirmation at the first launch, and the warning fades as the download
 count of a certificate grows. Local builds stay unsigned (`signAndEditExecutable=false`), because signing needs a certificate and
 symbolic-link privileges.
+
+### macOS
+
+A disk image per processor (`arm64` for Apple silicon, `x64` for Intel), built on a GitHub macOS runner from the same sources
+with a backend sidecar cross-compiled for `darwin`. An AppImage cannot run on macOS; the disk image is its equivalent there.
+
+This build is **experimental**: it has not been run on a Mac yet, and the job is allowed to fail without stopping the release.
+It is not signed or notarized (that needs an Apple developer account), so macOS asks for confirmation at the first launch
+(right-click the app, then Open) and the app does not update itself there (Squirrel.Mac only installs signed updates): the person
+downloads the new version from the website. The executable is ad-hoc signed (`identity: "-"`), which Apple silicon needs to run
+it at all.
