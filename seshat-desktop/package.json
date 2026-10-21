@@ -123,6 +123,9 @@
       ],
       "signAndEditExecutable": false
     },
+    "nsis": {
+      "artifactName": "SeshatOS-Setup-${version}.${ext}"
+    },
     "publish": [
       {
         "provider": "github",
