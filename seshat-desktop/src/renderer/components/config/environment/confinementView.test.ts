@@ -16,6 +16,12 @@ describe('confinementView', () => {
     expect(confinementView(null, true).confined).toBe(true)
   })
 
+  it('says it has not checked rather than guess when nothing is known yet', () => {
+    const view = confinementView(null, false)
+    expect(view.label).toBe('Not checked')
+    expect(view.confined).toBe(false)
+  })
+
   it('tells Windows users the command to run themselves and never sets it up on its own', () => {
     expect(confinementView(status('needs-setup'), false).text).toContain(WINDOWS_SETUP_COMMAND)
     expect(confinementView(status('needs-setup'), false).text).toContain('alpha')

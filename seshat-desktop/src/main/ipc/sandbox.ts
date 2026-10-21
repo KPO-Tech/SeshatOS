@@ -5,9 +5,9 @@ import { enableSrt, srtStatus } from '../srt-manager'
 import { assertTrustedSender } from './trusted-sender'
 
 export function registerSandboxHandlers(ipcMain: IpcMain): void {
-  ipcMain.handle('sandbox:srt-status', async (event: IpcMainInvokeEvent) => {
+  ipcMain.handle('sandbox:srt-status', async (event: IpcMainInvokeEvent, options?: { passive?: unknown; refresh?: unknown }) => {
     assertTrustedSender(event)
-    return srtStatus()
+    return srtStatus({ passive: options?.passive === true, refresh: options?.refresh === true })
   })
 
   // Windows one-time setup (one UAC prompt). Ready but NOT offered in the UI for now: the Windows backend of srt is

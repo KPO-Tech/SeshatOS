@@ -13,7 +13,7 @@ export function confinementView(status: SrtStatus | null, docker: boolean): Conf
     return { label: 'Docker', confined: true, text: 'Commands run inside a Docker container, isolated from the rest of this machine.' }
   }
   if (!status) {
-    return { label: 'Unknown', confined: false, text: 'The confinement status is not available in this build.' }
+    return { label: 'Not checked', confined: false, text: "Not checked yet: opening Config, then Environment, checks what confines the agent's commands on this machine." }
   }
   switch (status.state) {
     case 'not-needed':
