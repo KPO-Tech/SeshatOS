@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Down } from '@icon-park/react'
-import { fetchProviderModels } from '@renderer/hooks/useProviders'
+import { useContextUsage } from '@renderer/hooks/useContextUsage'
 import { currentSandboxMode } from '@renderer/components/config/environment/sandboxApi'
 import { confinementView } from '@renderer/components/config/environment/confinementView'
 import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
@@ -8,7 +8,7 @@ import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
 import { api, ApiError } from '@renderer/api/client'
-import { compactionNote, connectorRows, contextUsage, environmentRows, formatTokens, liveContextAfterCompaction, streamedChars, tokensSinceReport, type CompactionOutcome } from '@renderer/lib/sessionOverview'
+import { compactionNote, connectorRows, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 
@@ -38,7 +38,6 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   const [docker, setDocker] = useState(false)
   const [confinement, setConfinement] = useState<{ label: string; confined: boolean } | null>(null)
-  const [windowTokens, setWindowTokens] = useState<number | null>(null)
   const [servers, setServers] = useState<MCPServer[]>([])
   const [compacting, setCompacting] = useState(false)
   const [compactNote, setCompactNote] = useState<{ text: string; failed: boolean } | null>(null)
@@ -59,20 +58,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     return () => { cancelled = true }
   }, [])
 
-  const providerId = session?.providerSettingId
-  const modelId = session?.modelId
-  useEffect(() => {
-    if (!providerId || !modelId) return
-    let cancelled = false
-    void fetchProviderModels(providerId)
-      .then((models) => {
-        if (cancelled) return
-        const model = models.find((item) => item.model_id === modelId)
-        setWindowTokens(model?.context_window && model.context_window > 0 ? model.context_window : null)
-      })
-      .catch(() => undefined)
-    return () => { cancelled = true }
-  }, [providerId, modelId])
+  const { usage: context, windowTokens } = useContextUsage(sessionId)
 
   // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
   // compaction rewrites the conversation that turn is using (the server refuses it too).
@@ -94,14 +80,6 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }
 
   const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
-  const streamed = useSessionStore((s) => s.streamingBySession[sessionId])
-  const context = contextUsage(
-    agentState.inputTokens,
-    agentState.outputTokens,
-    windowTokens,
-    agentState.liveContext,
-    tokensSinceReport(streamedChars(streamed), agentState.liveContext),
-  )
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0

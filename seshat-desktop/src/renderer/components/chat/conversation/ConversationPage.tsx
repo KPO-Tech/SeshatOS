@@ -195,6 +195,7 @@ export function ConversationPage() {
       />
 
       <ConversationComposer
+        sessionId={id}
         inputValue={inputValue}
         setInputValue={setInputValue}
         selectedCorpusId={selectedCorpusId}
