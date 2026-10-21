@@ -75,3 +75,22 @@ The backend is meant for the desktop app on the same machine, so it is closed to
 - It refuses any request whose `Host` header is not `localhost`, a loopback address, the non-loopback `SESHAT_API_HOST` or a name in `SESHAT_API_ALLOWED_HOSTS` (comma-separated). This stops DNS rebinding, where a web page re-resolves its own domain to `127.0.0.1` to reach the API from the user's browser.
 - `POST /auth/local-session` (the "continue without an account" session, which needs no secret) requires the header `X-Seshat-Desktop-Proof`: the HMAC-SHA256 of `auth/local-session` under the desktop bridge secret file. The Electron main process sends it. In a plain browser during development the renderer cannot read that file: start the backend with `SESHAT_ALLOW_UNPROVEN_LOCAL_SESSION=true` (never for a packaged app).
 - The terminal websocket accepts a request without `Origin` (Electron's main process) or one whose `Origin` is the backend's own host.
+
+## Start time of `make dev`
+
+`make dev` builds the backend into `seshat-backend/bin/seshat-dev` (`.exe` on Windows) when a file of the backend changed, and runs that binary. It used to run `go run`, which links a new executable of about 100 MB at every start. A start with nothing changed does not build at all.
+
+Measured on a Windows laptop with the project on a 5400 rpm hard disk (Go and Node caches on the same disk), from `make dev` to a usable chat:
+
+| | Time |
+|---|---|
+| `go run`, every module loaded at start | 248 s |
+| built binary, pages and modals loaded when first opened, Vite warm-up | 24 s (caches warm) |
+
+What decides the rest, in order:
+
+1. **Where the files are.** `node_modules` holds about 46,000 files (950 MB). A hard disk reads about 100 files a second at random; a `make dev` from a hard disk spends most of its time waiting for it, with the processor idle. Keep the repository, `node_modules` and the Go caches (`GOCACHE`, `GOTMPDIR`) on an SSD.
+2. **The antivirus.** On Windows, real-time protection scans every new executable (the backend binary, `electron.exe`) and the files Vite reads. Excluding the repository, `node_modules` and the Go caches from the scan removes the waits that remain.
+3. **Memory.** With under 1 GB free the system pages, and every start is slower.
+
+The first start after `npm install` or a change of `electron.vite.config.ts` is slower: Vite optimizes its dependencies once. `optimizeDeps.include` lists a dependency its scan cannot see (the PDF worker), because finding it late made Vite reload the page.

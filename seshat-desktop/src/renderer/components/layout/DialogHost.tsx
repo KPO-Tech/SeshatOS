@@ -1,9 +1,11 @@
-import { useEffect } from 'react'
-import { ConfigModal } from '@renderer/components/config/ConfigModal'
-import { SettingsModal } from '@renderer/components/settings/SettingsModal'
+import { lazy, Suspense, useEffect } from 'react'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { useOverlayStore } from '@renderer/stores/overlay'
+
+// The modals are large (every config section is behind ConfigModal) and closed at start: they load the first time one is opened.
+const ConfigModal = lazy(() => import('@renderer/components/config/ConfigModal').then((m) => ({ default: m.ConfigModal })))
+const SettingsModal = lazy(() => import('@renderer/components/settings/SettingsModal').then((m) => ({ default: m.SettingsModal })))
 
 // Renders the Settings and Config modals and tells the overlay store whether a
 // modal is covering the app (used to freeze the native browser view).
@@ -29,7 +31,7 @@ export function DialogHost() {
   if (!user) return null
 
   return (
-    <>
+    <Suspense fallback={null}>
       {settingsSection && (
         <SettingsModal
           user={user}
@@ -45,6 +47,6 @@ export function DialogHost() {
           onClose={() => useDialogsStore.setState({ configSection: null })}
         />
       )}
-    </>
+    </Suspense>
   )
 }

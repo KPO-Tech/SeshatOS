@@ -27,6 +27,9 @@ import { createBrowserBridgeServer } from './browser-bridge'
 import { registerTerminalRelayHandlers, stopAllTerminalRelays } from './ipc/terminal-relay'
 import { registerShellHandlers, stopAllShellSessions } from './ipc/shell'
 
+/** How long after the window has loaded the local title model starts. */
+const LLAMA_START_DELAY_MS = 10_000
+
 function configureRuntimePaths() {
   const runtimeRoot = resolveRuntimeRoot()
   app.setPath('userData', join(runtimeRoot, 'electron', 'user-data'))
@@ -235,9 +238,18 @@ app.whenReady().then(async () => {
   setupAutoUpdater()
   // Installs llama.cpp and the default title model on first launch, in the
   // background; chat works meanwhile and titles fall back to the chat model.
-  startLlamaOnLaunch(broadcastLlamaProgress).catch((error) => {
-    console.warn('[llama] local title model unavailable:', error instanceof Error ? error.message : error)
-  })
+  // It waits for the window to have loaded: starting a model server (a few
+  // hundred MB read from disk) while the interface is still loading slows both.
+  const startLlama = () => {
+    startLlamaOnLaunch(broadcastLlamaProgress).catch((error) => {
+      console.warn('[llama] local title model unavailable:', error instanceof Error ? error.message : error)
+    })
+  }
+  if (mainWindow) {
+    mainWindow.webContents.once('did-finish-load', () => setTimeout(startLlama, LLAMA_START_DELAY_MS))
+  } else {
+    startLlama()
+  }
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
