@@ -5,6 +5,7 @@ import { streamingToContentBlocks, useSessionStore, type ChatAttachment } from '
 import { useUIStore } from '@renderer/stores/ui'
 import { handleRuntimeEvent } from '@renderer/components/chat/streaming/runtimeEvents'
 import { commitDonePayload } from '@renderer/components/chat/streaming/streamCommit'
+import { createTurnTimer } from '@renderer/lib/turnTiming'
 import { errorMarkdown } from '@renderer/components/chat/streaming/streamErrors'
 import { reduceStreamChunk } from '@renderer/components/chat/streaming/streamReducers'
 import { StreamPresenter } from '@renderer/components/chat/streaming/streamPresenter'
@@ -114,6 +115,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
     const token = useAuthStore.getState().token
     const permissionMode = useUIStore.getState().permissionMode
     let committed = false
+    const turnTimer = createTurnTimer()
     let pendingTool: ToolActivity | null = null
     let targetStreaming = store.getStreaming(sessionId)
 
@@ -177,6 +179,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               abortController.signal,
               (donePayload) => {
                 if (watchdogTimer !== null) clearTimeout(watchdogTimer)
+                store.updateAgentState(sessionId, { lastTurnTiming: turnTimer.finish() })
                 flushPresenter()
                 commitDonePayload(sessionId, assistantMessageId, donePayload, store)
                 openKnowledgePanel(sessionId, donePayload.rag_results)
@@ -198,6 +201,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               (streamEvent) => {
                 receivedServerActivity = true
                 resetWatchdog()
+                if (streamEvent.type === 'content_block_start' || streamEvent.type === 'content_block_delta') turnTimer.markFirstOutput()
                 const nextStreaming = reduceStreamChunk(targetStreaming, streamEvent)
                 if (nextStreaming) {
                   targetStreaming = nextStreaming
@@ -218,6 +222,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               abortController.signal,
               (donePayload) => {
                 if (watchdogTimer !== null) clearTimeout(watchdogTimer)
+                store.updateAgentState(sessionId, { lastTurnTiming: turnTimer.finish() })
                 flushPresenter()
                 commitDonePayload(sessionId, assistantMessageId, donePayload, store)
                 openKnowledgePanel(sessionId, donePayload.rag_results)
@@ -239,6 +244,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               (streamEvent) => {
                 receivedServerActivity = true
                 resetWatchdog()
+                if (streamEvent.type === 'content_block_start' || streamEvent.type === 'content_block_delta') turnTimer.markFirstOutput()
                 const nextStreaming = reduceStreamChunk(targetStreaming, streamEvent)
                 if (nextStreaming) {
                   targetStreaming = nextStreaming
