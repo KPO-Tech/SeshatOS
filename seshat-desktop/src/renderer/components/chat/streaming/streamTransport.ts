@@ -2,11 +2,13 @@ import { useAuthStore } from '@renderer/stores/auth'
 import type { StreamEvent } from '@renderer/api/types'
 import type { DonePayload, RuntimeEventPayload, SessionTitledPayload } from './runtimeTypes'
 
-export type RetryableError = Error & { retryable?: boolean }
+/** A failed stream: whether sending again may work, and the kind the backend named (see streamErrors.ts). */
+export type RetryableError = Error & { retryable?: boolean; errorKind?: string }
 
-function makeRetryableError(message: string, retryable: boolean): RetryableError {
+function makeRetryableError(message: string, retryable: boolean, errorKind?: string): RetryableError {
   const error: RetryableError = new Error(message)
   error.retryable = retryable
+  error.errorKind = errorKind
   return error
 }
 
@@ -43,7 +45,7 @@ export async function consumeElectronStream(
         settled = true
         unsubscribe()
         cleanupAbort()
-        reject(makeRetryableError((data.error as string) || 'Streaming error', data.retryable === true))
+        reject(makeRetryableError((data.error as string) || 'Streaming error', data.retryable === true, data.error_kind as string | undefined))
         return
       }
       if (name === 'done') {
@@ -158,7 +160,7 @@ export async function consumeBrowserStream(
         }
 
         if (eventName === 'error') {
-          throw new Error((parsed.error as string) || 'Streaming error')
+          throw makeRetryableError((parsed.error as string) || 'Streaming error', false, parsed.error_kind as string | undefined)
         }
 
         if (eventName === 'done') {

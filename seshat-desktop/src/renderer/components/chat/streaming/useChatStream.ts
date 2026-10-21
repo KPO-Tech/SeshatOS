@@ -5,7 +5,7 @@ import { streamingToContentBlocks, useSessionStore, type ChatAttachment } from '
 import { useUIStore } from '@renderer/stores/ui'
 import { handleRuntimeEvent } from '@renderer/components/chat/streaming/runtimeEvents'
 import { commitDonePayload } from '@renderer/components/chat/streaming/streamCommit'
-import { errorHeading } from '@renderer/components/chat/streaming/streamErrors'
+import { errorMarkdown } from '@renderer/components/chat/streaming/streamErrors'
 import { reduceStreamChunk } from '@renderer/components/chat/streaming/streamReducers'
 import { StreamPresenter } from '@renderer/components/chat/streaming/streamPresenter'
 import { consumeBrowserStream, consumeElectronStream, type RetryableError } from '@renderer/components/chat/streaming/streamTransport'
@@ -325,12 +325,13 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
         store.clearStreaming(sessionId)
         return
       }
+      const errorKind = watchdogTimedOut ? 'timeout' : (error as RetryableError | undefined)?.errorKind
       const errMsg = watchdogTimedOut
         ? 'No response from the agent. The connection may have stalled.'
         : error instanceof Error ? error.message : 'Unable to reach the backend.'
       flushPresenter()
       const partial = streamingToContentBlocks(useSessionStore.getState().getStreaming(sessionId))
-      const content = [...partial, { type: 'text' as const, text: `> ${errorHeading(errMsg)}\n\n${errMsg}` }]
+      const content = [...partial, { type: 'text' as const, text: errorMarkdown(errMsg, errorKind) }]
       store.updateMessage(sessionId, assistantMessageId, (message) => ({ ...message, content }))
       store.updateMessage(sessionId, userMessageId, (message) => ({ ...message, status: 'error' }))
       store.clearStreaming(sessionId)
