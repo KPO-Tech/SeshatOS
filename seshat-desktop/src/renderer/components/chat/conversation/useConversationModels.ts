@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api } from '@renderer/api/client'
+import { api, ApiError } from '@renderer/api/client'
 import type { ProviderModel, ProviderSetting } from '@renderer/api/types'
 import { fetchProviderModels, useProviders } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
@@ -22,6 +22,9 @@ type UseConversationModelsArgs = {
   // working), but without this the choice silently reverts to whatever was
   // last saved the next time the conversation loads, with no indication why.
   onSaveError?: () => void
+  // Called when the backend refuses the choice because the conversation already has turns (a started conversation stays on its
+  // provider and model), after the selection has been put back.
+  onSwitchRefused?: () => void
 }
 
 function modelChoiceId(providerId: string, modelId: string): string {
@@ -59,7 +62,7 @@ function isChatProviderUsable(provider: ProviderSetting): boolean {
   return provider.has_api_key || provider.connection_status === 'ready'
 }
 
-export function useConversationModels({ sessionId, session, updateSession, onSaveError }: UseConversationModelsArgs) {
+export function useConversationModels({ sessionId, session, updateSession, onSaveError, onSwitchRefused }: UseConversationModelsArgs) {
   useProviders()
   const providers = useProvidersStore((s) => s.providers)
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
@@ -156,7 +159,19 @@ export function useConversationModels({ sessionId, session, updateSession, onSav
     setModelLoadError(null)
     const label = model?.display_name || choice.modelId
     if (sessionId) {
-      void api.patch(`/sessions/${sessionId}`, { provider_setting_id: choice.providerId, model_id: choice.modelId }).catch(() => onSaveError?.())
+      const before = session ? { providerSettingId: session.providerSettingId, providerLabel: session.providerLabel, modelId: session.modelId, modelLabel: session.modelLabel } : null
+      void api.patch(`/sessions/${sessionId}`, { provider_setting_id: choice.providerId, model_id: choice.modelId }).catch((error: unknown) => {
+        // The backend keeps a started conversation on the provider and model it began with. Showing the new choice anyway would send
+        // the next message with a model the backend then refuses, so the selection goes back to what the conversation really uses.
+        if (error instanceof ApiError && error.status === 409 && before) {
+          setSelectedProviderId(before.providerSettingId ?? null)
+          setSelectedModelId(before.modelId ?? null)
+          updateSession(sessionId, before)
+          onSwitchRefused?.()
+          return
+        }
+        onSaveError?.()
+      })
       updateSession(sessionId, {
         providerSettingId: choice.providerId,
         providerLabel: provider?.name,
@@ -164,7 +179,7 @@ export function useConversationModels({ sessionId, session, updateSession, onSav
         modelLabel: label,
       })
     }
-  }, [sessionId, providers, modelsByProvider, updateSession, onSaveError])
+  }, [sessionId, session, providers, modelsByProvider, updateSession, onSaveError, onSwitchRefused])
 
   const handleModelRetry = useCallback(() => {
     setModelLoadError(null)
