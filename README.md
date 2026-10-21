@@ -77,7 +77,7 @@ SeshatOS works on its own. SeshatCloud completes it when an organization needs s
 
 Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condition: free to use, self-host, modify, and redistribute for any purpose — including internal use by organizations of any size — except selling it (offering it as a paid product or service to third parties). See [LICENSE](./LICENSE).
 
-This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat-runtime) runtime is plain Apache-2.0. The license text is still a draft pending legal review.
+This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat-runtime) runtime is plain Apache-2.0. The license is the unmodified standard Apache-2.0 text plus the unmodified standard Commons Clause text, with a plain-words summary at the top of [LICENSE](./LICENSE); no lawyer has reviewed how they are combined, so when in doubt about a use (consulting, hosting for a client), write to the address below first.
 
 ## Download
 
