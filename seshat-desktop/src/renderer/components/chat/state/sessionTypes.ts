@@ -1,3 +1,4 @@
+import type { TurnTiming } from '@renderer/lib/turnTiming'
 import type { Message, PlanDocument, ToolApproval, ToolPromptRequest } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 
@@ -90,6 +91,8 @@ export type AgentState = {
   // The size of the context as the runtime last reported it (context.usage), updated during a turn: at the start of
   // every iteration and when a response arrives. Null before any report, and after a compaction until the next one.
   liveContext: LiveContext | null
+  // How long the last completed turn took (see lib/turnTiming.ts). Null before the first one.
+  lastTurnTiming: TurnTiming | null
 }
 
 type LiveContext = {
@@ -112,5 +115,6 @@ export function defaultAgentState(): AgentState {
     pendingPermission: null,
     stage: null,
     liveContext: null,
+    lastTurnTiming: null,
   }
 }

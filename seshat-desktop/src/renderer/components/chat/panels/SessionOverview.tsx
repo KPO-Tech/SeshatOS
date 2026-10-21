@@ -9,6 +9,7 @@ import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
 import { api, ApiError } from '@renderer/api/client'
 import { compactionNote, connectorRows, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
+import { formatDuration } from '@renderer/lib/turnTiming'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 
@@ -200,6 +201,12 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
           <Figure label="Tools" value={String(toolCount)} />
           <Figure label="Sites" value={String(webCount)} />
         </div>
+        {agentState.lastTurnTiming && (
+          <div className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] text-[var(--text-muted)]">
+            <span title="From sending to the first thing the model wrote">First token <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{agentState.lastTurnTiming.ttftMs === null ? '-' : formatDuration(agentState.lastTurnTiming.ttftMs)}</b></span>
+            <span>Last turn <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatDuration(agentState.lastTurnTiming.durationMs)}</b></span>
+          </div>
+        )}
         {(toolCount > 0 || webCount > 0) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {toolCount > 0 && <PageLink onClick={onOpenTools}>All tools</PageLink>}
