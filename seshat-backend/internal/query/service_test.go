@@ -12,6 +12,7 @@ import (
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
@@ -448,17 +449,12 @@ func newTestOwnershipStore(t *testing.T) *db.SessionOwnershipStore {
 	return store
 }
 
-// TestUpdateSessionMetadataRejectsProviderSwitchAfterFirstTurn is the
-// regression test for the unguarded rebind: prepareRuntimeInput already
-// enforces TotalTurns==0 before letting a query bind a session's
-// provider/model, but UpdateSessionMetadata's provider branch called
-// ownership.UpdateProviderSelection directly with no such check - a session
-// with existing turns could have its bound provider/model swapped at any
-// time via this endpoint.
-func TestUpdateSessionMetadataRejectsProviderSwitchAfterFirstTurn(t *testing.T) {
+// A conversation can change provider and model after its first turn: the runtime loads the session again for every turn with the
+// client built for that turn, so the binding only has to follow the choice.
+func TestUpdateSessionMetadataAllowsProviderSwitchAfterFirstTurn(t *testing.T) {
 	ctx := context.Background()
 	ownership := newTestOwnershipStore(t)
-	if _, err := ownership.Create(ctx, db.CreateSessionOwnershipParams{SessionID: "sess-1", UserID: "user-1"}); err != nil {
+	if _, err := ownership.Create(ctx, db.CreateSessionOwnershipParams{SessionID: "sess-1", UserID: "user-1", ProviderSettingID: "provider-1", ModelID: "model-1"}); err != nil {
 		t.Fatalf("create session ownership: %v", err)
 	}
 	sessions := &stubSearchSessionManager{sessions: []*sdk.SessionInfo{
@@ -466,21 +462,57 @@ func TestUpdateSessionMetadataRejectsProviderSwitchAfterFirstTurn(t *testing.T) 
 	}}
 	svc := NewService(ServiceConfig{Ownership: ownership, Sessions: sessions})
 
-	newProviderID := "provider-2"
-	err := svc.UpdateSessionMetadata(ctx, nil, "sess-1", nil, nil, nil, &newProviderID, nil, nil, nil, nil)
-	if err == nil {
-		t.Fatal("expected switching provider on a session with existing turns to be rejected")
+	newProviderID, newModelID := "provider-2", "model-2"
+	if err := svc.UpdateSessionMetadata(ctx, nil, "sess-1", nil, nil, nil, &newProviderID, &newModelID, nil, nil, nil); err != nil {
+		t.Fatalf("switching provider after the first turn: %v", err)
 	}
-	if bkerr.KindOf(err) != bkerr.ErrorKindConflict {
-		t.Fatalf("expected a conflict error, got kind=%v err=%v", bkerr.KindOf(err), err)
-	}
-
 	after, err := ownership.GetBySessionID(ctx, "sess-1")
 	if err != nil {
 		t.Fatalf("get session ownership: %v", err)
 	}
-	if after.ProviderSettingID != "" {
-		t.Fatalf("expected provider selection to remain unchanged, got %q", after.ProviderSettingID)
+	if after.ProviderSettingID != newProviderID || after.ModelID != newModelID {
+		t.Fatalf("binding = %q/%q, want %q/%q", after.ProviderSettingID, after.ModelID, newProviderID, newModelID)
+	}
+}
+
+type fakeProviderResolver struct{}
+
+func (fakeProviderResolver) ResolveRuntimeConfig(_ context.Context, _ *backendauth.Principal, id string) (*bksettings.ResolvedProviderConfig, error) {
+	return &bksettings.ResolvedProviderConfig{SettingID: id, Provider: "openai", ModelID: "default-of-" + id}, nil
+}
+
+// The next turn of a started conversation uses the provider and model asked for, and the binding follows; without a request it
+// keeps the one it had.
+func TestPrepareRuntimeInputFollowsAModelSwitchInAStartedSession(t *testing.T) {
+	ctx := context.Background()
+	ownership := newTestOwnershipStore(t)
+	if _, err := ownership.Create(ctx, db.CreateSessionOwnershipParams{SessionID: "sess-1", UserID: "user-1", ProviderSettingID: "provider-1", ModelID: "model-1"}); err != nil {
+		t.Fatalf("create session ownership: %v", err)
+	}
+	svc := NewService(ServiceConfig{Ownership: ownership, Settings: fakeProviderResolver{}})
+
+	kept, binding, err := svc.prepareRuntimeInput(ctx, nil, QueryInput{SessionID: "sess-1"})
+	if err != nil {
+		t.Fatalf("no request: %v", err)
+	}
+	if kept.RuntimeProvider == nil || kept.RuntimeProvider.SettingID != "provider-1" || kept.RuntimeProvider.ModelID != "model-1" || binding != "" {
+		t.Errorf("without a request: provider %+v binding %q, want provider-1/model-1 and no new binding", kept.RuntimeProvider, binding)
+	}
+
+	sameProviderOtherModel, binding, err := svc.prepareRuntimeInput(ctx, nil, QueryInput{SessionID: "sess-1", ProviderSettingID: "provider-1", ModelID: "model-9"})
+	if err != nil {
+		t.Fatalf("other model: %v", err)
+	}
+	if sameProviderOtherModel.RuntimeProvider.ModelID != "model-9" || binding != encodeBinding("provider-1", "model-9") {
+		t.Errorf("other model: %+v binding %q", sameProviderOtherModel.RuntimeProvider, binding)
+	}
+
+	otherProvider, binding, err := svc.prepareRuntimeInput(ctx, nil, QueryInput{SessionID: "sess-1", ProviderSettingID: "provider-2", ModelID: "model-2"})
+	if err != nil {
+		t.Fatalf("other provider: %v", err)
+	}
+	if otherProvider.RuntimeProvider.SettingID != "provider-2" || otherProvider.RuntimeProvider.ModelID != "model-2" || binding != encodeBinding("provider-2", "model-2") {
+		t.Errorf("other provider: %+v binding %q", otherProvider.RuntimeProvider, binding)
 	}
 }
 

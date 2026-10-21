@@ -3208,8 +3208,25 @@ func TestQueryBindsAPIKeyProviderSettingToSession(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected provider switch rejection 400, got %d body=%s", rec.Code, rec.Body.String())
+	// A started conversation can move to another provider setting: the turn runs on it and the binding follows.
+	if rec.Code != http.StatusOK {
+		t.Fatalf("provider switch in a started session: got %d body=%s", rec.Code, rec.Body.String())
+	}
+	lastInput = runtime.lastInput(t)
+	if lastInput.RuntimeProvider == nil || lastInput.RuntimeProvider.SettingID != otherSetting["id"] || lastInput.RuntimeProvider.Secret != "sk-other-secret" {
+		t.Fatalf("expected the switched provider setting %v on the turn, got %#v", otherSetting["id"], lastInput.RuntimeProvider)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/sessions", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	var afterSwitch map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&afterSwitch); err != nil {
+		t.Fatalf("decode sessions response: %v", err)
+	}
+	if got := afterSwitch["sessions"].([]any)[0].(map[string]any)["provider_setting_id"]; got != otherSetting["id"] {
+		t.Fatalf("expected the session to be bound to %v after the switch, got %v", otherSetting["id"], got)
 	}
 }
 
