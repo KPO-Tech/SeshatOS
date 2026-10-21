@@ -70,6 +70,7 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	// Known limitation: the repos directory is shared per backend instance
 	// (skillsloader.GetSkillReposPath), not per user - fine for the local
 	// desktop backend, revisit before exposing one backend to many users.
+	apiV1.Handle("/skills/sources", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillSources))))
 	apiV1.Handle("/skills/repos", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillRepos))))
 	apiV1.Handle("/skills/repos/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillRepoByNameDispatch))))
 	apiV1.Handle("/skills/", app.authMiddleware(http.HandlerFunc(app.handleSkillsDispatch)))
