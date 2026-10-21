@@ -651,8 +651,8 @@ func (s *Service) cleanupSessionArtifacts(ctx context.Context, sessionID, worksp
 }
 
 // SweepAbandonedSessions deletes sessions that were created but never
-// actually used - TotalTurns == 0 (the same "not yet started" signal
-// sessionCanBindProvider already relies on) and older than olderThan.
+// actually used - TotalTurns == 0 (never started) and older than
+// olderThan.
 //
 // Attaching a file creates a real session immediately, before any message
 // is ever sent (see Home.tsx's ensureSessionCreated and
@@ -898,22 +898,8 @@ func (s *Service) UpdateSessionMetadata(ctx context.Context, principal *backenda
 		if modelID != nil {
 			mid = strings.TrimSpace(*modelID)
 		}
-		// A provider/model switch after the session already has turns would
-		// silently leave the runtime session bound to whatever it started
-		// with - only the ownership record's advertised provider/model would
-		// change, drifting out of sync with what the LLM actually continues
-		// using (and a genuine switch, if the runtime honored it mid-session,
-		// could hand a different provider a transcript full of tool calls in
-		// its predecessor's format). prepareRuntimeInput already enforces
-		// this same TotalTurns==0 rule for the query-time binding path; this
-		// closes the same gap on the session-metadata update path.
-		canBind, err := s.sessionCanBindProvider(ctx, sessionID)
-		if err != nil {
-			return err
-		}
-		if !canBind {
-			return bkerr.Conflict("cannot change provider/model after the session has started - create a new session instead", nil)
-		}
+		// A conversation may change provider or model after its first turn: the runtime builds the client of each turn from the
+		// binding stored here (see prepareRuntimeInput).
 		if err := s.ownership.UpdateProviderSelection(ctx, sessionID, pid, mid); err != nil {
 			return bkerr.Internal("update session provider: "+err.Error(), err)
 		}
@@ -1312,16 +1298,29 @@ func (s *Service) prepareRuntimeInput(ctx context.Context, principal *backendaut
 	requestedSettingID := strings.TrimSpace(input.ProviderSettingID)
 	requestedModelID := strings.TrimSpace(input.ModelID)
 
+	// The provider and model of a conversation can change between two turns: the runtime loads the session again for every turn
+	// with the client built for that turn, and the token count it carries over is dropped when the model differs. What was asked
+	// for this turn wins and becomes the new binding; without a request the conversation keeps the binding it had.
 	switch {
-	case boundSettingID != "":
+	case requestedSettingID != "":
 		if s.settings == nil {
 			return QueryInput{}, "", bkerr.Unavailable("provider settings resolver not configured", nil)
 		}
-		if requestedSettingID != "" && requestedSettingID != boundSettingID {
-			return QueryInput{}, "", bkerr.InvalidInput("session is already bound to another provider setting", nil)
+		resolved, err := s.settings.ResolveRuntimeConfig(ctx, principal, requestedSettingID)
+		if err != nil {
+			return QueryInput{}, "", err
 		}
-		if requestedModelID != "" && boundModelID != "" && requestedModelID != boundModelID {
-			return QueryInput{}, "", bkerr.InvalidInput("session is already bound to another model", nil)
+		switch {
+		case requestedModelID != "":
+			resolved.ModelID = requestedModelID
+		case requestedSettingID == boundSettingID && boundModelID != "":
+			resolved.ModelID = boundModelID
+		}
+		runtimeInput.RuntimeProvider = resolvedProviderToRuntime(resolved)
+		return runtimeInput, encodeBinding(requestedSettingID, strings.TrimSpace(resolved.ModelID)), nil
+	case boundSettingID != "":
+		if s.settings == nil {
+			return QueryInput{}, "", bkerr.Unavailable("provider settings resolver not configured", nil)
 		}
 		resolved, err := s.settings.ResolveRuntimeConfig(ctx, principal, boundSettingID)
 		if err != nil {
@@ -1332,30 +1331,10 @@ func (s *Service) prepareRuntimeInput(ctx context.Context, principal *backendaut
 		}
 		runtimeInput.RuntimeProvider = resolvedProviderToRuntime(resolved)
 		return runtimeInput, "", nil
-	case requestedSettingID == "":
+	default:
 		// Existing session, no bound provider, no requested provider: try user's default.
 		s.tryResolveDefaultProvider(ctx, principal, &runtimeInput)
 		return runtimeInput, "", nil
-	default:
-		if s.settings == nil {
-			return QueryInput{}, "", bkerr.Unavailable("provider settings resolver not configured", nil)
-		}
-		canBind, err := s.sessionCanBindProvider(ctx, input.SessionID)
-		if err != nil {
-			return QueryInput{}, "", err
-		}
-		if !canBind {
-			return QueryInput{}, "", bkerr.InvalidInput("cannot attach a provider setting to a non-empty session", nil)
-		}
-		resolved, err := s.settings.ResolveRuntimeConfig(ctx, principal, requestedSettingID)
-		if err != nil {
-			return QueryInput{}, "", err
-		}
-		if requestedModelID != "" {
-			resolved.ModelID = requestedModelID
-		}
-		runtimeInput.RuntimeProvider = resolvedProviderToRuntime(resolved)
-		return runtimeInput, encodeBinding(requestedSettingID, strings.TrimSpace(resolved.ModelID)), nil
 	}
 }
 
@@ -1384,23 +1363,6 @@ func (s *Service) trackSessionBinding(ctx context.Context, principal *backendaut
 		_ = s.ownership.UpdateProviderSelection(ctx, resultSessionID, bindingProviderSettingID, bindingModelID)
 	}
 	_ = s.ownership.UpdateExecutionPolicy(ctx, resultSessionID, string(effectiveMode), string(effectiveOrigin))
-}
-
-func (s *Service) sessionCanBindProvider(ctx context.Context, sessionID string) (bool, error) {
-	if s.sessions == nil {
-		return false, bkerr.Unavailable("session store not available", nil)
-	}
-	sessions, err := s.sessions.ListSessions()
-	if err != nil {
-		return false, bkerr.Internal(err.Error(), err)
-	}
-	for _, session := range sessions {
-		if session == nil || session.ID.String() != sessionID {
-			continue
-		}
-		return session.TotalTurns == 0, nil
-	}
-	return false, bkerr.NotFound("session not found", nil)
 }
 
 // tryResolveDefaultProvider injects the user's default provider into runtimeInput
