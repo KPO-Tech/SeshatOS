@@ -1,7 +1,10 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
@@ -33,5 +36,22 @@ func TestClassifyStreamError(t *testing.T) {
 				t.Errorf("classifyStreamError(%q) = %q, want %q", tc.msg, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestWriteSSEErrorCarriesTheKindOnTheWire(t *testing.T) {
+	rec := httptest.NewRecorder()
+	writeSSEError(rec, rec, nil, "insufficient_quota: out of credit", classifyStreamError(nil, "insufficient_quota: out of credit"))
+
+	body := rec.Body.String()
+	if !strings.HasPrefix(body, "event: error\ndata: ") {
+		t.Fatalf("not an error event: %q", body)
+	}
+	var payload map[string]string
+	if err := json.Unmarshal([]byte(strings.TrimSuffix(strings.TrimPrefix(body, "event: error\ndata: "), "\n\n")), &payload); err != nil {
+		t.Fatalf("payload is not JSON: %v (%q)", err, body)
+	}
+	if payload["error"] != "insufficient_quota: out of credit" || payload["error_kind"] != streamErrQuota {
+		t.Errorf("payload = %v, want the message and kind %q", payload, streamErrQuota)
 	}
 }
