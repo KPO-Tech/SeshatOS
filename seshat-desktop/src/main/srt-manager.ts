@@ -4,6 +4,7 @@ import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { createProbeCache } from './probe-cache'
+import { srtEntryScript, srtUnixLauncher, srtWindowsLauncher } from './srt-launcher'
 
 // Command confinement for the agent's bash tool on macOS and Windows.
 //
@@ -44,13 +45,16 @@ function ensureSrtLauncher(): string | null {
   if (!cli) return null
   const dir = join(app.getPath('userData'), 'bin')
   mkdirSync(dir, { recursive: true })
+  // The launcher starts an entry script, not the CLI itself: see srt-launcher.ts for why.
+  const entry = join(dir, 'srt-entry.cjs')
+  writeFileSync(entry, srtEntryScript(cli))
   if (process.platform === 'win32') {
     const file = join(dir, 'srt.cmd')
-    writeFileSync(file, `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" "${cli}" %*\r\n`)
+    writeFileSync(file, srtWindowsLauncher(process.execPath, entry))
     return file
   }
   const file = join(dir, 'srt')
-  writeFileSync(file, `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "${cli}" "$@"\n`)
+  writeFileSync(file, srtUnixLauncher(process.execPath, entry))
   chmodSync(file, 0o755)
   return file
 }
