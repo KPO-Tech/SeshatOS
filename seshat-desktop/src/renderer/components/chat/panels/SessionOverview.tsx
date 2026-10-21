@@ -48,11 +48,11 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     void currentSandboxMode()
       .then(async (mode) => {
         const isDocker = mode === 'docker'
-        const status = isDocker ? null : await (window.seshat?.sandbox?.srtStatus() ?? Promise.resolve(null)).catch(() => null)
+        const status = isDocker ? null : await (window.seshat?.sandbox?.srtStatus({ passive: true }) ?? Promise.resolve(null)).catch(() => null)
         if (cancelled) return
         setDocker(isDocker)
-        const view = isDocker || status ? confinementView(status, isDocker) : null
-        setConfinement(view ? { label: view.label, confined: view.confined } : null)
+        const view = confinementView(status, isDocker)
+        setConfinement({ label: view.label, confined: view.confined })
       })
       .catch(() => undefined)
     void fetchMCPServers().then((list) => { if (!cancelled) setServers(list) }).catch(() => undefined)

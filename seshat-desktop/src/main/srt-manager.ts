@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
+import { createProbeCache } from './probe-cache'
 
 // Command confinement for the agent's bash tool on macOS and Windows.
 //
@@ -86,7 +87,7 @@ function probeArgs(): string[] {
 }
 
 /** Tries a trivial confined command, the same check the backend makes before it relies on srt. */
-export async function srtStatus(): Promise<SrtStatus> {
+async function probeStatus(): Promise<SrtStatus> {
   const platform = process.platform
   if (platform === 'linux') return { state: 'not-needed', platform }
   const launcher = ensureSrtLauncher()
@@ -97,13 +98,31 @@ export async function srtStatus(): Promise<SrtStatus> {
   return { state: needsSetup ? 'needs-setup' : 'unavailable', platform, detail: output.slice(0, 600) }
 }
 
+// The probe starts a real sandboxed command, which on Windows opens a console (a Windows Terminal window flashes when that is the
+// default terminal). Its answer is kept for the run, and only the user, in Config, asks for a new one.
+const probeCache = createProbeCache(probeStatus)
+
+interface SrtStatusOptions {
+  /** Answer from what is already known, never by starting a command; null when nothing is known yet. */
+  passive?: boolean
+  /** Run the probe again even though an answer is known. */
+  refresh?: boolean
+}
+
+export async function srtStatus(options: SrtStatusOptions = {}): Promise<SrtStatus | null> {
+  // Linux needs no probe: nothing is started.
+  if (process.platform === 'linux') return { state: 'not-needed', platform: process.platform }
+  if (options.passive) return probeCache.peek()
+  return probeCache.get(options.refresh === true)
+}
+
 /** Windows only: the one-time setup. Shows one UAC prompt. Returns the new status. */
 export async function enableSrt(): Promise<SrtStatus> {
-  if (process.platform !== 'win32') return srtStatus()
+  if (process.platform !== 'win32') return probeCache.get()
   const launcher = ensureSrtLauncher()
-  if (!launcher) return srtStatus()
+  if (!launcher) return probeCache.get()
   const result = await run(launcher, ['windows-install'], SETUP_TIMEOUT_MS)
-  const status = await srtStatus()
+  const status = await probeCache.get(true)
   if (status.state !== 'ready' && result.output && !status.detail) status.detail = result.output.slice(0, 600)
   return status
 }

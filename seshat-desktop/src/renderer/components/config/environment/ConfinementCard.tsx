@@ -11,8 +11,9 @@ import { confinementView } from './confinementView'
 export function ConfinementCard({ docker }: { docker: boolean }) {
   const [status, setStatus] = useState<SrtStatus | null>(null)
 
-  const refresh = useCallback(async () => {
-    setStatus(await (window.seshat?.sandbox?.srtStatus() ?? Promise.resolve(null)).catch(() => null))
+  // Opening the card checks once; the answer is kept for the run, so coming back here does not start another command.
+  const refresh = useCallback(async (again = false) => {
+    setStatus(await (window.seshat?.sandbox?.srtStatus({ refresh: again }) ?? Promise.resolve(null)).catch(() => null))
   }, [])
 
   useEffect(() => { void refresh() }, [refresh])
@@ -27,6 +28,15 @@ export function ConfinementCard({ docker }: { docker: boolean }) {
       <div className="grid gap-2 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
         <div>{view.text}</div>
         {status?.detail && !view.confined && <div className="font-mono text-[11px]">{status.detail}</div>}
+        {!view.confined && !docker && (
+          <button
+            type="button"
+            onClick={() => void refresh(true)}
+            className="justify-self-start rounded-md border border-[var(--border-soft)] px-2.5 py-1 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
+          >
+            Check again
+          </button>
+        )}
       </div>
     </ConfigCard>
   )

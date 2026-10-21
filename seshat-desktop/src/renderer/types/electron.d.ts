@@ -75,7 +75,8 @@ interface Window {
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
     }
     sandbox?: {
-      srtStatus: () => Promise<SrtStatus>
+      // passive: answer from what is known without starting a command; refresh: probe again. Null when nothing is known.
+      srtStatus: (options?: { passive?: boolean; refresh?: boolean }) => Promise<SrtStatus | null>
       srtEnable: () => Promise<SrtStatus>
     }
     appearance?: {

@@ -203,7 +203,7 @@ const seshatBridge = {
     },
   },
   sandbox: {
-    srtStatus: (): Promise<SrtStatus> => ipcRenderer.invoke('sandbox:srt-status'),
+    srtStatus: (options?: { passive?: boolean; refresh?: boolean }): Promise<SrtStatus | null> => ipcRenderer.invoke('sandbox:srt-status', options),
     srtEnable: (): Promise<SrtStatus> => ipcRenderer.invoke('sandbox:srt-enable'),
   },
   envVars: {
