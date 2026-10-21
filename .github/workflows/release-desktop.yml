@@ -10,8 +10,28 @@ permissions:
   contents: write
 
 jobs:
+  check-version:
+    name: Check the tag matches the app version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # electron-updater compares the version inside the installer with the one in latest.yml: a tag that disagrees with
+      # seshat-desktop/package.json publishes installers named after one version and metadata claiming another, and the app
+      # then offers an update to itself or never sees one.
+      - name: Compare tag and package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./seshat-desktop/package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match seshat-desktop/package.json version $version"
+            exit 1
+          fi
+
   build-backend:
     name: Build backend (${{ matrix.suffix }})
+    needs: check-version
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -94,6 +114,7 @@ jobs:
           path: |
             seshat-desktop/dist/*.AppImage
             seshat-desktop/dist/*.deb
+            seshat-desktop/dist/latest-linux.yml
 
   package-windows:
     name: Package Windows (NSIS)
@@ -120,15 +141,33 @@ jobs:
         working-directory: seshat-desktop
         run: npm run build
 
+      # Signed when a certificate is configured in the repository secrets (WIN_CSC_LINK: the .pfx as a base64 string or a URL,
+      # WIN_CSC_KEY_PASSWORD: its password). Without them the installer is built unsigned, as before: Windows SmartScreen then
+      # warns on the first launch.
       - name: Package (NSIS)
         working-directory: seshat-desktop
-        run: npx electron-builder --win nsis --publish never
+        env:
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          if [ -n "$CSC_LINK" ]; then
+            echo "Signing the installer and the executable"
+            npx electron-builder --win nsis --publish never --config.win.signAndEditExecutable=true
+          else
+            echo "::warning::no WIN_CSC_LINK secret: the Windows installer is not signed"
+            unset CSC_LINK CSC_KEY_PASSWORD
+            npx electron-builder --win nsis --publish never
+          fi
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: installers-windows
-          path: seshat-desktop/dist/*.exe
+          path: |
+            seshat-desktop/dist/*.exe
+            seshat-desktop/dist/*.exe.blockmap
+            seshat-desktop/dist/latest.yml
 
   publish:
     name: Publish GitHub Release

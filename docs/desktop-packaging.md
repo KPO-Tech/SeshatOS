@@ -129,3 +129,32 @@ A future CI release should run a matrix:
 There is no release-time server URL to inject (see "Connected Mode Is Not
 Configurable" above) — every build targets whatever `defaultServerURL` is
 compiled into `seshat-backend/internal/config/bootstrap.go` at that commit.
+
+## Releasing
+
+A release is a `v*` tag on `main` of this repository. The `Release Desktop` workflow then builds the backend sidecar, packages
+Linux (AppImage, deb) and Windows (NSIS) and publishes them in a GitHub release with `SHA256SUMS.txt` and notes generated from the
+merged pull requests.
+
+1. Set `version` in `seshat-desktop/package.json` to the number of the release (without the `v`) and merge it. The workflow
+   refuses a tag that disagrees with it: the installers are named after the package version, and `electron-updater` compares that
+   version with the one in `latest.yml`.
+2. Tag `main` (`vX.Y.Z`) and push the tag.
+3. Open the release and check that it holds `SeshatOS-Setup-X.Y.Z.exe` (and its `.blockmap`), `latest.yml`, the AppImage,
+   `latest-linux.yml` and the deb.
+
+### Automatic updates
+
+The app checks the GitHub releases of this repository (`build.publish`) ten seconds after start, downloads an update in the
+background and installs it only when the person asks. `electron-updater` reads `latest.yml` (Windows) and `latest-linux.yml`
+(AppImage) from the release, so a release that lacks them is invisible to the installed apps. The Windows installer has a fixed
+name (`nsis.artifactName`) because GitHub rewrites spaces in asset names to dots, which would make `latest.yml` point at a file
+that does not exist. The deb is not updated by the app.
+
+### Windows signing
+
+The Windows job signs the installer and the executable when the repository has the secrets `WIN_CSC_LINK` (the code-signing
+certificate, `.pfx`, as a base64 string or a URL) and `WIN_CSC_KEY_PASSWORD`. Without them it builds an unsigned installer and
+says so in a warning: Windows SmartScreen then asks for confirmation at the first launch, and the warning fades as the download
+count of a certificate grows. Local builds stay unsigned (`signAndEditExecutable=false`), because signing needs a certificate and
+symbolic-link privileges.
