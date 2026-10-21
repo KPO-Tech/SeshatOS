@@ -50,6 +50,7 @@ export function ConversationPage() {
     session,
     updateSession,
     onSaveError: () => showToast("Couldn't save model selection - it may revert next time you open this conversation.", 'err'),
+    onSwitchRefused: () => showToast('This conversation keeps the model it started with. Start a new conversation to use another model.', 'err'),
   })
 
   const {
