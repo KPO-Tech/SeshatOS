@@ -30,7 +30,7 @@ export function PluginDetailModal({ connector, onChanged, onClose }: Props) {
         </div>
 
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <section className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] p-3.5">
+          <section className="min-w-0 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] p-3.5">
             <LocalConnectorPanel connector={connector} onChanged={onChanged} />
           </section>
         </div>
