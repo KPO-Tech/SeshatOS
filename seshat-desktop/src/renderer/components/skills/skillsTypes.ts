@@ -32,3 +32,30 @@ export type CatalogEntry = {
   installed: boolean
   source?: 'organization'
 }
+
+/** A tool whose skill folder the agent may use in place (Claude Code, Codex). */
+export type SkillSourceTool = {
+  id: 'claude_code' | 'codex'
+  label: string
+  path: string
+  detected: boolean
+  skill_count: number
+  enabled: boolean
+}
+
+export type SkillSourceFolder = {
+  path: string
+  exists: boolean
+  skill_count: number
+}
+
+export type SkillSources = {
+  tools: SkillSourceTool[]
+  folders: SkillSourceFolder[]
+}
+
+export type SkillSourcesChoice = {
+  claude_code: boolean
+  codex: boolean
+  folders: string[]
+}

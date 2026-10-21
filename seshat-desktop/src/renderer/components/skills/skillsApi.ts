@@ -1,5 +1,5 @@
 import { api } from '@renderer/api/client'
-import type { CatalogEntry, RepoInfo, Skill, TreeNode } from './skillsTypes'
+import type { CatalogEntry, RepoInfo, Skill, SkillSources, SkillSourcesChoice, TreeNode } from './skillsTypes'
 
 export async function fetchSkills() {
   const result = await api.get<{ skills: Skill[] }>('/skills')
@@ -42,4 +42,13 @@ export function installSkillRepo(url: string) {
 
 export function uninstallSkillRepo(name: string) {
   return api.delete(`/skills/repos/${encodeURIComponent(name)}`)
+}
+
+/** The skill folders of other tools and the folders the person added, as the agent reads them: in place, never copied. */
+export function fetchSkillSources() {
+  return api.get<SkillSources>('/skills/sources')
+}
+
+export function saveSkillSources(choice: SkillSourcesChoice) {
+  return api.put<SkillSources>('/skills/sources', choice)
 }

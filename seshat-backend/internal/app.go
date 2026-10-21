@@ -271,6 +271,8 @@ func NewApp(deps Dependencies) *App {
 		}
 	}
 	skillsService := skills.NewService()
+	// The skill folders of other tools that the person turned on are made available to the agent from the first turn.
+	skillsService.ApplySources()
 	agentsService := agents.NewService(deps.AgentDefinitionStore, deps.AgentsCloudClient)
 	mcpConfig := mcp.ServiceConfig{
 		Store:       deps.MCPServerStore,
