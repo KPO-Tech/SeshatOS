@@ -1,7 +1,7 @@
 // What the session overview shows, as plain data. Each card appears only when it has something to say: a connectors card
 // with nothing connected, or an outputs card with no file, is not drawn at all.
 
-type ContextUsage = {
+export type ContextUsage = {
   used: number
   /** The model's context window, when known. */
   window: number | null

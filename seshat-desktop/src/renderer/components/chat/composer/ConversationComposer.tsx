@@ -1,5 +1,6 @@
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ChatInput } from './ChatInput'
+import { ContextGauge } from './ContextGauge'
 import type { ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { providerDisplayName, providerInitials, type ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
 import { modelAlias } from '@renderer/lib/modelAlias'
@@ -14,6 +15,7 @@ type SendMessageOptions = {
 }
 
 type ConversationComposerProps = {
+  sessionId?: string
   inputValue: string
   setInputValue: (value: string) => void
   selectedCorpusId: string | null
@@ -48,6 +50,7 @@ type ConversationComposerProps = {
 }
 
 export function ConversationComposer({
+  sessionId,
   inputValue,
   setInputValue,
   selectedCorpusId,
@@ -145,6 +148,7 @@ export function ConversationComposer({
           executionMode={executionMode}
           onExecutionModeChange={onExecutionModeChange}
         />
+        {sessionId && <ContextGauge sessionId={sessionId} />}
       </div>
     </div>
   )
