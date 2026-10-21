@@ -4,6 +4,7 @@
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
+  "license": "SEE LICENSE IN ../LICENSE",
   "author": {
     "name": "KPO-Tech",
     "email": "seshatsupport@seshat-ai.com"
@@ -81,6 +82,7 @@
   "build": {
     "appId": "com.seshat.os",
     "productName": "SeshatOS",
+    "copyright": "Copyright © 2026 Stéphane Kpoviessi (Seshat)",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
@@ -101,6 +103,10 @@
       {
         "from": "node_modules/@anthropic-ai/sandbox-runtime",
         "to": "sandbox-runtime"
+      },
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE"
       },
       {
         "from": "build/icon.png",

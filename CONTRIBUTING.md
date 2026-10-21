@@ -8,6 +8,13 @@ service are developed.
 
 See [LICENSE](./LICENSE) for the terms this code is released under.
 
+### Your contributions
+
+By opening a pull request you confirm that you wrote the change (or have the right to submit it) and that it is released under the
+same license as the rest of SeshatOS (Apache-2.0 with the Commons Clause condition). You also allow the licensor to offer the
+project, including your contribution, under other terms, such as a commercial license for people who want to sell it. You keep the
+copyright on what you wrote.
+
 ---
 
 ## Contribution areas
