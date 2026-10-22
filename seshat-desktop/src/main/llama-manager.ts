@@ -18,7 +18,7 @@ const STATE_FILE = 'state.json'
 const REPORT_RETRY_INTERVAL_MS = 5_000
 const REPORT_MAX_ATTEMPTS = 120
 
-type TitleModelInfo = {
+export type TitleModelInfo = {
   id: string
   label: string
   repo: string
@@ -30,7 +30,7 @@ type TitleModelInfo = {
 
 // Only non-reasoning instruct models belong here. A reasoning model burns its
 // output budget on a hidden chain of thought and never returns a title.
-const MODEL_CATALOG: TitleModelInfo[] = [
+export const MODEL_CATALOG: TitleModelInfo[] = [
   {
     id: 'qwen2.5-0.5b',
     label: 'Qwen2.5 0.5B Instruct',
@@ -57,7 +57,7 @@ const MODEL_CATALOG: TitleModelInfo[] = [
   },
 ]
 
-const DEFAULT_MODEL_ID = 'qwen2.5-0.5b'
+export const DEFAULT_MODEL_ID = 'qwen2.5-0.5b'
 
 const HF_REPO_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*$/
 const HF_FILE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*\.gguf$/
