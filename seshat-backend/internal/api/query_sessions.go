@@ -151,6 +151,11 @@ func (app *App) handleSessionByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if action == "artifact" {
+		app.handleSessionArtifact(w, r, principal, sessionID)
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		detail, err := app.backend.Query.GetSession(r.Context(), principal, sessionID)

@@ -13,7 +13,7 @@ const TOOL_ACTIVITY_PHRASES: Record<string, string> = {
   task_create: 'planning tasks', task_update: 'updating tasks',
   submit_plan: 'writing the plan', exit_plan_mode: 'wrapping up the plan',
   agent: 'delegating to a sub-agent', spawn_agent: 'delegating to a sub-agent',
-  generate_image: 'generating an image', tts: 'generating audio', stt: 'transcribing audio',
+  generate_image: 'generating an image', present_artifact: 'preparing a file', tts: 'generating audio', stt: 'transcribing audio',
 }
 
 // Rotated through while the agent is reasoning with no specific tool active.
