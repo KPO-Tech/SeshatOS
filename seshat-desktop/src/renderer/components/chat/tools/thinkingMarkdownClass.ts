@@ -1,4 +1,7 @@
+// Thinking stays at 13px whatever size the answer is read at: it is the quiet part of the conversation.
 export const THINKING_MARKDOWN_CLASS = [
+  '!text-[13px]',
+  '!leading-[1.6]',
   '[&_h1]:m-0',
   '[&_h1]:mb-1',
   '[&_h1]:text-inherit',
