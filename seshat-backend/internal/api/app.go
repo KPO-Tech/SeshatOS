@@ -56,10 +56,6 @@ type App struct {
 	permBroker        *backendquery.PermissionBroker
 	promptBroker      *backendquery.PromptBroker
 	titleBroker       *backendquery.TitleBroker
-	// terminalRelay is shared with the SDKRuntime constructed in bootstrap.go
-	// (via SDKRuntime.SetTerminalRelay) — both need the same instance so a
-	// terminal registered here is visible to bash-tool calls there.
-	terminalRelay         *backendquery.TerminalRelay
 	cloudAutomation       *cloudautomation.Service
 	artifactPreviews      *artifactpreview.Store
 	ragService            *rag.Service
@@ -139,20 +135,10 @@ type AppConfig struct {
 	// SandboxKind is the bash-tool sandbox backend the query client's SDK
 	// Client actually resolved to at boot - see App.sandboxKind's doc comment.
 	SandboxKind string
-	// TerminalRelay, when set, is shared with the SDKRuntime constructed in
-	// bootstrap.go so a terminal registered via the WS handler here is
-	// visible to bash-tool calls made through that runtime. Falls back to a
-	// standalone instance (matching prior behavior) when nil, e.g. in tests
-	// that construct an App without a full bootstrap.
-	TerminalRelay *backendquery.TerminalRelay
-	TitleBroker   *backendquery.TitleBroker
+	TitleBroker *backendquery.TitleBroker
 }
 
 func NewApp(cfg AppConfig) *App {
-	terminalRelay := cfg.TerminalRelay
-	if terminalRelay == nil {
-		terminalRelay = backendquery.NewTerminalRelay()
-	}
 	titleBroker := cfg.TitleBroker
 	if titleBroker == nil {
 		titleBroker = backendquery.NewTitleBroker()
@@ -191,7 +177,6 @@ func NewApp(cfg AppConfig) *App {
 		permBroker:            backendquery.NewPermissionBroker(),
 		promptBroker:          backendquery.NewPromptBroker(),
 		titleBroker:           titleBroker,
-		terminalRelay:         terminalRelay,
 		artifactPreviews:      artifactPreviews,
 		enableSignup:          cfg.EnableSignup,
 		enableAPIKeys:         cfg.EnableAPIKeys,

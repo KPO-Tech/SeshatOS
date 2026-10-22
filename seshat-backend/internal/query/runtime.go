@@ -75,7 +75,6 @@ type SessionArchiveInspector interface {
 type SDKRuntime struct {
 	client                *sdk.Client
 	baseConfig            *sdk.ClientConfig
-	terminalRelay         *TerminalRelay
 	resolveLocalSTT       func(ctx context.Context) *sdk.SpeechToTextConfig
 	resolveMedia          func(ctx context.Context) MediaConfigs
 	resolveLocalTitle     func(ctx context.Context) *LocalTitleEndpoint
@@ -150,15 +149,6 @@ func NewSDKRuntime(client *sdk.Client, baseConfig *sdk.ClientConfig) *SDKRuntime
 	}
 }
 
-// SetTerminalRelay attaches the shared TerminalRelay used to route a
-// session's bash-tool calls through Electron's real terminal when one is
-// connected — see applyRemoteExecutor. A separate setter (rather than a
-// constructor param) keeps NewSDKRuntime's existing call sites, including
-// runtime_test.go, unchanged.
-func (r *SDKRuntime) SetTerminalRelay(relay *TerminalRelay) {
-	r.terminalRelay = relay
-}
-
 // SetLocalSTTResolver attaches a resolver for a locally running whisper.cpp
 // server (see api.handleLocalSTTConfig, set by the Electron main process
 // once it has spawned whisper-server) — when it returns non-nil, it takes
@@ -167,8 +157,7 @@ func (r *SDKRuntime) SetTerminalRelay(relay *TerminalRelay) {
 // dictation endpoint (POST /api/v1/transcribe) already prefers, without
 // needing a backend restart when the setting changes. A separate setter
 // (rather than a constructor param) keeps NewSDKRuntime's existing call
-// sites, including runtime_test.go, unchanged — same reasoning as
-// SetTerminalRelay above.
+// sites, including runtime_test.go, unchanged.
 func (r *SDKRuntime) SetLocalSTTResolver(resolve func(ctx context.Context) *sdk.SpeechToTextConfig) {
 	r.resolveLocalSTT = resolve
 }
@@ -277,7 +266,7 @@ func (r *SDKRuntime) SetBrowserRemoteControlResolver(resolve func(ctx context.Co
 // a session's browser tool calls attach to an existing, desktop-visible CDP
 // tab instead of an invisible incognito one - see
 // sdk.ClientConfig.BrowserSessionTargetResolver for the full rationale. Same
-// setter-not-constructor-param reasoning as SetTerminalRelay above.
+// setter-not-constructor-param reasoning as SetLocalSTTResolver above.
 func (r *SDKRuntime) SetBrowserSessionTargetResolver(resolve func(ctx context.Context, sessionID sdk.SessionID) (string, bool)) {
 	r.mu.Lock()
 	r.resolveBrowserSession = resolve
@@ -334,22 +323,6 @@ func (r *SDKRuntime) tryAcquireSessionTurn(sessionID string) (release func(), ok
 	}, true
 }
 
-// applyRemoteExecutor registers a terminalRemoteExecutor for session when
-// Electron's terminal relay has a live connection for it, so this turn's
-// bash-tool calls run in the user's real, visible shell. Sessions with no
-// terminal ever opened are unaffected — bash.Tool falls back to local
-// execution exactly as before.
-func (r *SDKRuntime) applyRemoteExecutor(session *sdk.Session, sessionID string) {
-	if r.terminalRelay == nil || sessionID == "" {
-		return
-	}
-	if !r.terminalRelay.Available(sessionID) {
-		session.ClearRemoteExecutor()
-		return
-	}
-	session.SetRemoteExecutor(&terminalRemoteExecutor{relay: r.terminalRelay, sessionID: sessionID})
-}
-
 func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryResult, error) {
 	release, ok := r.tryAcquireSessionTurn(input.SessionID)
 	if !ok {
@@ -366,7 +339,6 @@ func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryRes
 	if err != nil {
 		return nil, err
 	}
-	r.applyRemoteExecutor(session, session.GetID().String())
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// See the matching comment in StreamPrompt: carried on ctx, not
@@ -440,7 +412,6 @@ func (r *SDKRuntime) StreamPrompt(ctx context.Context, input QueryInput, onChunk
 		return nil, err
 	}
 	sessionLoadMs := time.Since(sessionStart).Milliseconds()
-	r.applyRemoteExecutor(session, session.GetID().String())
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// Carried on ctx (not client.SetPromptFn/SetWebSearchRunner, which mutate

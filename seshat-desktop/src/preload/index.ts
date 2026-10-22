@@ -89,24 +89,7 @@ type BrowserPanelState = {
 type ShellDataEvent = { id: string; data: string }
 type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
-// shell and terminal-relay are two different things on purpose. terminal-relay
-// carries the agent's own bash-tool commands per session, bridged to
-// seshat-backend's TerminalRelay so the user watches them run live - see
-// main/ipc/terminal-relay.ts. `shell` is a real PTY (main/ipc/shell.ts) that
-// the user drives themselves.
-type TerminalRelayEvent = {
-  sessionId: string
-  type: string
-  commandId?: string
-  command?: string
-  cwd?: string
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  exitCode?: number
-  durationMs?: number
-}
-
+// `shell` is a real PTY (main/ipc/shell.ts) that the user drives themselves.
 const seshatBridge = {
   getVersion: () => ipcRenderer.invoke('app:version'),
   openPath: (p: string) => ipcRenderer.invoke('system:open-path', p),
@@ -279,20 +262,6 @@ const seshatBridge = {
       }
       ipcRenderer.on('shell:exit', handler)
       return () => ipcRenderer.removeListener('shell:exit', handler)
-    },
-  },
-  terminalRelay: {
-    connect: (sessionId: string): Promise<{ ok: boolean; connected: boolean }> =>
-      ipcRenderer.invoke('terminal-relay:connect', sessionId),
-    disconnect: (sessionId: string): Promise<void> => ipcRenderer.invoke('terminal-relay:disconnect', sessionId),
-    status: (sessionId: string): Promise<{ connected: boolean }> => ipcRenderer.invoke('terminal-relay:status', sessionId),
-    onEvent: (sessionId: string, listener: (event: TerminalRelayEvent) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalRelayEvent) => {
-        if (payload.sessionId !== sessionId) return
-        listener(payload)
-      }
-      ipcRenderer.on('terminal-relay:event', handler)
-      return () => ipcRenderer.removeListener('terminal-relay:event', handler)
     },
   },
   updates: {

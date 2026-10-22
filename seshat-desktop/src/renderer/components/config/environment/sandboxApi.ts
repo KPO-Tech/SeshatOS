@@ -16,8 +16,7 @@ export function saveSandboxMode(mode: SandboxMode): Promise<SandboxConfig> {
 }
 
 // Cached read for callers that just need to know "local or docker" without
-// caring about update timestamps (e.g. deciding whether to proactively
-// connect the terminal relay for a session) - avoids a settings round trip
+// caring about update timestamps - avoids a settings round trip
 // on every conversation load. Invalidated whenever the setting is saved, so
 // a change in Settings > Environment takes effect without a restart.
 let cachedMode: Promise<SandboxMode> | null = null
