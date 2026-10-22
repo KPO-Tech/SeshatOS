@@ -1,6 +1,6 @@
 {
   "name": "seshat-desktop",
-  "version": "0.2.0",
+  "version": "0.1.2",
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
@@ -127,7 +127,8 @@
       "target": [
         "nsis"
       ],
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true,
+      "signExecutable": false
     },
     "mac": {
       "target": [
