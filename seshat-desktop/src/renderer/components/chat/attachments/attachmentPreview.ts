@@ -58,6 +58,13 @@ type AttachmentOpenAction =
   | { kind: 'external' }
   | { kind: 'none' }
 
+// The server reports an upload's place relative to its uploads folder, which the main process refuses to read or open: only an absolute
+// path is worth handing to it. Everything else goes through the file endpoints.
+export function absoluteLocalPath(file: ChatAttachment): string | undefined {
+  const path = file.local_path
+  return path && /^([A-Za-z]:[\\/]|[\\/])/.test(path) ? path : undefined
+}
+
 // Decides what clicking an attachment should do. Deliberately knows nothing
 // about useUIStore/right-panel wiring - the caller (AttachmentThumb) applies
 // the action, which keeps this testable as a pure function.

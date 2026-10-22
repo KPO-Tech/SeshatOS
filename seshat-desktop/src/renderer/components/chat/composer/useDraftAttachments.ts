@@ -111,7 +111,10 @@ export function useDraftAttachments(sessionId?: string) {
     uploadingAttachments,
     attachmentError,
     setAttachmentError,
-    clearAttachments: () => setAttachments([]),
+    clearAttachments: () => {
+      setAttachments([])
+      setAttachmentError(null)
+    },
     handleAttachFiles,
     handleRemoveAttachment,
     hasUploadingAttachments,

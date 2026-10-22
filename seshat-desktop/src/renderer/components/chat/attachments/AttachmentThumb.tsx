@@ -5,7 +5,7 @@ import { AttachmentTypeIcon } from '@renderer/components/AttachmentTypeIcon'
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
 import { useUIStore } from '@renderer/stores/ui'
 import type { ChatAttachment } from './attachmentTypes'
-import { attachmentPreviewURL, fetchAttachmentTextPreview, isImageAttachment, isPDFAttachment, resolveAttachmentOpenAction } from './attachmentPreview'
+import { absoluteLocalPath, attachmentPreviewURL, fetchAttachmentTextPreview, isImageAttachment, isPDFAttachment, resolveAttachmentOpenAction } from './attachmentPreview'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -58,8 +58,9 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
     let cancelled = false
     void (async () => {
       try {
-        const url = file.local_path && window.seshat?.readFileDataURL
-          ? await window.seshat.readFileDataURL(file.local_path)
+        const localPath = absoluteLocalPath(file)
+        const url = localPath && window.seshat?.readFileDataURL
+          ? await window.seshat.readFileDataURL(localPath)
           : await api.getFileDataURL(`/files/${file.id}/content`)
         if (!cancelled) setHydratedURL(url)
       } catch {
@@ -81,8 +82,9 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
     let cancelled = false
     void (async () => {
       try {
-        const dataUrl = file.local_path && window.seshat?.readFileDataURL
-          ? await window.seshat.readFileDataURL(file.local_path)
+        const localPath = absoluteLocalPath(file)
+        const dataUrl = localPath && window.seshat?.readFileDataURL
+          ? await window.seshat.readFileDataURL(localPath)
           : await api.getFileDataURL(`/files/${file.id}/content`)
         const blob = await fetch(dataUrl).then((res) => res.blob())
         const [firstPage] = await renderPDFPagePreviews(blob, 1)
@@ -110,11 +112,11 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
       const text = await fetchAttachmentTextPreview(file).catch(() => null)
       if (text) {
         openRightPanel({ kind: 'markdown', title: file.filename, markdown: text.markdown, documentFileId: file.id, plainText: text.plainText })
-      } else if (file.local_path) {
-        void window.seshat?.openPath?.(file.local_path)
+      } else if (absoluteLocalPath(file)) {
+        void window.seshat?.openPath?.(absoluteLocalPath(file) as string)
       }
-    } else if (action.kind === 'external' && file.local_path) {
-      void window.seshat?.openPath?.(file.local_path)
+    } else if (action.kind === 'external' && absoluteLocalPath(file)) {
+      void window.seshat?.openPath?.(absoluteLocalPath(file) as string)
     }
   }
 

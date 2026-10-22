@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { CheckCorrect, FileTextOne, Globe, LightMember } from '@icon-park/react'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
@@ -260,21 +260,28 @@ export function Home() {
           .catch(() => {})
       }
     }
+    await uploadAttachments(selectedFiles.map((file, index) => ({ file, id: pending[index]?.id ?? '' })))
+  }
+
+  // Files attached before a model was chosen wait here: no session can exist yet, and the person should not have to attach them again.
+  const filesWaitingForModel = useRef<Array<{ file: File; id: string }>>([])
+
+  async function uploadAttachments(items: Array<{ file: File; id: string }>) {
     setIsUploadingAttachments(true)
     setAttachmentError(null)
     try {
       const id = await ensureSessionCreated()
       if (!id) {
-        setAttachmentError('Select a provider and model before attaching files.')
+        filesWaitingForModel.current.push(...items)
+        setAttachmentError('Select a provider and model: the files are sent as soon as you do.')
         setAttachments((current) => current.map((file) => (
-          pending.some((item) => item.id === file.id)
+          items.some((item) => item.id === file.id)
             ? { ...file, upload_status: 'failed', error: 'Select a provider and model first.' }
             : file
         )))
         return
       }
-      for (const [index, file] of selectedFiles.entries()) {
-        const pendingId = pending[index]?.id
+      for (const { file, id: pendingId } of items) {
         const form = new FormData()
         form.append('file', file)
         const item = await api.upload<UploadedFileResponse>(`/sessions/${id}/files`, form)
@@ -299,7 +306,7 @@ export function Home() {
       const message = err instanceof ApiError ? err.message : 'Failed to attach files.'
       setAttachmentError(`Attachment upload failed: ${message}`)
       setAttachments((current) => current.map((file) => (
-        pending.some((item) => item.id === file.id)
+        items.some((item) => item.id === file.id)
           ? { ...file, upload_status: 'failed', error: message }
           : file
       )))
@@ -308,7 +315,19 @@ export function Home() {
     }
   }
 
+  useEffect(() => {
+    if (!selectedProviderForSend || !selectedModelForSend || filesWaitingForModel.current.length === 0) return
+    const items = filesWaitingForModel.current.splice(0)
+    setAttachments((current) => current.map((file) => (
+      items.some((item) => item.id === file.id) ? { ...file, upload_status: 'uploading', error: undefined } : file
+    )))
+    void uploadAttachments(items)
+    // Only a model choice should send the waiting files.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProviderForSend?.id, selectedModelForSend?.model_id])
+
   function handleRemoveAttachment(fileId: string) {
+    filesWaitingForModel.current = filesWaitingForModel.current.filter((item) => item.id !== fileId)
     setAttachments((current) => current.filter((file) => file.id !== fileId))
     setAttachmentError(null)
     // See Conversation.tsx's handleRemoveAttachment - attachments upload
