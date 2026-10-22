@@ -46,7 +46,7 @@ const allSections: SectionDef[] = [
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
-  { id: 'image', label: 'Image generation', icon: 'media', group: 'Capabilities', description: 'The provider and the model the agent uses to create images.' },
+  { id: 'image', label: 'Images', icon: 'media', group: 'Capabilities', description: 'The provider, model, size and quality the agent uses to create images.' },
   { id: 'audio', label: 'Audio', icon: 'media', group: 'Capabilities', description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
   { id: 'connectors', label: 'Connectors', icon: 'connectors', group: 'Workspace Runtime', description: 'External accounts and application connectors.' },

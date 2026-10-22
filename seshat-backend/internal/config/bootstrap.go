@@ -1403,7 +1403,8 @@ func defaultImageGenerationConfig(ctx context.Context, linkStore *db.CapabilityL
 		cfg = &sdk.ImageGenerationConfig{Provider: "gemini", APIKey: key}
 	}
 	if cfg != nil {
-		cfg.Model = capabilityOptions(ctx, linkStore, backendsettings.CapabilityImage)["model"]
+		options := capabilityOptions(ctx, linkStore, backendsettings.CapabilityImage)
+		cfg.Model, cfg.Size, cfg.Quality, cfg.AspectRatio = options["model"], options["size"], options["quality"], options["aspect_ratio"]
 	}
 	return cfg
 }

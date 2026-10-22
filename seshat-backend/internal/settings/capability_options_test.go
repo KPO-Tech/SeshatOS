@@ -33,3 +33,26 @@ func TestValidateCapabilityOptions(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateImageOptionsAndTheCatalogOfProviders(t *testing.T) {
+	cleaned, err := ValidateCapabilityOptions(CapabilityImage, map[string]string{"model": "gpt-image-2.5-flare", "size": "1536X1024", "quality": "HIGH", "aspect_ratio": "16:9"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cleaned["size"] != "1536x1024" || cleaned["quality"] != "high" || cleaned["aspect_ratio"] != "16:9" {
+		t.Fatalf("size and quality are lower case, got %v", cleaned)
+	}
+	for _, bad := range []map[string]string{{"size": "big"}, {"size": "1024"}, {"quality": "ultra"}, {"aspect_ratio": "wide"}, {"aspect_ratio": "16:9;x"}} {
+		if _, err := ValidateCapabilityOptions(CapabilityImage, bad); err == nil {
+			t.Errorf("%v must be refused", bad)
+		}
+	}
+	for _, provider := range []string{"openai", "gemini", "openrouter", " OpenAI "} {
+		if !SupportsCapability(provider, CapabilityImage) {
+			t.Errorf("%q draws images through the runtime catalog", provider)
+		}
+	}
+	if SupportsCapability("mistral", CapabilityImage) {
+		t.Error("mistral is not an image provider")
+	}
+}
