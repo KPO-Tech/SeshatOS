@@ -9,6 +9,7 @@ export type MediaPayload = {
   path?: string
   title?: string
   kind?: string
+  video_id?: string
   size?: number
   summary?: string
 }
