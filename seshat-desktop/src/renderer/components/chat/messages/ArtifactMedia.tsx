@@ -3,6 +3,7 @@ import { AttachmentTypeIcon } from '@renderer/components/AttachmentTypeIcon'
 import { api } from '@renderer/api/client'
 import { useUIStore } from '@renderer/stores/ui'
 import { MediaDownload } from './MediaDownload'
+import { YouTubeEmbed } from './YouTubeEmbed'
 import { formatBytes, type MediaPayload } from './mediaPayload'
 
 // A video is loaded whole into the page (the backend serves the file, the page reads it as a data URL), so a very large one is offered as a
@@ -53,6 +54,7 @@ function FileCard({ payload, src, note }: { payload: MediaPayload; src?: string;
 }
 
 export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payload: MediaPayload }) {
+  if (payload.kind === 'youtube') return <YouTubeEmbed videoId={payload.video_id} title={payload.title} />
   const openLightbox = useUIStore((s) => s.openLightbox)
   const playable = isPlayableArtifact(payload)
   const loaded = useArtifactSource(playable ? sessionId : undefined, payload.path)

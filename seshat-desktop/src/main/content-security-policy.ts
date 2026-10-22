@@ -32,7 +32,9 @@ import { resolveBackendOrigin } from './runtime'
 //   endpoint (see ArtifactPreviewPanel.tsx). That response carries its own,
 //   separately-scoped CSP (see artifactPreviewOrigin handling below) - this
 //   directive only controls whether the frame is allowed to load AT ALL, not
-//   what runs inside it once loaded.
+//   what runs inside it once loaded. The privacy-enhanced YouTube host is
+//   allowed too, for a video the agent shows in the conversation (see
+//   YouTubeEmbed.tsx).
 function buildContentSecurityPolicy(backendOrigin: string) {
   return [
     "default-src 'self'",
@@ -45,7 +47,7 @@ function buildContentSecurityPolicy(backendOrigin: string) {
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'none'",
-    `frame-src ${backendOrigin}`,
+    `frame-src ${backendOrigin} https://www.youtube-nocookie.com`,
   ].join('; ')
 }
 

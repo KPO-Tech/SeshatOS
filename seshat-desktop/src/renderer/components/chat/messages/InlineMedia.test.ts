@@ -22,6 +22,7 @@ describe('isInlineMedia', () => {
     expect(isInlineMedia(tool('present_artifact', 'completed', '{"path":"out/clip.mp4","kind":"video"}'))).toBe(true)
     expect(isInlineMedia(tool('present_artifact', 'completed', '{"kind":"video"}'))).toBe(false)
     expect(isInlineMedia(tool('present_artifact', 'running'))).toBe(true)
+    expect(isInlineMedia(tool('present_artifact', 'completed', '{"kind":"youtube","video_id":"dQw4w9WgXcQ"}'))).toBe(true)
     expect(isInlineMedia(tool('present_artifact', 'failed', 'outside the working folder', true))).toBe(false)
   })
 

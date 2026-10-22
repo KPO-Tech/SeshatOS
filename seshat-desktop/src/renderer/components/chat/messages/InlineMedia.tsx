@@ -23,7 +23,7 @@ function audioSource(payload: MediaPayload | null): { src: string; mime: string 
 
 function hasMedia(name: string, payload: MediaPayload | null): boolean {
   if (name === 'generate_image') return imageSource(payload) !== null
-  if (name === 'present_artifact') return Boolean(payload?.path)
+  if (name === 'present_artifact') return Boolean(payload?.path) || Boolean(payload?.video_id)
   return audioSource(payload) !== null
 }
 
