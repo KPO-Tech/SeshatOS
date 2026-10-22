@@ -177,8 +177,8 @@ that does not exist. The deb is not updated by the app.
 The Windows job signs the installer and the executable when the repository has the secrets `WIN_CSC_LINK` (the code-signing
 certificate, `.pfx`, as a base64 string or a URL) and `WIN_CSC_KEY_PASSWORD`. Without them it builds an unsigned installer and
 says so in a warning: Windows SmartScreen then asks for confirmation at the first launch, and the warning fades as the download
-count of a certificate grows. Local builds stay unsigned (`signAndEditExecutable=false`), because signing needs a certificate and
-symbolic-link privileges.
+count of a certificate grows. Local builds stay unsigned (`signExecutable=false`), because signing needs a certificate; the
+executables still get their icon and product information (editing them does not need one).
 
 ### macOS
 
