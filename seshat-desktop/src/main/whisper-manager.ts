@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'child_process'
+import { cpus } from 'os'
 import { createWriteStream, existsSync } from 'fs'
 import { mkdir, chmod, readdir, stat, readFile, writeFile, unlink, rm, rename } from 'fs/promises'
 import { join } from 'path'
@@ -29,18 +30,18 @@ type WhisperModelInfo = {
 
 export const MODEL_CATALOG: WhisperModelInfo[] = [
   { id: 'tiny', filename: 'ggml-tiny.bin', label: 'Tiny', approxSizeBytes: 77_700_000, description: 'Fastest, least accurate - good for quick drafts.' },
-  { id: 'base', filename: 'ggml-base.bin', label: 'Base', approxSizeBytes: 148_000_000, description: 'Fast, modest accuracy.' },
-  { id: 'small', filename: 'ggml-small.bin', label: 'Small', approxSizeBytes: 487_600_000, description: 'Good balance of speed and accuracy - recommended default.' },
+  { id: 'base', filename: 'ggml-base.bin', label: 'Base', approxSizeBytes: 148_000_000, description: 'Fast (about 4 s for a 7 s clip on a laptop CPU) and accurate enough for dictation - recommended default.' },
+  { id: 'small', filename: 'ggml-small.bin', label: 'Small', approxSizeBytes: 487_600_000, description: 'More accurate, about three times slower than Base on a CPU.' },
   { id: 'medium', filename: 'ggml-medium.bin', label: 'Medium', approxSizeBytes: 1_533_800_000, description: 'High accuracy, noticeably slower.' },
   { id: 'large-v3-turbo', filename: 'ggml-large-v3-turbo.bin', label: 'Large v3 Turbo', approxSizeBytes: 1_624_600_000, description: 'Near large-v3 accuracy at roughly half the compute cost.' },
   { id: 'large-v3', filename: 'ggml-large-v3.bin', label: 'Large v3', approxSizeBytes: 3_095_000_000, description: 'Best accuracy; largest download and slowest to run.' },
 ]
 
 // First-time setup downloads both of these together, so there's an
-// immediate fast/quality pair to compare without a second download - small
-// becomes the active one since it's the better default.
-const DEFAULT_MODEL_IDS: WhisperModelId[] = ['tiny', 'small']
-const DEFAULT_ACTIVE_MODEL_ID: WhisperModelId = 'small'
+// immediate fast/quality pair to compare without a second download - base
+// becomes the active one: on a CPU it answers in about a quarter of small's time.
+const DEFAULT_MODEL_IDS: WhisperModelId[] = ['base', 'small']
+const DEFAULT_ACTIVE_MODEL_ID: WhisperModelId = 'base'
 
 function modelInfo(id: WhisperModelId): WhisperModelInfo {
   return MODEL_CATALOG.find((m) => m.id === id) ?? MODEL_CATALOG.find((m) => m.id === DEFAULT_ACTIVE_MODEL_ID)!
@@ -190,8 +191,8 @@ async function ensureModelDownloaded(id: WhisperModelId, onProgress?: (p: Whispe
 
 /**
  * First-time setup: downloads the whisper-server binary plus both default
- * models (tiny + small) so there's an immediate fast/quality pair to try,
- * and makes small the active one.
+ * models (base + small) so there's an immediate fast/quality pair to try,
+ * and makes base the active one.
  */
 export async function downloadDefaultModels(onProgress?: (p: WhisperProgress) => void): Promise<void> {
   await ensureBinaryDownloaded(onProgress)
@@ -239,6 +240,13 @@ export async function deleteModel(modelId: WhisperModelId): Promise<void> {
   }
 }
 
+// whisper.cpp uses 4 threads unless told otherwise; on a machine with more cores, two thirds of them (at most 8) made a clip about
+// a third faster in a test, without taking the whole machine.
+function whisperThreads(): number {
+  const cores = cpus().length
+  return Math.max(4, Math.min(8, Math.floor((cores * 2) / 3)))
+}
+
 /** Spawns whisper-server (if not already running) using the active model, and tells seshat-backend where it is. */
 export async function enableLocalWhisper(): Promise<void> {
   if (serverProcess) return
@@ -262,6 +270,10 @@ export async function enableLocalWhisper(): Promise<void> {
     // posts to "{baseURL}/audio/transcriptions" - without this flag every
     // request against a local server 404s, cloud fallback notwithstanding.
     '--inference-path', '/audio/transcriptions',
+    // The server's own default language is English: a French clip sent without a language comes back translated into English.
+    // Detecting the language is the default, and a request that names one skips the detection pass.
+    '--language', 'auto',
+    '--threads', String(whisperThreads()),
   ], {
     stdio: ['ignore', 'pipe', 'pipe'],
     cwd: join(binaryPath, '..'),

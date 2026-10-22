@@ -57,6 +57,7 @@ func (a *App) handleTranscribe(w http.ResponseWriter, r *http.Request) {
 		writeBackendError(w, bkerr.InvalidInput(err.Error(), err))
 		return
 	}
+	target.language = normalizeSpokenLanguage(r.FormValue("language"))
 
 	result, err := a.transcribeAudio(r.Context(), target, audioData)
 	if err != nil {
@@ -65,7 +66,7 @@ func (a *App) handleTranscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"text":     result.Text,
+		"text":     cleanTranscript(result.Text),
 		"language": result.Language,
 		"duration": result.Duration,
 	})
@@ -83,6 +84,8 @@ type transcriptionTarget struct {
 	model      string
 	format     string
 	elevenLabs bool
+	// language is the spoken language the person chose (an IETF tag such as fr); empty lets the server detect it.
+	language string
 }
 
 // resolveTranscriptionTarget picks a locally running whisper.cpp server when
@@ -233,6 +236,9 @@ func transcribeAudioWithTarget(ctx context.Context, target transcriptionTarget, 
 	}
 	if target.format != "" {
 		opts = append(opts, audioproviders.WithSTTResponseFormat(target.format))
+	}
+	if target.language != "" {
+		opts = append(opts, audioproviders.WithSTTLanguage(target.language))
 	}
 	return audioproviders.NewOpenAISTT(target.apiKey, opts...).Transcribe(ctx, audioData)
 }
