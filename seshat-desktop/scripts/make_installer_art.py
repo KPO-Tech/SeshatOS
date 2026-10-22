@@ -1,4 +1,4 @@
-"""Draws the images of the Windows installer (the sidebar and the header of the NSIS pages) from the brand marks.
+"""Draws the images of the Windows installer (the sidebar and the header of the NSIS pages, dark like the welcome and finish pages: see installer.nsh) from the brand marks.
 
 Run from seshat-desktop/: python scripts/make_installer_art.py
 It needs Microsoft Edge (to draw the pages as pictures) and Pillow (to write the 24 bit BMP files NSIS wants).
@@ -31,11 +31,9 @@ img{{position:absolute;left:34px;top:46px;width:96px;height:96px}}
 <div class=tag>Your AI workspace,<br>on your computer</div><div class=foot>SESHAT AI</div>"""
 
 HEADER = """<!doctype html><meta charset=utf-8><style>
-html,body{{margin:0;width:150px;height:57px;overflow:hidden;background:#fff;font-family:'Segoe UI',sans-serif}}
-img{{position:absolute;left:12px;top:9px;width:38px;height:38px}}
-.name{{position:absolute;left:58px;top:14px;font:400 19px Georgia,serif;color:#2b2521}}
-.line{{position:absolute;left:58px;top:38px;width:26px;height:2px;border-radius:2px;background:#ea7828}}
-</style><img src="file:///{mark}"><div class=name>SeshatOS</div><div class=line></div>"""
+html,body{{margin:0;width:150px;height:57px;overflow:hidden;background:#2b2521}}
+img{{position:absolute;right:14px;top:8px;width:41px;height:41px}}
+</style><img src="file:///{mark}">"""
 
 
 def shot(html: str, width: int, height: int, target: pathlib.Path) -> None:
@@ -64,10 +62,9 @@ def main() -> int:
         return 1
     OUT.mkdir(exist_ok=True)
     dark = (BRAND / "mark-on-dark.svg").as_posix()
-    light = (BRAND / "mark-on-light.svg").as_posix()
     shot(SIDEBAR.format(mark=dark), 164, 314, OUT / "installerSidebar.bmp")
     shot(SIDEBAR.format(mark=dark), 164, 314, OUT / "uninstallerSidebar.bmp")
-    shot(HEADER.format(mark=light), 150, 57, OUT / "installerHeader.bmp")
+    shot(HEADER.format(mark=dark), 150, 57, OUT / "installerHeader.bmp")
     print("wrote the installer images in", OUT)
     return 0
 
