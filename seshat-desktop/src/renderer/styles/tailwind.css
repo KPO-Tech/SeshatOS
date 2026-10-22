@@ -21,7 +21,7 @@
   --leading-ui: 1.35;
   --leading-copy: 1.55;
   /* Appearance > text size, spacing, width (lib/appearance.ts sets them at start-up). */
-  --chat-font-size: 15px;
+  --chat-font-size: 14px;
   --message-gap: 36px;
   --list-item-pad-y: 6px;
   --chat-max-width: 768px;
