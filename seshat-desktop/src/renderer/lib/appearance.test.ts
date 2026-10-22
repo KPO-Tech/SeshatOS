@@ -21,10 +21,10 @@ describe('parseAppearance', () => {
 describe('appearanceVars', () => {
   it('writes px values for the layout variables', () => {
     expect(appearanceVars(DEFAULT_APPEARANCE)).toEqual({
-      '--chat-font-size': '13px',
+      '--chat-font-size': '15px',
       '--message-gap': '36px',
       '--list-item-pad-y': '6px',
-      '--chat-max-width': '880px'
+      '--chat-max-width': '768px'
     })
   })
 

@@ -382,7 +382,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
               <div
                 key={`${message.id ?? 'msg'}-text-${item.index}`}
                 className={cx(
-                  'text-[14px] leading-[1.62] text-app-text',
+                  'text-[length:var(--chat-font-size)] leading-[1.72] text-app-text',
                   isUser
                     ? 'rounded-[12px_12px_4px_12px] border border-app-border-subtle bg-app-surface px-[11px] py-[7px]'
                     : 'rounded-none border-0 bg-transparent p-0',

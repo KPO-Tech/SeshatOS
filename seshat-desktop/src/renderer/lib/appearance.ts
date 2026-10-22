@@ -17,10 +17,10 @@ export type AppearancePrefs = {
 export const DEFAULT_APPEARANCE: AppearancePrefs = { textSize: 'default', zoom: 100, spacing: 'comfortable', contentWidth: 'default' }
 
 export const TEXT_SIZES: ReadonlyArray<{ value: TextSize; label: string; px: number }> = [
-  { value: 'small', label: 'Small', px: 12 },
-  { value: 'default', label: 'Default', px: 13 },
-  { value: 'large', label: 'Large', px: 15 },
-  { value: 'xlarge', label: 'Extra large', px: 17 }
+  { value: 'small', label: 'Small', px: 13 },
+  { value: 'default', label: 'Default', px: 15 },
+  { value: 'large', label: 'Large', px: 16 },
+  { value: 'xlarge', label: 'Extra large', px: 18 }
 ]
 
 export const ZOOMS: readonly number[] = [90, 100, 110, 125, 150]
@@ -32,9 +32,9 @@ export const SPACINGS: ReadonlyArray<{ value: Spacing; label: string; messageGap
 ]
 
 export const CONTENT_WIDTHS: ReadonlyArray<{ value: ContentWidth; label: string; px: number }> = [
-  { value: 'narrow', label: 'Narrow', px: 720 },
-  { value: 'default', label: 'Default', px: 880 },
-  { value: 'wide', label: 'Wide', px: 1100 }
+  { value: 'narrow', label: 'Narrow', px: 680 },
+  { value: 'default', label: 'Default', px: 768 },
+  { value: 'wide', label: 'Wide', px: 960 }
 ]
 
 const storageKey = 'seshat.appearance'
