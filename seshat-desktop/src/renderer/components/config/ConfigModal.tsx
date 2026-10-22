@@ -7,7 +7,8 @@ import { EnvironmentConfig } from './environment/EnvironmentConfig'
 import { KnowledgeConfig } from './knowledge/KnowledgeConfig'
 import { MCPConfig } from './mcp/MCPConfig'
 import { ModelsConfig } from './models/ModelsConfig'
-import { MultimodalConfig } from './multimodal/MultimodalConfig'
+import { AudioConfig } from './multimodal/AudioConfig'
+import { ImageConfig } from './multimodal/ImageConfig'
 import { ProvidersConfig } from './providers/ProvidersConfig'
 import { SkillsConfig } from './skills/SkillsConfig'
 import { StorageConfig } from './storage/StorageConfig'
@@ -21,7 +22,8 @@ export type ConfigSection =
   | 'titles'
   | 'web-search'
   | 'knowledge'
-  | 'multimodal'
+  | 'image'
+  | 'audio'
   | 'mcp'
   | 'connectors'
   | 'environment'
@@ -44,7 +46,8 @@ const allSections: SectionDef[] = [
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
-  { id: 'multimodal', label: 'Multimodal', icon: 'media', group: 'Capabilities', description: 'Image generation, voice input, Whisper models, and local media capabilities.' },
+  { id: 'image', label: 'Image generation', icon: 'media', group: 'Capabilities', description: 'The provider and the model the agent uses to create images.' },
+  { id: 'audio', label: 'Audio', icon: 'media', group: 'Capabilities', description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
   { id: 'connectors', label: 'Connectors', icon: 'connectors', group: 'Workspace Runtime', description: 'External accounts and application connectors.' },
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },
@@ -124,7 +127,8 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'titles' && <TitlesConfig />}
               {activeSection === 'web-search' && <WebSearchConfig />}
               {activeSection === 'knowledge' && <KnowledgeConfig />}
-              {activeSection === 'multimodal' && <MultimodalConfig />}
+              {activeSection === 'image' && <ImageConfig />}
+              {activeSection === 'audio' && <AudioConfig />}
               {activeSection === 'mcp' && <MCPConfig />}
               {activeSection === 'connectors' && <ConnectorsConfig />}
               {activeSection === 'environment' && <EnvironmentConfig />}

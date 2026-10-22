@@ -1380,37 +1380,59 @@ func resolveCapabilityLink(ctx context.Context, linkStore *db.CapabilityLinkStor
 // prefers to configure these independently via Settings > Environment.
 // Without either, ClientConfig.ImageGeneration/.TextToSpeech/.SpeechToText
 // stay nil and the tools are never initialized.
+// capabilityOptions reads the choices the person saved for a capability (model, voice, format); none when there are none or the store
+// cannot be read, which leaves the provider defaults.
+func capabilityOptions(ctx context.Context, linkStore *db.CapabilityLinkStore, capability backendsettings.Capability) map[string]string {
+	if linkStore == nil {
+		return nil
+	}
+	options, err := linkStore.Options(ctx, string(capability))
+	if err != nil {
+		return nil
+	}
+	return options
+}
+
 func defaultImageGenerationConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.ImageGenerationConfig {
+	var cfg *sdk.ImageGenerationConfig
 	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityImage); ok {
-		return &sdk.ImageGenerationConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+		cfg = &sdk.ImageGenerationConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+	} else if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
+		cfg = &sdk.ImageGenerationConfig{Provider: "openai", APIKey: key}
+	} else if key := strings.TrimSpace(os.Getenv("GOOGLE_API_KEY")); key != "" {
+		cfg = &sdk.ImageGenerationConfig{Provider: "gemini", APIKey: key}
 	}
-	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
-		return &sdk.ImageGenerationConfig{Provider: "openai", APIKey: key}
+	if cfg != nil {
+		cfg.Model = capabilityOptions(ctx, linkStore, backendsettings.CapabilityImage)["model"]
 	}
-	if key := strings.TrimSpace(os.Getenv("GOOGLE_API_KEY")); key != "" {
-		return &sdk.ImageGenerationConfig{Provider: "gemini", APIKey: key}
-	}
-	return nil
+	return cfg
 }
 
 func defaultTextToSpeechConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.TextToSpeechConfig {
+	var cfg *sdk.TextToSpeechConfig
 	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
-		return &sdk.TextToSpeechConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+		cfg = &sdk.TextToSpeechConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+	} else if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
+		cfg = &sdk.TextToSpeechConfig{Provider: "openai", APIKey: key}
 	}
-	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
-		return &sdk.TextToSpeechConfig{Provider: "openai", APIKey: key}
+	if cfg != nil {
+		options := capabilityOptions(ctx, linkStore, backendsettings.CapabilityAudio)
+		cfg.Model, cfg.Voice, cfg.Format = options["tts_model"], options["tts_voice"], options["tts_format"]
 	}
-	return nil
+	return cfg
 }
 
 func defaultSpeechToTextConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.SpeechToTextConfig {
+	var cfg *sdk.SpeechToTextConfig
 	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
-		return &sdk.SpeechToTextConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+		cfg = &sdk.SpeechToTextConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+	} else if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
+		cfg = &sdk.SpeechToTextConfig{Provider: "openai", APIKey: key}
 	}
-	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
-		return &sdk.SpeechToTextConfig{Provider: "openai", APIKey: key}
+	if cfg != nil {
+		cfg.Model = capabilityOptions(ctx, linkStore, backendsettings.CapabilityAudio)["stt_model"]
 	}
-	return nil
+	return cfg
 }
 
 func titleProviderConfigFromAppConfig(config appconfig.Config, titleModel sdk.ModelIdentifier) *providers.Config {
