@@ -26,7 +26,7 @@ function categoryForTool(toolName: string | undefined): ToolPanelCategory | null
   // looking at.
   if (isFileTool(toolName)) return null
   // A picture or a clip is drawn in the conversation itself (InlineMedia): there is nothing to follow in a panel.
-  if (toolName === 'generate_image' || toolName === 'text_to_speech') return null
+  if (toolName === 'generate_image' || toolName === 'text_to_speech' || toolName === 'present_artifact') return null
   return 'computer'
 }
 

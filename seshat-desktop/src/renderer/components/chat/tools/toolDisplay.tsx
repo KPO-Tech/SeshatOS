@@ -153,6 +153,7 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
   read_url: { label: 'Web Fetch', groupable: false, silent: true, render: WebFetchToolView, snippet: (t) => str(t, 'url'), soloLabel: webFetchSoloLabel },
 
   generate_image: { label: 'Generate Image', groupable: false, render: ImageGenToolView },
+  present_artifact: { label: 'Present File', groupable: false, silent: true, snippet: (t) => str(t, 'path') },
   text_to_speech: { label: 'Text To Speech', groupable: false, render: TtsToolView },
   speech_to_text: { label: 'Speech To Text', groupable: false, render: SttToolView },
 

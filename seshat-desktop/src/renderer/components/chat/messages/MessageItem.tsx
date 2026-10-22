@@ -419,7 +419,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                 />
               )
             }
-            if (isInlineMedia(block)) return <InlineMedia key={key} tool={block} />
+            if (isInlineMedia(block)) return <InlineMedia key={key} tool={block} sessionId={sessionId} />
             return (
               <ToolBlock
                 key={key}

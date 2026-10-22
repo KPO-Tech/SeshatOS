@@ -18,6 +18,13 @@ describe('isInlineMedia', () => {
     expect(isInlineMedia(tool('text_to_speech', 'completed', '{"audio_base64":"QUJD","content_type":"audio/wav"}'))).toBe(true)
   })
 
+  it('draws a presented file once it is finished, and keeps the placeholder before', () => {
+    expect(isInlineMedia(tool('present_artifact', 'completed', '{"path":"out/clip.mp4","kind":"video"}'))).toBe(true)
+    expect(isInlineMedia(tool('present_artifact', 'completed', '{"kind":"video"}'))).toBe(false)
+    expect(isInlineMedia(tool('present_artifact', 'running'))).toBe(true)
+    expect(isInlineMedia(tool('present_artifact', 'failed', 'outside the working folder', true))).toBe(false)
+  })
+
   it('reads an answer stored with a note before the document', () => {
     const wrapped = '[SESHAT_SECURITY: note]\n<quarantined>\n{"image_base64":"QUJD"}\n</quarantined>'
     expect(isInlineMedia(tool('generate_image', 'completed', wrapped))).toBe(true)
