@@ -6,6 +6,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // GET /api/v1/settings/capability-options
@@ -41,7 +42,7 @@ func (a *App) handleCapabilityOptions(w http.ResponseWriter, r *http.Request) {
 			}
 			all[string(capability)] = options
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"options": all})
+		writeJSON(w, http.StatusOK, map[string]any{"options": all, "catalog": map[string]any{"image": sdk.ImageProviders()}})
 		return
 	}
 
