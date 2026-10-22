@@ -90,6 +90,14 @@ type ShellDataEvent = { id: string; data: string }
 type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
 // `shell` is a real PTY (main/ipc/shell.ts) that the user drives themselves.
+type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type SetupPlan = {
+  components: Array<{ id: 'title' | 'speech'; available: boolean; unavailableReason?: string; options: SetupOption[] }>
+  freeDiskBytes: number | null
+}
+type SetupSelection = Partial<Record<'title' | 'speech', { install: boolean; modelId: string }>>
+type SetupProgress = { component: 'title' | 'speech'; status: 'running' | 'done' | 'error'; receivedBytes?: number; totalBytes?: number; message?: string }
+
 const seshatBridge = {
   getVersion: () => ipcRenderer.invoke('app:version'),
   openPath: (p: string) => ipcRenderer.invoke('system:open-path', p),
@@ -171,6 +179,17 @@ const seshatBridge = {
       const handler = (_event: Electron.IpcRendererEvent, progress: WhisperProgress) => listener(progress)
       ipcRenderer.on('whisper:progress', handler)
       return () => ipcRenderer.removeListener('whisper:progress', handler)
+    },
+  },
+  setup: {
+    state: (): Promise<{ completed: boolean }> => ipcRenderer.invoke('setup:state'),
+    plan: (): Promise<SetupPlan> => ipcRenderer.invoke('setup:plan'),
+    run: (selection: SetupSelection): Promise<void> => ipcRenderer.invoke('setup:run', selection),
+    complete: (): Promise<void> => ipcRenderer.invoke('setup:complete'),
+    onProgress: (listener: (progress: SetupProgress) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: SetupProgress) => listener(payload)
+      ipcRenderer.on('setup:progress', handler)
+      return () => ipcRenderer.removeListener('setup:progress', handler)
     },
   },
   llama: {

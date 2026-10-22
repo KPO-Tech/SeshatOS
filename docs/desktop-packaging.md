@@ -40,6 +40,23 @@ Earlier drafts of this document described a `SESHAT_DEFAULT_SERVER_URL` /
 That mechanism has been removed — the Go binary never read `SESHAT_SERVER_URL`
 as an environment variable, so it did nothing.
 
+## The installer and the first-run setup
+
+Two things make the first minutes of SeshatOS, and they are separate on purpose.
+
+**The Windows installer** (NSIS) is the assisted one, not the one-click default: a welcome page, the licence (`build/license.txt`, a copy of
+`LICENSE` that a test keeps equal to it), the folder to install in, a progress page and a finish page that offers to open the app. Its
+sidebar and header images are drawn from the brand marks by `scripts/make_installer_art.py` (it needs Microsoft Edge and Pillow) and
+committed in `build/` (`installerSidebar.bmp`, `uninstallerSidebar.bmp`, `installerHeader.bmp`); run the script again when the logo
+changes. An installer page cannot show a download with its progress, so the installer downloads nothing.
+
+**The setup wizard** is the first screen of the app on a computer that was never set up (all platforms, the same one for AppImage, deb,
+dmg and the Windows installer). It offers the title model and the voice dictation model, each with the choice of model and its size, shows the
+download size next to the free space, installs what is ticked with a progress per item, and leaves out what is not: a title model that is
+not ticked is turned off so that nothing is downloaded behind the person's back. The state is `setup.json` in the runtime root; a computer
+that already has a title or speech model (an earlier version installed them) is not asked again. `SESHAT_FORCE_SETUP=1` shows the wizard
+again whatever the computer has, to test it or for support. Everything chosen there can be changed later in Config.
+
 ## Windows Build
 
 Run from `seshat-desktop/` on Windows:

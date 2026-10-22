@@ -52,6 +52,13 @@ interface Window {
       cancelStream: (streamId: string) => Promise<void>
       onStreamEvent: (streamId: string, listener: (event: { name: string; data: Record<string, unknown> }) => void) => () => void
     }
+    setup?: {
+      state: () => Promise<{ completed: boolean }>
+      plan: () => Promise<SetupPlan>
+      run: (selection: SetupSelection) => Promise<void>
+      complete: () => Promise<void>
+      onProgress: (listener: (progress: SetupProgress) => void) => () => void
+    }
     whisper?: {
       status: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       models: () => Promise<Array<{ id: string; filename: string; label: string; approxSizeBytes: number; description: string }>>
@@ -145,6 +152,14 @@ type BrowserPanelState = {
     canGoForward: boolean
   }>
 }
+
+type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type SetupPlan = {
+  components: Array<{ id: 'title' | 'speech'; available: boolean; unavailableReason?: string; options: SetupOption[] }>
+  freeDiskBytes: number | null
+}
+type SetupSelection = Partial<Record<'title' | 'speech', { install: boolean; modelId: string }>>
+type SetupProgress = { component: 'title' | 'speech'; status: 'running' | 'done' | 'error'; receivedBytes?: number; totalBytes?: number; message?: string }
 
 type ShellDataEvent = { id: string; data: string }
 type ShellExitEvent = { id: string; exitCode: number; signal?: number }

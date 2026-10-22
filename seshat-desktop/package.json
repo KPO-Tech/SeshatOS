@@ -140,7 +140,22 @@
       "artifactName": "SeshatOS-${version}-mac-${arch}.${ext}"
     },
     "nsis": {
-      "artifactName": "SeshatOS-Setup-${version}.${ext}"
+      "artifactName": "SeshatOS-Setup-${version}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "installerHeader": "installerHeader.bmp",
+      "installerSidebar": "installerSidebar.bmp",
+      "uninstallerSidebar": "uninstallerSidebar.bmp",
+      "license": "license.txt",
+      "shortcutName": "SeshatOS",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
     },
     "publish": [
       {

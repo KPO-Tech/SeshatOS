@@ -5,11 +5,13 @@ import { registerFilesystemHandlers } from './ipc/filesystem'
 import { registerSecureStoreHandlers } from './ipc/secure-store'
 import { registerBackendHandlers } from './ipc/backend'
 import { registerWhisperHandlers } from './ipc/whisper'
+import { registerSetupHandlers } from './ipc/setup'
 import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
 import { registerSandboxHandlers } from './ipc/sandbox'
 import { resolveRuntimeRoot } from './runtime'
 import { startBackendSidecar, stopBackendSidecar } from './backend-process'
+import { isSetupCompleted } from './setup-manager'
 import { resumeLocalWhisperOnLaunch, stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
@@ -199,6 +201,7 @@ app.whenReady().then(async () => {
   registerSecureStoreHandlers(ipcMain)
   registerBackendHandlers(ipcMain)
   registerWhisperHandlers(ipcMain)
+  registerSetupHandlers(ipcMain)
   registerLlamaHandlers(ipcMain)
   registerEnvVarsHandlers(ipcMain)
   registerSandboxHandlers(ipcMain)
@@ -238,8 +241,12 @@ app.whenReady().then(async () => {
   // background; chat works meanwhile and titles fall back to the chat model.
   // It waits for the window to have loaded: starting a model server (a few
   // hundred MB read from disk) while the interface is still loading slows both.
+  // On a computer that was never set up the first-run wizard decides what is downloaded, so nothing starts by itself here.
   const startLlama = () => {
-    startLlamaOnLaunch(broadcastLlamaProgress).catch((error) => {
+    void isSetupCompleted().then((completed) => {
+      if (!completed) return
+      return startLlamaOnLaunch(broadcastLlamaProgress)
+    }).catch((error) => {
       console.warn('[llama] local title model unavailable:', error instanceof Error ? error.message : error)
     })
   }

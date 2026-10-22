@@ -4,6 +4,8 @@ import { useAuth } from '@renderer/hooks/useAuth'
 import { useInactivityTimeout } from '@renderer/hooks/useInactivityTimeout'
 import { useSessionValidation } from '@renderer/hooks/useSessionValidation'
 import { edition } from '@renderer/lib/edition'
+import { SetupWizard } from '@renderer/components/setup/SetupWizard'
+import { useSetup } from '@renderer/components/setup/useSetup'
 import { Welcome } from '@renderer/pages/Welcome'
 import { router } from '@renderer/router'
 
@@ -58,6 +60,7 @@ function useLocalSession(enabled: boolean) {
 export function App() {
   const { isAuthenticated, restoring, restoreSession } = useAuth()
   const local = useLocalSession(!edition.accounts && !restoring && !isAuthenticated)
+  const setup = useSetup()
 
   useInactivityTimeout()
   useSessionValidation()
@@ -86,6 +89,9 @@ export function App() {
       </main>
     )
   }
+
+  if (setup.checking) return <Splash>Starting SeshatOS</Splash>
+  if (setup.needed) return <SetupWizard setup={setup} />
 
   return <RouterProvider router={router} />
 }
