@@ -57,7 +57,14 @@ func (a *App) handleTranscribe(w http.ResponseWriter, r *http.Request) {
 		writeBackendError(w, bkerr.InvalidInput(err.Error(), err))
 		return
 	}
-	target.language = normalizeSpokenLanguage(r.FormValue("language"))
+	// A language sent with the clip wins; without one, the person's saved choice applies; neither detects it.
+	spoken := r.FormValue("language")
+	if spoken == "" && a.localSTTStore != nil {
+		if cfg, err := a.localSTTStore.Get(r.Context()); err == nil && cfg != nil {
+			spoken = cfg.Language
+		}
+	}
+	target.language = normalizeSpokenLanguage(spoken)
 
 	result, err := a.transcribeAudio(r.Context(), target, audioData)
 	if err != nil {

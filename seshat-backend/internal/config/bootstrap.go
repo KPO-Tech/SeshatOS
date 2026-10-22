@@ -984,6 +984,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return &sdk.SpeechToTextConfig{
 			Provider: "openai",
 			BaseURL:  cfg.BaseURL,
+			Language: cfg.Language,
 		}
 	})
 
