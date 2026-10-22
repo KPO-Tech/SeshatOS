@@ -24,7 +24,6 @@ import {
 import { applyContentSecurityPolicy } from './content-security-policy'
 import { createBrowserPanel } from './browser-panel'
 import { createBrowserBridgeServer } from './browser-bridge'
-import { registerTerminalRelayHandlers, stopAllTerminalRelays } from './ipc/terminal-relay'
 import { registerShellHandlers, stopAllShellSessions } from './ipc/shell'
 
 /** How long after the window has loaded the local title model starts. */
@@ -205,7 +204,6 @@ app.whenReady().then(async () => {
   registerSandboxHandlers(ipcMain)
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
-  registerTerminalRelayHandlers(ipcMain)
   registerShellHandlers(ipcMain)
 
   // Packaged Electron apps deny every permission request by default when no
@@ -262,7 +260,6 @@ app.on('window-all-closed', () => {
 app.on('will-quit', () => {
   browserBridge.stop()
   browserPanel.destroy()
-  stopAllTerminalRelays()
   stopAllShellSessions()
   stopWhisperServerProcess()
   stopLlamaServerProcess()

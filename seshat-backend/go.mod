@@ -5,7 +5,6 @@ go 1.26.10
 require (
 	github.com/KPO-Tech/seshat-runtime v1.11.12
 	github.com/glebarez/sqlite v1.11.0
-	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
 	go.opentelemetry.io/otel v1.47.0
@@ -78,6 +77,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.20 // indirect
 	github.com/googleapis/gax-go/v2 v2.24.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect
 	github.com/hhrutter/tiff v1.0.7 // indirect
 	github.com/infiniflow/onnxruntime_go v1.29.0 // indirect

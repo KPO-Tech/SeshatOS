@@ -11,10 +11,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 type ShellStatus = 'idle' | 'starting' | 'running' | 'exited'
 
-// A real terminal for the user, as opposed to TerminalPanel, which is a
-// read-only live view of the commands the agent runs. Both exist on purpose:
-// the agent's own commands stay traceable on their own, and this one is a
-// shell the user drives.
+// A real terminal for the user: a shell the user drives.
 //
 // It is a real PTY (main/ipc/shell.ts, node-pty) rendered by xterm.js, so
 // colour, line editing, job control and full-screen programs all work the way
