@@ -40,13 +40,14 @@ export type SkillSourceTool = {
   path: string
   detected: boolean
   skill_count: number
-  enabled: boolean
+  selected: number
 }
 
 export type SkillSourceFolder = {
   path: string
   exists: boolean
   skill_count: number
+  selected: number
 }
 
 export type SkillSources = {
@@ -54,8 +55,21 @@ export type SkillSources = {
   folders: SkillSourceFolder[]
 }
 
+/** The folders (when given) and, by source, the skills validated from it. A source listed with no names stops being used. */
 export type SkillSourcesChoice = {
-  claude_code: boolean
-  codex: boolean
-  folders: string[]
+  folders?: string[]
+  selection?: Record<string, string[]>
+}
+
+export type ScanSkill = {
+  name: string
+  title: string
+  description: string
+  selected: boolean
+  flag?: string
+}
+
+export type ScanResult = {
+  source: string
+  skills: ScanSkill[]
 }
