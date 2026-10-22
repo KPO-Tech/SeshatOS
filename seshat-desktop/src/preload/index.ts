@@ -164,6 +164,9 @@ const seshatBridge = {
     deleteModel: (modelId: string): Promise<WhisperStatus> => ipcRenderer.invoke('whisper:delete-model', modelId),
     enable: (): Promise<WhisperStatus> => ipcRenderer.invoke('whisper:enable'),
     disable: (): Promise<WhisperStatus> => ipcRenderer.invoke('whisper:disable'),
+    getSettings: (): Promise<{ threads: number | null; automaticThreads: number; cores: number }> => ipcRenderer.invoke('whisper:get-settings'),
+    setSettings: (settings: { threads: number | null }): Promise<{ threads: number | null; automaticThreads: number; cores: number }> =>
+      ipcRenderer.invoke('whisper:set-settings', settings),
     onProgress: (listener: (progress: WhisperProgress) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, progress: WhisperProgress) => listener(progress)
       ipcRenderer.on('whisper:progress', handler)

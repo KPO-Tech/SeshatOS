@@ -10,7 +10,7 @@ import { registerEnvVarsHandlers } from './ipc/env-vars'
 import { registerSandboxHandlers } from './ipc/sandbox'
 import { resolveRuntimeRoot } from './runtime'
 import { startBackendSidecar, stopBackendSidecar } from './backend-process'
-import { stopWhisperServerProcess } from './whisper-manager'
+import { resumeLocalWhisperOnLaunch, stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
 import { isExternalOpenAllowed } from './url-safety'
@@ -248,6 +248,9 @@ app.whenReady().then(async () => {
   } else {
     startLlama()
   }
+  void resumeLocalWhisperOnLaunch().catch((error) => {
+    console.warn('[whisper] could not resume local transcription:', error instanceof Error ? error.message : error)
+  })
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })

@@ -61,6 +61,8 @@ interface Window {
       deleteModel: (modelId: string) => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       enable: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       disable: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
+      getSettings: () => Promise<{ threads: number | null; automaticThreads: number; cores: number }>
+      setSettings: (settings: { threads: number | null }) => Promise<{ threads: number | null; automaticThreads: number; cores: number }>
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
     }
     llama?: {

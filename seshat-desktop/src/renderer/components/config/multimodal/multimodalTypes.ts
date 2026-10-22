@@ -44,5 +44,6 @@ export type SystemStatus = {
 export type LocalSTTConfig = {
   base_url: string
   enabled: boolean
+  language?: string
   updated_at?: number
 }

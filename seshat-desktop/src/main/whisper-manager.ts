@@ -14,6 +14,7 @@ const WHISPER_RELEASE_TAG = 'v1.9.1'
 const WHISPER_RELEASE_BASE = `https://github.com/ggml-org/whisper.cpp/releases/download/${WHISPER_RELEASE_TAG}`
 const MODEL_BASE_URL = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main'
 const ACTIVE_MODEL_FILE = 'active-model.json'
+const SETTINGS_FILE = 'settings.json'
 
 // Multilingual, non-quantized tiers only for now - quantized (q5/q8) variants
 // exist too but would clutter this first pass of the picker. Sizes are the
@@ -242,9 +243,47 @@ export async function deleteModel(modelId: WhisperModelId): Promise<void> {
 
 // whisper.cpp uses 4 threads unless told otherwise; on a machine with more cores, two thirds of them (at most 8) made a clip about
 // a third faster in a test, without taking the whole machine.
-function whisperThreads(): number {
+function automaticThreads(): number {
   const cores = cpus().length
   return Math.max(4, Math.min(8, Math.floor((cores * 2) / 3)))
+}
+
+export type WhisperSettings = {
+  /** Threads the server computes with; null picks a share of the cores (see automaticThreads). */
+  threads: number | null
+  /** What automatic resolves to on this machine, to show next to the choice. */
+  automaticThreads: number
+  cores: number
+}
+
+const MAX_THREADS = 32
+
+export async function readWhisperSettings(): Promise<WhisperSettings> {
+  let threads: number | null = null
+  try {
+    const parsed = JSON.parse(await readFile(join(whisperDir(), SETTINGS_FILE), 'utf-8')) as { threads?: unknown }
+    if (typeof parsed.threads === 'number' && Number.isInteger(parsed.threads) && parsed.threads >= 1 && parsed.threads <= MAX_THREADS) {
+      threads = parsed.threads
+    }
+  } catch {
+    // No settings yet: automatic.
+  }
+  return { threads, automaticThreads: automaticThreads(), cores: cpus().length }
+}
+
+/** Saves the thread count (null for automatic) and restarts the server when it is running, because the count is fixed at spawn time. */
+export async function writeWhisperSettings(next: { threads: number | null }): Promise<WhisperSettings> {
+  const threads = next.threads
+  if (threads !== null && (!Number.isInteger(threads) || threads < 1 || threads > MAX_THREADS)) {
+    throw new Error(`Threads must be a whole number between 1 and ${MAX_THREADS}, or automatic.`)
+  }
+  await mkdir(whisperDir(), { recursive: true })
+  await writeFile(join(whisperDir(), SETTINGS_FILE), JSON.stringify({ threads }), 'utf-8')
+  if (serverProcess) {
+    stopWhisperServerProcess()
+    await enableLocalWhisper()
+  }
+  return readWhisperSettings()
 }
 
 /** Spawns whisper-server (if not already running) using the active model, and tells seshat-backend where it is. */
@@ -273,7 +312,7 @@ export async function enableLocalWhisper(): Promise<void> {
     // The server's own default language is English: a French clip sent without a language comes back translated into English.
     // Detecting the language is the default, and a request that names one skips the detection pass.
     '--language', 'auto',
-    '--threads', String(whisperThreads()),
+    '--threads', String((await readWhisperSettings()).threads ?? automaticThreads()),
   ], {
     stdio: ['ignore', 'pipe', 'pipe'],
     cwd: join(binaryPath, '..'),
@@ -304,6 +343,29 @@ export async function enableLocalWhisper(): Promise<void> {
     enabled: true,
     base_url: `http://127.0.0.1:${port}`,
   })
+}
+
+/**
+ * The server dies with the app but the backend keeps its address, so the next launch would send dictation to a dead port with no
+ * fallback. When the person had local transcription on, start the server again; if that fails, tell the backend to stop using it.
+ */
+export async function resumeLocalWhisperOnLaunch(): Promise<void> {
+  // The person may not be signed in yet when the app starts: ask again for a minute before giving up.
+  let saved: { enabled?: boolean } | null = null
+  for (let attempt = 0; attempt < 12; attempt++) {
+    try {
+      saved = (await callBackendAsCurrentUser('/settings/local-stt', 'GET')) as { enabled?: boolean } | null
+      break
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 5_000))
+    }
+  }
+  if (!saved?.enabled || serverProcess) return
+  try {
+    await enableLocalWhisper()
+  } catch {
+    await callBackendAsCurrentUser('/settings/local-stt', 'PUT', { enabled: false, base_url: '' }).catch(() => {})
+  }
 }
 
 /** Stops whisper-server (if running) and tells seshat-backend to fall back to cloud. */
