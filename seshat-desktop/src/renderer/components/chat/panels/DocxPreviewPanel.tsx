@@ -62,7 +62,7 @@ export function DocxPreviewPanel({ fileId, filename }: Props) {
         containerRef.current.style.zoom = ''
         await renderAsync(buffer, containerRef.current, undefined, {
           inWrapper: true,
-          ignoreHeight: true,
+          ignoreHeight: false,
           className: 'docx-preview-doc',
         })
         if (cancelled || !containerRef.current) return

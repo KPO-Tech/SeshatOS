@@ -114,6 +114,11 @@
   color: #1a1a1a;
 }
 
+.docx-preview-container [class$="-wrapper"] {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
 .docx-preview-container .docx-preview-doc {
   background: white;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
