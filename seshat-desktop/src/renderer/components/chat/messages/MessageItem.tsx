@@ -15,6 +15,7 @@ import { AttachmentThumb } from '../attachments/AttachmentThumb'
 import type { Message, ToolUseBlock, ToolStatus } from '@renderer/api/types'
 import type { ChangedFile } from '@renderer/lib/changedFiles'
 import { ChangedFiles } from './ChangedFiles'
+import { InlineMedia, isInlineMedia } from './InlineMedia'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 
@@ -418,6 +419,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                 />
               )
             }
+            if (isInlineMedia(block)) return <InlineMedia key={key} tool={block} />
             return (
               <ToolBlock
                 key={key}
