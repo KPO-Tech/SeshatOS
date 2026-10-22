@@ -13,7 +13,7 @@ function base64ToArrayBuffer(dataUrl: string): ArrayBuffer {
   return bytes.buffer
 }
 
-const SCROLL_PADDING = 20 // keep in sync with .docx-preview-scroll's padding below
+const SCROLL_PADDING = 0 // keep in sync with .docx-preview-scroll's padding below
 
 // Renders a .docx file's real content directly in the browser. docx-preview
 // parses the document XML client-side, which keeps the default preview path
@@ -62,7 +62,7 @@ export function DocxPreviewPanel({ fileId, filename }: Props) {
         containerRef.current.style.zoom = ''
         await renderAsync(buffer, containerRef.current, undefined, {
           inWrapper: true,
-          ignoreHeight: false,
+          ignoreHeight: true,
           className: 'docx-preview-doc',
         })
         if (cancelled || !containerRef.current) return
@@ -93,7 +93,7 @@ export function DocxPreviewPanel({ fileId, filename }: Props) {
 
   return (
     <div className="relative h-full min-h-0">
-      <div className="docx-preview-scroll flex h-full items-start justify-center overflow-auto bg-app-surface p-5" ref={scrollRef}>
+      <div className="docx-preview-scroll flex h-full items-start justify-center overflow-auto bg-white" ref={scrollRef}>
         <div className="docx-preview-container" ref={containerRef} />
       </div>
       {status === 'loading' && (

@@ -121,7 +121,9 @@
 
 .docx-preview-container .docx-preview-doc {
   background: white;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: none;
+  /* The page's own margins (about an inch) leave a blank frame in a narrow panel: a small one keeps the text off the edge. */
+  padding: 20px 24px !important;
 }
 
 
