@@ -360,6 +360,13 @@ func backendMigrations() []schemaMigration {
 			Scope: migrationScopeBackend,
 			Run:   migrateProviderCatalog,
 		},
+		{
+			ID:    "20261022_052_local_stt_language",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gLocalSTTConfig{})
+			},
+		},
 	}
 }
 
