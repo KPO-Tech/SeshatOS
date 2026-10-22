@@ -1,5 +1,5 @@
-import { memo } from 'react'
-import { Copy, Down, Time, CheckOne, Redo } from '@icon-park/react'
+import { memo, useState } from 'react'
+import { Copy, Down, Time, CheckOne } from '@icon-park/react'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useUIStore } from '@renderer/stores/ui'
@@ -16,6 +16,8 @@ import type { Message, ToolUseBlock, ToolStatus } from '@renderer/api/types'
 import type { ChangedFile } from '@renderer/lib/changedFiles'
 import { ChangedFiles } from './ChangedFiles'
 import { InlineMedia, isInlineMedia } from './InlineMedia'
+import { MessageActions } from './MessageActions'
+import { PromptEditor } from './PromptEditor'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 
@@ -163,6 +165,10 @@ type Props = {
   // retrying a failed send doesn't silently drop them - see metadata.attachments
   // below, populated by useChatStream.sendMessage on the original send.
   onRetryMessage?: (text: string, attachments?: ChatAttachment[]) => void
+  // Set on an answer that can be asked again; the message list leaves it out while a turn is running.
+  onRegenerate?: () => void
+  // False for an assistant message that a later one of the same turn follows: the actions sit under the end of the turn only.
+  endsTurn?: boolean
 }
 
 export type QuietGroupItem =
@@ -300,7 +306,17 @@ function CompactionDivider({ text }: { text: string }) {
   )
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage }: Props) {
+// The text and attachments of a user message, to ask the same thing again.
+export function userPrompt(message: Message): { text: string; attachments: ChatAttachment[] } {
+  const text = message.content
+    .map((block) => (block.type === 'text' ? block.text : ''))
+    .filter(Boolean)
+    .join('\n\n')
+  return { text, attachments: messageAttachments(message) }
+}
+
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true }: Props) {
+  const [editing, setEditing] = useState(false)
   if (isCompactionDivider(message)) {
     const first = message.content[0]
     return <CompactionDivider text={first && first.type === 'text' ? first.text : ''} />
@@ -316,7 +332,6 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
     return false
   })
   if (visibleBlocks.length === 0 && attachments.length === 0 && !liveActivity && !justCompleted) return null
-  const hasVisibleTool = visibleBlocks.some((block) => block.type === 'tool_use')
 
   const copyText = message.content
     .map((block) => {
@@ -378,6 +393,19 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
 
           const block = item.block
           if (block.type === 'text') {
+            if (isUser && editing) {
+              return (
+                <PromptEditor
+                  key={`${message.id ?? 'msg'}-edit-${item.index}`}
+                  initialText={block.text}
+                  onCancel={() => setEditing(false)}
+                  onSend={(text) => {
+                    setEditing(false)
+                    onRetryMessage?.(text, attachments)
+                  }}
+                />
+              )
+            }
             return (
               <div
                 key={`${message.id ?? 'msg'}-text-${item.index}`}
@@ -441,34 +469,13 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
         {liveActivity && <LiveActivityBlock label={liveActivity.label} detail={liveActivity.detail} />}
         {!liveActivity && justCompleted && <CompletionFlash />}
 
-        {copyText && !hasVisibleTool && (
-          <div className={cx('-mt-1 flex items-center gap-[7px] opacity-0 transition-opacity duration-200 group-hover:opacity-100', isUser && 'flex-row-reverse')}>
-            <button
-              className="flex cursor-pointer items-center rounded-app-xs border-0 bg-transparent p-0.5 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary"
-              aria-label="Copy"
-              type="button"
-              onClick={() => {
-                if (copyText) void navigator.clipboard.writeText(copyText)
-              }}
-            >
-              <Copy size={11} />
-            </button>
-            {/* User messages only - re-sends the same text as a new prompt,
-                same path the "Failed to send · Retry" link already uses
-                below, just available on every message instead of only a
-                failed one. */}
-            {isUser && onRetryMessage && (
-              <button
-                className="flex cursor-pointer items-center rounded-app-xs border-0 bg-transparent p-0.5 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary"
-                aria-label="Retry"
-                title="Send this message again"
-                type="button"
-                onClick={() => onRetryMessage(copyText, attachments)}
-              >
-                <Redo size={11} />
-              </button>
-            )}
-          </div>
+        {copyText && !liveActivity && !editing && (isUser || endsTurn) && (
+          <MessageActions
+            text={copyText}
+            align={isUser ? 'end' : 'start'}
+            onRegenerate={!isUser ? onRegenerate : undefined}
+            onEdit={isUser && onRetryMessage ? () => setEditing(true) : undefined}
+          />
         )}
       </div>
     </div>
