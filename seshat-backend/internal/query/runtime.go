@@ -77,6 +77,7 @@ type SDKRuntime struct {
 	baseConfig            *sdk.ClientConfig
 	terminalRelay         *TerminalRelay
 	resolveLocalSTT       func(ctx context.Context) *sdk.SpeechToTextConfig
+	resolveMedia          func(ctx context.Context) MediaConfigs
 	resolveLocalTitle     func(ctx context.Context) *LocalTitleEndpoint
 	resolveBrowser        func(ctx context.Context) string
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
@@ -121,6 +122,8 @@ type clientCacheKey struct {
 	// research identifies the research keys a cached client was built with: a key that changed or was removed
 	// must not keep being used by a client that already holds it.
 	research string
+	// media is the image, speech and transcription setup a cached client was built with.
+	media string
 }
 
 // cachedRuntimeClient pairs a cached client with when it was last handed out,
@@ -168,6 +171,36 @@ func (r *SDKRuntime) SetTerminalRelay(relay *TerminalRelay) {
 // SetTerminalRelay above.
 func (r *SDKRuntime) SetLocalSTTResolver(resolve func(ctx context.Context) *sdk.SpeechToTextConfig) {
 	r.resolveLocalSTT = resolve
+}
+
+// MediaConfigs is what the image, speech and transcription tools are set up with, as the person's capability links say it now.
+type MediaConfigs struct {
+	Image *sdk.ImageGenerationConfig
+	TTS   *sdk.TextToSpeechConfig
+	STT   *sdk.SpeechToTextConfig
+}
+
+// SetMediaResolver attaches the source of the media tools' configuration, read on each turn: linking a provider to image or audio in the
+// settings then reaches the next turn instead of waiting for a restart, and a client built with the old links is not reused.
+func (r *SDKRuntime) SetMediaResolver(resolve func(ctx context.Context) MediaConfigs) {
+	r.mu.Lock()
+	r.resolveMedia = resolve
+	r.mu.Unlock()
+}
+
+// mediaKey identifies the media configuration in the client cache key.
+func mediaKey(cfg *sdk.ClientConfig) string {
+	var parts []string
+	if c := cfg.ImageGeneration; c != nil {
+		parts = append(parts, "img:"+c.Provider+"|"+c.Model+"|"+c.BaseURL+"|"+c.APIKey)
+	}
+	if c := cfg.TextToSpeech; c != nil {
+		parts = append(parts, "tts:"+c.Provider+"|"+c.Model+"|"+c.Voice+"|"+c.BaseURL+"|"+c.APIKey)
+	}
+	if c := cfg.SpeechToText; c != nil {
+		parts = append(parts, "stt:"+c.Provider+"|"+c.Model+"|"+c.BaseURL+"|"+c.APIKey)
+	}
+	return strings.Join(parts, ";")
 }
 
 // LocalTitleEndpoint is an OpenAI-compatible server (llama.cpp's llama-server)
@@ -773,6 +806,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 		browser:  strings.TrimSpace(cfg.BrowserRemoteControlURL),
 		managed:  managedPolicyKey(cfg.ManagedPolicy),
 		research: researchKeysFingerprint(input.ResearchKeys),
+		media:    mediaKey(cfg),
 	}
 	if cfg.ProviderConfig != nil {
 		key.baseURL = cfg.ProviderConfig.BaseURL
@@ -851,6 +885,7 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	r.mu.RLock()
 	cfg := cloneClientConfig(r.baseConfig)
 	resolveLocalSTT := r.resolveLocalSTT
+	resolveMedia := r.resolveMedia
 	resolveLocalTitle := r.resolveLocalTitle
 	resolveBrowser := r.resolveBrowser
 	resolveBrowserSession := r.resolveBrowserSession
@@ -877,6 +912,10 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	cfg.SessionStore = r.client.GetSessionStore()
 	cfg.ArtifactStore = r.client.GetArtifactStore()
 	cfg.Monitoring = r.client.GetMonitoring()
+	if resolveMedia != nil {
+		media := resolveMedia(ctx)
+		cfg.ImageGeneration, cfg.TextToSpeech, cfg.SpeechToText = media.Image, media.TTS, media.STT
+	}
 	if resolveLocalSTT != nil {
 		if localSTT := resolveLocalSTT(ctx); localSTT != nil {
 			cfg.SpeechToText = localSTT

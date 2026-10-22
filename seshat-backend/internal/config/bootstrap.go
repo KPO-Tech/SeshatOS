@@ -974,6 +974,13 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// restart. No API key needed - the engine no longer requires one when a
 	// custom BaseURL is set (KPO-Tech/seshat-runtime#101), and whisper-server
 	// doesn't check the Authorization header anyway.
+	runtime.SetMediaResolver(func(ctx context.Context) backendquery.MediaConfigs {
+		return backendquery.MediaConfigs{
+			Image: defaultImageGenerationConfig(ctx, capabilityLinkStore, settingStore),
+			TTS:   defaultTextToSpeechConfig(ctx, capabilityLinkStore, settingStore),
+			STT:   defaultSpeechToTextConfig(ctx, capabilityLinkStore, settingStore),
+		}
+	})
 	runtime.SetLocalSTTResolver(func(ctx context.Context) *sdk.SpeechToTextConfig {
 		cfg, err := localSTTConfigStore.Get(ctx)
 		if err != nil || cfg == nil || !cfg.Enabled || cfg.BaseURL == "" {
@@ -1343,22 +1350,29 @@ func splitCommaList(raw string) []string {
 // false), so callers fall back to their own default the same as before this
 // feature existed.
 func resolveCapabilityCredential(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore, capability backendsettings.Capability) (providerType, apiKey string, ok bool) {
+	providerType, apiKey, _, ok = resolveCapabilityLink(ctx, linkStore, providerStore, capability)
+	return providerType, apiKey, ok
+}
+
+// resolveCapabilityLink is resolveCapabilityCredential that also returns the base URL of the linked provider: a provider that is not the
+// chat model of the conversation (an OpenAI-compatible image or speech server) is only reachable through it.
+func resolveCapabilityLink(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore, capability backendsettings.Capability) (providerType, apiKey, baseURL string, ok bool) {
 	if linkStore == nil || providerStore == nil {
-		return "", "", false
+		return "", "", "", false
 	}
 	providerSettingID, linked, err := linkStore.Get(ctx, string(capability))
 	if err != nil || !linked {
-		return "", "", false
+		return "", "", "", false
 	}
 	setting, err := providerStore.GetByID(ctx, providerSettingID)
 	if err != nil {
-		return "", "", false
+		return "", "", "", false
 	}
 	key, err := providerStore.GetDecryptedAPIKey(ctx, providerSettingID)
 	if err != nil || key == "" {
-		return "", "", false
+		return "", "", "", false
 	}
-	return setting.Provider, key, true
+	return setting.Provider, key, strings.TrimSpace(setting.BaseURL), true
 }
 
 // defaultImageGenerationConfig, defaultTextToSpeechConfig and
@@ -1372,8 +1386,8 @@ func resolveCapabilityCredential(ctx context.Context, linkStore *db.CapabilityLi
 // Without either, ClientConfig.ImageGeneration/.TextToSpeech/.SpeechToText
 // stay nil and the tools are never initialized.
 func defaultImageGenerationConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.ImageGenerationConfig {
-	if providerType, key, ok := resolveCapabilityCredential(ctx, linkStore, providerStore, backendsettings.CapabilityImage); ok {
-		return &sdk.ImageGenerationConfig{Provider: providerType, APIKey: key}
+	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityImage); ok {
+		return &sdk.ImageGenerationConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
 	}
 	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
 		return &sdk.ImageGenerationConfig{Provider: "openai", APIKey: key}
@@ -1385,8 +1399,8 @@ func defaultImageGenerationConfig(ctx context.Context, linkStore *db.CapabilityL
 }
 
 func defaultTextToSpeechConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.TextToSpeechConfig {
-	if providerType, key, ok := resolveCapabilityCredential(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
-		return &sdk.TextToSpeechConfig{Provider: providerType, APIKey: key}
+	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
+		return &sdk.TextToSpeechConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
 	}
 	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
 		return &sdk.TextToSpeechConfig{Provider: "openai", APIKey: key}
@@ -1395,8 +1409,8 @@ func defaultTextToSpeechConfig(ctx context.Context, linkStore *db.CapabilityLink
 }
 
 func defaultSpeechToTextConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.SpeechToTextConfig {
-	if providerType, key, ok := resolveCapabilityCredential(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
-		return &sdk.SpeechToTextConfig{Provider: providerType, APIKey: key}
+	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
+		return &sdk.SpeechToTextConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
 	}
 	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
 		return &sdk.SpeechToTextConfig{Provider: "openai", APIKey: key}
