@@ -115,12 +115,6 @@ interface Window {
       onData: (id: string, listener: (event: ShellDataEvent) => void) => () => void
       onExit: (id: string, listener: (event: ShellExitEvent) => void) => () => void
     }
-    terminalRelay?: {
-      connect: (sessionId: string) => Promise<{ ok: boolean; connected: boolean }>
-      disconnect: (sessionId: string) => Promise<void>
-      status: (sessionId: string) => Promise<{ connected: boolean }>
-      onEvent: (sessionId: string, listener: (event: TerminalRelayEvent) => void) => () => void
-    }
     updates?: {
       checkNow: () => Promise<{ ok: boolean; error?: string }>
       quitAndInstall: () => Promise<void>
@@ -152,19 +146,6 @@ type BrowserPanelState = {
 
 type ShellDataEvent = { id: string; data: string }
 type ShellExitEvent = { id: string; exitCode: number; signal?: number }
-
-type TerminalRelayEvent = {
-  sessionId: string
-  type: string
-  commandId?: string
-  command?: string
-  cwd?: string
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  exitCode?: number
-  durationMs?: number
-}
 
 interface LlamaModelInfo {
   id: string

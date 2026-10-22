@@ -253,19 +253,6 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 
 	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", handler))
 
-	// Registered directly on mux (a more specific pattern than "/api/v1/",
-	// so Go's ServeMux routes it here first) instead of on apiV1 - it needs
-	// to reach the real *http.response the Go server handed us so the
-	// websocket upgrade below can type-assert it as http.Hijacker.
-	// otelhttp.NewHandler's own response wrapper doesn't implement Hijacker
-	// (see its resp_writer_wrapper.go, a documented gap in that library),
-	// and neither does recoverMiddleware's commitTrackingWriter - stacking
-	// either of those in front of this handler breaks every websocket
-	// upgrade with "response does not implement http.Hijacker". Still
-	// behind authMiddleware (auth doesn't touch the ResponseWriter) since
-	// this still needs the same Bearer-token check as everything else.
-	mux.Handle("/api/v1/terminal/ws/", http.StripPrefix("/api/v1", app.authMiddleware(http.HandlerFunc(app.handleTerminalWS))))
-
 	// Anthropic Messages API compatible prefix.
 	// Clients set ANTHROPIC_BASE_URL=http://<host>/v1 to route through Seshat.
 	// Auth: x-api-key: <seshat-key>  or  Authorization: Bearer <seshat-jwt>

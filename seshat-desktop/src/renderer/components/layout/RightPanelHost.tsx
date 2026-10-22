@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Book, Code, CodeComputer, Computer, DocDetail, FilePdf, FileTextOne, Globe, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
+import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { useUIStore } from '@renderer/stores/ui'
 import { useSessionStore } from '@renderer/stores/session'
@@ -13,7 +13,6 @@ import { DocxPreviewPanel } from '@renderer/components/chat/panels/DocxPreviewPa
 import { XlsxPreviewPanel } from '@renderer/components/chat/panels/XlsxPreviewPanel'
 import { PptxPreviewPanel } from '@renderer/components/chat/panels/PptxPreviewPanel'
 import { BrowserPanel } from '@renderer/components/chat/panels/BrowserPanel'
-import { TerminalPanel } from '@renderer/components/chat/panels/TerminalPanel'
 import { ShellPanel } from '@renderer/components/chat/panels/ShellPanel'
 import { EmptyState } from '@renderer/components/chat/panels/EmptyState'
 import { KnowledgePanel } from '@renderer/components/chat/panels/KnowledgePanel'
@@ -211,9 +210,6 @@ function renderPanelIcon(kind: RightPanelKind) {
   switch (kind) {
     case 'browser':
       return <Globe size={11} />
-    case 'terminal':
-      // The agent's bash tool, live.
-      return <CodeComputer size={11} />
     case 'shell':
       // The user's own terminal.
       return <Terminal size={11} />
@@ -262,8 +258,6 @@ function renderPanelBody(panel: RightPanelInstance) {
       )
     case 'browser':
       return <BrowserPanel url={panel.browserUrl} contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'} />
-    case 'terminal':
-      return <TerminalPanel sessionId={panel.sessionId} focusToolId={panel.focusToolId} />
     case 'shell':
       return <ShellPanel sessionId={panel.sessionId} />
     case 'knowledge':

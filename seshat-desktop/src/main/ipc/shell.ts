@@ -4,8 +4,7 @@ import { spawn as spawnPty, type IPty } from 'node-pty'
 import { assertTrustedSender } from './trusted-sender'
 import { assertLocalFilePath } from './validation'
 
-// A real terminal for the user, as opposed to terminal-relay.ts, which only
-// reports the commands the agent runs. This one goes through node-pty, so the
+// A real terminal for the user. It goes through node-pty, so the
 // child gets a PTY and behaves like a terminal: line editing, colour, job
 // control, full-screen programs. node-pty is a Node-API module, so its
 // prebuilt binary does not have to be rebuilt per Electron version.

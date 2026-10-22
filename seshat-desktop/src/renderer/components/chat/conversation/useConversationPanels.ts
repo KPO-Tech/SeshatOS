@@ -2,17 +2,14 @@ import { useEffect, useRef } from 'react'
 import type { PlanDocument } from '@renderer/api/types'
 import type { AgentState, StreamingBlock } from '@renderer/stores/session'
 import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
-import { currentSandboxMode } from '@renderer/components/config/environment/sandboxApi'
-import { useTerminalStore } from '@renderer/stores/terminal'
 import { isAgentTool, isFileTool } from '@renderer/components/chat/tools/toolDisplay'
 
 const WEB_INFO_TOOLS = new Set(['web_search', 'web_fetch', 'read_url', 'read_document_url'])
 
-type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'terminal' | 'browser' | 'files'>
+type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'browser' | 'files'>
 
 function categoryForTool(toolName: string | undefined): ToolPanelCategory | null {
   if (!toolName) return null
-  if (toolName === 'bash') return 'terminal'
   if (toolName.startsWith('browser_')) return 'browser'
   // agent/spawn_agent has its own SubagentPanel (opened by clicking the
   // agent card) - it isn't Computer's content, so don't steal focus back to
@@ -32,8 +29,6 @@ function categoryForTool(toolName: string | undefined): ToolPanelCategory | null
 
 const PANEL_TITLE: Record<ToolPanelCategory, string> = {
   computer: 'Session',
-  // The agent's bash tool, live. The Terminal button of the titlebar is the user's own shell, a different panel.
-  terminal: 'Agent commands',
   browser: 'Browser',
   files: 'Files',
 }
@@ -103,25 +98,6 @@ export function useConversationPanels({
     if (toolBlock?.type !== 'tool_use') return
     openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: toolBlock.id })
   }, [activeToolName, isFileToolActive, filesOpen, openRightPanel, sessionId, streaming])
-
-  // Connects the terminal relay as soon as this session loads, when
-  // Settings > Environment is set to direct/local execution - the backend
-  // decides whether to route bash through it once, at the very start of
-  // each turn (SDKRuntime.applyRemoteExecutor), so waiting until a bash tool
-  // call is already active (see the effect below) would be one turn too
-  // late for that first call. Connecting doesn't require the panel to be
-  // open - see TerminalPanel.tsx's own (idempotent) attachSession call for
-  // the case where the user opens it manually instead.
-  useEffect(() => {
-    if (!sessionId) return
-    let cancelled = false
-    void currentSandboxMode().then((mode) => {
-      if (!cancelled && mode === 'local') void useTerminalStore.getState().attachSession(sessionId)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [sessionId])
 
   useEffect(() => {
     const tool = agentState.activeTool
