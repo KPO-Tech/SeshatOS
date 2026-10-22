@@ -3,7 +3,7 @@ import type { Virtualizer } from '@tanstack/react-virtual'
 import type { Message } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/stores/session'
 import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
-import { MessageItem } from '@renderer/components/chat/messages/MessageItem'
+import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
 
 type LiveActivity = {
   label: string
@@ -45,6 +45,18 @@ export function MessageList({
 }: MessageListProps) {
   // The files each turn created or edited, listed under the message that ends the turn.
   const changedFiles = useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming])
+
+  // An answer can be asked again from the prompt before it, unless a turn is running.
+  const regenerate = (index: number): (() => void) | undefined => {
+    if (isStreaming || messages[index]?.role !== 'assistant') return undefined
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i].role !== 'user') continue
+      const { text, attachments } = userPrompt(messages[i])
+      if (!text.trim()) continue
+      return () => onRetryMessage(text, attachments)
+    }
+    return undefined
+  }
 
   if (messages.length === 0) {
     return (
@@ -91,6 +103,8 @@ export function MessageList({
                 onDenyTool={onDenyTool}
                 onSubmitToolPrompt={onSubmitToolPrompt}
                 onRetryMessage={onRetryMessage}
+                onRegenerate={regenerate(i)}
+                endsTurn={messages[i + 1]?.role !== 'assistant'}
               />
             </div>
           )
