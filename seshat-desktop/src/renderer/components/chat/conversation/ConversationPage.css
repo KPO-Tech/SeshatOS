@@ -25,7 +25,7 @@
 }
 
 .conv-virtual-row {
-  max-width: var(--chat-max-width, 880px);
+  max-width: var(--chat-max-width, 768px);
   margin: 0 auto;
   padding: 0 18px;
   box-sizing: border-box;

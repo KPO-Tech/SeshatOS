@@ -276,7 +276,7 @@ type Props = {
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
-  chat: 'text-[length:var(--chat-font-size)] leading-[1.6]',
+  chat: 'text-[length:var(--chat-font-size)] leading-[1.72]',
   document: 'text-[14px] leading-7'
 }
 
@@ -329,7 +329,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
             )
           },
           p({ children }) {
-            return <p className="mb-3 last:mb-0">{children}</p>
+            return <p className="mb-4 last:mb-0">{children}</p>
           },
           pre({ children }) {
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
@@ -337,33 +337,33 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           table({ children }) {
             return (
               <div className="my-4 overflow-x-auto">
-                <table className="w-full border-collapse border border-[var(--border-soft)]">{children}</table>
+                <table className="w-full border-collapse">{children}</table>
               </div>
             )
           },
           th({ children }) {
-            return <th className="border border-[var(--border-soft)] bg-[var(--surface-muted)] px-2 py-1.5 text-left">{children}</th>
+            return <th className="border-b border-[var(--border-strong)] px-3 py-2.5 text-left font-semibold">{children}</th>
           },
           td({ children }) {
-            return <td className="border border-[var(--border-soft)] px-2 py-1.5 text-left">{children}</td>
+            return <td className="border-b border-[var(--border-soft)] px-3 py-3 text-left align-top">{children}</td>
           },
           ul({ children }) {
-            return <ul className="mb-4 list-disc pl-5">{children}</ul>
+            return <ul className="mb-4 list-disc pl-6">{children}</ul>
           },
           ol({ children }) {
-            return <ol className="mb-4 list-decimal pl-5">{children}</ol>
+            return <ol className="mb-4 list-decimal pl-6">{children}</ol>
           },
           li({ children }) {
-            return <li className="mb-1">{children}</li>
+            return <li className="mb-2 pl-1 last:mb-0">{children}</li>
           },
           h1({ children }) {
-            return <h1 className="mb-3 mt-6 text-[1.3em] font-semibold text-[var(--text-primary)]">{children}</h1>
+            return <h1 className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
           },
           h2({ children }) {
-            return <h2 className="mb-3 mt-6 text-[1.15em] font-semibold text-[var(--text-primary)]">{children}</h2>
+            return <h2 className="mb-3 mt-7 text-[1.3em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h2>
           },
           h3({ children }) {
-            return <h3 className="mb-3 mt-6 text-[1.05em] font-semibold text-[var(--text-primary)]">{children}</h3>
+            return <h3 className="mb-2 mt-6 text-[1.12em] leading-snug font-semibold text-[var(--text-primary)]">{children}</h3>
           },
           blockquote({ children }) {
             return <blockquote className="my-4 border-l-4 border-[var(--accent-primary)] pl-3 text-[var(--text-secondary)]">{children}</blockquote>
