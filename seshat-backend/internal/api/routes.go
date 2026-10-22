@@ -163,6 +163,8 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/settings/embedder/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleEmbedderConfig))))
 	apiV1.Handle("/settings/capability-links", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityLinks))))
 	apiV1.Handle("/settings/capability-links/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityLinks))))
+	apiV1.Handle("/settings/capability-options", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityOptions))))
+	apiV1.Handle("/settings/capability-options/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityOptions))))
 	apiV1.Handle("/settings/document-reader", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleDocumentReaderConfig))))
 	apiV1.Handle("/settings/document-reader/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleDocumentReaderConfig))))
 	apiV1.Handle("/settings/reranker", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleRerankerConfig))))

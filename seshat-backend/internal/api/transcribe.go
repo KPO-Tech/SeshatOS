@@ -57,6 +57,12 @@ func (a *App) handleTranscribe(w http.ResponseWriter, r *http.Request) {
 		writeBackendError(w, bkerr.InvalidInput(err.Error(), err))
 		return
 	}
+	// A cloud provider transcribes with the model the person chose for it, when they chose one.
+	if target.provider != "" && a.capabilityLinkStore != nil {
+		if options, err := a.capabilityLinkStore.Options(r.Context(), string(backendsettings.CapabilityAudio)); err == nil && options["stt_model"] != "" {
+			target.model = options["stt_model"]
+		}
+	}
 	// A language sent with the clip wins; without one, the person's saved choice applies; neither detects it.
 	spoken := r.FormValue("language")
 	if spoken == "" && a.localSTTStore != nil {

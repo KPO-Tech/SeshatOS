@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ConfigCard, CustomSelect, Field, SoftButton, StatusPill, type SelectOption } from '../knowledge/KnowledgePrimitives'
+import { ConfigCard, CustomSelect, Field, StatusPill, type SelectOption } from '../knowledge/KnowledgePrimitives'
 import { linkCapability } from './multimodalApi'
 import { CapabilityIcon, SourceIcon } from './MultimodalIcons'
 import type { CapabilityName, CapabilityStatus } from './multimodalTypes'
@@ -99,11 +99,7 @@ export function CapabilitySourceCard({ capability, title, description, configure
           </div>
         )}
 
-        <div className="flex items-center justify-end">
-          <SoftButton type="button" tone={linked ? 'success' : 'default'} disabled>
-            {saving ? 'Saving...' : linked ? 'Provider synced' : 'Waiting for provider'}
-          </SoftButton>
-        </div>
+        {saving && <div className="text-[12px] text-[var(--text-muted)]">Saving...</div>}
       </div>
     </ConfigCard>
   )

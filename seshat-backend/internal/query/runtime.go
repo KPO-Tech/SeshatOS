@@ -184,7 +184,7 @@ func mediaKey(cfg *sdk.ClientConfig) string {
 		parts = append(parts, "img:"+c.Provider+"|"+c.Model+"|"+c.BaseURL+"|"+c.APIKey)
 	}
 	if c := cfg.TextToSpeech; c != nil {
-		parts = append(parts, "tts:"+c.Provider+"|"+c.Model+"|"+c.Voice+"|"+c.BaseURL+"|"+c.APIKey)
+		parts = append(parts, "tts:"+c.Provider+"|"+c.Model+"|"+c.Voice+"|"+c.Format+"|"+c.BaseURL+"|"+c.APIKey)
 	}
 	if c := cfg.SpeechToText; c != nil {
 		parts = append(parts, "stt:"+c.Provider+"|"+c.Model+"|"+c.BaseURL+"|"+c.APIKey)

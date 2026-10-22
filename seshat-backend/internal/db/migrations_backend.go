@@ -367,6 +367,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gLocalSTTConfig{})
 			},
 		},
+		{
+			ID:    "20261022_053_capability_options",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gCapabilityOption{})
+			},
+		},
 	}
 }
 

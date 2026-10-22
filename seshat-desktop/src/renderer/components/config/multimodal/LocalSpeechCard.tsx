@@ -56,8 +56,8 @@ export function LocalSpeechCard({ config, configured, onSaved }: { config: Local
 
   return (
     <ConfigCard
-      title="Speech to text"
-      description="Dictation and the agent's transcription run on this computer first, with no account and no cost. The audio source below is the fallback."
+      title="On this computer"
+      description="Dictation and the agent's transcription run here first, with no account and no cost. The cloud provider is the fallback."
       status={<StatusPill tone={on ? 'ok' : 'muted'}>{running ? 'Running' : on ? 'Enabled' : 'Off'}</StatusPill>}
       action={<CapabilityIcon name="whisper" />}
     >

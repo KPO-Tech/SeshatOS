@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
@@ -438,5 +439,50 @@ func TestHandleTranscribeUsesTheSavedLanguage(t *testing.T) {
 	cfg, err := store.Get(context.Background())
 	if err != nil || cfg == nil || cfg.Language != "fr" || !cfg.Enabled || cfg.BaseURL != "http://127.0.0.1:7891" {
 		t.Fatalf("a partial save keeps the other fields, got %+v (%v)", cfg, err)
+	}
+}
+
+func TestCapabilityOptionsRoundTripAndAreValidated(t *testing.T) {
+	app, _ := newSettingsTestApp(t, nil)
+	router := CreateRouter(defaultAPIConfig, app)
+	token := loginAs(t, router, "admin@settings.test", "adminpass")
+	optionsDB, err := db.Open(context.Background(), db.DefaultSQLiteConfig(filepath.Join(t.TempDir(), "capability-options.db")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { optionsDB.Close() })
+	if app.capabilityLinkStore, err = db.NewCapabilityLinkStore(optionsDB); err != nil {
+		t.Fatal(err)
+	}
+
+	put := func(path, body string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		return resp
+	}
+	if resp := put("/api/v1/settings/capability-options/audio", `{"options":{"tts_voice":"coral","tts_format":"wav"}}`); resp.Code != http.StatusOK {
+		t.Fatalf("save: %d %s", resp.Code, resp.Body.String())
+	}
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/settings/capability-options", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"tts_voice":"coral"`) || !strings.Contains(resp.Body.String(), `"tts_format":"wav"`) {
+		t.Fatalf("read back: %d %s", resp.Code, resp.Body.String())
+	}
+	if resp := put("/api/v1/settings/capability-options/audio", `{"options":{"tts_voice":""}}`); resp.Code != http.StatusOK || strings.Contains(resp.Body.String(), "coral") {
+		t.Fatalf("a save replaces the choices of the capability: %d %s", resp.Code, resp.Body.String())
+	}
+	for path, body := range map[string]string{
+		"/api/v1/settings/capability-options/audio":      `{"options":{"nope":"x"}}`,
+		"/api/v1/settings/capability-options/image":      `{"options":{"model":"a b"}}`,
+		"/api/v1/settings/capability-options/embeddings": `{"options":{}}`,
+	} {
+		if resp := put(path, body); resp.Code != http.StatusBadRequest {
+			t.Errorf("%s %s must be a bad request, got %d", path, body, resp.Code)
+		}
 	}
 }
