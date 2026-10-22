@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { useUIStore } from '@renderer/stores/ui'
 import { useSessionStore } from '@renderer/stores/session'
 import { ComputerPanel } from '@renderer/components/chat/panels/ComputerPanel'
@@ -13,7 +13,7 @@ import { DocxPreviewPanel } from '@renderer/components/chat/panels/DocxPreviewPa
 import { XlsxPreviewPanel } from '@renderer/components/chat/panels/XlsxPreviewPanel'
 import { PptxPreviewPanel } from '@renderer/components/chat/panels/PptxPreviewPanel'
 import { BrowserPanel } from '@renderer/components/chat/panels/BrowserPanel'
-import { TerminalPanel } from '@renderer/components/chat/panels/TerminalPanel'
+import { ShellPanel } from '@renderer/components/chat/panels/ShellPanel'
 import { EmptyState } from '@renderer/components/chat/panels/EmptyState'
 import { KnowledgePanel } from '@renderer/components/chat/panels/KnowledgePanel'
 import { flattenRightPanels } from '@renderer/stores/ui'
@@ -166,6 +166,21 @@ function PanelFrame({
     )
   }
 
+  // The session panel is cards, not a window: its home has no header, and its pages carry a slim one of their own.
+  if (panel.kind === 'computer') {
+    return (
+      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--chat-bg)]">
+        <ComputerPanel
+          sessionId={panel.sessionId ?? ''}
+          focusToolId={panel.focusToolId}
+          isMaximized={isMaximized}
+          onClose={onClose}
+          onToggleMaximize={onToggleMaximize}
+        />
+      </aside>
+    )
+  }
+
   return (
     <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
       <div className="flex min-h-[46px] shrink-0 items-center justify-between gap-2 border-b border-app-border-subtle px-3 py-2">
@@ -195,7 +210,8 @@ function renderPanelIcon(kind: RightPanelKind) {
   switch (kind) {
     case 'browser':
       return <Globe size={11} />
-    case 'terminal':
+    case 'shell':
+      // The user's own terminal.
       return <Terminal size={11} />
     case 'subagent':
       return <Robot size={11} />
@@ -242,8 +258,8 @@ function renderPanelBody(panel: RightPanelInstance) {
       )
     case 'browser':
       return <BrowserPanel url={panel.browserUrl} contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'} />
-    case 'terminal':
-      return <TerminalPanel sessionId={panel.sessionId} focusToolId={panel.focusToolId} />
+    case 'shell':
+      return <ShellPanel sessionId={panel.sessionId} />
     case 'knowledge':
       return <KnowledgePanel results={panel.knowledgeResults ?? []} />
     case 'subagent':

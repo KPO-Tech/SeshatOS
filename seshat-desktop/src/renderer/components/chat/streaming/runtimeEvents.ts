@@ -15,6 +15,7 @@ import {
   updateStreamingTool,
 } from '@renderer/components/chat/streaming/streamToolState'
 import { findLatestToolUseByName } from '@renderer/lib/chat'
+import { streamedChars } from '@renderer/lib/sessionOverview'
 import { permissionSignature } from '@renderer/lib/permissionSignature'
 import { useSessionStore, type ToolActivity } from '@renderer/stores/session'
 import { streamingToContentBlocks } from '@renderer/stores/session'
@@ -65,6 +66,24 @@ export function handleRuntimeEvent(
     case 'context.compacted': {
       if (event.compaction_event) {
         onCompaction(event.compaction_event.pre_compact_tokens, event.compaction_event.post_compact_tokens)
+      }
+      // The figure described the conversation as it was before; the next report is the new one.
+      store.updateAgentState(sessionId, { liveContext: null })
+      break
+    }
+
+    // How full the context window is, reported while the turn runs rather than once it is over.
+    case 'context.usage': {
+      const usage = event.context_usage_event
+      if (usage && usage.window_tokens > 0) {
+        store.updateAgentState(sessionId, {
+          liveContext: {
+            used: usage.used_tokens,
+            window: usage.window_tokens,
+            autoCompactAt: usage.auto_compact_at_tokens,
+            atChars: streamedChars(store.streamingBySession?.[sessionId]),
+          },
+        })
       }
       break
     }
@@ -318,7 +337,7 @@ export function handleRuntimeEvent(
   }
 }
 
-export function handleSubagentEvent(
+function handleSubagentEvent(
   sessionId: string,
   event: RuntimeEventPayload,
   store: SessionStore,

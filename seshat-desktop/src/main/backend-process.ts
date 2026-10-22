@@ -1,3 +1,4 @@
+import { srtEnvironment } from './srt-manager'
 import { spawn, type ChildProcess } from 'child_process'
 import { createWriteStream, existsSync } from 'fs'
 import { join } from 'path'
@@ -47,7 +48,7 @@ export async function startBackendSidecar(): Promise<void> {
   // the real process environment, since setting one via the UI is a more
   // deliberate choice than an ambient shell var. See env-vars-manager.ts.
   const envVarOverrides = await resolveEnvVarOverrides()
-  const env = { ...process.env, ...envVarOverrides }
+  const env = { ...process.env, ...srtEnvironment(), ...envVarOverrides }
   if (process.platform === 'win32') {
     env.PATH = `${backendDir};${env.PATH || ''}`
     const onnxRuntimePath = join(backendDir, 'onnxruntime.dll')

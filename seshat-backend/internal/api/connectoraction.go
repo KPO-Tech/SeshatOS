@@ -29,6 +29,8 @@ type connectManualAccountRequest struct {
 // in skills_manage.go, this codebase's established convention for
 // path-segment routing rather than Go 1.22 {param} mux patterns) since
 // {kind} sits in the middle of the path:
+//   - GET      /connectors/catalog                      -> handleLocalConnectorCatalog (local_connectors.go)
+//   - PUT/DELETE /connectors/{kind}/connection          -> handleLocalConnectorConnection
 //   - GET/POST /connectors/{kind}/accounts              -> handleConnectorAccounts
 //   - DELETE   /connectors/{kind}/accounts/{id}          -> handleConnectorAccountDelete
 //   - POST     /connectors/{kind}/accounts/{id}/act      -> handleConnectorAccountAct
@@ -63,6 +65,10 @@ func (a *App) handleConnectorsDispatch(w http.ResponseWriter, r *http.Request) {
 	kind := parts[0]
 
 	switch {
+	case trimmed == "catalog":
+		a.handleLocalConnectorCatalog(w, r)
+	case len(parts) == 2 && parts[1] == "connection":
+		a.handleLocalConnectorConnection(w, r, kind)
 	case trimmed == "my-accounts":
 		a.handleMyConnectorAccounts(w, r)
 	case len(parts) == 2 && parts[0] == "my-accounts":

@@ -11,7 +11,7 @@ import { assertLocalFilePath } from './validation'
 
 const MAX_READ_TEXT_BYTES = 2 * 1024 * 1024
 
-export type DirEntry = {
+type DirEntry = {
   name: string
   isDirectory: boolean
 }

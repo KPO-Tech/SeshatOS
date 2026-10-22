@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
@@ -10,6 +11,7 @@ import (
 type localSTTConfigResponse struct {
 	BaseURL   string `json:"base_url,omitempty"`
 	Enabled   bool   `json:"enabled"`
+	Language  string `json:"language,omitempty"`
 	UpdatedAt int64  `json:"updated_at,omitempty"`
 }
 
@@ -24,6 +26,7 @@ func localSTTConfigToResponse(cfg *db.LocalSTTConfig) localSTTConfigResponse {
 	return localSTTConfigResponse{
 		BaseURL:   cfg.BaseURL,
 		Enabled:   cfg.Enabled,
+		Language:  cfg.Language,
 		UpdatedAt: updatedAt,
 	}
 }
@@ -53,15 +56,27 @@ func (a *App) handleLocalSTTConfig(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodPut:
 		var body struct {
-			BaseURL string `json:"base_url"`
-			Enabled bool   `json:"enabled"`
+			BaseURL  *string `json:"base_url"`
+			Enabled  *bool   `json:"enabled"`
+			Language *string `json:"language"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
 		}
+		var language *string
+		if body.Language != nil {
+			raw := strings.TrimSpace(*body.Language)
+			tag := normalizeSpokenLanguage(raw)
+			if tag == "" && raw != "" && !strings.EqualFold(raw, "auto") {
+				writeBackendError(w, bkerr.InvalidInput("language must be a language tag such as fr or en, or auto", nil))
+				return
+			}
+			language = &tag
+		}
 		cfg, err := a.localSTTStore.Upsert(r.Context(), db.UpsertLocalSTTConfigParams{
-			BaseURL: body.BaseURL,
-			Enabled: body.Enabled,
+			BaseURL:  body.BaseURL,
+			Enabled:  body.Enabled,
+			Language: language,
 		})
 		if err != nil {
 			writeBackendError(w, bkerr.Internal("failed to save local speech-to-text config", err))

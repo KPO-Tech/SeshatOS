@@ -1,8 +1,9 @@
-import type { RefObject } from 'react'
+import { useMemo, type RefObject } from 'react'
 import type { Virtualizer } from '@tanstack/react-virtual'
 import type { Message } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/stores/session'
-import { MessageItem } from '@renderer/components/chat/messages/MessageItem'
+import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
+import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
 
 type LiveActivity = {
   label: string
@@ -42,6 +43,21 @@ export function MessageList({
   onSubmitToolPrompt,
   onRetryMessage,
 }: MessageListProps) {
+  // The files each turn created or edited, listed under the message that ends the turn.
+  const changedFiles = useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming])
+
+  // An answer can be asked again from the prompt before it, unless a turn is running.
+  const regenerate = (index: number): (() => void) | undefined => {
+    if (isStreaming || messages[index]?.role !== 'assistant') return undefined
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i].role !== 'user') continue
+      const { text, attachments } = userPrompt(messages[i])
+      if (!text.trim()) continue
+      return () => onRetryMessage(text, attachments)
+    }
+    return undefined
+  }
+
   if (messages.length === 0) {
     return (
       <div className={`conv-messages${blurred ? ' conv-messages--blurred' : ''}`} ref={scrollRef}>
@@ -82,10 +98,13 @@ export function MessageList({
                 autoExpandTools={autoExpandTools}
                 liveActivity={showLiveActivity ? liveActivity : undefined}
                 justCompleted={showCompleted}
+                changedFiles={changedFiles.get(i)}
                 onApproveTool={onApproveTool}
                 onDenyTool={onDenyTool}
                 onSubmitToolPrompt={onSubmitToolPrompt}
                 onRetryMessage={onRetryMessage}
+                onRegenerate={regenerate(i)}
+                endsTurn={messages[i + 1]?.role !== 'assistant'}
               />
             </div>
           )

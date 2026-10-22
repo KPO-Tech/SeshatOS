@@ -5,7 +5,7 @@ import { isFileTool, toolCategory, toolLabel } from '@renderer/components/chat/t
 import { basename, languageForPath, parseReadToolContent } from '@renderer/components/chat/tools/helpers'
 import { CodeBox, ErrorPre, Section } from '@renderer/components/chat/tools/common'
 import { DiffView, resolveDiffRows } from '@renderer/components/chat/tools/DiffView'
-import { MarkdownView } from '@renderer/components/MarkdownView'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { EmptyState } from './EmptyState'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import type { StreamingBlock } from '@renderer/stores/session'
@@ -87,7 +87,7 @@ export function FilesPanel({
   function loadDirectory(path: string) {
     if (dirCache[path]) return
     setDirCache((prev) => ({ ...prev, [path]: 'loading' }))
-    window.nexus?.fs?.listDirectory(path)
+    window.seshat?.fs?.listDirectory(path)
       .then((entries) => setDirCache((prev) => ({ ...prev, [path]: entries })))
       .catch(() => setDirCache((prev) => ({ ...prev, [path]: 'error' })))
   }
@@ -125,7 +125,7 @@ export function FilesPanel({
     setActiveTabId(id)
     if (!fileContent[path]) {
       setFileContent((prev) => ({ ...prev, [path]: 'loading' }))
-      window.nexus?.fs?.readTextFile(path)
+      window.seshat?.fs?.readTextFile(path)
         .then((text) => setFileContent((prev) => ({ ...prev, [path]: text })))
         .catch(() => setFileContent((prev) => ({ ...prev, [path]: 'error' })))
     }

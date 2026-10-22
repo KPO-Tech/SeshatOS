@@ -348,6 +348,32 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gLocalTitleConfig{})
 			},
 		},
+		{
+			ID:    "20261018_050_user_preferences_memory_enabled",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
+			},
+		},
+		{
+			ID:    "20261020_051_provider_catalog",
+			Scope: migrationScopeBackend,
+			Run:   migrateProviderCatalog,
+		},
+		{
+			ID:    "20261022_052_local_stt_language",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gLocalSTTConfig{})
+			},
+		},
+		{
+			ID:    "20261022_053_capability_options",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gCapabilityOption{})
+			},
+		},
 	}
 }
 

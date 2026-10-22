@@ -40,6 +40,23 @@ Earlier drafts of this document described a `SESHAT_DEFAULT_SERVER_URL` /
 That mechanism has been removed — the Go binary never read `SESHAT_SERVER_URL`
 as an environment variable, so it did nothing.
 
+## The installer and the first-run setup
+
+Two things make the first minutes of SeshatOS, and they are separate on purpose.
+
+**The Windows installer** (NSIS) is the assisted one, not the one-click default: a welcome page, the licence (`build/license.txt`, a copy of
+`LICENSE` that a test keeps equal to it), the folder to install in, a progress page and a finish page that offers to open the app. Its
+sidebar and header images are drawn from the brand marks by `scripts/make_installer_art.py` (it needs Microsoft Edge and Pillow) and
+committed in `build/` (`installerSidebar.bmp`, `uninstallerSidebar.bmp`, `installerHeader.bmp`); run the script again when the logo
+changes. An installer page cannot show a download with its progress, so the installer downloads nothing.
+
+**The setup wizard** is the first screen of the app on a computer that was never set up (all platforms, the same one for AppImage, deb,
+dmg and the Windows installer). It offers the title model and the voice dictation model, each with the choice of model and its size, shows the
+download size next to the free space, installs what is ticked with a progress per item, and leaves out what is not: a title model that is
+not ticked is turned off so that nothing is downloaded behind the person's back. The state is `setup.json` in the runtime root; a computer
+that already has a title or speech model (an earlier version installed them) is not asked again. `SESHAT_FORCE_SETUP=1` shows the wizard
+again whatever the computer has, to test it or for support. Everything chosen there can be changed later in Config.
+
 ## Windows Build
 
 Run from `seshat-desktop/` on Windows:
@@ -129,3 +146,47 @@ A future CI release should run a matrix:
 There is no release-time server URL to inject (see "Connected Mode Is Not
 Configurable" above) — every build targets whatever `defaultServerURL` is
 compiled into `seshat-backend/internal/config/bootstrap.go` at that commit.
+
+## Releasing
+
+A release is a `v*` tag on `main` of this repository. The `Release Desktop` workflow then builds the backend sidecar, packages
+Linux (AppImage, deb) and Windows (NSIS) and publishes them in a GitHub release with `SHA256SUMS.txt` and notes generated from the
+merged pull requests.
+
+1. Set `version` in `seshat-desktop/package.json` to the number of the release (without the `v`) and merge it. The workflow
+   refuses a tag that disagrees with it: the installers are named after the package version, and `electron-updater` compares that
+   version with the one in `latest.yml`.
+2. Tag `main` (`vX.Y.Z`) and push the tag.
+3. Open the release and check that it holds `SeshatOS-Setup-X.Y.Z.exe` (and its `.blockmap`), `latest.yml`, the AppImage,
+   `latest-linux.yml`, the deb, `SHA256SUMS.txt` and, when that job passed, the two macOS disk images
+   (`SeshatOS-X.Y.Z-mac-arm64.dmg`, `SeshatOS-X.Y.Z-mac-x64.dmg`).
+
+A tag with a dash (`v0.3.0-rc1`) is published as a pre-release.
+
+### Automatic updates
+
+The app checks the GitHub releases of this repository (`build.publish`) ten seconds after start, downloads an update in the
+background and installs it only when the person asks: a small banner (`UpdateBanner`) says that the new version is ready and offers
+to restart into it. `electron-updater` reads `latest.yml` (Windows) and `latest-linux.yml`
+(AppImage) from the release, so a release that lacks them is invisible to the installed apps. The Windows installer has a fixed
+name (`nsis.artifactName`) because GitHub rewrites spaces in asset names to dots, which would make `latest.yml` point at a file
+that does not exist. The deb is not updated by the app.
+
+### Windows signing
+
+The Windows job signs the installer and the executable when the repository has the secrets `WIN_CSC_LINK` (the code-signing
+certificate, `.pfx`, as a base64 string or a URL) and `WIN_CSC_KEY_PASSWORD`. Without them it builds an unsigned installer and
+says so in a warning: Windows SmartScreen then asks for confirmation at the first launch, and the warning fades as the download
+count of a certificate grows. Local builds stay unsigned (`signExecutable=false`), because signing needs a certificate; the
+executables still get their icon and product information (editing them does not need one).
+
+### macOS
+
+A disk image per processor (`arm64` for Apple silicon, `x64` for Intel), built on a GitHub macOS runner from the same sources
+with a backend sidecar cross-compiled for `darwin`. An AppImage cannot run on macOS; the disk image is its equivalent there.
+
+This build is **experimental**: it has not been run on a Mac yet, and the job is allowed to fail without stopping the release.
+It is not signed or notarized (that needs an Apple developer account), so macOS asks for confirmation at the first launch
+(right-click the app, then Open) and the app does not update itself there (Squirrel.Mac only installs signed updates): the person
+downloads the new version from the website. The executable is ad-hoc signed (`identity: "-"`), which Apple silicon needs to run
+it at all.

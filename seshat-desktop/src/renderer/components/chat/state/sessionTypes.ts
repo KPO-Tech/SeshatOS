@@ -1,3 +1,4 @@
+import type { TurnTiming } from '@renderer/lib/turnTiming'
 import type { Message, PlanDocument, ToolApproval, ToolPromptRequest } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 
@@ -7,6 +8,9 @@ export type ChatSession = {
   id: string
   title: string
   messages: Message[]
+  // Messages a compaction removed from the model's context, oldest first; shown above `messages` (see
+  // lib/compactedHistory.ts). Only set when the session was loaded from the server.
+  archivedMessages?: Message[]
   createdAt: string
   updatedAt?: string
   providerSettingId?: string
@@ -84,6 +88,19 @@ export type AgentState = {
   isThinking: boolean
   pendingPermission: PendingPermission | null
   stage: { stage: string; label: string } | null
+  // The size of the context as the runtime last reported it (context.usage), updated during a turn: at the start of
+  // every iteration and when a response arrives. Null before any report, and after a compaction until the next one.
+  liveContext: LiveContext | null
+  // How long the last completed turn took (see lib/turnTiming.ts). Null before the first one.
+  lastTurnTiming: TurnTiming | null
+}
+
+type LiveContext = {
+  used: number
+  window: number
+  autoCompactAt: number
+  // Text streamed in the turn when this figure was reported, the base for estimating what is written after it.
+  atChars?: number
 }
 
 export function defaultAgentState(): AgentState {
@@ -97,5 +114,7 @@ export function defaultAgentState(): AgentState {
     isThinking: false,
     pendingPermission: null,
     stage: null,
+    liveContext: null,
+    lastTurnTiming: null,
   }
 }

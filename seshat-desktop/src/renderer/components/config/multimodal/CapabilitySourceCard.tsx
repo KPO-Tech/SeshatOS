@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ConfigCard, CustomSelect, Field, SoftButton, StatusPill, type SelectOption } from '../knowledge/KnowledgePrimitives'
+import { ConfigCard, CustomSelect, Field, StatusPill, type SelectOption } from '../knowledge/KnowledgePrimitives'
 import { linkCapability } from './multimodalApi'
 import { CapabilityIcon, SourceIcon } from './MultimodalIcons'
 import type { CapabilityName, CapabilityStatus } from './multimodalTypes'
@@ -35,7 +35,7 @@ export function CapabilitySourceCard({ capability, title, description, configure
       {
         value: NO_PROVIDER,
         label: 'Select provider',
-        description: capability === 'image' ? 'OpenAI or Gemini provider' : 'OpenAI provider',
+        description: capability === 'image' ? 'OpenAI, Gemini or OpenRouter provider' : 'OpenAI provider',
         icon: <SourceIcon provider="custom" />
       },
       ...providerOptions
@@ -77,7 +77,7 @@ export function CapabilitySourceCard({ capability, title, description, configure
           <div className="rounded-md border border-dashed border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-3">
             <div className="text-[13px] font-semibold text-[var(--text-primary)]">No compatible provider configured</div>
             <div className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-              Add {capability === 'image' ? 'OpenAI or Gemini' : 'OpenAI'} in Providers, then select it here for this capability.
+              Add {capability === 'image' ? 'OpenAI, Gemini or OpenRouter' : 'OpenAI'} in Providers, then select it here for this capability.
             </div>
           </div>
         )}
@@ -99,11 +99,7 @@ export function CapabilitySourceCard({ capability, title, description, configure
           </div>
         )}
 
-        <div className="flex items-center justify-end">
-          <SoftButton type="button" tone={linked ? 'success' : 'default'} disabled>
-            {saving ? 'Saving...' : linked ? 'Provider synced' : 'Waiting for provider'}
-          </SoftButton>
-        </div>
+        {saving && <div className="text-[12px] text-[var(--text-muted)]">Saving...</div>}
       </div>
     </ConfigCard>
   )
@@ -113,5 +109,6 @@ function providerDescription(provider: string, capability: CapabilityName) {
   if (capability === 'audio') return 'Audio-capable provider'
   if (provider === 'openai') return 'Images API'
   if (provider === 'gemini') return 'Gemini image generation'
+  if (provider === 'openrouter') return 'Image models of OpenRouter'
   return 'Configured provider'
 }

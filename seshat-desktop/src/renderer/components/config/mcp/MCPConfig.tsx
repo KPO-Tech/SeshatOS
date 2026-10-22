@@ -36,7 +36,8 @@ export function MCPConfig() {
   }, [])
 
   const metrics = useMemo(() => {
-    const toolCount = Object.values(tools).reduce((sum, items) => sum + items.length, 0)
+    // Only the tools of the servers listed below: the runtime's own generic MCP tools are not part of any of them.
+    const toolCount = servers.reduce((sum, server) => sum + (tools[server.name]?.length ?? 0), 0)
     return [
       { label: 'Servers', value: String(servers.length) },
       { label: 'Enabled', value: String(servers.filter((server) => server.enabled).length) },
@@ -152,7 +153,7 @@ export function MCPConfig() {
 
       <section>
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Configured servers</h2>
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
           {loading ? (
             <ProviderEmptyState label="Loading MCP servers..." />
           ) : servers.length === 0 ? (

@@ -1,0 +1,12 @@
+SeshatOS
+Copyright (c) 2026-present Stéphane Kpoviessi (Seshat)
+
+This product is licensed under the Apache License 2.0 with the Commons Clause License Condition v1.0 (see LICENSE).
+
+It includes software developed by others, each under its own license:
+- the Seshat runtime (github.com/KPO-Tech/seshat-runtime), Apache-2.0;
+- the Go modules listed in seshat-backend/go.mod and the npm packages listed in seshat-desktop/package.json;
+- Electron and Chromium (the installed application contains LICENSES.chromium.html with the licenses of the components of
+  Chromium).
+
+Their notices and licenses stay with them and are not changed by the license of SeshatOS.

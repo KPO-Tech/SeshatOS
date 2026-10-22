@@ -59,7 +59,7 @@ function buildBackendURL(path: string) {
   return `${resolveBackendOrigin()}/api/v1${normalized}`
 }
 
-export async function ensureBackendTrusted() {
+async function ensureBackendTrusted() {
   if (backendTrustPromise) {
     return backendTrustPromise
   }
@@ -111,15 +111,6 @@ async function loadSession(): Promise<StoredSession | null> {
   } catch {
     return null
   }
-}
-
-// Used by terminal-relay.ts to authenticate its own WebSocket connection to
-// /api/v1/terminal/ws/:sessionId the same way every HTTP call from this
-// process already does - reuses loadSession's caching/parsing instead of a
-// second copy of it.
-export async function getStoredAuthToken(): Promise<string | null> {
-  const session = await loadSession()
-  return session?.token ?? null
 }
 
 async function saveSession(session: StoredSession) {

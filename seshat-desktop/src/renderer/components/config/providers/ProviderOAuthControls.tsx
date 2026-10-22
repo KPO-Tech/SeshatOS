@@ -22,8 +22,8 @@ export function ProviderOAuthControls({
   }, [setting.connection_status])
 
   async function openExternal(url: string) {
-    if (window.nexus?.openExternal) {
-      await window.nexus.openExternal(url)
+    if (window.seshat?.openExternal) {
+      await window.seshat.openExternal(url)
       return
     }
     window.open(url, '_blank', 'noopener,noreferrer')

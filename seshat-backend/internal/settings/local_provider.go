@@ -74,6 +74,13 @@ func (s *LocalProvider) Create(ctx context.Context, principal *backendauth.Princ
 	if strings.TrimSpace(p.Name) == "" {
 		return nil, bkerr.InvalidInput("name is required", nil)
 	}
+	// A former built-in name (workers-ai) is stored under the name the runtime uses now.
+	p.Provider = CanonicalProvider(p.Provider)
+	// A provider that only a downloaded catalog knows has an address nobody reviewed: the key must not go there until the user has
+	// confirmed it, which they do by giving the base URL themselves.
+	if IsUnverifiedCatalogProvider(p.Provider) && strings.TrimSpace(p.BaseURL) == "" {
+		return nil, bkerr.InvalidInput("this provider comes from a downloaded catalog and its address was not reviewed: give the base URL you have confirmed", nil)
+	}
 
 	authKind := normalizeAuthKind(p.Provider, p.AuthKind)
 	if err := validateAuthKind(p.Provider, authKind); err != nil {

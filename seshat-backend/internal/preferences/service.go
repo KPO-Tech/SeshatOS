@@ -77,6 +77,16 @@ func (s *Service) GetMaxSubAgentDepth(ctx context.Context, principal *backendaut
 	return prefs.MaxSubAgentDepth, nil
 }
 
+// MemoryEnabled reports whether the user opted in to long-term memory. It is false when preferences cannot be read: memory
+// stores facts from conversations, so doubt means off.
+func (s *Service) MemoryEnabled(ctx context.Context, principal *backendauth.Principal) bool {
+	if s == nil || s.provider == nil || principal == nil {
+		return false
+	}
+	prefs, err := s.provider.Get(ctx, principal)
+	return err == nil && prefs != nil && prefs.MemoryEnabled
+}
+
 func (s *Service) ValidatePermissionMode(raw string) bool {
 	if raw == "" {
 		return true

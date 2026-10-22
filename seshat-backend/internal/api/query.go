@@ -386,7 +386,7 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 
 	permMode, executionOrigin, err := app.backend.Query.ResolvePolicyFromRequest(r.Context(), principal, req.SessionID, req.PermissionMode, req.ExecutionOrigin)
 	if err != nil {
-		writeSSEError(w, flusher, &writeMu, err.Error())
+		writeSSEError(w, flusher, &writeMu, err.Error(), classifyStreamError(err, err.Error()))
 		return
 	}
 
@@ -472,7 +472,7 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 		}
 		streamSpan.RecordError(err)
 		streamSpan.SetStatus(codes.Error, bkerr.Message(err))
-		writeSSEError(w, flusher, &writeMu, bkerr.Message(err))
+		writeSSEError(w, flusher, &writeMu, bkerr.Message(err), classifyStreamError(err, bkerr.Message(err)))
 		return
 	}
 	streamSpan.SetStatus(codes.Ok, "")
@@ -497,7 +497,7 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 		RAGResults:  ragResults,
 	})
 	if marshalErr != nil {
-		writeSSEError(w, flusher, &writeMu, "failed to serialize result")
+		writeSSEError(w, flusher, &writeMu, "failed to serialize result", streamErrInternal)
 		return
 	}
 	writeSSE("done", finalData)
@@ -556,6 +556,10 @@ func (app *App) triggerMemoryExtraction(principal *backendauth.Principal, result
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
+		// Memory stores facts from conversations: it only runs for users who opted in.
+		if !app.backend.Preferences.MemoryEnabled(backendauth.WithContext(ctx, principal), principal) {
+			return
+		}
 		_ = app.longTermExtractor.Extract(ctx, userID, msgs)
 	}()
 }

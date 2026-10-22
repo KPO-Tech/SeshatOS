@@ -57,7 +57,7 @@ export const MODEL_CATALOG: TitleModelInfo[] = [
   },
 ]
 
-const DEFAULT_MODEL_ID = 'qwen2.5-0.5b'
+export const DEFAULT_MODEL_ID = 'qwen2.5-0.5b'
 
 const HF_REPO_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*$/
 const HF_FILE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*\.gguf$/
@@ -69,7 +69,7 @@ type PersistedState = {
   customModels: TitleModelInfo[]
 }
 
-export type LlamaPhase = 'binary' | 'model'
+type LlamaPhase = 'binary' | 'model'
 
 export type LlamaProgress = {
   phase: LlamaPhase
@@ -78,7 +78,7 @@ export type LlamaProgress = {
   totalBytes: number
 }
 
-export type LlamaStatus = {
+type LlamaStatus = {
   supported: boolean
   binaryReady: boolean
   running: boolean
@@ -151,7 +151,7 @@ function archiveName(): string | null {
   return null
 }
 
-export function isLlamaSupported(): boolean {
+function isLlamaSupported(): boolean {
   return archiveName() !== null
 }
 
@@ -265,7 +265,7 @@ function reportWhenPossible(payload: { enabled: boolean; base_url: string; model
 }
 
 /** Spawns llama-server with the active model and points the backend at it. */
-export async function startLlamaServer(): Promise<void> {
+async function startLlamaServer(): Promise<void> {
   if (serverProcess) return
   const state = await readState()
   const binary = await serverBinaryPath()

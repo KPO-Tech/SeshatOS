@@ -20,10 +20,17 @@
   --leading-tight: 1.18;
   --leading-ui: 1.35;
   --leading-copy: 1.55;
+  /* Appearance > text size, spacing, width (lib/appearance.ts sets them at start-up). */
+  --chat-font-size: 14px;
+  --message-gap: 36px;
+  --list-item-pad-y: 6px;
+  --chat-max-width: 768px;
+  /* The background of the conversation, which the session panel shares so its cards float beside the chat. */
+  --chat-bg: color-mix(in srgb, var(--surface-root) 68%, var(--surface-panel));
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 56px;
   /* Seshat identity: warm tinted dark surfaces, orange accent (ported from
-     seshat-ui tokens.css). Dark is the default; light overrides below. */
+     the earlier client's tokens.css). Dark is the default; light overrides below. */
   --surface-root: #2f2e34;
   --surface-sidebar: #2c2a31;
   --surface-panel: #3a3941;
@@ -96,7 +103,8 @@ body {
   font-family: var(--font-sans);
   font-size: var(--type-base);
   line-height: var(--leading-ui);
-  background: var(--surface-root);
+  /* A theme with a wallpaper sets --wallpaper; its surfaces are translucent so it shows through. */
+  background: var(--wallpaper, var(--surface-root));
 }
 
 button,

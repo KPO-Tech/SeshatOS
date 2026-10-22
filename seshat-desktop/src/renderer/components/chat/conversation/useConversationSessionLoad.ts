@@ -78,6 +78,7 @@ export function useConversationSessionLoad({
             id: detail.session_id,
             title: detail.title || UNTITLED_SESSION_TITLE,
             messages: normalizeSessionMessages(detail.messages ?? []),
+            archivedMessages: normalizeSessionMessages(detail.archived_messages ?? []),
             createdAt: new Date((detail.created_at ?? 0) * 1000).toISOString(),
             providerSettingId: detail.provider_setting_id,
             modelId: detail.model_id,

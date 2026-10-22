@@ -369,7 +369,7 @@ func TestAuthLoginMeLogoutFlow(t *testing.T) {
 }
 
 // TestAuthMeIncludesOrganizationID is a regression test for a bug found
-// live: seshat-ui's useOrganizationStore has no other way to learn "which
+// live: the desktop app's useOrganizationStore has no other way to learn "which
 // organization" than GET /auth/me, but this endpoint used to omit
 // organization info entirely (its DTO only carried workspace_memberships'
 // slugs, never an id) - every org-scoped feature in the desktop app
@@ -2717,7 +2717,7 @@ func TestPlans_MissingSessionID(t *testing.T) {
 	}
 }
 
-// TestPlans_RouteCompatibility verifies that all routes used by seshat-ui are still registered.
+// TestPlans_RouteCompatibility verifies that all routes used by the desktop app are still registered.
 func TestPlans_RouteCompatibility(t *testing.T) {
 	app, identity, store := newPlansTestApp(t)
 	router := CreateRouter(defaultAPIConfig, app)
@@ -3208,8 +3208,25 @@ func TestQueryBindsAPIKeyProviderSettingToSession(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec = httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected provider switch rejection 400, got %d body=%s", rec.Code, rec.Body.String())
+	// A started conversation can move to another provider setting: the turn runs on it and the binding follows.
+	if rec.Code != http.StatusOK {
+		t.Fatalf("provider switch in a started session: got %d body=%s", rec.Code, rec.Body.String())
+	}
+	lastInput = runtime.lastInput(t)
+	if lastInput.RuntimeProvider == nil || lastInput.RuntimeProvider.SettingID != otherSetting["id"] || lastInput.RuntimeProvider.Secret != "sk-other-secret" {
+		t.Fatalf("expected the switched provider setting %v on the turn, got %#v", otherSetting["id"], lastInput.RuntimeProvider)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/sessions", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	var afterSwitch map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&afterSwitch); err != nil {
+		t.Fatalf("decode sessions response: %v", err)
+	}
+	if got := afterSwitch["sessions"].([]any)[0].(map[string]any)["provider_setting_id"]; got != otherSetting["id"] {
+		t.Fatalf("expected the session to be bound to %v after the switch, got %v", otherSetting["id"], got)
 	}
 }
 

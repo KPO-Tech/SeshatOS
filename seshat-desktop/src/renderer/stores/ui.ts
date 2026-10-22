@@ -1,13 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { renamedStorage } from '@renderer/lib/renamedStorage'
 import type { RAGSearchResult } from '@renderer/api/types'
 import { useSessionStore } from '@renderer/stores/session'
 
 type Theme = 'light' | 'dark'
-export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'terminal' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
+export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'shell' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
 export type UIPermissionMode = 'onRequest' | 'auto' | 'bypass'
 
-export type RightPanelFields = {
+type RightPanelFields = {
   kind: RightPanelKind
   title: string
   sourceLabel?: string
@@ -78,7 +79,7 @@ function isRightPanelPinned(p: RightPanelInstance): boolean {
 // in a row, while something like Computer a user deliberately kept
 // open stays put instead of being silently evicted to make room.
 const DOCUMENT_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['pdf', 'docx', 'xlsx', 'pptx', 'markdown', 'plan', 'artifact'])
-const READABLE_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['browser', 'terminal', 'files', ...DOCUMENT_PANEL_KINDS])
+const READABLE_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['browser', 'shell', 'files', ...DOCUMENT_PANEL_KINDS])
 
 const RIGHT_PANEL_STACK_LIMIT = 1
 // Note: with this at 1, rightPanelColumnLimit below always returns 1
@@ -119,8 +120,8 @@ function rightPanelTotalLimit(windowWidth: number): number {
 // The user can drag the sidebar edge between these bounds. The current value
 // is mirrored here (and into --sidebar-width) because the right-panel clamp
 // below runs inside store actions, not components, so it can't read the DOM.
-export const SIDEBAR_MIN_WIDTH = 208
-export const SIDEBAR_MAX_WIDTH = 360
+const SIDEBAR_MIN_WIDTH = 208
+const SIDEBAR_MAX_WIDTH = 360
 export const SIDEBAR_DEFAULT_WIDTH = 240
 const SIDEBAR_COLLAPSED_WIDTH = 56
 let currentSidebarWidth = SIDEBAR_DEFAULT_WIDTH
@@ -186,7 +187,7 @@ function defaultRightPanelWidth(kind: RightPanelKind, windowWidth: number, sideb
   return clampRightPanelWidth(preferred, windowWidth, sidebarCollapsed, 1)
 }
 
-export type LightboxImage = { url: string; filename: string }
+type LightboxImage = { url: string; filename: string }
 
 type UIState = {
   theme: Theme
@@ -552,7 +553,8 @@ export const useUIStore = create<UIState>()(
       },
     }),
     {
-      name: 'seshat-ui-prefs',
+      name: 'seshat-prefs',
+      storage: renamedStorage('seshat-ui-prefs'),
       onRehydrateStorage: () => (state) => {
         if (state) applySidebarWidth(clampSidebarWidth(state.sidebarWidth ?? SIDEBAR_DEFAULT_WIDTH))
       },

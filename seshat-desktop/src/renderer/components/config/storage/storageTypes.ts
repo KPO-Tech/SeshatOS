@@ -1,4 +1,4 @@
-export type StorageConfigState = {
+type StorageConfigState = {
   provider: 'local' | 's3' | 'minio' | string
   local_path?: string
   s3_endpoint?: string

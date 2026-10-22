@@ -54,18 +54,6 @@ export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   )
 }
 
-export function SelectInput(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      {...props}
-      className={[
-        'h-10 min-w-0 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[13px] font-semibold text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent-primary)]',
-        props.className ?? ''
-      ].join(' ')}
-    />
-  )
-}
-
 export type SelectOption = {
   value: string
   label: string

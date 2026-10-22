@@ -2,7 +2,7 @@ import {
   Terminal, Globe, FileTextOne, Robot, PlugOne,
   MindMapping, Notebook, Calculator, Comment, Calendar,
 } from '@icon-park/react'
-import type { ToolPromptRequest, ToolStatus, ToolUseBlock } from '@renderer/api/types'
+import type { ToolPromptRequest, ToolUseBlock } from '@renderer/api/types'
 import type { AskUserOption, AskUserQuestion, WebSearchHit } from './types'
 
 // Splits on both / and \ - the tool calls' file_path values can be genuine
@@ -90,16 +90,6 @@ export function fallbackApprovalDescription(tool: ToolUseBlock): string {
   return 'This tool requires explicit approval before it can run.'
 }
 
-export function statusLabel(status: ToolStatus): string {
-  return {
-    pending: 'Pending',
-    running: 'Running',
-    awaiting_approval: 'Awaiting Approval',
-    completed: 'Completed',
-    failed: 'Failed',
-  }[status]
-}
-
 export function fmtDuration(ms: number): string {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
 }
@@ -131,7 +121,7 @@ export function parseBashResult(result?: ToolUseBlock['_result']) {
   }
 }
 
-export function parseAskUserQuestions(input: Record<string, unknown>): AskUserQuestion[] {
+function parseAskUserQuestions(input: Record<string, unknown>): AskUserQuestion[] {
   const rawQuestions = input.questions
   if (!Array.isArray(rawQuestions)) return []
 
@@ -228,13 +218,6 @@ export function parseAskUserAnswers(content?: string): Map<string, string> {
     }
   }
   return answers
-}
-
-export function splitSelectedAnswer(answer: string): string[] {
-  return answer
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
 }
 
 export function parseWebSearchHits(content?: string): WebSearchHit[] {

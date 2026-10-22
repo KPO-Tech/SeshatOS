@@ -1,4 +1,7 @@
+import { BrandIcon } from '@renderer/components/plugins/catalog/BrandIcon'
 import { CodeBox, ErrorPre, HCARD_HEADER_PATH_CSS, HeaderCard, Section } from '../common'
+import { connectorKind, serverLabel } from '../connectorNames'
+import { formatMcpResult } from '../mcpResult'
 import type { ToolViewProps } from '../types'
 
 type ParsedMcpName = { server: string; tool: string }
@@ -43,7 +46,9 @@ export function McpToolView({ tool, result }: ToolViewProps) {
   const args = Object.entries(tool.input).filter(
     ([key]) => !['tool', '_tool', 'server', '_server'].includes(key),
   )
-  const title = parsed?.server ? `MCP - ${parsed.server}` : 'MCP'
+  const kind = parsed?.server ? connectorKind(parsed.server) : null
+  const title = parsed?.server ? (kind ? serverLabel(parsed.server) : `MCP - ${parsed.server}`) : 'MCP'
+  const formatted = result?.content && !result.isError ? formatMcpResult(result.content) : null
   const toolName = parsed?.tool || tool.name
 
   return (
@@ -51,6 +56,7 @@ export function McpToolView({ tool, result }: ToolViewProps) {
       <HeaderCard
         header={
           <>
+            {kind && <BrandIcon brand={kind} title={title} size={16} />}
             <span>{title}</span>
             <span className={HCARD_HEADER_PATH_CSS} title={toolName}>{toolName}</span>
           </>
@@ -74,7 +80,7 @@ export function McpToolView({ tool, result }: ToolViewProps) {
 
       {result?.content && !result.isError && (
         <Section label="Result">
-          <CodeBox content={result.content} copyable />
+          <CodeBox content={formatted?.text ?? result.content} language={formatted?.language} copyable />
         </Section>
       )}
 

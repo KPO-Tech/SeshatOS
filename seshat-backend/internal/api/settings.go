@@ -115,7 +115,7 @@ func (a *App) handleProviderSettings(w http.ResponseWriter, r *http.Request) {
 		// the user expands the provider card. For Ollama we try a live fetch first
 		// (fast 3-second timeout); for all providers we always fall back to the
 		// static registry so the response is instant regardless.
-		a.seedModelsForNewProvider(setting.ID, body.Provider, body.BaseURL)
+		a.seedModelsForNewProvider(setting.ID, setting.Provider, body.BaseURL)
 
 		// See capability_autolink.go: makes this provider's key usable for
 		// image/audio/embeddings automatically, without a separate manual step.

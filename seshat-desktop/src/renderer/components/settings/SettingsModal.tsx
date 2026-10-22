@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { User } from '@renderer/api/types'
-import { applyTheme, getStoredTheme, notifyThemeChange, setStoredTheme, type ThemePreference } from '@renderer/lib/theme'
+import { applyTheme, getStoredTheme, isThemePreference, notifyThemeChange, setStoredTheme, type ThemePreference } from '@renderer/lib/theme'
 import { SettingsContent } from './SettingsContent'
 
-export type SettingsSection = 'general' | 'account' | 'shortcuts' | 'memories' | 'data-controls' | 'about'
+export type SettingsSection = 'general' | 'appearance' | 'account' | 'shortcuts' | 'memories' | 'data-controls' | 'about'
 
 type Props = {
   user: User
@@ -14,6 +14,7 @@ type Props = {
 
 const sections: Array<{ id: SettingsSection; label: string; icon: IconName; group: string }> = [
   { id: 'general', label: 'General', icon: 'sliders', group: 'Settings' },
+  { id: 'appearance', label: 'Appearance', icon: 'contrast', group: 'Settings' },
   { id: 'account', label: 'Account', icon: 'user', group: 'Settings' },
   { id: 'shortcuts', label: 'Shortcuts', icon: 'keyboard', group: 'Settings' },
   { id: 'memories', label: 'Memories', icon: 'database', group: 'Settings' },
@@ -40,7 +41,7 @@ export function SettingsModal({ user, initialSection, onLogout, onClose }: Props
   useEffect(() => {
     function onThemeChange(event: Event) {
       const nextTheme = (event as CustomEvent<{ theme?: ThemePreference }>).detail?.theme
-      if (nextTheme === 'light' || nextTheme === 'dark' || nextTheme === 'auto') setTheme(nextTheme)
+      if (isThemePreference(nextTheme)) setTheme(nextTheme)
     }
 
     window.addEventListener('seshat-theme-change', onThemeChange)

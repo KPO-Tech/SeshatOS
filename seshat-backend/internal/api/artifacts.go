@@ -7,7 +7,7 @@ import (
 )
 
 // artifactPreviewCSP is deliberately more permissive than the app's own
-// packaged-renderer CSP (see seshat-ui/src/main/content-security-policy.ts)
+// packaged-renderer CSP (see seshat-desktop/src/main/content-security-policy.ts)
 // in exactly one dimension - inline script/style execution, the entire
 // point of previewing agent-written HTML - while staying at least as
 // strict everywhere else: no network egress at all (connect-src/img-src/

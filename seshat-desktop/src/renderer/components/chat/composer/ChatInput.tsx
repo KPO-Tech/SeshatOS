@@ -9,6 +9,7 @@ import type { Corpus } from '@renderer/api/types'
 import { startWavRecording, type WavRecording } from '@renderer/lib/wavRecorder'
 import { SelectorPill, SelectorMenu } from '@renderer/components/ui/SelectorPill'
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
+import { edition } from '@renderer/lib/edition'
 
 type SkillOption = { Name: string; DisplayName: string; Description: string; Source: string; UserInvocable?: boolean; IsHidden?: boolean }
 
@@ -84,7 +85,7 @@ export function ChatInput({
     api.get<{ skills: SkillOption[] }>('/skills')
       .then(d => setSkills((d.skills ?? []).filter(s => s.Source !== 'mcp' && s.UserInvocable !== false && !s.IsHidden)))
       .catch(() => {})
-    loadCorpora()
+    if (edition.knowledge) loadCorpora()
   }, [loadCorpora])
 
   // Release the mic if the component unmounts mid-recording.
@@ -350,7 +351,7 @@ export function ChatInput({
               className={cx(TOOL_ICON_CSS, projectPath && '!text-[var(--accent-primary)]')}
               aria-label={projectPath ? `Project: ${projectPath}` : 'Set project folder'}
               onClick={async () => {
-                const result = await window.nexus?.dialog?.openDirectory?.()
+                const result = await window.seshat?.dialog?.openDirectory?.()
                 if (result && !result.canceled && result.filePaths?.length) {
                   onProjectChange?.(result.filePaths[0])
                 }
@@ -371,7 +372,7 @@ export function ChatInput({
               </>
             )}
           </div>
-          <div className="relative" ref={corpusDropdownRef}>
+          {edition.knowledge && <div className="relative" ref={corpusDropdownRef}>
             <button
               className={cx(TOOL_ICON_CSS, selectedCorpusId && '!text-[var(--accent-primary)]')}
               aria-label="Attach knowledge base"
@@ -413,7 +414,7 @@ export function ChatInput({
                 })}
               </div>
             )}
-          </div>
+          </div>}
           <div className="relative min-w-0 max-w-[min(240px,32vw)]">
             <SelectorPill
               label={modelLabel}
@@ -427,6 +428,7 @@ export function ChatInput({
               <SelectorMenu
                 placement={modelMenuPlacement}
                 className="min-w-[330px]"
+                searchable
                 options={modelOptions}
                 selectedId={selectedModelId}
                 onSelect={(id) => {

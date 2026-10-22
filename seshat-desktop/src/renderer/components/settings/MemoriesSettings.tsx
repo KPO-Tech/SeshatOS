@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
-import { Panel } from './SettingsPrimitives'
+import type { UserPreferences } from '@renderer/api/types'
+import { Panel, ToggleRow } from './SettingsPrimitives'
 
 type UserMemory = {
   id: string
@@ -31,6 +32,39 @@ export function MemoriesSettings() {
   const [filter, setFilter] = useState('all')
   const [form, setForm] = useState(emptyMemoryForm)
   const [error, setError] = useState<string | null>(null)
+  const [autoMemory, setAutoMemory] = useState(false)
+  const [autoMemoryBusy, setAutoMemoryBusy] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get<UserPreferences>('/users/me/preferences')
+      .then((prefs) => {
+        if (!cancelled) setAutoMemory(prefs.memory_enabled === true)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setAutoMemoryBusy(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function handleAutoMemory(enabled: boolean) {
+    if (autoMemoryBusy) return
+    setAutoMemoryBusy(true)
+    setError(null)
+    try {
+      // The save replaces the whole record, so send back what is stored with only this choice changed.
+      const current = await api.get<UserPreferences>('/users/me/preferences')
+      const saved = await api.put<UserPreferences>('/users/me/preferences', { ...current, memory_enabled: enabled })
+      setAutoMemory(saved.memory_enabled === true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save the memory setting')
+    } finally {
+      setAutoMemoryBusy(false)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -85,6 +119,15 @@ export function MemoriesSettings() {
   return (
     <Panel title="Memories">
       <div className="max-w-[860px] space-y-5">
+        <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
+          <ToggleRow
+            title="Learn from my conversations"
+            description="Seshat reads your conversations to remember preferences, procedures that worked and pitfalls, and recalls them in later chats. Off by default; the memories you add yourself below are always used."
+            enabled={autoMemory}
+            onChange={(enabled) => void handleAutoMemory(enabled)}
+          />
+        </section>
+
         <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
           <div className="grid grid-cols-[160px_1fr] gap-3">
             <label className="grid gap-1.5">

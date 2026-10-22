@@ -1,6 +1,6 @@
 import { useAuthStore } from '@renderer/stores/auth'
 
-export const SESHAT_BASE = 'http://127.0.0.1:8090/api/v1'
+const SESHAT_BASE = 'http://127.0.0.1:8090/api/v1'
 
 type RequestOptions = {
   method?: string
@@ -54,8 +54,8 @@ function bridgeErrorMessage(payload: BridgeResponse): string {
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  if (window.nexus?.http) {
-    const res = await window.nexus.http.request({
+  if (window.seshat?.http) {
+    const res = await window.seshat.http.request({
       path,
       method: opts.method ?? 'GET',
       body: opts.body,
@@ -119,9 +119,9 @@ export const api = {
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string, body?: unknown) => request<T>(path, { method: 'DELETE', body }),
   upload: async <T>(path: string, formData: FormData): Promise<T> => {
-    if (window.nexus?.http) {
+    if (window.seshat?.http) {
       const payload = await serializeFormData(formData)
-      const res = await window.nexus.http.upload({ path, ...payload })
+      const res = await window.seshat.http.upload({ path, ...payload })
       if (!res.ok) {
         if (res.status === 401) {
           useAuthStore.getState().logout()
@@ -149,8 +149,8 @@ export const api = {
   // URL (created client-side at attach time) no longer exists - e.g. after an
   // app restart, when only the server-persisted file bytes survive.
   getFileDataURL: async (path: string): Promise<string> => {
-    if (window.nexus?.http) {
-      const res = await window.nexus.http.fileContent(path)
+    if (window.seshat?.http) {
+      const res = await window.seshat.http.fileContent(path)
       if (!res.ok || !res.dataUrl) {
         throw new ApiError(res.status, res.error || `HTTP ${res.status}`)
       }
@@ -182,8 +182,8 @@ export const api = {
   // just that response's own Content-Length, and the caller only gets the
   // fetched slice, not a genuine partial-content optimization for that call.
   getFileRange: async (path: string, start: number, end: number): Promise<{ data: ArrayBuffer; totalLength: number; contentType: string }> => {
-    if (window.nexus?.http) {
-      const res = await window.nexus.http.fileRange(path, start, end)
+    if (window.seshat?.http) {
+      const res = await window.seshat.http.fileRange(path, start, end)
       if (!res.ok || !res.data) {
         throw new ApiError(res.status, res.error || `HTTP ${res.status}`)
       }

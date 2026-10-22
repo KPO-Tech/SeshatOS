@@ -70,14 +70,15 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	// Known limitation: the repos directory is shared per backend instance
 	// (skillsloader.GetSkillReposPath), not per user - fine for the local
 	// desktop backend, revisit before exposing one backend to many users.
+	apiV1.Handle("/skills/sources", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillSources))))
+	apiV1.Handle("/skills/sources/scan", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillSourceScan))))
 	apiV1.Handle("/skills/repos", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillRepos))))
 	apiV1.Handle("/skills/repos/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleSkillRepoByNameDispatch))))
 	apiV1.Handle("/skills/", app.authMiddleware(http.HandlerFunc(app.handleSkillsDispatch)))
 
 	// Read-only prerequisite check (Docker, the strix CLI, whether the skill
-	// repo is installed) for a future dedicated seshat-ui app — no side
+	// repo is installed) for a future dedicated desktop app — no side
 	// effects, so authMiddleware is enough, unlike /skills/repos's admin gate.
-	apiV1.Handle("/apps/strix/status", app.authMiddleware(http.HandlerFunc(app.handleAppsStrixStatus)))
 
 	apiV1.Handle("/agents", app.authMiddleware(http.HandlerFunc(app.handleAgents)))
 	apiV1.Handle("/agents/", app.authMiddleware(http.HandlerFunc(app.handleAgentBySlug)))
@@ -154,12 +155,16 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 
 	apiV1.Handle("/audit/logs", app.authMiddleware(http.HandlerFunc(app.handleAuditLogs)))
 
+	// The providers a user can set up (main + the models.dev catalog): read-only, so it does not need the settings to be writable.
+	apiV1.Handle("/settings/providers/catalog", app.authMiddleware(http.HandlerFunc(app.handleProviderCatalog)))
 	apiV1.Handle("/settings/providers", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleProviderSettings))))
 	apiV1.Handle("/settings/providers/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleProviderSettingByID))))
 	apiV1.Handle("/settings/embedder", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleEmbedderConfig))))
 	apiV1.Handle("/settings/embedder/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleEmbedderConfig))))
 	apiV1.Handle("/settings/capability-links", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityLinks))))
 	apiV1.Handle("/settings/capability-links/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityLinks))))
+	apiV1.Handle("/settings/capability-options", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityOptions))))
+	apiV1.Handle("/settings/capability-options/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleCapabilityOptions))))
 	apiV1.Handle("/settings/document-reader", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleDocumentReaderConfig))))
 	apiV1.Handle("/settings/document-reader/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleDocumentReaderConfig))))
 	apiV1.Handle("/settings/reranker", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleRerankerConfig))))
@@ -250,19 +255,6 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 
 	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", handler))
 
-	// Registered directly on mux (a more specific pattern than "/api/v1/",
-	// so Go's ServeMux routes it here first) instead of on apiV1 - it needs
-	// to reach the real *http.response the Go server handed us so the
-	// websocket upgrade below can type-assert it as http.Hijacker.
-	// otelhttp.NewHandler's own response wrapper doesn't implement Hijacker
-	// (see its resp_writer_wrapper.go, a documented gap in that library),
-	// and neither does recoverMiddleware's commitTrackingWriter - stacking
-	// either of those in front of this handler breaks every websocket
-	// upgrade with "response does not implement http.Hijacker". Still
-	// behind authMiddleware (auth doesn't touch the ResponseWriter) since
-	// this still needs the same Bearer-token check as everything else.
-	mux.Handle("/api/v1/terminal/ws/", http.StripPrefix("/api/v1", app.authMiddleware(http.HandlerFunc(app.handleTerminalWS))))
-
 	// Anthropic Messages API compatible prefix.
 	// Clients set ANTHROPIC_BASE_URL=http://<host>/v1 to route through Seshat.
 	// Auth: x-api-key: <seshat-key>  or  Authorization: Bearer <seshat-jwt>
@@ -351,11 +343,11 @@ func corsMiddleware(allowedOrigins []string, next http.Handler) http.Handler {
 		if len(allowed) == 0 {
 			// Default: accept any localhost origin (127.0.0.1 or localhost, any
 			// port), deliberately, not just an oversight left unconfigured.
-			// seshat-ui's renderer talks to this API two ways: through the
+			// the desktop app's renderer talks to this API two ways: through the
 			// Electron main-process IPC bridge (not subject to CORS at all —
 			// it's not a browser fetch), or directly via browser fetch when
-			// window.nexus is unavailable ("browser dev mode", explicitly
-			// supported per seshat-ui/AGENTS.md) — that second path runs on
+			// window.seshat is unavailable ("browser dev mode", explicitly
+			// supported per seshat-desktop/AGENTS.md) — that second path runs on
 			// an arbitrary Vite dev-server port that isn't known ahead of
 			// time, so pinning a single allowed origin by default would break
 			// it on every port change.

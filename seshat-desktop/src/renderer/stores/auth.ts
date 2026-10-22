@@ -32,8 +32,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     })
   },
   logout: () => {
-    if (typeof window !== 'undefined' && window.nexus?.auth) {
-      void window.nexus.auth.clearSession().catch(() => {
+    if (typeof window !== 'undefined' && window.seshat?.auth) {
+      void window.seshat.auth.clearSession().catch(() => {
         // best-effort
       })
     }

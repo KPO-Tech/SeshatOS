@@ -44,3 +44,12 @@ export function sentAttachment(file: ChatAttachment) {
     page_preview_urls: file.page_preview_urls,
   }
 }
+
+/** The most the backend accepts for one upload (maxUploadSize in files.go). */
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+
+/** The sentence shown when a file is over the limit, before any bytes are sent. */
+export function oversizedMessage(filename: string, size: number): string {
+  const megabytes = Math.ceil(size / (1024 * 1024))
+  return `${filename} is ${megabytes} MB; the limit is ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB per file.`
+}

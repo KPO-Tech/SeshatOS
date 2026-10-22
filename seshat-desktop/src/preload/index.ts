@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webFrame } from 'electron'
 
 type WhisperStatus = {
   supported: boolean
@@ -52,6 +52,12 @@ type LlamaProgress = {
   totalBytes: number
 }
 
+type SrtStatus = {
+  state: 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
+  platform: string
+  detail?: string
+}
+
 type EnvVarDef = {
   key: string
   label: string
@@ -80,38 +86,19 @@ type BrowserPanelState = {
   }>
 }
 
-type TerminalEvent = {
-  id: string
-  type: 'started' | 'data' | 'error' | 'exit'
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  shell?: string
-  cwd?: string
-  pid?: number
-  code?: number | null
-  signal?: string | null
-}
+type ShellDataEvent = { id: string; data: string }
+type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
-// terminal-relay is separate from `terminal` above: `terminal` is a
-// general-purpose interactive shell session (not yet wired to any UI);
-// terminal-relay carries the agent's own bash-tool commands per session,
-// bridged to seshat-backend's TerminalRelay so the user watches them run
-// live - see main/ipc/terminal-relay.ts.
-type TerminalRelayEvent = {
-  sessionId: string
-  type: string
-  commandId?: string
-  command?: string
-  cwd?: string
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  exitCode?: number
-  durationMs?: number
+// `shell` is a real PTY (main/ipc/shell.ts) that the user drives themselves.
+type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type SetupPlan = {
+  components: Array<{ id: 'title' | 'speech'; available: boolean; unavailableReason?: string; options: SetupOption[] }>
+  freeDiskBytes: number | null
 }
+type SetupSelection = Partial<Record<'title' | 'speech', { install: boolean; modelId: string }>>
+type SetupProgress = { component: 'title' | 'speech'; status: 'running' | 'done' | 'error'; receivedBytes?: number; totalBytes?: number; message?: string }
 
-const nexusBridge = {
+const seshatBridge = {
   getVersion: () => ipcRenderer.invoke('app:version'),
   openPath: (p: string) => ipcRenderer.invoke('system:open-path', p),
   openLocalPath: (p: string) => ipcRenderer.invoke('system:open-local-path', p),
@@ -185,10 +172,24 @@ const nexusBridge = {
     deleteModel: (modelId: string): Promise<WhisperStatus> => ipcRenderer.invoke('whisper:delete-model', modelId),
     enable: (): Promise<WhisperStatus> => ipcRenderer.invoke('whisper:enable'),
     disable: (): Promise<WhisperStatus> => ipcRenderer.invoke('whisper:disable'),
+    getSettings: (): Promise<{ threads: number | null; automaticThreads: number; cores: number }> => ipcRenderer.invoke('whisper:get-settings'),
+    setSettings: (settings: { threads: number | null }): Promise<{ threads: number | null; automaticThreads: number; cores: number }> =>
+      ipcRenderer.invoke('whisper:set-settings', settings),
     onProgress: (listener: (progress: WhisperProgress) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, progress: WhisperProgress) => listener(progress)
       ipcRenderer.on('whisper:progress', handler)
       return () => ipcRenderer.removeListener('whisper:progress', handler)
+    },
+  },
+  setup: {
+    state: (): Promise<{ completed: boolean }> => ipcRenderer.invoke('setup:state'),
+    plan: (): Promise<SetupPlan> => ipcRenderer.invoke('setup:plan'),
+    run: (selection: SetupSelection): Promise<void> => ipcRenderer.invoke('setup:run', selection),
+    complete: (): Promise<void> => ipcRenderer.invoke('setup:complete'),
+    onProgress: (listener: (progress: SetupProgress) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: SetupProgress) => listener(payload)
+      ipcRenderer.on('setup:progress', handler)
+      return () => ipcRenderer.removeListener('setup:progress', handler)
     },
   },
   llama: {
@@ -206,12 +207,22 @@ const nexusBridge = {
       return () => ipcRenderer.removeListener('llama:progress', handler)
     },
   },
+  sandbox: {
+    srtStatus: (options?: { passive?: boolean; refresh?: boolean }): Promise<SrtStatus | null> => ipcRenderer.invoke('sandbox:srt-status', options),
+    srtEnable: (): Promise<SrtStatus> => ipcRenderer.invoke('sandbox:srt-enable'),
+  },
   envVars: {
     catalog: (): Promise<EnvVarDef[]> => ipcRenderer.invoke('env-vars:catalog'),
     status: (): Promise<Record<string, boolean>> => ipcRenderer.invoke('env-vars:status'),
     set: (key: string, value: string): Promise<void> => ipcRenderer.invoke('env-vars:set', key, value),
     delete: (key: string): Promise<void> => ipcRenderer.invoke('env-vars:delete', key),
     restartBackend: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('env-vars:restart-backend'),
+  },
+  appearance: {
+    // Zoom of the whole window (1 = 100%). Chromium scales layout and text together.
+    setZoom: (factor: number): void => {
+      if (Number.isFinite(factor) && factor >= 0.5 && factor <= 2) webFrame.setZoomFactor(factor)
+    },
   },
   browser: {
     show: (contextId: string, bounds?: BrowserPanelBounds): Promise<BrowserPanelState> => ipcRenderer.invoke('seshat:browser:show', contextId, bounds),
@@ -252,32 +263,27 @@ const nexusBridge = {
       return () => ipcRenderer.removeListener('seshat:browser:panel-closed', handler)
     },
   },
-  terminal: {
-    start: (payload: { id: string; cwd: string }): Promise<{ ok: boolean; id: string; shell: string; cwd: string; pid?: number }> =>
-      ipcRenderer.invoke('terminal:start', payload),
-    write: (id: string, data: string): Promise<void> => ipcRenderer.invoke('terminal:write', { id, data }),
-    stop: (id: string): Promise<void> => ipcRenderer.invoke('terminal:stop', id),
-    onEvent: (id: string, listener: (event: TerminalEvent) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalEvent) => {
+  shell: {
+    start: (payload: { id: string; cwd: string; cols: number; rows: number }): Promise<{ id: string; shell: string; cwd: string; pid?: number }> =>
+      ipcRenderer.invoke('shell:start', payload),
+    write: (id: string, data: string): Promise<void> => ipcRenderer.invoke('shell:write', { id, data }),
+    resize: (id: string, cols: number, rows: number): Promise<void> => ipcRenderer.invoke('shell:resize', { id, cols, rows }),
+    stop: (id: string): Promise<void> => ipcRenderer.invoke('shell:stop', id),
+    onData: (id: string, listener: (event: ShellDataEvent) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: ShellDataEvent) => {
         if (payload.id !== id) return
         listener(payload)
       }
-      ipcRenderer.on('terminal:event', handler)
-      return () => ipcRenderer.removeListener('terminal:event', handler)
+      ipcRenderer.on('shell:data', handler)
+      return () => ipcRenderer.removeListener('shell:data', handler)
     },
-  },
-  terminalRelay: {
-    connect: (sessionId: string): Promise<{ ok: boolean; connected: boolean }> =>
-      ipcRenderer.invoke('terminal-relay:connect', sessionId),
-    disconnect: (sessionId: string): Promise<void> => ipcRenderer.invoke('terminal-relay:disconnect', sessionId),
-    status: (sessionId: string): Promise<{ connected: boolean }> => ipcRenderer.invoke('terminal-relay:status', sessionId),
-    onEvent: (sessionId: string, listener: (event: TerminalRelayEvent) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalRelayEvent) => {
-        if (payload.sessionId !== sessionId) return
+    onExit: (id: string, listener: (event: ShellExitEvent) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: ShellExitEvent) => {
+        if (payload.id !== id) return
         listener(payload)
       }
-      ipcRenderer.on('terminal-relay:event', handler)
-      return () => ipcRenderer.removeListener('terminal-relay:event', handler)
+      ipcRenderer.on('shell:exit', handler)
+      return () => ipcRenderer.removeListener('shell:exit', handler)
     },
   },
   updates: {
@@ -306,6 +312,6 @@ const nexusBridge = {
   },
 }
 
-contextBridge.exposeInMainWorld('nexus', nexusBridge)
+contextBridge.exposeInMainWorld('seshat', seshatBridge)
 
-export type NexusBridge = typeof nexusBridge
+export type SeshatBridge = typeof seshatBridge

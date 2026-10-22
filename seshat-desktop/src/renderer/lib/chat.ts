@@ -32,16 +32,12 @@ function cloneContentBlock(block: ContentBlock): ContentBlock {
   }
 }
 
-export function cloneMessage(message: Message): Message {
+function cloneMessage(message: Message): Message {
   return {
     ...message,
     metadata: message.metadata ? { ...message.metadata } : undefined,
     content: message.content.map(cloneContentBlock),
   }
-}
-
-export function cloneMessages(messages: Message[]): Message[] {
-  return messages.map(cloneMessage)
 }
 
 export function normalizeSessionMessages(messages: Message[]): Message[] {
@@ -108,21 +104,6 @@ export function toolResultFromDone(result?: {
     isError: result.is_error ?? false,
     durationMs: result.duration_ms,
     metadata: result.metadata ? { ...result.metadata } : undefined,
-  }
-}
-
-export function updateToolStatus(
-  messages: Message[],
-  toolUseId: string,
-  patch: Partial<ToolUseBlock>,
-) {
-  for (const message of messages) {
-    for (const block of message.content) {
-      if (block.type === 'tool_use' && block.id === toolUseId) {
-        Object.assign(block, patch)
-        return
-      }
-    }
   }
 }
 

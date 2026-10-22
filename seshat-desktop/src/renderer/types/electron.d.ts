@@ -1,5 +1,5 @@
 interface Window {
-  nexus: {
+  seshat: {
     getVersion: () => Promise<string>
     openPath: (p: string) => Promise<void>
     openLocalPath: (p: string) => Promise<void>
@@ -52,6 +52,13 @@ interface Window {
       cancelStream: (streamId: string) => Promise<void>
       onStreamEvent: (streamId: string, listener: (event: { name: string; data: Record<string, unknown> }) => void) => () => void
     }
+    setup?: {
+      state: () => Promise<{ completed: boolean }>
+      plan: () => Promise<SetupPlan>
+      run: (selection: SetupSelection) => Promise<void>
+      complete: () => Promise<void>
+      onProgress: (listener: (progress: SetupProgress) => void) => () => void
+    }
     whisper?: {
       status: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       models: () => Promise<Array<{ id: string; filename: string; label: string; approxSizeBytes: number; description: string }>>
@@ -61,6 +68,8 @@ interface Window {
       deleteModel: (modelId: string) => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       enable: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
       disable: () => Promise<{ supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }>
+      getSettings: () => Promise<{ threads: number | null; automaticThreads: number; cores: number }>
+      setSettings: (settings: { threads: number | null }) => Promise<{ threads: number | null; automaticThreads: number; cores: number }>
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
     }
     llama?: {
@@ -73,6 +82,14 @@ interface Window {
       enable: () => Promise<LlamaStatus>
       disable: () => Promise<LlamaStatus>
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
+    }
+    sandbox?: {
+      // passive: answer from what is known without starting a command; refresh: probe again. Null when nothing is known.
+      srtStatus: (options?: { passive?: boolean; refresh?: boolean }) => Promise<SrtStatus | null>
+      srtEnable: () => Promise<SrtStatus>
+    }
+    appearance?: {
+      setZoom: (factor: number) => void
     }
     envVars?: {
       catalog: () => Promise<Array<{ key: string; label: string; description: string; group: string; groupLabel: string; helpUrl?: string; hidden?: boolean }>>
@@ -99,17 +116,13 @@ interface Window {
       onPanelOpened: (contextId: string, listener: (state: BrowserPanelState) => void) => () => void
       onPanelClosed: (contextId: string, listener: (state: BrowserPanelState) => void) => () => void
     }
-    terminal?: {
-      start: (payload: { id: string; cwd: string }) => Promise<{ ok: boolean; id: string; shell: string; cwd: string; pid?: number }>
+    shell?: {
+      start: (payload: { id: string; cwd: string; cols: number; rows: number }) => Promise<{ id: string; shell: string; cwd: string; pid?: number }>
       write: (id: string, data: string) => Promise<void>
+      resize: (id: string, cols: number, rows: number) => Promise<void>
       stop: (id: string) => Promise<void>
-      onEvent: (id: string, listener: (event: TerminalEvent) => void) => () => void
-    }
-    terminalRelay?: {
-      connect: (sessionId: string) => Promise<{ ok: boolean; connected: boolean }>
-      disconnect: (sessionId: string) => Promise<void>
-      status: (sessionId: string) => Promise<{ connected: boolean }>
-      onEvent: (sessionId: string, listener: (event: TerminalRelayEvent) => void) => () => void
+      onData: (id: string, listener: (event: ShellDataEvent) => void) => () => void
+      onExit: (id: string, listener: (event: ShellExitEvent) => void) => () => void
     }
     updates?: {
       checkNow: () => Promise<{ ok: boolean; error?: string }>
@@ -120,6 +133,12 @@ interface Window {
       onError: (listener: (payload: { message: string }) => void) => () => void
     }
   }
+}
+
+type SrtStatus = {
+  state: 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
+  platform: string
+  detail?: string
 }
 
 type BrowserPanelState = {
@@ -134,31 +153,16 @@ type BrowserPanelState = {
   }>
 }
 
-type TerminalEvent = {
-  id: string
-  type: 'started' | 'data' | 'error' | 'exit'
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  shell?: string
-  cwd?: string
-  pid?: number
-  code?: number | null
-  signal?: string | null
+type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type SetupPlan = {
+  components: Array<{ id: 'title' | 'speech'; available: boolean; unavailableReason?: string; options: SetupOption[] }>
+  freeDiskBytes: number | null
 }
+type SetupSelection = Partial<Record<'title' | 'speech', { install: boolean; modelId: string }>>
+type SetupProgress = { component: 'title' | 'speech'; status: 'running' | 'done' | 'error'; receivedBytes?: number; totalBytes?: number; message?: string }
 
-type TerminalRelayEvent = {
-  sessionId: string
-  type: string
-  commandId?: string
-  command?: string
-  cwd?: string
-  stream?: 'stdout' | 'stderr'
-  data?: string
-  message?: string
-  exitCode?: number
-  durationMs?: number
-}
+type ShellDataEvent = { id: string; data: string }
+type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
 interface LlamaModelInfo {
   id: string

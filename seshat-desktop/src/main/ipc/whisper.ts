@@ -7,6 +7,8 @@ import {
   deleteModel,
   enableLocalWhisper,
   disableLocalWhisper,
+  readWhisperSettings,
+  writeWhisperSettings,
   MODEL_CATALOG,
   type WhisperProgress,
   type WhisperModelId,
@@ -63,6 +65,16 @@ export function registerWhisperHandlers(ipcMain: IpcMain): void {
     assertTrustedSender(event)
     await enableLocalWhisper()
     return getWhisperStatus()
+  })
+
+  ipcMain.handle('whisper:get-settings', (event: IpcMainInvokeEvent) => {
+    assertTrustedSender(event)
+    return readWhisperSettings()
+  })
+
+  ipcMain.handle('whisper:set-settings', async (event: IpcMainInvokeEvent, next: { threads: number | null }) => {
+    assertTrustedSender(event)
+    return writeWhisperSettings({ threads: next?.threads ?? null })
   })
 
   ipcMain.handle('whisper:disable', async (event: IpcMainInvokeEvent) => {

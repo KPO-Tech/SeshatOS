@@ -89,7 +89,7 @@ export function SkillDetailModal({ skill, onClose, onChanged }: Props) {
                   <pre className="mb-5 whitespace-pre-wrap break-words rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-3 font-mono text-[12px] leading-5 text-[var(--text-secondary)]">{frontmatter}</pre>
                 )}
                 {isMain || /\.(md|markdown)$/i.test(selected ?? '') ? (
-                  <MarkdownView>{body}</MarkdownView>
+                  <MarkdownView variant="document">{body}</MarkdownView>
                 ) : (
                   <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-[12px] leading-5 text-[var(--text-secondary)]">{body}</pre>
                 )}

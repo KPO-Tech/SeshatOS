@@ -1,6 +1,6 @@
 import { Copy } from '@icon-park/react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { codeTheme } from '@renderer/lib/codeTheme'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { languageForPath } from './helpers'
 
@@ -33,7 +33,7 @@ type GitDiffMeta = {
   patch: string
 }
 
-export type DiffRow = {
+type DiffRow = {
   type: 'context' | 'add' | 'del'
   oldLineNo: number | null
   newLineNo: number | null
@@ -150,7 +150,7 @@ function computeLcsDiff(oldStr: string, newStr: string): DiffRow[] {
   return rows
 }
 
-export type ResolvedDiff = { rows: DiffRow[]; addCount: number; delCount: number }
+type ResolvedDiff = { rows: DiffRow[]; addCount: number; delCount: number }
 
 export function resolveDiffRows(tool: ToolUseBlock): ResolvedDiff | null {
   const metadata = tool._result?.metadata
@@ -273,7 +273,7 @@ export function DiffView({
               {language ? (
                 <SyntaxHighlighter
                   language={language}
-                  style={vscDarkPlus}
+                  style={codeTheme as any}
                   PreTag="span"
                   CodeTag="span"
                   customStyle={{ background: 'transparent', padding: 0, margin: 0, display: 'inline' }}

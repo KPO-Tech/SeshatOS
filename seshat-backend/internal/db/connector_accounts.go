@@ -271,3 +271,17 @@ func connectorAccountFromModel(row gConnectorAccount) *ConnectorAccount {
 	}
 	return a
 }
+
+// LatestByKind returns the most recently updated account of a kind, whoever owns it. The local catalog's connectors are used by an agent
+// that has no user of its own to ask for, on a machine with one person: that person's latest account is the one it uses.
+func (s *ConnectorAccountStore) LatestByKind(ctx context.Context, kind string) (*ConnectorAccount, bool, error) {
+	var row gConnectorAccount
+	err := s.db.GormDB().WithContext(ctx).Where("kind = ?", kind).Order("updated_at_unix desc, created_at_unix desc").First(&row).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	return connectorAccountFromModel(row), true, nil
+}

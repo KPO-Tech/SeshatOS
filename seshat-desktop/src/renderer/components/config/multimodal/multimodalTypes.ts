@@ -1,6 +1,6 @@
 export type CapabilityName = 'image' | 'audio' | 'embeddings'
 
-export type CapabilityCandidate = {
+type CapabilityCandidate = {
   id: string
   provider: string
   name: string
@@ -44,5 +44,6 @@ export type SystemStatus = {
 export type LocalSTTConfig = {
   base_url: string
   enabled: boolean
+  language?: string
   updated_at?: number
 }

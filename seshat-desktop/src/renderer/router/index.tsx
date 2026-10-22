@@ -1,13 +1,8 @@
 import { createHashRouter, Navigate, useParams } from 'react-router'
 import { Shell } from '@renderer/components/layout/Shell'
-import { PluginsPage } from '@renderer/components/plugins/PluginsPage'
-import { SkillsPage } from '@renderer/components/skills/SkillsPage'
 import { ConversationPage } from '@renderer/components/chat/conversation/ConversationPage'
 import { Home } from '@renderer/pages/Home'
-import { ProjectsPage } from '@renderer/pages/projects'
-import { ProjectDetailPage } from '@renderer/pages/projects/detail'
-import { AdminPage } from '@renderer/pages/admin'
-import { StorePage } from '@renderer/pages/store'
+import { edition } from '@renderer/lib/edition'
 
 // React Router reuses a route's element across navigations to the same
 // route pattern - switching from /conversation/A to /conversation/B keeps
@@ -20,6 +15,16 @@ function ConversationRoute() {
   return <ConversationPage key={id} />
 }
 
+// Only the home and the conversation open at start. The other pages load when they are first visited: in dev every imported module is a
+// request to the dev server (about 250 at start, on a machine with a slow disk many seconds), and a page the edition hides is never
+// needed at all. The built app gets a small chunk per page instead of one large file.
+const plugins = () => import('@renderer/components/plugins/PluginsPage').then((m) => ({ Component: m.PluginsPage }))
+const skills = () => import('@renderer/components/skills/SkillsPage').then((m) => ({ Component: m.SkillsPage }))
+const projects = () => import('@renderer/pages/projects').then((m) => ({ Component: m.ProjectsPage }))
+const projectDetail = () => import('@renderer/pages/projects/detail').then((m) => ({ Component: m.ProjectDetailPage }))
+const store = () => import('@renderer/pages/store').then((m) => ({ Component: m.StorePage }))
+const admin = () => import('@renderer/pages/admin').then((m) => ({ Component: m.AdminPage }))
+
 // Authentication is handled in App.tsx (this router only mounts once signed
 // in), so every route below lives inside the shell.
 export const router = createHashRouter([
@@ -29,12 +34,12 @@ export const router = createHashRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'conversation/:id', element: <ConversationRoute /> },
-      { path: 'skills', element: <SkillsPage /> },
-      { path: 'plugins', element: <PluginsPage /> },
-      { path: 'store', element: <StorePage /> },
-      { path: 'projects', element: <ProjectsPage /> },
-      { path: 'projects/:projectId', element: <ProjectDetailPage /> },
-      { path: 'admin/*', element: <AdminPage /> }
+      { path: 'skills', lazy: skills },
+      { path: 'plugins', lazy: plugins },
+      ...(edition.store ? [{ path: 'store', lazy: store }] : []),
+      { path: 'projects', lazy: projects },
+      { path: 'projects/:projectId', lazy: projectDetail },
+      ...(edition.cloud ? [{ path: 'admin/*', lazy: admin }] : [])
     ]
   },
   { path: '*', element: <Navigate to="/" replace /> }

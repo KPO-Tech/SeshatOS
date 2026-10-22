@@ -43,7 +43,7 @@ export async function downloadToFile(url: string, destPath: string, onProgress?:
 // mid-extraction kills the child process with a bare, undiagnosable exit
 // code. Linux's .tar.gz asset still goes through system tar, which is
 // universal and reliable there.
-export async function extractZipArchive(archivePath: string, destDir: string): Promise<void> {
+async function extractZipArchive(archivePath: string, destDir: string): Promise<void> {
   const buffer = await readFile(archivePath)
   const zip = await JSZip.loadAsync(buffer)
   const destRoot = resolvePath(destDir)
@@ -64,7 +64,7 @@ export async function extractZipArchive(archivePath: string, destDir: string): P
   }
 }
 
-export function extractTarArchive(archivePath: string, destDir: string): Promise<void> {
+function extractTarArchive(archivePath: string, destDir: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn('tar', ['-xf', archivePath, '-C', destDir])
     let stderr = ''

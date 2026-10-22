@@ -1,12 +1,14 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
+import { normalizeMathDelimiters, sealOpenFences } from '@renderer/lib/markdownText'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -64,7 +66,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   }
 
   return (
-    <div className="my-4 overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[#1e1e1e]">
+    <div className="my-4 overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--code-bg)]">
       <div className="flex items-center justify-between border-b border-[var(--border-soft)] bg-white/5 px-2.5 py-1.5">
         <button
           type="button"
@@ -86,7 +88,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
       </div>
       {!collapsed && (
         <SyntaxHighlighter
-          style={vscDarkPlus}
+          style={codeTheme as any}
           language={language}
           PreTag="div"
           customStyle={CODE_BLOCK_STYLE}
@@ -125,7 +127,7 @@ function MermaidBlock({ code }: { code: string }) {
     setSvg(null)
 
     import('mermaid').then(async ({ default: mermaid }) => {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      const isLight = document.documentElement.getAttribute('data-color-scheme') === 'light'
       mermaid.initialize({
         startOnLoad: false,
         theme: isLight ? 'default' : 'dark',
@@ -191,7 +193,7 @@ function ChartBlock({ code }: { code: string }) {
 
     import('chart.js/auto').then(({ default: Chart }) => {
       if (cancelled || !canvasRef.current) return
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      const isLight = document.documentElement.getAttribute('data-color-scheme') === 'light'
       const tickColor = isLight ? '#44403c' : '#d6d3d1'
       const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'
       // The chart type/shape only exists at runtime (parsed from the
@@ -238,35 +240,46 @@ function ChartBlock({ code }: { code: string }) {
   )
 }
 
+// A remote image is the one markdown construct that makes the renderer fetch a
+// third-party URL on its own, exposing the user's IP and the existence of the
+// conversation to whoever hosts it. Message text is model output, and model
+// output may be influenced by untrusted content pulled in earlier, so only
+// inline data URLs are drawn. Anything else becomes a chip the user has to
+// click, and that click routes through the app browser like any other link.
+function RemoteImageChip({ src, alt, sessionId }: { src: string; alt?: string; sessionId?: string }) {
+  const remote = isRemoteImageSrc(src)
+
+  return (
+    <span className="my-3 inline-flex max-w-full items-center gap-2 rounded-md border border-app-border-subtle bg-app-surface px-2 py-1.5 text-xs text-app-text-muted">
+      <span className="min-w-0 truncate text-app-text-secondary">{alt?.trim() || 'Image'}</span>
+      <span className="min-w-0 flex-1 truncate font-mono text-[10px]" title={src}>{src}</span>
+      {remote && (
+        <button
+          type="button"
+          className="shrink-0 cursor-pointer rounded-[5px] border-0 bg-transparent px-1 text-xs font-semibold text-[var(--accent-primary)] hover:underline"
+          onClick={() => openInAppBrowser(src, sessionId)}
+        >
+          Open
+        </button>
+      )}
+    </span>
+  )
+}
+
 type Props = {
   children: string
   className?: string
   streaming?: boolean
   sessionId?: string
+  /** "chat" (default) is the compact size of messages and side panels; "document" is the larger one of a page read on its own. */
+  variant?: 'chat' | 'document'
 }
 
-// Close any unclosed code fences so the markdown parser never treats the
-// rest of the document as a code block mid-stream.
-function sealOpenFences(text: string): string {
-  const lines = text.split('\n')
-  let inFence = false
-  for (const line of lines) {
-    if (/^(`{3,}|~{3,})/.test(line)) {
-      inFence = !inFence
-    }
-  }
-  return inFence ? `${text}\n\`\`\`` : text
+const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
+  chat: 'text-[length:var(--chat-font-size)] leading-[1.72]',
+  document: 'text-[14px] leading-7'
 }
 
-function normalizeMathDelimiters(text: string): string {
-  const segments = text.split(/(^[ \t]*(?:`{3,}|~{3,})[\s\S]*?^[ \t]*(?:`{3,}|~{3,})[ \t]*$)/gm)
-  return segments.map((segment) => {
-    if (/^[ \t]*(?:`{3,}|~{3,})/.test(segment)) return segment
-    return segment
-      .replace(/\\\[([\s\S]*?)\\\]/g, (_match, math: string) => `$$\n${math.trim()}\n$$`)
-      .replace(/\\\(([^()\n]+?)\\\)/g, (_match, math: string) => `$${math.trim()}$`)
-  }).join('')
-}
 
 type CodeProps = {
   inline?: boolean
@@ -274,7 +287,7 @@ type CodeProps = {
   children?: ReactNode
 }
 
-export function MarkdownView({ children, className, streaming = false, sessionId }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat' }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
 
   // react-markdown uses the identity of each entry here as the React element
@@ -316,7 +329,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
             )
           },
           p({ children }) {
-            return <p className="mb-3 last:mb-0">{children}</p>
+            return <p className="mb-4 last:mb-0">{children}</p>
           },
           pre({ children }) {
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
@@ -324,36 +337,45 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           table({ children }) {
             return (
               <div className="my-4 overflow-x-auto">
-                <table className="w-full border-collapse border border-[var(--border-soft)]">{children}</table>
+                <table className="w-full border-collapse">{children}</table>
               </div>
             )
           },
           th({ children }) {
-            return <th className="border border-[var(--border-soft)] bg-[var(--surface-muted)] px-2 py-1.5 text-left">{children}</th>
+            return <th className="border-b border-[var(--border-strong)] px-3 py-2.5 text-left font-semibold">{children}</th>
           },
           td({ children }) {
-            return <td className="border border-[var(--border-soft)] px-2 py-1.5 text-left">{children}</td>
+            return <td className="border-b border-[var(--border-soft)] px-3 py-3 text-left align-top">{children}</td>
           },
           ul({ children }) {
-            return <ul className="mb-4 list-disc pl-5">{children}</ul>
+            return <ul className="mb-4 list-disc pl-6">{children}</ul>
           },
           ol({ children }) {
-            return <ol className="mb-4 list-decimal pl-5">{children}</ol>
+            return <ol className="mb-4 list-decimal pl-6">{children}</ol>
           },
           li({ children }) {
-            return <li className="mb-1">{children}</li>
+            return <li className="mb-2 pl-1 last:mb-0">{children}</li>
           },
           h1({ children }) {
-            return <h1 className="mb-3 mt-6 text-[1.3em] font-semibold text-[var(--text-primary)]">{children}</h1>
+            return <h1 className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
           },
           h2({ children }) {
-            return <h2 className="mb-3 mt-6 text-[1.15em] font-semibold text-[var(--text-primary)]">{children}</h2>
+            return <h2 className="mb-3 mt-7 text-[1.3em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h2>
           },
           h3({ children }) {
-            return <h3 className="mb-3 mt-6 text-[1.05em] font-semibold text-[var(--text-primary)]">{children}</h3>
+            return <h3 className="mb-2 mt-6 text-[1.12em] leading-snug font-semibold text-[var(--text-primary)]">{children}</h3>
           },
           blockquote({ children }) {
             return <blockquote className="my-4 border-l-4 border-[var(--accent-primary)] pl-3 text-[var(--text-secondary)]">{children}</blockquote>
+          },
+          // See RemoteImageChip: no <img> reaches the DOM except a data URL.
+          img({ src, alt }: any) {
+            const url = typeof src === 'string' ? src : ''
+            if (isRenderableImageSrc(url)) {
+              return <img src={url} alt={alt ?? ''} className="my-3 max-w-full rounded-md border border-app-border-subtle" />
+            }
+            if (!url) return <span className="text-app-text-muted">{alt ?? ''}</span>
+            return <RemoteImageChip src={url} alt={alt} sessionId={sessionId} />
           },
           // Plain markdown links otherwise render as a bare <a href> with no
           // target/onClick - in Electron that's a same-frame top-level
@@ -381,7 +403,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
         }), [streaming, sessionId])
 
   return (
-    <div className={cx('text-[14px] leading-7 text-[var(--text-primary)]', className)}>
+    <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
       <ReactMarkdown
         // KaTeX and Prism re-parse their whole input on every render; while
         // streaming, `content` changes on every token, which would mean

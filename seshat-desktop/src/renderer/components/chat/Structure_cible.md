@@ -495,8 +495,8 @@ Validation :
 ### Phase 9 - Unifier l'affichage des pieces jointes
 
 Objectif : l'utilisateur a signale que l'affichage des pieces jointes (image, PDF,
-DOCX, XLSX, PPTX) portait la meme surcomplication que dans `seshat-ui` d'origine -
-confirme par une comparaison avec `legacy/seshat-ui`, `legacy/seshat-desktop-v1` et
+DOCX, XLSX, PPTX) portait la meme surcomplication que dans le premier client desktop -
+confirme par une comparaison avec les anciens clients desktop et
 AI-Manus (`helps/ai-manus`). Diagnostic : la vignette d'une piece jointe etait codee
 deux fois en parallele (`composer/ChatInput.tsx` avant envoi, `messages/MessageItem.tsx`
 apres envoi), avec deux types quasi identiques (`ChatAttachment`/`MessageAttachment`),
@@ -571,7 +571,7 @@ Validation :
 
 Demande utilisateur : coller un texte long dans le composer doit l'attacher comme un
 `.txt`, plutot que de remplir la zone de saisie (comme Claude.ai/ChatGPT). Aucune
-reference existante dans `legacy/seshat-ui`, `legacy/seshat-desktop-v1` ni AI-Manus -
+reference existante dans les anciens clients desktop ni AI-Manus -
 fonctionnalite neuve.
 
 Fait :

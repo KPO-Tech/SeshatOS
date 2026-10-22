@@ -33,6 +33,8 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/websearch"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector"
+	connectorgateway "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector/gateway"
+	localconnectors "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/connector/local"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
@@ -724,10 +726,33 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		}
 	}
 
+	// The connectors of the local catalog reach the runtime through a loopback gateway; only a machine that is not connected to an
+	// organization server uses them (an organization brings its own connectors).
+	var localConnectors *localconnectors.Service
+	if mcpCloudClient == nil {
+		gateway := connectorgateway.New(func(ctx context.Context, kind connector.Kind) (string, bool) {
+			return localConnectors.Secret(ctx, kind)
+		})
+		localConnectors = localconnectors.NewService(connectorAccountStore, gateway)
+		if gwErr := gateway.Start(); gwErr != nil {
+			fmt.Fprintln(os.Stderr, "[API] Avertissement connecteurs:", gwErr)
+			localConnectors = nil
+		} else {
+			cleanups = append(cleanups, func() error { gateway.Close(); return nil })
+		}
+	}
+
 	var startupMCPServers []sdk.MCPServerConfig
 	if dbServers, dbErr := mcpServerStore.ListEnabled(ctx); dbErr == nil && len(dbServers) > 0 {
 		startupMCPServers = append(startupMCPServers, dbMCPServersToSDKConfigs(dbServers)...)
 		fmt.Printf("[API] MCP: %d server(s) chargés depuis la DB\n", len(dbServers))
+	}
+
+	if localConnectors != nil {
+		if configs := localConnectors.MCPConfigs(ctx); len(configs) > 0 {
+			startupMCPServers = append(startupMCPServers, configs...)
+			fmt.Println("[API] Connecteurs:", len(configs), "connecteur(s) chargés")
+		}
 	}
 
 	browserRemoteControlURL := strings.TrimSpace(config.BrowserRemoteControlURL)
@@ -761,19 +786,28 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		SandboxKind:             sdk.SandboxKindDocker,
 		BrowserRemoteControlURL: browserRemoteControlURL,
 		BrowserExecutablePath:   strings.TrimSpace(config.BrowserExecutablePath),
-		StorageGCEnabled:        config.StorageGCEnabled,
-		StorageGCInterval:       parseDurationOrDefault(config.StorageGCInterval, time.Hour),
-		StorageGCLimit:          config.StorageGCLimit,
-		StorageGCNamespaces:     splitCommaList(config.StorageGCNamespaces),
-		RAGService:              ragService,
-		MCPServers:              startupMCPServers,
-		PlanStore:               &dbPlanStoreAdapter{store: planDocumentStore},
-		LongTermMemory:          longTermMemStore,
-		DocumentConverter:       documentreading.NewProcessorConverter(resolveDocumentConverter),
-		DocumentPageRenderer:    documentreading.NewNativeDocPageRenderer(),
-		ImageGeneration:         defaultImageGenerationConfig(ctx, capabilityLinkStore, settingStore),
-		TextToSpeech:            defaultTextToSpeechConfig(ctx, capabilityLinkStore, settingStore),
-		SpeechToText:            defaultSpeechToTextConfig(ctx, capabilityLinkStore, settingStore),
+		// The desktop agent loads a short list of tools and finds the rest with tool_search, which keeps about 45% of the tool
+		// definitions out of every request (see agent_profile.go).
+		// The models.dev catalog downloaded earlier is read from the runtime's cache; downloading it again is the one call to the network
+		// the catalog makes, so it is off unless SESHAT_REFRESH_MODEL_CATALOG is set (see refreshModelCatalogEnabled).
+		CatalogCacheDir:        sdk.CatalogCacheDir(),
+		RefreshCatalog:         refreshModelCatalogEnabled(),
+		MainAgentTools:         desktopMainAgentTools(),
+		MainAgentDeferredTools: desktopMainAgentDeferredTools(),
+		EnableToolSearch:       true,
+		StorageGCEnabled:       config.StorageGCEnabled,
+		StorageGCInterval:      parseDurationOrDefault(config.StorageGCInterval, time.Hour),
+		StorageGCLimit:         config.StorageGCLimit,
+		StorageGCNamespaces:    splitCommaList(config.StorageGCNamespaces),
+		RAGService:             ragService,
+		MCPServers:             startupMCPServers,
+		PlanStore:              &dbPlanStoreAdapter{store: planDocumentStore},
+		LongTermMemory:         longTermMemStore,
+		DocumentConverter:      documentreading.NewProcessorConverter(resolveDocumentConverter),
+		DocumentPageRenderer:   documentreading.NewNativeDocPageRenderer(),
+		ImageGeneration:        defaultImageGenerationConfig(ctx, capabilityLinkStore, settingStore),
+		TextToSpeech:           defaultTextToSpeechConfig(ctx, capabilityLinkStore, settingStore),
+		SpeechToText:           defaultSpeechToTextConfig(ctx, capabilityLinkStore, settingStore),
 		// The SDK auto-generates a short AI title after a session's first
 		// turn completes (see its own generateTitleAsync) and was already
 		// running unconditionally - just silently discarded, since nothing
@@ -916,11 +950,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// (returns ok=false) whenever SESHAT_ELECTRON_BRIDGE_PORT isn't set, so
 	// this is a no-op outside the desktop app without needing a guard here.
 	runtime.SetBrowserSessionTargetResolver(resolveElectronBrowserSessionTarget)
-	// Shared with api.NewApp below (via AppConfig.TerminalRelay) - the WS
-	// handler there registers a session's Electron relay connection into the
-	// same instance runtime.applyRemoteExecutor reads from per turn.
-	terminalRelay := backendquery.NewTerminalRelay()
-	runtime.SetTerminalRelay(terminalRelay)
 
 	// Scopes the rag_search/rag_ingest/rag_delete tools to the requesting
 	// user's own (or shared-workspace) corpora per request, instead of
@@ -940,6 +969,13 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// restart. No API key needed - the engine no longer requires one when a
 	// custom BaseURL is set (KPO-Tech/seshat-runtime#101), and whisper-server
 	// doesn't check the Authorization header anyway.
+	runtime.SetMediaResolver(func(ctx context.Context) backendquery.MediaConfigs {
+		return backendquery.MediaConfigs{
+			Image: defaultImageGenerationConfig(ctx, capabilityLinkStore, settingStore),
+			TTS:   defaultTextToSpeechConfig(ctx, capabilityLinkStore, settingStore),
+			STT:   defaultSpeechToTextConfig(ctx, capabilityLinkStore, settingStore),
+		}
+	})
 	runtime.SetLocalSTTResolver(func(ctx context.Context) *sdk.SpeechToTextConfig {
 		cfg, err := localSTTConfigStore.Get(ctx)
 		if err != nil || cfg == nil || !cfg.Enabled || cfg.BaseURL == "" {
@@ -948,6 +984,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return &sdk.SpeechToTextConfig{
 			Provider: "openai",
 			BaseURL:  cfg.BaseURL,
+			Language: cfg.Language,
 		}
 	})
 
@@ -1047,6 +1084,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		LongTermExtractor:        longTermExtractor,
 		PlanDocumentStore:        planDocumentStore,
 		MCPServerStore:           mcpServerStore,
+		LocalConnectors:          localConnectors,
 		MCPRuntime:               runtime,
 		MCPCloudClient:           mcpCloudClient,
 		MCPOrgServerApprovals:    mcpOrgServerApprovalStore,
@@ -1156,7 +1194,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		ConnectedServerURL:    serverURL,
 		TargetServerURL:       defaultServerURL,
 		SandboxKind:           sandboxKind,
-		TerminalRelay:         terminalRelay,
 		TitleBroker:           titleBroker,
 	})
 
@@ -1308,22 +1345,29 @@ func splitCommaList(raw string) []string {
 // false), so callers fall back to their own default the same as before this
 // feature existed.
 func resolveCapabilityCredential(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore, capability backendsettings.Capability) (providerType, apiKey string, ok bool) {
+	providerType, apiKey, _, ok = resolveCapabilityLink(ctx, linkStore, providerStore, capability)
+	return providerType, apiKey, ok
+}
+
+// resolveCapabilityLink is resolveCapabilityCredential that also returns the base URL of the linked provider: a provider that is not the
+// chat model of the conversation (an OpenAI-compatible image or speech server) is only reachable through it.
+func resolveCapabilityLink(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore, capability backendsettings.Capability) (providerType, apiKey, baseURL string, ok bool) {
 	if linkStore == nil || providerStore == nil {
-		return "", "", false
+		return "", "", "", false
 	}
 	providerSettingID, linked, err := linkStore.Get(ctx, string(capability))
 	if err != nil || !linked {
-		return "", "", false
+		return "", "", "", false
 	}
 	setting, err := providerStore.GetByID(ctx, providerSettingID)
 	if err != nil {
-		return "", "", false
+		return "", "", "", false
 	}
 	key, err := providerStore.GetDecryptedAPIKey(ctx, providerSettingID)
 	if err != nil || key == "" {
-		return "", "", false
+		return "", "", "", false
 	}
-	return setting.Provider, key, true
+	return setting.Provider, key, strings.TrimSpace(setting.BaseURL), true
 }
 
 // defaultImageGenerationConfig, defaultTextToSpeechConfig and
@@ -1336,37 +1380,60 @@ func resolveCapabilityCredential(ctx context.Context, linkStore *db.CapabilityLi
 // prefers to configure these independently via Settings > Environment.
 // Without either, ClientConfig.ImageGeneration/.TextToSpeech/.SpeechToText
 // stay nil and the tools are never initialized.
+// capabilityOptions reads the choices the person saved for a capability (model, voice, format); none when there are none or the store
+// cannot be read, which leaves the provider defaults.
+func capabilityOptions(ctx context.Context, linkStore *db.CapabilityLinkStore, capability backendsettings.Capability) map[string]string {
+	if linkStore == nil {
+		return nil
+	}
+	options, err := linkStore.Options(ctx, string(capability))
+	if err != nil {
+		return nil
+	}
+	return options
+}
+
 func defaultImageGenerationConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.ImageGenerationConfig {
-	if providerType, key, ok := resolveCapabilityCredential(ctx, linkStore, providerStore, backendsettings.CapabilityImage); ok {
-		return &sdk.ImageGenerationConfig{Provider: providerType, APIKey: key}
+	var cfg *sdk.ImageGenerationConfig
+	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityImage); ok {
+		cfg = &sdk.ImageGenerationConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+	} else if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
+		cfg = &sdk.ImageGenerationConfig{Provider: "openai", APIKey: key}
+	} else if key := strings.TrimSpace(os.Getenv("GOOGLE_API_KEY")); key != "" {
+		cfg = &sdk.ImageGenerationConfig{Provider: "gemini", APIKey: key}
 	}
-	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
-		return &sdk.ImageGenerationConfig{Provider: "openai", APIKey: key}
+	if cfg != nil {
+		options := capabilityOptions(ctx, linkStore, backendsettings.CapabilityImage)
+		cfg.Model, cfg.Size, cfg.Quality, cfg.AspectRatio = options["model"], options["size"], options["quality"], options["aspect_ratio"]
 	}
-	if key := strings.TrimSpace(os.Getenv("GOOGLE_API_KEY")); key != "" {
-		return &sdk.ImageGenerationConfig{Provider: "gemini", APIKey: key}
-	}
-	return nil
+	return cfg
 }
 
 func defaultTextToSpeechConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.TextToSpeechConfig {
-	if providerType, key, ok := resolveCapabilityCredential(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
-		return &sdk.TextToSpeechConfig{Provider: providerType, APIKey: key}
+	var cfg *sdk.TextToSpeechConfig
+	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
+		cfg = &sdk.TextToSpeechConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+	} else if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
+		cfg = &sdk.TextToSpeechConfig{Provider: "openai", APIKey: key}
 	}
-	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
-		return &sdk.TextToSpeechConfig{Provider: "openai", APIKey: key}
+	if cfg != nil {
+		options := capabilityOptions(ctx, linkStore, backendsettings.CapabilityAudio)
+		cfg.Model, cfg.Voice, cfg.Format = options["tts_model"], options["tts_voice"], options["tts_format"]
 	}
-	return nil
+	return cfg
 }
 
 func defaultSpeechToTextConfig(ctx context.Context, linkStore *db.CapabilityLinkStore, providerStore *db.ProviderSettingStore) *sdk.SpeechToTextConfig {
-	if providerType, key, ok := resolveCapabilityCredential(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
-		return &sdk.SpeechToTextConfig{Provider: providerType, APIKey: key}
+	var cfg *sdk.SpeechToTextConfig
+	if providerType, key, baseURL, ok := resolveCapabilityLink(ctx, linkStore, providerStore, backendsettings.CapabilityAudio); ok {
+		cfg = &sdk.SpeechToTextConfig{Provider: providerType, APIKey: key, BaseURL: baseURL}
+	} else if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
+		cfg = &sdk.SpeechToTextConfig{Provider: "openai", APIKey: key}
 	}
-	if key := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); key != "" {
-		return &sdk.SpeechToTextConfig{Provider: "openai", APIKey: key}
+	if cfg != nil {
+		cfg.Model = capabilityOptions(ctx, linkStore, backendsettings.CapabilityAudio)["stt_model"]
 	}
-	return nil
+	return cfg
 }
 
 func titleProviderConfigFromAppConfig(config appconfig.Config, titleModel sdk.ModelIdentifier) *providers.Config {
@@ -1435,4 +1502,12 @@ func structuredChunkProfile() rag.ChunkProfile {
 		return rag.DefaultChunkProfile()
 	}
 	return profile
+}
+
+// refreshModelCatalogEnabled reports whether the backend may download the public models.dev catalog (at most once a day) to learn the
+// models and providers that appeared since this version was built. Off by default: it sends nothing about the user, but it is a call to
+// the network the user did not ask for.
+func refreshModelCatalogEnabled() bool {
+	enabled, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("SESHAT_REFRESH_MODEL_CATALOG")))
+	return enabled
 }

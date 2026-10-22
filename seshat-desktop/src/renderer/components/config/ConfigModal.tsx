@@ -7,12 +7,14 @@ import { EnvironmentConfig } from './environment/EnvironmentConfig'
 import { KnowledgeConfig } from './knowledge/KnowledgeConfig'
 import { MCPConfig } from './mcp/MCPConfig'
 import { ModelsConfig } from './models/ModelsConfig'
-import { MultimodalConfig } from './multimodal/MultimodalConfig'
+import { AudioConfig } from './multimodal/AudioConfig'
+import { ImageConfig } from './multimodal/ImageConfig'
 import { ProvidersConfig } from './providers/ProvidersConfig'
 import { SkillsConfig } from './skills/SkillsConfig'
 import { StorageConfig } from './storage/StorageConfig'
 import { TitlesConfig } from './titles/TitlesConfig'
 import { WebSearchConfig } from './web-search/WebSearchConfig'
+import { edition } from '@renderer/lib/edition'
 
 export type ConfigSection =
   | 'providers'
@@ -20,7 +22,8 @@ export type ConfigSection =
   | 'titles'
   | 'web-search'
   | 'knowledge'
-  | 'multimodal'
+  | 'image'
+  | 'audio'
   | 'mcp'
   | 'connectors'
   | 'environment'
@@ -35,13 +38,16 @@ type Props = {
   onClose: () => void
 }
 
-const sections: Array<{ id: ConfigSection; label: string; icon: IconName; group: string; description: string }> = [
+type SectionDef = { id: ConfigSection; label: string; icon: IconName; group: string; description: string }
+
+const allSections: SectionDef[] = [
   { id: 'providers', label: 'Providers', icon: 'provider', group: 'AI Runtime', description: 'Configure OpenAI, Anthropic, Mistral, Ollama, and custom compatible providers.' },
   { id: 'models', label: 'Models', icon: 'model', group: 'AI Runtime', description: 'Choose defaults, model catalogs, aliases, and fallback behavior.' },
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
-  { id: 'multimodal', label: 'Multimodal', icon: 'media', group: 'Knowledge', description: 'Image generation, voice input, Whisper models, and local media capabilities.' },
+  { id: 'image', label: 'Images', icon: 'media', group: 'Capabilities', description: 'The provider, model, size and quality the agent uses to create images.' },
+  { id: 'audio', label: 'Audio', icon: 'media', group: 'Capabilities', description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
   { id: 'connectors', label: 'Connectors', icon: 'connectors', group: 'Workspace Runtime', description: 'External accounts and application connectors.' },
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },
@@ -51,8 +57,15 @@ const sections: Array<{ id: ConfigSection; label: string; icon: IconName; group:
   { id: 'cloud', label: 'SeshatCloud', icon: 'connectors', group: 'Workspace Runtime', description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
 ]
 
+// Sections kept in code but hidden from this edition (see lib/edition.ts).
+const hiddenSections = new Set<ConfigSection>([
+  ...(edition.knowledge ? [] : (['knowledge', 'connectors'] as const)),
+  ...(edition.cloud ? [] : (['cloud'] as const))
+])
+const sections = allSections.filter((section) => !hiddenSections.has(section.id))
+
 export function ConfigModal({ user, initialSection = 'providers', onClose }: Props) {
-  const [activeSection, setActiveSection] = useState<ConfigSection>(initialSection)
+  const [activeSection, setActiveSection] = useState<ConfigSection>(hiddenSections.has(initialSection) ? 'providers' : initialSection)
   const displayName = user.display_name || user.email
   const active = sections.find((section) => section.id === activeSection) ?? sections[0]
 
@@ -62,7 +75,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
         <aside className="no-scrollbar w-[220px] shrink-0 overflow-y-auto border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-2.5">
           <div className="px-2 py-2">
             <div className="text-[15px] font-semibold text-[var(--text-primary)]">Config</div>
-            <div className="mt-1 truncate text-[11px] text-[var(--text-muted)]">{displayName}</div>
+            <div className="mt-1 truncate text-[11px] text-[var(--text-muted)]">{edition.accounts ? displayName : 'This device'}</div>
           </div>
 
           <nav className="mt-4 space-y-3">
@@ -114,7 +127,8 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'titles' && <TitlesConfig />}
               {activeSection === 'web-search' && <WebSearchConfig />}
               {activeSection === 'knowledge' && <KnowledgeConfig />}
-              {activeSection === 'multimodal' && <MultimodalConfig />}
+              {activeSection === 'image' && <ImageConfig />}
+              {activeSection === 'audio' && <AudioConfig />}
               {activeSection === 'mcp' && <MCPConfig />}
               {activeSection === 'connectors' && <ConnectorsConfig />}
               {activeSection === 'environment' && <EnvironmentConfig />}
@@ -122,106 +136,12 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'agents' && <AgentsConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
               {activeSection === 'cloud' && <CloudConfig />}
-              {activeSection !== 'providers' && activeSection !== 'models' && activeSection !== 'titles' && activeSection !== 'web-search' && activeSection !== 'knowledge' && activeSection !== 'multimodal' && activeSection !== 'mcp' && activeSection !== 'connectors' && activeSection !== 'environment' && activeSection !== 'storage' && activeSection !== 'agents' && activeSection !== 'skills' && activeSection !== 'cloud' && <ConfigOverview active={active} />}
             </div>
           </div>
         </section>
       </div>
     </div>
   )
-}
-
-function ConfigOverview({ active }: { active: (typeof sections)[number] }) {
-  const current = configDetails[active.id]
-  return (
-    <div className="space-y-5">
-      <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Migration source</h2>
-            <p className="mt-1 text-[12px] text-[var(--text-muted)]">{current.source}</p>
-          </div>
-          <span className="rounded-md bg-[var(--surface-muted)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
-            Planned
-          </span>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Scope</h2>
-        <div className="mt-3 grid gap-2">
-          {current.scope.map((item) => (
-            <div key={item} className="flex min-h-9 items-center gap-2.5 rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[13px] text-[var(--text-secondary)]">
-              <Icon name="check" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Implementation order</h2>
-        <p className="mt-2 text-[13px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-          This panel is ready as a stable shell. The detailed controls will be migrated from `seshat-ui` one section at a time, starting with providers because chat depends on model selection.
-        </p>
-      </section>
-    </div>
-  )
-}
-
-const configDetails: Record<ConfigSection, { source: string; scope: string[] }> = {
-  skills: {
-    source: 'seshat-ui/apps/skills-creator',
-    scope: ['Skill repositories', 'Install and remove', 'Skill groups']
-  },
-  providers: {
-    source: 'seshat-ui/pages/settings/ProvidersView.tsx',
-    scope: ['Provider catalog', 'API key or OAuth connection', 'Connection tests', 'Default provider/model readiness']
-  },
-  titles: {
-    source: 'llama-manager.ts, whisper-manager pattern',
-    scope: ['Local title model', 'Model catalog', 'Custom GGUF']
-  },
-  models: {
-    source: 'seshat-ui Home and Conversation model selectors',
-    scope: ['Default chat model', 'Provider model catalogs', 'Model aliases', 'Fallback behavior']
-  },
-  'web-search': {
-    source: 'seshat-ui/pages/settings/WebSearchView.tsx',
-    scope: ['Enable web search', 'Search providers', 'Allowed and blocked domains', 'Provider tests']
-  },
-  knowledge: {
-    source: 'seshat-ui/pages/settings/KnowledgeView.tsx',
-    scope: ['Corpora', 'Embedder settings', 'Reranker settings', 'Document reader settings']
-  },
-  multimodal: {
-    source: 'seshat-ui/pages/settings/CapabilitiesViews.tsx',
-    scope: ['Image generation', 'Voice input', 'Whisper model downloads', 'Local media capability status']
-  },
-  mcp: {
-    source: 'seshat-ui/pages/settings/McpView.tsx',
-    scope: ['MCP server registry', 'Enable/disable servers', 'Tool exposure policy', 'Runtime diagnostics']
-  },
-  connectors: {
-    source: 'seshat-ui/pages/settings/ConnectorsView.tsx',
-    scope: ['External connector accounts', 'Corpus target selection', 'Connector actions', 'Disconnect flow']
-  },
-  environment: {
-    source: 'seshat-ui/pages/settings/EnvironmentView.tsx',
-    scope: ['Encrypted env vars', 'API key catalog', 'Apply and restart backend', 'Configured status']
-  },
-  storage: {
-    source: 'seshat-ui/pages/settings/StorageView.tsx and MemoriesView StorageCard',
-    scope: ['Local storage mode', 'S3/MinIO later', 'Cache locations', 'Storage health']
-  },
-  agents: {
-    source: 'seshat-ui agent/session settings and future agent store',
-    scope: ['Agent profiles', 'Default instructions', 'Delegation permissions', 'Tool access defaults']
-  },
-  cloud: {
-    source: 'seshat-desktop cloud connection',
-    scope: ['Device registration', 'Organization policies', 'Minimum app version']
-  }
 }
 
 function groupedSections() {

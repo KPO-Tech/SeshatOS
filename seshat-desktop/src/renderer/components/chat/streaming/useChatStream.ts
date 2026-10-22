@@ -5,7 +5,8 @@ import { streamingToContentBlocks, useSessionStore, type ChatAttachment } from '
 import { useUIStore } from '@renderer/stores/ui'
 import { handleRuntimeEvent } from '@renderer/components/chat/streaming/runtimeEvents'
 import { commitDonePayload } from '@renderer/components/chat/streaming/streamCommit'
-import { errorHeading } from '@renderer/components/chat/streaming/streamErrors'
+import { createTurnTimer } from '@renderer/lib/turnTiming'
+import { errorMarkdown } from '@renderer/components/chat/streaming/streamErrors'
 import { reduceStreamChunk } from '@renderer/components/chat/streaming/streamReducers'
 import { StreamPresenter } from '@renderer/components/chat/streaming/streamPresenter'
 import { consumeBrowserStream, consumeElectronStream, type RetryableError } from '@renderer/components/chat/streaming/streamTransport'
@@ -29,7 +30,7 @@ const RETRY_BASE_MS = 1000
 // detected disconnect. Mirrors OpenHands' own 150s watchdog precedent.
 const WATCHDOG_TIMEOUT_MS = 150_000
 
-export type SendMessageOptions = {
+type SendMessageOptions = {
   corpusId?: string | null
   fileIds?: string[]
   attachments?: ChatAttachment[]
@@ -38,7 +39,7 @@ export type SendMessageOptions = {
   modelId?: string | null
 }
 
-export type UseChatStreamOptions = {
+type UseChatStreamOptions = {
   onCompaction?: (preTokens: number, postTokens: number) => void
   onTurnSuccess?: () => void
 }
@@ -114,6 +115,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
     const token = useAuthStore.getState().token
     const permissionMode = useUIStore.getState().permissionMode
     let committed = false
+    const turnTimer = createTurnTimer()
     let pendingTool: ToolActivity | null = null
     let targetStreaming = store.getStreaming(sessionId)
 
@@ -171,12 +173,13 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
             ...(opts?.providerSettingId ? { provider_setting_id: opts.providerSettingId } : {}),
             ...(opts?.modelId ? { model_id: opts.modelId } : {}),
           }
-          if (window.nexus?.http) {
+          if (window.seshat?.http) {
             await consumeElectronStream(
               body,
               abortController.signal,
               (donePayload) => {
                 if (watchdogTimer !== null) clearTimeout(watchdogTimer)
+                store.updateAgentState(sessionId, { lastTurnTiming: turnTimer.finish() })
                 flushPresenter()
                 commitDonePayload(sessionId, assistantMessageId, donePayload, store)
                 openKnowledgePanel(sessionId, donePayload.rag_results)
@@ -198,6 +201,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               (streamEvent) => {
                 receivedServerActivity = true
                 resetWatchdog()
+                if (streamEvent.type === 'content_block_start' || streamEvent.type === 'content_block_delta') turnTimer.markFirstOutput()
                 const nextStreaming = reduceStreamChunk(targetStreaming, streamEvent)
                 if (nextStreaming) {
                   targetStreaming = nextStreaming
@@ -218,6 +222,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               abortController.signal,
               (donePayload) => {
                 if (watchdogTimer !== null) clearTimeout(watchdogTimer)
+                store.updateAgentState(sessionId, { lastTurnTiming: turnTimer.finish() })
                 flushPresenter()
                 commitDonePayload(sessionId, assistantMessageId, donePayload, store)
                 openKnowledgePanel(sessionId, donePayload.rag_results)
@@ -239,6 +244,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
               (streamEvent) => {
                 receivedServerActivity = true
                 resetWatchdog()
+                if (streamEvent.type === 'content_block_start' || streamEvent.type === 'content_block_delta') turnTimer.markFirstOutput()
                 const nextStreaming = reduceStreamChunk(targetStreaming, streamEvent)
                 if (nextStreaming) {
                   targetStreaming = nextStreaming
@@ -325,12 +331,13 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
         store.clearStreaming(sessionId)
         return
       }
+      const errorKind = watchdogTimedOut ? 'timeout' : (error as RetryableError | undefined)?.errorKind
       const errMsg = watchdogTimedOut
         ? 'No response from the agent. The connection may have stalled.'
         : error instanceof Error ? error.message : 'Unable to reach the backend.'
       flushPresenter()
       const partial = streamingToContentBlocks(useSessionStore.getState().getStreaming(sessionId))
-      const content = [...partial, { type: 'text' as const, text: `> ${errorHeading(errMsg)}\n\n${errMsg}` }]
+      const content = [...partial, { type: 'text' as const, text: errorMarkdown(errMsg, errorKind) }]
       store.updateMessage(sessionId, assistantMessageId, (message) => ({ ...message, content }))
       store.updateMessage(sessionId, userMessageId, (message) => ({ ...message, status: 'error' }))
       store.clearStreaming(sessionId)

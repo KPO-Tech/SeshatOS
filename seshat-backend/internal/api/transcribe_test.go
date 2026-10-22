@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
@@ -126,8 +127,8 @@ func TestHandleTranscribePrefersLocalWhisperServer(t *testing.T) {
 		t.Fatalf("NewLocalSTTConfigStore: %v", err)
 	}
 	if _, err := localSTTStore.Upsert(context.Background(), db.UpsertLocalSTTConfigParams{
-		BaseURL: "http://127.0.0.1:7890",
-		Enabled: true,
+		BaseURL: ptr("http://127.0.0.1:7890"),
+		Enabled: ptr(true),
 	}); err != nil {
 		t.Fatalf("upsert local stt config: %v", err)
 	}
@@ -365,4 +366,123 @@ func createProviderSettingWithKeyForTest(t *testing.T, router http.Handler, toke
 	var payload map[string]any
 	json.NewDecoder(rec.Body).Decode(&payload)
 	return payload["id"].(string)
+}
+
+func ptr[T any](v T) *T { return &v }
+
+func newTranscribeRequestWithLanguage(t *testing.T, token, language string) *http.Request {
+	t.Helper()
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	fw, err := mw.CreateFormFile("audio", "clip.wav")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = fw.Write([]byte("fake-audio-bytes"))
+	if err := mw.WriteField("language", language); err != nil {
+		t.Fatal(err)
+	}
+	mw.Close()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/transcribe", &body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+token)
+	return req
+}
+
+// The language the person saved applies to a clip that names none, a language sent with the clip wins, and auto asks for detection.
+func TestHandleTranscribeUsesTheSavedLanguage(t *testing.T) {
+	app, _ := newSettingsTestApp(t, nil)
+	router := CreateRouter(defaultAPIConfig, app)
+	token := loginAs(t, router, "admin@settings.test", "adminpass")
+
+	sttDB, err := db.Open(context.Background(), db.DefaultSQLiteConfig(filepath.Join(t.TempDir(), "local-stt-language.db")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { sttDB.Close() })
+	store, err := db.NewLocalSTTConfigStore(sttDB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Upsert(context.Background(), db.UpsertLocalSTTConfigParams{BaseURL: ptr("http://127.0.0.1:7890"), Enabled: ptr(true), Language: ptr("fr")}); err != nil {
+		t.Fatal(err)
+	}
+	app.localSTTStore = store
+	var got transcriptionTarget
+	app.transcribeAudio = func(ctx context.Context, target transcriptionTarget, audioData []byte) (*sdk.TranscriptionResult, error) {
+		got = target
+		return &sdk.TranscriptionResult{Text: "ok"}, nil
+	}
+
+	for name, tc := range map[string]struct {
+		req  *http.Request
+		want string
+	}{
+		"saved":    {newTranscribeRequest(t, token), "fr"},
+		"override": {newTranscribeRequestWithLanguage(t, token, "en"), "en"},
+		"auto":     {newTranscribeRequestWithLanguage(t, token, "auto"), ""},
+	} {
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, tc.req)
+		if resp.Code != http.StatusOK {
+			t.Fatalf("%s: %d %s", name, resp.Code, resp.Body.String())
+		}
+		if got.language != tc.want {
+			t.Errorf("%s: language %q, want %q", name, got.language, tc.want)
+		}
+	}
+
+	// Saving the address later must not erase the language.
+	if _, err := store.Upsert(context.Background(), db.UpsertLocalSTTConfigParams{BaseURL: ptr("http://127.0.0.1:7891")}); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := store.Get(context.Background())
+	if err != nil || cfg == nil || cfg.Language != "fr" || !cfg.Enabled || cfg.BaseURL != "http://127.0.0.1:7891" {
+		t.Fatalf("a partial save keeps the other fields, got %+v (%v)", cfg, err)
+	}
+}
+
+func TestCapabilityOptionsRoundTripAndAreValidated(t *testing.T) {
+	app, _ := newSettingsTestApp(t, nil)
+	router := CreateRouter(defaultAPIConfig, app)
+	token := loginAs(t, router, "admin@settings.test", "adminpass")
+	optionsDB, err := db.Open(context.Background(), db.DefaultSQLiteConfig(filepath.Join(t.TempDir(), "capability-options.db")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { optionsDB.Close() })
+	if app.capabilityLinkStore, err = db.NewCapabilityLinkStore(optionsDB); err != nil {
+		t.Fatal(err)
+	}
+
+	put := func(path, body string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		return resp
+	}
+	if resp := put("/api/v1/settings/capability-options/audio", `{"options":{"tts_voice":"coral","tts_format":"wav"}}`); resp.Code != http.StatusOK {
+		t.Fatalf("save: %d %s", resp.Code, resp.Body.String())
+	}
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/settings/capability-options", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"tts_voice":"coral"`) || !strings.Contains(resp.Body.String(), `"tts_format":"wav"`) {
+		t.Fatalf("read back: %d %s", resp.Code, resp.Body.String())
+	}
+	if resp := put("/api/v1/settings/capability-options/audio", `{"options":{"tts_voice":""}}`); resp.Code != http.StatusOK || strings.Contains(resp.Body.String(), "coral") {
+		t.Fatalf("a save replaces the choices of the capability: %d %s", resp.Code, resp.Body.String())
+	}
+	for path, body := range map[string]string{
+		"/api/v1/settings/capability-options/audio":      `{"options":{"nope":"x"}}`,
+		"/api/v1/settings/capability-options/image":      `{"options":{"model":"a b"}}`,
+		"/api/v1/settings/capability-options/embeddings": `{"options":{}}`,
+	} {
+		if resp := put(path, body); resp.Code != http.StatusBadRequest {
+			t.Errorf("%s %s must be a bad request, got %d", path, body, resp.Code)
+		}
+	}
 }

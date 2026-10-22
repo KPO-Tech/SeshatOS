@@ -1,7 +1,7 @@
 import { Copy } from '@icon-park/react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { codeTheme } from '@renderer/lib/codeTheme'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -18,7 +18,7 @@ const COPY_BUTTON_CSS = 'absolute right-1.5 top-1.5 flex items-center rounded-[5
 // with its own tag (a <span>, an <a>, a filename vs. a match count) - a
 // component would need as many props as there are callers.
 export const HCARD_HEADER_PATH_CSS = 'overflow-hidden text-ellipsis text-app-text-muted'
-export const HCARD_HEADER_LINK_CSS = 'min-w-0 overflow-hidden text-ellipsis text-app-text no-underline hover:text-[var(--accent-primary)] hover:underline'
+
 export const HCARD_HEADER_STAT_CSS = 'ml-auto shrink-0 pl-2 text-[10px] font-medium text-[var(--text-muted)]'
 
 // Shared by GlobToolView and ListDirectoryToolView - both always render
@@ -38,7 +38,7 @@ export const ASK_SUMMARY_CSS = 'flex flex-col overflow-hidden rounded-b-md borde
 export const ASK_QA_CSS = 'grid grid-cols-[34px_minmax(0,1fr)] gap-3 border-t border-app-border-subtle px-3.5 py-3 first:border-t-0'
 export const ASK_QA_INDEX_CSS = 'mt-px inline-flex size-[25px] items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_9%,var(--surface-root))] text-[11px] font-bold text-app-text-secondary'
 export const ASK_QA_COPY_CSS = 'flex min-w-0 flex-col gap-[7px]'
-export const ASK_CARD_CSS = 'flex flex-col gap-1.5 rounded-[5px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_78%,var(--surface-panel))] px-2 py-[7px]'
+
 // The combined result of the original `tb-ask-card tb-ask-card--pending`
 // pair (the pending variant overrides padding/background, not a full
 // restyle) - see ErrorPre above for the same reasoning.
@@ -117,13 +117,13 @@ export function CodeBox({
         'group relative overflow-hidden',
         bare && 'rounded-none border-0 bg-transparent',
         !bare && isError && 'rounded-md border border-[rgba(var(--color-error-rgb),0.18)] bg-[rgba(var(--color-error-rgb),0.06)]',
-        !bare && !isError && 'rounded-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_84%,black)]',
+        !bare && !isError && 'rounded-md border border-app-border-subtle bg-[var(--code-bg)]',
       )}
     >
       {language ? (
         <SyntaxHighlighter
           language={language}
-          style={vscDarkPlus as any}
+          style={codeTheme as any}
           customStyle={expanded ? CODE_HIGHLIGHT_STYLE_EXPANDED : CODE_HIGHLIGHT_STYLE}
           codeTagProps={{ style: expanded ? CODE_HIGHLIGHT_CODE_STYLE_EXPANDED : CODE_HIGHLIGHT_CODE_STYLE }}
           className={SCROLL_THIN}

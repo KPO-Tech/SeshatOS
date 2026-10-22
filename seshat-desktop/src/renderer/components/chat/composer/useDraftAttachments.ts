@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { api } from '@renderer/api/client'
-import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
+import { attachmentCategory, isPDFFile, MAX_UPLOAD_BYTES, oversizedMessage, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 
 type UploadedFileResponse = {
@@ -55,9 +55,12 @@ export function useDraftAttachments(sessionId?: string) {
     }
     setUploadingAttachments(true)
     setAttachmentError(null)
-    try {
-      for (const [index, file] of selectedFiles.entries()) {
-        const pendingId = pending[index]?.id
+    const failures: string[] = []
+    // One file that cannot be uploaded must not take the others down with it: each is sent on its own and marked on its own.
+    for (const [index, file] of selectedFiles.entries()) {
+      const pendingId = pending[index]?.id
+      try {
+        if (file.size > MAX_UPLOAD_BYTES) throw new Error(oversizedMessage(file.name, file.size))
         const form = new FormData()
         form.append('file', file)
         const item = await api.upload<UploadedFileResponse>(`/sessions/${sessionId}/files`, form)
@@ -78,20 +81,18 @@ export function useDraftAttachments(sessionId?: string) {
               }
             : attachment
         )))
+      } catch (error) {
+        const message = error instanceof Error && error.message ? error.message : 'Attachment upload failed.'
+        failures.push(message)
+        setAttachments(current => current.map(attachment => (
+          attachment.id === pendingId ? { ...attachment, upload_status: 'failed', error: message } : attachment
+        )))
       }
-    } catch (error) {
-      const message = error instanceof Error && error.message
-        ? error.message
-        : 'Attachment upload failed.'
-      setAttachmentError(`Attachment upload failed: ${message}`)
-      setAttachments(current => current.map(file => (
-        pending.some(item => item.id === file.id)
-          ? { ...file, upload_status: 'failed', error: message }
-          : file
-      )))
-    } finally {
-      setUploadingAttachments(false)
     }
+    if (failures.length > 0) {
+      setAttachmentError(failures.length === 1 ? `Attachment upload failed: ${failures[0]}` : `${failures.length} attachments failed to upload: ${failures[0]}`)
+    }
+    setUploadingAttachments(false)
   }, [sessionId])
 
   const handleRemoveAttachment = useCallback((fileId: string) => {
@@ -110,7 +111,10 @@ export function useDraftAttachments(sessionId?: string) {
     uploadingAttachments,
     attachmentError,
     setAttachmentError,
-    clearAttachments: () => setAttachments([]),
+    clearAttachments: () => {
+      setAttachments([])
+      setAttachmentError(null)
+    },
     handleAttachFiles,
     handleRemoveAttachment,
     hasUploadingAttachments,

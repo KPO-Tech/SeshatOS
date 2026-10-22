@@ -68,6 +68,8 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
   const [focused, setFocused] = useState(0)
   const [remoteResults, setRemoteResults] = useState<SearchRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [searchFailed, setSearchFailed] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -101,11 +103,13 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
     if (!trimmed) {
       setRemoteResults([])
       setLoading(false)
+      setSearchFailed(false)
       return
     }
 
     let cancelled = false
     setLoading(true)
+    setSearchFailed(false)
     const timeout = window.setTimeout(() => {
       api.get<{ results: SessionSearchResult[] }>(`/sessions/search?q=${encodeURIComponent(trimmed)}`)
         .then((data) => {
@@ -119,7 +123,13 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
           })))
         })
         .catch(() => {
-          if (!cancelled) setRemoteResults([])
+          // A failed search is not an empty one. Clearing the list without
+          // saying so made a backend that never answered look exactly like a
+          // query that matched nothing.
+          if (!cancelled) {
+            setRemoteResults([])
+            setSearchFailed(true)
+          }
         })
         .finally(() => {
           if (!cancelled) setLoading(false)
@@ -130,7 +140,7 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
       cancelled = true
       window.clearTimeout(timeout)
     }
-  }, [open, query])
+  }, [open, query, retryCount])
 
   const select = useCallback((id: string) => {
     onSelect(id)
@@ -199,7 +209,18 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
         <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-1" ref={listRef}>
           {results.length === 0 ? (
             <div className="flex min-h-40 items-center justify-center text-[var(--font-size-2xs)] text-app-text-muted">
-              {loading ? 'Searching...' : 'No conversations found'}
+              {loading ? 'Searching...' : searchFailed ? (
+                <span className="flex flex-col items-center gap-2">
+                  <span className="text-app-error">Could not search conversations</span>
+                  <button
+                    className="cursor-pointer rounded-[5px] border border-app-border bg-app-surface px-2 py-[3px] text-app-text-secondary transition-colors duration-75 hover:bg-[var(--surface-hover)]"
+                    onClick={() => setRetryCount((count) => count + 1)}
+                    type="button"
+                  >
+                    Try again
+                  </button>
+                </span>
+              ) : 'No conversations found'}
             </div>
           ) : results.map((result, idx) => {
             const date = relativeDate(result.updatedAt || result.createdAt)

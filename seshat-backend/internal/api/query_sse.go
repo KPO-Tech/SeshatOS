@@ -17,7 +17,9 @@
 //
 // Error:
 //
-//	event: error\ndata: {"error":"<message>"}\n\n
+//	event: error\ndata: {"error":"<message>","error_kind":"<kind>"}\n\n
+//
+// error_kind is one of the stream error kinds of query_errors.go; a client that does not know it shows the message.
 //
 // Keep-alive (no-op, prevents proxy timeouts):
 //
@@ -72,8 +74,8 @@ func buildToolResultSSE(uses []types.ToolUseContent, results []CallResult) []too
 	return out
 }
 
-func writeSSEError(w http.ResponseWriter, flusher http.Flusher, mu *sync.Mutex, msg string) {
-	data, _ := json.Marshal(map[string]string{"error": msg})
+func writeSSEError(w http.ResponseWriter, flusher http.Flusher, mu *sync.Mutex, msg, kind string) {
+	data, _ := json.Marshal(map[string]string{"error": msg, "error_kind": kind})
 	if mu != nil {
 		mu.Lock()
 		defer mu.Unlock()

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { renamedStorage } from '@renderer/lib/renamedStorage'
 import type { ProviderSetting } from '@renderer/api/types'
 
 type ProvidersState = {
@@ -48,6 +49,6 @@ export const useProvidersStore = create<ProvidersState>()(
           providers: s.providers.map((p) => ({ ...p, is_default: p.id === id })),
         })),
     }),
-    { name: 'nexus-providers', partialize: (s) => ({ selectedModelId: s.selectedModelId }) }
+    { name: 'seshat-providers', storage: renamedStorage('nexus-providers'), partialize: (s) => ({ selectedModelId: s.selectedModelId }) }
   )
 )

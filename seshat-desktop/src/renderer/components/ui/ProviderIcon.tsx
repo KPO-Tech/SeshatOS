@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 
 type Props = { size?: number; className?: string }
 
-export function AnthropicIcon({ size = 36, className }: Props) {
+function AnthropicIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#D97757" />
@@ -11,7 +11,7 @@ export function AnthropicIcon({ size = 36, className }: Props) {
   )
 }
 
-export function OpenAIIcon({ size = 36, className }: Props) {
+function OpenAIIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#10A37F" />
@@ -20,7 +20,7 @@ export function OpenAIIcon({ size = 36, className }: Props) {
   )
 }
 
-export function MistralIcon({ size = 36, className }: Props) {
+function MistralIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#EF7C2F" />
@@ -37,7 +37,7 @@ export function MistralIcon({ size = 36, className }: Props) {
   )
 }
 
-export function GeminiIcon({ size = 36, className }: Props) {
+function GeminiIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#4285F4" />
@@ -46,7 +46,7 @@ export function GeminiIcon({ size = 36, className }: Props) {
   )
 }
 
-export function OllamaIcon({ size = 36, className }: Props) {
+function OllamaIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#1A1A2E" />
@@ -59,7 +59,7 @@ export function OllamaIcon({ size = 36, className }: Props) {
   )
 }
 
-export function OpenRouterIcon({ size = 36, className }: Props) {
+function OpenRouterIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#6B39CB" />
@@ -68,7 +68,7 @@ export function OpenRouterIcon({ size = 36, className }: Props) {
   )
 }
 
-export function MiniMaxIcon({ size = 36, className }: Props) {
+function MiniMaxIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#0D1B2A" />
@@ -77,7 +77,7 @@ export function MiniMaxIcon({ size = 36, className }: Props) {
   )
 }
 
-export function ZAiIcon({ size = 36, className }: Props) {
+function ZAiIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#1E3A5F" />
@@ -86,7 +86,7 @@ export function ZAiIcon({ size = 36, className }: Props) {
   )
 }
 
-export function DeepSeekIcon({ size = 36, className }: Props) {
+function DeepSeekIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#4D6BFE" />
@@ -96,7 +96,7 @@ export function DeepSeekIcon({ size = 36, className }: Props) {
   )
 }
 
-export function OpenCodeIcon({ size = 36, className }: Props) {
+function OpenCodeIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#0D1117" />
@@ -105,7 +105,7 @@ export function OpenCodeIcon({ size = 36, className }: Props) {
   )
 }
 
-export function KimiIcon({ size = 36, className }: Props) {
+function KimiIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#16171B" />
@@ -114,7 +114,7 @@ export function KimiIcon({ size = 36, className }: Props) {
   )
 }
 
-export function FoundryIcon({ size = 36, className }: Props) {
+function FoundryIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#0078D4" />
@@ -123,7 +123,7 @@ export function FoundryIcon({ size = 36, className }: Props) {
   )
 }
 
-export function WorkersAIIcon({ size = 36, className }: Props) {
+function WorkersAIIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#F38020" />
@@ -132,7 +132,7 @@ export function WorkersAIIcon({ size = 36, className }: Props) {
   )
 }
 
-export function BedrockIcon({ size = 36, className }: Props) {
+function BedrockIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#232F3E" />
@@ -142,7 +142,7 @@ export function BedrockIcon({ size = 36, className }: Props) {
   )
 }
 
-export function VertexIcon({ size = 36, className }: Props) {
+function VertexIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#1A73E8" />
@@ -152,7 +152,7 @@ export function VertexIcon({ size = 36, className }: Props) {
   )
 }
 
-export function CodexIcon({ size = 36, className }: Props) {
+function CodexIcon({ size = 36, className }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
       <rect width="36" height="36" rx="9" fill="#0D1117" />
@@ -163,17 +163,7 @@ export function CodexIcon({ size = 36, className }: Props) {
   )
 }
 
-export function GenericProviderIcon({ size = 36, className }: Props) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
-      <rect width="36" height="36" rx="9" fill="#54515B" />
-      <circle cx="18" cy="18" r="6" stroke="white" strokeWidth="2" fill="none" />
-      <path d="M18 9v4M18 23v4M9 18h4M23 18h4" stroke="white" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-export function SimpleProviderIcon({ provider, size = 36, className }: Props & { provider: string }) {
+function SimpleProviderIcon({ provider, size = 36, className }: Props & { provider: string }) {
   const initial = provider.slice(0, 2).toUpperCase()
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>

@@ -13,7 +13,7 @@ type Props = {
 // (not this app's own file-serving) carries its own, separately-scoped CSP
 // that allows the inline <script>/<style> a real HTML artifact needs - see
 // artifactPreviewCSP in seshat-backend/internal/api/artifacts.go and the
-// frame-src carve-out in seshat-ui/src/main/content-security-policy.ts.
+// frame-src carve-out in src/main/content-security-policy.ts.
 export function ArtifactPreviewPanel({ artifactId, filename }: Props) {
   const [src, setSrc] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +22,7 @@ export function ArtifactPreviewPanel({ artifactId, filename }: Props) {
     let cancelled = false
     setSrc(null)
     setError(null)
-    window.nexus?.http?.backendOrigin()
+    window.seshat?.http?.backendOrigin()
       .then((origin) => {
         if (cancelled) return
         if (!origin) throw new Error('Backend origin unavailable')

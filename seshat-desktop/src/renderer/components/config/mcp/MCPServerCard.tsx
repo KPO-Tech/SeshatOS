@@ -24,9 +24,9 @@ export function MCPServerCard({
   const toolCount = tools?.length ?? status?.tools ?? 0
 
   return (
-    <article className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
+    <article className="min-w-0 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
       <div className="flex items-start justify-between gap-4 p-4">
-        <div className="flex min-w-0 items-start gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--surface-muted)]">
             <MCPServerIcon icon={server.icon} type={server.server_type} />
           </div>

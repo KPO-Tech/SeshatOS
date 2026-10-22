@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchSkills } from './skillsApi'
 import type { Skill } from './skillsTypes'
 
-export type SkillFilters = {
+type SkillFilters = {
   query: string
   collection: string
   enabledOnly: boolean

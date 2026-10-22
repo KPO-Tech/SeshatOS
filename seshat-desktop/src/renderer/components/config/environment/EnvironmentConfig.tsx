@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ConfigCard, CustomSelect, SoftButton, StatusPill } from '../knowledge/KnowledgePrimitives'
 import { ProviderEmptyState } from '../providers/ProviderEmptyState'
+import { ConfinementCard } from './ConfinementCard'
 import { EnvVarRow } from './EnvVarRow'
 import type { EnvVarDef } from './environmentTypes'
 import { groupEnvVars } from './environmentUtils'
@@ -25,8 +26,8 @@ export function EnvironmentConfig() {
     setNotice(null)
     try {
       const [nextCatalog, nextStatus, sandbox] = await Promise.all([
-        window.nexus?.envVars?.catalog() ?? Promise.resolve([]),
-        window.nexus?.envVars?.status() ?? Promise.resolve({}),
+        window.seshat?.envVars?.catalog() ?? Promise.resolve([]),
+        window.seshat?.envVars?.status() ?? Promise.resolve({}),
         fetchSandboxConfig(),
       ])
       setCatalog(nextCatalog)
@@ -64,14 +65,14 @@ export function EnvironmentConfig() {
   const configuredCount = visibleCatalog.filter((def) => status[def.key]).length
 
   async function refreshStatus() {
-    setStatus(await (window.nexus?.envVars?.status() ?? Promise.resolve({})))
+    setStatus(await (window.seshat?.envVars?.status() ?? Promise.resolve({})))
   }
 
   async function applyRestart() {
     setRestarting(true)
     setNotice(null)
     try {
-      const result = await window.nexus?.envVars?.restartBackend()
+      const result = await window.seshat?.envVars?.restartBackend()
       setNotice(result?.ok
         ? { tone: 'ok', text: 'Backend restarted. Environment changes are active.' }
         : { tone: 'error', text: result?.error ?? 'Backend restart is not available.' })
@@ -130,6 +131,8 @@ export function EnvironmentConfig() {
           {sandboxSaving && <div className="text-[11px] font-semibold text-[var(--text-muted)]">Saving...</div>}
         </div>
       </ConfigCard>
+
+      <ConfinementCard docker={sandboxMode === 'docker'} />
 
       {loading ? (
         <ProviderEmptyState label="Loading environment catalog..." />

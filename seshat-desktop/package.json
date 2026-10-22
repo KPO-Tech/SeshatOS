@@ -1,9 +1,10 @@
 {
   "name": "seshat-desktop",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
+  "license": "SEE LICENSE IN ../LICENSE",
   "author": {
     "name": "KPO-Tech",
     "email": "seshatsupport@seshat-ai.com"
@@ -32,12 +33,14 @@
     "test:ipc": "tsc -p tsconfig.ipc-tests.json && node --test .tmp/ipc-tests/ipc/*.test.js"
   },
   "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "0.0.80",
     "@icon-park/react": "^1.4.2",
     "@seshat/connector-catalog": "file:../shared/connector-catalog",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-virtual": "^3.14.13",
-    "@types/papaparse": "^5.5.2",
     "@vitejs/plugin-react": "^4.5.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "chart.js": "^4.5.1",
     "docx-preview": "^0.4.0",
     "electron-updater": "^6.6.2",
@@ -45,7 +48,7 @@
     "jszip": "^3.10.2",
     "katex": "^0.16.47",
     "mermaid": "^11.17.2",
-    "papaparse": "^5.7.0",
+    "node-pty": "^1.1.0",
     "pdfjs-dist": "^5.7.284",
     "pptx-preview": "^1.0.7",
     "react": "^19.2.8",
@@ -58,7 +61,6 @@
     "remark-math": "^6.0.0",
     "simple-icons": "^16.31.0",
     "tailwindcss": "^4.3.3",
-    "zod": "^3.25.76",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -80,18 +82,31 @@
   "build": {
     "appId": "com.seshat.os",
     "productName": "SeshatOS",
+    "copyright": "Copyright © 2026 Stéphane Kpoviessi (Seshat)",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
     },
     "files": [
       "out/**/*",
-      "!out/**/*.map"
+      "!out/**/*.map",
+      "node_modules/node-pty/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/node-pty/**/*"
     ],
     "extraResources": [
       {
         "from": "resources/backend",
         "to": "backend"
+      },
+      {
+        "from": "node_modules/@anthropic-ai/sandbox-runtime",
+        "to": "sandbox-runtime"
+      },
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE"
       },
       {
         "from": "build/icon.png",
@@ -112,7 +127,36 @@
       "target": [
         "nsis"
       ],
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true,
+      "signExecutable": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": "-"
+    },
+    "dmg": {
+      "artifactName": "SeshatOS-${version}-mac-${arch}.${ext}"
+    },
+    "nsis": {
+      "artifactName": "SeshatOS-Setup-${version}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "installerHeader": "installerHeader.bmp",
+      "installerSidebar": "installerSidebar.bmp",
+      "uninstallerSidebar": "uninstallerSidebar.bmp",
+      "license": "license.txt",
+      "shortcutName": "SeshatOS",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
     },
     "publish": [
       {

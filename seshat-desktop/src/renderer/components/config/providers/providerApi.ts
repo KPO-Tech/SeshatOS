@@ -1,6 +1,6 @@
 import { api } from '@renderer/api/client'
 import { refreshProviders } from '@renderer/hooks/useProviders'
-import type { ProviderCatalogEntry, ProviderModel, ProviderOAuthChallenge, ProviderSetting } from './providerTypes'
+import type { ProviderCatalogEntry, ProviderChoice, ProviderModel, ProviderOAuthChallenge, ProviderSetting } from './providerTypes'
 
 // Every mutation below ends here so the rest of the app (model picker in Home
 // and conversations) sees the change without a restart.
@@ -12,6 +12,17 @@ function afterChange<T>(result: T): T {
 export async function fetchProviderCatalog() {
   const result = await api.get<{ providers: ProviderCatalogEntry[]; count: number }>('/models')
   return result.providers ?? []
+}
+
+type ProviderChoiceResponse = Omit<ProviderChoice, 'main'>
+
+// Main providers first, in the runtime's order, then the catalog's, sorted by name.
+export async function fetchProviderChoices(): Promise<ProviderChoice[]> {
+  const result = await api.get<{ main?: ProviderChoiceResponse[]; more?: ProviderChoiceResponse[] }>('/settings/providers/catalog')
+  return [
+    ...(result.main ?? []).map((entry) => ({ ...entry, main: true })),
+    ...(result.more ?? []).map((entry) => ({ ...entry, main: false }))
+  ]
 }
 
 export async function fetchProviderSettings() {

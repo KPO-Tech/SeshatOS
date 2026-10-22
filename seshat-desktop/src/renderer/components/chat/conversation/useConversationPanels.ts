@@ -2,17 +2,14 @@ import { useEffect, useRef } from 'react'
 import type { PlanDocument } from '@renderer/api/types'
 import type { AgentState, StreamingBlock } from '@renderer/stores/session'
 import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
-import { currentSandboxMode } from '@renderer/components/config/environment/sandboxApi'
-import { useTerminalStore } from '@renderer/stores/terminal'
 import { isAgentTool, isFileTool } from '@renderer/components/chat/tools/toolDisplay'
 
 const WEB_INFO_TOOLS = new Set(['web_search', 'web_fetch', 'read_url', 'read_document_url'])
 
-type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'terminal' | 'browser' | 'files'>
+type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'browser' | 'files'>
 
 function categoryForTool(toolName: string | undefined): ToolPanelCategory | null {
   if (!toolName) return null
-  if (toolName === 'bash') return 'terminal'
   if (toolName.startsWith('browser_')) return 'browser'
   // agent/spawn_agent has its own SubagentPanel (opened by clicking the
   // agent card) - it isn't Computer's content, so don't steal focus back to
@@ -25,12 +22,13 @@ function categoryForTool(toolName: string | undefined): ToolPanelCategory | null
   // shouldn't keep stealing focus from whatever panel they're actually
   // looking at.
   if (isFileTool(toolName)) return null
+  // A picture or a clip is drawn in the conversation itself (InlineMedia): there is nothing to follow in a panel.
+  if (toolName === 'generate_image' || toolName === 'text_to_speech' || toolName === 'present_artifact') return null
   return 'computer'
 }
 
 const PANEL_TITLE: Record<ToolPanelCategory, string> = {
-  computer: 'Computer',
-  terminal: 'Terminal',
+  computer: 'Session',
   browser: 'Browser',
   files: 'Files',
 }
@@ -89,7 +87,7 @@ export function useConversationPanels({
     if (!sessionId || !computerOpen || !isWebInfoTool || !activeToolName) return
     const toolBlock = [...streaming].reverse().find((block) => block.type === 'tool_use' && block.name === activeToolName)
     if (toolBlock?.type !== 'tool_use') return
-    openRightPanel({ kind: 'computer', title: 'Computer', sessionId, focusToolId: toolBlock.id })
+    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: toolBlock.id })
   }, [activeToolName, isWebInfoTool, computerOpen, openRightPanel, sessionId, streaming])
 
   // Follows each read/write/edit call live while Files is showing, the same
@@ -100,25 +98,6 @@ export function useConversationPanels({
     if (toolBlock?.type !== 'tool_use') return
     openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: toolBlock.id })
   }, [activeToolName, isFileToolActive, filesOpen, openRightPanel, sessionId, streaming])
-
-  // Connects the terminal relay as soon as this session loads, when
-  // Settings > Environment is set to direct/local execution - the backend
-  // decides whether to route bash through it once, at the very start of
-  // each turn (SDKRuntime.applyRemoteExecutor), so waiting until a bash tool
-  // call is already active (see the effect below) would be one turn too
-  // late for that first call. Connecting doesn't require the panel to be
-  // open - see TerminalPanel.tsx's own (idempotent) attachSession call for
-  // the case where the user opens it manually instead.
-  useEffect(() => {
-    if (!sessionId) return
-    let cancelled = false
-    void currentSandboxMode().then((mode) => {
-      if (!cancelled && mode === 'local') void useTerminalStore.getState().attachSession(sessionId)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [sessionId])
 
   useEffect(() => {
     const tool = agentState.activeTool
@@ -139,7 +118,7 @@ export function useConversationPanels({
     const navKey = target ? `${tool.toolName}:${target}` : null
     if (target && browserToolNavigationRef.current !== navKey) {
       browserToolNavigationRef.current = navKey
-      void window.nexus?.browser?.openUrl(target, 'builtin', sessionId).catch(() => undefined)
+      void window.seshat?.browser?.openUrl(target, 'builtin', sessionId).catch(() => undefined)
     }
   }, [agentState.activeTool, sessionId, streaming])
 

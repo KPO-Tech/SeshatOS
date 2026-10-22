@@ -1,7 +1,7 @@
 // Package clouddesktoppolicies lets seshat-backend manage an organization's
 // real desktop policy bindings (seshat-server's iam.DesktopPolicyBinding)
 // for Admin Console's Desktop Policies tab. These bindings already actively
-// control this exact device's behavior (see seshat-ui's
+// control this exact device's behavior (see the desktop app's
 // hooks/useDesktopPolicies.ts, which reads the resolved bundle from
 // /cloud/status and locks Settings/Providers accordingly) - but until
 // now an org admin had no way to see or manage them without opening

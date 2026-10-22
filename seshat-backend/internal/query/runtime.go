@@ -20,6 +20,7 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 )
 
 type QueryRuntime interface {
@@ -54,12 +55,28 @@ type SessionInspector interface {
 	LoadSessionMessages(ctx context.Context, sessionID string) ([]types.Message, error)
 }
 
+// CompactionResult is what a compaction on demand did: the size of the conversation before and after, in tokens.
+type CompactionResult struct {
+	PreTokens  int `json:"pre_tokens"`
+	PostTokens int `json:"post_tokens"`
+}
+
+// SessionCompactor is an optional capability of a runtime: compacting a session's conversation now.
+type SessionCompactor interface {
+	CompactSession(ctx context.Context, input QueryInput) (CompactionResult, error)
+}
+
+// SessionArchiveInspector is an optional capability of a runtime: reading the messages that compactions archived.
+type SessionArchiveInspector interface {
+	LoadSessionArchive(ctx context.Context, sessionID string) ([]types.Message, error)
+}
+
 // SDKRuntime adapts sdk.Client to QueryRuntime + StreamingQueryRuntime + SessionManager.
 type SDKRuntime struct {
 	client                *sdk.Client
 	baseConfig            *sdk.ClientConfig
-	terminalRelay         *TerminalRelay
 	resolveLocalSTT       func(ctx context.Context) *sdk.SpeechToTextConfig
+	resolveMedia          func(ctx context.Context) MediaConfigs
 	resolveLocalTitle     func(ctx context.Context) *LocalTitleEndpoint
 	resolveBrowser        func(ctx context.Context) string
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
@@ -104,6 +121,8 @@ type clientCacheKey struct {
 	// research identifies the research keys a cached client was built with: a key that changed or was removed
 	// must not keep being used by a client that already holds it.
 	research string
+	// media is the image, speech and transcription setup a cached client was built with.
+	media string
 }
 
 // cachedRuntimeClient pairs a cached client with when it was last handed out,
@@ -130,15 +149,6 @@ func NewSDKRuntime(client *sdk.Client, baseConfig *sdk.ClientConfig) *SDKRuntime
 	}
 }
 
-// SetTerminalRelay attaches the shared TerminalRelay used to route a
-// session's bash-tool calls through Electron's real terminal when one is
-// connected — see applyRemoteExecutor. A separate setter (rather than a
-// constructor param) keeps NewSDKRuntime's existing call sites, including
-// runtime_test.go, unchanged.
-func (r *SDKRuntime) SetTerminalRelay(relay *TerminalRelay) {
-	r.terminalRelay = relay
-}
-
 // SetLocalSTTResolver attaches a resolver for a locally running whisper.cpp
 // server (see api.handleLocalSTTConfig, set by the Electron main process
 // once it has spawned whisper-server) — when it returns non-nil, it takes
@@ -147,10 +157,39 @@ func (r *SDKRuntime) SetTerminalRelay(relay *TerminalRelay) {
 // dictation endpoint (POST /api/v1/transcribe) already prefers, without
 // needing a backend restart when the setting changes. A separate setter
 // (rather than a constructor param) keeps NewSDKRuntime's existing call
-// sites, including runtime_test.go, unchanged — same reasoning as
-// SetTerminalRelay above.
+// sites, including runtime_test.go, unchanged.
 func (r *SDKRuntime) SetLocalSTTResolver(resolve func(ctx context.Context) *sdk.SpeechToTextConfig) {
 	r.resolveLocalSTT = resolve
+}
+
+// MediaConfigs is what the image, speech and transcription tools are set up with, as the person's capability links say it now.
+type MediaConfigs struct {
+	Image *sdk.ImageGenerationConfig
+	TTS   *sdk.TextToSpeechConfig
+	STT   *sdk.SpeechToTextConfig
+}
+
+// SetMediaResolver attaches the source of the media tools' configuration, read on each turn: linking a provider to image or audio in the
+// settings then reaches the next turn instead of waiting for a restart, and a client built with the old links is not reused.
+func (r *SDKRuntime) SetMediaResolver(resolve func(ctx context.Context) MediaConfigs) {
+	r.mu.Lock()
+	r.resolveMedia = resolve
+	r.mu.Unlock()
+}
+
+// mediaKey identifies the media configuration in the client cache key.
+func mediaKey(cfg *sdk.ClientConfig) string {
+	var parts []string
+	if c := cfg.ImageGeneration; c != nil {
+		parts = append(parts, "img:"+c.Provider+"|"+c.Model+"|"+c.BaseURL+"|"+c.APIKey)
+	}
+	if c := cfg.TextToSpeech; c != nil {
+		parts = append(parts, "tts:"+c.Provider+"|"+c.Model+"|"+c.Voice+"|"+c.Format+"|"+c.BaseURL+"|"+c.APIKey)
+	}
+	if c := cfg.SpeechToText; c != nil {
+		parts = append(parts, "stt:"+c.Provider+"|"+c.Model+"|"+c.BaseURL+"|"+c.APIKey)
+	}
+	return strings.Join(parts, ";")
 }
 
 // LocalTitleEndpoint is an OpenAI-compatible server (llama.cpp's llama-server)
@@ -227,7 +266,7 @@ func (r *SDKRuntime) SetBrowserRemoteControlResolver(resolve func(ctx context.Co
 // a session's browser tool calls attach to an existing, desktop-visible CDP
 // tab instead of an invisible incognito one - see
 // sdk.ClientConfig.BrowserSessionTargetResolver for the full rationale. Same
-// setter-not-constructor-param reasoning as SetTerminalRelay above.
+// setter-not-constructor-param reasoning as SetLocalSTTResolver above.
 func (r *SDKRuntime) SetBrowserSessionTargetResolver(resolve func(ctx context.Context, sessionID sdk.SessionID) (string, bool)) {
 	r.mu.Lock()
 	r.resolveBrowserSession = resolve
@@ -284,22 +323,6 @@ func (r *SDKRuntime) tryAcquireSessionTurn(sessionID string) (release func(), ok
 	}, true
 }
 
-// applyRemoteExecutor registers a terminalRemoteExecutor for session when
-// Electron's terminal relay has a live connection for it, so this turn's
-// bash-tool calls run in the user's real, visible shell. Sessions with no
-// terminal ever opened are unaffected — bash.Tool falls back to local
-// execution exactly as before.
-func (r *SDKRuntime) applyRemoteExecutor(session *sdk.Session, sessionID string) {
-	if r.terminalRelay == nil || sessionID == "" {
-		return
-	}
-	if !r.terminalRelay.Available(sessionID) {
-		session.ClearRemoteExecutor()
-		return
-	}
-	session.SetRemoteExecutor(&terminalRemoteExecutor{relay: r.terminalRelay, sessionID: sessionID})
-}
-
 func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryResult, error) {
 	release, ok := r.tryAcquireSessionTurn(input.SessionID)
 	if !ok {
@@ -316,7 +339,6 @@ func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryRes
 	if err != nil {
 		return nil, err
 	}
-	r.applyRemoteExecutor(session, session.GetID().String())
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// See the matching comment in StreamPrompt: carried on ctx, not
@@ -390,7 +412,6 @@ func (r *SDKRuntime) StreamPrompt(ctx context.Context, input QueryInput, onChunk
 		return nil, err
 	}
 	sessionLoadMs := time.Since(sessionStart).Milliseconds()
-	r.applyRemoteExecutor(session, session.GetID().String())
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// Carried on ctx (not client.SetPromptFn/SetWebSearchRunner, which mutate
@@ -669,6 +690,48 @@ func (r *SDKRuntime) LoadSessionMessages(ctx context.Context, sessionID string) 
 	return session.GetMessages(), nil
 }
 
+// CompactSession compacts the conversation of a session now, with the session's own provider settings (the input
+// carries them, as for a turn). It refuses while a turn is running on the session: a compaction rewrites the
+// conversation that turn is using.
+func (r *SDKRuntime) CompactSession(ctx context.Context, input QueryInput) (CompactionResult, error) {
+	release, ok := r.tryAcquireSessionTurn(input.SessionID)
+	if !ok {
+		return CompactionResult{}, bkerr.Conflict("a turn is already in progress for this session", nil)
+	}
+	defer release()
+
+	client, releaseClient, err := r.clientForInput(ctx, input)
+	if err != nil {
+		return CompactionResult{}, err
+	}
+	defer releaseClient()
+	session, err := r.loadOrCreateSession(ctx, client, input.SessionID)
+	if err != nil {
+		return CompactionResult{}, err
+	}
+	out, err := session.Compact(ctx)
+	if err != nil {
+		return CompactionResult{}, err
+	}
+	return CompactionResult{PreTokens: out.PreTokens, PostTokens: out.PostTokens}, nil
+}
+
+// LoadSessionArchive returns the messages that compactions took out of the conversation the model sees, oldest first.
+func (r *SDKRuntime) LoadSessionArchive(ctx context.Context, sessionID string) ([]types.Message, error) {
+	if r == nil || r.client == nil {
+		return nil, fmt.Errorf("session store not available")
+	}
+	session, err := r.client.LoadSession(ctx, sdk.SessionID(sessionID))
+	if err != nil {
+		return nil, fmt.Errorf("load session: %w", err)
+	}
+	history, err := session.History()
+	if err != nil {
+		return nil, fmt.Errorf("load session history: %w", err)
+	}
+	return history.Archived, nil
+}
+
 func (r *SDKRuntime) loadOrCreateSession(ctx context.Context, client *sdk.Client, sessionID string) (*sdk.Session, error) {
 	if client == nil {
 		return nil, fmt.Errorf("query runtime not configured")
@@ -714,6 +777,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 		browser:  strings.TrimSpace(cfg.BrowserRemoteControlURL),
 		managed:  managedPolicyKey(cfg.ManagedPolicy),
 		research: researchKeysFingerprint(input.ResearchKeys),
+		media:    mediaKey(cfg),
 	}
 	if cfg.ProviderConfig != nil {
 		key.baseURL = cfg.ProviderConfig.BaseURL
@@ -792,6 +856,7 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	r.mu.RLock()
 	cfg := cloneClientConfig(r.baseConfig)
 	resolveLocalSTT := r.resolveLocalSTT
+	resolveMedia := r.resolveMedia
 	resolveLocalTitle := r.resolveLocalTitle
 	resolveBrowser := r.resolveBrowser
 	resolveBrowserSession := r.resolveBrowserSession
@@ -818,6 +883,10 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 	cfg.SessionStore = r.client.GetSessionStore()
 	cfg.ArtifactStore = r.client.GetArtifactStore()
 	cfg.Monitoring = r.client.GetMonitoring()
+	if resolveMedia != nil {
+		media := resolveMedia(ctx)
+		cfg.ImageGeneration, cfg.TextToSpeech, cfg.SpeechToText = media.Image, media.TTS, media.STT
+	}
 	if resolveLocalSTT != nil {
 		if localSTT := resolveLocalSTT(ctx); localSTT != nil {
 			cfg.SpeechToText = localSTT
@@ -854,7 +923,8 @@ func (r *SDKRuntime) buildClientConfig(ctx context.Context, providerCfg RuntimeP
 			modelID = cfg.Model.Model
 		}
 	}
-	provider := types.APIProvider(providerCfg.Provider)
+	// A setting made before the runtime v1.11 may carry a former built-in name (workers-ai): use the name the runtime has now.
+	provider := types.APIProvider(bksettings.CanonicalProvider(providerCfg.Provider))
 	providerConfig := providers.GetProviderConfig(provider)
 	if providerConfig == nil {
 		providerConfig = &providers.Config{Provider: provider}

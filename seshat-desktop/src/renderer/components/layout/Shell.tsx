@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { InternalExpansion } from '@icon-park/react'
+import { loadConnectorLabels } from '@renderer/components/chat/tools/connectorNames'
 import { useSessionsSync } from '@renderer/hooks/useSessionsSync'
 import { useUIStore } from '@renderer/stores/ui'
 import { DialogHost } from './DialogHost'
@@ -11,6 +12,7 @@ import { Sidebar } from './sidebar/Sidebar'
 import { ThemeToggleButton } from './ThemeToggleButton'
 import { Titlebar } from './Titlebar'
 import { TitlebarSessionControls } from './TitlebarSessionControls'
+import { UpdateBanner } from './UpdateBanner'
 
 export function Shell() {
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
@@ -25,6 +27,11 @@ export function Shell() {
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
   useSessionsSync()
+
+  // The names of the connectors, so tool rows in chat say "GitHub" and not "connector-github".
+  useEffect(() => {
+    void loadConnectorLabels()
+  }, [])
 
   // The right panel needs the window width to size itself.
   useEffect(() => {
@@ -49,7 +56,7 @@ export function Shell() {
     const previousConversationId = previousConversationIdRef.current
     if (conversationId) {
       if (previousConversationId && previousConversationId !== conversationId) {
-        void window.nexus?.browser?.hide(`session:${previousConversationId}`).catch(() => undefined)
+        void window.seshat?.browser?.hide(`session:${previousConversationId}`).catch(() => undefined)
         useUIStore.getState().closeRightPanelsForSession(previousConversationId)
       }
       previousConversationIdRef.current = conversationId
@@ -68,7 +75,7 @@ export function Shell() {
 
     useUIStore.getState().closeAllRightPanels()
     for (const contextId of browserContexts) {
-      void window.nexus?.browser?.hide(contextId).catch(() => undefined)
+      void window.seshat?.browser?.hide(contextId).catch(() => undefined)
     }
     previousConversationIdRef.current = null
   }, [conversationId])
@@ -120,6 +127,7 @@ export function Shell() {
       </div>
 
       <DialogHost />
+      <UpdateBanner />
     </div>
   )
 }

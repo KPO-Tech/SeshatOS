@@ -6,6 +6,8 @@ import { useSessionStore } from '@renderer/stores/session'
 import { toolIcon } from '@renderer/components/chat/tools/helpers'
 import { renderToolBody, toolLabel, toolSnippet } from '@renderer/components/chat/tools/toolDisplay'
 import { toolStatus } from '@renderer/components/chat/tools/quietGroupPhrase'
+import { SessionOverview } from './SessionOverview'
+import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import type { StreamingBlock } from '@renderer/stores/session'
 import type { Message, ToolUseBlock } from '@renderer/api/types'
 
@@ -54,8 +56,19 @@ type VisitedSite = {
 // its live detail in the same frame. No separate Activity section anymore.
 type ScreenView = 'home' | 'web' | 'tools'
 
-export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; focusToolId?: string }) {
-  const agentState = useSessionStore((s) => s.getAgentState(sessionId))
+type ComputerPanelProps = {
+  sessionId: string
+  focusToolId?: string
+  isMaximized?: boolean
+  onClose?: () => void
+  onToggleMaximize?: () => void
+}
+
+/**
+ * The session panel. Its home is the overview (cards, no header: the cards are the panel, as in Claude Code); Web,
+ * Tools and a tool's live detail are pages with a slim header that has a way back, maximize and close.
+ */
+export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onClose, onToggleMaximize }: ComputerPanelProps) {
   const planArtifact = useSessionStore(
     (s) => s.sessions.find((session) => session.id === sessionId)?.planArtifact,
   )
@@ -99,6 +112,9 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
   const focusedStatus = focusedTool ? toolStatus(focusedTool) : null
   const focusedIsSubagent = focusedTool ? isSubagentTool(focusedTool.name) : false
 
+  // The overview has no header; every other page has the slim one.
+  const showHeader = Boolean(focusedTool) || view !== 'home'
+
   function goHome() {
     setView('home')
     setFocusedId(null)
@@ -116,11 +132,12 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
 
   function visitSite(site: VisitedSite) {
     openRightPanel({ kind: 'browser', title: 'Browser', sessionId })
-    void window.nexus?.browser?.openUrl(site.url, 'builtin', sessionId).catch(() => undefined)
+    void window.seshat?.browser?.openUrl(site.url, 'builtin', sessionId).catch(() => undefined)
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-app-bg">
+    // No background of its own: the frame gives the panel the background of the chat (--chat-bg).
+    <div className="flex h-full min-h-0 flex-col">
       {/* Plan: collapsed progress bar by default, click to see the checklist inline */}
       {plan.items.length > 0 && (
         <div className="shrink-0 border-b border-app-border-subtle">
@@ -180,50 +197,62 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
           bezel, inset frame) so it reads as "the computer" at a glance. Stats
           is home; Web and Tools are its two pages; a focused tool's live
           detail takes over the same frame from Tools. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[color-mix(in_srgb,var(--surface-root)_92%,black)]">
-        <div className="flex shrink-0 items-center gap-2 border-b border-app-border-subtle bg-app-surface px-3 py-2">
-          {focusedTool ? (
-            <>
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
-                {toolIcon(focusedTool.name)}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">{toolLabel(focusedTool.name)}</span>
-              <span className={cx('shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', focusedTool.source === 'live' ? 'text-[var(--accent-primary)]' : 'text-app-text-muted')}>
-                {focusedTool.source === 'live' ? 'live' : 'past'}
-              </span>
-            </>
-          ) : view === 'web' ? (
-            <>
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
-                <Globe size={12} />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Web</span>
-            </>
-          ) : view === 'tools' ? (
-            <>
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
-                <History size={12} />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Tools</span>
-            </>
-          ) : (
-            <>
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
-                <ChartHistogram size={12} />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Stats</span>
-            </>
-          )}
-          <button
-            type="button"
-            aria-label="Home"
-            disabled={view === 'home' && !focusedTool}
-            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
-            onClick={goHome}
-          >
-            <Home size={12} />
-          </button>
-        </div>
+      <div className={cx('flex min-h-0 flex-1 flex-col overflow-hidden', showHeader && 'bg-[color-mix(in_srgb,var(--surface-root)_92%,black)]')}>
+        {showHeader && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-app-border-subtle bg-app-surface px-3 py-2">
+            {focusedTool ? (
+              <>
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
+                  {toolIcon(focusedTool.name)}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">{toolLabel(focusedTool.name)}</span>
+                <span className={cx('shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', focusedTool.source === 'live' ? 'text-[var(--accent-primary)]' : 'text-app-text-muted')}>
+                  {focusedTool.source === 'live' ? 'live' : 'past'}
+                </span>
+              </>
+            ) : view === 'web' ? (
+              <>
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
+                  <Globe size={12} />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Web</span>
+              </>
+            ) : view === 'tools' ? (
+              <>
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
+                  <History size={12} />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Tools</span>
+              </>
+            ) : (
+              <>
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
+                  <ChartHistogram size={12} />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Session</span>
+              </>
+            )}
+            <button
+              type="button"
+              aria-label="Back to the overview"
+              title="Back to the overview"
+              className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
+              onClick={goHome}
+            >
+              <Home size={12} />
+            </button>
+            {onToggleMaximize && (
+              <button type="button" aria-label={isMaximized ? 'Restore' : 'Maximize'} className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onToggleMaximize}>
+                <WindowMaximizeIcon />
+              </button>
+            )}
+            {onClose && (
+              <button type="button" aria-label="Close" className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onClose}>
+                <WindowCloseIcon />
+              </button>
+            )}
+          </div>
+        )}
 
         {focusedTool ? (
           <div className="min-h-0 flex-1 overflow-auto p-2.5 [&>*]:max-w-full">
@@ -319,28 +348,13 @@ export function ComputerPanel({ sessionId, focusToolId }: { sessionId: string; f
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-auto p-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Stat label="Turn" value={agentState.turnNumber > 0 ? `#${agentState.turnNumber}` : '-'} />
-              <Stat label="Input tokens" value={agentState.inputTokens > 0 ? fmt(agentState.inputTokens) : '-'} />
-              <Stat label="Output tokens" value={agentState.outputTokens > 0 ? fmt(agentState.outputTokens) : '-'} />
-              <Stat label="Total" value={
-                agentState.inputTokens + agentState.outputTokens > 0
-                  ? fmt(agentState.inputTokens + agentState.outputTokens)
-                  : '-'
-              } />
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button type="button" className="flex cursor-pointer items-center gap-2 rounded-app-md border border-app-border-subtle bg-white/[0.03] px-2.5 py-2 text-left hover:border-[rgba(239,124,47,0.28)] hover:bg-[rgba(239,124,47,0.055)]" onClick={() => setView('web')}>
-                <Globe size={13} className="shrink-0 text-app-text-secondary" />
-                <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-app-text">Web</span>
-                <span className="shrink-0 text-[10px] font-semibold text-app-text-muted">{sites.length}</span>
-              </button>
-              <button type="button" className="flex cursor-pointer items-center gap-2 rounded-app-md border border-app-border-subtle bg-white/[0.03] px-2.5 py-2 text-left hover:border-[rgba(239,124,47,0.28)] hover:bg-[rgba(239,124,47,0.055)]" onClick={() => setView('tools')}>
-                <History size={13} className="shrink-0 text-app-text-secondary" />
-                <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-app-text">Tools</span>
-                <span className="shrink-0 text-[10px] font-semibold text-app-text-muted">{tools.length}</span>
-              </button>
-            </div>
+            <SessionOverview
+              sessionId={sessionId}
+              webCount={sites.length}
+              toolCount={tools.length}
+              onOpenWeb={() => setView('web')}
+              onOpenTools={() => setView('tools')}
+            />
           </div>
         )}
       </div>
@@ -435,17 +449,4 @@ function workspaceToolSnippet(tool: ToolUseBlock): string {
     }
   }
   return tool._message ?? ''
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1 rounded-app-md border border-app-border-subtle bg-white/[0.03] px-2.5 py-2">
-      <span className="text-[10px] font-bold uppercase tracking-[0.06em] text-app-text-muted">{label}</span>
-      <span className="font-mono text-[var(--font-size-lg)] font-bold tabular-nums text-app-text">{value}</span>
-    </div>
-  )
-}
-
-function fmt(n: number) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
 }

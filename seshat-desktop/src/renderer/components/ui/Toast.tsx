@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 
-export type Toast = { id: number; msg: string; kind: 'ok' | 'err' | 'info' }
+type Toast = { id: number; msg: string; kind: 'ok' | 'err' | 'info' }
 
 // First genuinely shared toast in the app - previously the only precedent
 // was the companion app's own local, non-shared useToast/ToastStack

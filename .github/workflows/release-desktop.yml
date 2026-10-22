@@ -10,8 +10,28 @@ permissions:
   contents: write
 
 jobs:
+  check-version:
+    name: Check the tag matches the app version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # electron-updater compares the version inside the installer with the one in latest.yml: a tag that disagrees with
+      # seshat-desktop/package.json publishes installers named after one version and metadata claiming another, and the app
+      # then offers an update to itself or never sees one.
+      - name: Compare tag and package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./seshat-desktop/package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match seshat-desktop/package.json version $version"
+            exit 1
+          fi
+
   build-backend:
     name: Build backend (${{ matrix.suffix }})
+    needs: check-version
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -25,6 +45,14 @@ jobs:
             goarch: amd64
             suffix: windows-amd64
             binary_name: seshat-backend.exe
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+            binary_name: seshat-backend
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+            binary_name: seshat-backend
 
     steps:
       - uses: actions/checkout@v4
@@ -94,6 +122,7 @@ jobs:
           path: |
             seshat-desktop/dist/*.AppImage
             seshat-desktop/dist/*.deb
+            seshat-desktop/dist/latest-linux.yml
 
   package-windows:
     name: Package Windows (NSIS)
@@ -120,19 +149,93 @@ jobs:
         working-directory: seshat-desktop
         run: npm run build
 
+      # Signed when a certificate is configured in the repository secrets (WIN_CSC_LINK: the .pfx as a base64 string or a URL,
+      # WIN_CSC_KEY_PASSWORD: its password). Without them the installer is built unsigned, as before: Windows SmartScreen then
+      # warns on the first launch.
       - name: Package (NSIS)
         working-directory: seshat-desktop
-        run: npx electron-builder --win nsis --publish never
+        env:
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          # The executable gets its icon and version information in both cases (signAndEditExecutable); only the signature depends on
+          # the certificate.
+          if [ -n "$CSC_LINK" ]; then
+            echo "Signing the installer and the executable"
+          else
+            echo "::warning::no WIN_CSC_LINK secret: the Windows installer is not signed"
+            unset CSC_LINK CSC_KEY_PASSWORD
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+          fi
+          npx electron-builder --win nsis --publish never --config.win.signAndEditExecutable=true
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: installers-windows
-          path: seshat-desktop/dist/*.exe
+          path: |
+            seshat-desktop/dist/*.exe
+            seshat-desktop/dist/*.exe.blockmap
+            seshat-desktop/dist/latest.yml
+
+  # macOS: a disk image per processor. Experimental: nobody has run it on a Mac yet, and it is not signed (no Apple developer
+  # account), so macOS asks to confirm the first launch. A failure here does not stop the release: the publish job takes whatever
+  # was built. An AppImage cannot run on macOS, this is the macOS package.
+  package-macos:
+    name: Package macOS (${{ matrix.arch }})
+    runs-on: macos-latest
+    needs: build-backend
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            backend: darwin-amd64
+          - arch: arm64
+            backend: darwin-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: seshat-desktop
+        run: npm ci
+
+      - name: Download backend binary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-${{ matrix.backend }}
+          path: seshat-desktop/resources/backend
+
+      - name: Make backend binary executable
+        run: chmod +x seshat-desktop/resources/backend/seshat-backend
+
+      - name: Build renderer/main
+        working-directory: seshat-desktop
+        run: npm run build
+
+      - name: Package (dmg)
+        working-directory: seshat-desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --mac dmg --${{ matrix.arch }} --publish never
+
+      - name: Upload macOS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-macos-${{ matrix.arch }}
+          path: seshat-desktop/dist/*.dmg
 
   publish:
     name: Publish GitHub Release
-    needs: [package-linux, package-windows]
+    needs: [package-linux, package-windows, package-macos]
+    # The macOS job may fail without failing the release; Linux and Windows may not.
+    if: ${{ !cancelled() && needs.package-linux.result == 'success' && needs.package-windows.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -150,4 +253,6 @@ jobs:
         with:
           files: dist/**
           generate_release_notes: true
+          fail_on_unmatched_files: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
 

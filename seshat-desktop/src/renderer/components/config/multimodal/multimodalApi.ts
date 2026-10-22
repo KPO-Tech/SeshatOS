@@ -25,10 +25,6 @@ export function linkCapability(capability: CapabilityName, providerSettingId: st
   return api.put<{ ok: boolean }>(`/settings/capability-links/${capability}`, { provider_setting_id: providerSettingId })
 }
 
-export function unlinkCapability(capability: CapabilityName) {
-  return api.delete<{ ok: boolean }>(`/settings/capability-links/${capability}`)
-}
-
-export function saveLocalSTT(config: { base_url: string; enabled: boolean }) {
+export function saveLocalSTT(config: { base_url?: string; enabled?: boolean; language?: string }) {
   return api.put<LocalSTTConfig>('/settings/local-stt', config)
 }

@@ -3,6 +3,8 @@ import { fetchSkillRepos, installSkillRepo, uninstallSkillRepo } from '@renderer
 import type { CatalogEntry, RepoInfo } from '@renderer/components/skills/skillsTypes'
 import { ConfigCard, Field, SoftButton, StatusPill, TextInput } from '../knowledge/KnowledgePrimitives'
 import { ProviderEmptyState } from '../providers/ProviderEmptyState'
+import { ExternalSkillSources } from './ExternalSkillSources'
+import { SkillRow as Row } from './SkillRow'
 
 export function SkillsConfig() {
   const [installed, setInstalled] = useState<RepoInfo[]>([])
@@ -90,6 +92,8 @@ export function SkillsConfig() {
         </div>
       )}
 
+      <ExternalSkillSources />
+
       <ConfigCard title="Add skills" description="Download a Git repository of skills to use with your agents. Skills are stored locally on this machine.">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
           <Field label="Repository URL">
@@ -135,18 +139,6 @@ export function SkillsConfig() {
           </div>
         )}
       </ConfigCard>
-    </div>
-  )
-}
-
-function Row({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2.5">
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{title}</div>
-        {subtitle && <div className="line-clamp-2 break-words text-[11.5px] leading-4 text-[var(--text-muted)]">{subtitle}</div>}
-      </div>
-      <div className="shrink-0">{children}</div>
     </div>
   )
 }

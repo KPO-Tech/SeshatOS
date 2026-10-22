@@ -33,7 +33,7 @@ const TEXT_PREVIEW_EXTENSIONS = new Set([...MD_EXTENSIONS, ...PLAIN_TEXT_EXTENSI
 // preview is opened. DOCX, PPTX and XLSX have their own client-side render.
 const MARKDOWN_CONVERTED_EXTENSIONS = new Set(['html', 'htm', 'tex', 'wav', 'mp3'])
 
-export function isPlainTextFilename(filename: string): boolean {
+function isPlainTextFilename(filename: string): boolean {
   return PLAIN_TEXT_EXTENSIONS.has(fileExtension(filename))
 }
 
@@ -51,12 +51,19 @@ async function fetchTextContent(fileId: string, kind: 'direct' | 'markdown'): Pr
   return new TextDecoder('utf-8').decode(bytes)
 }
 
-export type AttachmentOpenAction =
+type AttachmentOpenAction =
   | { kind: 'lightbox'; url: string }
   | { kind: 'panel'; panel: 'pdf' | 'docx' | 'xlsx' | 'pptx' }
   | { kind: 'text' }
   | { kind: 'external' }
   | { kind: 'none' }
+
+// The server reports an upload's place relative to its uploads folder, which the main process refuses to read or open: only an absolute
+// path is worth handing to it. Everything else goes through the file endpoints.
+export function absoluteLocalPath(file: ChatAttachment): string | undefined {
+  const path = file.local_path
+  return path && /^([A-Za-z]:[\\/]|[\\/])/.test(path) ? path : undefined
+}
 
 // Decides what clicking an attachment should do. Deliberately knows nothing
 // about useUIStore/right-panel wiring - the caller (AttachmentThumb) applies

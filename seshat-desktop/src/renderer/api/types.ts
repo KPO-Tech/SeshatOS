@@ -1,13 +1,13 @@
-// Types mirroring nexus-engine API surface
+// Types mirroring the SeshatOS backend API surface
 
-export type Role = 'user' | 'assistant' | 'system'
+type Role = 'user' | 'assistant' | 'system'
 
-export type TextBlock = {
+type TextBlock = {
   type: 'text'
   text: string
 }
 
-export type ThinkingBlock = {
+type ThinkingBlock = {
   type: 'thinking'
   thinking: string
 }
@@ -19,7 +19,7 @@ export type ToolApproval = {
   description?: string
 }
 
-export type PromptOption = {
+type PromptOption = {
   label: string
   value: unknown
   description?: string
@@ -95,32 +95,6 @@ export type TokenUsage = {
   cache_creation_input_tokens?: number
 }
 
-export type QueryRequest = {
-  session_id?: string
-  prompt: string
-  provider_setting_id?: string
-  model_id?: string
-  permission_mode?: string
-  execution_origin?: string
-  corpus_id?: string
-  file_ids?: string[]
-  append_system_prompt?: string
-  agent_slug?: string
-}
-
-export type QueryResponse = {
-  session_id: string
-  content: string
-  stop_reason?: string
-  turn_number?: number
-  is_complete: boolean
-  usage?: TokenUsage
-  tool_uses?: ToolUseBlock[]
-  tool_results?: ToolResultBlock[]
-  messages?: Message[]
-  rag_results?: RAGSearchResult[]
-}
-
 export type StreamEvent =
   | { type: 'content_block_start'; content_block: ContentBlock }
   | { type: 'content_block_delta'; delta?: string; delta_type?: 'text_delta' | 'thinking_delta' | 'input_json_delta'; partial_json?: string }
@@ -136,6 +110,9 @@ export type Session = {
   created_at: number
   updated_at: number
   messages: Message[]
+  // Messages a compaction took out of what the model sees, oldest first. They are shown above `messages` so that a
+  // compacted session keeps its scrollback.
+  archived_messages?: Message[]
   provider_setting_id?: string
   model_id?: string
   permission_mode?: string
@@ -162,14 +139,6 @@ export type ProviderModel = {
 }
 
 // ProviderSetting matches the backend settingResponse struct
-export type OAuthChallenge = {
-  status: string
-  user_code: string
-  verification_url: string
-  poll_interval_seconds: number
-  expires_at: number
-}
-
 export type ProviderSetting = {
   id: string
   user_id: string
@@ -189,92 +158,31 @@ export type ProviderSetting = {
   updated_at: number
 }
 
-// Legacy alias kept for backward compat
-export type Provider = ProviderSetting & {
-  models?: ProviderModel[]
-}
-
 // ProviderCatalogEntry/ProviderCatalogModel mirror GET /api/v1/models -
 // which providers/models this connected seshat-backend build supports,
 // resolved live from the SDK's own registry rather than a hardcoded copy
-// here (see docs/helps/audit-2026-08-29-openwork-den-comparison.md, item 2).
-export type ProviderCatalogModel = {
-  id: string
-  description?: string
-  context_window?: number
-  max_output?: number
-}
-
-export type ProviderCatalogEntry = {
-  name: string
-  display_name: string
-  description?: string
-  auth_type: string
-  auth_types?: string[]
-  models: ProviderCatalogModel[]
-}
 
 // OrgProviderSetting is the organization-wide record backing Admin
 // Console's Providers tab (/admin/provider-settings) - deliberately
 // distinct from ProviderSetting above, which is this device's own personal
 // key (per-user, /settings/providers). Mirrors seshat-server's
-// automation.ProviderSetting exactly; never carries an API key.
-export type OrgProviderSetting = {
-  id: string
-  organization_id: string
-  created_by_user_id: string
-  provider: string
-  default_model: string
-  base_url?: string
-  is_default: boolean
-}
 
 // ConnectorOAuthApp mirrors seshat-server's connectors.OAuthApp - the
 // client secret is never returned, only whether one is configured. Backs
 // Admin Console's own Connectors tab (/admin/connector-oauth-apps), the
 // desktop-app counterpart of seshat-console's ConnectorsPage.tsx "OAuth
 // apps" modal. Subdomain is only ever set for kind "zendesk" - see
-// connectors.zendeskKind's doc comment on the seshat-server side.
-export type ConnectorOAuthApp = {
-  kind: string
-  client_id: string
-  configured: boolean
-  updated_at: string
-  subdomain?: string
-}
 
 // AdminMCPServerConfig mirrors seshat-server's mcpregistry.MCPServerConfig
 // - never carries Env/Headers (encrypted secrets), only whether the server
 // is configured plus connector_kind. Backs Admin Console's own MCP Servers
 // tab (/admin/mcp-server-configs), the desktop-app counterpart of
-// seshat-console's MCPServersPage.tsx.
-export type AdminMCPServerConfig = {
-  id: string
-  organization_id: string
-  created_by_user_id: string
-  name: string
-  display_name?: string
-  server_type: string
-  command?: string
-  args?: string[]
-  url?: string
-  timeout_secs: number
-  icon?: string
-  connector_kind?: string
-}
 
 export type User = {
   id: string
   email: string
   display_name: string
   status: string
-}
-
-export type ApiKey = {
-  id: string
-  name: string
-  key_preview: string
-  created_at: string
 }
 
 export type LoginRequest = {
@@ -287,54 +195,6 @@ export type LoginResponse = {
   expires_at: string
   user: User
   roles: string[]
-}
-
-export type ApiError = {
-  error: string
-  message: string
-  status: number
-}
-
-export type WebSearchSettings = {
-  id?: string
-  user_id: string
-  enabled: boolean
-  provider_setting_ids: string[]
-  allow_env_fallback: boolean
-  allowed_domains: string[]
-  blocked_domains: string[]
-  max_queries_per_day: number
-  created_at?: number
-  updated_at?: number
-  // Subset of allowed_domains/blocked_domains contributed by a connected
-  // seshat-server's org policy — omitted in standalone mode or when the
-  // org has no policy set.
-  org_allowed_domains?: string[]
-  org_blocked_domains?: string[]
-}
-
-export type DomainCategory = {
-  id: string
-  label: string
-  icon: string
-  domains: string[]
-}
-
-export type SearchProviderConfig = {
-  provider: string
-  label: string
-  enabled: boolean
-  has_api_key: boolean
-  base_url: string
-  auth_username?: string
-  requires_api_key: boolean
-  requires_base_url: boolean
-  default_base_url: string
-  priority: number
-  updated_at?: number
-  // "organization" | "platform" when resolved from a connected seshat-server
-  // rather than personally configured — omitted otherwise.
-  source?: string
 }
 
 export type Corpus = {
@@ -351,117 +211,10 @@ export type Corpus = {
 // ConnectorAccount mirrors seshat-backend's connectorAccountResponse
 // (internal/api/knowledge/gdrive.go) - the generic, kind-agnostic shape
 // shared by every internal/connector implementation (Drive, S3, the
-// MCP-backed Action connector), same as ChannelAccount is for Inbox.
-export type ConnectorAccount = {
-  id: string
-  kind: string
-  display_name: string
-  external_account_id: string
-  status: string
-  last_synced_at?: number
-  last_error?: string
-  created_at: number
-}
 
 // ActionResult mirrors connector.ActionResult (seshat-backend/internal/connector/types.go)
 // exactly, including its unusual PascalCase JSON keys - that struct has no
 // json tags, so Go's default field-name marshaling applies, unlike every
-// snake_case type elsewhere in this file.
-export type ActionResult = {
-  Success: boolean
-  Message: string
-  Data?: Record<string, unknown>
-}
-
-export type CorpusFile = {
-  corpus_id: string
-  file_id: string
-  filename: string
-  status: string        // 'pending' | 'ingested' | 'failed'
-  chunk_count: number
-  ingested_at?: number
-  created_at: number
-}
-
-export type IngestionJob = {
-  id: string
-  corpus_id: string
-  file_id: string
-  filename: string
-  status: string        // 'pending' | 'running' | 'completed' | 'failed'
-  attempt_count: number
-  max_attempts: number
-  chunk_count: number
-  last_error?: string
-  started_at?: number
-  completed_at?: number
-  created_at: number
-  updated_at: number
-}
-
-export type FileItem = {
-  id: string
-  filename: string
-  content_type: string
-  size: number
-  created_at: number
-}
-
-export type EmbedderConfig = {
-  provider: string
-  base_url: string
-  model: string
-  has_api_key: boolean
-  enabled: boolean
-  is_configured: boolean
-  updated_at?: number
-}
-
-export type DocumentReaderConfig = {
-  base_url: string
-  enabled: boolean
-  prefer_external: boolean
-  updated_at?: number
-}
-
-export type RerankerConfig = {
-  base_url: string
-  model: string
-  has_api_key: boolean
-  enabled: boolean
-  is_configured: boolean
-  updated_at?: number
-}
-
-export type UserMemory = {
-  id: string
-  type: string
-  key: string
-  value: string
-  importance: number
-  source?: string
-  created_at: number
-  updated_at: number
-}
-
-export type StorageConfigData = {
-  provider: string           // 'local' | 's3' | 'minio'
-  local_path?: string
-  s3_endpoint?: string
-  s3_bucket?: string
-  s3_region?: string
-  s3_key_prefix?: string
-  has_s3_access_key: boolean
-  has_s3_secret_key: boolean
-  is_configured: boolean
-  updated_at?: number
-}
-
-export type StorageStatus = {
-  active_provider: string
-  config: StorageConfigData
-  restart_required: boolean
-}
 
 export type UserPreferences = {
   user_id?: string
@@ -473,6 +226,9 @@ export type UserPreferences = {
   extra_context: string
   interactive_permission_mode?: string
   automation_permission_mode?: string
+  max_sub_agent_depth?: number
+  /** Opt-in to long-term memory (notes extracted from conversations and recalled into prompts). Off by default. */
+  memory_enabled?: boolean
   updated_at?: number
 }
 
@@ -495,80 +251,25 @@ export type SessionSearchResult = {
 // tab (/admin/teams) - replaced the old local, per-device "Groups" feature-
 // permission bundle. Mirrors seshat-server's iam.Group exactly; membership
 // is a plain list of user IDs, and permissions are assigned separately
-// through policies on seshat-server, not carried on the team itself.
-export type OrgTeam = {
-  id: string
-  organization_id: string
-  name: string
-  slug: string
-  description: string
-  member_user_ids: string[]
-  created_at: string
-  updated_at: string
-  scim_external_id?: string
-}
 
 // OrgMembership is the organization-wide record backing Admin Console's
 // Users tab (/admin/memberships) - deliberately NOT built on the platform-
 // wide /users resource, which requires the rare platform super-admin flag a
 // normal org admin never has. Mirrors seshat-server's iam.Membership; role
 // is the one field an org admin can actually change here, same as
-// seshat-console's MembershipsPage.tsx.
-export type OrgMembership = {
-  id: string
-  user_id: string
-  organization_id: string
-  role: string
-  status: string
-  pending_since?: string
-  created_at: string
-  permissions?: string[]
-  user_email?: string
-  user_display_name?: string
-  user_is_admin?: boolean
-  scim_external_id?: string
-}
 
 // OrgRole is the built-in + custom role catalog for an organization
 // (/admin/roles, read-only here) - used only to populate the role picker
 // when editing a membership. Creating/editing roles stays console-only
-// (RolesPage.tsx).
-export type OrgRole = {
-  code: string
-  name: string
-  description?: string
-  permissions?: string[]
-  system: boolean
-}
 
 // OrgInvitation is the organization-wide record backing Admin Console's
 // Invitations tab (/admin/invitations) - a promise of access by email that
 // hasn't been accepted yet, distinct from OrgMembership (someone who already
 // has access). Mirrors seshat-server's iam.Invitation; token is only ever
-// populated in the response right after creating an invitation.
-export type OrgInvitation = {
-  id: string
-  organization_id: string
-  email: string
-  role: string
-  status: 'pending' | 'accepted' | 'revoked' | 'expired'
-  token?: string
-  created_at: string
-  expires_at?: string
-  accepted_at?: string
-  revoked_at?: string
-}
 
 // DesktopPolicy is one entry from seshat-server's fixed, code-defined
 // desktop policy catalog (/admin/desktop-policies/catalog) - not
 // organization-specific data, just a reference table of what CAN be
-// restricted.
-export type DesktopPolicy = {
-  code: string
-  admin_description: string
-  user_blocked_message: string
-  default_value: boolean
-}
 
 // OrgDesktopPolicyBinding is the organization-wide record backing Admin
 // Console's Desktop Policies tab (/admin/desktop-policy-bindings). These
@@ -576,17 +277,6 @@ export type DesktopPolicy = {
 // hooks/useDesktopPolicies.ts, which reads the resolved bundle and locks
 // Settings/Providers accordingly) - this tab is what finally lets an org
 // admin see and manage them from the desktop app, mirroring
-// seshat-console's DesktopPoliciesPage.tsx.
-export type OrgDesktopPolicyBinding = {
-  id: string
-  organization_id: string
-  policy_code: string
-  subject_type: 'org' | 'role' | 'user' | 'group'
-  subject_id: string
-  value: boolean
-  created_at: string
-  updated_at: string
-}
 
 // OrgAgentPreset is the organization-wide record backing Admin Console's
 // Agents tab (/admin/agent-presets) - deliberately separate from this
@@ -594,61 +284,10 @@ export type OrgDesktopPolicyBinding = {
 // shows this same catalog read-only as an enrichment - see
 // internal/agents.Service.ListOrganizationPresets). Mirrors seshat-server's
 // agentregistry.AgentPreset exactly; the same store seshat-console's
-// AgentPresetsPage.tsx edits.
-export type OrgAgentPreset = {
-  id: string
-  organization_id: string
-  created_by_user_id?: string
-  slug: string
-  name: string
-  when_to_use?: string
-  system_prompt?: string
-  model?: string
-  tools?: string[]
-  disallowed_tools?: string[]
-  max_turns?: number
-  permission_mode?: string
-  isolation?: string
-  mcp_servers?: string[]
-  icon?: string
-  enabled: boolean
-  created_at?: string
-  updated_at?: string
-}
-
-export type AdminOrganization = {
-  id: string
-  name: string
-  slug: string
-  owner_user_id?: string
-  status: string
-}
 
 // AdminAutomationJob mirrors seshat-server's automation.Job, proxied via
 // seshat-backend's /automation/jobs (internal/api/automation_jobs.go) - used
 // by Admin Console's Overview for a "Recent jobs" summary and by the
-// scheduled-job builder elsewhere.
-export type AdminAutomationJob = {
-  id: string
-  organization_id: string
-  name: string
-  status: string
-  trigger_type: string
-  execution_target: string
-  target_device_id?: string
-  last_run_at?: string
-  last_run_status?: string
-  next_run_at?: string
-  created_at?: string
-}
-
-export type AdminWorkspace = {
-  id: string
-  organization_id: string
-  name: string
-  slug: string
-  status: string
-}
 
 // ─── Plan documents ───────────────────────────────────────────────────────────
 
@@ -668,148 +307,12 @@ export type PlanDocument = {
 
 // ─── Agents ───────────────────────────────────────────────────────────────────
 
-export type AgentSource = 'user' | 'built-in' | 'builtin' | 'organization' | 'workflow'
-
-export type Agent = {
-  id?: string
-  slug: string
-  name: string
-  when_to_use: string
-  system_prompt: string
-  model: string
-  tools: string[]
-  disallowed_tools: string[]
-  max_turns: number
-  permission_mode: string
-  isolation: string
-  mcp_servers: string[]
-  icon: string
-  enabled: boolean
-  source: AgentSource
-  created_at?: number
-  updated_at?: number
-}
-
-export type CreateAgentBody = {
-  slug: string
-  name?: string
-  when_to_use?: string
-  system_prompt?: string
-  model?: string
-  tools?: string[]
-  disallowed_tools?: string[]
-  max_turns?: number
-  permission_mode?: string
-  isolation?: string
-  mcp_servers?: string[]
-  icon?: string
-  enabled?: boolean
-  // '' (default, omitted) for a normal Companion persona, 'workflow' for
-  // one created inline by an Automation graph's own "agent" node - see
-  // AgentPickerField.tsx. The backend rejects any other value here.
-  source?: 'workflow'
-}
-
-export type UpdateAgentBody = Partial<Omit<CreateAgentBody, 'slug'>>
-
 // ─── Scheduled jobs ───────────────────────────────────────────────────────────
-
-export type JobStatus = '' | 'ok' | 'error' | 'running'
-
-export type ScheduledJob = {
-  id: string
-  name: string
-  cron_expr: string
-  agent_slug: string
-  prompt: string
-  session_title: string
-  enabled: boolean
-  last_run_at?: string   // ISO-8601, absent when never ran
-  next_run_at: string    // ISO-8601
-  last_status: JobStatus
-  last_error: string
-  created_at: string
-  updated_at: string
-}
-
-export type CreateJobBody = {
-  name?: string
-  cron_expr: string
-  prompt: string
-  agent_slug?: string
-  session_title?: string
-  enabled?: boolean
-}
-
-export type UpdateJobBody = Partial<CreateJobBody>
 
 // ─── Automation jobs (seshat-automation daemon) ───────────────────────────────
 
-export type AutomationTriggerType = 'cron' | 'interval' | 'once'
-
-export type AutomationTrigger = {
-  type: AutomationTriggerType
-  cron?: string
-  interval?: string   // Go duration string, e.g. "24h"
-  run_at?: string     // RFC3339
-}
-
-export type AutomationAgentConfig = {
-  slug?: string
-  base_type?: string
-  tools?: string[]
-  skills?: string[]
-  model?: string
-  max_turns?: number
-  system_prompt?: string
-}
-
-export type AutomationJobStatus = 'active' | 'paused' | 'inactive'
-export type AutomationRunStatus = 'running' | 'success' | 'error'
-
-export type AutomationJob = {
-  id: string
-  owner_id: string
-  name: string
-  description: string
-  trigger: AutomationTrigger
-  agent: AutomationAgentConfig
-  task: string
-  status: AutomationJobStatus
-  last_run_at?: string   // RFC3339
-  next_run_at?: string   // RFC3339
-  last_run_status: string
-  created_at: string
-  updated_at: string
-}
-
-export type AutomationRun = {
-  id: string
-  job_id: string
-  started_at: string
-  ended_at?: string
-  status: AutomationRunStatus
-  output: string
-  error: string
-}
-
-export type CreateAutomationJobBody = {
-  name: string
-  description?: string
-  trigger: AutomationTrigger
-  agent: AutomationAgentConfig
-  task: string
-}
 
 // ─── Plan runtime event ───────────────────────────────────────────────────────
-
-export type PlanRuntimeEvent = {
-  plan_id: string
-  slug: string
-  filename: string
-  status: PlanStatus
-  version: number
-}
 
 export type RegisterRequest = {
   name: string

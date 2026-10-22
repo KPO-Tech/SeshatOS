@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	audioproviders "github.com/KPO-Tech/seshat-runtime/pkg/audio/providers"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // Capability is a non-chat feature whose credential can be reused from an
@@ -26,33 +27,10 @@ func (c Capability) Valid() bool {
 	}
 }
 
-// capableProviders lists, for each capability, which provider_settings.Provider
-// type strings this app actually has integration code for on that capability
-// today - deliberately not a speculative full matrix:
-//   - image: internal/config/bootstrap.go's defaultImageGenerationConfig.
-//     github.com/KPO-Tech/seshat-runtime/pkg/sdk's initImageGenerator has a real Go
-//     client for exactly two vendors ("openai", "gemini") - a hard SDK
-//     limit, not a config choice. Investigated adding z-ai (2026-08-13:
-//     GLM-image's /images/generations request/response shape is close
-//     enough to OpenAI's to reuse the SDK's openai client) but ruled it
-//     out: the SDK's ensureOpenAIBaseURL always appends "/v1" to a BaseURL
-//     that doesn't already end in it, so pointing the openai client at
-//     Z.ai's real host (https://api.z.ai/api/paas/v4, no /v1 segment
-//     anywhere in its API - confirmed via docs.z.ai and
-//     seshat-ui/.../ProvidersView.tsx's own default URL for z-ai) produces
-//     .../v4/v1/images/generations instead of the real
-//     .../v4/images/generations - a 404, not a working integration. No
-//     BaseURL value satisfies both "survives ensureOpenAIBaseURL unchanged"
-//     and "matches Z.ai's real path" at once, and that function lives in
-//     the external seshat module (no local replace directive, see
-//     AGENTS.md) - not fixable from here. Also checked and ruled out for
-//     the same "no compatible endpoint" reason: mistral (image gen only
-//     via an agent tool-call flow, no direct REST images endpoint),
-//     minimax (incompatible path/shape), kimi (no image API at all),
-//     openrouter (incompatible path, inconsistent shape per underlying
-//     model), stability ai (not in this app's provider catalog at all, and
-//     its API is multipart/form-data rather than JSON - would need a whole
-//     new image.Generation client, not a config-only fix).
+// Which provider_settings.Provider types can serve each non-chat capability, as SupportsCapability answers it, never as a list kept here:
+//   - image: the runtime's image catalog (sdk.ImageProviders: OpenAI, Gemini and OpenRouter), the same one initImageGenerator dispatches
+//     on, so a provider added there works here without a change in this repo. A provider outside it was checked once and does not fit
+//     (Z.ai: its real path has no /v1 segment; Mistral: images only through an agent flow; MiniMax: another shape; Stability: multipart).
 //   - audio: defaultTextToSpeechConfig/defaultSpeechToTextConfig. Which
 //     provider types can serve audio is no longer a list this file owns: the
 //     runtime ships the catalog it dispatches on
@@ -69,9 +47,6 @@ func (c Capability) Valid() bool {
 //   - embeddings: see embedderDefaultsByProvider below - unlike audio, this
 //     one DOES have a generic fallthrough in the engine, so any wire-
 //     compatible vendor just needs a correct BaseURL+Model, no SDK change.
-var capableProviders = map[Capability]map[string]bool{
-	CapabilityImage: {"openai": true, "gemini": true},
-}
 
 // EmbedderDefaults is what a compatible chat provider needs for Knowledge's
 // embedder_config to work: github.com/KPO-Tech/seshat-runtime/internal/rag/embedder's
@@ -132,7 +107,16 @@ func SupportsCapability(providerType string, capability Capability) bool {
 		// see the audio bullet above.
 		profile, ok := audioproviders.ProfileFor(providerType)
 		return ok && (profile.STT != nil || profile.TTS != nil)
+	case CapabilityImage:
+		// The runtime's image catalog says which providers draw images, as the audio one does for speech.
+		id := strings.ToLower(strings.TrimSpace(providerType))
+		for _, provider := range sdk.ImageProviders() {
+			if provider.ID == id {
+				return true
+			}
+		}
+		return false
 	default:
-		return capableProviders[capability][strings.ToLower(strings.TrimSpace(providerType))]
+		return false
 	}
 }

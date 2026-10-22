@@ -1,10 +1,20 @@
 Copyright (c) 2026-present Stéphane Kpoviessi (Seshat)
 
 ================================================================================
- DRAFT NOTICE - not yet lawyer-reviewed. Have the Commons Clause condition
- reviewed by a lawyer (it is the clause doing the actual commercial-protection
- work) before this license governs any published release.
+ In plain words (this summary is not part of the license; the texts below are)
 ================================================================================
+
+You may use SeshatOS for any purpose, on your own machine or your own servers,
+including inside a company of any size; read it, change it, and share your
+changes. You may NOT sell it: you may not offer it, or a product or service
+whose value comes mostly from it, to third parties for a fee, and that includes
+selling hosting of it or paid support or consulting for it. If you want to do
+that, ask for a commercial license: seshatsupport@seshat-ai.com
+
+The two texts below are the standard Apache License 2.0 and the standard Commons
+Clause License Condition v1.0, reproduced without change. No lawyer has reviewed
+how they are combined here; the Commons Clause is known to be loosely worded, so
+when in doubt about a use of the software, write to the address above first.
 
 This license applies to SeshatOS: the seshat-backend and seshat-desktop
 components in this repository. The seshat SDK

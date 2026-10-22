@@ -57,6 +57,20 @@ func (a *App) handleTranscribe(w http.ResponseWriter, r *http.Request) {
 		writeBackendError(w, bkerr.InvalidInput(err.Error(), err))
 		return
 	}
+	// A cloud provider transcribes with the model the person chose for it, when they chose one.
+	if target.provider != "" && a.capabilityLinkStore != nil {
+		if options, err := a.capabilityLinkStore.Options(r.Context(), string(backendsettings.CapabilityAudio)); err == nil && options["stt_model"] != "" {
+			target.model = options["stt_model"]
+		}
+	}
+	// A language sent with the clip wins; without one, the person's saved choice applies; neither detects it.
+	spoken := r.FormValue("language")
+	if spoken == "" && a.localSTTStore != nil {
+		if cfg, err := a.localSTTStore.Get(r.Context()); err == nil && cfg != nil {
+			spoken = cfg.Language
+		}
+	}
+	target.language = normalizeSpokenLanguage(spoken)
 
 	result, err := a.transcribeAudio(r.Context(), target, audioData)
 	if err != nil {
@@ -65,7 +79,7 @@ func (a *App) handleTranscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"text":     result.Text,
+		"text":     cleanTranscript(result.Text),
 		"language": result.Language,
 		"duration": result.Duration,
 	})
@@ -83,6 +97,8 @@ type transcriptionTarget struct {
 	model      string
 	format     string
 	elevenLabs bool
+	// language is the spoken language the person chose (an IETF tag such as fr); empty lets the server detect it.
+	language string
 }
 
 // resolveTranscriptionTarget picks a locally running whisper.cpp server when
@@ -233,6 +249,9 @@ func transcribeAudioWithTarget(ctx context.Context, target transcriptionTarget, 
 	}
 	if target.format != "" {
 		opts = append(opts, audioproviders.WithSTTResponseFormat(target.format))
+	}
+	if target.language != "" {
+		opts = append(opts, audioproviders.WithSTTLanguage(target.language))
 	}
 	return audioproviders.NewOpenAISTT(target.apiKey, opts...).Transcribe(ctx, audioData)
 }

@@ -121,6 +121,9 @@ type SessionInfo struct {
 type SessionDetail struct {
 	SessionInfo
 	Messages []types.Message `json:"messages,omitempty"`
+	// ArchivedMessages are the messages a compaction took out of what the model sees, oldest first. They are shown
+	// above Messages, so that a compacted session keeps its scrollback.
+	ArchivedMessages []types.Message `json:"archived_messages,omitempty"`
 }
 
 // RAGSearchResult is the transport-friendly view of one knowledge base search hit.

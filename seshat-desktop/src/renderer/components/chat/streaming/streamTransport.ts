@@ -2,11 +2,13 @@ import { useAuthStore } from '@renderer/stores/auth'
 import type { StreamEvent } from '@renderer/api/types'
 import type { DonePayload, RuntimeEventPayload, SessionTitledPayload } from './runtimeTypes'
 
-export type RetryableError = Error & { retryable?: boolean }
+/** A failed stream: whether sending again may work, and the kind the backend named (see streamErrors.ts). */
+export type RetryableError = Error & { retryable?: boolean; errorKind?: string }
 
-function makeRetryableError(message: string, retryable: boolean): RetryableError {
+function makeRetryableError(message: string, retryable: boolean, errorKind?: string): RetryableError {
   const error: RetryableError = new Error(message)
   error.retryable = retryable
+  error.errorKind = errorKind
   return error
 }
 
@@ -18,11 +20,11 @@ export async function consumeElectronStream(
   onChunk: (payload: StreamEvent) => void,
   onSessionTitled: (payload: SessionTitledPayload) => void,
 ) {
-  if (!window.nexus?.http) {
+  if (!window.seshat?.http) {
     throw new Error('Electron HTTP bridge is unavailable')
   }
 
-  const startResult = await window.nexus.http.startStream({
+  const startResult = await window.seshat.http.startStream({
     path: '/query/stream',
     method: 'POST',
     body,
@@ -37,13 +39,13 @@ export async function consumeElectronStream(
 
   await new Promise<void>((resolve, reject) => {
     let settled = false
-    const unsubscribe = window.nexus.http!.onStreamEvent(streamId, ({ name, data }) => {
+    const unsubscribe = window.seshat.http!.onStreamEvent(streamId, ({ name, data }) => {
       if (settled) return
       if (name === 'error') {
         settled = true
         unsubscribe()
         cleanupAbort()
-        reject(makeRetryableError((data.error as string) || 'Streaming error', data.retryable === true))
+        reject(makeRetryableError((data.error as string) || 'Streaming error', data.retryable === true, data.error_kind as string | undefined))
         return
       }
       if (name === 'done') {
@@ -70,7 +72,7 @@ export async function consumeElectronStream(
       settled = true
       unsubscribe()
       cleanupAbort()
-      void window.nexus?.http?.cancelStream(streamId).catch(() => {
+      void window.seshat?.http?.cancelStream(streamId).catch(() => {
         // noop
       })
       reject(new DOMException('Aborted', 'AbortError'))
@@ -158,7 +160,7 @@ export async function consumeBrowserStream(
         }
 
         if (eventName === 'error') {
-          throw new Error((parsed.error as string) || 'Streaming error')
+          throw makeRetryableError((parsed.error as string) || 'Streaming error', false, parsed.error_kind as string | undefined)
         }
 
         if (eventName === 'done') {

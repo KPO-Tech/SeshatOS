@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
+import { serverLabel } from './connectorNames'
 import { FileTextOne, Write, Edit as EditIcon, Search, Terminal, Tool } from '@icon-park/react'
 import type { ToolUseBlock } from '@renderer/api/types'
 import type { ToolViewProps, ToolBlockProps } from './types'
@@ -47,9 +48,9 @@ import { WriteToolView } from './renderers/WriteToolView'
 
 export type ToolCategory = 'read' | 'search' | 'edit' | 'write' | 'bash' | 'other'
 
-export type ToolViewComponent = ComponentType<ToolViewProps & { onSubmitPrompt?: ToolBlockProps['onSubmitPrompt'] }>
+type ToolViewComponent = ComponentType<ToolViewProps & { onSubmitPrompt?: ToolBlockProps['onSubmitPrompt'] }>
 
-export type ToolDisplayEntry = {
+type ToolDisplayEntry = {
   /** Static label - PermissionCard, the collapsed-group "other" bucket, and SilentToolView's status line all read this. */
   label: string
   category?: ToolCategory
@@ -152,6 +153,7 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
   read_url: { label: 'Web Fetch', groupable: false, silent: true, render: WebFetchToolView, snippet: (t) => str(t, 'url'), soloLabel: webFetchSoloLabel },
 
   generate_image: { label: 'Generate Image', groupable: false, render: ImageGenToolView },
+  present_artifact: { label: 'Present File', groupable: false, silent: true, snippet: (t) => str(t, 'path') },
   text_to_speech: { label: 'Text To Speech', groupable: false, render: TtsToolView },
   speech_to_text: { label: 'Speech To Text', groupable: false, render: SttToolView },
 
@@ -354,7 +356,7 @@ function mcpDynamicLabel(name: string): string {
   const server = sepIndex >= 0 ? rest.slice(0, sepIndex) : ''
   const toolPart = sepIndex >= 0 ? rest.slice(sepIndex + 2) : rest
   const readableTool = toolPart.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-  return server ? `${server}: ${readableTool}` : readableTool
+  return server ? `${serverLabel(server)}: ${readableTool}` : readableTool
 }
 
 function getEntry(name: string): ToolDisplayEntry | undefined {
@@ -364,25 +366,11 @@ function getEntry(name: string): ToolDisplayEntry | undefined {
 // Tools that never surface as their own chat row (mode-switches folded into
 // the Computer panel, or task_create/update/list superseded by its live
 // task list there — see HIDDEN_TOOLS in MessageItem.tsx) are left out of the
-// catalog too: they aren't something a user would ever allow/disallow.
-const CATALOG_EXCLUDED = new Set([
-  'enter_plan_mode', 'exit_plan_mode',
-  'enter_pair_programming_mode', 'exit_pair_programming_mode',
-  'task_create', 'task_update', 'task_list',
-])
-
-export type ToolCatalogEntry = { name: string; label: string; category: ToolCategory }
 
 // Read-only listing of every named entry in the registry, for surfaces that
 // want to show "what tools exist" (Workspace's Tools tab) rather than
 // display one already-invoked tool_use. mcp__server__tool names are dynamic
 // (one per connected server) and never appear here — only the static
-// built-in catalog does.
-export function listToolCatalog(): ToolCatalogEntry[] {
-  return Object.entries(TOOL_REGISTRY)
-    .filter(([name]) => !CATALOG_EXCLUDED.has(name))
-    .map(([name, entry]) => ({ name, label: entry.label, category: entry.category ?? DEFAULTS.category }))
-}
 
 export function toolLabel(name: string): string {
   if (name.startsWith('mcp__')) return mcpDynamicLabel(name)

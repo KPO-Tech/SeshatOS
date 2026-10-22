@@ -5,18 +5,31 @@ import { registerFilesystemHandlers } from './ipc/filesystem'
 import { registerSecureStoreHandlers } from './ipc/secure-store'
 import { registerBackendHandlers } from './ipc/backend'
 import { registerWhisperHandlers } from './ipc/whisper'
+import { registerSetupHandlers } from './ipc/setup'
 import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
+import { registerSandboxHandlers } from './ipc/sandbox'
 import { resolveRuntimeRoot } from './runtime'
 import { startBackendSidecar, stopBackendSidecar } from './backend-process'
-import { stopWhisperServerProcess } from './whisper-manager'
+import { isSetupCompleted } from './setup-manager'
+import { resumeLocalWhisperOnLaunch, stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
 import { isExternalOpenAllowed } from './url-safety'
+import {
+  LOAD_WATCHDOG_MS,
+  SHOW_FALLBACK_MS,
+  buildLoadFailureUrl,
+  createLoadRetry,
+  isRetryNavigation
+} from './renderer-load-retry'
 import { applyContentSecurityPolicy } from './content-security-policy'
 import { createBrowserPanel } from './browser-panel'
 import { createBrowserBridgeServer } from './browser-bridge'
-import { registerTerminalRelayHandlers, stopAllTerminalRelays } from './ipc/terminal-relay'
+import { registerShellHandlers, stopAllShellSessions } from './ipc/shell'
+
+/** How long after the window has loaded the local title model starts. */
+const LLAMA_START_DELAY_MS = 10_000
 
 function configureRuntimePaths() {
   const runtimeRoot = resolveRuntimeRoot()
@@ -65,7 +78,15 @@ function createWindow() {
   mainWindow = win
 
   win.removeMenu()
-  win.on('ready-to-show', () => win.show())
+  // The window is shown once the renderer has painted. If the first load fails the paint never comes, so a timer shows the window
+  // anyway and the load is retried (see renderer-load-retry.ts).
+  const showFallback = setTimeout(() => {
+    if (!win.isDestroyed() && !win.isVisible()) win.show()
+  }, SHOW_FALLBACK_MS)
+  win.on('ready-to-show', () => {
+    clearTimeout(showFallback)
+    win.show()
+  })
   win.on('closed', () => {
     if (mainWindow === win) mainWindow = null
   })
@@ -93,11 +114,52 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL)
-  } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
+  let lastFailure = 'The app did not finish loading.'
+  let watchdog: ReturnType<typeof setTimeout> | null = null
+  const loadRenderer = () => {
+    if (watchdog) clearTimeout(watchdog)
+    watchdog = setTimeout(() => {
+      lastFailure = 'The app took too long to load.'
+      loadRetry.failed()
+    }, LOAD_WATCHDOG_MS)
+    const loading = process.env.ELECTRON_RENDERER_URL
+      ? win.loadURL(process.env.ELECTRON_RENDERER_URL)
+      : win.loadFile(join(__dirname, '../renderer/index.html'))
+    // A failed load is handled by did-fail-load below.
+    loading.catch(() => {})
   }
+  const loadRetry = createLoadRetry({
+    load: loadRenderer,
+    onGiveUp: () => {
+      if (win.isDestroyed()) return
+      if (watchdog) clearTimeout(watchdog)
+      void win.loadURL(buildLoadFailureUrl(lastFailure))
+      if (!win.isVisible()) win.show()
+    }
+  })
+
+  win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, _url, isMainFrame) => {
+    // -3 is a load that was replaced by another navigation, not a failure.
+    if (!isMainFrame || errorCode === -3) return
+    lastFailure = `${errorDescription} (${errorCode})`
+    loadRetry.failed()
+  })
+  win.webContents.on('did-finish-load', () => {
+    if (watchdog) clearTimeout(watchdog)
+    watchdog = null
+  })
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!isRetryNavigation(url)) return
+    event.preventDefault()
+    loadRetry.reset()
+    loadRenderer()
+  })
+  win.on('closed', () => {
+    if (watchdog) clearTimeout(watchdog)
+    loadRetry.cancel()
+  })
+
+  loadRenderer()
 }
 
 configureRuntimePaths()
@@ -139,11 +201,13 @@ app.whenReady().then(async () => {
   registerSecureStoreHandlers(ipcMain)
   registerBackendHandlers(ipcMain)
   registerWhisperHandlers(ipcMain)
+  registerSetupHandlers(ipcMain)
   registerLlamaHandlers(ipcMain)
   registerEnvVarsHandlers(ipcMain)
+  registerSandboxHandlers(ipcMain)
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
-  registerTerminalRelayHandlers(ipcMain)
+  registerShellHandlers(ipcMain)
 
   // Packaged Electron apps deny every permission request by default when no
   // handler is registered. The voice-input control needs the renderer's
@@ -175,8 +239,24 @@ app.whenReady().then(async () => {
   setupAutoUpdater()
   // Installs llama.cpp and the default title model on first launch, in the
   // background; chat works meanwhile and titles fall back to the chat model.
-  startLlamaOnLaunch(broadcastLlamaProgress).catch((error) => {
-    console.warn('[llama] local title model unavailable:', error instanceof Error ? error.message : error)
+  // It waits for the window to have loaded: starting a model server (a few
+  // hundred MB read from disk) while the interface is still loading slows both.
+  // On a computer that was never set up the first-run wizard decides what is downloaded, so nothing starts by itself here.
+  const startLlama = () => {
+    void isSetupCompleted().then((completed) => {
+      if (!completed) return
+      return startLlamaOnLaunch(broadcastLlamaProgress)
+    }).catch((error) => {
+      console.warn('[llama] local title model unavailable:', error instanceof Error ? error.message : error)
+    })
+  }
+  if (mainWindow) {
+    mainWindow.webContents.once('did-finish-load', () => setTimeout(startLlama, LLAMA_START_DELAY_MS))
+  } else {
+    startLlama()
+  }
+  void resumeLocalWhisperOnLaunch().catch((error) => {
+    console.warn('[whisper] could not resume local transcription:', error instanceof Error ? error.message : error)
   })
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -190,7 +270,7 @@ app.on('window-all-closed', () => {
 app.on('will-quit', () => {
   browserBridge.stop()
   browserPanel.destroy()
-  stopAllTerminalRelays()
+  stopAllShellSessions()
   stopWhisperServerProcess()
   stopLlamaServerProcess()
   void stopBackendSidecar()

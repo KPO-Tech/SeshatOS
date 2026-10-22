@@ -53,7 +53,7 @@ func TestCheckCreatePolicyAllowsKnownProviderWithDefaultBaseURL(t *testing.T) {
 }
 
 // TestCheckCreatePolicyBlocksKnownProviderWithOverriddenBaseURL is the
-// realistic, UI-reachable case: seshat-ui's Add Provider form only lets a
+// realistic, UI-reachable case: the desktop app's Add Provider form only lets a
 // user pick a provider name from the built-in catalog (the dropdown is
 // drawn from it), but its Base URL field is freely editable - so "custom
 // provider" in practice means a known provider pointed at a different
@@ -71,7 +71,7 @@ func TestCheckCreatePolicyBlocksKnownProviderWithOverriddenBaseURL(t *testing.T)
 }
 
 // TestCheckCreatePolicyBlocksUnknownProviderName is defense in depth for a
-// caller that bypasses seshat-ui entirely (e.g. a direct API call) with a
+// caller that bypasses the desktop app entirely (e.g. a direct API call) with a
 // provider name outside the catalog altogether.
 func TestCheckCreatePolicyBlocksUnknownProviderName(t *testing.T) {
 	policies := newTestPolicyStore(t)
