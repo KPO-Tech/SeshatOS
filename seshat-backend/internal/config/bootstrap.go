@@ -950,11 +950,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// (returns ok=false) whenever SESHAT_ELECTRON_BRIDGE_PORT isn't set, so
 	// this is a no-op outside the desktop app without needing a guard here.
 	runtime.SetBrowserSessionTargetResolver(resolveElectronBrowserSessionTarget)
-	// Shared with api.NewApp below (via AppConfig.TerminalRelay) - the WS
-	// handler there registers a session's Electron relay connection into the
-	// same instance runtime.applyRemoteExecutor reads from per turn.
-	terminalRelay := backendquery.NewTerminalRelay()
-	runtime.SetTerminalRelay(terminalRelay)
 
 	// Scopes the rag_search/rag_ingest/rag_delete tools to the requesting
 	// user's own (or shared-workspace) corpora per request, instead of
@@ -1198,7 +1193,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		ConnectedServerURL:    serverURL,
 		TargetServerURL:       defaultServerURL,
 		SandboxKind:           sandboxKind,
-		TerminalRelay:         terminalRelay,
 		TitleBroker:           titleBroker,
 	})
 

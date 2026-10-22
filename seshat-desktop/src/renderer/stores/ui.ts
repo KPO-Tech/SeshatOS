@@ -5,7 +5,7 @@ import type { RAGSearchResult } from '@renderer/api/types'
 import { useSessionStore } from '@renderer/stores/session'
 
 type Theme = 'light' | 'dark'
-export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'terminal' | 'shell' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
+export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'shell' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
 export type UIPermissionMode = 'onRequest' | 'auto' | 'bypass'
 
 type RightPanelFields = {
@@ -79,7 +79,7 @@ function isRightPanelPinned(p: RightPanelInstance): boolean {
 // in a row, while something like Computer a user deliberately kept
 // open stays put instead of being silently evicted to make room.
 const DOCUMENT_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['pdf', 'docx', 'xlsx', 'pptx', 'markdown', 'plan', 'artifact'])
-const READABLE_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['browser', 'terminal', 'shell', 'files', ...DOCUMENT_PANEL_KINDS])
+const READABLE_PANEL_KINDS: ReadonlySet<RightPanelKind> = new Set(['browser', 'shell', 'files', ...DOCUMENT_PANEL_KINDS])
 
 const RIGHT_PANEL_STACK_LIMIT = 1
 // Note: with this at 1, rightPanelColumnLimit below always returns 1

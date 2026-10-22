@@ -56,9 +56,10 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const isRunning = status === 'running' || status === 'pending'
   const isError = status === 'failed'
   const isCompleted = status === 'completed'
-  // Only ever true while live/erroring - clicking a row opens the tool's
-  // own panel instead of toggling this in place (see toggle() below).
-  const expanded = autoExpand || isRunning || isError
+  // Live and erroring rows are open; a bash row can also be opened and closed by a click (see toggle() below), the other tools open
+  // their own panel instead.
+  const [opened, setOpened] = useState(false)
+  const expanded = autoExpand || isRunning || isError || opened
   const label = isPreviewTool ? toolLabel(tool.name) : summarizeTool(tool)
   const detail = isPreviewTool ? previewDetail(tool) : ''
   const meta = isPreviewTool ? previewMeta(tool) : ''
@@ -72,15 +73,14 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const copyText = tool._result?.content || JSON.stringify(tool.input, null, 2)
 
   // Clicking a tool row now opens its own live panel instead of expanding
-  // inline - bash and browser_* already have dedicated panels (Terminal,
-  // Browser), read/write/edit open in Files (see FilesPanel.tsx), everything
+  // inline - bash opens in place, browser_* has its own panel (Browser), read/write/edit open in Files (see FilesPanel.tsx), everything
   // else (web_search/web_fetch, mcp, ...) opens in Computer, focused on this
   // exact tool call. Sub-agent tools never reach this component - they
   // render as AgentCardsRow instead (see MessageItem.tsx) - so no case is
   // needed for them here.
   function toggle() {
     if (tool.name === 'bash') {
-      openRightPanel({ kind: 'terminal', title: 'Agent commands', sessionId, focusToolId: tool.id })
+      setOpened((value) => !value)
       return
     }
     if (tool.name.startsWith('browser_')) {
