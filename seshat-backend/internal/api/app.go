@@ -50,12 +50,12 @@ type App struct {
 	storageConfigStore   *db.StorageConfigStore
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
-	longTermExtractor *longterm.Extractor
-	rateLimiter       *RateLimiter
-	loginRateLimiter  *RateLimiter
-	permBroker        *backendquery.PermissionBroker
-	promptBroker      *backendquery.PromptBroker
-	titleBroker       *backendquery.TitleBroker
+	longTermExtractor     *longterm.Extractor
+	rateLimiter           *RateLimiter
+	loginRateLimiter      *RateLimiter
+	permBroker            *backendquery.PermissionBroker
+	promptBroker          *backendquery.PromptBroker
+	titleBroker           *backendquery.TitleBroker
 	cloudAutomation       *cloudautomation.Service
 	artifactPreviews      *artifactpreview.Store
 	ragService            *rag.Service
