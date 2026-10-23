@@ -8,12 +8,13 @@ type Props = {
   icon: ReactNode
   label: string
   shortcut?: string
+  badge?: string
   collapsed: boolean
   active?: boolean
   onClick: () => void
 }
 
-export function SidebarItem({ icon, label, shortcut, collapsed, active, onClick }: Props) {
+export function SidebarItem({ icon, label, shortcut, badge, collapsed, active, onClick }: Props) {
   return (
     <button
       type="button"
@@ -29,6 +30,9 @@ export function SidebarItem({ icon, label, shortcut, collapsed, active, onClick 
       {!collapsed && (
         <>
           <span className={cx('min-w-0 flex-1 overflow-hidden text-ellipsis text-left', active && 'text-[var(--accent-primary)]')}>{label}</span>
+          {badge && (
+            <span className="rounded-full bg-[var(--surface-muted)] px-1.5 text-[9.5px] font-bold uppercase tracking-[0.04em] text-[var(--text-muted)]">{badge}</span>
+          )}
           {shortcut && (
             <span className="rounded-[4px] bg-[var(--border-soft)] px-[5px] py-px text-[10px] font-bold text-[var(--text-muted)]">{shortcut}</span>
           )}
