@@ -122,4 +122,43 @@ func TestSearchTool_Call_FormatsResultsWithCorpusAndFileTags(t *testing.T) {
 	}
 }
 
+func TestSearchTool_Call_GivesEachExcerptARefAndItsPages(t *testing.T) {
+	backend := &fakeBackend{
+		corpora: []knowledge.Corpus{{ID: "c1", Name: "Legal"}},
+		results: map[string]*rag.SearchResponse{
+			"c1": {CorpusID: "c1", Results: []rag.SearchResult{
+				{Key: "c1-a", Text: "sixty days", Score: 0.9, Metadata: map[string]string{"filename": "template.docx", "page_numbers": "[12]", "heading_path": "Termination"}},
+				{Key: "c1-b", Text: "thirty days", Score: 0.7, Metadata: map[string]string{"filename": "framework.pdf"}},
+			}},
+		},
+	}
+	result, err := NewSearchTool(backend).Call(principalCtx(), tools.CallInput{Parsed: map[string]any{"query": "notice"}}, nil)
+	if err != nil || result.Error != nil {
+		t.Fatalf("Call: %v %v", err, result.Error)
+	}
+	first := "ref=" + Ref("c1", "c1-a")
+	second := "ref=" + Ref("c1", "c1-b")
+	for _, want := range []string{first, second, "pages=12", `section="Termination"`} {
+		if !strings.Contains(result.Content, want) {
+			t.Errorf("expected %q in:\n%s", want, result.Content)
+		}
+	}
+	if strings.Count(result.Content, "pages=") != 1 {
+		t.Errorf("an excerpt without pages must not show any:\n%s", result.Content)
+	}
+}
+
+func TestRef(t *testing.T) {
+	first, again := Ref("c1", "k"), Ref("c1", "k")
+	if first != again {
+		t.Fatal("a ref must be the same every time")
+	}
+	if Ref("c1", "k") == Ref("c2", "k") || Ref("c1", "k") == Ref("c1", "j") {
+		t.Fatal("two excerpts must not share a ref")
+	}
+	if got := Ref("c1", "k"); len(got) != 7 || got[0] != 'k' {
+		t.Fatalf("a ref is k and six hexadecimal digits, got %q", got)
+	}
+}
+
 var _ tools.Tool = (*SearchTool)(nil)
