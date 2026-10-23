@@ -53,6 +53,12 @@ SeshatOS is under active construction. The desktop is being rebuilt chat-first; 
 | Dedicated Knowledge, Skills and Admin screens | Planned, in order after Chat |
 | Inbox, Companion, Team | Roadmap (after the MVP) |
 
+## The Knowledge agent
+
+Ask, in the Knowledge platform, is a chat conversation with a built-in agent that answers only from the documents the person can read, and cites them. It has two read-only tools (search and read), no shell, no web and no memory, and the collection limit is applied by the tools, not asked of the model. How it works, its tools and its current limits: [docs/knowledge-agent.md](docs/knowledge-agent.md).
+
+<p align="center"><img src="docs/img/knowledge-agent-workflow.svg" alt="Knowledge agent workflow: composer, chat session, built-in agent, one turn of searches and reads against the knowledge backend, citations in the Ask view" width="680"></p>
+
 ## SeshatOS and SeshatCloud: two halves of one offer
 
 | | SeshatOS (this repository) | [SeshatCloud](https://github.com/KPO-Tech/SeshatCloud) |

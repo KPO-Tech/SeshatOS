@@ -14,8 +14,8 @@ func TestDefinition(t *testing.T) {
 	if string(def.Source) != "built-in" {
 		t.Fatalf("the agent is built into the product, got source %q", def.Source)
 	}
-	if !reflect.DeepEqual(def.Tools, []string{"knowledge_search"}) {
-		t.Fatalf("the agent has one tool, read only, got %v", def.Tools)
+	if !reflect.DeepEqual(def.Tools, []string{"knowledge_search", "knowledge_read"}) {
+		t.Fatalf("the agent has these two tools, read only, and no other (never the runtime's Read, which takes any path), got %v", def.Tools)
 	}
 	for _, tool := range def.Tools {
 		if strings.Contains(tool, "*") {

@@ -13,8 +13,8 @@ func TestBuildContextInput_KnowledgeAgentGetsOnlyItsOwnTools(t *testing.T) {
 	svc := &Service{agents: fakeAgentsProvider{def: knowledgeagent.Definition()}}
 	input, _ := svc.BuildContextInput(context.Background(), ContextBuildParams{Prompt: "What is the notice period?", AgentSlug: knowledgeagent.Slug})
 
-	if !reflect.DeepEqual(input.AllowedTools, []string{"knowledge_search"}) {
-		t.Fatalf("the session must be narrowed to knowledge_search alone, got %v", input.AllowedTools)
+	if !reflect.DeepEqual(input.AllowedTools, []string{"knowledge_search", "knowledge_read"}) {
+		t.Fatalf("the session must be narrowed to the two knowledge tools, got %v", input.AllowedTools)
 	}
 	if input.SystemPromptOverride == nil || *input.SystemPromptOverride != knowledgeagent.Prompt {
 		t.Fatal("the agent's own prompt must replace the default identity")
