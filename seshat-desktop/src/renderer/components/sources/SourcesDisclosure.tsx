@@ -3,14 +3,15 @@ import { Down } from '@icon-park/react'
 import { SourceRow } from './SourceRow'
 import type { SourceItem } from './sourceItem'
 
-// The sources of an answer, folded at its end: a row that names how many there are, and opens the list when clicked.
+// The sources of an answer, in one card at its end. Folded, the card is its header: the marks of the first sources and how many
+// there are. Unfolded, the list of sources opens under it as lines.
 export function SourcesDisclosure({ items, sessionId }: { items: SourceItem[]; sessionId?: string }) {
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   if (items.length === 0) return null
 
   return (
-    <div ref={root} className="mt-5">
+    <div ref={root} className="mt-5 w-full max-w-[560px] overflow-hidden rounded-xl border border-solid border-[var(--border-soft)]">
       <button
         type="button"
         aria-expanded={open}
@@ -19,16 +20,16 @@ export function SourcesDisclosure({ items, sessionId }: { items: SourceItem[]; s
           // Once the list has unfolded, bring its end into view above the composer.
           if (!open) setTimeout(() => root.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 320)
         }}
-        className="flex h-9 cursor-pointer items-center gap-2.5 rounded-full border border-solid border-[var(--border-soft)] bg-transparent pl-2 pr-3.5 text-[12.5px] font-semibold text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
+        className="flex h-10 w-full cursor-pointer items-center gap-2.5 border-0 bg-transparent px-3 text-left text-[12.5px] font-semibold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
       >
         <span className="flex -space-x-1">
           {items.slice(0, 3).map((item) => (
-            <span key={item.key} className="rounded-[8px] ring-2 ring-[var(--chat-bg,var(--surface-root))]">
-              {item.mark(20)}
+            <span key={item.key} className="rounded-full ring-2 ring-[var(--chat-bg,var(--surface-root))]">
+              {item.mark(18)}
             </span>
           ))}
         </span>
-        <span>
+        <span className="flex-1">
           {items.length} {items.length === 1 ? 'source' : 'sources'}
         </span>
         <Down size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
@@ -36,12 +37,10 @@ export function SourcesDisclosure({ items, sessionId }: { items: SourceItem[]; s
 
       <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="min-h-0 overflow-hidden">
-          <div className="pt-3" inert={!open}>
-            <div className="grid gap-2">
-              {items.map((item, index) => (
-                <SourceRow key={item.key} item={item} sessionId={sessionId} delay={index * 60} />
-              ))}
-            </div>
+          <div className="border-0 border-t border-solid border-[var(--border-soft)]" inert={!open}>
+            {items.map((item) => (
+              <SourceRow key={item.key} item={item} sessionId={sessionId} />
+            ))}
           </div>
         </div>
       </div>

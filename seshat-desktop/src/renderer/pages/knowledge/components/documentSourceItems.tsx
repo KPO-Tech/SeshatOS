@@ -18,7 +18,7 @@ export function documentSourceItems(
     return {
       key: group.documentId,
       title: document?.name ?? 'Document',
-      meta: [collection?.name, document?.source].filter(Boolean).join(' · '),
+      meta: collection?.name ?? '',
       trailing: pagesLabel(group.pages),
       mark: (size) => (document ? <FileKindIcon kind={document.kind} size={size} /> : <span style={{ width: size, height: size }} />),
       onOpen: () => onOpen(group.sources[0]),

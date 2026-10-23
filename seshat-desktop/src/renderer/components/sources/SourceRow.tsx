@@ -2,19 +2,17 @@ import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAp
 import type { SourceItem } from './sourceItem'
 
 const ROW =
-  'flex w-full cursor-pointer items-center gap-3 rounded-xl border border-solid bg-transparent px-3 py-2.5 text-left no-underline transition-[border-color,background-color] duration-150 hover:bg-[var(--surface-hover)]'
+  'flex w-full cursor-pointer items-center gap-2.5 border-0 border-b border-solid border-[var(--border-soft)] bg-transparent px-3 py-2 text-left no-underline transition-colors duration-150 last:border-b-0 hover:bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)]'
 
-export function SourceRow({ item, sessionId, delay = 0 }: { item: SourceItem; sessionId?: string; delay?: number }) {
-  const className = `${ROW} ${item.active ? 'border-[var(--accent-primary)] bg-[var(--accent-subtle)]' : 'border-[var(--border-soft)]'}`
-  const style = { animation: `slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms both` }
+// One line of the list of sources: the mark, the title, and on the right where it comes from.
+export function SourceRow({ item, sessionId }: { item: SourceItem; sessionId?: string }) {
+  const className = `${ROW} ${item.active ? 'bg-[var(--accent-subtle)]' : ''}`
+  const place = [item.meta, item.trailing].filter(Boolean).join(' · ')
   const content = (
     <>
-      {item.mark(30)}
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[12.5px] font-semibold text-[var(--text-primary)]">{item.title}</span>
-        <span className="block truncate text-[11px] text-[var(--text-muted)]">{item.meta}</span>
-      </span>
-      {item.trailing && <span className="shrink-0 text-[11px] text-[var(--text-muted)]">{item.trailing}</span>}
+      {item.mark(18)}
+      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[var(--text-primary)]">{item.title}</span>
+      {place && <span className="max-w-[200px] shrink-0 truncate text-[11px] text-[var(--text-muted)]">{place}</span>}
     </>
   )
 
@@ -23,7 +21,6 @@ export function SourceRow({ item, sessionId, delay = 0 }: { item: SourceItem; se
     return (
       <a
         className={className}
-        style={style}
         href={href}
         target="_blank"
         rel="noreferrer"
@@ -38,7 +35,7 @@ export function SourceRow({ item, sessionId, delay = 0 }: { item: SourceItem; se
     )
   }
   return (
-    <button type="button" className={className} style={style} onClick={item.onOpen}>
+    <button type="button" className={className} onClick={item.onOpen}>
       {content}
     </button>
   )
