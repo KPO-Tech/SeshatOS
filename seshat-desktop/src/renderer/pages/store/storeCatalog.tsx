@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChartHistogram, MailOpen, Peoples, Robot } from '@icon-park/react'
+import { edition } from '@renderer/lib/edition'
 
 // Every platform SeshatOS can host, ready or not yet built: the one list that
 // says what exists and what is still ahead. Skills and Plugins are not here:
@@ -26,6 +27,7 @@ export const STORE_APPS: StoreApp[] = [
     tagline: 'Search and ask across your organization’s documents.',
     description: 'Connect your sources, find a document by keyword, or ask a question and read the answer next to the passages it comes from.',
     logo: 'brand/knowledge-icon.svg',
+    route: edition.knowledgeApp ? '/knowledge' : undefined,
     needsCloud: true,
     featured: true
   },

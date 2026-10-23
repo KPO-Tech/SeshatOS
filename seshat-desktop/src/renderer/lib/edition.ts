@@ -13,19 +13,23 @@ export type Edition = {
   knowledge: boolean
   // The community store page.
   store: boolean
+  // The Knowledge platform page, opened from the Store and the sidebar.
+  knowledgeApp: boolean
 }
 
 const V1_EDITION: Edition = {
   accounts: false,
   cloud: false,
   knowledge: false,
-  store: false
+  store: false,
+  knowledgeApp: false
 }
 
 // What the next edition will switch on, for work in progress: run `npm run dev:next`. The public build never reads it.
 const NEXT_EDITION: Edition = {
   ...V1_EDITION,
-  store: true
+  store: true,
+  knowledgeApp: true
 }
 
 export const edition: Edition = import.meta.env.VITE_SESHAT_EDITION === 'next' ? NEXT_EDITION : V1_EDITION

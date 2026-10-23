@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { ApplicationOne, Browser, Plus, Puzzle, Search, Workbench } from '@icon-park/react'
+import { ApplicationOne, Book, Browser, Plus, Puzzle, Search, Workbench } from '@icon-park/react'
 import { SearchModal } from '@renderer/components/layout/SearchModal'
 import { SessionHistoryModal } from '@renderer/components/layout/SessionHistoryModal'
 import { edition } from '@renderer/lib/edition'
@@ -100,6 +100,7 @@ export function Sidebar() {
               <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
               <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
               <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
+              {edition.knowledgeApp && <SidebarItem icon={<Book theme="outline" size={16} />} label="Knowledge" collapsed={collapsed} active={item('/knowledge')} onClick={() => navigate('/knowledge')} />}
             </>
           )}
         </div>
