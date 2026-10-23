@@ -59,7 +59,7 @@ export function AskPage() {
   if (turns.length === 0) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 pb-16 pt-10">
-        <div className="flex w-full max-w-[720px] flex-col items-center" style={{ animation: 'slide-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
+        <div className="flex w-full max-w-[var(--chat-max-width)] flex-col items-center" style={{ animation: 'slide-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
           <img src="brand/knowledge-icon.svg" alt="" width={60} height={60} className="rounded-[22%] shadow-[0_14px_34px_-14px_var(--accent-primary)]" />
           <h1 className="mb-0 mt-6 text-center text-[34px] font-normal leading-[1.15] tracking-[-0.015em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
             What do you want to know?
@@ -77,14 +77,14 @@ export function AskPage() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div ref={scroller} className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pt-8">
-        <div className="mx-auto flex max-w-[720px] flex-col gap-12 pb-10">
+        <div className="mx-auto flex max-w-[var(--chat-max-width)] flex-col gap-12 pb-10">
           {turns.map((turn) => (
             <TurnView key={turn.id} turn={turn} scopeName={scopeName} onOpenPassage={onOpenPassage} />
           ))}
         </div>
       </div>
       <div className="shrink-0 px-6 pb-5">
-        <div className="mx-auto max-w-[720px]">
+        <div className="mx-auto max-w-[var(--chat-max-width)]">
           {composer}
           {notice}
         </div>
