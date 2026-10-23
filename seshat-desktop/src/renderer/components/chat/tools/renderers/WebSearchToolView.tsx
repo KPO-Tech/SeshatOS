@@ -4,11 +4,11 @@ import { CodeBox, HCARD_HEADER_STAT_CSS, HeaderCard } from '../common'
 import { fmtDuration, parseWebSearchHits } from '../helpers'
 import type { ToolViewProps } from '../types'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { SiteIcon } from '@renderer/components/sources/SiteIcon'
 
 const LINKS_CSS = '[scrollbar-width:thin] [scrollbar-color:var(--border-soft)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-app-border-subtle flex flex-col overflow-y-auto'
 const LINKS_CSS_CAPPED = `${LINKS_CSS} max-h-[220px]`
 const LINK_ITEM_CSS = 'flex items-center gap-2.5 border-0 border-b border-app-border-subtle px-2.5 py-2 no-underline transition-colors duration-150 last:border-b-0 hover:bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)]'
-const LINK_FAVICON_CSS = 'inline-flex size-[18px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-panel)_74%,var(--surface-root))]'
 
 export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolViewProps) {
   const query = typeof tool.input.query === 'string' ? tool.input.query : ''
@@ -63,7 +63,7 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
                     openInAppBrowser(hit.url, sessionId)
                   }}
                 >
-                  <Favicon domain={domain} fallback={sourceInitial(hit.title || domain)} />
+                  <SiteIcon domain={domain} fallback={sourceInitial(hit.title || domain)} size={18} />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[12px] font-medium leading-[1.35] text-app-text">{hit.title || hit.url}</span>
                   </span>
@@ -89,24 +89,6 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
         </div>
       )}
     </HeaderCard>
-  )
-}
-
-function Favicon({ domain, fallback }: { domain: string; fallback: string }) {
-  const [failed, setFailed] = useState(false)
-  if (!domain || failed) {
-    return <span className={`${LINK_FAVICON_CSS} bg-[color-mix(in_srgb,var(--accent-primary)_88%,black)] text-[9px] font-bold text-white`}>{fallback}</span>
-  }
-  return (
-    <span className={LINK_FAVICON_CSS} aria-hidden="true">
-      <img
-        className="block size-full object-cover"
-        src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
-        alt=""
-        loading="lazy"
-        onError={() => setFailed(true)}
-      />
-    </span>
   )
 }
 

@@ -23,6 +23,7 @@ const skills = () => import('@renderer/components/skills/SkillsPage').then((m) =
 const projects = () => import('@renderer/pages/projects').then((m) => ({ Component: m.ProjectsPage }))
 const projectDetail = () => import('@renderer/pages/projects/detail').then((m) => ({ Component: m.ProjectDetailPage }))
 const store = () => import('@renderer/pages/store').then((m) => ({ Component: m.StorePage }))
+const knowledge = () => import('@renderer/pages/knowledge').then((m) => ({ Component: m.KnowledgePage }))
 const admin = () => import('@renderer/pages/admin').then((m) => ({ Component: m.AdminPage }))
 
 // Authentication is handled in App.tsx (this router only mounts once signed
@@ -37,6 +38,7 @@ export const router = createHashRouter([
       { path: 'skills', lazy: skills },
       { path: 'plugins', lazy: plugins },
       ...(edition.store ? [{ path: 'store', lazy: store }] : []),
+      ...(edition.knowledgeApp ? [{ path: 'knowledge/*', lazy: knowledge }] : []),
       { path: 'projects', lazy: projects },
       { path: 'projects/:projectId', lazy: projectDetail },
       ...(edition.cloud ? [{ path: 'admin/*', lazy: admin }] : [])

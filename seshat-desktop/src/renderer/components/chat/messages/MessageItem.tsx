@@ -17,6 +17,10 @@ import type { ChangedFile } from '@renderer/lib/changedFiles'
 import { ChangedFiles } from './ChangedFiles'
 import { InlineMedia, isInlineMedia } from './InlineMedia'
 import { MessageActions } from './MessageActions'
+import { edition } from '@renderer/lib/edition'
+import { SourcesDisclosure } from '@renderer/components/sources/SourcesDisclosure'
+import { webSourceItems } from '@renderer/components/sources/webSourceItems'
+import type { WebSource } from '@renderer/lib/webSources'
 import { PromptEditor } from './PromptEditor'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
@@ -169,6 +173,8 @@ type Props = {
   onRegenerate?: () => void
   // False for an assistant message that a later one of the same turn follows: the actions sit under the end of the turn only.
   endsTurn?: boolean
+  webSources?: WebSource[]
+  consultedPages?: WebSource[]
 }
 
 export type QuietGroupItem =
@@ -315,7 +321,7 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
   return { text, attachments: messageAttachments(message) }
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages }: Props) {
   const [editing, setEditing] = useState(false)
   if (isCompactionDivider(message)) {
     const first = message.content[0]
@@ -418,7 +424,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                   isUser && message.status === 'error' && 'border-app-error',
                 )}
               >
-                <MarkdownView sessionId={sessionId}>{block.text}</MarkdownView>
+                <MarkdownView sessionId={sessionId} sources={edition.sources ? consultedPages : undefined}>{block.text}</MarkdownView>
                 {isUser && message.status === 'error' && (
                   <button
                     type="button"
@@ -465,6 +471,12 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
         })}
 
         {changedFiles && changedFiles.length > 0 && !liveActivity && <ChangedFiles files={changedFiles} sessionId={sessionId} />}
+
+        {webSources && webSources.length > 0 && !liveActivity && edition.sources && (
+          <div className="mt-4">
+            <SourcesDisclosure items={webSourceItems(webSources)} sessionId={sessionId} />
+          </div>
+        )}
 
         {liveActivity && <LiveActivityBlock label={liveActivity.label} detail={liveActivity.detail} />}
         {!liveActivity && justCompleted && <CompletionFlash />}

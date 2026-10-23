@@ -9,6 +9,9 @@ import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
+import { citedPages, type MarkdownNode } from '@renderer/lib/markdownLinks'
+import type { WebSource } from '@renderer/lib/webSources'
+import { WebCitation } from '@renderer/components/sources/WebCitation'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -273,6 +276,8 @@ type Props = {
   sessionId?: string
   /** "chat" (default) is the compact size of messages and side panels; "document" is the larger one of a page read on its own. */
   variant?: 'chat' | 'document'
+  /** The pages the agent consulted for this answer: a link to one of them is drawn as a citation. */
+  sources?: WebSource[]
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
@@ -287,8 +292,11 @@ type CodeProps = {
   children?: ReactNode
 }
 
-export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat' }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
+  // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
+  const sourcesKey = sources?.map((source) => source.url).join('|') ?? ''
+  const consulted = useMemo<WebSource[]>(() => sources ?? [], [sourcesKey])
 
   // react-markdown uses the identity of each entry here as the React element
   // type for that tag. A fresh object literal (recreated on every keystroke
@@ -328,8 +336,15 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </code>
             )
           },
-          p({ children }) {
-            return <p className="mb-4 last:mb-0">{children}</p>
+          // The pages a paragraph or item cites by its links come as one small chip at its end.
+          p({ node, children }: { node?: unknown; children?: ReactNode }) {
+            const cited = citedPages(node as MarkdownNode | undefined, consulted)
+            return (
+              <p className="mb-4 last:mb-0">
+                {children}
+                {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
+              </p>
+            )
           },
           pre({ children }) {
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
@@ -353,8 +368,17 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           ol({ children }) {
             return <ol className="mb-4 list-decimal pl-6">{children}</ol>
           },
-          li({ children }) {
-            return <li className="mb-2 pl-1 last:mb-0">{children}</li>
+          li({ node, children }: { node?: unknown; children?: ReactNode }) {
+            const tree = node as MarkdownNode | undefined
+            // An item whose text sits in a paragraph of its own already gets its chip from that paragraph.
+            const ownText = !tree?.children?.some((child) => child.tagName === 'p')
+            const cited = ownText ? citedPages(tree, consulted) : []
+            return (
+              <li className="mb-2 pl-1 last:mb-0">
+                {children}
+                {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
+              </li>
+            )
           },
           h1({ children }) {
             return <h1 className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
@@ -400,7 +424,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </a>
             )
           }
-        }), [streaming, sessionId])
+        }), [streaming, sessionId, consulted])
 
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
