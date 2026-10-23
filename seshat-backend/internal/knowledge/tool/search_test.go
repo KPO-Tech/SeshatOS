@@ -149,7 +149,8 @@ func TestSearchTool_Call_GivesEachExcerptARefAndItsPages(t *testing.T) {
 }
 
 func TestRef(t *testing.T) {
-	if Ref("c1", "k") != Ref("c1", "k") {
+	first, again := Ref("c1", "k"), Ref("c1", "k")
+	if first != again {
 		t.Fatal("a ref must be the same every time")
 	}
 	if Ref("c1", "k") == Ref("c2", "k") || Ref("c1", "k") == Ref("c1", "j") {
