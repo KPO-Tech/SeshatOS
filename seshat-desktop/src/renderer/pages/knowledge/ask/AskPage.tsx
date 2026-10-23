@@ -64,7 +64,7 @@ export function AskPage() {
           <h1 className="mb-0 mt-6 text-center text-[34px] font-normal leading-[1.15] tracking-[-0.015em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
             What do you want to know?
           </h1>
-          <p className="mb-0 mt-3 max-w-[460px] text-center text-[13.5px] leading-[21px] text-[var(--text-muted)]">
+          <p className="mb-0 mt-3 text-center text-[13.5px] leading-[21px] text-[var(--text-muted)]">
             Answers come only from the documents you can read, and each one shows the passages it rests on.
           </p>
           <div className="mt-8 w-full">{composer}</div>
