@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from '@renderer/api/client'
-import type { ProviderModel, ProviderSetting } from '@renderer/api/types'
+import type { ProviderModel } from '@renderer/api/types'
 import { fetchProviderModels, useProviders } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import type { ChatSession } from '@renderer/stores/session'
+import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 
 export type ModelChoice = {
   id: string
@@ -51,12 +52,6 @@ export function providerDisplayName(name: string, kind: string): string {
   if (!providerKind) return displayName
   if (displayName.toLowerCase() === providerKind.toLowerCase()) return displayName
   return displayName
-}
-
-function isChatProviderUsable(provider: ProviderSetting): boolean {
-  if (provider.provider === 'ollama') return true
-  if (provider.auth_kind === 'oauth') return provider.connection_status === 'connected'
-  return provider.has_api_key || provider.connection_status === 'ready'
 }
 
 export function useConversationModels({ sessionId, session, updateSession, onSaveError }: UseConversationModelsArgs) {

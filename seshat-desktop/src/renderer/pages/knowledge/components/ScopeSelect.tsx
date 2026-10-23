@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Down, FolderOpen } from '@icon-park/react'
-import type { AskScope, KnowledgeCollection } from '../api/types'
+import type { AskScope, KnowledgeCollection } from '../chat/useCollections'
 
 type Props = {
   collections: KnowledgeCollection[]
@@ -52,9 +52,9 @@ export function ScopeSelect({ collections, scope, onChange }: Props) {
           className="absolute bottom-[calc(100%+8px)] left-0 z-30 w-[260px] rounded-xl border border-solid border-[var(--border-soft)] bg-[var(--surface-menu)] p-1.5 shadow-[0_16px_34px_rgba(0,0,0,0.28)]"
           style={{ animation: 'slide-up 160ms ease both' }}
         >
-          <Option label="All collections" note={`${collections.reduce((sum, item) => sum + item.documentCount, 0)} documents`} selected={!current} onPick={() => pick(null)} />
+          <Option label="All collections" note={`${collections.length} ${collections.length === 1 ? 'collection' : 'collections'}`} selected={!current} onPick={() => pick(null)} />
           {collections.map((item) => (
-            <Option key={item.id} label={item.name} note={`${item.documentCount} ${item.documentCount === 1 ? 'document' : 'documents'}`} selected={current?.id === item.id} onPick={() => pick(item.id)} />
+            <Option key={item.id} label={item.name} note={item.documentCount === null ? '' : `${item.documentCount} ${item.documentCount === 1 ? 'document' : 'documents'}`} selected={current?.id === item.id} onPick={() => pick(item.id)} />
           ))}
         </div>
       )}

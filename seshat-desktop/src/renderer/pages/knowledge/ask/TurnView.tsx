@@ -1,27 +1,72 @@
+import { useCallback, useMemo, type ReactNode } from 'react'
 import { Caution, Check, Info } from '@icon-park/react'
-import { splitAnswer } from './citations'
-import type { Turn } from './useAsk'
-import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../api/types'
-import { CitationChip } from '../components/CitationChip'
+import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SourcesDisclosure } from '@renderer/components/sources/SourcesDisclosure'
-import { documentSourceItems } from '../components/documentSourceItems'
+import { prepareAnswer, refOfHref } from '../chat/answerText'
+import type { AskTurn } from '../chat/askTurns'
+import type { Passage } from '../chat/knowledgeSearchResults'
+import { groupPassages } from '../chat/passageSources'
+import { CitationChip } from '../components/CitationChip'
+import { passageSourceItems } from '../components/passageSourceItems'
 
 type Props = {
-  turn: Turn
-  documents: Record<string, KnowledgeDocument>
-  collections: KnowledgeCollection[]
-  activeN: number | null
-  isLatest: boolean
-  onHoverSource: (n: number | null) => void
-  onOpenSource: (source: SourceRef) => void
+  turn: AskTurn
+  // The name of the collection the question was limited to, if it was.
+  scopeName: string | null
+  onOpenPassage: (passage: Passage) => void
 }
 
-export function TurnView({ turn, documents, collections, activeN, isLatest, onHoverSource, onOpenSource }: Props) {
-  const parts = splitAnswer(turn.text)
-  const sourceOf = (n: number) => turn.sources.find((item) => item.n === n)
-  const writing = turn.phase === 'writing'
-  const passageCount = turn.sources.length
-  const documentCount = new Set(turn.sources.map((source) => source.documentId)).size
+const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
+
+function Status({ turn }: { turn: AskTurn }): ReactNode {
+  if (turn.phase === 'error') {
+    return (
+      <>
+        <Caution size={13} className="text-[var(--accent-danger)]" />
+        <span className="text-[var(--accent-danger)]">The question could not be answered</span>
+      </>
+    )
+  }
+  if (turn.phase === 'searching') {
+    return (
+      <>
+        <span className="size-1.5 rounded-full bg-[var(--accent-primary)]" style={{ animation: 'pulse-opacity 1.1s ease-in-out infinite' }} />
+        <span>{turn.searching || turn.searches === 0 ? 'Searching' : 'Reading what was found'}</span>
+      </>
+    )
+  }
+  if (turn.passages.length > 0) {
+    const documents = groupPassages(turn.passages).length
+    return (
+      <>
+        <Check size={13} className="text-[var(--accent-success)]" />
+        <span>
+          {plural(turn.passages.length, 'passage', 'passages')} in {plural(documents, 'document', 'documents')}
+        </span>
+      </>
+    )
+  }
+  return turn.phase === 'done' ? <span>No passage found</span> : null
+}
+
+export function TurnView({ turn, scopeName, onOpenPassage }: Props) {
+  const known = useMemo(() => new Set(turn.passages.map((passage) => passage.ref)), [turn.passages])
+  const text = useMemo(() => prepareAnswer(turn.text, known), [turn.text, known])
+
+  // The markdown view rebuilds its components when this function changes: it changes only with the excerpts.
+  const renderCitation = useCallback(
+    (href: string | undefined) => {
+      const ref = refOfHref(href)
+      const passage = ref ? turn.passages.find((item) => item.ref === ref) : undefined
+      return passage ? <CitationChip passage={passage} onOpen={() => onOpenPassage(passage)} /> : null
+    },
+    [turn.passages, onOpenPassage]
+  )
+
+  const finished = turn.phase === 'done'
+  // The documents the answer cites; when it cites none, the ones the searches found, so that its basis is still shown.
+  const basis = turn.cited.length > 0 ? turn.cited : turn.passages
+  const documents = groupPassages(basis).length
 
   return (
     <section className="py-2" style={{ animation: 'slide-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
@@ -30,72 +75,32 @@ export function TurnView({ turn, documents, collections, activeN, isLatest, onHo
       </h2>
 
       <div className="mt-4 flex h-6 items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
-        {turn.phase === 'searching' ? (
-          <>
-            <span className="size-1.5 rounded-full bg-[var(--accent-primary)]" style={{ animation: 'pulse-opacity 1.1s ease-in-out infinite' }} />
-            <span>{turn.collectionsSearched > 1 ? `Searching ${turn.collectionsSearched} collections` : 'Searching'}</span>
-          </>
-        ) : turn.phase === 'error' ? (
-          <>
-            <Caution size={13} className="text-[var(--accent-danger)]" />
-            <span className="text-[var(--accent-danger)]">{turn.error}</span>
-          </>
-        ) : passageCount > 0 ? (
-          <>
-            <Check size={13} className="text-[var(--accent-success)]" />
-            <span>
-              {passageCount} {passageCount === 1 ? 'passage' : 'passages'} in {documentCount} {documentCount === 1 ? 'document' : 'documents'}
-            </span>
-          </>
-        ) : turn.phase === 'done' ? (
-          <span>No passage found</span>
-        ) : null}
+        <Status turn={turn} />
       </div>
 
-      {(turn.text || writing) && (
-        <p className="mb-0 mt-3 text-[15.5px] leading-[28px] text-[var(--text-primary)]">
-          {parts.map((part, index) => {
-            if (part.type === 'text') return <span key={index}>{part.value}</span>
-            const source = sourceOf(part.n)
-            if (!source) return null
-            const document = documents[source.documentId]
-            return (
-              <CitationChip
-                key={index}
-                source={source}
-                document={document}
-                collectionName={collections.find((item) => item.id === document?.collectionId)?.name}
-                active={isLatest && activeN === part.n}
-                onHover={(hovering) => onHoverSource(hovering ? part.n : null)}
-                onOpen={() => onOpenSource(source)}
-              />
-            )
-          })}
-          {writing && <span className="ml-0.5 inline-block h-[18px] w-[2px] translate-y-[3px] bg-[var(--accent-primary)]" style={{ animation: 'pulse-opacity 0.9s ease-in-out infinite' }} />}
-        </p>
+      {turn.text.trim() !== '' && (
+        <div className="mt-3">
+          <MarkdownView streaming={turn.phase === 'writing'} renderLink={renderCitation}>
+            {text}
+          </MarkdownView>
+        </div>
       )}
 
-      {turn.limits && (
+      {finished && (
         <div className="mt-5" style={{ animation: 'fade-in 400ms ease both' }}>
-          {turn.sources.length > 0 ? (
+          {basis.length > 0 ? (
             <SourcesDisclosure
-              items={documentSourceItems(turn.sources, documents, collections, isLatest ? activeN : null, onOpenSource)}
+              items={passageSourceItems(basis, null, onOpenPassage)}
               label={
                 <span className="inline-flex items-center gap-1.5">
                   <Info size={13} />
-                  {`Based on ${turn.limits.documentsUsed} ${turn.limits.documentsUsed === 1 ? 'document' : 'documents'} among those you can read, in ${turn.limits.collectionsSearched} ${turn.limits.collectionsSearched === 1 ? 'collection' : 'collections'}`}
+                  {`Based on ${plural(documents, 'document', 'documents')}${turn.collectionsSearched ? ` among ${plural(turn.collectionsSearched, 'collection', 'collections')} you can read` : ''}`}
                 </span>
               }
             />
           ) : (
-            <p className="m-0 flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
-              <Info size={13} />
-              {`Searched ${turn.limits.collectionsSearched} ${turn.limits.collectionsSearched === 1 ? 'collection' : 'collections'} you can read.`}
-            </p>
-          )}
-          {turn.limits.notFound && (
-            <p className="mb-0 mt-2 rounded-lg border border-solid border-[color-mix(in_srgb,var(--accent-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-warning)_10%,transparent)] px-3 py-2 text-[12.5px] leading-[18px] text-[var(--text-secondary)]">
-              {turn.limits.notFound}
+            <p className="m-0 rounded-lg border border-solid border-[color-mix(in_srgb,var(--accent-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-warning)_10%,transparent)] px-3 py-2 text-[12.5px] leading-[18px] text-[var(--text-secondary)]">
+              {scopeName ? `No passage in ${scopeName} matched. Try another collection or other words.` : 'No passage matched. Try other words, or look for the document by keyword.'}
             </p>
           )}
         </div>

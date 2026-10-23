@@ -44,12 +44,20 @@ The agent is told what the limit means (`knowledgeagent.ScopeBlock`): an empty r
 `knowledge_search` introduces each excerpt like this:
 
 ```text
-[1] ref=k7f3a9 score=0.8123 corpus=Legal file=Supplier contract template.docx pages=12 section="Termination"
+[1] ref=k7f3a91 score=0.8123 corpus=Legal file=Supplier contract template.docx pages=12 section="Termination"
 ```
 
-`ref` is `k` and six hexadecimal digits taken from the corpus and the key of the chunk (`tool.Ref`): the same excerpt has the same ref every time, and a ref cannot be guessed from the text. The prompt tells the agent to write the ref in square brackets after each sentence that rests on an excerpt, and never to write file names or pages itself. The interface finds the excerpt again from the tool result and draws the citation, so a ref that matches no result is dropped and a source cannot be invented.
+`ref` is `k` and six hexadecimal digits (seven characters) taken from the corpus and the key of the chunk (`tool.Ref`): the same excerpt has the same ref every time, and a ref cannot be guessed from the text. The prompt tells the agent to write the ref in square brackets after each sentence that rests on an excerpt, and never to write file names or pages itself. The interface finds the excerpt again from the tool result and draws the citation, so a ref that matches no result is dropped and a source cannot be invented.
 
 `pages` and `section` come from the chunk metadata (`page_numbers`, `heading_path`), when the document had them.
+
+## In the desktop
+
+The Ask view of the Knowledge page (`seshat-desktop/src/renderer/pages/knowledge/`) is a conversation of the chat with this agent, not a separate engine. `useKnowledgeConversation` creates a session with the default model, sends each question through the chat hook (`useChat`) with `agentSlug: "knowledge"` and the chosen collection as `corpusId`, and the chat engine streams, stops and keeps the history.
+
+The view reads the messages of the chat: `knowledgeSearchResults.ts` parses the text `knowledge_search` returns (the format above), `askTurns.ts` turns the messages into questions, excerpts and answers, and `answerText.ts` turns each `[ref]` the agent wrote into a citation chip, dropping a ref that matches no excerpt. Because the parser reads the text the tool writes, a change to that text (`formatResults` in `internal/knowledge/tool`) must change `knowledgeSearchResults.test.ts` with it.
+
+What the view cannot show yet: the document itself (a click on a citation opens the passage the agent read, with its file, pages and section), the source system and the date of the file, and a history of past conversations.
 
 ## Open points
 

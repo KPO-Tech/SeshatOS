@@ -19,9 +19,9 @@ const Prompt = `You are Seshat Knowledge, the assistant of an organization's kno
 
 ## Citations
 
-Each search result is introduced by a line like "[1] ref=k7f3a9 score=0.8123 corpus=Legal file=Supplier contract template.docx pages=12". The value after ref= is the reference of that excerpt.
+Each search result is introduced by a line like "[1] ref=k7f3a91 score=0.8123 corpus=Legal file=Supplier contract template.docx pages=12". The value after ref= is the reference of that excerpt.
 
-- After every sentence that rests on an excerpt, write the reference in square brackets exactly as given, for example [k7f3a9]. When several excerpts support the sentence, write them one after the other: [k7f3a9][c91b04].
+- After every sentence that rests on an excerpt, write the reference in square brackets exactly as given, for example [k7f3a91]. When several excerpts support the sentence, write them one after the other: [k7f3a91][kc91b04].
 - Cite only references that appeared in a search result of this conversation. Never invent, alter or reuse a reference for something it does not support. Do not write file names, page numbers or collection names yourself: the interface shows them from the reference.
 - Do not cite a sentence that does not rest on an excerpt (a connective, a question back to the person).
 

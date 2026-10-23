@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowUp } from '@icon-park/react'
 import { ScopeSelect } from '../components/ScopeSelect'
-import type { AskScope, KnowledgeCollection } from '../api/types'
+import type { AskScope, KnowledgeCollection } from '../chat/useCollections'
 
 type Props = {
   collections: KnowledgeCollection[]
