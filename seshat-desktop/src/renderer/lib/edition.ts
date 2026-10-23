@@ -22,4 +22,10 @@ const V1_EDITION: Edition = {
   store: false
 }
 
-export const edition: Edition = V1_EDITION
+// What the next edition will switch on, for work in progress: run `npm run dev:next`. The public build never reads it.
+const NEXT_EDITION: Edition = {
+  ...V1_EDITION,
+  store: true
+}
+
+export const edition: Edition = import.meta.env.VITE_SESHAT_EDITION === 'next' ? NEXT_EDITION : V1_EDITION

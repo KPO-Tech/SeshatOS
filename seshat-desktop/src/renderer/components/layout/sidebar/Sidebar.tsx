@@ -99,7 +99,6 @@ export function Sidebar() {
             <>
               <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
               <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
-              {edition.store && <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />}
               <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
             </>
           )}
@@ -108,6 +107,12 @@ export function Sidebar() {
         <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 py-2">
           {!collapsed && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onOpenHistory={() => setHistoryOpen(true)} />}
         </div>
+
+        {edition.store && (
+          <div className={cx('mt-1 flex flex-col px-2', collapsed && 'items-center')}>
+            <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />
+          </div>
+        )}
 
         <SidebarFooterMenu collapsed={collapsed} />
 

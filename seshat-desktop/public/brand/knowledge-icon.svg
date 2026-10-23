@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SeshatOS Knowledge">
+<rect x="0" y="0" width="512" height="512" rx="112" fill="#EA7828"/>
+<g transform="translate(78.557 122.918) scale(0.538)">
+<path d="M80 178 C57 171 37 180 37 201 L37 378 C37 398 48 403 66 397 C125 378 191 378 259 422" stroke="#F1DEC8" stroke-width="24" stroke-linejoin="round" fill="none" stroke-linecap="round"/>
+<path d="M580 178 C603 171 623 180 623 201 L623 378 C623 398 612 403 594 397 C535 378 469 378 401 422" stroke="#F1DEC8" stroke-width="24" stroke-linejoin="round" fill="none" stroke-linecap="round"/>
+<path d="M125 147 C177 119 225 153 257 199 C288 244 298 308 304 364" stroke="#F1DEC8" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M535 147 C483 119 435 153 403 199 C372 244 362 308 356 364" stroke="#F1DEC8" stroke-width="25" fill="none" stroke-linecap="round"/>
+<path d="M155 225 C218 251 271 304 298 361" stroke="#F1DEC8" stroke-width="21" fill="none" stroke-linecap="round"/>
+<path d="M505 225 C442 251 389 304 362 361" stroke="#F1DEC8" stroke-width="21" fill="none" stroke-linecap="round"/>
+<path d="M155 320 C209 330 246 350 273 380" stroke="#F1DEC8" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M505 320 C451 330 414 350 387 380" stroke="#F1DEC8" stroke-width="17" fill="none" stroke-linecap="round"/>
+<path d="M316 80 L344 80 L344 360 Q344 374 330 374 Q316 374 316 360 Z" fill="#F1DEC8"/>
+<circle cx="330" cy="52" r="39" fill="#F1DEC8"/>
+<circle cx="150" cy="217" r="31" fill="#F1DEC8"/>
+<circle cx="510" cy="217" r="31" fill="#F1DEC8"/>
+<circle cx="150" cy="312" r="29" fill="#F1DEC8"/>
+<circle cx="510" cy="312" r="29" fill="#F1DEC8"/>
+<circle cx="330" cy="448" r="34" fill="#F1DEC8"/>
+</g>
+</svg>
