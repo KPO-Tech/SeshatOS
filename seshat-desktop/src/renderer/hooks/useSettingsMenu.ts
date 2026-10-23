@@ -7,7 +7,7 @@ import { hasAdminAccess } from '@renderer/lib/authz'
 import { useAuthStore } from '@renderer/stores/auth'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 
-// One answer to "where does Settings / Feedback / Admin go, and is Admin
+// One answer to "where does Settings / Config / Admin go, and is Admin
 // reachable" for every place that shows that menu. Each host owns its own
 // trigger markup and open/close state.
 export function useSettingsMenu() {
@@ -25,14 +25,10 @@ export function useSettingsMenu() {
     return () => { cancelled = true }
   }, [])
 
-  function go(kind: 'settings' | 'config' | 'feedback' | 'admin') {
+  function go(kind: 'settings' | 'config' | 'admin') {
     if (kind === 'settings') useDialogsStore.getState().openSettings()
     else if (kind === 'config') useDialogsStore.getState().openConfig()
-    else if (kind === 'admin') {
-      if (isAdmin) navigate('/admin')
-    } else {
-      window.location.href = 'mailto:feedback@seshat.local?subject=SeshatOS%20feedback'
-    }
+    else if (isAdmin) navigate('/admin')
   }
 
   return { isAdmin, connected, go }
