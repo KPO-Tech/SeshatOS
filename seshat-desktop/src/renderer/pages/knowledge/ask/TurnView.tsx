@@ -91,7 +91,7 @@ export function TurnView({ turn, documents, collections, activeN, isLatest, onHo
       )}
 
       {turn.sources.length > 0 && (
-        <SourcesDisclosure sources={turn.sources} documents={documents} collections={collections} activeN={isLatest ? activeN : null} onOpen={onOpenSource} onHover={onHoverSource} />
+        <SourcesDisclosure sources={turn.sources} documents={documents} collections={collections} activeN={isLatest ? activeN : null} onOpen={onOpenSource} />
       )}
     </section>
   )
