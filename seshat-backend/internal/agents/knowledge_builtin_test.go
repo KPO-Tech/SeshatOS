@@ -13,8 +13,8 @@ func TestGetDefinitionKnowledgeIsBuiltIn(t *testing.T) {
 	if !ok || def == nil {
 		t.Fatal("the Knowledge agent must always resolve, with no store and no organization")
 	}
-	if !reflect.DeepEqual(def.Tools, []string{"knowledge_search"}) {
-		t.Fatalf("the Knowledge agent has exactly one tool, got %v", def.Tools)
+	if !reflect.DeepEqual(def.Tools, []string{"knowledge_search", "knowledge_read"}) {
+		t.Fatalf("the Knowledge agent has exactly its two tools, got %v", def.Tools)
 	}
 	if def.GetSystemPrompt == nil || def.GetSystemPrompt() == "" {
 		t.Fatal("the Knowledge agent carries its own system prompt")
@@ -37,7 +37,7 @@ func TestStoredAgentCannotTakeTheKnowledgeSlug(t *testing.T) {
 		t.Fatalf("seeding a shadowing row: %v", err)
 	}
 	def, ok := svc.GetDefinition(context.Background(), nil, "knowledge")
-	if !ok || !reflect.DeepEqual(def.Tools, []string{"knowledge_search"}) {
+	if !ok || !reflect.DeepEqual(def.Tools, []string{"knowledge_search", "knowledge_read"}) {
 		t.Fatalf("the built-in definition must win over a stored row, got %+v", def)
 	}
 }
