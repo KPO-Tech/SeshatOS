@@ -29,6 +29,14 @@ export const STORE_APPS: StoreApp[] = [
     needsCloud: true,
     featured: true
   },
+  {
+    id: 'automation',
+    name: 'Automation',
+    tagline: 'Agent workflows that run on a schedule or a trigger.',
+    description: 'Build governed workflows where agents use your tools, ask for approval when needed, and leave a trace of what they did.',
+    logo: 'brand/automation-icon.svg',
+    needsCloud: true
+  },
   { id: 'data', name: 'Data', tagline: 'Explore and transform structured data.', description: 'Work on tables and files with an agent at your side.', icon: <ChartHistogram size={20} /> },
   { id: 'inbox', name: 'Inbox', tagline: 'A connected mailbox with agent triage.', description: 'Sort and answer mail with an agent that knows your context.', icon: <MailOpen size={20} /> },
   { id: 'companion', name: 'Companion', tagline: 'A roster of agent personas.', description: 'Keep agents with their own role, tone and memory.', icon: <Robot size={20} /> },
