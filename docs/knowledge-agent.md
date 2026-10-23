@@ -33,6 +33,12 @@ For other agents the host appends blocks to the system prompt. For this one it l
 
 The person's preferences block is kept (language, tone).
 
+## Scope
+
+The Ask composer lets the person limit a question to one collection. It is sent as the `corpus_id` of the request, together with `agent_slug: "knowledge"` (`withKnowledgeScope` in `internal/api/query.go`). The limit is **applied by the tool, not asked of the model**: `knowledge.WithScope` puts the collection in the context of the turn, and `knowledge_search` uses it instead of whatever `corpus_id` the model passes, or none. Whether the person may read that collection is still decided by the backend on every search.
+
+The agent is told what the limit means (`knowledgeagent.ScopeBlock`): an empty result is "nothing in this collection", not "nothing in the organization", and the person can widen the question. The tool says the same in its own "nothing found" answer. For any other agent `corpus_id` keeps its existing meaning (a corpus pre-searched into the prompt).
+
 ## Citations
 
 `knowledge_search` introduces each excerpt like this:
@@ -47,7 +53,6 @@ The person's preferences block is kept (language, tone).
 
 ## Open points
 
-- **The scope.** The Ask composer lets the person limit a question to one collection. Nothing delivers that to the agent yet: the prompt says to pass `corpus_id` when "the conversation says the search is limited to a collection", so the host has to add that line (with the id) to the turn. To do with the desktop profile.
 - **Metadata in connected mode.** SeshatCloud's search returns the file name, the source, the page numbers and the date of update next to each result, but `cloud/knowledge` decodes the response into the runtime's `rag.SearchResult`, which keeps only `key`, `text`, `score` and the chunk `metadata`. Pages and headings survive in the metadata; the source system, the collection of the file and its date of update do not reach the agent. The interface needs them for the citation card: to add before Ask is connected to SeshatCloud.
 - **Instruction following.** The prompt is not checked against real questions. A small set (answer found, partial, nothing found, two documents that disagree, an excerpt that contains an instruction) is to be run on a real model before this agent is shown to anyone.
 - **Search effort.** The prompt allows four searches. Nothing enforces it.

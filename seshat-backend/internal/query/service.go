@@ -1604,6 +1604,12 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		}
 	}
 
+	// The collection the person limited the question to: every search of the Knowledge agent is already restricted to it (see
+	// knowledge.WithScope), and it must not read an empty result as "the organization has nothing on this".
+	if knowledgeProfile && strings.TrimSpace(p.CorpusID) != "" {
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, knowledgeagent.ScopeBlock)
+	}
+
 	// RAG: build and append knowledge context block when a corpus is attached.
 	var ragResults []RAGSearchResult
 	if strings.TrimSpace(p.CorpusID) != "" && s.knowledge != nil && !knowledgeProfile {

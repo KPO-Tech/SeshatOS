@@ -36,3 +36,9 @@ func Definition() *pkgagent.AgentDefinition {
 		GetSystemPrompt: func() string { return prompt },
 	}
 }
+
+// ScopeBlock is added to the prompt when the person limited the question to one collection. The limit is applied by the search tool;
+// this tells the agent what it means for what it may conclude.
+const ScopeBlock = `## Scope of this question
+
+The person limited this question to one collection. Every search you make is already restricted to it: you do not need to say where to look. A search that finds nothing means that this collection has nothing on it, not that the organization has nothing. Say so in those terms, and mention that the person can widen the question to all collections.`

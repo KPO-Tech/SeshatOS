@@ -46,9 +46,29 @@ func TestBuildContextInput_KnowledgeAgentIsNotToldAboutToolsItDoesNotHave(t *tes
 
 func TestKnowledgeAgentPromptTeachesTheCitationFormatTheToolWrites(t *testing.T) {
 	// The tool introduces each excerpt with "ref=" and the prompt tells the agent to cite that value: if one changes alone, citations break.
-	for _, want := range []string{"ref=", "knowledge_search", "corpus_id", "[k7f3a9]"} {
+	for _, want := range []string{"ref=", "knowledge_search", "already restricted", "[k7f3a9]"} {
 		if !strings.Contains(knowledgeagent.Prompt, want) {
 			t.Errorf("the prompt must mention %q", want)
 		}
+	}
+}
+
+func TestBuildContextInput_KnowledgeAgentIsToldWhenTheQuestionIsLimitedToACollection(t *testing.T) {
+	svc := &Service{agents: fakeAgentsProvider{def: knowledgeagent.Definition()}}
+
+	limited, _ := svc.BuildContextInput(context.Background(), ContextBuildParams{Prompt: "notice period", AgentSlug: knowledgeagent.Slug, CorpusID: "legal"})
+	if limited.AppendSystemPrompt == nil || !strings.Contains(*limited.AppendSystemPrompt, "Scope of this question") {
+		t.Fatal("an agent whose question is limited to a collection must be told what that means")
+	}
+
+	open, _ := svc.BuildContextInput(context.Background(), ContextBuildParams{Prompt: "notice period", AgentSlug: knowledgeagent.Slug})
+	if open.AppendSystemPrompt != nil && strings.Contains(*open.AppendSystemPrompt, "Scope of this question") {
+		t.Fatal("a question over every collection must not carry the scope block")
+	}
+
+	// Another agent keeps its own use of corpus_id: no scope block.
+	other, _ := (&Service{}).BuildContextInput(context.Background(), ContextBuildParams{Prompt: "hello", CorpusID: "legal"})
+	if other.AppendSystemPrompt != nil && strings.Contains(*other.AppendSystemPrompt, "Scope of this question") {
+		t.Fatal("only the Knowledge agent is given the scope block")
 	}
 }
