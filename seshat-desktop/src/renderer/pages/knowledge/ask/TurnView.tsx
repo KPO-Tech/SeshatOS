@@ -2,6 +2,7 @@ import { Caution, Check, Info } from '@icon-park/react'
 import { splitAnswer } from './citations'
 import type { Turn } from './useAsk'
 import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../data/types'
+import { CitationChip } from '../components/CitationChip'
 import { SourcesList } from '../components/SourcesList'
 
 type Props = {
@@ -14,25 +15,9 @@ type Props = {
   onOpenSource: (source: SourceRef) => void
 }
 
-function CitePill({ n, active, onHover, onOpen }: { n: number; active: boolean; onHover: (n: number | null) => void; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      onMouseEnter={() => onHover(n)}
-      onMouseLeave={() => onHover(null)}
-      onClick={onOpen}
-      aria-label={`Source ${n}`}
-      className={`mx-[3px] inline-flex h-[18px] min-w-[18px] cursor-pointer items-center justify-center rounded-full border-0 px-1 align-[2px] text-[10.5px] font-bold transition-colors ${
-        active ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--accent-subtle)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white'
-      }`}
-    >
-      {n}
-    </button>
-  )
-}
-
 export function TurnView({ turn, documents, collections, activeN, isLatest, onHoverSource, onOpenSource }: Props) {
   const parts = splitAnswer(turn.text)
+  const sourceOf = (n: number) => turn.sources.find((item) => item.n === n)
   const writing = turn.phase === 'writing'
   const passageCount = turn.sources.length
   const documentCount = new Set(turn.sources.map((source) => source.documentId)).size
@@ -68,16 +53,23 @@ export function TurnView({ turn, documents, collections, activeN, isLatest, onHo
 
       {(turn.text || writing) && (
         <p className="mb-0 mt-3 text-[15.5px] leading-[28px] text-[var(--text-primary)]">
-          {parts.map((part, index) =>
-            part.type === 'text' ? (
-              <span key={index}>{part.value}</span>
-            ) : (
-              <CitePill key={index} n={part.n} active={isLatest && activeN === part.n} onHover={onHoverSource} onOpen={() => {
-                const source = turn.sources.find((item) => item.n === part.n)
-                if (source) onOpenSource(source)
-              }} />
+          {parts.map((part, index) => {
+            if (part.type === 'text') return <span key={index}>{part.value}</span>
+            const source = sourceOf(part.n)
+            if (!source) return null
+            const document = documents[source.documentId]
+            return (
+              <CitationChip
+                key={index}
+                source={source}
+                document={document}
+                collectionName={collections.find((item) => item.id === document?.collectionId)?.name}
+                active={isLatest && activeN === part.n}
+                onHover={(hovering) => onHoverSource(hovering ? part.n : null)}
+                onOpen={() => onOpenSource(source)}
+              />
             )
-          )}
+          })}
           {writing && <span className="ml-0.5 inline-block h-[18px] w-[2px] translate-y-[3px] bg-[var(--accent-primary)]" style={{ animation: 'pulse-opacity 0.9s ease-in-out infinite' }} />}
         </p>
       )}

@@ -3,7 +3,7 @@ import { KNOWLEDGE_NAV, type KnowledgeTab } from '../nav'
 const ABOUT: Record<Exclude<KnowledgeTab, 'ask'>, { title: string; text: string }> = {
   search: {
     title: 'Find a document by keyword',
-    text: 'A search engine for your organization’s own data. No model involved: the same words give the same results, filtered by collection, source, type and date.'
+    text: 'A search engine for the own data of your organization. No model involved: the same words give the same results, filtered by collection, source, type and date.'
   },
   collections: {
     title: 'Browse what is inside',

@@ -24,7 +24,7 @@ export const STORE_APPS: StoreApp[] = [
   {
     id: 'knowledge',
     name: 'Knowledge',
-    tagline: 'Search and ask across your organization’s documents.',
+    tagline: 'Search and ask across the documents of your organization.',
     description: 'Connect your sources, find a document by keyword, or ask a question and read the answer next to the passages it comes from.',
     logo: 'brand/knowledge-icon.svg',
     route: edition.knowledgeApp ? '/knowledge' : undefined,

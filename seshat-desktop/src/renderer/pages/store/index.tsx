@@ -87,7 +87,7 @@ function FeaturedApp({ app, onOpen }: { app: StoreApp; onOpen?: () => void }) {
           </div>
           <p className="mb-0 mt-1 text-[14px] text-[var(--text-primary)]">{app.tagline}</p>
           <p className="mb-0 mt-2 max-w-[560px] text-[12.5px] leading-[19px] text-[var(--text-muted)]">{app.description}</p>
-          {app.needsCloud && <p className="mb-0 mt-3 text-[12px] text-[var(--text-secondary)]">Works on your organization’s data: needs a SeshatCloud connection.</p>}
+          {app.needsCloud && <p className="mb-0 mt-3 text-[12px] text-[var(--text-secondary)]">Works on the data of your organization: needs a SeshatCloud connection.</p>}
           <button
             type="button"
             disabled={!onOpen}
