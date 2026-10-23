@@ -2,16 +2,21 @@ import { useEffect } from 'react'
 import { CloseSmall } from '@icon-park/react'
 import type { Passage } from '../chat/knowledgeSearchResults'
 import { kindOfFile, pagesLabel } from '../chat/passageSources'
+import { Highlighted } from '../search/Highlighted'
 import { FileKindIcon } from './FileKindIcon'
 
 type Props = {
   passage: Passage | null
+  // The words of a search to mark in the passage, when the passage comes from one.
+  terms?: readonly string[]
+  // What the footer says about the passage.
+  note?: string
   onClose: () => void
 }
 
 // A cited passage opened beside the answer, with where it comes from. The document itself is not read here yet: only the passage the
 // agent was given.
-export function PassageDrawer({ passage, onClose }: Props) {
+export function PassageDrawer({ passage, terms = [], note = 'This is the passage the answer rests on, as the agent read it.', onClose }: Props) {
   useEffect(() => {
     if (!passage) return
     const close = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
@@ -44,10 +49,10 @@ export function PassageDrawer({ passage, onClose }: Props) {
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-6">
           <div className="rounded-lg border border-solid border-[var(--border-soft)] bg-[var(--surface-root)] px-9 py-9">
             <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-[26px] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
-              {passage.text}
+              <Highlighted text={passage.text} terms={terms} />
             </p>
           </div>
-          <p className="mb-0 mt-3 text-center text-[11.5px] text-[var(--text-muted)]">This is the passage the answer rests on, as the agent read it.</p>
+          <p className="mb-0 mt-3 text-center text-[11.5px] text-[var(--text-muted)]">{note}</p>
         </div>
       </aside>
     </div>

@@ -13,6 +13,8 @@ type Props = {
   scope: AskScope
   busy: boolean
   placeholder?: string
+  // A question to start from, for instance the words of a search.
+  initialValue?: string
   autoFocus?: boolean
   onScopeChange: (scope: AskScope) => void
   onSubmit: (question: string) => void
@@ -20,8 +22,8 @@ type Props = {
 }
 
 // The input of the Ask view, made like the chat input: the same card, text size, selector pill and send button.
-export function AskComposer({ collections, scope, busy, placeholder = 'Ask about your documents', autoFocus, onScopeChange, onSubmit, onStop }: Props) {
-  const [value, setValue] = useState('')
+export function AskComposer({ collections, scope, busy, placeholder = 'Ask about your documents', initialValue = '', autoFocus, onScopeChange, onSubmit, onStop }: Props) {
+  const [value, setValue] = useState(initialValue)
   const field = useRef<HTMLTextAreaElement>(null)
   const canSend = value.trim() !== '' && !busy
 
