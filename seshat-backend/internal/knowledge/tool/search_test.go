@@ -148,6 +148,44 @@ func TestSearchTool_Call_GivesEachExcerptARefAndItsPages(t *testing.T) {
 	}
 }
 
+func TestSearchTool_Call_ASearchLimitedToACollectionStaysInIt(t *testing.T) {
+	backend := &fakeBackend{
+		corpora: []knowledge.Corpus{{ID: "legal", Name: "Legal"}, {ID: "people", Name: "People"}},
+		results: map[string]*rag.SearchResponse{
+			"legal":  {CorpusID: "legal", Results: []rag.SearchResult{{Key: "l1", Text: "sixty days", Score: 0.9}}},
+			"people": {CorpusID: "people", Results: []rag.SearchResult{{Key: "p1", Text: "three days a week", Score: 0.95}}},
+		},
+	}
+	ctx := knowledge.WithScope(principalCtx(), "legal")
+
+	// The model asks for the other collection, and for all of them: the person's choice wins.
+	for _, input := range []map[string]any{
+		{"query": "days", "corpus_id": "people"},
+		{"query": "days"},
+	} {
+		result, err := NewSearchTool(backend).Call(ctx, tools.CallInput{Parsed: input}, nil)
+		if err != nil || result.Error != nil {
+			t.Fatalf("Call: %v %v", err, result.Error)
+		}
+		if !strings.Contains(result.Content, "sixty days") || strings.Contains(result.Content, "three days a week") {
+			t.Errorf("a search limited to Legal must return only Legal excerpts, got:\n%s", result.Content)
+		}
+	}
+}
+
+func TestSearchTool_Call_NothingFoundInTheChosenCollectionIsNotNothingInTheOrganization(t *testing.T) {
+	backend := &fakeBackend{corpora: []knowledge.Corpus{{ID: "legal", Name: "Legal"}}}
+	result, err := NewSearchTool(backend).Call(knowledge.WithScope(principalCtx(), "legal"), tools.CallInput{Parsed: map[string]any{"query": "holidays"}}, nil)
+	if err != nil || result.Error != nil {
+		t.Fatalf("Call: %v %v", err, result.Error)
+	}
+	for _, want := range []string{"collection the person chose", "do not conclude"} {
+		if !strings.Contains(result.Content, want) {
+			t.Errorf("expected %q in:\n%s", want, result.Content)
+		}
+	}
+}
+
 func TestRef(t *testing.T) {
 	first, again := Ref("c1", "k"), Ref("c1", "k")
 	if first != again {

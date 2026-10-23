@@ -11,6 +11,8 @@ import (
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
+	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
+	knowledgeagent "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/agent"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/seshat-runtime/pkg/contract"
 	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
@@ -20,6 +22,15 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
+
+// withKnowledgeScope limits the searches of a Knowledge agent conversation to the collection the person chose (the corpus_id of the
+// request). Any other agent keeps its own use of corpus_id.
+func withKnowledgeScope(ctx context.Context, agentSlug, corpusID string) context.Context {
+	if !knowledgeagent.IsKnowledge(strings.TrimSpace(agentSlug)) {
+		return ctx
+	}
+	return backendknowledge.WithScope(ctx, corpusID)
+}
 
 // Type aliases kept for readability in handler signatures.
 type queryRunner = query.QueryRuntime
@@ -134,7 +145,7 @@ func (app *App) handleQuery(w http.ResponseWriter, r *http.Request) {
 		AgentSlug:          req.AgentSlug,
 		Principal:          principal,
 	})
-	queryCtx := app.enrichContextWithAgentPrefs(r.Context(), principal)
+	queryCtx := withKnowledgeScope(app.enrichContextWithAgentPrefs(r.Context(), principal), req.AgentSlug, req.CorpusID)
 	queryCtx, span := otel.Tracer("seshat").Start(queryCtx, "query.run",
 		trace.WithSpanKind(trace.SpanKindServer),
 		trace.WithAttributes(
@@ -445,7 +456,7 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 		}()
 	}
 	// Inject the event emitter and the user's sub-agent depth preference.
-	baseCtx := app.enrichContextWithAgentPrefs(r.Context(), principal)
+	baseCtx := withKnowledgeScope(app.enrichContextWithAgentPrefs(r.Context(), principal), req.AgentSlug, req.CorpusID)
 	streamCtx, streamSpan := otel.Tracer("seshat").Start(baseCtx, "query.stream",
 		trace.WithSpanKind(trace.SpanKindServer),
 		trace.WithAttributes(

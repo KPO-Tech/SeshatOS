@@ -93,6 +93,11 @@ func (t *SearchTool) Call(ctx context.Context, input tools.CallInput, _ tools.Ca
 	}
 
 	corpusID, _ := input.Parsed["corpus_id"].(string)
+	// A collection the person chose for the conversation wins over whatever the model asks for.
+	scope := knowledge.ScopeFromContext(ctx)
+	if scope != "" {
+		corpusID = scope
+	}
 
 	res, err := knowledge.SearchAll(ctx, principal, t.backend, knowledge.SearchAllParams{
 		Query:    query,
@@ -104,6 +109,9 @@ func (t *SearchTool) Call(ctx context.Context, input tools.CallInput, _ tools.Ca
 	}
 	if res.CorporaSearched == 0 {
 		return tools.NewTextResult("No knowledge corpora are available to search."), nil
+	}
+	if scope != "" && len(res.Results) == 0 {
+		return tools.NewTextResult(fmt.Sprintf("No results found for %q in the collection the person chose. The search is limited to that collection; do not conclude that the information is absent from the rest of the organization.", query)), nil
 	}
 
 	result := tools.NewJSONResult(res.Results)
