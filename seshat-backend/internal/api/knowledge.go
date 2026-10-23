@@ -17,8 +17,10 @@ type corpusResponse struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	ChunkCount  int    `json:"chunk_count"`
-	CreatedAt   int64  `json:"created_at"`
-	UpdatedAt   int64  `json:"updated_at"`
+	// FileCount is set on the list only: the number of documents the collection holds.
+	FileCount *int  `json:"file_count,omitempty"`
+	CreatedAt int64 `json:"created_at"`
+	UpdatedAt int64 `json:"updated_at"`
 }
 
 type corpusFileResponse struct {
@@ -128,7 +130,13 @@ func (a *App) handleCorpora(w http.ResponseWriter, r *http.Request) {
 		}
 		items := make([]corpusResponse, 0, len(corpora))
 		for _, c := range corpora {
-			items = append(items, corpusToResponse(c))
+			item := corpusToResponse(c)
+			// Best effort: a collection whose files cannot be listed is shown without a count.
+			if files, err := a.backend.Knowledge.ListFiles(r.Context(), principal, c.ID); err == nil {
+				count := len(files)
+				item.FileCount = &count
+			}
+			items = append(items, item)
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"corpora": items,
