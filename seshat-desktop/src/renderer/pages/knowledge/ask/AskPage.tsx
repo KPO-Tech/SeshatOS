@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Message } from '@icon-park/react'
 import { DocumentDrawer } from '../components/DocumentDrawer'
-import { SourcesList } from '../components/SourcesList'
-import { SourcesPanel } from '../components/SourcesPanel'
 import { SAMPLE_QUESTIONS } from '../data/sampleApi'
 import type { AskScope, SourceRef } from '../data/types'
 import { useCollections, useDocuments, useKnowledgeApi } from '../data/useKnowledgeData'
@@ -99,10 +97,6 @@ export function AskPage() {
           <div className="mx-auto max-w-[720px]">{composer}</div>
         </div>
       </div>
-
-      <SourcesPanel count={latest?.sources.length ?? 0}>
-        <SourcesList sources={latest?.sources ?? []} documents={documents} collections={collections} activeN={activeN} onOpen={setOpened} onHover={setActiveN} />
-      </SourcesPanel>
 
       <DocumentDrawer
         document={opened ? (documents[opened.documentId] ?? null) : null}
