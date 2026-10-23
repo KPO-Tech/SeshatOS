@@ -17,7 +17,7 @@ const Slug = "knowledge"
 // Tools is the exact list of tools the agent has, and no other: the session is pruned down to them. All read only.
 // It grows by decision, one tool at a time; a list of patterns would fail open (see toolAllowlistFromPatterns in internal/query).
 func Tools() []string {
-	return []string{knowledgetool.ToolName}
+	return []string{knowledgetool.ToolName, knowledgetool.ReadToolName}
 }
 
 // IsKnowledge reports whether a slug is the Knowledge agent's.
