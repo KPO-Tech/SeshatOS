@@ -26,7 +26,7 @@ export function CitationChip({ mark, label, preview, active = false, onHover, on
 
   return (
     <span
-      className="group relative mx-[3px] inline-block align-[1px]"
+      className="group/cite relative mx-[3px] inline-block align-[1px]"
       onMouseEnter={(event) => {
         setAlignRight(event.currentTarget.getBoundingClientRect().left > window.innerWidth * 0.5)
         onHover?.(true)
@@ -36,7 +36,7 @@ export function CitationChip({ mark, label, preview, active = false, onHover, on
       <button
         type="button"
         onClick={onOpen}
-        className={`inline-flex h-[22px] max-w-[190px] cursor-pointer items-center gap-1.5 rounded-full border border-solid py-0 pl-1 pr-2.5 text-[12px] font-medium leading-none transition-colors ${
+        className={`inline-flex h-5 max-w-[170px] cursor-pointer items-center gap-1 rounded-full border border-solid py-0 pl-[3px] pr-2 text-[11px] font-medium leading-none transition-colors ${
           active
             ? 'border-[var(--accent-primary)] bg-[var(--accent-subtle)] text-[var(--text-primary)]'
             : 'border-[var(--border-soft)] bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
@@ -46,7 +46,7 @@ export function CitationChip({ mark, label, preview, active = false, onHover, on
         <span className="truncate">{label}</span>
       </button>
 
-      <span className={`absolute top-full z-30 hidden pt-1.5 group-focus-within:block group-hover:block ${alignRight ? 'right-0' : 'left-0'}`}>
+      <span className={`absolute top-full z-30 hidden pt-1.5 group-focus-within/cite:block group-hover/cite:block ${alignRight ? 'right-0' : 'left-0'}`}>
         <span
           className="block w-[300px] rounded-xl border border-solid border-[var(--border-soft)] bg-[var(--surface-menu)] p-3 text-left shadow-[0_16px_34px_rgba(0,0,0,0.28)]"
           style={{ animation: 'fade-in 140ms ease both' }}

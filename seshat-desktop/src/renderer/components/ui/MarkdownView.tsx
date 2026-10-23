@@ -9,7 +9,8 @@ import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
-import { findWebSource, type WebSource } from '@renderer/lib/webSources'
+import { citedPages, type MarkdownNode } from '@renderer/lib/markdownLinks'
+import type { WebSource } from '@renderer/lib/webSources'
 import { WebCitation } from '@renderer/components/sources/WebCitation'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -335,8 +336,15 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </code>
             )
           },
-          p({ children }) {
-            return <p className="mb-4 last:mb-0">{children}</p>
+          // The pages a paragraph or item cites by its links come as one small chip at its end.
+          p({ node, children }: { node?: unknown; children?: ReactNode }) {
+            const cited = citedPages(node as MarkdownNode | undefined, consulted)
+            return (
+              <p className="mb-4 last:mb-0">
+                {children}
+                {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
+              </p>
+            )
           },
           pre({ children }) {
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
@@ -360,8 +368,17 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           ol({ children }) {
             return <ol className="mb-4 list-decimal pl-6">{children}</ol>
           },
-          li({ children }) {
-            return <li className="mb-2 pl-1 last:mb-0">{children}</li>
+          li({ node, children }: { node?: unknown; children?: ReactNode }) {
+            const tree = node as MarkdownNode | undefined
+            // An item whose text sits in a paragraph of its own already gets its chip from that paragraph.
+            const ownText = !tree?.children?.some((child) => child.tagName === 'p')
+            const cited = ownText ? citedPages(tree, consulted) : []
+            return (
+              <li className="mb-2 pl-1 last:mb-0">
+                {children}
+                {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
+              </li>
+            )
           },
           h1({ children }) {
             return <h1 className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
@@ -390,9 +407,6 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           // instead of opening it anywhere sensible. Route through the
           // built-in browser panel instead.
           a({ href, children, ...props }: { href?: string; children?: ReactNode }) {
-            // A link to a page the agent consulted is a citation; any other link stays a link.
-            const cited = findWebSource(href, consulted)
-            if (cited) return <WebCitation source={cited} sessionId={sessionId} />
             return (
               <a
                 href={href}
