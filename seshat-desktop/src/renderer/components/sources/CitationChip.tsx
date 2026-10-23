@@ -36,7 +36,7 @@ export function CitationChip({ mark, label, preview, active = false, onHover, on
       <button
         type="button"
         onClick={onOpen}
-        className={`inline-flex h-5 max-w-[170px] cursor-pointer items-center gap-1 rounded-full border border-solid py-0 pl-[3px] pr-2 text-[11px] font-medium leading-none transition-colors ${
+        className={`inline-flex h-[18px] max-w-[150px] cursor-pointer items-center gap-[3px] rounded-full border border-solid py-0 pl-[3px] pr-1.5 text-[10.5px] font-medium leading-none transition-colors ${
           active
             ? 'border-[var(--accent-primary)] bg-[var(--accent-subtle)] text-[var(--text-primary)]'
             : 'border-[var(--border-soft)] bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'

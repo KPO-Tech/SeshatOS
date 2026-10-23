@@ -18,9 +18,9 @@ export function WebCitation({ sources, sessionId }: { sources: WebSource[]; sess
       <button
         type="button"
         onClick={() => openInAppBrowser(first.url, sessionId)}
-        className="inline-flex h-5 max-w-[150px] cursor-pointer items-center gap-1 rounded-full border border-solid border-[var(--border-soft)] bg-[var(--surface-muted)] py-0 pl-[3px] pr-2 text-[11px] font-medium leading-none text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
+        className="inline-flex h-[18px] max-w-[130px] cursor-pointer items-center gap-[3px] rounded-full border border-solid border-[var(--border-soft)] bg-[var(--surface-muted)] py-0 pl-[3px] pr-1.5 text-[10.5px] font-medium leading-none text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
       >
-        <SiteIcon domain={first.domain} fallback={initialOf(first)} size={14} />
+        <SiteIcon domain={first.domain} fallback={initialOf(first)} size={12} />
         <span className="truncate">{first.domain}</span>
         {otherSites > 0 && <span className="shrink-0 text-[var(--text-muted)]">+{otherSites}</span>}
       </button>

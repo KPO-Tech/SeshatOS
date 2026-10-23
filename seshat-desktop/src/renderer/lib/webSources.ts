@@ -100,8 +100,35 @@ export function collectConsultedPages(messages: readonly MessageLike[]): WebSour
   return listOf([...fetched.map((url) => ({ url, title: titleFor(url, hitTitles) })), ...hits], hitTitles, Number.MAX_SAFE_INTEGER)
 }
 
+const URL_IN_TEXT = /https?:\/\/[^\s)>\]"']+/g
+
+/** The addresses written in the text of these messages, as links or bare. */
+function urlsInText(messages: readonly MessageLike[]): string[] {
+  const urls: string[] = []
+  for (const message of messages) {
+    if (message.role !== 'assistant') continue
+    for (const block of message.content) {
+      const text = block.type === 'text' ? (block as { text?: unknown }).text : undefined
+      if (typeof text === 'string') urls.push(...(text.match(URL_IN_TEXT) ?? []))
+    }
+  }
+  return urls
+}
+
+/**
+ * The sources to list at the end of a turn. Pages the text already cites with a link have their chip there, so they are left out;
+ * when the text cites none, the list stands alone and keeps every source.
+ */
+export function listedSources(turn: readonly MessageLike[]): WebSource[] {
+  const sources = collectWebSources(turn)
+  const written = new Set(urlsInText(turn).map(sameAddress))
+  const cited = sources.filter((source) => written.has(sameAddress(source.url)))
+  if (cited.length === 0) return sources
+  return sources.filter((source) => !written.has(sameAddress(source.url)))
+}
+
 export function webSourcesByTurnEnd<M extends MessageLike>(messages: readonly M[], streaming: boolean): Map<number, WebSource[]> {
-  return byTurnEnd(messages, streaming, collectWebSources)
+  return byTurnEnd(messages, streaming, listedSources)
 }
 
 /** The source a link of an answer points to, if the agent consulted that page. Compared without the fragment, the trailing slash or the case. */

@@ -21,7 +21,7 @@ export function CitationChip({ source, document, collectionName, active, onHover
 
   return (
     <Chip
-      mark={mark(14)}
+      mark={mark(12)}
       label={document?.name ?? 'Source'}
       active={active}
       onHover={onHover}

@@ -472,7 +472,11 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
 
         {changedFiles && changedFiles.length > 0 && !liveActivity && <ChangedFiles files={changedFiles} sessionId={sessionId} />}
 
-        {webSources && webSources.length > 0 && !liveActivity && edition.sources && <SourcesDisclosure items={webSourceItems(webSources)} sessionId={sessionId} />}
+        {webSources && webSources.length > 0 && !liveActivity && edition.sources && (
+          <div className="mt-4">
+            <SourcesDisclosure items={webSourceItems(webSources)} sessionId={sessionId} />
+          </div>
+        )}
 
         {liveActivity && <LiveActivityBlock label={liveActivity.label} detail={liveActivity.detail} />}
         {!liveActivity && justCompleted && <CompletionFlash />}

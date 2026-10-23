@@ -77,22 +77,28 @@ export function TurnView({ turn, documents, collections, activeN, isLatest, onHo
 
       {turn.limits && (
         <div className="mt-5" style={{ animation: 'fade-in 400ms ease both' }}>
-          <p className="m-0 flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
-            <Info size={13} />
-            {turn.limits.documentsUsed > 0
-              ? `Based on ${turn.limits.documentsUsed} ${turn.limits.documentsUsed === 1 ? 'document' : 'documents'} among those you can read, in ${turn.limits.collectionsSearched} ${turn.limits.collectionsSearched === 1 ? 'collection' : 'collections'}.`
-              : `Searched ${turn.limits.collectionsSearched} ${turn.limits.collectionsSearched === 1 ? 'collection' : 'collections'} you can read.`}
-          </p>
+          {turn.sources.length > 0 ? (
+            <SourcesDisclosure
+              items={documentSourceItems(turn.sources, documents, collections, isLatest ? activeN : null, onOpenSource)}
+              label={
+                <span className="inline-flex items-center gap-1.5">
+                  <Info size={13} />
+                  {`Based on ${turn.limits.documentsUsed} ${turn.limits.documentsUsed === 1 ? 'document' : 'documents'} among those you can read, in ${turn.limits.collectionsSearched} ${turn.limits.collectionsSearched === 1 ? 'collection' : 'collections'}`}
+                </span>
+              }
+            />
+          ) : (
+            <p className="m-0 flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
+              <Info size={13} />
+              {`Searched ${turn.limits.collectionsSearched} ${turn.limits.collectionsSearched === 1 ? 'collection' : 'collections'} you can read.`}
+            </p>
+          )}
           {turn.limits.notFound && (
             <p className="mb-0 mt-2 rounded-lg border border-solid border-[color-mix(in_srgb,var(--accent-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-warning)_10%,transparent)] px-3 py-2 text-[12.5px] leading-[18px] text-[var(--text-secondary)]">
               {turn.limits.notFound}
             </p>
           )}
         </div>
-      )}
-
-      {turn.sources.length > 0 && (
-        <SourcesDisclosure items={documentSourceItems(turn.sources, documents, collections, isLatest ? activeN : null, onOpenSource)} />
       )}
     </section>
   )

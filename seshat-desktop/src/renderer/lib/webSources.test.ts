@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectConsultedPages, collectWebSources, findWebSource, webSourcesByTurnEnd, webSourcesSoFar } from './webSources'
+import { collectConsultedPages, collectWebSources, findWebSource, listedSources, webSourcesByTurnEnd, webSourcesSoFar } from './webSources'
 
 const search = (hits: Array<[string, string]>) => ({
   type: 'tool_use',
@@ -86,5 +86,25 @@ describe('citations in an answer', () => {
     expect(so.get(1)?.map((item) => item.url)).toEqual(['https://example.com/a'])
     expect(so.get(2)?.map((item) => item.url)).toEqual(['https://example.com/a', 'https://example.com/b'])
     expect(so.has(4)).toBe(false)
+  })
+})
+
+describe('listedSources', () => {
+  const hits: Array<[string, string]> = [['One', 'https://one.example.com/a'], ['Two', 'https://two.example.com/b'], ['Three', 'https://three.example.com/c']]
+  const answer = (text: string) => message('assistant', { type: 'text', text })
+
+  it('leaves out the pages the text already cites', () => {
+    const turn = [message('assistant', search(hits)), answer('See [one](https://one.example.com/a) and https://two.example.com/b/ for details.')]
+    expect(listedSources(turn).map((source) => source.title)).toEqual(['Three'])
+  })
+
+  it('keeps every source when the text cites none', () => {
+    const turn = [message('assistant', search(hits)), answer('No links here.')]
+    expect(listedSources(turn)).toHaveLength(3)
+  })
+
+  it('lists nothing when the text cites all of them', () => {
+    const turn = [message('assistant', search(hits)), answer('[a](https://one.example.com/a) [b](https://two.example.com/b) [c](https://three.example.com/c)')]
+    expect(listedSources(turn)).toEqual([])
   })
 })

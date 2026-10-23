@@ -1,3 +1,4 @@
+import { FileTextOne } from '@icon-park/react'
 import type { FileKind } from '../data/types'
 
 const KINDS: Record<FileKind, { label: string; color: string }> = {
@@ -10,6 +11,14 @@ const KINDS: Record<FileKind, { label: string; color: string }> = {
 
 export function FileKindIcon({ kind, size = 28 }: { kind: FileKind; size?: number }) {
   const { label, color } = KINDS[kind]
+  // Too small for a label: a page glyph in the color of the kind.
+  if (size < 18) {
+    return (
+      <span aria-hidden="true" className="flex shrink-0 items-center justify-center" style={{ width: size, height: size, color }}>
+        <FileTextOne size={size} />
+      </span>
+    )
+  }
   return (
     <span
       aria-hidden="true"
