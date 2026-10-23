@@ -1,12 +1,13 @@
 import { FileTextOne } from '@icon-park/react'
-import type { FileKind } from '../api/types'
+import type { FileKind } from '../chat/passageSources'
 
 const KINDS: Record<FileKind, { label: string; color: string }> = {
   pdf: { label: 'PDF', color: 'var(--accent-danger)' },
   docx: { label: 'DOC', color: 'var(--accent-info)' },
   xlsx: { label: 'XLS', color: 'var(--accent-success)' },
   pptx: { label: 'PPT', color: 'var(--accent-warning)' },
-  md: { label: 'MD', color: 'var(--text-muted)' }
+  md: { label: 'TXT', color: 'var(--text-muted)' },
+  other: { label: 'FILE', color: 'var(--text-muted)' }
 }
 
 export function FileKindIcon({ kind, size = 28 }: { kind: FileKind; size?: number }) {

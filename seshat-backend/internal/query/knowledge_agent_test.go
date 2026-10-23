@@ -46,7 +46,7 @@ func TestBuildContextInput_KnowledgeAgentIsNotToldAboutToolsItDoesNotHave(t *tes
 
 func TestKnowledgeAgentPromptTeachesTheCitationFormatTheToolWrites(t *testing.T) {
 	// The tool introduces each excerpt with "ref=" and the prompt tells the agent to cite that value: if one changes alone, citations break.
-	for _, want := range []string{"ref=", "knowledge_search", "already restricted", "[k7f3a9]"} {
+	for _, want := range []string{"ref=", "knowledge_search", "already restricted", "[k7f3a91]"} {
 		if !strings.Contains(knowledgeagent.Prompt, want) {
 			t.Errorf("the prompt must mention %q", want)
 		}

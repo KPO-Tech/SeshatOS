@@ -5,7 +5,7 @@ import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { api, ApiError } from '@renderer/api/client'
-import type { ProviderModel, ProviderSetting } from '@renderer/api/types'
+import type { ProviderModel } from '@renderer/api/types'
 import { useProviders, fetchProviderModels } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import { useSessionStore } from '@renderer/stores/session'
@@ -13,6 +13,7 @@ import { useUIStore } from '@renderer/stores/ui'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 import { modelAlias } from '@renderer/lib/modelAlias'
+import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import './Home.css'
 
 type ModelChoice = {
@@ -59,12 +60,6 @@ function providerDisplayName(name: string, kind: string): string {
   if (!providerKind) return displayName
   if (displayName.toLowerCase() === providerKind.toLowerCase()) return displayName
   return displayName
-}
-
-function isChatProviderUsable(provider: ProviderSetting): boolean {
-  if (provider.provider === 'ollama') return true
-  if (provider.auth_kind === 'oauth') return provider.connection_status === 'connected'
-  return provider.has_api_key || provider.connection_status === 'ready'
 }
 
 export function Home() {

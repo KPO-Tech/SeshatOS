@@ -278,6 +278,8 @@ type Props = {
   variant?: 'chat' | 'document'
   /** The pages the agent consulted for this answer: a link to one of them is drawn as a citation. */
   sources?: WebSource[]
+  /** Draws a link of its own, such as a citation chip, in place of the plain link: return null to leave the link as it is. */
+  renderLink?: (href: string | undefined) => ReactNode
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
@@ -292,7 +294,7 @@ type CodeProps = {
   children?: ReactNode
 }
 
-export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources, renderLink }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
   // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
   const sourcesKey = sources?.map((source) => source.url).join('|') ?? ''
@@ -407,6 +409,8 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           // instead of opening it anywhere sensible. Route through the
           // built-in browser panel instead.
           a({ href, children, ...props }: { href?: string; children?: ReactNode }) {
+            const custom = renderLink?.(href)
+            if (custom) return <>{custom}</>
             return (
               <a
                 href={href}
@@ -424,7 +428,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </a>
             )
           }
-        }), [streaming, sessionId, consulted])
+        }), [streaming, sessionId, consulted, renderLink])
 
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>

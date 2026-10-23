@@ -1,32 +1,32 @@
 import { CitationChip as Chip } from '@renderer/components/sources/CitationChip'
-import type { KnowledgeDocument, SourceRef } from '../api/types'
+import type { Passage } from '../chat/knowledgeSearchResults'
+import { kindOfFile, pagesLabel } from '../chat/passageSources'
 import { FileKindIcon } from './FileKindIcon'
 
-const DATE = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' })
-
 type Props = {
-  source: SourceRef
-  document: KnowledgeDocument | undefined
-  collectionName: string | undefined
-  active: boolean
-  onHover: (hovering: boolean) => void
+  passage: Passage
   onOpen: () => void
 }
 
-// A citation of an answer: the kind of file and the name of the document. Hovering it shows the passage and where it sits; clicking
-// opens the document at that page.
-export function CitationChip({ source, document, collectionName, active, onHover, onOpen }: Props) {
-  const mark = (size: number) => (document ? <FileKindIcon kind={document.kind} size={size} /> : <span className="shrink-0 rounded-full bg-[var(--border-soft)]" style={{ width: size, height: size }} />)
-  const meta = [`Page ${source.page}`, collectionName, document?.source, document ? DATE.format(new Date(document.updatedAt)) : null].filter(Boolean)
+// A citation of an answer: the kind of file and the name of the document. Hovering it shows the passage and where it sits; clicking opens it.
+export function CitationChip({ passage, onOpen }: Props) {
+  const kind = kindOfFile(passage.file)
+  const mark = (size: number) => <FileKindIcon kind={kind} size={size} />
+  const title = passage.file || passage.collection
+  const meta = [pagesLabel(passage.pages), passage.collection, passage.section].filter(Boolean)
 
   return (
     <Chip
       mark={mark(12)}
-      label={document?.name ?? 'Source'}
-      active={active}
-      onHover={onHover}
+      label={title}
       onOpen={onOpen}
-      preview={{ title: document?.name ?? 'Document', meta: meta.join(' · '), excerpt: source.excerpt, action: `Open at page ${source.page}`, mark }}
+      preview={{ title, meta: meta.join(' · '), excerpt: excerptOf(passage.text), action: 'Open the passage', mark }}
     />
   )
+}
+
+// The start of the passage, for the preview: long enough to recognize it, short enough to read at a glance.
+function excerptOf(text: string): string {
+  const flat = text.replace(/\s+/g, ' ').trim()
+  return flat.length > 260 ? `${flat.slice(0, 257).trimEnd()}...` : flat
 }
