@@ -1,7 +1,7 @@
 import { Caution, Check, Info } from '@icon-park/react'
 import { splitAnswer } from './citations'
 import type { Turn } from './useAsk'
-import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../data/types'
+import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../api/types'
 import { CitationChip } from '../components/CitationChip'
 import { SourcesDisclosure } from '@renderer/components/sources/SourcesDisclosure'
 import { documentSourceItems } from '../components/documentSourceItems'

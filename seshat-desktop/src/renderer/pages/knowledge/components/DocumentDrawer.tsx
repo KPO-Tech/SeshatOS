@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CloseSmall, Left, Right } from '@icon-park/react'
-import type { KnowledgeCollection, KnowledgeDocument } from '../data/types'
+import type { KnowledgeCollection, KnowledgeDocument } from '../api/types'
 import { FileKindIcon } from './FileKindIcon'
 import { splitHighlight } from './highlight'
 

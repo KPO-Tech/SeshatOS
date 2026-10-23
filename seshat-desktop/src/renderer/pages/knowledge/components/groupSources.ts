@@ -1,4 +1,4 @@
-import type { SourceRef } from '../data/types'
+import type { SourceRef } from '../api/types'
 
 export type DocumentSources = {
   documentId: string

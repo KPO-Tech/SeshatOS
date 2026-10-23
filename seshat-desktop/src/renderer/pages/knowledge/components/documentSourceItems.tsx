@@ -1,5 +1,5 @@
 import type { SourceItem } from '@renderer/components/sources/sourceItem'
-import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../data/types'
+import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../api/types'
 import { FileKindIcon } from './FileKindIcon'
 import { groupSources, pagesLabel } from './groupSources'
 

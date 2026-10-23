@@ -1,5 +1,5 @@
 import { CitationChip as Chip } from '@renderer/components/sources/CitationChip'
-import type { KnowledgeDocument, SourceRef } from '../data/types'
+import type { KnowledgeDocument, SourceRef } from '../api/types'
 import { FileKindIcon } from './FileKindIcon'
 
 const DATE = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' })

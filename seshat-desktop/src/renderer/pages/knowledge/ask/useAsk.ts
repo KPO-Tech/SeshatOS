@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AnswerLimits, AskScope, KnowledgeApi, SourceRef } from '../data/types'
+import type { AnswerLimits, AskScope, KnowledgeApi, SourceRef } from '../api/types'
 
 export type TurnPhase = 'searching' | 'writing' | 'done' | 'error'
 

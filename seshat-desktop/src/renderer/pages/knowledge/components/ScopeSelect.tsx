@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Down, FolderOpen } from '@icon-park/react'
-import type { AskScope, KnowledgeCollection } from '../data/types'
+import type { AskScope, KnowledgeCollection } from '../api/types'
 
 type Props = {
   collections: KnowledgeCollection[]

@@ -1,5 +1,5 @@
 import { FileTextOne } from '@icon-park/react'
-import type { FileKind } from '../data/types'
+import type { FileKind } from '../api/types'
 
 const KINDS: Record<FileKind, { label: string; color: string }> = {
   pdf: { label: 'PDF', color: 'var(--accent-danger)' },
