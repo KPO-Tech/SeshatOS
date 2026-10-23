@@ -2,6 +2,7 @@
 #
 #   make setup          -> first-time setup (system deps, Node deps, build)
 #   make dev            -> start the local backend + the Electron UI
+#   make dev-next       -> same, with the next edition on (Store, Knowledge)
 #   make build          -> compile the local backend binary
 #   make test           -> run the Go tests
 #   make disk-usage     -> what is heavy here, and the `make clean-*` that removes it
@@ -33,7 +34,7 @@ NATIVE_ENV = eval "$$("$(BASH)" $(ROOT)/scripts/setup-nativedoc-cgo.sh)"
 # The runtime root of the app, where its log is.
 RUNTIME_ROOT_SH = $${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}
 
-.PHONY: help setup dev dev-native dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
+.PHONY: help setup dev dev-next dev-native dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
 
 .DEFAULT_GOAL := help
 
@@ -80,6 +81,13 @@ dev: stop desktop-install dev-backend ## Start the local backend + the Electron 
 	BACKEND_PID=$$!; \
 	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
 	cd $(DESKTOP_DIR) && $(UI_PKG_MGR) run start
+
+dev-next: stop desktop-install dev-backend ## Same as dev, with the next edition on (Store, Knowledge, sources): what the public build still hides
+	@printf "\033[32m[seshatos]\033[0m starting local backend and Electron UI (next edition)...\n"
+	@(cd $(BACKEND_DIR) && ./bin/$(BACKEND_DEV_EXE)) & \
+	BACKEND_PID=$$!; \
+	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
+	cd $(DESKTOP_DIR) && $(UI_PKG_MGR) run dev:next
 
 dev-native: stop desktop-install dev-backend-native ## Start the local backend with native document reading (CGO) + the Electron UI
 	@printf "\033[32m[seshatos]\033[0m starting local backend (native document reading) and Electron UI...\n"
