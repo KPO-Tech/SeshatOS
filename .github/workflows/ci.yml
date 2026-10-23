@@ -137,8 +137,10 @@ jobs:
             go.work.sum
             seshat-backend/go.sum
 
+      # Pinned: gosec v2.30.0 (2026-10-23) added rules that flag 45 places of existing code, and @master picked it up the same day.
+      # Raise the pin together with the fixes or the exclusions those findings need.
       - name: gosec
-        uses: securego/gosec@master
+        uses: securego/gosec@v2.29.0
         with:
           args: -exclude-generated ./seshat-backend/...
 
