@@ -1,4 +1,5 @@
 // The files the agent wrote or edited during a turn, for the list shown under its answer.
+import { byTurnEnd } from './turns'
 
 export type ChangedFile = {
   /** Path as the tool received it. */
@@ -66,24 +67,7 @@ export function collectChangedFiles(messages: readonly MessageLike[]): ChangedFi
   return [...files.values()]
 }
 
-/**
- * For each message that ends a turn (the last assistant message before the next user message, or the last one of the
- * list once nothing is streaming), the files changed during that whole turn. The key is the message index.
- */
+/** For each message that ends a turn, the files changed during that whole turn. The key is the message index. */
 export function changedFilesByTurnEnd(messages: readonly MessageLike[], streaming: boolean): Map<number, ChangedFile[]> {
-  const result = new Map<number, ChangedFile[]>()
-  let turnStart = -1
-  for (let i = 0; i < messages.length; i++) {
-    if (messages[i].role === 'user') {
-      turnStart = i
-      continue
-    }
-    const next = messages[i + 1]
-    const endsTurn = !next || next.role === 'user'
-    if (!endsTurn) continue
-    if (!next && streaming) continue
-    const files = collectChangedFiles(messages.slice(turnStart + 1, i + 1))
-    if (files.length > 0) result.set(i, files)
-  }
-  return result
+  return byTurnEnd(messages, streaming, collectChangedFiles)
 }

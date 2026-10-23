@@ -3,7 +3,8 @@ import { splitAnswer } from './citations'
 import type { Turn } from './useAsk'
 import type { KnowledgeCollection, KnowledgeDocument, SourceRef } from '../data/types'
 import { CitationChip } from '../components/CitationChip'
-import { SourcesDisclosure } from '../components/SourcesDisclosure'
+import { SourcesDisclosure } from '@renderer/components/sources/SourcesDisclosure'
+import { documentSourceItems } from '../components/documentSourceItems'
 
 type Props = {
   turn: Turn
@@ -91,7 +92,7 @@ export function TurnView({ turn, documents, collections, activeN, isLatest, onHo
       )}
 
       {turn.sources.length > 0 && (
-        <SourcesDisclosure sources={turn.sources} documents={documents} collections={collections} activeN={isLatest ? activeN : null} onOpen={onOpenSource} />
+        <SourcesDisclosure items={documentSourceItems(turn.sources, documents, collections, isLatest ? activeN : null, onOpenSource)} />
       )}
     </section>
   )

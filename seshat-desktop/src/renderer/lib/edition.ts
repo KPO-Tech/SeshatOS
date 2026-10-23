@@ -15,6 +15,8 @@ export type Edition = {
   store: boolean
   // The Knowledge platform page, opened from the Store and the sidebar.
   knowledgeApp: boolean
+  // The sources of an answer, folded at its end (the web pages behind a chat answer).
+  sources: boolean
 }
 
 const V1_EDITION: Edition = {
@@ -22,14 +24,16 @@ const V1_EDITION: Edition = {
   cloud: false,
   knowledge: false,
   store: false,
-  knowledgeApp: false
+  knowledgeApp: false,
+  sources: false
 }
 
 // What the next edition will switch on, for work in progress: run `npm run dev:next`. The public build never reads it.
 const NEXT_EDITION: Edition = {
   ...V1_EDITION,
   store: true,
-  knowledgeApp: true
+  knowledgeApp: true,
+  sources: true
 }
 
 export const edition: Edition = import.meta.env.VITE_SESHAT_EDITION === 'next' ? NEXT_EDITION : V1_EDITION
