@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import type { Passage } from '../chat/knowledgeSearchResults'
 import { useCollections, type AskScope } from '../chat/useCollections'
 import { useKnowledgeConversation } from '../chat/useKnowledgeConversation'
@@ -10,6 +10,7 @@ import { TurnView } from './TurnView'
 
 export function AskPage() {
   const navigate = useNavigate()
+  const startingQuestion = (useLocation().state as { question?: string } | null)?.question ?? ''
   const { collections, failed: collectionsFailed } = useCollections()
   const { turns, busy, ask, stop, startError, modelLoading, configured } = useKnowledgeConversation()
   const [scope, setScope] = useState<AskScope>({ collectionId: null })
@@ -35,6 +36,7 @@ export function AskPage() {
       scope={scope}
       busy={busy}
       autoFocus
+      initialValue={turns.length === 0 ? startingQuestion : ''}
       placeholder={turns.length ? 'Ask a follow-up' : 'Ask about your documents'}
       onScopeChange={setScope}
       onSubmit={(question) => void ask(question, scope.collectionId)}

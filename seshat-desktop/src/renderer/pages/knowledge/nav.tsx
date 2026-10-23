@@ -17,7 +17,7 @@ export const KNOWLEDGE_NAV: Array<{ title: string; items: KnowledgeNavItem[] }> 
     title: 'Ask',
     items: [
       { id: 'ask', label: 'Ask', icon: <Message size={15} />, ready: true },
-      { id: 'search', label: 'Search', icon: <Search size={15} />, ready: false }
+      { id: 'search', label: 'Search', icon: <Search size={15} />, ready: true }
     ]
   },
   { title: 'Browse', items: [{ id: 'collections', label: 'Collections', icon: <FolderOpen size={15} />, ready: true }] },
