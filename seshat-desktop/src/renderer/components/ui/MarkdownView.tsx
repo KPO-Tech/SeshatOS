@@ -9,6 +9,8 @@ import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
+import { findWebSource, type WebSource } from '@renderer/lib/webSources'
+import { WebCitation } from '@renderer/components/sources/WebCitation'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -273,6 +275,8 @@ type Props = {
   sessionId?: string
   /** "chat" (default) is the compact size of messages and side panels; "document" is the larger one of a page read on its own. */
   variant?: 'chat' | 'document'
+  /** The pages the agent consulted for this answer: a link to one of them is drawn as a citation. */
+  sources?: WebSource[]
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
@@ -287,8 +291,11 @@ type CodeProps = {
   children?: ReactNode
 }
 
-export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat' }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
+  // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
+  const sourcesKey = sources?.map((source) => source.url).join('|') ?? ''
+  const consulted = useMemo<WebSource[]>(() => sources ?? [], [sourcesKey])
 
   // react-markdown uses the identity of each entry here as the React element
   // type for that tag. A fresh object literal (recreated on every keystroke
@@ -383,6 +390,9 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           // instead of opening it anywhere sensible. Route through the
           // built-in browser panel instead.
           a({ href, children, ...props }: { href?: string; children?: ReactNode }) {
+            // A link to a page the agent consulted is a citation; any other link stays a link.
+            const cited = findWebSource(href, consulted)
+            if (cited) return <WebCitation source={cited} sessionId={sessionId} />
             return (
               <a
                 href={href}
@@ -400,7 +410,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </a>
             )
           }
-        }), [streaming, sessionId])
+        }), [streaming, sessionId, consulted])
 
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>

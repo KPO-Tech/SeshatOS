@@ -52,12 +52,12 @@ function titleFor(url: string, hitTitles: Map<string, string>): string {
   }
 }
 
-/** The web pages behind the answer of a turn: the ones the agent read, or, if it read none, the first results of its searches. */
-export function collectWebSources(messages: readonly MessageLike[]): WebSource[] {
+type Scan = { hitTitles: Map<string, string>; hits: Array<{ url: string; title: string }>; fetched: string[] }
+
+function scan(messages: readonly MessageLike[]): Scan {
   const hitTitles = new Map<string, string>()
   const hits: Array<{ url: string; title: string }> = []
   const fetched: string[] = []
-
   for (const message of messages) {
     for (const block of message.content) {
       if (!isToolBlock(block) || !block._result || block._result.isError) continue
@@ -71,21 +71,59 @@ export function collectWebSources(messages: readonly MessageLike[]): WebSource[]
       }
     }
   }
+  return { hitTitles, hits, fetched }
+}
 
-  const readPages = fetched.length > 0
-  const chosen = readPages ? fetched.map((url) => ({ url, title: titleFor(url, hitTitles) })) : hits
+function listOf(items: Array<{ url: string; title: string }>, hitTitles: Map<string, string>, limit: number): WebSource[] {
   const seen = new Set<string>()
   const sources: WebSource[] = []
-  for (const item of chosen) {
+  for (const item of items) {
     const key = sameAddress(item.url)
     if (seen.has(key)) continue
     seen.add(key)
     sources.push({ url: item.url, title: item.title || titleFor(item.url, hitTitles), domain: domainOf(item.url) })
-    if (!readPages && sources.length >= MAX_SEARCH_SOURCES) break
+    if (sources.length >= limit) break
   }
   return sources
 }
 
+/** The web pages behind the answer of a turn: the ones the agent read, or, if it read none, the first results of its searches. */
+export function collectWebSources(messages: readonly MessageLike[]): WebSource[] {
+  const { hitTitles, hits, fetched } = scan(messages)
+  if (fetched.length > 0) return listOf(fetched.map((url) => ({ url, title: titleFor(url, hitTitles) })), hitTitles, Number.MAX_SAFE_INTEGER)
+  return listOf(hits, hitTitles, MAX_SEARCH_SOURCES)
+}
+
+/** Every page that came back to the agent, read or only found: what a link in its answer can be checked against. */
+export function collectConsultedPages(messages: readonly MessageLike[]): WebSource[] {
+  const { hitTitles, hits, fetched } = scan(messages)
+  return listOf([...fetched.map((url) => ({ url, title: titleFor(url, hitTitles) })), ...hits], hitTitles, Number.MAX_SAFE_INTEGER)
+}
+
 export function webSourcesByTurnEnd<M extends MessageLike>(messages: readonly M[], streaming: boolean): Map<number, WebSource[]> {
   return byTurnEnd(messages, streaming, collectWebSources)
+}
+
+/** The source a link of an answer points to, if the agent consulted that page. Compared without the fragment, the trailing slash or the case. */
+export function findWebSource(href: string | undefined, sources: readonly WebSource[]): WebSource | undefined {
+  if (!href) return undefined
+  const wanted = sameAddress(href)
+  return sources.find((source) => sameAddress(source.url) === wanted)
+}
+
+/**
+ * For each assistant message, the pages consulted from the start of its turn up to that message. The key is the message index.
+ */
+export function webSourcesSoFar<M extends MessageLike>(messages: readonly M[]): Map<number, WebSource[]> {
+  const result = new Map<number, WebSource[]>()
+  let turnStart = -1
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].role === 'user') {
+      turnStart = i
+      continue
+    }
+    const found = collectConsultedPages(messages.slice(turnStart + 1, i + 1))
+    if (found.length > 0) result.set(i, found)
+  }
+  return result
 }

@@ -174,6 +174,7 @@ type Props = {
   // False for an assistant message that a later one of the same turn follows: the actions sit under the end of the turn only.
   endsTurn?: boolean
   webSources?: WebSource[]
+  consultedPages?: WebSource[]
 }
 
 export type QuietGroupItem =
@@ -320,7 +321,7 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
   return { text, attachments: messageAttachments(message) }
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages }: Props) {
   const [editing, setEditing] = useState(false)
   if (isCompactionDivider(message)) {
     const first = message.content[0]
@@ -423,7 +424,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                   isUser && message.status === 'error' && 'border-app-error',
                 )}
               >
-                <MarkdownView sessionId={sessionId}>{block.text}</MarkdownView>
+                <MarkdownView sessionId={sessionId} sources={edition.sources ? consultedPages : undefined}>{block.text}</MarkdownView>
                 {isUser && message.status === 'error' && (
                   <button
                     type="button"

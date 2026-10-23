@@ -3,7 +3,7 @@ import type { Virtualizer } from '@tanstack/react-virtual'
 import type { Message } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/stores/session'
 import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
-import { webSourcesByTurnEnd } from '@renderer/lib/webSources'
+import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
 
 type LiveActivity = {
@@ -48,6 +48,8 @@ export function MessageList({
   const changedFiles = useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming])
   // The web pages behind each answer, listed under it.
   const webSources = useMemo(() => webSourcesByTurnEnd(messages, isStreaming), [messages, isStreaming])
+  // The pages consulted so far in the turn, to tell which links of an answer are citations.
+  const consulted = useMemo(() => webSourcesSoFar(messages), [messages])
 
   // An answer can be asked again from the prompt before it, unless a turn is running.
   const regenerate = (index: number): (() => void) | undefined => {
@@ -103,6 +105,7 @@ export function MessageList({
                 justCompleted={showCompleted}
                 changedFiles={changedFiles.get(i)}
                 webSources={webSources.get(i)}
+                consultedPages={consulted.get(i)}
                 onApproveTool={onApproveTool}
                 onDenyTool={onDenyTool}
                 onSubmitToolPrompt={onSubmitToolPrompt}

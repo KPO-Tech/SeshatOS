@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectWebSources, webSourcesByTurnEnd } from './webSources'
+import { collectConsultedPages, collectWebSources, findWebSource, webSourcesByTurnEnd, webSourcesSoFar } from './webSources'
 
 const search = (hits: Array<[string, string]>) => ({
   type: 'tool_use',
@@ -55,5 +55,36 @@ describe('webSourcesByTurnEnd', () => {
     const messages = [message('user', { type: 'text' }), message('assistant', fetchPage('https://example.com/a'))]
     expect(webSourcesByTurnEnd(messages, true).size).toBe(0)
     expect(webSourcesByTurnEnd(messages, false).size).toBe(1)
+  })
+})
+
+describe('citations in an answer', () => {
+  const hits = Array.from({ length: 9 }, (_, i): [string, string] => [`Result ${i}`, `https://site${i}.example.com/page`])
+
+  it('checks a link against every page that came back, not only the ones listed under the answer', () => {
+    const messages = [message('assistant', search(hits))]
+    expect(collectWebSources(messages)).toHaveLength(6)
+    expect(collectConsultedPages(messages)).toHaveLength(9)
+  })
+
+  it('finds the source of a link, whatever its fragment, trailing slash or case', () => {
+    const pages = collectConsultedPages([message('assistant', search([['Playwright', 'https://github.com/playwright-community/playwright-go']]))])
+    expect(findWebSource('https://GitHub.com/playwright-community/playwright-go/#readme', pages)?.title).toBe('Playwright')
+    expect(findWebSource('https://github.com/somebody/else', pages)).toBeUndefined()
+    expect(findWebSource(undefined, pages)).toBeUndefined()
+  })
+
+  it('knows, for each message, the pages consulted up to it in its own turn', () => {
+    const messages = [
+      message('user', { type: 'text' }),
+      message('assistant', fetchPage('https://example.com/a')),
+      message('assistant', fetchPage('https://example.com/b')),
+      message('user', { type: 'text' }),
+      message('assistant', { type: 'text' })
+    ]
+    const so = webSourcesSoFar(messages)
+    expect(so.get(1)?.map((item) => item.url)).toEqual(['https://example.com/a'])
+    expect(so.get(2)?.map((item) => item.url)).toEqual(['https://example.com/a', 'https://example.com/b'])
+    expect(so.has(4)).toBe(false)
   })
 })
