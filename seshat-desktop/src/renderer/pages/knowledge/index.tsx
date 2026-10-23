@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router'
 import { hasAdminAccess } from '@renderer/lib/authz'
 import { useAuthStore } from '@renderer/stores/auth'
 import { AskPage } from './ask/AskPage'
+import { CollectionPage } from './collections/CollectionPage'
+import { CollectionsPage } from './collections/CollectionsPage'
 import { ComingNext } from './components/ComingNext'
 import './knowledge.css'
 
@@ -15,7 +17,8 @@ export function KnowledgePage() {
       <Routes>
         <Route index element={<AskPage />} />
         <Route path="search" element={<ComingNext tab="search" />} />
-        <Route path="collections" element={<ComingNext tab="collections" />} />
+        <Route path="collections" element={<CollectionsPage />} />
+        <Route path="collections/:id" element={<CollectionPage />} />
         <Route path="sources" element={isAdmin ? <ComingNext tab="sources" /> : <Navigate to="/knowledge" replace />} />
         <Route path="settings" element={isAdmin ? <ComingNext tab="settings" /> : <Navigate to="/knowledge" replace />} />
         <Route path="*" element={<Navigate to="/knowledge" replace />} />

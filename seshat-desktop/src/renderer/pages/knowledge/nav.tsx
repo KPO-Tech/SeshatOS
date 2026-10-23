@@ -20,7 +20,7 @@ export const KNOWLEDGE_NAV: Array<{ title: string; items: KnowledgeNavItem[] }> 
       { id: 'search', label: 'Search', icon: <Search size={15} />, ready: false }
     ]
   },
-  { title: 'Browse', items: [{ id: 'collections', label: 'Collections', icon: <FolderOpen size={15} />, ready: false }] },
+  { title: 'Browse', items: [{ id: 'collections', label: 'Collections', icon: <FolderOpen size={15} />, ready: true }] },
   {
     title: 'Manage',
     items: [
