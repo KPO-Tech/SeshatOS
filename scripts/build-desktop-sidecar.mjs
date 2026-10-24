@@ -69,6 +69,8 @@ if (nativeDoc) {
   const setupRunner = process.platform === 'win32' ? shQuote(toSlash(shell)) : 'bash'
   const command = [
     `eval "$(${setupRunner} ${quotedSetup})"`,
+    // eval ignores a failing setup script: without this the build goes on with no nativedoc tag and ships a backend with no OCR.
+    '[ -n "${NATIVEDOC_BUILD_TAGS:-}" ] || { echo "nativedoc setup failed: NATIVEDOC_BUILD_TAGS is not set" >&2; exit 1; }',
     `CGO_ENABLED=1 GOOS=${shQuote(selected.goos)} GOARCH=${shQuote(arch)} go build ${releaseFlags} -tags "$NATIVEDOC_BUILD_TAGS" -o ${quotedOut} ./cmd/api`,
     copyRuntimeLibsCommand(selected.goos, quotedOutDir),
   ].filter(Boolean).join(' && ')
