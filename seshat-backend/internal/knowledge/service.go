@@ -609,11 +609,11 @@ func (s *Service) ingestFile(ctx context.Context, corpusID string, fileRecord *d
 		return nil, 0, bkerr.Internal(fmt.Sprintf("read file blob: %s", err.Error()), err)
 	}
 
-	result, ok := s.readDocumentResultForFile(ctx, data, fileRecord)
+	result, ok, readErr := s.readDocumentResultForFile(ctx, data, fileRecord)
 	text := result.Text
 	if strings.TrimSpace(text) == "" {
 		_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileRecord.ID, db.CorpusFileStatusFailed, 0)
-		return nil, 0, bkerr.InvalidInput("file has no extractable text content", nil)
+		return nil, 0, bkerr.InvalidInput(documentreading.UnreadableReason(fileRecord.Filename, readErr), readErr)
 	}
 	if ok {
 		_ = documentreading.SaveReadResult(ctx, s.artifacts, fileRecord.ID, result)
@@ -796,7 +796,7 @@ func (s *Service) ExtractText(ctx context.Context, data []byte, contentType, fil
 // else. The policy is local-first by default and only uses an external reader
 // when it is configured.
 func (s *Service) extractTextWithDocumentReader(ctx context.Context, data []byte, contentType, filename string) string {
-	result, ok := s.readDocumentResult(ctx, documentreading.ReadInput{
+	result, ok, _ := s.readDocumentResult(ctx, documentreading.ReadInput{
 		Filename:    filename,
 		ContentType: contentType,
 		Data:        data,
@@ -807,13 +807,13 @@ func (s *Service) extractTextWithDocumentReader(ctx context.Context, data []byte
 	return ""
 }
 
-func (s *Service) readDocumentResultForFile(ctx context.Context, data []byte, fileRecord *db.File) (documentreading.ReadResult, bool) {
+func (s *Service) readDocumentResultForFile(ctx context.Context, data []byte, fileRecord *db.File) (documentreading.ReadResult, bool, error) {
 	if fileRecord == nil {
 		return s.readDocumentResult(ctx, documentreading.ReadInput{Data: data})
 	}
 	if cached, ok, err := documentreading.LoadReadResult(ctx, s.artifacts, fileRecord.ID); err == nil && ok {
 		if cached.SHA256 == "" || fileRecord.SHA256 == "" || strings.EqualFold(cached.SHA256, fileRecord.SHA256) {
-			return cached, true
+			return cached, true, nil
 		}
 	}
 	return s.readDocumentResult(ctx, documentreading.ReadInput{
@@ -825,15 +825,18 @@ func (s *Service) readDocumentResultForFile(ctx context.Context, data []byte, fi
 	})
 }
 
-func (s *Service) readDocumentResult(ctx context.Context, input documentreading.ReadInput) (documentreading.ReadResult, bool) {
+// readDocumentResult reads a file. When it cannot, the reason is returned with it, so that the person who added the file is told why
+// instead of only that no text was found.
+func (s *Service) readDocumentResult(ctx context.Context, input documentreading.ReadInput) (documentreading.ReadResult, bool, error) {
 	processor := s.documentProcessor
 	if processor == nil {
 		processor = documentreading.NewProcessor(s.resolveDocumentConverter)
 	}
-	if result, ok, err := processor.ReadBytes(ctx, input); err == nil && ok {
-		return result, true
+	result, ok, err := processor.ReadBytes(ctx, input)
+	if err == nil && ok {
+		return result, true, nil
 	}
-	return documentreading.ReadResult{}, false
+	return documentreading.ReadResult{}, false, err
 }
 
 func corpusFromDB(r db.Corpus) *Corpus {
