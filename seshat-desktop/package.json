@@ -50,7 +50,7 @@
     "katex": "^0.16.47",
     "mermaid": "^11.17.2",
     "node-pty": "^1.1.0",
-    "pdfjs-dist": "^5.7.284",
+    "pdfjs-dist": "^6.4.299",
     "pptx-preview": "^1.0.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
