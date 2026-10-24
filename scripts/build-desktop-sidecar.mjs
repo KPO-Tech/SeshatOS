@@ -8,6 +8,9 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
 const nativeDoc = args.includes('--nativedoc') || process.env.SESHAT_BUILD_NATIVEDOC === '1'
 const positional = args.filter((arg) => arg !== '--nativedoc')
+// Release builds (CI) set the version the backend reports and ask for a smaller, reproducible binary; a local build leaves it unset.
+const releaseVersion = (process.env.SESHAT_BUILD_VERSION || '').trim()
+const releaseFlags = releaseVersion ? `-trimpath -ldflags=${shQuote(`-s -w -X main.version=${releaseVersion}`)}` : ''
 const target = positional[0]
 const arch = positional[1] || 'amd64'
 
@@ -66,7 +69,7 @@ if (nativeDoc) {
   const setupRunner = process.platform === 'win32' ? shQuote(toSlash(shell)) : 'bash'
   const command = [
     `eval "$(${setupRunner} ${quotedSetup})"`,
-    `CGO_ENABLED=1 GOOS=${shQuote(selected.goos)} GOARCH=${shQuote(arch)} go build -tags "$NATIVEDOC_BUILD_TAGS" -o ${quotedOut} ./cmd/api`,
+    `CGO_ENABLED=1 GOOS=${shQuote(selected.goos)} GOARCH=${shQuote(arch)} go build ${releaseFlags} -tags "$NATIVEDOC_BUILD_TAGS" -o ${quotedOut} ./cmd/api`,
     copyRuntimeLibsCommand(selected.goos, quotedOutDir),
   ].filter(Boolean).join(' && ')
   result = spawnSync(shell, ['-lc', command], {
@@ -76,7 +79,8 @@ if (nativeDoc) {
   })
 } else {
   cleanupNativeRuntimeFiles(outDir)
-  result = spawnSync('go', ['build', '-o', outPath, './cmd/api'], {
+  const goBuildArgs = releaseVersion ? ['build', '-trimpath', `-ldflags=-s -w -X main.version=${releaseVersion}`, '-o', outPath, './cmd/api'] : ['build', '-o', outPath, './cmd/api']
+  result = spawnSync('go', goBuildArgs, {
     cwd: resolve(repoRoot, 'seshat-backend'),
     stdio: 'inherit',
     env: {
