@@ -90,6 +90,6 @@ export function fetchNativeDocumentReaderStatus() {
   return api.get<NativeDocStatusResult>('/settings/document-reader/native/status')
 }
 
-export function downloadNativeDocumentReaderModels() {
-  return api.post<NativeDocDownloadResult>('/settings/document-reader/native/download', {})
+export function downloadNativeDocumentReaderModels(pack?: string) {
+  return api.post<NativeDocDownloadResult>('/settings/document-reader/native/download', pack ? { pack } : {})
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ConfigCard, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
 import { downloadNativeDocumentReaderModels, fetchNativeDocumentReaderStatus, initializeNativeDocumentReader, saveDocumentReaderConfig, testDocumentReaderConfig } from './knowledgeApi'
-import type { DocumentReaderConfig, NativeDocDownloadState, SystemStatus, TestState } from './knowledgeTypes'
+import type { DocumentReaderConfig, NativeDocDownloadState, NativeDocPack, SystemStatus, TestState } from './knowledgeTypes'
 
 export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }: {
   config: DocumentReaderConfig | null
@@ -21,6 +21,8 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const [downloadingNative, setDownloadingNative] = useState(false)
   const [nativeDownload, setNativeDownload] = useState<NativeDocDownloadState | null>(null)
   const [nativeModelDir, setNativeModelDir] = useState<string | null>(null)
+  const [nativePacks, setNativePacks] = useState<NativeDocPack[]>([])
+  const [selectedPack, setSelectedPack] = useState<string | null>(null)
   const [testError, setTestError] = useState<string | null>(null)
   const [nativeInitError, setNativeInitError] = useState<string | null>(null)
   const [latency, setLatency] = useState<number | null>(null)
@@ -50,6 +52,8 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
         if (cancelled) return
         setNativeModelDir(status.model_dir)
         setNativeDownload(status.download)
+        setNativePacks(status.packs ?? [])
+        setSelectedPack((current) => current ?? status.active_pack ?? null)
         onSystemChanged?.(status.capabilities)
         if (status.download.status === 'running') {
           setDownloadingNative(true)
@@ -110,7 +114,16 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const nativeDocReady = system?.document_nativedoc_ready === true
   const nativeDocDetail = nativeDocReady ? 'Ready' : !nativeDocCompiled ? 'CGO build needed' : !nativeDocModels ? 'Needs models' : !nativeDocInitialized ? 'Needs runtime' : 'Unavailable'
   const canInitializeNative = nativeDocCompiled && nativeDocModels && !nativeDocReady
-  const canDownloadNativeModels = !nativeDocModels && !downloadingNative
+  const chosenPack = nativePacks.find((pack) => pack.id === selectedPack) ?? null
+  const chosenPackReady = chosenPack ? chosenPack.installed && chosenPack.active : nativeDocModels
+  const canDownloadNativeModels = !chosenPackReady && !downloadingNative
+  const nativeModelsButton = downloadingNative
+    ? 'Downloading...'
+    : chosenPackReady
+      ? 'Models detected'
+      : chosenPack?.installed
+        ? 'Use this recognizer'
+        : 'Download models'
   const visionConfigured = system?.document_vision_fallback_configured === true
   const nativeSetupMessage = nativeDocReady
     ? 'Native OCR is ready for local scanned PDFs.'
@@ -164,7 +177,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
     setDownloadingNative(true)
     setNativeInitError(null)
     try {
-      const started = await downloadNativeDocumentReaderModels()
+      const started = await downloadNativeDocumentReaderModels(selectedPack ?? undefined)
       setNativeModelDir(started.download.model_dir)
       setNativeDownload(started.download)
       onSystemChanged?.(started.capabilities)
@@ -183,6 +196,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
       if (cancelled()) return
       setNativeModelDir(status.model_dir)
       setNativeDownload(status.download)
+      setNativePacks(status.packs ?? [])
       onSystemChanged?.(status.capabilities)
       if (status.download.status === 'completed') {
         setDownloadingNative(false)
@@ -228,9 +242,25 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
         <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[12px] font-semibold text-[var(--text-muted)]">
           {nativeSetupMessage}
         </div>
+        {nativePacks.length > 1 && (
+          <Field label="Languages to read">
+            <select
+              value={selectedPack ?? ''}
+              onChange={(event) => setSelectedPack(event.target.value)}
+              disabled={downloadingNative}
+              className="h-9 w-full rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
+            >
+              {nativePacks.map((pack) => (
+                <option key={pack.id} value={pack.id}>
+                  {pack.label} ({pack.size_mb} MB){pack.active ? ' - in use' : pack.installed ? ' - downloaded' : ''}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
         <div className="flex items-center gap-2">
           <SoftButton type="button" onClick={() => void downloadNativeModels()} disabled={!canDownloadNativeModels}>
-            {downloadingNative ? 'Downloading...' : nativeDocModels ? 'Models detected' : 'Download models'}
+            {nativeModelsButton}
           </SoftButton>
           <SoftButton type="button" onClick={() => void initializeNative()} disabled={!canInitializeNative || initializingNative} tone={nativeDocReady ? 'success' : 'default'}>
             {initializingNative ? 'Initializing...' : nativeDocReady ? 'Native OCR ready' : 'Initialize native OCR'}

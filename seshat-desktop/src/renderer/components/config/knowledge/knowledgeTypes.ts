@@ -107,11 +107,24 @@ export type NativeDocDownloadState = {
   files_completed?: number
   error?: string
   model_dir: string
+  pack?: string
+}
+
+/** A recognizer for the native OCR: the alphabets it reads decide which languages come out with their accents. */
+export type NativeDocPack = {
+  id: string
+  label: string
+  languages: string[]
+  size_mb: number
+  installed: boolean
+  active: boolean
 }
 
 export type NativeDocStatusResult = {
   model_dir: string
   models: string[]
+  packs?: NativeDocPack[]
+  active_pack?: string
   download: NativeDocDownloadState
   capabilities: Partial<SystemStatus>
 }

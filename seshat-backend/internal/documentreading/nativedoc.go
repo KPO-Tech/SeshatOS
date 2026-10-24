@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,6 +54,13 @@ func NativeDocModelsBaseURL() string {
 func NativeDocModelsAvailable() bool {
 	dir := NativeDocModelsDir()
 	for _, name := range nativeDocRequiredModelFiles {
+		if name == "rec.ort" {
+			// The Latin recognizer is a plain ONNX file: the runtime reads rec.ort first and rec.onnx when there is none.
+			if !usableModelFile(filepath.Join(dir, "rec.ort")) && !usableModelFile(filepath.Join(dir, "rec.onnx")) {
+				return false
+			}
+			continue
+		}
 		if !usableModelFile(filepath.Join(dir, name)) {
 			return false
 		}
@@ -85,83 +90,9 @@ func InitNativeDocRuntime() (Capabilities, error) {
 	return DetectCapabilities(), nil
 }
 
+// DownloadNativeDocModels downloads the models of the active recognizer pack (Chinese and English until another is chosen).
 func DownloadNativeDocModels(ctx context.Context, onProgress func(NativeDocDownloadProgress)) error {
-	modelDir := NativeDocModelsDir()
-	if err := os.MkdirAll(modelDir, 0o755); err != nil {
-		return fmt.Errorf("create nativedoc model dir: %w", err)
-	}
-	baseURL := NativeDocModelsBaseURL()
-	client := &http.Client{}
-	for i, name := range NativeDocModelFiles {
-		progress := NativeDocDownloadProgress{File: name, FileIndex: i + 1, FileCount: len(NativeDocModelFiles)}
-		dest := filepath.Join(modelDir, name)
-		if usableModelFile(dest) {
-			progress.AlreadyAvailable = true
-			if onProgress != nil {
-				onProgress(progress)
-			}
-			continue
-		}
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/"+name, nil)
-		if err != nil {
-			return fmt.Errorf("build download request for %s: %w", name, err)
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			return fmt.Errorf("download %s: %w", name, err)
-		}
-		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			resp.Body.Close()
-			return fmt.Errorf("download %s: HTTP %d", name, resp.StatusCode)
-		}
-		progress.BytesTotal = resp.ContentLength
-		part := dest + ".part"
-		file, err := os.Create(part)
-		if err != nil {
-			resp.Body.Close()
-			return fmt.Errorf("create partial model file %s: %w", part, err)
-		}
-		buf := make([]byte, 256*1024)
-		for {
-			n, readErr := resp.Body.Read(buf)
-			if n > 0 {
-				if _, err := file.Write(buf[:n]); err != nil {
-					file.Close()
-					resp.Body.Close()
-					_ = os.Remove(part)
-					return fmt.Errorf("write model file %s: %w", name, err)
-				}
-				progress.BytesDownloaded += int64(n)
-				if onProgress != nil {
-					onProgress(progress)
-				}
-			}
-			if readErr == io.EOF {
-				break
-			}
-			if readErr != nil {
-				file.Close()
-				resp.Body.Close()
-				_ = os.Remove(part)
-				return fmt.Errorf("read model download %s: %w", name, readErr)
-			}
-		}
-		if err := file.Close(); err != nil {
-			resp.Body.Close()
-			_ = os.Remove(part)
-			return fmt.Errorf("close model file %s: %w", name, err)
-		}
-		resp.Body.Close()
-		if !usableModelFile(part) {
-			_ = os.Remove(part)
-			return fmt.Errorf("download %s looks truncated or empty", name)
-		}
-		if err := os.Rename(part, dest); err != nil {
-			_ = os.Remove(part)
-			return fmt.Errorf("install model file %s: %w", name, err)
-		}
-	}
-	return nil
+	return DownloadNativeDocPack(ctx, NativeDocActivePack(), onProgress)
 }
 
 func NewNativeDocConverter() documentreader.Converter {
