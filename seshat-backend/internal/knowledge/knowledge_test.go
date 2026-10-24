@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -470,6 +471,40 @@ func TestService_ProcessNextIngestionJob_ChunksTheNativeTextUnlessTheExternalRea
 	require.NotContains(t, resp.Results[0].Text, "hybrid chunk")
 	require.Equal(t, "[1]", resp.Results[0].Metadata["page_numbers"])
 	require.NotContains(t, resp.Results[0].Text, "<!--", "a page marker must not reach the indexed text")
+}
+
+func TestService_ProcessNextIngestionJob_ExplainsWhyAScannedPDFCannotBeRead(t *testing.T) {
+	ctx := context.Background()
+	database := openTestDB(t)
+	artifacts := newTestArtifactStore(t)
+	svc := newTestService(t, database, artifacts)
+	principal := testPrincipal("user-scan")
+
+	corpus, err := svc.CreateCorpus(ctx, principal, knowledge.CreateCorpusParams{Name: "kb"})
+	require.NoError(t, err)
+	// A PDF with a page and no text at all: what a scan looks like to a reader with no OCR.
+	scanned := strings.Join([]string{
+		"%PDF-1.4",
+		"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
+		"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
+		"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj",
+		"trailer<</Root 1 0 R>>",
+		"%%EOF",
+	}, "\n")
+	fileID := seedFile(t, ctx, database, artifacts, "user-scan", "scan.pdf", scanned)
+	_, err = svc.AttachFile(ctx, principal, corpus.ID, fileID)
+	require.NoError(t, err)
+
+	processed, err := svc.ProcessNextIngestionJob(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+
+	jobs, err := svc.ListIngestionJobs(ctx, principal, corpus.ID)
+	require.NoError(t, err)
+	require.Len(t, jobs, 1)
+	require.NotEqual(t, db.IngestionJobStatusCompleted, jobs[0].Status)
+	require.Contains(t, jobs[0].LastError, "looks like a scan", "the person must be told it is a scan, not only that no text was found")
+	require.NotEqual(t, "file has no extractable text content", jobs[0].LastError)
 }
 
 func TestService_ProcessNextIngestionJob_NoJobs(t *testing.T) {
