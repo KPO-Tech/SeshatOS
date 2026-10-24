@@ -120,11 +120,23 @@ function findWindowsBash() {
   return 'bash'
 }
 
+// The native libraries sit in the cache of setup-nativedoc-cgo.sh (NATIVEDOC_CACHE_DIR, or ~/.cache/seshat-nativedoc): pdfium in lib/ or
+// bin/ depending on the system. They are looked for there and not through PATH or LD_LIBRARY_PATH, which the script sets differently on a
+// clean CI runner than on a developer machine.
+function findPdfiumFunction() {
+  return (
+    'find_pdfium() { local base="${NATIVEDOC_CACHE_DIR:-$HOME/.cache/seshat-nativedoc}/pdfium" dir found; ' +
+    'for dir in "$base/lib" "$base/bin"; do found="$(find "$dir" -maxdepth 1 -name "$1" 2>/dev/null | head -1)"; ' +
+    'if [ -n "$found" ]; then echo "$found"; return 0; fi; done; return 1; }'
+  )
+}
+
 function copyRuntimeLibsCommand(goos, quotedOutDir) {
   if (goos === 'windows') {
     return [
-      'pdfium_dll="$(command -v pdfium.dll || true)"',
-      '[ -n "$pdfium_dll" ] || { echo "pdfium.dll not found on PATH after nativedoc setup" >&2; exit 1; }',
+      findPdfiumFunction(),
+      'pdfium_dll="$(find_pdfium pdfium.dll || true)"',
+      '[ -n "$pdfium_dll" ] || { echo "pdfium.dll not found in the nativedoc cache after the setup" >&2; exit 1; }',
       `cp "$pdfium_dll" ${quotedOutDir}/pdfium.dll`,
       '[ -n "${SESHAT_NATIVEDOC_ONNXRUNTIME_PATH:-}" ] || { echo "SESHAT_NATIVEDOC_ONNXRUNTIME_PATH missing after nativedoc setup" >&2; exit 1; }',
       `cp "$SESHAT_NATIVEDOC_ONNXRUNTIME_PATH" ${quotedOutDir}/onnxruntime.dll`,
@@ -132,16 +144,18 @@ function copyRuntimeLibsCommand(goos, quotedOutDir) {
   }
   if (goos === 'linux') {
     return [
-      'pdfium_so="$(find "${LD_LIBRARY_PATH%%:*}" -maxdepth 1 -name "libpdfium.so*" | head -1)"',
-      '[ -n "$pdfium_so" ] || { echo "libpdfium.so not found after nativedoc setup" >&2; exit 1; }',
-      `cp "$pdfium_so" ${quotedOutDir}/libpdfium.so`,
+      findPdfiumFunction(),
+      'pdfium_so="$(find_pdfium "libpdfium.so*" || true)"',
+      '[ -n "$pdfium_so" ] || { echo "libpdfium.so not found in the nativedoc cache after the setup" >&2; exit 1; }',
+      `cp -L "$pdfium_so" ${quotedOutDir}/libpdfium.so`,
     ].join(' && ')
   }
   if (goos === 'darwin') {
     return [
-      'pdfium_dylib="$(find "${DYLD_LIBRARY_PATH%%:*}" -maxdepth 1 -name "libpdfium.dylib*" | head -1)"',
-      '[ -n "$pdfium_dylib" ] || { echo "libpdfium.dylib not found after nativedoc setup" >&2; exit 1; }',
-      `cp "$pdfium_dylib" ${quotedOutDir}/libpdfium.dylib`,
+      findPdfiumFunction(),
+      'pdfium_dylib="$(find_pdfium "libpdfium.dylib*" || true)"',
+      '[ -n "$pdfium_dylib" ] || { echo "libpdfium.dylib not found in the nativedoc cache after the setup" >&2; exit 1; }',
+      `cp -L "$pdfium_dylib" ${quotedOutDir}/libpdfium.dylib`,
     ].join(' && ')
   }
   return ''
