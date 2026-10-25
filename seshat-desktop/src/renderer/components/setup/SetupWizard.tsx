@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ComponentCard } from './ComponentCard'
 import { InstallProgress } from './InstallProgress'
-import { fitsOnDisk, formatBytes, totalDownloadBytes } from './setupFormat'
+import { fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes } from './setupFormat'
 import type { useSetup } from './useSetup'
 
 type Step = 'welcome' | 'choose' | 'installing' | 'done'
@@ -104,6 +104,8 @@ export function SetupWizard({ setup }: { setup: Setup }) {
   if (!plan) return null
 
   const total = totalDownloadBytes(plan, choices)
+  const overall = overallProgress(plan, choices, progress)
+  const chosenCount = plan.components.filter((component) => component.available && choices[component.id]?.install).length
   const fits = fitsOnDisk(total, plan.freeDiskBytes)
   const anyAvailable = plan.components.some((component) => component.available)
   const hadError = Object.values(progress).some((item) => item?.status === 'error')
@@ -190,7 +192,7 @@ export function SetupWizard({ setup }: { setup: Setup }) {
               <div className="flex gap-3">
                 <QuietButton onClick={() => setStep('welcome')}>Back</QuietButton>
                 <PrimaryButton disabled={!fits} onClick={() => void install()}>
-                  {total > 0 ? 'Install' : 'Continue'}
+                  {total > 0 ? `Install · ${formatBytes(total)}` : 'Continue'}
                 </PrimaryButton>
               </div>
             </div>
@@ -199,9 +201,12 @@ export function SetupWizard({ setup }: { setup: Setup }) {
 
         {step === 'installing' && (
           <>
-            <Heading title="Setting things up">This takes a few minutes, depending on your connection. You can leave this window open.</Heading>
+            <Heading title="Setting things up">
+              {chosenCount > 1 ? 'Everything downloads at the same time, so it takes as long as the biggest one.' : 'This takes a few minutes, depending on your connection.'} You can
+              leave this window open.
+            </Heading>
             <div className="w-full">
-              <InstallProgress progress={progress} />
+              <InstallProgress progress={progress} overall={overall} />
             </div>
           </>
         )}

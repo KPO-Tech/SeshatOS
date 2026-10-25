@@ -6,6 +6,7 @@ import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL,
 import { MODEL_CATALOG as SPEECH_MODELS, activateModel as activateSpeechModel, downloadModel as downloadSpeechModel, enableLocalWhisper, getWhisperStatus } from './whisper-manager'
 import { resolveRuntimeRoot } from './runtime'
 import { downloadOcrPack, ocrSuitability, pickRecommendedPack, readOcrPacks } from './setup-ocr'
+import { runTogether, type SetupTask } from './setup-run'
 
 // What the person chooses to have on this computer the first time SeshatOS opens: the model that names conversations and the model that
 // transcribes the voice. Each choice is a download; the wizard of the renderer shows the plan, asks, then calls runSetup.
@@ -195,8 +196,9 @@ async function installOcr(packId: string, report: Report): Promise<void> {
 }
 
 /**
- * Installs what was chosen, one component after the other, and reports each. A component left out stays off: the title model is turned
- * off so it is not downloaded behind the person's back; speech was never on by itself. One that fails does not stop the next one.
+ * Installs what was chosen, all the components at the same time, and reports each as it goes. A component left out stays off: the title
+ * model is turned off so it is not downloaded behind the person's back; speech was never on by itself. One that fails does not stop the
+ * others.
  */
 export async function runSetup(selection: SetupSelection, report: Report): Promise<void> {
   const plan: Array<[SetupComponentId, (modelId: string, report: Report) => Promise<void>]> = [
@@ -204,23 +206,27 @@ export async function runSetup(selection: SetupSelection, report: Report): Promi
     ['speech', installSpeech],
     ['ocr', installOcr]
   ]
-  for (const [component, install] of plan) {
-    const choice = selection[component]
-    if (!choice?.install) {
-      if (component === 'title') await disableLlama().catch(() => {})
-      report({ component, status: 'done', message: 'Skipped' })
-      continue
+  const tasks: SetupTask[] = plan.map(([component, install]) => ({
+    id: component,
+    run: async () => {
+      const choice = selection[component]
+      if (!choice?.install) {
+        if (component === 'title') await disableLlama().catch(() => {})
+        report({ component, status: 'done', message: 'Skipped' })
+        return
+      }
+      if (!validModel(component, choice.modelId)) {
+        report({ component, status: 'error', message: 'That model is not one of the choices.' })
+        return
+      }
+      report({ component, status: 'running', receivedBytes: 0, totalBytes: 0 })
+      try {
+        await install(choice.modelId, report)
+        report({ component, status: 'done' })
+      } catch (error) {
+        report({ component, status: 'error', message: error instanceof Error ? error.message : String(error) })
+      }
     }
-    if (!validModel(component, choice.modelId)) {
-      report({ component, status: 'error', message: 'That model is not one of the choices.' })
-      continue
-    }
-    report({ component, status: 'running', receivedBytes: 0, totalBytes: 0 })
-    try {
-      await install(choice.modelId, report)
-      report({ component, status: 'done' })
-    } catch (error) {
-      report({ component, status: 'error', message: error instanceof Error ? error.message : String(error) })
-    }
-  }
+  }))
+  await runTogether(tasks, (id, error) => report({ component: id as SetupComponentId, status: 'error', message: error instanceof Error ? error.message : String(error) }))
 }
