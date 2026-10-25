@@ -30,8 +30,9 @@ export function updateSearchProvider(provider: string, params: {
   return api.put<SearchProviderConfig>(`/web/search/providers/${provider}`, params)
 }
 
-export function testSearchProvider(provider: string) {
-  return api.post<{ ok: boolean; latency_ms: number; error: string }>(`/web/search/providers/${provider}/test`, {})
+/** Tries a provider with what is typed in its card when given, and with what is saved for the rest: nothing is stored. */
+export function testSearchProvider(provider: string, typed: { api_key?: string; base_url?: string; auth_username?: string } = {}) {
+  return api.post<{ ok: boolean; latency_ms: number; error: string }>(`/web/search/providers/${provider}/test`, typed)
 }
 
 export async function fetchDomainCatalog() {

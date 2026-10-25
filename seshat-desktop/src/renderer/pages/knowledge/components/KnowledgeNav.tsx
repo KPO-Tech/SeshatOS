@@ -1,15 +1,14 @@
 import { useLocation, useNavigate } from 'react-router'
 import { SidebarItem } from '@renderer/components/layout/sidebar/SidebarItem'
-import { hasAdminAccess } from '@renderer/lib/authz'
-import { useAuthStore } from '@renderer/stores/auth'
 import { KNOWLEDGE_NAV, tabFromPath, type KnowledgeTab } from '../nav'
+import { useCanManageKnowledge } from '../useCanManage'
 
 // The sidebar of the Knowledge platform. While it is open it takes the place of the main sidebar's navigation; the Store entry and the
-// SeshatOS menu below stay. Pages for administrators are left out for everyone else.
+// SeshatOS menu below stay. The pages that manage Knowledge are left out for a person who may not.
 export function KnowledgeNav({ collapsed }: { collapsed: boolean }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const isAdmin = hasAdminAccess(useAuthStore((state) => state.roles))
+  const { allowed: canManage } = useCanManageKnowledge()
   const active = tabFromPath(pathname)
 
   function select(tab: KnowledgeTab) {
@@ -24,7 +23,7 @@ export function KnowledgeNav({ collapsed }: { collapsed: boolean }) {
       </div>
 
       {KNOWLEDGE_NAV.map((group) => {
-        const items = group.items.filter((item) => isAdmin || !item.adminOnly)
+        const items = group.items.filter((item) => canManage || !item.adminOnly)
         if (items.length === 0) return null
         return (
           <div key={group.title} className={`flex flex-col gap-px ${collapsed ? 'items-center' : ''}`}>
