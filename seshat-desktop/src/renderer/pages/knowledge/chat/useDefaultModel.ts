@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ProviderModel, ProviderSetting } from '@renderer/api/types'
 import { fetchProviderModels, useProviders } from '@renderer/hooks/useProviders'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
+import { pickDefaultModel } from '@renderer/lib/defaultModel'
 import { useProvidersStore } from '@renderer/stores/providers'
 
 export type DefaultModel = { provider: ProviderSetting; model: ProviderModel }
@@ -31,13 +32,7 @@ export function useDefaultModel(): { choice: DefaultModel | null; loading: boole
   const loaded = usable.length > 0 && usable.every((provider) => models[provider.id] !== undefined)
   const choice = useMemo<DefaultModel | null>(() => {
     if (!loaded) return null
-    const ordered = [...usable].sort((a, b) => Number(Boolean(b.is_default)) - Number(Boolean(a.is_default)))
-    for (const provider of ordered) {
-      const list = models[provider.id] ?? []
-      const model = list.find((item) => item.is_default) ?? list[0]
-      if (model) return { provider, model }
-    }
-    return null
+    return pickDefaultModel(usable, (provider) => models[provider.id] ?? [])
   }, [loaded, usable, models])
 
   return { choice, loading: providersLoading || (usable.length > 0 && !loaded), configured: usable.length > 0 }

@@ -14,6 +14,7 @@ import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 import { modelAlias } from '@renderer/lib/modelAlias'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
+import { pickDefaultChoice } from '@renderer/lib/defaultModel'
 import './Home.css'
 
 type ModelChoice = {
@@ -179,10 +180,10 @@ export function Home() {
     if (allModelChoices.length === 0) return
     if (selectedModelChoice) return
     if (loadingModelProviderIds.length > 0) return
-    const def = allModelChoices.find((choice) => choice.model.is_default) ?? allModelChoices[0]
+    const def = pickDefaultChoice(chatProviders, allModelChoices) ?? allModelChoices[0]
     setSelectedProviderId(def.providerId)
     setSelectedModelId(def.model.model_id)
-  }, [allModelChoices, selectedModelChoice, loadingModelProviderIds])
+  }, [allModelChoices, chatProviders, selectedModelChoice, loadingModelProviderIds])
 
   useEffect(() => {
     if (!selectedModelId || allModelChoices.length === 0) return
