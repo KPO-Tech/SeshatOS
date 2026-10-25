@@ -4,6 +4,7 @@ import { createWriteStream, existsSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 import { setDynamicBackendOrigin } from './runtime'
+import { withBackendLibraries } from './backend-env'
 import { resolveEnvVarOverrides } from './env-vars-manager'
 
 const READY_LINE = /^SESHAT_BACKEND_READY port=(\d+)/
@@ -48,18 +49,7 @@ export async function startBackendSidecar(): Promise<void> {
   // the real process environment, since setting one via the UI is a more
   // deliberate choice than an ambient shell var. See env-vars-manager.ts.
   const envVarOverrides = await resolveEnvVarOverrides()
-  const env = { ...process.env, ...srtEnvironment(), ...envVarOverrides }
-  if (process.platform === 'win32') {
-    env.PATH = `${backendDir};${env.PATH || ''}`
-    const onnxRuntimePath = join(backendDir, 'onnxruntime.dll')
-    if (!env.SESHAT_NATIVEDOC_ONNXRUNTIME_PATH && existsSync(onnxRuntimePath)) {
-      env.SESHAT_NATIVEDOC_ONNXRUNTIME_PATH = onnxRuntimePath
-    }
-  } else if (process.platform === 'linux') {
-    env.LD_LIBRARY_PATH = `${backendDir}${env.LD_LIBRARY_PATH ? `:${env.LD_LIBRARY_PATH}` : ''}`
-  } else if (process.platform === 'darwin') {
-    env.DYLD_LIBRARY_PATH = `${backendDir}${env.DYLD_LIBRARY_PATH ? `:${env.DYLD_LIBRARY_PATH}` : ''}`
-  }
+  const env = withBackendLibraries({ ...process.env, ...srtEnvironment(), ...envVarOverrides }, backendDir)
   if (!env.SESHAT_NATIVEDOC_AUTO_INIT && existsSync(join(backendDir, '.nativedoc-enabled'))) {
     env.SESHAT_NATIVEDOC_AUTO_INIT = '1'
   }

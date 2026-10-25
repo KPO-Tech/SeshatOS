@@ -1,7 +1,7 @@
 import { formatBytes } from './setupFormat'
 import type { Progress } from './useSetup'
 
-const LABELS = { title: 'Smart titles', speech: 'Voice dictation' } as const
+const LABELS = { title: 'Smart titles', speech: 'Voice dictation', ocr: 'Scanned documents' } as const
 
 function Status({ status }: { status: 'waiting' | 'running' | 'done' | 'error' }) {
   if (status === 'done') {

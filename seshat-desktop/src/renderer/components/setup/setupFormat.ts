@@ -5,9 +5,10 @@ export function formatBytes(bytes: number): string {
 }
 
 export type Choice = { install: boolean; modelId: string }
-export type Choices = Partial<Record<'title' | 'speech', Choice>>
+export type SetupComponentId = 'title' | 'speech' | 'ocr'
+export type Choices = Partial<Record<SetupComponentId, Choice>>
 
-type Plan = { components: Array<{ id: 'title' | 'speech'; available: boolean; options: Array<{ id: string; sizeBytes: number }> }> }
+type Plan = { components: Array<{ id: SetupComponentId; available: boolean; options: Array<{ id: string; sizeBytes: number }> }> }
 
 /** What the person has ticked, in bytes: the models only, the engines that run them are small next to them. */
 export function totalDownloadBytes(plan: Plan, choices: Choices): number {
@@ -18,15 +19,18 @@ export function totalDownloadBytes(plan: Plan, choices: Choices): number {
   }, 0)
 }
 
-/** The recommended model of each available component, ticked: where the choice starts. */
+/**
+ * The recommended model of each available component: where the choice starts. It is ticked, except for a component that says this
+ * computer is better left without it (defaultOn false): the person can still tick it.
+ */
 export function defaultChoices(plan: {
-  components: Array<{ id: 'title' | 'speech'; available: boolean; options: Array<{ id: string; recommended: boolean }> }>
+  components: Array<{ id: SetupComponentId; available: boolean; defaultOn?: boolean; options: Array<{ id: string; recommended: boolean }> }>
 }): Choices {
   const choices: Choices = {}
   for (const component of plan.components) {
     if (!component.available || component.options.length === 0) continue
     const recommended = component.options.find((option) => option.recommended) ?? component.options[0]
-    choices[component.id] = { install: true, modelId: recommended.id }
+    choices[component.id] = { install: component.defaultOn !== false, modelId: recommended.id }
   }
   return choices
 }
