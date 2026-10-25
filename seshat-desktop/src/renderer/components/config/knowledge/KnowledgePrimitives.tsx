@@ -61,7 +61,19 @@ export type SelectOption = {
   icon?: ReactNode
 }
 
-export function CustomSelect({ value, options, onChange, compact = false }: { value: string; options: SelectOption[]; onChange: (value: string) => void; compact?: boolean }) {
+export function CustomSelect({
+  value,
+  options,
+  onChange,
+  compact = false,
+  disabled = false
+}: {
+  value: string
+  options: SelectOption[]
+  onChange: (value: string) => void
+  compact?: boolean
+  disabled?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const selected = options.find((option) => option.value === value) ?? options[0]
 
@@ -70,12 +82,13 @@ export function CustomSelect({ value, options, onChange, compact = false }: { va
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
+        disabled={disabled}
         className={[
-          'flex w-full items-center justify-between gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-2.5 text-left text-[13px] font-semibold text-[var(--text-primary)] outline-none transition-colors hover:border-[var(--border-strong)]',
+          'flex w-full items-center justify-between gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-2.5 text-left text-[13px] font-semibold text-[var(--text-primary)] outline-none transition-colors hover:border-[var(--border-strong)] disabled:cursor-default disabled:opacity-55 disabled:hover:border-[var(--border-soft)]',
           compact ? 'h-9' : 'h-10'
         ].join(' ')}
         aria-haspopup="listbox"
-        aria-expanded={open}
+        aria-expanded={open && !disabled}
       >
         <span className="flex min-w-0 items-center gap-2.5">
           {selected?.icon}
@@ -84,7 +97,7 @@ export function CustomSelect({ value, options, onChange, compact = false }: { va
         <ChevronDownIcon />
       </button>
 
-      {open && (
+      {open && !disabled && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
           <div className="no-scrollbar max-h-[260px] overflow-y-auto p-1.5" role="listbox">
             {options.map((option) => (

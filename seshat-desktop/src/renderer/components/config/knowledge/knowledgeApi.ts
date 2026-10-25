@@ -30,6 +30,20 @@ export async function fetchKnowledgeSnapshot(): Promise<KnowledgeSnapshot> {
   }
 }
 
+export type DocumentsSnapshot = {
+  documentReader: DocumentReaderConfig | null
+  system: SystemStatus | null
+}
+
+/** What the Documents section of Config needs: the document reader settings and the state of the reading engines. */
+export async function fetchDocumentsSnapshot(): Promise<DocumentsSnapshot> {
+  const [documentReader, system] = await Promise.all([
+    api.get<DocumentReaderConfig>('/settings/document-reader').catch(() => null),
+    api.get<SystemStatus>('/system/status').catch(() => null)
+  ])
+  return { documentReader, system }
+}
+
 export function saveEmbedderConfig(config: {
   provider: string
   base_url: string

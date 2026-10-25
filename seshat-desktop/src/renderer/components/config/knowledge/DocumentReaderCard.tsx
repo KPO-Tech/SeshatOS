@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ConfigCard, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
+import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
+import { packOptions } from './ocrPacks'
 import { downloadNativeDocumentReaderModels, fetchNativeDocumentReaderStatus, initializeNativeDocumentReader, saveDocumentReaderConfig, testDocumentReaderConfig } from './knowledgeApi'
 import type { DocumentReaderConfig, NativeDocDownloadState, NativeDocPack, SystemStatus, TestState } from './knowledgeTypes'
 
@@ -244,18 +245,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
         </div>
         {nativePacks.length > 1 && (
           <Field label="Languages to read">
-            <select
-              value={selectedPack ?? ''}
-              onChange={(event) => setSelectedPack(event.target.value)}
-              disabled={downloadingNative}
-              className="h-9 w-full rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
-            >
-              {nativePacks.map((pack) => (
-                <option key={pack.id} value={pack.id}>
-                  {pack.label} ({pack.size_mb} MB){pack.active ? ' - in use' : pack.installed ? ' - downloaded' : ''}
-                </option>
-              ))}
-            </select>
+            <CustomSelect value={selectedPack ?? ''} options={packOptions(nativePacks)} onChange={setSelectedPack} disabled={downloadingNative} />
           </Field>
         )}
         <div className="flex items-center gap-2">
