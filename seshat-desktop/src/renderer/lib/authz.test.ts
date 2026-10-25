@@ -8,7 +8,12 @@ describe('canManageKnowledge', () => {
     expect(canManageKnowledge(null, 'standalone')).toBe(true)
   })
 
-  it('leaves the decision to the roles of the organization when paired with SeshatCloud', () => {
+  it('lets an individual SeshatCloud account, which belongs to no organization, manage its own Knowledge', () => {
+    expect(canManageKnowledge([], 'connected')).toBe(true)
+    expect(canManageKnowledge(null, 'connected')).toBe(true)
+  })
+
+  it('holds a member of an organization to the roles of that organization', () => {
     expect(canManageKnowledge(['member'], 'connected')).toBe(false)
     expect(canManageKnowledge(['Admin'], 'connected')).toBe(true)
     expect(canManageKnowledge([' owner '], 'connected')).toBe(true)
