@@ -24,8 +24,8 @@ export const KNOWLEDGE_NAV: Array<{ title: string; items: KnowledgeNavItem[] }> 
   {
     title: 'Manage',
     items: [
-      { id: 'sources', label: 'Sources', icon: <PlugOne size={15} />, ready: false, adminOnly: true },
-      { id: 'settings', label: 'Settings', icon: <SettingTwo size={15} />, ready: false, adminOnly: true }
+      { id: 'sources', label: 'Sources', icon: <PlugOne size={15} />, ready: true, adminOnly: true },
+      { id: 'settings', label: 'Settings', icon: <SettingTwo size={15} />, ready: true, adminOnly: true }
     ]
   }
 ]

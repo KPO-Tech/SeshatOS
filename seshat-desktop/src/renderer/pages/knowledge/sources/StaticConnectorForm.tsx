@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Field, SoftButton, TextInput } from '../knowledge/KnowledgePrimitives'
+import { Field, SoftButton, TextInput } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import type { ConnectAccountPayload, ConnectorKind } from './connectorTypes'
 
 export function StaticConnectorForm({

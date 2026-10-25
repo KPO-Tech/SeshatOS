@@ -1,4 +1,4 @@
-import type { Corpus, DocumentReaderConfig, EmbedderConfig, RerankerConfig, StorageStatus, SystemStatus } from './knowledgeTypes'
+import type { Corpus, DocumentReaderConfig, EmbedderConfig, RerankerConfig, StorageStatus, SystemStatus } from '@renderer/components/config/knowledge/knowledgeTypes'
 
 export function KnowledgeStatus({ corpora, embedder, reranker, documentReader, storage, system }: {
   corpora: Corpus[]

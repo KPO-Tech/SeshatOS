@@ -12,7 +12,7 @@ export type Edition = {
   // Pairing with a SeshatCloud (config section, admin page, organization
   // connectors, organization-managed catalogs and policies).
   cloud: boolean
-  // Knowledge bases: config section, composer selector and panel.
+  // Knowledge bases: the selector of the composer and its panel.
   knowledge: boolean
   // The community store page.
   store: boolean

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
-import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from './KnowledgePrimitives'
-import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from './knowledgeApi'
-import type { EmbedderConfig, TestState } from './knowledgeTypes'
+import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from '@renderer/components/config/knowledge/knowledgeApi'
+import type { EmbedderConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
 
 const BASE_URLS: Record<string, string> = {
   openai: 'https://api.openai.com/v1',

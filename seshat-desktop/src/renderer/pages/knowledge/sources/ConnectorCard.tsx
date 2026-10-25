@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CustomSelect, SoftButton, StatusPill } from '../knowledge/KnowledgePrimitives'
+import { CustomSelect, SoftButton, StatusPill } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { ConnectorIcon } from './ConnectorIcons'
 import type { ConnectorAccount, ConnectorDefinition, Corpus } from './connectorTypes'
 

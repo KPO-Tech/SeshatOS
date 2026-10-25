@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ProviderEmptyState } from '../providers/ProviderEmptyState'
-import { SoftButton } from '../knowledge/KnowledgePrimitives'
+import { ProviderEmptyState } from '@renderer/components/config/providers/ProviderEmptyState'
+import { SoftButton } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { ConnectorCard } from './ConnectorCard'
 import { connectorCatalog } from './connectorCatalog'
 import {

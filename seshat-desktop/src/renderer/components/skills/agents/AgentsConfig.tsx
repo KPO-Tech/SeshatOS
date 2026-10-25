@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ConfigCard, SoftButton, StatusPill } from '../knowledge/KnowledgePrimitives'
-import { ProviderEmptyState } from '../providers/ProviderEmptyState'
+import { ConfigCard, SoftButton, StatusPill } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { ProviderEmptyState } from '@renderer/components/config/providers/ProviderEmptyState'
 import { AgentCard } from './AgentCard'
 import { AgentCreateForm } from './AgentCreateForm'
 import { createAgent, deleteAgent, fetchAgents, updateAgent } from './agentsApi'

@@ -1,4 +1,4 @@
-import { SoftButton, StatusPill, ToggleSwitch } from '../knowledge/KnowledgePrimitives'
+import { SoftButton, StatusPill, ToggleSwitch } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { AgentAvatar } from './AgentAvatar'
 import type { AgentConfigEntry } from './agentTypes'
 
