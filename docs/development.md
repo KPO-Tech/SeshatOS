@@ -76,6 +76,19 @@ The backend is meant for the desktop app on the same machine, so it is closed to
 - `POST /auth/local-session` (the "continue without an account" session, which needs no secret) requires the header `X-Seshat-Desktop-Proof`: the HMAC-SHA256 of `auth/local-session` under the desktop bridge secret file. The Electron main process sends it. In a plain browser during development the renderer cannot read that file: start the backend with `SESHAT_ALLOW_UNPROVEN_LOCAL_SESSION=true` (never for a packaged app).
 - The terminal websocket accepts a request without `Origin` (Electron's main process) or one whose `Origin` is the backend's own host.
 
+## Starting as a brand new install
+
+`make dev`, `make dev-next` and `make dev-native` start the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. They do it with an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
+
+```bash
+make dev-next                  # a brand new install (FRESH=1, the default)
+make dev-next FRESH=0          # your own data, as before
+make dev-next KEEP_MODELS=1    # a brand new install, but keep the models downloaded earlier: the wizard still shows and nothing is downloaded twice
+make dev-native                # the same, with the backend built with the native OCR: the wizard then offers the scanned documents
+```
+
+The wizard offers the scanned documents only when the backend it can run was built with the native OCR. An unpackaged app has no bundled backend, so `make` points it to the one it built (`SESHAT_SETUP_BACKEND`); the plain `make dev` builds without the OCR, and the box then shows greyed out with the reason. `make dev-native` needs a C compiler (see `make install-cgo-windows`).
+
 ## Start time of `make dev`
 
 `make dev` builds the backend into `seshat-backend/bin/seshat-dev` (`.exe` on Windows) when a file of the backend changed, and runs that binary. It used to run `go run`, which links a new executable of about 100 MB at every start. A start with nothing changed does not build at all.
