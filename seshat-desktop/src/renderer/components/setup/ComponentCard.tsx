@@ -9,6 +9,8 @@ type Props = {
   icon: ReactNode
   available: boolean
   unavailableReason?: string
+  /** Something to tell the person about this choice on this computer, shown while the box is off. */
+  note?: string
   options: Option[]
   choice: Choice | undefined
   onChange: (choice: Choice) => void
@@ -33,7 +35,7 @@ function Check({ checked }: { checked: boolean }) {
 }
 
 // One thing the person can have installed: a switch, a line on what it does, and the model to pick when it is on.
-export function ComponentCard({ title, tagline, icon, available, unavailableReason, options, choice, onChange }: Props) {
+export function ComponentCard({ title, tagline, icon, available, unavailableReason, note, options, choice, onChange }: Props) {
   const on = available && Boolean(choice?.install)
   const selected = options.find((option) => option.id === choice?.modelId) ?? options[0]
 
@@ -60,6 +62,8 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
         </span>
         {available && selected && on && <span className="shrink-0 pt-0.5 text-[12.5px] font-medium text-[var(--text-muted)]">{formatBytes(selected.sizeBytes)}</span>}
       </button>
+
+      {available && !on && note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">{note}</p>}
 
       {on && choice && options.length > 0 && (
         <div className="mt-4 ml-[54px] grid gap-3">

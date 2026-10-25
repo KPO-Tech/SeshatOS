@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { defaultChoices, type Choices } from './setupFormat'
+import { defaultChoices, type Choices, type SetupComponentId } from './setupFormat'
 
 export type ItemProgress = { status: 'waiting' | 'running' | 'done' | 'error'; receivedBytes: number; totalBytes: number; message?: string }
-export type Progress = Partial<Record<'title' | 'speech', ItemProgress>>
+export type Progress = Partial<Record<SetupComponentId, ItemProgress>>
 
 // Whether the first-run setup is still to do, the plan the main process offers, what the person ticked, and the run itself.
 export function useSetup() {
@@ -40,7 +40,7 @@ export function useSetup() {
   const run = useCallback(
     async (selection: Choices) => {
       if (!bridge) return
-      const chosen = (['title', 'speech'] as const).filter((id) => selection[id]?.install)
+      const chosen = (['title', 'speech', 'ocr'] as const).filter((id) => selection[id]?.install)
       setProgress(Object.fromEntries(chosen.map((id) => [id, { status: 'waiting', receivedBytes: 0, totalBytes: 0 }])))
       setRunning(true)
       const stop = bridge.onProgress((event) => {

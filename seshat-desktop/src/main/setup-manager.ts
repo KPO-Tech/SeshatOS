@@ -1,8 +1,11 @@
 import { mkdir, readFile, statfs, writeFile } from 'fs/promises'
+import { cpus, totalmem } from 'os'
 import { join } from 'path'
+import { app } from 'electron'
 import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL, activateModel as activateTitleModel, disableLlama, getLlamaStatus } from './llama-manager'
 import { MODEL_CATALOG as SPEECH_MODELS, activateModel as activateSpeechModel, downloadModel as downloadSpeechModel, enableLocalWhisper, getWhisperStatus } from './whisper-manager'
 import { resolveRuntimeRoot } from './runtime'
+import { downloadOcrPack, ocrSuitability, pickRecommendedPack, readOcrPacks } from './setup-ocr'
 
 // What the person chooses to have on this computer the first time SeshatOS opens: the model that names conversations and the model that
 // transcribes the voice. Each choice is a download; the wizard of the renderer shows the plan, asks, then calls runSetup.
@@ -15,7 +18,7 @@ const TITLE_CHOICES = ['qwen2.5-0.5b', 'gemma-3-270m', 'qwen2.5-1.5b']
 const SPEECH_CHOICES = ['base', 'small', 'tiny']
 const RECOMMENDED = { title: DEFAULT_TITLE_MODEL, speech: 'base' } as const
 
-export type SetupComponentId = 'title' | 'speech'
+export type SetupComponentId = 'title' | 'speech' | 'ocr'
 
 export type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
 
@@ -23,6 +26,9 @@ export type SetupComponent = {
   id: SetupComponentId
   available: boolean
   unavailableReason?: string
+  /** False when this computer is better left without it: the wizard starts with it unticked, and says why in note. */
+  defaultOn?: boolean
+  note?: string
   options: SetupOption[]
 }
 
@@ -113,8 +119,35 @@ function speechOptions(): SetupOption[] {
   })
 }
 
+// Reading scanned documents: the packs come from the backend (which knows them), the one offered first reads the language of the system,
+// and the box starts ticked only on a computer that can run it comfortably.
+async function ocrComponent(): Promise<SetupComponent> {
+  const report = await readOcrPacks()
+  if (!report || report.packs.length === 0) {
+    return { id: 'ocr', available: false, unavailableReason: 'Not part of this version of SeshatOS yet.', options: [] }
+  }
+  if (!report.compiled) {
+    return { id: 'ocr', available: false, unavailableReason: 'This version of SeshatOS cannot read scanned documents.', options: [] }
+  }
+  const recommended = pickRecommendedPack(report.packs, app.getLocale())
+  const suitability = ocrSuitability({ totalMemoryBytes: totalmem(), cpuCount: cpus().length })
+  return {
+    id: 'ocr',
+    available: true,
+    defaultOn: suitability.ok,
+    note: suitability.note,
+    options: report.packs.map((pack) => ({
+      id: pack.id,
+      label: pack.label.replace(/ \(.*\)$/, ''),
+      sizeBytes: pack.download_bytes,
+      description: pack.installed ? 'Already on this computer.' : pack.label,
+      recommended: pack.id === recommended
+    }))
+  }
+}
+
 export async function getSetupPlan(): Promise<SetupPlan> {
-  const [llama, whisper, free] = await Promise.all([getLlamaStatus(), getWhisperStatus(), freeDiskBytes()])
+  const [llama, whisper, free, ocr] = await Promise.all([getLlamaStatus(), getWhisperStatus(), freeDiskBytes(), ocrComponent()])
   return {
     freeDiskBytes: free,
     components: [
@@ -129,12 +162,15 @@ export async function getSetupPlan(): Promise<SetupPlan> {
         available: whisper.supported,
         unavailableReason: whisper.supported ? undefined : 'Not available on this system yet.',
         options: speechOptions()
-      }
+      },
+      ocr
     ]
   }
 }
 
 function validModel(component: SetupComponentId, modelId: string): boolean {
+  // The backend knows the packs and refuses one it does not: here only a plain id is let through to its command line.
+  if (component === 'ocr') return /^[a-z0-9-]{1,32}$/.test(modelId)
   return (component === 'title' ? TITLE_CHOICES : SPEECH_CHOICES).includes(modelId)
 }
 
@@ -154,6 +190,10 @@ async function installSpeech(modelId: string, report: Report): Promise<void> {
   await enableLocalWhisper()
 }
 
+async function installOcr(packId: string, report: Report): Promise<void> {
+  await downloadOcrPack(packId, (progress) => report({ component: 'ocr', status: 'running', receivedBytes: progress.receivedBytes, totalBytes: progress.totalBytes }))
+}
+
 /**
  * Installs what was chosen, one component after the other, and reports each. A component left out stays off: the title model is turned
  * off so it is not downloaded behind the person's back; speech was never on by itself. One that fails does not stop the next one.
@@ -161,7 +201,8 @@ async function installSpeech(modelId: string, report: Report): Promise<void> {
 export async function runSetup(selection: SetupSelection, report: Report): Promise<void> {
   const plan: Array<[SetupComponentId, (modelId: string, report: Report) => Promise<void>]> = [
     ['title', installTitle],
-    ['speech', installSpeech]
+    ['speech', installSpeech],
+    ['ocr', installOcr]
   ]
   for (const [component, install] of plan) {
     const choice = selection[component]

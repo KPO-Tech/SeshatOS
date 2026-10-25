@@ -153,13 +153,14 @@ type BrowserPanelState = {
   }>
 }
 
+type SetupComponentId = 'title' | 'speech' | 'ocr'
 type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
 type SetupPlan = {
-  components: Array<{ id: 'title' | 'speech'; available: boolean; unavailableReason?: string; options: SetupOption[] }>
+  components: Array<{ id: SetupComponentId; available: boolean; unavailableReason?: string; defaultOn?: boolean; note?: string; options: SetupOption[] }>
   freeDiskBytes: number | null
 }
-type SetupSelection = Partial<Record<'title' | 'speech', { install: boolean; modelId: string }>>
-type SetupProgress = { component: 'title' | 'speech'; status: 'running' | 'done' | 'error'; receivedBytes?: number; totalBytes?: number; message?: string }
+type SetupSelection = Partial<Record<SetupComponentId, { install: boolean; modelId: string }>>
+type SetupProgress = { component: SetupComponentId; status: 'running' | 'done' | 'error'; receivedBytes?: number; totalBytes?: number; message?: string }
 
 type ShellDataEvent = { id: string; data: string }
 type ShellExitEvent = { id: string; exitCode: number; signal?: number }

@@ -17,6 +17,22 @@ describe('setup choices', () => {
     expect(defaultChoices({ components: [{ ...plan.components[0], available: false }, plan.components[1]] })).toEqual({ speech: { install: true, modelId: 'base' } })
   })
 
+  it('offers a component the computer is better without, but unticked', () => {
+    const withScans = {
+      components: [...plan.components, { id: 'ocr' as const, available: true, defaultOn: false, options: [{ id: 'latin', sizeBytes: 101_000_000, recommended: true }] }]
+    }
+    const choices = defaultChoices(withScans)
+    expect(choices.ocr).toEqual({ install: false, modelId: 'latin' })
+    // It counts for nothing until the person ticks it, then for its own size.
+    expect(totalDownloadBytes(withScans, choices)).toBe(639_000_000)
+    expect(totalDownloadBytes(withScans, { ...choices, ocr: { install: true, modelId: 'latin' } })).toBe(740_000_000)
+  })
+
+  it('ticks a component that says nothing about the computer', () => {
+    const withScans = { components: [{ id: 'ocr' as const, available: true, defaultOn: true, options: [{ id: 'latin', sizeBytes: 1, recommended: true }] }] }
+    expect(defaultChoices(withScans).ocr?.install).toBe(true)
+  })
+
   it('adds up what is ticked, and nothing for what is not', () => {
     expect(totalDownloadBytes(plan, defaultChoices(plan))).toBe(639_000_000)
     expect(totalDownloadBytes(plan, { title: { install: false, modelId: 'a' }, speech: { install: true, modelId: 'tiny' } })).toBe(78_000_000)
