@@ -23,6 +23,9 @@ BACKEND_BIN       := seshat-api
 BACKEND_BIN_PATH  := $(BACKEND_BIN_DIR)/$(BACKEND_BIN)
 # The binary make dev runs. A separate name, with the .exe Windows needs, so make build keeps producing what it always did.
 BACKEND_DEV_EXE   := seshat-dev$(if $(filter Windows_NT,$(OS)),.exe,)
+# The backend with the native OCR is another file: it is linked to pdfium and does not start without it on the path, so a plain
+# make dev must never pick it up. make dev and make dev-native used to share one file, and make dev reused whichever was built last.
+BACKEND_DEV_NATIVE_EXE := seshat-dev-native$(if $(filter Windows_NT,$(OS)),.exe,)
 DESKTOP_DIR       := $(ROOT)/seshat-desktop
 GO_BUILD_CACHE    := $(CACHE_DIR)/go-build
 GOLANGCI_CACHE    := $(CACHE_DIR)/golangci-lint
@@ -47,10 +50,12 @@ KEEP_MODELS       ?= 0
 FRESH_ROOT        := $(CACHE_DIR)/dev-fresh
 # What every dev start exports. SESHAT_SETUP_BACKEND lets the wizard of an unpackaged app run the commands of the backend built here
 # (it has no bundled one): the box of the scanned documents shows only when that backend was built with the native OCR (make dev-native).
-DEV_EXPORTS       := export SESHAT_SETUP_BACKEND="$(BACKEND_DIR)/bin/$(BACKEND_DEV_EXE)";
+SETUP_BACKEND_EXE  = $(BACKEND_DEV_EXE)
+DEV_EXPORTS        = export SESHAT_SETUP_BACKEND="$(BACKEND_DIR)/bin/$(SETUP_BACKEND_EXE)";
 ifeq ($(FRESH),1)
 DEV_EXPORTS       += export SESHAT_RUNTIME_ROOT="$(FRESH_ROOT)"; export SESHAT_FORCE_SETUP=1;
 endif
+dev-native: SETUP_BACKEND_EXE = $(BACKEND_DEV_NATIVE_EXE)
 
 .PHONY: help setup dev dev-next dev-native dev-fresh-state dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
 
@@ -82,6 +87,10 @@ install-cgo-windows: ## Install MSYS2/MinGW-w64 GCC for the native document read
 # the binary.
 dev-backend:
 	@mkdir -p $(BACKEND_BIN_DIR)
+	@if [ -f "$(BACKEND_BIN_DIR)/$(BACKEND_DEV_EXE)" ] && go version -m "$(BACKEND_BIN_DIR)/$(BACKEND_DEV_EXE)" 2>/dev/null | grep -q 'tags=.*nativedoc'; then \
+	  printf "\033[33m[go]\033[0m %s was built with the native OCR and needs pdfium to start: removed, it is rebuilt without\n" $(BACKEND_DEV_EXE); \
+	  rm -f "$(BACKEND_BIN_DIR)/$(BACKEND_DEV_EXE)"; \
+	fi
 	@if [ -f "$(BACKEND_BIN_DIR)/$(BACKEND_DEV_EXE)" ] && [ -z "$$(find $(BACKEND_DIR) $(ROOT)/go.work -path $(BACKEND_BIN_DIR) -prune -o -type f -newer $(BACKEND_BIN_DIR)/$(BACKEND_DEV_EXE) -print -quit)" ]; then \
 	  printf "\033[32m[go]\033[0m backend up to date, not rebuilt\n"; \
 	else \
@@ -91,7 +100,7 @@ dev-backend:
 
 dev-backend-native:
 	@mkdir -p $(BACKEND_BIN_DIR)
-	@cd $(BACKEND_DIR) && $(NATIVE_ENV) && CGO_ENABLED=1 go build -tags "$$NATIVEDOC_BUILD_TAGS" -o ./bin/$(BACKEND_DEV_EXE) $(BACKEND_CMD)
+	@cd $(BACKEND_DIR) && $(NATIVE_ENV) && CGO_ENABLED=1 go build -tags "$$NATIVEDOC_BUILD_TAGS" -o ./bin/$(BACKEND_DEV_NATIVE_EXE) $(BACKEND_CMD)
 
 # Empties the runtime root of a fresh start (see FRESH above). It only ever wipes a folder named dev-fresh, whatever CACHE_DIR is.
 dev-fresh-state:
@@ -124,7 +133,7 @@ dev-next: stop desktop-install dev-backend dev-fresh-state ## Same as dev, with 
 # pdfium, which has to be on the path.
 dev-native: stop desktop-install dev-backend-native dev-fresh-state ## Start the local backend with native document reading (CGO) + the Electron UI, as a brand new install
 	@printf "\033[32m[seshatos]\033[0m starting local backend (native document reading) and Electron UI...\n"
-	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(NATIVE_ENV) && SESHAT_NATIVEDOC_AUTO_INIT=1 ./bin/$(BACKEND_DEV_EXE)) & \
+	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(NATIVE_ENV) && SESHAT_NATIVEDOC_AUTO_INIT=1 ./bin/$(BACKEND_DEV_NATIVE_EXE)) & \
 	BACKEND_PID=$$!; \
 	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
 	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(NATIVE_ENV) && $(UI_PKG_MGR) run start
@@ -135,11 +144,12 @@ stop: ## Stop the backend and UI processes
 	  pkill -x api 2>/dev/null || true; \
 	  pkill -x $(BACKEND_BIN) 2>/dev/null || true; \
 	  pkill -x seshat-dev 2>/dev/null || true; \
+	  pkill -x seshat-dev-native 2>/dev/null || true; \
 	  pkill -f "electron-vite" 2>/dev/null || true; \
 	  pkill -f "[e]lectron.*seshatos" 2>/dev/null || true; \
 	elif command -v powershell.exe >/dev/null 2>&1; then \
 	  powershell.exe -NoProfile -Command \
-	    "Get-CimInstance Win32_Process | Where-Object { \$$_.Name -match '^(api|go|seshat-api|seshat-dev)(\.exe)?\$$' -or (\$$_.Name -match '^(electron|node)(\.exe)?\$$' -and \$$_.CommandLine -match 'electron-vite|seshat-desktop') } | ForEach-Object { Stop-Process -Id \$$_.ProcessId -Force -ErrorAction SilentlyContinue }" \
+	    "Get-CimInstance Win32_Process | Where-Object { \$$_.Name -match '^(api|go|seshat-api|seshat-dev|seshat-dev-native)(\.exe)?\$$' -or (\$$_.Name -match '^(electron|node)(\.exe)?\$$' -and \$$_.CommandLine -match 'electron-vite|seshat-desktop') } | ForEach-Object { Stop-Process -Id \$$_.ProcessId -Force -ErrorAction SilentlyContinue }" \
 	    2>/dev/null || true; \
 	fi
 	@printf "\033[32m[seshatos]\033[0m stopped.\n"
