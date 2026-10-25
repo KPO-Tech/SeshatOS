@@ -76,14 +76,20 @@ The backend is meant for the desktop app on the same machine, so it is closed to
 - `POST /auth/local-session` (the "continue without an account" session, which needs no secret) requires the header `X-Seshat-Desktop-Proof`: the HMAC-SHA256 of `auth/local-session` under the desktop bridge secret file. The Electron main process sends it. In a plain browser during development the renderer cannot read that file: start the backend with `SESHAT_ALLOW_UNPROVEN_LOCAL_SESSION=true` (never for a packaged app).
 - The terminal websocket accepts a request without `Origin` (Electron's main process) or one whose `Origin` is the backend's own host.
 
+## One version of the app
+
+There is one version of the app. The main branch, `make dev` and a build you make yourself show everything: accounts, SeshatCloud, Knowledge, the store and the sources of an answer. `make dev-next` was the name of the second version and now only runs `make dev`.
+
+A release can still hide what is not ready. The release workflow builds the app with `VITE_SESHAT_EDITION=public` (three build steps in `.github/workflows/release-desktop.yml`), which switches the flags of `seshat-desktop/src/renderer/lib/edition.ts` off: the local, single-user workspace of the first public version. That value is what a release shows; change it, with the comment above it, to release with more or less. `npm run dev:public` (in `seshat-desktop`) runs the app the way such a release shows it. Nothing is removed by a flag: the hidden code stays compiled and typed.
+
 ## Starting as a brand new install
 
-`make dev`, `make dev-next` and `make dev-native` start the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. They do it with an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
+`make dev` and `make dev-native` start the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. They do it with an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
 
 ```bash
-make dev-next                  # a brand new install (FRESH=1, the default)
-make dev-next FRESH=0          # your own data, as before
-make dev-next KEEP_MODELS=1    # a brand new install, but keep the models downloaded earlier: the wizard still shows and nothing is downloaded twice
+make dev                       # a brand new install (FRESH=1, the default)
+make dev FRESH=0               # your own data, as before
+make dev KEEP_MODELS=1         # a brand new install, but keep the models downloaded earlier: the wizard still shows and nothing is downloaded twice
 make dev-native                # the same, with the backend built with the native OCR: the wizard then offers the scanned documents
 ```
 

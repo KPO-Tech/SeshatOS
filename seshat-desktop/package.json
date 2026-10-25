@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node scripts/start-desktop-dev.mjs",
     "dev": "node scripts/start-desktop-dev.mjs",
-    "dev:next": "node scripts/start-desktop-dev.mjs --edition=next",
+    "dev:public": "node scripts/start-desktop-dev.mjs --edition=public",
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "lint": "oxlint src",

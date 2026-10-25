@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { DocumentReaderCard } from './DocumentReaderCard'
 import { EmbedderCard } from './EmbedderCard'
 import { KnowledgeStatus } from './KnowledgeStatus'
 import { RerankerCard } from './RerankerCard'
 import { StorageAndCorporaCard } from './StorageAndCorporaCard'
 import { fetchKnowledgeSnapshot, type KnowledgeSnapshot } from './knowledgeApi'
-import type { SystemStatus } from './knowledgeTypes'
 
-type KnowledgePage = 'overview' | 'retrieval' | 'documents'
+type KnowledgePage = 'overview' | 'retrieval'
 
 const emptySnapshot: KnowledgeSnapshot = {
   corpora: [],
@@ -96,26 +94,12 @@ export function KnowledgeConfig() {
           <RerankerCard config={snapshot.reranker} onSaved={(reranker) => setSnapshot((current) => ({ ...current, reranker }))} />
         </>
       )}
-
-      {activePage === 'documents' && (
-        <DocumentReaderCard
-          config={snapshot.documentReader}
-          system={snapshot.system}
-          onSaved={(documentReader) => setSnapshot((current) => ({ ...current, documentReader }))}
-          onSystemChanged={(system) =>
-            setSnapshot((current) => ({
-              ...current,
-              system: current.system ? { ...current.system, ...system } : ({ mode: 'standalone', ...system } as SystemStatus)
-            }))
-          }
-        />
-      )}
     </div>
   )
 }
 
+// The reading of documents has its own section in Config (Documents): the chat and the attachments use that reader too.
 const knowledgePages: Array<{ id: KnowledgePage; label: string }> = [
   { id: 'overview', label: 'Overview' },
-  { id: 'retrieval', label: 'Retrieval' },
-  { id: 'documents', label: 'Documents' }
+  { id: 'retrieval', label: 'Retrieval' }
 ]
