@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from 'react'
 import type { User } from '@renderer/api/types'
-import { AgentsConfig } from './agents/AgentsConfig'
 import { CloudConfig } from './cloud/CloudConfig'
 import { EnvironmentConfig } from './environment/EnvironmentConfig'
 import { hiddenConfigSections } from './configSections'
@@ -27,7 +26,6 @@ export type ConfigSection =
   | 'mcp'
   | 'environment'
   | 'storage'
-  | 'agents'
   | 'skills'
   | 'cloud'
 
@@ -50,7 +48,6 @@ const allSections: SectionDef[] = [
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },
   { id: 'storage', label: 'Storage', icon: 'storage', group: 'Workspace Runtime', description: 'Local filesystem, object storage, and cache locations.' },
-  { id: 'agents', label: 'Agents', icon: 'agent', group: 'Agents', description: 'Agent profiles, permissions, delegation defaults, and system instructions.' },
   { id: 'skills', label: 'Skills', icon: 'skills', group: 'Agents', description: 'Skill repositories downloaded to this machine and the groups they provide.' },
   { id: 'cloud', label: 'SeshatCloud', icon: 'connectors', group: 'Workspace Runtime', description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
 ]
@@ -127,7 +124,6 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'mcp' && <MCPConfig />}
               {activeSection === 'environment' && <EnvironmentConfig />}
               {activeSection === 'storage' && <StorageConfig />}
-              {activeSection === 'agents' && <AgentsConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
               {activeSection === 'cloud' && <CloudConfig />}
             </div>

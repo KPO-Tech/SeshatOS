@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CustomSelect, Field, SoftButton, TextInput, ToggleSwitch } from '../knowledge/KnowledgePrimitives'
+import { CustomSelect, Field, SoftButton, TextInput, ToggleSwitch } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { AgentAvatar } from './AgentAvatar'
 import type { AgentConfigEntry, AgentCreatePayload } from './agentTypes'
 
