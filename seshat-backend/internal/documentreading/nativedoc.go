@@ -96,6 +96,11 @@ func DownloadNativeDocModels(ctx context.Context, onProgress func(NativeDocDownl
 }
 
 func NewNativeDocConverter() documentreader.Converter {
+	// The models can arrive after the backend started (the first-run setup, or Settings): bring the OCR up when a document needs it
+	// rather than at the next start. InitORT runs once, so a machine where it fails pays for it once.
+	if nativeDocCompiled() && !nativedoc.Initialized() && NativeDocModelsAvailable() {
+		_ = nativedoc.InitORT()
+	}
 	if !NativeDocReady() {
 		return nil
 	}

@@ -118,6 +118,29 @@ func NativeDocActivePack() string {
 	return id
 }
 
+// nativeDocSharedModelBytes is what the models every pack shares weigh (det.ort, layout.ort, tsr.ort), for the size shown before a
+// download. An estimate: the files are the ones of the InfiniFlow/deepdoc repository.
+var nativeDocSharedModelBytes = map[string]int64{"det.ort": 4_885_936, "layout.ort": 75_986_208, "tsr.ort": 12_343_760}
+
+// NativeDocPackDownloadBytes is about how much a person has to download to use a pack now: the shared models that are not on disk yet,
+// and the recognizer of the pack unless it is installed.
+func NativeDocPackDownloadBytes(id string) int64 {
+	pack, ok := NativeDocPackByID(id)
+	if !ok {
+		return 0
+	}
+	var total int64
+	for _, name := range nativeDocSharedModelFiles {
+		if !usableModelFile(filepath.Join(NativeDocModelsDir(), name)) {
+			total += nativeDocSharedModelBytes[name]
+		}
+	}
+	if !NativeDocPackInstalled(id) {
+		total += int64(pack.SizeMB) * 1_000_000
+	}
+	return total
+}
+
 // NativeDocPackInstalled reports whether the files of a pack are on disk, in its own folder or, for the active pack, in the model
 // directory.
 func NativeDocPackInstalled(id string) bool {

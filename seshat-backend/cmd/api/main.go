@@ -30,6 +30,16 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// The OCR model commands (--ocr-packs, --download-ocr-pack) run without a server: the first-run setup of the desktop app uses them.
+	if len(os.Args) > 1 && strings.HasPrefix(os.Args[1], "--") {
+		commandCtx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+		handled, code := runOCRCommand(commandCtx, os.Args[1:], os.Stdout)
+		stop()
+		if handled {
+			os.Exit(code)
+		}
+	}
+
 	go func() {
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
