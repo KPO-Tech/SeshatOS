@@ -55,19 +55,26 @@ export function SettingsModal({ user, initialSection, onLogout, onClose }: Props
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-8 py-8 backdrop-blur-sm">
-      <div className="relative flex h-full max-h-[720px] w-full max-w-[1240px] overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]">
-        <aside className="no-scrollbar w-[220px] shrink-0 overflow-y-auto border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-2.5">
-          <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent-primary)] text-[11px] font-bold text-white">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{displayName}</div>
-              <div className="text-[11px] text-[var(--text-muted)]">Local workspace</div>
-            </div>
+      <div className="relative flex h-full max-h-[720px] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]">
+        <header className="flex h-11 shrink-0 items-center justify-between border-b border-[var(--border-soft)] pl-4 pr-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="text-[14px] font-semibold text-[var(--text-primary)]">Settings</span>
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent-primary)] text-[9px] font-bold text-white">{initials}</span>
+            <span className="truncate text-[11.5px] text-[var(--text-muted)]">{displayName}</span>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-7 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            aria-label="Close settings"
+          >
+            <CloseIcon />
+          </button>
+        </header>
 
-          <nav className="mt-3 space-y-3">
+        <div className="flex min-h-0 flex-1">
+        <aside className="no-scrollbar w-[220px] shrink-0 overflow-y-auto border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-2.5">
+          <nav className="space-y-3">
             {groupedSections().map(([group, items]) => (
               <div key={group}>
                 <div className="mb-1 px-3 text-[11px] font-medium text-[var(--text-muted)]">{group}</div>
@@ -94,16 +101,7 @@ export function SettingsModal({ user, initialSection, onLogout, onClose }: Props
           </nav>
         </aside>
 
-        <section className="no-scrollbar min-w-0 flex-1 overflow-y-auto px-12 py-9">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-5 top-5 flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-            aria-label="Close settings"
-          >
-            <CloseIcon />
-          </button>
-
+        <section className="no-scrollbar min-w-0 flex-1 overflow-y-auto px-10 py-7">
           <div className="mx-auto max-w-[920px]">
             <SettingsContent
               section={activeSection}
@@ -123,6 +121,7 @@ export function SettingsModal({ user, initialSection, onLogout, onClose }: Props
             />
           </div>
         </section>
+        </div>
       </div>
     </div>
   )

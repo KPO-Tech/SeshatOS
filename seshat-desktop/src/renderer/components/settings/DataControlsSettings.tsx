@@ -33,7 +33,7 @@ export function DataControlsSettings() {
   return (
     <div>
       <header className="mb-7">
-        <h1 className="text-[24px] font-semibold tracking-normal text-[var(--text-primary)]">Data Controls</h1>
+        <h1 className="text-[18px] font-semibold tracking-normal text-[var(--text-primary)]">Data Controls</h1>
         <p className="mt-2 text-[13px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
           Local data cleanup and export controls belong here. Destructive actions are prepared, but disabled until backend bulk endpoints are added.
         </p>

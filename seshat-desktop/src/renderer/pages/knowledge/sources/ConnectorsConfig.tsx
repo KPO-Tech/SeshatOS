@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ProviderEmptyState } from '@renderer/components/config/providers/ProviderEmptyState'
-import { SoftButton } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { useEffect, useState } from 'react'
+import { PluginCard } from '@renderer/components/plugins/PluginCard'
+import { ConnectorIcon } from './ConnectorIcons'
 import { ConnectorCard } from './ConnectorCard'
 import { connectorCatalog } from './connectorCatalog'
 import {
@@ -22,6 +22,9 @@ export function ConnectorsConfig() {
   const [connecting, setConnecting] = useState<ConnectorDefinition | null>(null)
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<'all' | 'Knowledge' | 'Actions'>('all')
+  const [openKind, setOpenKind] = useState<string | null>(null)
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
   async function load() {
@@ -49,15 +52,6 @@ export function ConnectorsConfig() {
   useEffect(() => {
     void load()
   }, [])
-
-  const metrics = useMemo(() => {
-    const accounts = Object.values(accountsByKind).reduce((sum, items) => sum + items.length, 0)
-    return [
-      { label: 'Connectors', value: String(connectorCatalog.length) },
-      { label: 'Accounts', value: String(accounts) },
-      { label: 'Corpora', value: String(corpora.length) }
-    ]
-  }, [accountsByKind, corpora.length])
 
   async function handleConnect(definition: ConnectorDefinition) {
     if (definition.mode === 'oauth') {
@@ -133,78 +127,126 @@ export function ConnectorsConfig() {
     }
   }
 
-  const grouped = {
-    Knowledge: connectorCatalog.filter((item) => item.category === 'Knowledge'),
-    Actions: connectorCatalog.filter((item) => item.category === 'Actions')
-  }
+  const needle = query.trim().toLowerCase()
+  const matching = connectorCatalog.filter((item) => `${item.title} ${item.description}`.toLowerCase().includes(needle))
+  const groups = (['Knowledge', 'Actions'] as const)
+    .filter((group) => filter === 'all' || filter === group)
+    .map((group) => ({ group, items: matching.filter((item) => item.category === group) }))
+    .filter((entry) => entry.items.length > 0)
+  const opened = connectorCatalog.find((item) => item.kind === openKind) ?? null
 
   return (
-    <div className="space-y-5">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-4">
+      <div className="flex shrink-0 items-center justify-between">
+        <h1 className="text-[18px] font-semibold text-[var(--text-primary)]">Sources</h1>
+        <button
+          type="button"
+          onClick={() => void load()}
+          disabled={loading}
+          className="flex h-7 items-center rounded-lg border border-[var(--border-soft)] px-3 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-50"
+        >
+          {loading ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
+      <p className="mt-1 shrink-0 text-[12px] text-[var(--text-muted)]">Connect the places your documents live, and synchronize them into a collection.</p>
+
+      <div className="relative mt-3 shrink-0">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+        </span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search sources"
+          className="h-9 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-9 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
+        />
+      </div>
+
+      <div className="no-scrollbar mt-3 flex shrink-0 gap-1.5 overflow-x-auto">
+        {(['all', 'Knowledge', 'Actions'] as const).map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setFilter(item)}
+            className={['h-7 shrink-0 rounded-full px-3 text-[12px] font-semibold transition-colors', filter === item ? 'bg-[var(--surface-muted)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'].join(' ')}
+          >
+            {item === 'all' ? 'All' : item}
+          </button>
+        ))}
+      </div>
+
       {message && (
         <div className={[
-          'rounded-lg border bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold',
+          'mt-3 shrink-0 rounded-lg border bg-[var(--surface-panel)] px-4 py-2.5 text-[12.5px] font-semibold',
           message.tone === 'ok' ? 'border-[var(--accent-success)]/35 text-[var(--accent-success)]' : 'border-[var(--accent-danger)]/40 text-[var(--accent-danger)]'
         ].join(' ')}>
           {message.text}
         </div>
       )}
 
-      <section className="grid grid-cols-3 gap-2">
-        {metrics.map((metric) => <Metric key={metric.label} {...metric} />)}
-      </section>
-
-      <section className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-3">
-        <div>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Connector accounts</h2>
-          <p className="mt-1 text-[12px] text-[var(--text-muted)]">Connect external workspaces, then sync knowledge sources into a corpus.</p>
-        </div>
-        <SoftButton onClick={() => void load()} disabled={loading}>{loading ? 'Loading...' : 'Refresh'}</SoftButton>
-      </section>
-
-      {connecting && (
-        <StaticConnectorForm
-          kind={connecting.kind as ConnectorKind}
-          saving={busyId === connecting.kind}
-          onCancel={() => setConnecting(null)}
-          onSubmit={(payload) => handleStaticConnect(connecting, payload)}
-        />
-      )}
-
       {loading ? (
-        <ProviderEmptyState label="Loading connectors..." />
+        <div className="flex flex-1 items-center justify-center text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+      ) : groups.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center pb-16 text-[13px] font-semibold text-[var(--text-muted)]">No sources match your search.</div>
       ) : (
-        <>
-          {Object.entries(grouped).map(([group, items]) => (
-            <section key={group}>
-              <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">{group}</h2>
-              <div className="mt-3 grid gap-2">
-                {items.map((definition) => (
-                  <ConnectorCard
-                    key={definition.kind}
-                    definition={definition}
-                    accounts={accountsByKind[definition.kind] ?? []}
-                    corpora={corpora}
-                    busy={Boolean(busyId)}
-                    onConnect={() => void handleConnect(definition)}
-                    onDisconnect={(account) => void handleDisconnect(definition, account)}
-                    onSync={(account, corpusId) => void handleSync(definition, account, corpusId)}
-                    onRunAction={(account) => void handleAction(definition, account)}
-                  />
-                ))}
+        <div className="no-scrollbar mt-5 min-h-0 flex-1 space-y-7 overflow-y-auto pb-8">
+          {groups.map(({ group, items }) => (
+            <div key={group}>
+              <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{group}</h2>
+              <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-2.5">
+                {items.map((definition) => {
+                  const accounts = accountsByKind[definition.kind] ?? []
+                  const needsAttention = accounts.some((account) => Boolean(account.last_error))
+                  return (
+                    <PluginCard
+                      key={definition.kind}
+                      title={definition.title}
+                      description={definition.description}
+                      icon={<ConnectorIcon kind={definition.kind} size={34} />}
+                      connected={accounts.length > 0}
+                      needsAttention={needsAttention}
+                      onOpen={() => setOpenKind(definition.kind)}
+                    />
+                  )
+                })}
               </div>
-            </section>
+            </div>
           ))}
-        </>
+        </div>
       )}
-    </div>
-  )
-}
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2.5">
-      <div className="text-[11px] font-semibold text-[var(--text-muted)]">{label}</div>
-      <div className="mt-1 text-[20px] font-semibold text-[var(--text-primary)]">{value}</div>
-    </div>
+      {opened && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-8 py-8 backdrop-blur-sm" onMouseDown={() => setOpenKind(null)}>
+          <div
+            className="relative flex max-h-[85vh] w-full max-w-[640px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" onClick={() => setOpenKind(null)} aria-label="Close" className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>
+            <div className="no-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pt-12">
+              {connecting?.kind === opened.kind && (
+                <StaticConnectorForm
+                  kind={connecting.kind as ConnectorKind}
+                  saving={busyId === connecting.kind}
+                  onCancel={() => setConnecting(null)}
+                  onSubmit={(payload) => handleStaticConnect(connecting, payload)}
+                />
+              )}
+              <ConnectorCard
+                definition={opened}
+                accounts={accountsByKind[opened.kind] ?? []}
+                corpora={corpora}
+                busy={Boolean(busyId)}
+                onConnect={() => void handleConnect(opened)}
+                onDisconnect={(account) => void handleDisconnect(opened, account)}
+                onSync={(account, corpusId) => void handleSync(opened, account, corpusId)}
+                onRunAction={(account) => void handleAction(opened, account)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }

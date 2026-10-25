@@ -19,7 +19,7 @@ type SettingsIconName =
 export function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="min-h-full pb-8">
-      <h1 className="text-[24px] font-semibold tracking-normal text-[var(--text-primary)]">{title}</h1>
+      <h1 className="text-[18px] font-semibold tracking-normal text-[var(--text-primary)]">{title}</h1>
       <div className="mt-5 border-t border-[var(--border-soft)] pt-6">{children}</div>
     </div>
   )
