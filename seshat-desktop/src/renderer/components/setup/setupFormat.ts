@@ -19,6 +19,30 @@ export function totalDownloadBytes(plan: Plan, choices: Choices): number {
   }, 0)
 }
 
+type ItemProgress = { status: 'waiting' | 'running' | 'done' | 'error'; receivedBytes: number; totalBytes: number }
+
+/**
+ * How far the whole setup is, in bytes, when everything downloads at the same time. Each component counts for the size the plan gave
+ * it, and for the share of it that has arrived: the sizes the downloads report are only for their own files, and a component that has
+ * not said anything yet would otherwise count for nothing. A component that failed leaves the count, it will not arrive.
+ */
+export function overallProgress(plan: Plan, choices: Choices, progress: Partial<Record<SetupComponentId, ItemProgress>>): { receivedBytes: number; totalBytes: number; percent: number } {
+  let receivedBytes = 0
+  let totalBytes = 0
+  for (const component of plan.components) {
+    const choice = choices[component.id]
+    if (!component.available || !choice?.install) continue
+    const expected = component.options.find((option) => option.id === choice.modelId)?.sizeBytes ?? 0
+    const item = progress[component.id]
+    if (item?.status === 'error') continue
+    totalBytes += expected
+    if (item?.status === 'done') receivedBytes += expected
+    else if (item && item.totalBytes > 0) receivedBytes += expected * Math.min(1, item.receivedBytes / item.totalBytes)
+  }
+  const percent = totalBytes > 0 ? Math.min(100, Math.round((receivedBytes / totalBytes) * 100)) : 0
+  return { receivedBytes: Math.round(receivedBytes), totalBytes, percent }
+}
+
 /**
  * The recommended model of each available component: where the choice starts. It is ticked, except for a component that says this
  * computer is better left without it (defaultOn false): the person can still tick it.

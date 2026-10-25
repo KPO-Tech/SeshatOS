@@ -54,13 +54,16 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
         className="flex w-full cursor-pointer items-start gap-4 border-0 bg-transparent p-0 text-left disabled:cursor-default"
         aria-pressed={on}
       >
-        <Check checked={on} />
+        {available ? <Check checked={on} /> : <span className="mt-0.5 size-[22px] shrink-0" aria-hidden="true" />}
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] text-[var(--accent-primary)]">{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[16px] font-semibold text-[var(--text-primary)]">{title}</span>
           <span className="mt-1 block text-[13.5px] leading-[1.5] text-[var(--text-muted)]">{available ? tagline : unavailableReason}</span>
         </span>
         {available && selected && on && <span className="shrink-0 pt-0.5 text-[12.5px] font-medium text-[var(--text-muted)]">{formatBytes(selected.sizeBytes)}</span>}
+        {!available && (
+          <span className="shrink-0 rounded-full border border-[var(--border-soft)] px-2.5 py-0.5 text-[11.5px] font-medium text-[var(--text-muted)]">Not in this version</span>
+        )}
       </button>
 
       {available && !on && note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">{note}</p>}

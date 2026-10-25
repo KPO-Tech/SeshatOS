@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultChoices, fitsOnDisk, formatBytes, totalDownloadBytes } from './setupFormat'
+import { defaultChoices, fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes } from './setupFormat'
 
 const plan = {
   components: [
@@ -49,5 +49,37 @@ describe('setup choices', () => {
     expect(formatBytes(491_400_032)).toBe('491 MB')
     expect(formatBytes(1_117_320_736)).toBe('1.1 GB')
     expect(formatBytes(0)).toBe('0 MB')
+  })
+})
+
+describe('overallProgress', () => {
+  const choices = defaultChoices(plan)
+  const item = (status: 'waiting' | 'running' | 'done' | 'error', receivedBytes = 0, totalBytes = 0) => ({ status, receivedBytes, totalBytes })
+
+  it('is nothing before anything has arrived, out of the whole plan', () => {
+    expect(overallProgress(plan, choices, {})).toEqual({ receivedBytes: 0, totalBytes: 639_000_000, percent: 0 })
+  })
+
+  it('counts each component for its share of the size the plan gave it', () => {
+    // Half of the title model (491 MB) and none of the voice: 245 MB of 639 MB.
+    const half = overallProgress(plan, choices, { title: item('running', 50, 100), speech: item('waiting') })
+    expect(half.receivedBytes).toBe(245_500_000)
+    expect(half.percent).toBe(38)
+  })
+
+  it('counts a finished component for all of its size, whatever it reported', () => {
+    const state = overallProgress(plan, choices, { title: item('done', 1, 1), speech: item('running', 74_000_000, 148_000_000) })
+    expect(state.receivedBytes).toBe(491_000_000 + 74_000_000)
+    expect(state.percent).toBe(88)
+  })
+
+  it('leaves a component that failed out of the count, so the rest can reach 100', () => {
+    const state = overallProgress(plan, choices, { title: item('error'), speech: item('done') })
+    expect(state).toEqual({ receivedBytes: 148_000_000, totalBytes: 148_000_000, percent: 100 })
+  })
+
+  it('ignores a component that was not ticked, and never goes over 100', () => {
+    const state = overallProgress(plan, { speech: { install: true, modelId: 'base' } }, { speech: item('running', 500, 100), title: item('done') })
+    expect(state).toEqual({ receivedBytes: 148_000_000, totalBytes: 148_000_000, percent: 100 })
   })
 })

@@ -1,8 +1,8 @@
 # SeshatOS - development Makefile
 #
 #   make setup          -> first-time setup (system deps, Node deps, build)
-#   make dev            -> start the local backend + the Electron UI, with everything on, as a brand new install (FRESH=0 keeps your own data)
-#   make dev-native     -> same, with the backend built with the native OCR (the wizard then offers the scanned documents)
+#   make dev            -> start the local backend + the Electron UI, with everything on and the native OCR (when there is a C compiler),
+#                          as a brand new install (FRESH=0 keeps your own data, NATIVE=0 builds without the OCR)
 #   make build          -> compile the local backend binary
 #   make test           -> run the Go tests
 #   make disk-usage     -> what is heavy here, and the `make clean-*` that removes it
@@ -37,7 +37,7 @@ NATIVE_ENV = eval "$$("$(BASH)" $(ROOT)/scripts/setup-nativedoc-cgo.sh)"
 # The runtime root of the app, where its log is.
 RUNTIME_ROOT_SH = $${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}
 
-# make dev and dev-native start as a brand new install by default (FRESH=1): an empty runtime root, so the first-run wizard
+# make dev starts as a brand new install by default (FRESH=1): an empty runtime root, so the first-run wizard
 # shows, there is no account, no session, no model, nothing the app remembered. The root is a throwaway folder of this project
 # (.cache/dev-fresh), wiped at each start; your real data (~/.config/seshat) is never read or touched. Everything the app keeps sits
 # under that root, the backend database and the models as much as Electron's own storage.
@@ -47,14 +47,44 @@ RUNTIME_ROOT_SH = $${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}
 FRESH             ?= 1
 KEEP_MODELS       ?= 0
 FRESH_ROOT        := $(CACHE_DIR)/dev-fresh
+
+# The backend of make dev is built with the native OCR (the reading of scanned documents) whenever a C compiler is found, so that the
+# app you run is the app you ship and the first-run wizard offers the scanned documents. The first build downloads the native libraries
+# (pdfium, onnxruntime) and takes a few minutes; the next ones are quick.
+#   make dev              with the OCR if there is a C compiler, without otherwise
+#   make dev NATIVE=0     without the OCR (a quicker build, the box of the scanned documents is then greyed out)
+#   make dev NATIVE=1     with the OCR, and fail when there is no C compiler (make install-cgo-windows installs one)
+NATIVE            ?= auto
+HAS_CC            := $(shell command -v gcc 2>/dev/null || command -v cc 2>/dev/null)
+ifeq ($(NATIVE),1)
+DEV_NATIVE        := 1
+else ifeq ($(NATIVE),0)
+DEV_NATIVE        :=
+else
+DEV_NATIVE        := $(if $(HAS_CC),1,)
+endif
+ifeq ($(DEV_NATIVE),1)
+DEV_BACKEND_TARGET := dev-backend-native
+DEV_BACKEND_EXE    := $(BACKEND_DEV_NATIVE_EXE)
+# The backend and the app both run with the native library path: the backend is linked to pdfium and does not start without it, and the
+# wizard of the app starts it to list and download the OCR models.
+DEV_WITH_NATIVE    := $(NATIVE_ENV) &&
+DEV_BACKEND_INIT   := SESHAT_NATIVEDOC_AUTO_INIT=1
+DEV_KIND           := with the native OCR
+else
+DEV_BACKEND_TARGET := dev-backend
+DEV_BACKEND_EXE    := $(BACKEND_DEV_EXE)
+DEV_WITH_NATIVE    :=
+DEV_BACKEND_INIT   :=
+DEV_KIND           := without the native OCR$(if $(HAS_CC),, (no C compiler found: make install-cgo-windows))
+endif
+
 # What every dev start exports. SESHAT_SETUP_BACKEND lets the wizard of an unpackaged app run the commands of the backend built here
-# (it has no bundled one): the box of the scanned documents shows only when that backend was built with the native OCR (make dev-native).
-SETUP_BACKEND_EXE  = $(BACKEND_DEV_EXE)
-DEV_EXPORTS        = export SESHAT_SETUP_BACKEND="$(BACKEND_DIR)/bin/$(SETUP_BACKEND_EXE)";
+# (it has no bundled one).
+DEV_EXPORTS        = export SESHAT_SETUP_BACKEND="$(BACKEND_DIR)/bin/$(DEV_BACKEND_EXE)";
 ifeq ($(FRESH),1)
 DEV_EXPORTS       += export SESHAT_RUNTIME_ROOT="$(FRESH_ROOT)"; export SESHAT_FORCE_SETUP=1;
 endif
-dev-native: SETUP_BACKEND_EXE = $(BACKEND_DEV_NATIVE_EXE)
 
 .PHONY: help setup dev dev-next dev-native dev-fresh-state dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
 
@@ -114,24 +144,19 @@ dev-fresh-state:
 	  printf "\033[33m[seshatos]\033[0m using your own data (FRESH=0)\n"; \
 	fi
 
-dev: stop desktop-install dev-backend dev-fresh-state ## Start the local backend + the Electron UI, everything on, as a brand new install (FRESH=0 keeps your data)
-	@printf "\033[32m[seshatos]\033[0m starting local backend and Electron UI...\n"
-	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && ./bin/$(BACKEND_DEV_EXE)) & \
+dev: stop desktop-install $(DEV_BACKEND_TARGET) dev-fresh-state ## Start the local backend (with the native OCR when there is a C compiler) + the Electron UI, as a brand new install
+	@printf "\033[32m[seshatos]\033[0m starting local backend ($(DEV_KIND)) and Electron UI...\n"
+	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(DEV_WITH_NATIVE) $(DEV_BACKEND_INIT) ./bin/$(DEV_BACKEND_EXE)) & \
 	BACKEND_PID=$$!; \
 	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
-	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(UI_PKG_MGR) run start
+	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(DEV_WITH_NATIVE) $(UI_PKG_MGR) run start
 
-# There is one version of the app now (see seshat-desktop/src/renderer/lib/edition.ts); dev-next was the second one, and only stays so that the command still works.
+# There is one version of the app now (see seshat-desktop/src/renderer/lib/edition.ts), and one command to run it. These two only stay so that
+# the commands still work: dev-next was the second version, dev-native is make dev with the OCR required.
 dev-next: dev
 
-# The Electron app runs under NATIVE_ENV too: its wizard starts the backend to list and download the OCR models, and that backend is linked to
-# pdfium, which has to be on the path.
-dev-native: stop desktop-install dev-backend-native dev-fresh-state ## Start the local backend with native document reading (CGO) + the Electron UI, as a brand new install
-	@printf "\033[32m[seshatos]\033[0m starting local backend (native document reading) and Electron UI...\n"
-	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(NATIVE_ENV) && SESHAT_NATIVEDOC_AUTO_INIT=1 ./bin/$(BACKEND_DEV_NATIVE_EXE)) & \
-	BACKEND_PID=$$!; \
-	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
-	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(NATIVE_ENV) && $(UI_PKG_MGR) run start
+dev-native:
+	@$(MAKE) --no-print-directory dev NATIVE=1
 
 stop: ## Stop the backend and UI processes
 	@if command -v pkill >/dev/null 2>&1; then \
