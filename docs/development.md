@@ -87,7 +87,7 @@ make dev-next KEEP_MODELS=1    # a brand new install, but keep the models downlo
 make dev-native                # the same, with the backend built with the native OCR: the wizard then offers the scanned documents
 ```
 
-The wizard offers the scanned documents only when the backend it can run was built with the native OCR. An unpackaged app has no bundled backend, so `make` points it to the one it built (`SESHAT_SETUP_BACKEND`); the plain `make dev` builds without the OCR, and the box then shows greyed out with the reason. `make dev-native` needs a C compiler (see `make install-cgo-windows`).
+The wizard offers the scanned documents only when the backend it can run was built with the native OCR. An unpackaged app has no bundled backend, so `make` points it to the one it built (`SESHAT_SETUP_BACKEND`); the plain `make dev` builds without the OCR, and the box then shows greyed out with the reason. `make dev-native` needs a C compiler (see `make install-cgo-windows`). It builds its own binary, `seshat-backend/bin/seshat-dev-native`, which is linked to pdfium and does not start unless the pdfium folder is on the path (the target sets it); `make dev` and `make dev-next` build and run `seshat-dev`, never the native one, and remove a `seshat-dev` that was built with the OCR (an older `make dev-native` wrote to that name).
 
 ## Start time of `make dev`
 
