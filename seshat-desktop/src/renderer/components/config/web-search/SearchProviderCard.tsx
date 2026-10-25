@@ -69,7 +69,11 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
     setTesting('running')
     setMessage('')
     try {
-      const result = await testSearchProvider(provider.provider)
+      const result = await testSearchProvider(provider.provider, {
+        api_key: authChanged ? authPassword : apiKeyChanged ? apiKey : undefined,
+        base_url: baseUrl || undefined,
+        auth_username: authChanged || clientIdChanged ? authUsername : undefined
+      })
       setTesting(result.ok ? 'ok' : 'error')
       setMessage(result.ok ? `${result.latency_ms} ms` : result.error || 'Provider test failed.')
     } catch (err) {
