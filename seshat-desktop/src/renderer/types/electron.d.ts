@@ -154,7 +154,7 @@ type BrowserPanelState = {
 }
 
 type SetupComponentId = 'title' | 'speech' | 'ocr'
-type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean; installed?: boolean; active?: boolean }
 type SetupPlan = {
   components: Array<{ id: SetupComponentId; available: boolean; unavailableReason?: string; defaultOn?: boolean; note?: string; options: SetupOption[] }>
   freeDiskBytes: number | null

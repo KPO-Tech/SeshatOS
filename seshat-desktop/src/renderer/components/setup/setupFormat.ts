@@ -8,14 +8,20 @@ export type Choice = { install: boolean; modelId: string }
 export type SetupComponentId = 'title' | 'speech' | 'ocr'
 export type Choices = Partial<Record<SetupComponentId, Choice>>
 
-type Plan = { components: Array<{ id: SetupComponentId; available: boolean; options: Array<{ id: string; sizeBytes: number }> }> }
+type Plan = { components: Array<{ id: SetupComponentId; available: boolean; options: Array<{ id: string; sizeBytes: number; installed?: boolean }> }> }
+
+/** What choosing an option downloads: nothing when its files are already on this computer. */
+export function bytesToDownload(option: { sizeBytes: number; installed?: boolean }): number {
+  return option.installed ? 0 : option.sizeBytes
+}
 
 /** What the person has ticked, in bytes: the models only, the engines that run them are small next to them. */
 export function totalDownloadBytes(plan: Plan, choices: Choices): number {
   return plan.components.reduce((total, component) => {
     const choice = choices[component.id]
     if (!component.available || !choice?.install) return total
-    return total + (component.options.find((option) => option.id === choice.modelId)?.sizeBytes ?? 0)
+    const option = component.options.find((candidate) => candidate.id === choice.modelId)
+    return total + (option ? bytesToDownload(option) : 0)
   }, 0)
 }
 
@@ -32,7 +38,8 @@ export function overallProgress(plan: Plan, choices: Choices, progress: Partial<
   for (const component of plan.components) {
     const choice = choices[component.id]
     if (!component.available || !choice?.install) continue
-    const expected = component.options.find((option) => option.id === choice.modelId)?.sizeBytes ?? 0
+    const option = component.options.find((candidate) => candidate.id === choice.modelId)
+    const expected = option ? bytesToDownload(option) : 0
     const item = progress[component.id]
     if (item?.status === 'error') continue
     totalBytes += expected
@@ -44,17 +51,29 @@ export function overallProgress(plan: Plan, choices: Choices, progress: Partial<
 }
 
 /**
- * The recommended model of each available component: where the choice starts. It is ticked, except for a component that says this
- * computer is better left without it (defaultOn false): the person can still tick it.
+ * Where the choice starts, for each available component: the model already on this computer when there is one (the one in use first,
+ * then the recommended one), the recommended model otherwise. It is ticked, except for a component that says this computer is better
+ * left without it (defaultOn false): the person can still tick it, or pick another model of the family and download it.
  */
 export function defaultChoices(plan: {
-  components: Array<{ id: SetupComponentId; available: boolean; defaultOn?: boolean; options: Array<{ id: string; recommended: boolean }> }>
+  components: Array<{
+    id: SetupComponentId
+    available: boolean
+    defaultOn?: boolean
+    options: Array<{ id: string; recommended: boolean; installed?: boolean; active?: boolean }>
+  }>
 }): Choices {
   const choices: Choices = {}
   for (const component of plan.components) {
     if (!component.available || component.options.length === 0) continue
-    const recommended = component.options.find((option) => option.recommended) ?? component.options[0]
-    choices[component.id] = { install: component.defaultOn !== false, modelId: recommended.id }
+    const { options } = component
+    const start =
+      options.find((option) => option.installed && option.active) ??
+      options.find((option) => option.installed && option.recommended) ??
+      options.find((option) => option.installed) ??
+      options.find((option) => option.recommended) ??
+      options[0]
+    choices[component.id] = { install: component.defaultOn !== false, modelId: start.id }
   }
   return choices
 }

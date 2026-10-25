@@ -6,6 +6,7 @@ import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL,
 import { MODEL_CATALOG as SPEECH_MODELS, activateModel as activateSpeechModel, downloadModel as downloadSpeechModel, enableLocalWhisper, getWhisperStatus } from './whisper-manager'
 import { resolveRuntimeRoot } from './runtime'
 import { downloadOcrPack, ocrSuitability, pickRecommendedPack, readOcrPacks } from './setup-ocr'
+import { withInstalled } from './setup-options'
 import { runTogether, type SetupTask } from './setup-run'
 
 // What the person chooses to have on this computer the first time SeshatOS opens: the model that names conversations and the model that
@@ -21,7 +22,17 @@ const RECOMMENDED = { title: DEFAULT_TITLE_MODEL, speech: 'base' } as const
 
 export type SetupComponentId = 'title' | 'speech' | 'ocr'
 
-export type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+export type SetupOption = {
+  id: string
+  label: string
+  sizeBytes: number
+  description: string
+  recommended: boolean
+  /** Its files are already on this computer: choosing it downloads nothing. */
+  installed?: boolean
+  /** The one in use now. */
+  active?: boolean
+}
 
 export type SetupComponent = {
   id: SetupComponentId
@@ -104,20 +115,22 @@ const DESCRIPTIONS: Record<string, string> = {
   tiny: 'The fastest and the lightest, with more mistakes.'
 }
 
-function titleOptions(): SetupOption[] {
-  return TITLE_CHOICES.flatMap((id) => {
+function titleOptions(installedIds: readonly string[], activeId?: string): SetupOption[] {
+  const options = TITLE_CHOICES.flatMap((id) => {
     const model = TITLE_MODELS.find((candidate) => candidate.id === id)
     return model
       ? [{ id: model.id, label: model.label.replace(/ Instruct$/, ''), sizeBytes: model.approxSizeBytes, description: DESCRIPTIONS[id] ?? model.description, recommended: model.id === RECOMMENDED.title }]
       : []
   })
+  return withInstalled(options, installedIds, activeId)
 }
 
-function speechOptions(): SetupOption[] {
-  return SPEECH_CHOICES.flatMap((id) => {
+function speechOptions(installedIds: readonly string[], activeId?: string): SetupOption[] {
+  const options = SPEECH_CHOICES.flatMap((id) => {
     const model = SPEECH_MODELS.find((candidate) => candidate.id === id)
     return model ? [{ id: model.id, label: model.label, sizeBytes: model.approxSizeBytes, description: DESCRIPTIONS[id] ?? model.description, recommended: model.id === RECOMMENDED.speech }] : []
   })
+  return withInstalled(options, installedIds, activeId)
 }
 
 // Reading scanned documents: the packs come from the backend (which knows them), the one offered first reads the language of the system,
@@ -142,7 +155,9 @@ async function ocrComponent(): Promise<SetupComponent> {
       label: pack.label.replace(/ \(.*\)$/, ''),
       sizeBytes: pack.download_bytes,
       description: pack.installed ? 'Already on this computer.' : pack.label,
-      recommended: pack.id === recommended
+      recommended: pack.id === recommended,
+      installed: pack.installed,
+      active: pack.active
     }))
   }
 }
@@ -156,13 +171,13 @@ export async function getSetupPlan(): Promise<SetupPlan> {
         id: 'title',
         available: llama.supported,
         unavailableReason: llama.supported ? undefined : 'Not available on this system yet.',
-        options: titleOptions()
+        options: titleOptions(llama.downloadedModelIds, llama.activeModelId)
       },
       {
         id: 'speech',
         available: whisper.supported,
         unavailableReason: whisper.supported ? undefined : 'Not available on this system yet.',
-        options: speechOptions()
+        options: speechOptions(whisper.downloadedModelIds, whisper.activeModelId)
       },
       ocr
     ]

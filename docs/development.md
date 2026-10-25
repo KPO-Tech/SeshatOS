@@ -89,9 +89,11 @@ A release can still hide what is not ready. The release workflow builds the app 
 ```bash
 make dev                       # a brand new install (FRESH=1, the default)
 make dev FRESH=0               # your own data, as before
-make dev KEEP_MODELS=1         # a brand new install, but keep the models downloaded earlier: the wizard still shows and nothing is downloaded twice
+make dev KEEP_MODELS=0         # also forget the models and the engines downloaded earlier, to try the first download
 make dev NATIVE=0               # without the native OCR: a quicker build, and the box of the scanned documents is greyed out
 ```
+
+What was downloaded is kept from one start to the next, because it is several hundred megabytes: the models of the titles, the voice and the OCR (`models/`, `whisper/ggml-*.bin`) and the engines that run them (`llama/bin`, `whisper/bin`). Everything else of the runtime root (the database, the accounts, the settings, the state of the wizard) starts empty. The wizard still shows; it finds what is already there, ticks it, and downloads nothing for it. `KEEP_MODELS=0` forgets the downloads too.
 
 `make dev` builds the backend with the native OCR (the reading of scanned documents) whenever it finds a C compiler (`gcc`), so the app you run is the app you ship and the first-run wizard offers the scanned documents. The first build downloads the native libraries (pdfium, onnxruntime) and takes a few minutes; the next ones are quick. `NATIVE=0` skips it, `NATIVE=1` requires it (and fails without a compiler; `make install-cgo-windows` installs one), and `make dev-native` is `make dev NATIVE=1`. An unpackaged app has no bundled backend, so `make` points the wizard to the one it built (`SESHAT_SETUP_BACKEND`). The OCR backend is `seshat-backend/bin/seshat-dev-native`, linked to pdfium: it does not start unless the pdfium folder is on the path, which `make dev` sets for it and for the app; `seshat-dev`, the one without the OCR, is never run in its place, and an older `seshat-dev` built with the OCR is removed.
 
