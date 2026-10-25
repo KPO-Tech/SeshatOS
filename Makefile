@@ -43,9 +43,12 @@ RUNTIME_ROOT_SH = $${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}
 # under that root, the backend database and the models as much as Electron's own storage.
 #
 #   make dev FRESH=0              use your real data, as before
-#   make dev KEEP_MODELS=1        fresh, but keep the models downloaded earlier (the wizard still shows, nothing is downloaded twice)
+#   make dev KEEP_MODELS=0        also forget the models and the engines downloaded earlier, to try the first download
+#
+# What was downloaded (the models of the titles, the voice and the OCR, and the engines that run them) is kept by default: it is
+# several hundred megabytes, and the wizard still shows, finds what is already there and does not download it twice.
 FRESH             ?= 1
-KEEP_MODELS       ?= 0
+KEEP_MODELS       ?= 1
 FRESH_ROOT        := $(CACHE_DIR)/dev-fresh
 
 # The backend of make dev is built with the native OCR (the reading of scanned documents) whenever a C compiler is found, so that the
@@ -135,11 +138,19 @@ dev-backend-native:
 dev-fresh-state:
 	@if [ "$(FRESH)" = "1" ]; then \
 	  case "$(FRESH_ROOT)" in */dev-fresh) ;; *) echo "refusing to wipe $(FRESH_ROOT)"; exit 1 ;; esac; \
-	  kept="$(FRESH_ROOT).models"; rm -rf "$$kept"; \
-	  if [ "$(KEEP_MODELS)" = "1" ] && [ -d "$(FRESH_ROOT)/models" ]; then mv "$(FRESH_ROOT)/models" "$$kept"; fi; \
-	  rm -rf "$(FRESH_ROOT)"; mkdir -p "$(FRESH_ROOT)"; \
-	  if [ -d "$$kept" ]; then mv "$$kept" "$(FRESH_ROOT)/models"; fi; \
+	  kept="$(FRESH_ROOT).kept"; rm -rf "$$kept"; \
+	  if [ "$(KEEP_MODELS)" = "1" ]; then \
+	    for p in models llama/bin whisper/bin; do \
+	      if [ -e "$(FRESH_ROOT)/$$p" ]; then mkdir -p "$$kept/$$(dirname $$p)"; mv "$(FRESH_ROOT)/$$p" "$$kept/$$p"; fi; \
+	    done; \
+	    for f in "$(FRESH_ROOT)"/whisper/ggml-*.bin; do \
+	      if [ -e "$$f" ]; then mkdir -p "$$kept/whisper"; mv "$$f" "$$kept/whisper/"; fi; \
+	    done; \
+	  fi; \
+	  rm -rf "$(FRESH_ROOT)"; \
+	  if [ -d "$$kept" ]; then mv "$$kept" "$(FRESH_ROOT)"; else mkdir -p "$(FRESH_ROOT)"; fi; \
 	  printf "\033[32m[seshatos]\033[0m fresh start: a new install in %s (your own data is not touched; FRESH=0 to use it)\n" "$(FRESH_ROOT)"; \
+	  if [ "$(KEEP_MODELS)" = "1" ]; then printf "\033[32m[seshatos]\033[0m the models and engines downloaded earlier are kept (KEEP_MODELS=0 to download them again)\n"; fi; \
 	else \
 	  printf "\033[33m[seshatos]\033[0m using your own data (FRESH=0)\n"; \
 	fi
