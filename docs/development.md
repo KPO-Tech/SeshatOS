@@ -84,16 +84,16 @@ A release can still hide what is not ready. The release workflow builds the app 
 
 ## Starting as a brand new install
 
-`make dev` and `make dev-native` start the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. They do it with an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
+`make dev` starts the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. They do it with an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
 
 ```bash
 make dev                       # a brand new install (FRESH=1, the default)
 make dev FRESH=0               # your own data, as before
 make dev KEEP_MODELS=1         # a brand new install, but keep the models downloaded earlier: the wizard still shows and nothing is downloaded twice
-make dev-native                # the same, with the backend built with the native OCR: the wizard then offers the scanned documents
+make dev NATIVE=0               # without the native OCR: a quicker build, and the box of the scanned documents is greyed out
 ```
 
-The wizard offers the scanned documents only when the backend it can run was built with the native OCR. An unpackaged app has no bundled backend, so `make` points it to the one it built (`SESHAT_SETUP_BACKEND`); the plain `make dev` builds without the OCR, and the box then shows greyed out with the reason. `make dev-native` needs a C compiler (see `make install-cgo-windows`). It builds its own binary, `seshat-backend/bin/seshat-dev-native`, which is linked to pdfium and does not start unless the pdfium folder is on the path (the target sets it); `make dev` and `make dev-next` build and run `seshat-dev`, never the native one, and remove a `seshat-dev` that was built with the OCR (an older `make dev-native` wrote to that name).
+`make dev` builds the backend with the native OCR (the reading of scanned documents) whenever it finds a C compiler (`gcc`), so the app you run is the app you ship and the first-run wizard offers the scanned documents. The first build downloads the native libraries (pdfium, onnxruntime) and takes a few minutes; the next ones are quick. `NATIVE=0` skips it, `NATIVE=1` requires it (and fails without a compiler; `make install-cgo-windows` installs one), and `make dev-native` is `make dev NATIVE=1`. An unpackaged app has no bundled backend, so `make` points the wizard to the one it built (`SESHAT_SETUP_BACKEND`). The OCR backend is `seshat-backend/bin/seshat-dev-native`, linked to pdfium: it does not start unless the pdfium folder is on the path, which `make dev` sets for it and for the app; `seshat-dev`, the one without the OCR, is never run in its place, and an older `seshat-dev` built with the OCR is removed.
 
 ## Start time of `make dev`
 
