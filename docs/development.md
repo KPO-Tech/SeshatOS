@@ -82,13 +82,13 @@ There is one version of the app. The main branch, `make dev` and a build you mak
 
 A release can still hide what is not ready. The release workflow builds the app with `VITE_SESHAT_EDITION=public` (three build steps in `.github/workflows/release-desktop.yml`), which switches the flags of `seshat-desktop/src/renderer/lib/edition.ts` off: the local, single-user workspace of the first public version. That value is what a release shows; change it, with the comment above it, to release with more or less. `npm run dev:public` (in `seshat-desktop`) runs the app the way such a release shows it. Nothing is removed by a flag: the hidden code stays compiled and typed.
 
-## Starting as a brand new install
+## Starting as a brand new install (FRESH=1)
 
-`make dev` starts the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. They do it with an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
+`make dev` keeps your data between starts: the providers you configured, your sessions and the wizard you went through stay. `make dev FRESH=1` starts the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. It uses an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
 
 ```bash
-make dev                       # a brand new install (FRESH=1, the default)
-make dev FRESH=0               # your own data, as before
+make dev                       # your data is kept between starts (FRESH=0, the default)
+make dev FRESH=1               # a brand new install, to try the first run
 make dev KEEP_MODELS=0         # also forget the models and the engines downloaded earlier, to try the first download
 make dev-reset                 # forget the fresh install completely, downloads included, and stop; the next make dev starts from nothing
 make dev NATIVE=0               # without the native OCR: a quicker build, and the box of the scanned documents is greyed out
