@@ -1,8 +1,9 @@
 # SeshatOS - development Makefile
 #
 #   make setup          -> first-time setup (system deps, Node deps, build)
-#   make dev            -> start the local backend + the Electron UI
+#   make dev            -> start the local backend + the Electron UI, as a brand new install (FRESH=0 keeps your own data)
 #   make dev-next       -> same, with the next edition on (Store, Knowledge)
+#   make dev-native     -> same, with the backend built with the native OCR (the wizard then offers the scanned documents)
 #   make build          -> compile the local backend binary
 #   make test           -> run the Go tests
 #   make disk-usage     -> what is heavy here, and the `make clean-*` that removes it
@@ -34,7 +35,24 @@ NATIVE_ENV = eval "$$("$(BASH)" $(ROOT)/scripts/setup-nativedoc-cgo.sh)"
 # The runtime root of the app, where its log is.
 RUNTIME_ROOT_SH = $${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}
 
-.PHONY: help setup dev dev-next dev-native dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
+# make dev, dev-next and dev-native start as a brand new install by default (FRESH=1): an empty runtime root, so the first-run wizard
+# shows, there is no account, no session, no model, nothing the app remembered. The root is a throwaway folder of this project
+# (.cache/dev-fresh), wiped at each start; your real data (~/.config/seshat) is never read or touched. Everything the app keeps sits
+# under that root, the backend database and the models as much as Electron's own storage.
+#
+#   make dev-next FRESH=0         use your real data, as before
+#   make dev-next KEEP_MODELS=1   fresh, but keep the models downloaded earlier (the wizard still shows, nothing is downloaded twice)
+FRESH             ?= 1
+KEEP_MODELS       ?= 0
+FRESH_ROOT        := $(CACHE_DIR)/dev-fresh
+# What every dev start exports. SESHAT_SETUP_BACKEND lets the wizard of an unpackaged app run the commands of the backend built here
+# (it has no bundled one): the box of the scanned documents shows only when that backend was built with the native OCR (make dev-native).
+DEV_EXPORTS       := export SESHAT_SETUP_BACKEND="$(BACKEND_DIR)/bin/$(BACKEND_DEV_EXE)";
+ifeq ($(FRESH),1)
+DEV_EXPORTS       += export SESHAT_RUNTIME_ROOT="$(FRESH_ROOT)"; export SESHAT_FORCE_SETUP=1;
+endif
+
+.PHONY: help setup dev dev-next dev-native dev-fresh-state dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
 
 .DEFAULT_GOAL := help
 
@@ -75,26 +93,41 @@ dev-backend-native:
 	@mkdir -p $(BACKEND_BIN_DIR)
 	@cd $(BACKEND_DIR) && $(NATIVE_ENV) && CGO_ENABLED=1 go build -tags "$$NATIVEDOC_BUILD_TAGS" -o ./bin/$(BACKEND_DEV_EXE) $(BACKEND_CMD)
 
-dev: stop desktop-install dev-backend ## Start the local backend + the Electron UI
+# Empties the runtime root of a fresh start (see FRESH above). It only ever wipes a folder named dev-fresh, whatever CACHE_DIR is.
+dev-fresh-state:
+	@if [ "$(FRESH)" = "1" ]; then \
+	  case "$(FRESH_ROOT)" in */dev-fresh) ;; *) echo "refusing to wipe $(FRESH_ROOT)"; exit 1 ;; esac; \
+	  kept="$(FRESH_ROOT).models"; rm -rf "$$kept"; \
+	  if [ "$(KEEP_MODELS)" = "1" ] && [ -d "$(FRESH_ROOT)/models" ]; then mv "$(FRESH_ROOT)/models" "$$kept"; fi; \
+	  rm -rf "$(FRESH_ROOT)"; mkdir -p "$(FRESH_ROOT)"; \
+	  if [ -d "$$kept" ]; then mv "$$kept" "$(FRESH_ROOT)/models"; fi; \
+	  printf "\033[32m[seshatos]\033[0m fresh start: a new install in %s (your own data is not touched; FRESH=0 to use it)\n" "$(FRESH_ROOT)"; \
+	else \
+	  printf "\033[33m[seshatos]\033[0m using your own data (FRESH=0)\n"; \
+	fi
+
+dev: stop desktop-install dev-backend dev-fresh-state ## Start the local backend + the Electron UI, as a brand new install (FRESH=0 keeps your data)
 	@printf "\033[32m[seshatos]\033[0m starting local backend and Electron UI...\n"
-	@(cd $(BACKEND_DIR) && ./bin/$(BACKEND_DEV_EXE)) & \
+	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && ./bin/$(BACKEND_DEV_EXE)) & \
 	BACKEND_PID=$$!; \
 	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
-	cd $(DESKTOP_DIR) && $(UI_PKG_MGR) run start
+	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(UI_PKG_MGR) run start
 
-dev-next: stop desktop-install dev-backend ## Same as dev, with the next edition on (Store, Knowledge, sources): what the public build still hides
+dev-next: stop desktop-install dev-backend dev-fresh-state ## Same as dev, with the next edition on (Store, Knowledge, sources): what the public build still hides
 	@printf "\033[32m[seshatos]\033[0m starting local backend and Electron UI (next edition)...\n"
-	@(cd $(BACKEND_DIR) && ./bin/$(BACKEND_DEV_EXE)) & \
+	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && ./bin/$(BACKEND_DEV_EXE)) & \
 	BACKEND_PID=$$!; \
 	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
-	cd $(DESKTOP_DIR) && $(UI_PKG_MGR) run dev:next
+	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(UI_PKG_MGR) run dev:next
 
-dev-native: stop desktop-install dev-backend-native ## Start the local backend with native document reading (CGO) + the Electron UI
+# The Electron app runs under NATIVE_ENV too: its wizard starts the backend to list and download the OCR models, and that backend is linked to
+# pdfium, which has to be on the path.
+dev-native: stop desktop-install dev-backend-native dev-fresh-state ## Start the local backend with native document reading (CGO) + the Electron UI, as a brand new install
 	@printf "\033[32m[seshatos]\033[0m starting local backend (native document reading) and Electron UI...\n"
-	@(cd $(BACKEND_DIR) && $(NATIVE_ENV) && SESHAT_NATIVEDOC_AUTO_INIT=1 ./bin/$(BACKEND_DEV_EXE)) & \
+	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(NATIVE_ENV) && SESHAT_NATIVEDOC_AUTO_INIT=1 ./bin/$(BACKEND_DEV_EXE)) & \
 	BACKEND_PID=$$!; \
 	trap 'kill $$BACKEND_PID 2>/dev/null || true' EXIT INT TERM; \
-	cd $(DESKTOP_DIR) && $(UI_PKG_MGR) run start
+	cd $(DESKTOP_DIR) && $(DEV_EXPORTS) $(NATIVE_ENV) && $(UI_PKG_MGR) run start
 
 stop: ## Stop the backend and UI processes
 	@if command -v pkill >/dev/null 2>&1; then \
