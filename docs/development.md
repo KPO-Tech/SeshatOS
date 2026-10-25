@@ -90,6 +90,7 @@ A release can still hide what is not ready. The release workflow builds the app 
 make dev                       # a brand new install (FRESH=1, the default)
 make dev FRESH=0               # your own data, as before
 make dev KEEP_MODELS=0         # also forget the models and the engines downloaded earlier, to try the first download
+make dev-reset                 # forget the fresh install completely, downloads included, and stop; the next make dev starts from nothing
 make dev NATIVE=0               # without the native OCR: a quicker build, and the box of the scanned documents is greyed out
 ```
 

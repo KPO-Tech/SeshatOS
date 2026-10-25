@@ -3,6 +3,7 @@
 #   make setup          -> first-time setup (system deps, Node deps, build)
 #   make dev            -> start the local backend + the Electron UI, with everything on and the native OCR (when there is a C compiler),
 #                          as a brand new install (FRESH=0 keeps your own data, NATIVE=0 builds without the OCR)
+#   make dev-reset      -> forget that fresh install completely, downloads included: the next make dev starts from nothing
 #   make build          -> compile the local backend binary
 #   make test           -> run the Go tests
 #   make disk-usage     -> what is heavy here, and the `make clean-*` that removes it
@@ -89,7 +90,7 @@ ifeq ($(FRESH),1)
 DEV_EXPORTS       += export SESHAT_RUNTIME_ROOT="$(FRESH_ROOT)"; export SESHAT_FORCE_SETUP=1;
 endif
 
-.PHONY: help setup dev dev-next dev-native dev-fresh-state dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
+.PHONY: help setup dev dev-next dev-native dev-fresh-state dev-reset dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
 
 .DEFAULT_GOAL := help
 
@@ -153,6 +154,20 @@ dev-fresh-state:
 	  if [ "$(KEEP_MODELS)" = "1" ]; then printf "\033[32m[seshatos]\033[0m the models and engines downloaded earlier are kept (KEEP_MODELS=0 to download them again)\n"; fi; \
 	else \
 	  printf "\033[33m[seshatos]\033[0m using your own data (FRESH=0)\n"; \
+	fi
+
+# Forgets everything of the fresh dev install, the downloads (models and engines) included: the next make dev starts from nothing and
+# downloads again. It stops the app first, files under a running app cannot be removed. It only ever removes the throwaway folder of
+# this project (.cache/dev-fresh, and what a start left beside it): your own data (~/.config/seshat) is never read or touched.
+dev-reset: stop ## Forget the fresh dev install completely, downloads included (your own data is not touched)
+	@case "$(FRESH_ROOT)" in */dev-fresh) ;; *) echo "refusing to remove $(FRESH_ROOT)"; exit 1 ;; esac; \
+	if [ -e "$(FRESH_ROOT)" ] || [ -e "$(FRESH_ROOT).kept" ]; then \
+	  size="$$(du -sh "$(FRESH_ROOT)" 2>/dev/null | cut -f1)"; \
+	  rm -rf "$(FRESH_ROOT)" "$(FRESH_ROOT).kept"; \
+	  if [ -e "$(FRESH_ROOT)" ]; then printf "\033[31m[seshatos]\033[0m could not remove everything of %s: a program still uses it, close it and run make dev-reset again\n" "$(FRESH_ROOT)"; exit 1; fi; \
+	  printf "\033[32m[seshatos]\033[0m forgot the fresh dev install (%s freed): the next make dev starts from nothing and downloads again\n" "$${size:-0}"; \
+	else \
+	  printf "\033[32m[seshatos]\033[0m nothing to forget: there is no fresh dev install\n"; \
 	fi
 
 dev: stop desktop-install $(DEV_BACKEND_TARGET) dev-fresh-state ## Start the local backend (with the native OCR when there is a C compiler) + the Electron UI, as a brand new install
