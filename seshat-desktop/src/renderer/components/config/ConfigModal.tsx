@@ -4,6 +4,8 @@ import { AgentsConfig } from './agents/AgentsConfig'
 import { CloudConfig } from './cloud/CloudConfig'
 import { ConnectorsConfig } from './connectors/ConnectorsConfig'
 import { EnvironmentConfig } from './environment/EnvironmentConfig'
+import { hiddenConfigSections } from './configSections'
+import { DocumentsConfig } from './documents/DocumentsConfig'
 import { KnowledgeConfig } from './knowledge/KnowledgeConfig'
 import { MCPConfig } from './mcp/MCPConfig'
 import { ModelsConfig } from './models/ModelsConfig'
@@ -22,6 +24,7 @@ export type ConfigSection =
   | 'titles'
   | 'web-search'
   | 'knowledge'
+  | 'documents'
   | 'image'
   | 'audio'
   | 'mcp'
@@ -46,6 +49,7 @@ const allSections: SectionDef[] = [
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
+  { id: 'documents', label: 'Documents', icon: 'book', group: 'Capabilities', description: 'Read scanned PDFs and photos of documents on this computer, in the languages you choose, or through a document server.' },
   { id: 'image', label: 'Images', icon: 'media', group: 'Capabilities', description: 'The provider, model, size and quality the agent uses to create images.' },
   { id: 'audio', label: 'Audio', icon: 'media', group: 'Capabilities', description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
@@ -58,10 +62,7 @@ const allSections: SectionDef[] = [
 ]
 
 // Sections kept in code but hidden from this edition (see lib/edition.ts).
-const hiddenSections = new Set<ConfigSection>([
-  ...(edition.knowledge ? [] : (['knowledge', 'connectors'] as const)),
-  ...(edition.cloud ? [] : (['cloud'] as const))
-])
+const hiddenSections = new Set<ConfigSection>(hiddenConfigSections(edition))
 const sections = allSections.filter((section) => !hiddenSections.has(section.id))
 
 export function ConfigModal({ user, initialSection = 'providers', onClose }: Props) {
@@ -127,6 +128,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'titles' && <TitlesConfig />}
               {activeSection === 'web-search' && <WebSearchConfig />}
               {activeSection === 'knowledge' && <KnowledgeConfig />}
+              {activeSection === 'documents' && <DocumentsConfig />}
               {activeSection === 'image' && <ImageConfig />}
               {activeSection === 'audio' && <AudioConfig />}
               {activeSection === 'mcp' && <MCPConfig />}
