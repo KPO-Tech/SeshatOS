@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { formatBytes, type Choice } from './setupFormat'
 
-type Option = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type Option = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean; installed?: boolean }
 
 type Props = {
   title: string
@@ -60,7 +60,11 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
           <span className="block text-[16px] font-semibold text-[var(--text-primary)]">{title}</span>
           <span className="mt-1 block text-[13.5px] leading-[1.5] text-[var(--text-muted)]">{available ? tagline : unavailableReason}</span>
         </span>
-        {available && selected && on && <span className="shrink-0 pt-0.5 text-[12.5px] font-medium text-[var(--text-muted)]">{formatBytes(selected.sizeBytes)}</span>}
+        {available && selected && on && (
+          <span className={['shrink-0 pt-0.5 text-[12.5px] font-medium', selected.installed ? 'text-[var(--accent-success)]' : 'text-[var(--text-muted)]'].join(' ')}>
+            {selected.installed ? 'Already installed' : formatBytes(selected.sizeBytes)}
+          </span>
+        )}
         {!available && (
           <span className="shrink-0 rounded-full border border-[var(--border-soft)] px-2.5 py-0.5 text-[11.5px] font-medium text-[var(--text-muted)]">Not in this version</span>
         )}
@@ -88,7 +92,11 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
                   ].join(' ')}
                 >
                   {option.label}
-                  <span className="text-[12px] text-[var(--text-muted)]">{formatBytes(option.sizeBytes)}</span>
+                  {option.installed ? (
+                    <span className="rounded-full border border-[var(--accent-success)] px-2 py-px text-[10.5px] font-semibold uppercase tracking-wide text-[var(--accent-success)]">Installed</span>
+                  ) : (
+                    <span className="text-[12px] text-[var(--text-muted)]">{formatBytes(option.sizeBytes)}</span>
+                  )}
                   {option.recommended && (
                     <span className="rounded-full bg-[var(--accent-primary)] px-2 py-px text-[10.5px] font-semibold uppercase tracking-wide text-white">Recommended</span>
                   )}

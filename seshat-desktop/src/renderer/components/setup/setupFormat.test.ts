@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultChoices, fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes } from './setupFormat'
+import { bytesToDownload, defaultChoices, fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes } from './setupFormat'
 
 const plan = {
   components: [
@@ -81,5 +81,51 @@ describe('overallProgress', () => {
   it('ignores a component that was not ticked, and never goes over 100', () => {
     const state = overallProgress(plan, { speech: { install: true, modelId: 'base' } }, { speech: item('running', 500, 100), title: item('done') })
     expect(state).toEqual({ receivedBytes: 148_000_000, totalBytes: 148_000_000, percent: 100 })
+  })
+})
+
+describe('models already on the computer', () => {
+  // The voice: base is the recommended one, small is already there and in use, tiny is already there too.
+  const speech = (installed: Record<string, boolean>, active?: string) => ({
+    id: 'speech' as const,
+    available: true,
+    options: [
+      { id: 'tiny', sizeBytes: 78_000_000, recommended: false, installed: installed.tiny, active: active === 'tiny' },
+      { id: 'base', sizeBytes: 148_000_000, recommended: true, installed: installed.base, active: active === 'base' },
+      { id: 'small', sizeBytes: 488_000_000, recommended: false, installed: installed.small, active: active === 'small' }
+    ]
+  })
+  const title = { id: 'title' as const, available: true, options: [{ id: 'a', sizeBytes: 491_000_000, recommended: true }] }
+
+  it('downloads nothing for an option whose files are there', () => {
+    expect(bytesToDownload({ sizeBytes: 148_000_000, installed: true })).toBe(0)
+    expect(bytesToDownload({ sizeBytes: 148_000_000, installed: false })).toBe(148_000_000)
+    expect(bytesToDownload({ sizeBytes: 148_000_000 })).toBe(148_000_000)
+  })
+
+  it('starts on the model in use, ticked, rather than on the recommended one', () => {
+    const plan = { components: [title, speech({ small: true }, 'small')] }
+    expect(defaultChoices(plan).speech).toEqual({ install: true, modelId: 'small' })
+  })
+
+  it('starts on the recommended model among the installed ones when none is in use, and on any installed one otherwise', () => {
+    expect(defaultChoices({ components: [speech({ tiny: true, base: true })] }).speech?.modelId).toBe('base')
+    expect(defaultChoices({ components: [speech({ tiny: true })] }).speech?.modelId).toBe('tiny')
+  })
+
+  it('starts on the recommended model when nothing is installed', () => {
+    expect(defaultChoices({ components: [speech({})] }).speech?.modelId).toBe('base')
+  })
+
+  it('counts nothing to download when the chosen model is installed, and its size when another one is picked', () => {
+    const plan = { components: [title, speech({ small: true }, 'small')] }
+    expect(totalDownloadBytes(plan, { title: { install: true, modelId: 'a' }, speech: { install: true, modelId: 'small' } })).toBe(491_000_000)
+    // The person picks another model of the family: that one is downloaded.
+    expect(totalDownloadBytes(plan, { title: { install: true, modelId: 'a' }, speech: { install: true, modelId: 'base' } })).toBe(491_000_000 + 148_000_000)
+  })
+
+  it('leaves an installed component out of the overall progress', () => {
+    const plan = { components: [speech({ small: true }, 'small')] }
+    expect(overallProgress(plan, { speech: { install: true, modelId: 'small' } }, {})).toEqual({ receivedBytes: 0, totalBytes: 0, percent: 0 })
   })
 })

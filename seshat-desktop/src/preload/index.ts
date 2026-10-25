@@ -91,7 +91,7 @@ type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 
 // `shell` is a real PTY (main/ipc/shell.ts) that the user drives themselves.
 type SetupComponentId = 'title' | 'speech' | 'ocr'
-type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean; installed?: boolean; active?: boolean }
 type SetupPlan = {
   components: Array<{ id: SetupComponentId; available: boolean; unavailableReason?: string; defaultOn?: boolean; note?: string; options: SetupOption[] }>
   freeDiskBytes: number | null
