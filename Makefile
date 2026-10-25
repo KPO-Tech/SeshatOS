@@ -2,8 +2,8 @@
 #
 #   make setup          -> first-time setup (system deps, Node deps, build)
 #   make dev            -> start the local backend + the Electron UI, with everything on and the native OCR (when there is a C compiler),
-#                          as a brand new install (FRESH=0 keeps your own data, NATIVE=0 builds without the OCR)
-#   make dev-reset      -> forget that fresh install completely, downloads included: the next make dev starts from nothing
+#                          keeping your data (FRESH=1 starts as a brand new install, NATIVE=0 builds without the OCR)
+#   make dev-reset      -> forget the FRESH=1 install completely, downloads included: the next make dev starts from nothing
 #   make build          -> compile the local backend binary
 #   make test           -> run the Go tests
 #   make disk-usage     -> what is heavy here, and the `make clean-*` that removes it
@@ -38,17 +38,18 @@ NATIVE_ENV = eval "$$("$(BASH)" $(ROOT)/scripts/setup-nativedoc-cgo.sh)"
 # The runtime root of the app, where its log is.
 RUNTIME_ROOT_SH = $${SESHAT_RUNTIME_ROOT:-$$HOME/.config/seshatos}
 
-# make dev starts as a brand new install by default (FRESH=1): an empty runtime root, so the first-run wizard
+# make dev keeps your data between starts by default (FRESH=0): the providers you configured, your sessions and the wizard you already
+# went through are still there. FRESH=1 starts as a brand new install instead: an empty runtime root, so the first-run wizard
 # shows, there is no account, no session, no model, nothing the app remembered. The root is a throwaway folder of this project
 # (.cache/dev-fresh), wiped at each start; your real data (~/.config/seshat) is never read or touched. Everything the app keeps sits
 # under that root, the backend database and the models as much as Electron's own storage.
 #
-#   make dev FRESH=0              use your real data, as before
+#   make dev FRESH=1             a brand new install, to try the first run
 #   make dev KEEP_MODELS=0        also forget the models and the engines downloaded earlier, to try the first download
 #
 # What was downloaded (the models of the titles, the voice and the OCR, and the engines that run them) is kept by default: it is
 # several hundred megabytes, and the wizard still shows, finds what is already there and does not download it twice.
-FRESH             ?= 1
+FRESH             ?= 0
 KEEP_MODELS       ?= 1
 FRESH_ROOT        := $(CACHE_DIR)/dev-fresh
 

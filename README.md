@@ -105,7 +105,7 @@ git clone <this-repo>
 cd seshatos
 cp .env.example .env   # fill in at least one provider API key
 make setup              # first-time setup: Node deps + build
-make dev                 # start the local backend + desktop app, as a brand new install (FRESH=0 keeps your data)
+make dev                 # start the local backend + desktop app, keeping your data (FRESH=1 starts as a brand new install)
 ```
 
 See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.
