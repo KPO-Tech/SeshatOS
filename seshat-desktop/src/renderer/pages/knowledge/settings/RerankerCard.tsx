@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from './KnowledgePrimitives'
-import { detectRerankerModel, saveRerankerConfig, testRerankerConfig } from './knowledgeApi'
-import type { RerankerConfig, TestState } from './knowledgeTypes'
+import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { detectRerankerModel, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
+import type { RerankerConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
 
 const RERANKER_PRESETS = [
   { id: 'tei', label: 'TEI local', base_url: 'http://localhost:8083/rerank', model: 'BAAI/bge-reranker-v2-m3' },

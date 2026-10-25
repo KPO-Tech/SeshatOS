@@ -1,5 +1,5 @@
-import { ConfigCard, StatusPill } from './KnowledgePrimitives'
-import type { Corpus, StorageStatus } from './knowledgeTypes'
+import { ConfigCard, StatusPill } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import type { Corpus, StorageStatus } from '@renderer/components/config/knowledge/knowledgeTypes'
 
 export function StorageAndCorporaCard({ storage, corpora }: { storage: StorageStatus | null; corpora: Corpus[] }) {
   const chunks = corpora.reduce((total, corpus) => total + (corpus.chunk_count ?? 0), 0)
