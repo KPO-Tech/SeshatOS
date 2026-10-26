@@ -29,3 +29,10 @@ export async function addFolderSource(path: string, name: string): Promise<Knowl
 export async function removeSource(id: string): Promise<void> {
   await api.delete(`/knowledge/sources/${encodeURIComponent(id)}`)
 }
+
+/** The id the default source goes by in the address of its page: the collections made in the app have no source id. */
+export const DEFAULT_SOURCE_ID = 'seshat'
+
+export function sourcePath(sourceId: string): string {
+  return `/knowledge/collections/source/${encodeURIComponent(sourceId)}`
+}

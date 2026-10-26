@@ -8,6 +8,7 @@ import { addDocument, deleteCollection, removeDocument, retryIndexing, updateCol
 import { DocumentRow } from './DocumentRow'
 import { fileState, plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
+import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionDetail } from './useCollectionDetail'
 
 const message = (error: unknown, fallback: string) => (error instanceof Error && error.message ? error.message : fallback)
@@ -24,7 +25,8 @@ export function CollectionPage() {
   const picker = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
 
-  const back = () => navigate('/knowledge/collections')
+  // Back to the source the collection is in.
+  const back = () => navigate(sourcePath(collection?.sourceId || DEFAULT_SOURCE_ID))
 
   async function add(list: File[]) {
     for (const file of list) {
@@ -101,7 +103,7 @@ export function CollectionPage() {
           This collection could not be read.
         </p>
         <button type="button" onClick={back} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--accent-primary)] underline">
-          Back to the collections
+          Back
         </button>
       </div>
     )
