@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { SourceIconPicker } from './SourceIcon'
 import { addFolderSource, type KnowledgeSource } from './sourcesApi'
 
 const FIELD =
@@ -8,6 +9,7 @@ const FIELD =
 export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: KnowledgeSource) => void | Promise<void>; onClose: () => void }) {
   const [path, setPath] = useState('')
   const [name, setName] = useState('')
+  const [icon, setIcon] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const pathField = useRef<HTMLInputElement>(null)
@@ -31,7 +33,7 @@ export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: Knowle
     setBusy(true)
     setError(null)
     try {
-      await onAdded(await addFolderSource(path.trim(), name))
+      await onAdded(await addFolderSource(path.trim(), name, icon))
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : 'The source could not be added.')
       setBusy(false)
@@ -74,9 +76,12 @@ export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: Knowle
         </div>
 
         <label className="mt-3.5 block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="source-name">
-          Name <span className="font-normal text-[var(--text-muted)]">(optional, the folder's name by default)</span>
+          Name and icon <span className="font-normal text-[var(--text-muted)]">(optional, the folder's name by default)</span>
         </label>
-        <input id="source-name" value={name} onChange={(event) => setName(event.target.value)} className={`${FIELD} mt-1.5`} maxLength={255} />
+        <div className="mt-1.5 flex items-center gap-2">
+          <SourceIconPicker value={icon} onChange={setIcon} />
+          <input id="source-name" value={name} onChange={(event) => setName(event.target.value)} className={FIELD} maxLength={255} />
+        </div>
 
         {error && (
           <p role="alert" className="mb-0 mt-3 text-[12.5px] font-medium text-[var(--accent-danger)]">

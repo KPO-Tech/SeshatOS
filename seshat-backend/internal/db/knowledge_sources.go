@@ -23,6 +23,8 @@ type KnowledgeSource struct {
 	Kind      string
 	Name      string
 	Root      string
+	// Icon is the key of the icon the person chose for the source; empty for the kind's own.
+	Icon      string
 	CreatedAt time.Time
 }
 
@@ -32,13 +34,14 @@ type gKnowledgeSource struct {
 	Kind          string `gorm:"not null;size:32"`
 	Name          string `gorm:"not null"`
 	Root          string `gorm:"not null;default:''"`
+	Icon          string `gorm:"not null;size:32;default:''"`
 	CreatedAtUnix int64  `gorm:"column:created_at_unix;autoCreateTime:unix"`
 }
 
 func (gKnowledgeSource) TableName() string { return "knowledge_sources" }
 
 func knowledgeSourceFromGorm(g gKnowledgeSource) KnowledgeSource {
-	return KnowledgeSource{ID: g.ID, UserID: g.UserID, Kind: g.Kind, Name: g.Name, Root: g.Root, CreatedAt: time.Unix(g.CreatedAtUnix, 0).UTC()}
+	return KnowledgeSource{ID: g.ID, UserID: g.UserID, Kind: g.Kind, Name: g.Name, Root: g.Root, Icon: g.Icon, CreatedAt: time.Unix(g.CreatedAtUnix, 0).UTC()}
 }
 
 // ErrKnowledgeSourceNotFound is returned for a source that does not exist.
@@ -49,13 +52,14 @@ type CreateKnowledgeSourceParams struct {
 	Kind   string
 	Name   string
 	Root   string
+	Icon   string
 }
 
 func (s *CorpusStore) CreateSource(ctx context.Context, p CreateKnowledgeSourceParams) (*KnowledgeSource, error) {
 	if strings.TrimSpace(p.UserID) == "" || strings.TrimSpace(p.Kind) == "" || strings.TrimSpace(p.Name) == "" {
 		return nil, fmt.Errorf("user_id, kind and name are required")
 	}
-	row := gKnowledgeSource{ID: newIdentityID("src"), UserID: p.UserID, Kind: p.Kind, Name: p.Name, Root: p.Root, CreatedAtUnix: time.Now().UTC().Unix()}
+	row := gKnowledgeSource{ID: newIdentityID("src"), UserID: p.UserID, Kind: p.Kind, Name: p.Name, Root: p.Root, Icon: p.Icon, CreatedAtUnix: time.Now().UTC().Unix()}
 	if err := s.db.GormDB().WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, fmt.Errorf("create knowledge source: %w", err)
 	}
@@ -85,6 +89,21 @@ func (s *CorpusStore) ListSources(ctx context.Context, userID string) ([]Knowled
 		out = append(out, knowledgeSourceFromGorm(r))
 	}
 	return out, nil
+}
+
+// UpdateSource changes what is given: a nil field is left as it is.
+func (s *CorpusStore) UpdateSource(ctx context.Context, id string, name, icon *string) error {
+	updates := map[string]any{}
+	if name != nil {
+		updates["name"] = *name
+	}
+	if icon != nil {
+		updates["icon"] = *icon
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+	return s.db.GormDB().WithContext(ctx).Model(&gKnowledgeSource{}).Where("id = ?", id).Updates(updates).Error
 }
 
 func (s *CorpusStore) DeleteSource(ctx context.Context, id string) error {

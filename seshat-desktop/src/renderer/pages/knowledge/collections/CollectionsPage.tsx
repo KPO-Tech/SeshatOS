@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { FolderOpen, Plus } from '@icon-park/react'
+import { Plus } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useDeviceMode } from '../useCanManage'
 import { AddSourceDialog } from './AddSourceDialog'
 import { plural } from './fileStatus'
+import { SourceIcon } from './SourceIcon'
 import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
 
@@ -71,7 +72,7 @@ export function CollectionsPage() {
               onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
             />
             {sources.map((source) => (
-              <SourceCard key={source.id} icon={<FolderOpen size={18} />} title={source.name} detail={source.root} count={countIn(source.id)} onOpen={() => navigate(sourcePath(source.id))} />
+              <SourceCard key={source.id} icon={<SourceIcon icon={source.icon} />} title={source.name} detail={source.root} count={countIn(source.id)} onOpen={() => navigate(sourcePath(source.id))} />
             ))}
           </div>
         )}

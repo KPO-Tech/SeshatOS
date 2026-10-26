@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { FolderOpen, Left, Plus } from '@icon-park/react'
+import { Left, Plus } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { FolderPlanModal } from '../sources/FolderPlanModal'
 import { CollectionCard } from './CollectionCard'
 import { CollectionDialog } from './CollectionDialog'
 import { createCollection } from './collectionsApi'
 import { IndexingNotice } from './IndexingNotice'
-import { DEFAULT_SOURCE_ID, removeSource } from './sourcesApi'
+import { SourceIconPicker } from './SourceIcon'
+import { DEFAULT_SOURCE_ID, removeSource, updateSource } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
 
 const BUTTON = 'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-medium transition-colors'
@@ -34,6 +35,17 @@ export function SourcePage() {
     setCreating(false)
     await reload()
     open(created.id)
+  }
+
+  async function changeIcon(icon: string) {
+    if (!source) return
+    setError(null)
+    try {
+      await updateSource(source.id, { icon })
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'The icon could not be changed.')
+    }
   }
 
   async function remove() {
@@ -68,9 +80,13 @@ export function SourcePage() {
 
         <div className="mt-4 flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-              {isDefault ? <SeshatLogo size={22} /> : <FolderOpen size={20} />}
-            </span>
+            {isDefault ? (
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
+                <SeshatLogo size={22} />
+              </span>
+            ) : (
+              <SourceIconPicker value={source?.icon ?? ''} onChange={(icon) => void changeIcon(icon)} disabled={!source} />
+            )}
             <div className="min-w-0">
               <h1 className="m-0 truncate text-[26px] font-normal leading-[1.15] tracking-[-0.01em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
                 {isDefault ? 'Seshat' : (source?.name ?? '')}

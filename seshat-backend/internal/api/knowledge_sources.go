@@ -57,6 +57,7 @@ func (a *App) handleKnowledgeSources(w http.ResponseWriter, r *http.Request) {
 			Kind string `json:"kind"`
 			Path string `json:"path"`
 			Name string `json:"name"`
+			Icon string `json:"icon"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
@@ -70,7 +71,7 @@ func (a *App) handleKnowledgeSources(w http.ResponseWriter, r *http.Request) {
 			writeJSONError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		src, err := svc.CreateFolderSource(r.Context(), principal, body.Name, root)
+		src, err := svc.CreateFolderSource(r.Context(), principal, body.Name, root, body.Icon)
 		if err != nil {
 			writeBackendError(w, err)
 			return
@@ -81,7 +82,10 @@ func (a *App) handleKnowledgeSources(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleKnowledgeSource serves DELETE /api/v1/knowledge/sources/{id}: a source that holds no collection is removed.
+// handleKnowledgeSource serves what hangs under /knowledge/sources/{id}:
+//
+//	PATCH  /api/v1/knowledge/sources/{id}  {"name":"...","icon":"..."}  rename it or change its icon (either, or both)
+//	DELETE /api/v1/knowledge/sources/{id}  a source that holds no collection is removed
 func (a *App) handleKnowledgeSource(w http.ResponseWriter, r *http.Request) {
 	principal, _ := authPrincipalFromContext(r.Context())
 	if principal == nil {
@@ -93,12 +97,28 @@ func (a *App) handleKnowledgeSource(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if r.Method != http.MethodDelete {
+	if r.Method != http.MethodDelete && r.Method != http.MethodPatch {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	svc, ok := a.localKnowledge(w)
 	if !ok {
+		return
+	}
+	if r.Method == http.MethodPatch {
+		var body struct {
+			Name *string `json:"name"`
+			Icon *string `json:"icon"`
+		}
+		if !decodeJSONBody(w, r, &body) {
+			return
+		}
+		src, err := svc.UpdateSource(r.Context(), principal, id, body.Name, body.Icon)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, src)
 		return
 	}
 	if err := svc.DeleteSource(r.Context(), principal, id); err != nil {

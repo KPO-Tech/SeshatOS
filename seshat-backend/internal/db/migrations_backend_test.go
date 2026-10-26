@@ -140,3 +140,29 @@ func TestKnowledgeSourcesAreAddedToAnExistingDatabase(t *testing.T) {
 		t.Fatalf("create corpus under the source: %+v, %v", c, err)
 	}
 }
+
+// A database made before sources had an icon gets the column when it is opened.
+func TestKnowledgeSourceIconIsAddedToAnExistingDatabase(t *testing.T) {
+	ctx := context.Background()
+	database := openTestDB(t)
+	if err := database.gormDB.Migrator().DropColumn(&gKnowledgeSource{}, "icon"); err != nil {
+		t.Fatalf("drop column: %v", err)
+	}
+	var run func(context.Context, *DB) error
+	for _, mig := range backendMigrations() {
+		if mig.ID == "20261027_056_knowledge_source_icon" {
+			run = mig.Run
+		}
+	}
+	if run == nil {
+		t.Fatal("the migration is not registered")
+	}
+	if err := run(ctx, database); err != nil {
+		t.Fatalf("migration: %v", err)
+	}
+	store, _ := NewCorpusStore(database)
+	src, err := store.CreateSource(ctx, CreateKnowledgeSourceParams{UserID: "u", Kind: KnowledgeSourceLocalFolder, Name: "n", Root: "/x", Icon: "bank"})
+	if err != nil || src.Icon != "bank" {
+		t.Fatalf("create source with an icon: %+v, %v", src, err)
+	}
+}

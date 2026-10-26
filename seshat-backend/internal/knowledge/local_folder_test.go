@@ -89,11 +89,11 @@ func TestSourcesGroupTheCollectionsTheyHold(t *testing.T) {
 	ctx := context.Background()
 	p := testPrincipal("user-1")
 
-	src, err := svc.CreateFolderSource(ctx, p, "", "/data/corpus")
+	src, err := svc.CreateFolderSource(ctx, p, "", "/data/corpus", "")
 	require.NoError(t, err)
 	require.Equal(t, "corpus", src.Name, "a source without a name takes its folder's name")
 
-	_, err = svc.CreateFolderSource(ctx, p, "again", "/data/corpus")
+	_, err = svc.CreateFolderSource(ctx, p, "again", "/data/corpus", "")
 	require.Equal(t, bkerr.ErrorKindConflict, bkerr.KindOf(err), "the same folder is not a source twice")
 
 	_, err = svc.CreateCorpus(ctx, p, knowledge.CreateCorpusParams{Name: "Mine"})
@@ -119,7 +119,7 @@ func TestASourceBelongsToItsPerson(t *testing.T) {
 	database := openTestDB(t)
 	svc := newTestService(t, database, newTestArtifactStore(t))
 	ctx := context.Background()
-	src, err := svc.CreateFolderSource(ctx, testPrincipal("user-1"), "", "/data/corpus")
+	src, err := svc.CreateFolderSource(ctx, testPrincipal("user-1"), "", "/data/corpus", "")
 	require.NoError(t, err)
 
 	_, err = svc.GetSource(ctx, testPrincipal("user-2"), src.ID)

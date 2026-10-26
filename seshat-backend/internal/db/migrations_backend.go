@@ -388,6 +388,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeSource{}, &gCorpus{})
 			},
 		},
+		{
+			ID:    "20261027_056_knowledge_source_icon",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeSource{})
+			},
+		},
 	}
 }
 

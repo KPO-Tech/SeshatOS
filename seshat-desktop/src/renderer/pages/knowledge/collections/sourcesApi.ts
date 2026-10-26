@@ -8,13 +8,15 @@ export type KnowledgeSource = {
   kind: 'local_folder'
   name: string
   root: string
+  // The key of the icon the person chose; empty for the folder icon of its kind.
+  icon: string
   collectionCount: number
 }
 
-type SourceRow = { id: string; kind: string; name: string; root?: string; collection_count?: number }
+type SourceRow = { id: string; kind: string; name: string; root?: string; icon?: string; collection_count?: number }
 
 function toSource(row: SourceRow): KnowledgeSource {
-  return { id: row.id, kind: 'local_folder', name: row.name, root: row.root ?? '', collectionCount: row.collection_count ?? 0 }
+  return { id: row.id, kind: 'local_folder', name: row.name, root: row.root ?? '', icon: row.icon ?? '', collectionCount: row.collection_count ?? 0 }
 }
 
 export async function listSources(): Promise<{ sources: KnowledgeSource[]; defaultCount: number }> {
@@ -22,8 +24,13 @@ export async function listSources(): Promise<{ sources: KnowledgeSource[]; defau
   return { sources: (data.sources ?? []).map(toSource), defaultCount: data.default?.collection_count ?? 0 }
 }
 
-export async function addFolderSource(path: string, name: string): Promise<KnowledgeSource> {
-  return toSource(await api.post<SourceRow>('/knowledge/sources', { kind: 'local_folder', path, name: name.trim() || undefined }))
+export async function addFolderSource(path: string, name: string, icon: string): Promise<KnowledgeSource> {
+  return toSource(await api.post<SourceRow>('/knowledge/sources', { kind: 'local_folder', path, name: name.trim() || undefined, icon }))
+}
+
+/** Renames a source or changes its icon; what is not given stays. */
+export async function updateSource(id: string, change: { name?: string; icon?: string }): Promise<KnowledgeSource> {
+  return toSource(await api.patch<SourceRow>(`/knowledge/sources/${encodeURIComponent(id)}`, change))
 }
 
 export async function removeSource(id: string): Promise<void> {

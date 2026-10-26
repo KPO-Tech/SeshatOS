@@ -404,3 +404,44 @@ func TestAPlanForAnUnknownSourceIsRefused(t *testing.T) {
 		t.Errorf("status %d, want 404", rec.Code)
 	}
 }
+
+func TestASourceCanBeRenamedAndGivenAnIcon(t *testing.T) {
+	app, _ := folderPlanAppWithKnowledge(t)
+	root := archiveOnDisk(t)
+	rec := doJSON(app, app.handleKnowledgeSources, http.MethodPost, "/knowledge/sources", "user-1", `{"kind":"local_folder","path":`+quote(root)+`,"icon":"briefcase"}`)
+	var src knowledge.Source
+	_ = json.Unmarshal(rec.Body.Bytes(), &src)
+	if rec.Code != http.StatusCreated || src.Icon != "briefcase" {
+		t.Fatalf("add with an icon: status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	patch := func(user, body string) *httptest.ResponseRecorder {
+		return doJSON(app, app.handleKnowledgeSource, http.MethodPatch, "/knowledge/sources/"+src.ID, user, body)
+	}
+	rec = patch("user-1", `{"icon":"bank"}`)
+	var changed knowledge.Source
+	_ = json.Unmarshal(rec.Body.Bytes(), &changed)
+	if rec.Code != http.StatusOK || changed.Icon != "bank" || changed.Name != src.Name {
+		t.Fatalf("icon only: status %d: %s", rec.Code, rec.Body.String())
+	}
+	rec = patch("user-1", `{"name":"  Archive 2021  "}`)
+	_ = json.Unmarshal(rec.Body.Bytes(), &changed)
+	if rec.Code != http.StatusOK || changed.Name != "Archive 2021" || changed.Icon != "bank" {
+		t.Fatalf("name only: status %d: %s", rec.Code, rec.Body.String())
+	}
+	rec = patch("user-1", `{"icon":""}`)
+	changed = knowledge.Source{} // the icon is left out of the answer when empty
+	_ = json.Unmarshal(rec.Body.Bytes(), &changed)
+	if rec.Code != http.StatusOK || changed.Icon != "" {
+		t.Errorf("an empty icon goes back to the kind's own: status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	for name, body := range map[string]string{"an empty name": `{"name":" "}`, "an icon with a path in it": `{"icon":"../x"}`, "capitals": `{"icon":"Bank"}`} {
+		if rec := patch("user-1", body); rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", name, rec.Code)
+		}
+	}
+	if rec := patch("user-2", `{"icon":"bank"}`); rec.Code != http.StatusNotFound {
+		t.Errorf("another person: status %d, want 404", rec.Code)
+	}
+}
