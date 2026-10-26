@@ -2,10 +2,13 @@ package knowledge_test
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 )
@@ -127,4 +130,48 @@ func TestASourceBelongsToItsPerson(t *testing.T) {
 	_, err = svc.CreateLocalCollections(ctx, testPrincipal("user-2"), src.ID, localCollections())
 	require.Equal(t, bkerr.ErrorKindNotFound, bkerr.KindOf(err), "collections cannot be made under someone else's source")
 	require.Equal(t, bkerr.ErrorKindNotFound, bkerr.KindOf(svc.DeleteSource(ctx, testPrincipal("user-2"), src.ID)))
+}
+
+func localSourceWithFiles(t *testing.T, svc *knowledge.Service, p *backendauth.Principal, inside, outside string) (id string) {
+	t.Helper()
+	ctx := context.Background()
+	src, err := svc.CreateFolderSource(ctx, p, "", inside, "")
+	require.NoError(t, err)
+	_, err = svc.CreateLocalCollections(ctx, p, src.ID, []knowledge.LocalCollection{{Name: "Docs", Files: []knowledge.LocalFile{
+		{Path: filepath.Join(inside, "a.md"), Name: "a.md"},
+		{Path: filepath.Join(outside, "b.md"), Name: "b.md"},
+		{Path: filepath.Join(inside, "gone.pdf"), Name: "gone.pdf"},
+	}}})
+	require.NoError(t, err)
+	return src.ID
+}
+
+func TestAFileOfAFolderSourceIsReadFromWhereItIsAndOnlyFromThere(t *testing.T) {
+	database := openTestDB(t)
+	svc := newTestService(t, database, newTestArtifactStore(t))
+	ctx := context.Background()
+	p := testPrincipal("user-1")
+	inside, outside := t.TempDir(), t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(inside, "a.md"), []byte("# Hello"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(outside, "b.md"), []byte("secret"), 0o644))
+	localSourceWithFiles(t, svc, p, inside, outside)
+
+	got, err := svc.DownloadFile(ctx, p, knowledge.LocalFileID(filepath.Join(inside, "a.md")))
+	require.NoError(t, err)
+	require.Equal(t, "# Hello", string(got.Data))
+	require.Equal(t, "a.md", got.Filename)
+	require.Contains(t, got.ContentType, "markdown")
+
+	info, err := svc.LocalFileInfo(ctx, p, knowledge.LocalFileID(filepath.Join(inside, "a.md")))
+	require.NoError(t, err)
+	require.EqualValues(t, 7, info.Size)
+
+	_, err = svc.DownloadFile(ctx, p, knowledge.LocalFileID(filepath.Join(outside, "b.md")))
+	require.Equal(t, bkerr.ErrorKindNotFound, bkerr.KindOf(err), "a path outside the folder of its source is never read")
+
+	_, err = svc.DownloadFile(ctx, p, knowledge.LocalFileID(filepath.Join(inside, "gone.pdf")))
+	require.Equal(t, bkerr.ErrorKindNotFound, bkerr.KindOf(err), "a file that was moved is reported, not invented")
+
+	_, err = svc.DownloadFile(ctx, testPrincipal("user-2"), knowledge.LocalFileID(filepath.Join(inside, "a.md")))
+	require.Equal(t, bkerr.ErrorKindNotFound, bkerr.KindOf(err), "another person cannot read it")
 }

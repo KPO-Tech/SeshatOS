@@ -251,6 +251,10 @@ func (s *Service) AttachFile(ctx context.Context, principal *backendauth.Princip
 // all - unlike RemoteService's implementation, which is the one that
 // actually needs a corpus lookup (see that type's doc comment).
 func (s *Service) DownloadFile(ctx context.Context, principal *backendauth.Principal, fileID string) (*DownloadedFile, error) {
+	// A file of a folder source is read from where it is, not from the file store.
+	if IsLocalFileID(fileID) {
+		return s.readLocalFile(ctx, principal, fileID)
+	}
 	if s == nil || s.files == nil || s.artifacts == nil {
 		return nil, bkerr.Unavailable("file store not configured", nil)
 	}

@@ -4,8 +4,9 @@ import { Delete, Edit, Left, Upload } from '@icon-park/react'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { CollectionDialog } from './CollectionDialog'
 import { ConfirmDialog } from './ConfirmDialog'
-import { addDocument, deleteCollection, removeDocument, retryIndexing, updateCollection } from './collectionsApi'
+import { addDocument, deleteCollection, removeDocument, retryIndexing, updateCollection, type CollectionFile } from './collectionsApi'
 import { DocumentRow } from './DocumentRow'
+import { openDocument } from './openDocument'
 import { fileState, plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
 import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
@@ -51,6 +52,14 @@ export function CollectionPage() {
 
   function askRemove(fileId: string, name: string) {
     setConfirming({ title: 'Remove the document', message: `${name} will be removed from this collection and no longer used to answer.`, label: 'Remove', run: () => remove(fileId) })
+  }
+
+  async function read(file: CollectionFile) {
+    try {
+      if (!(await openDocument(file))) show(`There is no preview for this kind of file yet: ${file.name}`, 'err')
+    } catch (error) {
+      show(message(error, 'The document could not be opened'), 'err')
+    }
   }
 
   async function remove(fileId: string) {
@@ -205,6 +214,7 @@ export function CollectionPage() {
                   key={file.fileId}
                   file={file}
                   state={fileState(file, jobOf(file.fileId))}
+                  onOpen={() => void read(file)}
                   onRetry={() => void retry(file.fileId)}
                   onRemove={() => askRemove(file.fileId, file.name)}
                 />

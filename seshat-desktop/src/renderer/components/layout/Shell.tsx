@@ -24,9 +24,18 @@ export function Shell() {
   const conversationId = pathname.match(/^\/conversation\/([^/]+)/)?.[1] ?? null
   const isChatHome = pathname === '/'
   const isAdminRoute = pathname.startsWith('/admin')
+  // Knowledge opens documents in the right panel, as the chat does.
+  const isKnowledge = pathname.startsWith('/knowledge')
+  const wasKnowledgeRef = useRef(isKnowledge)
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
   useSessionsSync()
+
+  // The documents opened from Knowledge are closed when leaving it (a conversation closes its own).
+  useEffect(() => {
+    if (wasKnowledgeRef.current && !isKnowledge && !isConversation) useUIStore.getState().closeAllRightPanels()
+    wasKnowledgeRef.current = isKnowledge
+  }, [isKnowledge, isConversation])
 
   // The names of the connectors, so tool rows in chat say "GitHub" and not "connector-github".
   useEffect(() => {
@@ -121,7 +130,7 @@ export function Shell() {
               <Outlet />
             </ErrorBoundary>
           </div>
-          {isConversation && <RightPanelHost />}
+          {(isConversation || isKnowledge) && <RightPanelHost />}
           <ImageLightbox />
         </main>
       </div>

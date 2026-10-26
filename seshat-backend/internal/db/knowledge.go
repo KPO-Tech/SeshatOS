@@ -277,6 +277,19 @@ func (s *CorpusStore) AddFile(ctx context.Context, params UpsertCorpusFileParams
 	return &cf, nil
 }
 
+// FindLocalFiles returns the corpus files of a folder source that have this id: the same file can be in more than one collection.
+func (s *CorpusStore) FindLocalFiles(ctx context.Context, fileID string) ([]CorpusFile, error) {
+	var rows []gCorpusFile
+	if err := s.db.GormDB().WithContext(ctx).Where("file_id = ? AND source_path <> ''", fileID).Find(&rows).Error; err != nil {
+		return nil, fmt.Errorf("find local files: %w", err)
+	}
+	out := make([]CorpusFile, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, corpusFileFromGorm(r))
+	}
+	return out, nil
+}
+
 // UpdateFileStatus updates the ingest status for a corpus file record.
 func (s *CorpusStore) UpdateFileStatus(ctx context.Context, corpusID, fileID, status string, chunkCount int) error {
 	updates := map[string]any{
