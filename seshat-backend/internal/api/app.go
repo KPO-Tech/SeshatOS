@@ -10,6 +10,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/artifactpreview"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
@@ -20,7 +21,9 @@ import (
 // all business logic lives in seshat.App.
 type App struct {
 	backend *seshat.App
-	db      *db.DB
+	// folderPlans keeps the collections proposed for a folder while the person looks at them (see knowledge_folder_plan.go).
+	folderPlans *folderplan.Store
+	db          *db.DB
 	// Direct DB stores not yet wrapped in backend services
 	modelStore          *db.ProviderModelStore
 	embedderStore       *db.EmbedderConfigStore
@@ -157,6 +160,7 @@ func NewApp(cfg AppConfig) *App {
 	}()
 	return &App{
 		oauthStates:           make(map[string]oauthState),
+		folderPlans:           folderplan.NewStore(time.Hour, 10),
 		backend:               cfg.Backend,
 		db:                    cfg.DB,
 		modelStore:            cfg.ModelStore,
