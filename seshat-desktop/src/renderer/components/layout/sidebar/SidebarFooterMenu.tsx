@@ -68,7 +68,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
             {edition.accounts && (
               <>
                 <div className="my-0.5 h-px bg-[var(--border-soft)]" aria-hidden="true" />
-                <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" onClick={() => pick(() => void logout())} />
+                <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" disabled={!connected} onClick={() => pick(() => void logout())} />
               </>
             )}
           </div>
