@@ -69,3 +69,40 @@ func TestBackfillRAGScopeID_EnqueuesJobForIngestedFile(t *testing.T) {
 		t.Fatalf("expected exactly one job after re-running backfill, got %d", len(rows))
 	}
 }
+
+// A database made before a corpus file could record where it lives on this computer gets the column when it is opened.
+func TestCorpusFileSourcePathIsAddedToAnExistingDatabase(t *testing.T) {
+	ctx := context.Background()
+	database := openTestDB(t)
+	if err := database.gormDB.Migrator().DropColumn(&gCorpusFile{}, "source_path"); err != nil {
+		t.Fatalf("drop column: %v", err)
+	}
+	var run func(context.Context, *DB) error
+	for _, m := range backendMigrations() {
+		if m.ID == "20261026_054_corpus_file_source_path" {
+			run = m.Run
+		}
+	}
+	if run == nil {
+		t.Fatal("the migration is not registered")
+	}
+	if err := run(ctx, database); err != nil {
+		t.Fatalf("migration: %v", err)
+	}
+
+	corpora, err := NewCorpusStore(database)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corpus, err := corpora.Create(ctx, CreateCorpusParams{UserID: "u", Name: "kb"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := corpora.AddFile(ctx, UpsertCorpusFileParams{CorpusID: corpus.ID, FileID: "local-1", Filename: "a.pdf", SourcePath: "/x/a.pdf"}); err != nil {
+		t.Fatalf("add file: %v", err)
+	}
+	files, _ := corpora.ListFiles(ctx, corpus.ID)
+	if len(files) != 1 || files[0].SourcePath != "/x/a.pdf" {
+		t.Fatalf("files = %+v", files)
+	}
+}
