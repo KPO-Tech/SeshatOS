@@ -395,6 +395,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeSource{})
 			},
 		},
+		{
+			ID:    "20261027_057_ingestion_job_priority",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeIngestionJob{})
+			},
+		},
 	}
 }
 

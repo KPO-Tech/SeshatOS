@@ -333,6 +333,10 @@ func (s *Service) EnqueueIngest(ctx context.Context, principal *backendauth.Prin
 	if s.jobs == nil {
 		return nil, bkerr.Unavailable("ingestion job store not configured", nil)
 	}
+	// A file of a folder source is indexed from where it is: it is not in the file store.
+	if IsLocalFileID(params.FileID) {
+		return s.EnqueueLocalFile(ctx, principal, params.CorpusID, params.FileID)
+	}
 	if s.files == nil {
 		return nil, bkerr.Unavailable("file store not configured", nil)
 	}
@@ -563,6 +567,10 @@ func (s *Service) ProcessNextIngestionJob(ctx context.Context) (bool, error) {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 func (s *Service) processIngestionJob(ctx context.Context, job db.KnowledgeIngestionJob) {
+	if IsLocalFileID(job.FileID) {
+		s.processLocalJob(ctx, job)
+		return
+	}
 	if _, err := s.corpora.GetFile(ctx, job.CorpusID, job.FileID); err != nil {
 		_ = s.jobs.MarkSkipped(ctx, job.ID, "corpus file detached before ingestion")
 		return

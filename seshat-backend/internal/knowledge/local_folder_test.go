@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -174,4 +175,68 @@ func TestAFileOfAFolderSourceIsReadFromWhereItIsAndOnlyFromThere(t *testing.T) {
 
 	_, err = svc.DownloadFile(ctx, testPrincipal("user-2"), knowledge.LocalFileID(filepath.Join(inside, "a.md")))
 	require.Equal(t, bkerr.ErrorKindNotFound, bkerr.KindOf(err), "another person cannot read it")
+}
+
+func TestTheFilesOfAFolderSourceAreIndexedFromWhereTheyAreCheapestFirst(t *testing.T) {
+	database := openTestDB(t)
+	svc := newTestService(t, database, newTestArtifactStore(t))
+	ctx := context.Background()
+	p := testPrincipal("user-1")
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "big.md"), []byte("# Big\n\n"+strings.Repeat("Retention of records is required for seven years. ", 200)), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "small.txt"), []byte("The audit committee meets quarterly."), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "broken.pdf"), []byte("not a pdf at all"), 0o644))
+
+	src, err := svc.CreateFolderSource(ctx, p, "", dir, "")
+	require.NoError(t, err)
+	made, err := svc.CreateLocalCollections(ctx, p, src.ID, []knowledge.LocalCollection{{Name: "Docs", Files: []knowledge.LocalFile{
+		{Path: filepath.Join(dir, "big.md"), Name: "big.md"},
+		{Path: filepath.Join(dir, "small.txt"), Name: "small.txt"},
+		{Path: filepath.Join(dir, "broken.pdf"), Name: "broken.pdf"},
+		{Path: filepath.Join(dir, "moved.txt"), Name: "moved.txt"},
+	}}})
+	require.NoError(t, err)
+	corpusID := made[0].Corpus.ID
+
+	queued, err := svc.EnqueueAllLocal(ctx, p, corpusID)
+	require.NoError(t, err)
+	require.Equal(t, 4, queued)
+	again, err := svc.EnqueueAllLocal(ctx, p, corpusID)
+	require.NoError(t, err)
+	require.Zero(t, again, "asking twice queues nothing twice")
+
+	// Plain text goes first, the small file before the big one, and the PDF last: the order the jobs are taken in.
+	var order []string
+	seen := map[string]bool{}
+	for {
+		processed, err := svc.ProcessNextIngestionJob(ctx)
+		require.NoError(t, err)
+		if !processed {
+			break
+		}
+		jobs, err := svc.ListIngestionJobs(ctx, p, corpusID)
+		require.NoError(t, err)
+		for _, j := range jobs {
+			if j.AttemptCount > 0 && !seen[j.Filename] {
+				seen[j.Filename] = true
+				order = append(order, j.Filename)
+			}
+		}
+	}
+	require.Equal(t, []string{"moved.txt", "small.txt", "big.md", "broken.pdf"}, order, "a missing file fails at once, then text smallest first, the PDF last")
+
+	files, err := svc.ListFiles(ctx, p, corpusID)
+	require.NoError(t, err)
+	status := map[string]string{}
+	for _, f := range files {
+		status[f.Filename] = f.Status
+	}
+	require.Equal(t, "ingested", status["small.txt"])
+	require.Equal(t, "ingested", status["big.md"])
+	require.Equal(t, "failed", status["moved.txt"], "a file that was moved fails with its reason, the others go on")
+	require.Equal(t, "failed", status["broken.pdf"])
+
+	res, err := svc.Search(ctx, p, knowledge.SearchParams{CorpusID: corpusID, Query: "audit committee", TopK: 3})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.Results, "what was indexed can be searched")
 }

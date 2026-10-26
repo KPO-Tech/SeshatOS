@@ -351,8 +351,33 @@ func (a *App) handleCorpusIngest(w http.ResponseWriter, r *http.Request, corpusI
 
 	var body struct {
 		FileID string `json:"file_id"`
+		// All queues the indexing of every document of the collection that is still waiting (folder sources only).
+		All bool `json:"all"`
 	}
 	if !decodeJSONBody(w, r, &body) {
+		return
+	}
+	if body.All {
+		svc, ok := a.localKnowledge(w)
+		if !ok {
+			return
+		}
+		queued, err := svc.EnqueueAllLocal(r.Context(), principal, corpusID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		if principal != nil {
+			a.backend.Audit.Log(r.Context(), backendaudit.LogParams{
+				ActorUserID:  principal.User.ID,
+				Action:       backendaudit.ActionKnowledgeIngest,
+				ResourceType: "corpus",
+				ResourceID:   corpusID,
+				IPAddress:    a.clientIP(r),
+				Metadata:     map[string]any{"queued": queued},
+			})
+		}
+		writeJSON(w, http.StatusAccepted, map[string]int{"queued": queued})
 		return
 	}
 	if strings.TrimSpace(body.FileID) == "" {

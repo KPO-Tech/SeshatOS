@@ -5,7 +5,8 @@ import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { FolderPlanModal } from '../sources/FolderPlanModal'
 import { CollectionCard } from './CollectionCard'
 import { CollectionDialog } from './CollectionDialog'
-import { createCollection } from './collectionsApi'
+import { createCollection, indexCollection } from './collectionsApi'
+import { plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
 import { SourceIconPicker } from './SourceIcon'
 import { DEFAULT_SOURCE_ID, removeSource, updateSource } from './sourcesApi'
@@ -23,6 +24,8 @@ export function SourcePage() {
   const [creating, setCreating] = useState(false)
   const [analysing, setAnalysing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [indexing, setIndexing] = useState(false)
 
   const isDefault = sourceId === DEFAULT_SOURCE_ID
   const source = isDefault ? null : (sources.find((s) => s.id === sourceId) ?? null)
@@ -35,6 +38,21 @@ export function SourcePage() {
     setCreating(false)
     await reload()
     open(created.id)
+  }
+
+  async function indexAll() {
+    setIndexing(true)
+    setError(null)
+    setNotice(null)
+    try {
+      let queued = 0
+      for (const collection of own) queued += await indexCollection(collection.id)
+      setNotice(queued === 0 ? 'Nothing is waiting to be indexed.' : `${plural(queued, 'document', 'documents')} queued for indexing. Open a collection to follow it.`)
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'The indexing could not be started.')
+    } finally {
+      setIndexing(false)
+    }
   }
 
   async function changeIcon(icon: string) {
@@ -111,7 +129,12 @@ export function SourcePage() {
                     Remove
                   </button>
                 )}
-                <button type="button" onClick={() => setAnalysing(true)} className={PRIMARY}>
+                {own.length > 0 && (
+                  <button type="button" onClick={() => void indexAll()} disabled={indexing} className={PRIMARY}>
+                    {indexing ? 'Starting...' : 'Index everything'}
+                  </button>
+                )}
+                <button type="button" onClick={() => setAnalysing(true)} className={own.length === 0 ? PRIMARY : QUIET}>
                   {own.length === 0 ? 'Analyse to import collections' : 'Analyse again'}
                 </button>
               </>
@@ -124,6 +147,8 @@ export function SourcePage() {
             <IndexingNotice />
           </div>
         )}
+
+        {notice && <p className="mb-0 mt-6 text-[13px] text-[var(--text-secondary)]">{notice}</p>}
 
         {(failed || error) && (
           <p className="mb-0 mt-8 text-[13px] text-[var(--accent-danger)]" role="alert">

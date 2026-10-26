@@ -45,6 +45,8 @@ type CreateKnowledgeIngestionJobParams struct {
 	WorkspaceID string
 	Filename    string
 	MaxAttempts int
+	// Priority orders the jobs: the lower runs first, and jobs of the same priority run in the order they were made.
+	Priority int
 }
 
 type gKnowledgeIngestionJob struct {
@@ -58,6 +60,7 @@ type gKnowledgeIngestionJob struct {
 	AttemptCount    int     `gorm:"column:attempt_count;not null;default:0"`
 	MaxAttempts     int     `gorm:"column:max_attempts;not null;default:3"`
 	ChunkCount      int     `gorm:"column:chunk_count;not null;default:0"`
+	Priority        int     `gorm:"column:priority;not null;default:0;index"`
 	LastError       string  `gorm:"column:last_error;type:text;not null;default:''"`
 	ErrorLog        string  `gorm:"column:error_log;type:text;not null;default:''"`
 	NextRunAtUnix   *int64  `gorm:"column:next_run_at_unix;index"`
@@ -137,6 +140,7 @@ func (s *KnowledgeIngestionJobStore) Create(ctx context.Context, params CreateKn
 		Filename:      params.Filename,
 		Status:        IngestionJobStatusPending,
 		MaxAttempts:   maxAttempts,
+		Priority:      params.Priority,
 		CreatedAtUnix: now.Unix(),
 		UpdatedAtUnix: now.Unix(),
 	}
@@ -215,7 +219,7 @@ func (s *KnowledgeIngestionJobStore) ClaimNextDue(ctx context.Context, staleAfte
 
 		var row gKnowledgeIngestionJob
 		err := tx.Where("status = ? AND (next_run_at_unix IS NULL OR next_run_at_unix <= ?)", IngestionJobStatusPending, now.Unix()).
-			Order("created_at_unix ASC").
+			Order("priority ASC, created_at_unix ASC").
 			First(&row).Error
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {

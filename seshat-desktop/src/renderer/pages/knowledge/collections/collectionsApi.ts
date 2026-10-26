@@ -105,6 +105,12 @@ export function retryIndexing(id: string, fileId: string, job: IndexingJob | und
   return job ? api.post(`${base}/jobs/${encodeURIComponent(job.id)}/retry`) : api.post(base, { file_id: fileId })
 }
 
+/** Queues the indexing of every document of a collection that is still waiting (a collection of a folder source); says how many it queued. */
+export async function indexCollection(id: string): Promise<number> {
+  const answer = await api.post<{ queued?: number }>(`/corpora/${encodeURIComponent(id)}/ingest`, { all: true })
+  return answer.queued ?? 0
+}
+
 /** Whether an embedding model is set: without one, documents are kept but never indexed. Null when it cannot be known. */
 export async function isIndexingConfigured(): Promise<boolean | null> {
   try {
