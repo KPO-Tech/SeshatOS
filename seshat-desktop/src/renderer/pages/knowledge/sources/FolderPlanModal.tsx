@@ -248,7 +248,7 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
 
         <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--border-soft)] px-5 py-3">
           <span className="text-[11.5px] text-[var(--text-muted)]">{plan ? 'The plan is kept for an hour.' : 'Choose a folder to begin.'}</span>
-          <SoftButton disabled title="Creating and indexing the collections is not built yet">Create collections</SoftButton>
+          <SoftButton tone="primary" disabled title="Creating and indexing the collections is not built yet">Create collections</SoftButton>
         </footer>
       </div>
     </div>
