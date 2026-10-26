@@ -16,7 +16,9 @@ type corpusResponse struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	ChunkCount  int    `json:"chunk_count"`
+	// SourceID is the source the collection comes from; empty for the default source.
+	SourceID   string `json:"source_id,omitempty"`
+	ChunkCount int    `json:"chunk_count"`
 	// FileCount is set on the list only: the number of documents the collection holds.
 	FileCount *int  `json:"file_count,omitempty"`
 	CreatedAt int64 `json:"created_at"`
@@ -60,6 +62,7 @@ func corpusToResponse(c knowledge.Corpus) corpusResponse {
 		WorkspaceID: c.WorkspaceID,
 		Name:        c.Name,
 		Description: c.Description,
+		SourceID:    c.SourceID,
 		ChunkCount:  c.ChunkCount,
 		CreatedAt:   c.CreatedAt.Unix(),
 		UpdatedAt:   c.UpdatedAt.Unix(),

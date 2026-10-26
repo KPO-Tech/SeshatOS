@@ -106,3 +106,37 @@ func TestCorpusFileSourcePathIsAddedToAnExistingDatabase(t *testing.T) {
 		t.Fatalf("files = %+v", files)
 	}
 }
+
+// A database made before collections had a source gets the sources table and the collections' source_id when it is opened.
+func TestKnowledgeSourcesAreAddedToAnExistingDatabase(t *testing.T) {
+	ctx := context.Background()
+	database := openTestDB(t)
+	m := database.gormDB.Migrator()
+	if err := m.DropColumn(&gCorpus{}, "source_id"); err != nil {
+		t.Fatalf("drop column: %v", err)
+	}
+	if err := m.DropTable(&gKnowledgeSource{}); err != nil {
+		t.Fatalf("drop table: %v", err)
+	}
+	var run func(context.Context, *DB) error
+	for _, mig := range backendMigrations() {
+		if mig.ID == "20261026_055_knowledge_sources" {
+			run = mig.Run
+		}
+	}
+	if run == nil {
+		t.Fatal("the migration is not registered")
+	}
+	if err := run(ctx, database); err != nil {
+		t.Fatalf("migration: %v", err)
+	}
+	store, _ := NewCorpusStore(database)
+	src, err := store.CreateSource(ctx, CreateKnowledgeSourceParams{UserID: "u", Kind: KnowledgeSourceLocalFolder, Name: "n", Root: "/x"})
+	if err != nil {
+		t.Fatalf("create source: %v", err)
+	}
+	c, err := store.Create(ctx, CreateCorpusParams{UserID: "u", Name: "kb", SourceID: src.ID})
+	if err != nil || c.SourceID != src.ID {
+		t.Fatalf("create corpus under the source: %+v, %v", c, err)
+	}
+}

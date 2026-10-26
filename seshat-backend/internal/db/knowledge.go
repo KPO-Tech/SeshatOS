@@ -26,10 +26,12 @@ type Corpus struct {
 	WorkspaceID string
 	Name        string
 	Description string
-	Status      string
-	ChunkCount  int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	// SourceID is the knowledge source the collection comes from; empty for the default source (made in the app).
+	SourceID   string
+	Status     string
+	ChunkCount int
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type CorpusFile struct {
@@ -50,6 +52,7 @@ type CreateCorpusParams struct {
 	WorkspaceID string // optional
 	Name        string
 	Description string
+	SourceID    string // optional: empty for the default source
 }
 
 type UpdateCorpusParams struct {
@@ -75,6 +78,7 @@ type gCorpus struct {
 	Name          string  `gorm:"not null"`
 	Description   string  `gorm:"not null;default:''"`
 	Status        string  `gorm:"not null;default:'active';index"`
+	SourceID      string  `gorm:"column:source_id;size:64;not null;default:'';index"`
 	ChunkCount    int     `gorm:"column:chunk_count;not null;default:0"`
 	CreatedAtUnix int64   `gorm:"column:created_at_unix;autoCreateTime:unix"`
 	UpdatedAtUnix int64   `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
@@ -103,6 +107,7 @@ func corpusFromGorm(g gCorpus) Corpus {
 		UserID:      g.UserID,
 		Name:        g.Name,
 		Description: g.Description,
+		SourceID:    g.SourceID,
 		Status:      g.Status,
 		ChunkCount:  g.ChunkCount,
 		CreatedAt:   time.Unix(g.CreatedAtUnix, 0).UTC(),
@@ -157,6 +162,7 @@ func (s *CorpusStore) Create(ctx context.Context, params CreateCorpusParams) (*C
 		UserID:        params.UserID,
 		Name:          params.Name,
 		Description:   params.Description,
+		SourceID:      params.SourceID,
 		Status:        CorpusStatusActive,
 		CreatedAtUnix: now.Unix(),
 		UpdatedAtUnix: now.Unix(),

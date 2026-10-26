@@ -45,6 +45,7 @@ type folderPlanDuplicate struct {
 
 type folderPlanResponse struct {
 	ID               string                 `json:"id"`
+	SourceID         string                 `json:"source_id,omitempty"`
 	Root             string                 `json:"root"`
 	Listed           int                    `json:"listed"`
 	Collections      []folderPlanCollection `json:"collections"`
@@ -56,7 +57,7 @@ type folderPlanResponse struct {
 }
 
 func folderPlanSummary(an *folderplan.Analysis) folderPlanResponse {
-	resp := folderPlanResponse{ID: an.ID, Root: an.Root, Listed: an.Listed, ExcludedByReason: map[string]int{}}
+	resp := folderPlanResponse{ID: an.ID, SourceID: an.SourceID, Root: an.Root, Listed: an.Listed, ExcludedByReason: map[string]int{}}
 	for i, c := range an.Plan.Collections {
 		item := folderPlanCollection{Index: i, Name: c.Name, FileCount: len(c.Files), Bytes: c.Bytes, Folders: c.Folders, Sample: c.Files}
 		if len(item.Folders) > 20 {
@@ -111,10 +112,24 @@ func (a *App) handleKnowledgeFolderPlans(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	var body struct {
-		Path string `json:"path"`
+		Path     string `json:"path"`
+		SourceID string `json:"source_id"`
 	}
 	if !decodeJSONBody(w, r, &body) {
 		return
+	}
+	// A plan made for a source analyses the folder of that source, whatever path is sent.
+	if body.SourceID != "" {
+		svc, ok := a.localKnowledge(w)
+		if !ok {
+			return
+		}
+		src, err := svc.GetSource(r.Context(), principal, body.SourceID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		body.Path = src.Root
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), folderPlanTimeout)
 	defer cancel()
@@ -133,7 +148,7 @@ func (a *App) handleKnowledgeFolderPlans(w http.ResponseWriter, r *http.Request)
 		writeJSONError(w, http.StatusInternalServerError, "the folder could not be analysed: "+err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, folderPlanSummary(a.folderPlans.Add(principal.User.ID, root, listed, plan)))
+	writeJSON(w, http.StatusOK, folderPlanSummary(a.folderPlans.AddFor(principal.User.ID, body.SourceID, root, listed, plan)))
 }
 
 // handleKnowledgeFolderPlan serves what hangs under /knowledge/folder-plans/{id}:
@@ -267,7 +282,7 @@ func (a *App) createFolderPlanCollections(w http.ResponseWriter, r *http.Request
 		}
 		collections = append(collections, lc)
 	}
-	made, err := svc.CreateLocalCollections(r.Context(), principal, collections)
+	made, err := svc.CreateLocalCollections(r.Context(), principal, an.SourceID, collections)
 	if err != nil {
 		writeBackendError(w, err)
 		return

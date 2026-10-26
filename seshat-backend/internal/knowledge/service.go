@@ -846,6 +846,7 @@ func corpusFromDB(r db.Corpus) *Corpus {
 		WorkspaceID: r.WorkspaceID,
 		Name:        r.Name,
 		Description: r.Description,
+		SourceID:    r.SourceID,
 		ChunkCount:  r.ChunkCount,
 		CreatedAt:   r.CreatedAt,
 		UpdatedAt:   r.UpdatedAt,

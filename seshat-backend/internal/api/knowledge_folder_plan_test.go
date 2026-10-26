@@ -338,3 +338,69 @@ func TestOnlyThePersonWhoMadeAPlanCanCreateItsCollections(t *testing.T) {
 		t.Errorf("connected device: status %d, want 409", rec.Code)
 	}
 }
+
+func doJSON(app *App, handler func(http.ResponseWriter, *http.Request), method, path, userID, body string) *httptest.ResponseRecorder {
+	req := withPrincipal(httptest.NewRequest(method, path, strings.NewReader(body)), userID)
+	rec := httptest.NewRecorder()
+	handler(rec, req)
+	return rec
+}
+
+func TestAFolderBecomesASourceThatItsPlanAndCollectionsBelongTo(t *testing.T) {
+	app, _ := folderPlanAppWithKnowledge(t)
+	root := archiveOnDisk(t)
+
+	rec := doJSON(app, app.handleKnowledgeSources, http.MethodPost, "/knowledge/sources", "user-1", `{"kind":"local_folder","path":`+quote(root)+`}`)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("add source: status %d: %s", rec.Code, rec.Body.String())
+	}
+	var src knowledge.Source
+	_ = json.Unmarshal(rec.Body.Bytes(), &src)
+	if src.ID == "" || src.Root != filepath.Clean(root) {
+		t.Fatalf("source = %+v", src)
+	}
+	if rec := doJSON(app, app.handleKnowledgeSources, http.MethodPost, "/knowledge/sources", "user-1", `{"kind":"local_folder","path":`+quote(root)+`}`); rec.Code != http.StatusConflict {
+		t.Errorf("the same folder twice: status %d, want 409", rec.Code)
+	}
+	if rec := doJSON(app, app.handleKnowledgeSources, http.MethodPost, "/knowledge/sources", "user-1", `{"kind":"local_folder","path":"relative/dir"}`); rec.Code != http.StatusBadRequest {
+		t.Errorf("a relative path: status %d, want 400", rec.Code)
+	}
+
+	// A plan made for the source analyses the source's folder, whatever path is sent, and its collections belong to the source.
+	rec = doJSON(app, app.handleKnowledgeFolderPlans, http.MethodPost, "/knowledge/folder-plans", "user-1", `{"source_id":`+quote(src.ID)+`,"path":"/elsewhere"}`)
+	var plan folderPlanResponse
+	_ = json.Unmarshal(rec.Body.Bytes(), &plan)
+	if rec.Code != http.StatusOK || plan.SourceID != src.ID || plan.Listed != 9 {
+		t.Fatalf("plan for the source: status %d: %s", rec.Code, rec.Body.String())
+	}
+	if rec := createFolderPlan(app, "user-1", plan.ID); rec.Code != http.StatusCreated {
+		t.Fatalf("create: status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	rec = doJSON(app, app.handleKnowledgeSources, http.MethodGet, "/knowledge/sources", "user-1", "")
+	var list struct {
+		Default struct {
+			Count int `json:"collection_count"`
+		} `json:"default"`
+		Sources []knowledge.Source `json:"sources"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &list)
+	if len(list.Sources) != 1 || list.Sources[0].Count != 2 || list.Default.Count != 0 {
+		t.Fatalf("list = %s", rec.Body.String())
+	}
+
+	if rec := doJSON(app, app.handleKnowledgeSource, http.MethodDelete, "/knowledge/sources/"+src.ID, "user-1", ""); rec.Code != http.StatusConflict {
+		t.Errorf("a source with collections: status %d, want 409", rec.Code)
+	}
+	if rec := doJSON(app, app.handleKnowledgeSource, http.MethodDelete, "/knowledge/sources/"+src.ID, "user-2", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("another person: status %d, want 404", rec.Code)
+	}
+}
+
+func TestAPlanForAnUnknownSourceIsRefused(t *testing.T) {
+	app, _ := folderPlanAppWithKnowledge(t)
+	rec := doJSON(app, app.handleKnowledgeFolderPlans, http.MethodPost, "/knowledge/folder-plans", "user-1", `{"source_id":"src_nope"}`)
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("status %d, want 404", rec.Code)
+	}
+}

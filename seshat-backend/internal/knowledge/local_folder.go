@@ -40,12 +40,12 @@ func LocalFileID(path string) string {
 	return "local-" + hex.EncodeToString(sum[:])[:32]
 }
 
-// CreateLocalCollections creates collections whose files stay where they are on this computer. Each file is recorded as waiting to be
+// CreateLocalCollections creates collections, under the source when sourceID is not empty, whose files stay where they are on this computer. Each file is recorded as waiting to be
 // indexed, with its path; none is read here, and no indexing job is queued (indexing is a separate step).
 //
 // It is all or nothing: a name that a collection of the person already has refuses the whole request before anything is made, and a
 // failure half way removes what was made.
-func (s *Service) CreateLocalCollections(ctx context.Context, principal *backendauth.Principal, collections []LocalCollection) ([]CreatedLocalCollection, error) {
+func (s *Service) CreateLocalCollections(ctx context.Context, principal *backendauth.Principal, sourceID string, collections []LocalCollection) ([]CreatedLocalCollection, error) {
 	if s == nil || s.corpora == nil {
 		return nil, bkerr.Unavailable("knowledge store not configured", nil)
 	}
@@ -54,6 +54,11 @@ func (s *Service) CreateLocalCollections(ctx context.Context, principal *backend
 	}
 	if len(collections) == 0 {
 		return nil, bkerr.InvalidInput("there is no collection to create", nil)
+	}
+	if sourceID != "" {
+		if _, err := s.GetSource(ctx, principal, sourceID); err != nil {
+			return nil, err
+		}
 	}
 	existing, err := s.corpora.ListByUserID(ctx, principal.User.ID)
 	if err != nil {
@@ -94,7 +99,7 @@ func (s *Service) CreateLocalCollections(ctx context.Context, principal *backend
 		}
 	}
 	for _, c := range collections {
-		record, err := s.corpora.Create(ctx, db.CreateCorpusParams{UserID: principal.User.ID, Name: strings.TrimSpace(c.Name), Description: c.Description})
+		record, err := s.corpora.Create(ctx, db.CreateCorpusParams{UserID: principal.User.ID, Name: strings.TrimSpace(c.Name), Description: c.Description, SourceID: sourceID})
 		if err != nil {
 			rollback()
 			return nil, bkerr.Internal("create corpus: "+err.Error(), err)

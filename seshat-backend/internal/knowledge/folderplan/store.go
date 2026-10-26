@@ -14,9 +14,11 @@ import (
 // Analysis is a plan made from a folder, kept for the person who asked for it. A stored Analysis is never changed in place (Update stores
 // a new version), so one that was read can be used without a lock.
 type Analysis struct {
-	ID      string
-	UserID  string
-	Root    string
+	ID     string
+	UserID string
+	// SourceID is the knowledge source the plan was made for; empty for a folder that is not a source.
+	SourceID string
+	Root     string
 	Created time.Time
 	// Listed is how many entries the scan found, before the plan left some out.
 	Listed int
@@ -46,10 +48,15 @@ func NewStore(ttl time.Duration, perUser int) *Store {
 
 // Add stores an analysis for a person and returns it with its id.
 func (s *Store) Add(userID, root string, listed int, plan collectionplan.Plan) *Analysis {
+	return s.AddFor(userID, "", root, listed, plan)
+}
+
+// AddFor is Add for a plan made for a knowledge source: the collections it creates belong to that source.
+func (s *Store) AddFor(userID, sourceID, root string, listed int, plan collectionplan.Plan) *Analysis {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.expireLocked()
-	a := &Analysis{ID: newID(), UserID: userID, Root: root, Created: s.now(), Listed: listed, Plan: plan}
+	a := &Analysis{ID: newID(), UserID: userID, SourceID: sourceID, Root: root, Created: s.now(), Listed: listed, Plan: plan}
 	s.items[a.ID] = a
 
 	var mine []*Analysis

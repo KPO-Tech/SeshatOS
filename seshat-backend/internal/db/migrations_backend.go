@@ -381,6 +381,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gCorpusFile{})
 			},
 		},
+		{
+			ID:    "20261026_055_knowledge_sources",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeSource{}, &gCorpus{})
+			},
+		},
 	}
 }
 
