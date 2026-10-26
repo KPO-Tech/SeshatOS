@@ -861,6 +861,7 @@ func corpusFileFromDB(r db.CorpusFile) *CorpusFile {
 		ChunkCount: r.ChunkCount,
 		IngestedAt: r.IngestedAt,
 		CreatedAt:  r.CreatedAt,
+		SourcePath: r.SourcePath,
 	}
 }
 

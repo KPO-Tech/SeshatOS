@@ -3,13 +3,15 @@ import { SoftButton } from '@renderer/components/config/knowledge/KnowledgePrimi
 import {
   analyseFolder,
   collectionFiles,
+  createCollections,
   mergeCollections,
   removeCollection,
   renameCollection,
+  type CreatedCollection,
   type FolderPlan,
   type FolderPlanCollection
 } from './folderPlanApi'
-import { formatSize, planSentence, plural, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
+import { createdSentence, formatSize, planSentence, plural, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
 
 type LoadedFiles = { files: string[]; total: number }
 
@@ -20,12 +22,12 @@ function errorText(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback
 }
 
-// Proposes the collections of a folder of this computer, and lets the person adjust them. The folder is listed, not read, and nothing is
-// created here yet: the plan lives on the backend until it is thrown away or used.
+// Proposes the collections of a folder of this computer, and lets the person adjust them. The folder is listed, not read; the plan lives
+// on the backend until it is thrown away or used. Creating the collections records the files where they are, waiting to be indexed.
 export function FolderPlanModal({ onClose }: { onClose: () => void }) {
   const [path, setPath] = useState('')
   const [plan, setPlan] = useState<FolderPlan | null>(null)
-  const [busy, setBusy] = useState<'analysing' | 'editing' | null>(null)
+  const [busy, setBusy] = useState<'analysing' | 'editing' | 'creating' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<number[]>([])
   const [renaming, setRenaming] = useState<{ index: number; value: string } | null>(null)
@@ -33,6 +35,7 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
   const [expanded, setExpanded] = useState<number[]>([])
   const [files, setFiles] = useState<Record<number, LoadedFiles>>({})
   const [showLeftOut, setShowLeftOut] = useState(false)
+  const [created, setCreated] = useState<CreatedCollection[] | null>(null)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -65,6 +68,19 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
       showPlan(await analyseFolder(path.trim()))
     } catch (err) {
       setError(errorText(err, 'The folder could not be analysed.'))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function create() {
+    if (!plan || plan.collections.length === 0 || busy) return
+    setBusy('creating')
+    setError(null)
+    try {
+      setCreated((await createCollections(plan.id)).collections)
+    } catch (err) {
+      setError(errorText(err, 'The collections could not be created.'))
     } finally {
       setBusy(null)
     }
@@ -136,6 +152,25 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
         </header>
 
         <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          {created ? (
+            <section className="space-y-3">
+              <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3">
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{createdSentence(created)}</div>
+                <p className="mt-1 text-[12px] leading-5 text-[var(--text-muted)]">
+                  The files stay where they are on this computer; nothing was read or copied. Indexing them is the next step, not built yet.
+                </p>
+              </div>
+              <ul className="space-y-1.5">
+                {created.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-soft)] px-4 py-2.5">
+                    <span className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{c.name}</span>
+                    <span className="shrink-0 text-[12px] text-[var(--text-muted)]">{plural(c.file_count, 'file')} · waiting</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : (
+          <>
           <div className="flex items-center gap-2">
             <input
               value={path}
@@ -166,7 +201,7 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
                   {plan.root} · {plural(plan.listed, 'entry', 'entries')} listed
                 </div>
                 <p className="mt-2 text-[12px] leading-5 text-[var(--text-muted)]">
-                  This is a proposal and nothing has been created. Rename, merge or remove collections until it suits you. Creating and indexing them is the next step, not built yet.
+                  This is a proposal and nothing has been created. Rename, merge or remove collections until it suits you, then create them: the files stay where they are and are not read until they are indexed (not built yet).
                 </p>
               </section>
 
@@ -244,11 +279,19 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
               )}
             </>
           )}
+          </>
+          )}
         </div>
 
         <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--border-soft)] px-5 py-3">
-          <span className="text-[11.5px] text-[var(--text-muted)]">{plan ? 'The plan is kept for an hour.' : 'Choose a folder to begin.'}</span>
-          <SoftButton tone="primary" disabled title="Creating and indexing the collections is not built yet">Create collections</SoftButton>
+          <span className="text-[11.5px] text-[var(--text-muted)]">{created ? 'Done.' : plan ? 'The plan is kept for an hour.' : 'Choose a folder to begin.'}</span>
+          {created ? (
+            <SoftButton tone="primary" onClick={onClose}>Done</SoftButton>
+          ) : (
+            <SoftButton tone="primary" onClick={() => void create()} disabled={!plan || plan.collections.length === 0 || busy !== null}>
+              {busy === 'creating' ? 'Creating...' : 'Create collections'}
+            </SoftButton>
+          )}
         </footer>
       </div>
     </div>

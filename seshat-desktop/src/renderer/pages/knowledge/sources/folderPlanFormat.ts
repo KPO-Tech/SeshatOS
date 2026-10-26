@@ -1,4 +1,4 @@
-import type { FolderPlan } from './folderPlanApi'
+import type { CreatedCollection, FolderPlan } from './folderPlanApi'
 
 /** A size for a person: "12 KB", "3.4 MB". */
 export function formatSize(bytes: number): string {
@@ -61,4 +61,10 @@ export function suggestedMergeName(plan: Pick<FolderPlan, 'collections'>, indexe
 export function shortPath(path: string, keep = 2): string {
   const parts = path.split(/[\\/]+/).filter(Boolean)
   return parts.length <= keep ? path : `.../${parts.slice(-keep).join('/')}`
+}
+
+/** "5 collections created, 193 files waiting to be indexed." */
+export function createdSentence(collections: CreatedCollection[]): string {
+  const files = collections.reduce((sum, c) => sum + c.file_count, 0)
+  return `${plural(collections.length, 'collection')} created, ${plural(files, 'file')} waiting to be indexed.`
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,10 @@ import (
 	"testing"
 	"time"
 
+	seshat "github.com/KPO-Tech/SeshatOS/seshat-backend/internal"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 )
 
@@ -245,5 +250,91 @@ func TestAnotherPersonCannotChangeAPlanAndOtherMethodsAreRefused(t *testing.T) {
 	app.handleKnowledgeFolderPlan(rec, req)
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("without a person: status %d, want 401", rec.Code)
+	}
+}
+
+func folderPlanAppWithKnowledge(t *testing.T) (*App, *knowledge.Service) {
+	t.Helper()
+	database, err := db.Open(context.Background(), db.DefaultSQLiteConfig(filepath.Join(t.TempDir(), "plan-test.db")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { database.Close() })
+	corpora, err := db.NewCorpusStore(database)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := knowledge.NewService(corpora, nil, nil, nil, nil)
+	return &App{folderPlans: folderplan.NewStore(time.Hour, 10), backend: &seshat.App{Knowledge: svc}}, svc
+}
+
+func createFolderPlan(app *App, userID, id string) *httptest.ResponseRecorder {
+	req := withPrincipal(httptest.NewRequest(http.MethodPost, "/knowledge/folder-plans/"+id+"/create", nil), userID)
+	rec := httptest.NewRecorder()
+	app.handleKnowledgeFolderPlan(rec, req)
+	return rec
+}
+
+func TestAPlanBecomesCollectionsOnceAndKeepsTheFilesWhereTheyAre(t *testing.T) {
+	app, svc := folderPlanAppWithKnowledge(t)
+	plan := analysedPlan(t, app)
+
+	rec := createFolderPlan(app, "user-1", plan.ID)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		Collections []createdCollectionResponse `json:"collections"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Collections) != 2 || resp.Collections[0].Name != "Contracts" || resp.Collections[0].FileCount != 6 {
+		t.Fatalf("collections = %+v", resp.Collections)
+	}
+
+	files, err := svc.ListFiles(context.Background(), &backendauth.Principal{User: backendauth.User{ID: "user-1"}}, resp.Collections[0].ID)
+	if err != nil || len(files) != 6 {
+		t.Fatalf("files = %d, err %v", len(files), err)
+	}
+	for _, f := range files {
+		if f.Status != "pending" || !filepath.IsAbs(f.SourcePath) || !strings.HasSuffix(filepath.ToSlash(f.SourcePath), "/"+f.Filename) {
+			t.Errorf("file %+v is not recorded where it is", f)
+		}
+	}
+
+	if rec := createFolderPlan(app, "user-1", plan.ID); rec.Code != http.StatusNotFound {
+		t.Errorf("asking twice: status %d, want 404 (the plan is spent)", rec.Code)
+	}
+}
+
+func TestAPlanThatClashesWithACollectionIsKeptSoThatItCanBeRenamed(t *testing.T) {
+	app, _ := folderPlanAppWithKnowledge(t)
+	plan := analysedPlan(t, app)
+	if rec := createFolderPlan(app, "user-1", plan.ID); rec.Code != http.StatusCreated {
+		t.Fatalf("first creation: status %d", rec.Code)
+	}
+	again := analysedPlan(t, app)
+	if rec := createFolderPlan(app, "user-1", again.ID); rec.Code != http.StatusConflict {
+		t.Fatalf("same names: status %d, want 409", rec.Code)
+	}
+	if rec := patchFolderPlan(app, "user-1", again.ID, `{"op":"rename","index":0,"name":"Contracts 2"}`); rec.Code != http.StatusOK {
+		t.Fatalf("the plan should still be there: status %d", rec.Code)
+	}
+	if rec := patchFolderPlan(app, "user-1", again.ID, `{"op":"rename","index":1,"name":"Memos"}`); rec.Code != http.StatusOK {
+		t.Fatalf("rename: status %d", rec.Code)
+	}
+	if rec := createFolderPlan(app, "user-1", again.ID); rec.Code != http.StatusCreated {
+		t.Fatalf("after renaming: status %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestOnlyThePersonWhoMadeAPlanCanCreateItsCollections(t *testing.T) {
+	app, _ := folderPlanAppWithKnowledge(t)
+	plan := analysedPlan(t, app)
+	if rec := createFolderPlan(app, "user-2", plan.ID); rec.Code != http.StatusNotFound {
+		t.Errorf("another person: status %d, want 404", rec.Code)
+	}
+	app.connectedServerURL = "https://cloud.example.test"
+	if rec := createFolderPlan(app, "user-1", plan.ID); rec.Code != http.StatusConflict {
+		t.Errorf("connected device: status %d, want 409", rec.Code)
 	}
 }

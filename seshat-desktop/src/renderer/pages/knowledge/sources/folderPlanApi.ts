@@ -46,3 +46,10 @@ export function mergeCollections(planId: string, indexes: number[], name: string
 export function collectionFiles(planId: string, index: number, offset: number, limit = 100) {
   return api.get<FolderPlanFiles>(`/knowledge/folder-plans/${planId}/files?collection=${index}&offset=${offset}&limit=${limit}`)
 }
+
+export type CreatedCollection = { id: string; name: string; file_count: number }
+
+/** Makes the collections of the plan as it stands. The files stay where they are and wait to be indexed; the plan is spent. */
+export function createCollections(planId: string) {
+  return api.post<{ collections: CreatedCollection[] }>(`/knowledge/folder-plans/${planId}/create`, {})
+}

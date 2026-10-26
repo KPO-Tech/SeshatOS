@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FolderPlan } from './folderPlanApi'
-import { formatSize, planSentence, plural, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
+import { createdSentence, formatSize, planSentence, plural, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
 
 const plan = (over: Partial<FolderPlan> = {}): FolderPlan => ({
   id: 'p',
@@ -79,5 +79,16 @@ describe('shortPath', () => {
     expect(shortPath('C:\\Users\\me\\Documents\\Archive\\2021')).toBe('.../Archive/2021')
     expect(shortPath('/data/archive/2021')).toBe('.../archive/2021')
     expect(shortPath('Archive/2021')).toBe('Archive/2021')
+  })
+})
+
+describe('createdSentence', () => {
+  it('says how many collections were made and how many files wait', () => {
+    const made = [
+      { id: 'a', name: 'Legal', file_count: 48 },
+      { id: 'b', name: 'Finance', file_count: 47 }
+    ]
+    expect(createdSentence(made)).toBe('2 collections created, 95 files waiting to be indexed.')
+    expect(createdSentence([{ id: 'a', name: 'Legal', file_count: 1 }])).toBe('1 collection created, 1 file waiting to be indexed.')
   })
 })

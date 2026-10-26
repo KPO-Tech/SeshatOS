@@ -21,6 +21,8 @@ type CorpusFile struct {
 	ChunkCount int        `json:"chunk_count"`
 	IngestedAt *time.Time `json:"ingested_at,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
+	// SourcePath is where the file is on this computer, for a file indexed from a folder; empty for an uploaded one. Never sent to a client.
+	SourcePath string `json:"-"`
 }
 
 // DownloadedFile carries a corpus file's raw bytes and the metadata needed

@@ -40,6 +40,9 @@ type CorpusFile struct {
 	ChunkCount int
 	IngestedAt *time.Time
 	CreatedAt  time.Time
+	// SourcePath is the absolute path of the file on this computer, for a file that is indexed from where it is (a folder of this
+	// computer) rather than uploaded; empty for every other file.
+	SourcePath string
 }
 
 type CreateCorpusParams struct {
@@ -60,6 +63,7 @@ type UpsertCorpusFileParams struct {
 	Filename   string
 	Status     string
 	ChunkCount int
+	SourcePath string
 }
 
 // ─── GORM private models ─────────────────────────────────────────────────────
@@ -86,6 +90,7 @@ type gCorpusFile struct {
 	ChunkCount     int    `gorm:"column:chunk_count;not null;default:0"`
 	IngestedAtUnix *int64 `gorm:"column:ingested_at_unix"`
 	CreatedAtUnix  int64  `gorm:"column:created_at_unix;autoCreateTime:unix"`
+	SourcePath     string `gorm:"column:source_path;not null;default:''"`
 }
 
 func (gCorpusFile) TableName() string { return "corpus_files" }
@@ -117,6 +122,7 @@ func corpusFileFromGorm(g gCorpusFile) CorpusFile {
 		Status:     g.Status,
 		ChunkCount: g.ChunkCount,
 		CreatedAt:  time.Unix(g.CreatedAtUnix, 0).UTC(),
+		SourcePath: g.SourcePath,
 	}
 	if g.IngestedAtUnix != nil {
 		t := time.Unix(*g.IngestedAtUnix, 0).UTC()
@@ -254,6 +260,7 @@ func (s *CorpusStore) AddFile(ctx context.Context, params UpsertCorpusFileParams
 		Status:        status,
 		ChunkCount:    params.ChunkCount,
 		CreatedAtUnix: now.Unix(),
+		SourcePath:    params.SourcePath,
 	}
 	if err := s.db.GormDB().WithContext(ctx).
 		Clauses(clause.OnConflict{DoNothing: true}).

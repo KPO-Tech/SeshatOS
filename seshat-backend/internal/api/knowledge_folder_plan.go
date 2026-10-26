@@ -5,11 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 	"github.com/KPO-Tech/seshat-runtime/pkg/collectionplan"
 )
@@ -135,6 +139,7 @@ func (a *App) handleKnowledgeFolderPlans(w http.ResponseWriter, r *http.Request)
 // handleKnowledgeFolderPlan serves what hangs under /knowledge/folder-plans/{id}:
 //
 //	GET   /api/v1/knowledge/folder-plans/{id}/files?collection=<index>&offset=<n>&limit=<n>   the files of one collection
+//	POST  /api/v1/knowledge/folder-plans/{id}/create   makes the collections of the plan (see createFolderPlanCollections)
 //	PATCH /api/v1/knowledge/folder-plans/{id}   {"op":"rename","index":0,"name":"..."} | {"op":"remove","index":0} | {"op":"merge","indexes":[0,2],"name":"..."}
 //
 // A change only reorganises the files the scan found, by the index of the collections of the plan the person is looking at; the answer
@@ -152,7 +157,9 @@ func (a *App) handleKnowledgeFolderPlan(w http.ResponseWriter, r *http.Request) 
 		a.serveFolderPlanFiles(w, r, principal.User.ID, parts[0])
 	case r.Method == http.MethodPatch && len(parts) == 1 && parts[0] != "":
 		a.editFolderPlan(w, r, principal.User.ID, parts[0])
-	case len(parts) == 2 && parts[1] == "files", len(parts) == 1 && parts[0] != "":
+	case r.Method == http.MethodPost && len(parts) == 2 && parts[1] == "create":
+		a.createFolderPlanCollections(w, r, principal, parts[0])
+	case len(parts) == 2 && (parts[1] == "files" || parts[1] == "create"), len(parts) == 1 && parts[0] != "":
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	default:
 		http.NotFound(w, r)
@@ -218,4 +225,64 @@ func (a *App) serveFolderPlanFiles(w http.ResponseWriter, r *http.Request, userI
 	page := append([]string(nil), files[offset:end]...)
 	sort.Strings(page)
 	writeJSON(w, http.StatusOK, map[string]any{"collection": an.Plan.Collections[index].Name, "total": len(files), "offset": offset, "files": page})
+}
+
+type createdCollectionResponse struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	FileCount int    `json:"file_count"`
+}
+
+// createFolderPlanCollections makes the collections of a plan, as the plan stands when the request arrives.
+//
+//	POST /api/v1/knowledge/folder-plans/{id}/create
+//
+// The files stay where they are: each collection records them, waiting to be indexed, with the path the scan found them at. Nothing is
+// read and nothing is indexed here. All collections are made or none; a name the person already uses is refused (409), and the plan is
+// kept so that they can rename it and ask again. Once the collections exist the plan is spent, so that asking twice cannot make them twice.
+func (a *App) createFolderPlanCollections(w http.ResponseWriter, r *http.Request, principal *backendauth.Principal, id string) {
+	if a.connectedServerURL != "" {
+		writeJSONError(w, http.StatusConflict, "folders can be used on this computer only, not on a device connected to an organization")
+		return
+	}
+	svc, ok := a.backend.Knowledge.(*knowledge.Service)
+	if !ok {
+		writeJSONError(w, http.StatusNotImplemented, "collections from a folder are not supported in connected mode")
+		return
+	}
+	an, ok := a.folderPlans.Get(principal.User.ID, id)
+	if !ok {
+		writeJSONError(w, http.StatusNotFound, "no such analysis: it may have expired, analyse the folder again")
+		return
+	}
+	if len(an.Plan.Collections) == 0 {
+		writeJSONError(w, http.StatusBadRequest, "the plan has no collection")
+		return
+	}
+	collections := make([]knowledge.LocalCollection, 0, len(an.Plan.Collections))
+	for _, c := range an.Plan.Collections {
+		lc := knowledge.LocalCollection{Name: c.Name, Description: "From " + an.Root}
+		for _, rel := range c.Files {
+			lc.Files = append(lc.Files, knowledge.LocalFile{Path: filepath.Join(an.Root, filepath.FromSlash(rel)), Name: rel})
+		}
+		collections = append(collections, lc)
+	}
+	made, err := svc.CreateLocalCollections(r.Context(), principal, collections)
+	if err != nil {
+		writeBackendError(w, err)
+		return
+	}
+	a.folderPlans.Delete(principal.User.ID, id)
+	resp := make([]createdCollectionResponse, 0, len(made))
+	for _, m := range made {
+		a.backend.Audit.Log(r.Context(), backendaudit.LogParams{
+			ActorUserID:  principal.User.ID,
+			Action:       backendaudit.ActionCorpusCreate,
+			ResourceType: "corpus",
+			ResourceID:   m.Corpus.ID,
+			IPAddress:    a.clientIP(r),
+		})
+		resp = append(resp, createdCollectionResponse{ID: m.Corpus.ID, Name: m.Corpus.Name, FileCount: m.FileCount})
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"collections": resp})
 }

@@ -97,6 +97,18 @@ func (s *Store) Update(userID, id string, fn func(*Analysis) error) (*Analysis, 
 	return &draft, nil
 }
 
+// Delete forgets an analysis of the person it was made for, and reports whether there was one.
+func (s *Store) Delete(userID, id string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	a, ok := s.items[id]
+	if !ok || a.UserID != userID {
+		return false
+	}
+	delete(s.items, id)
+	return true
+}
+
 // ErrNotFound is returned for an analysis that does not exist, has expired, or belongs to someone else.
 var ErrNotFound = errors.New("no such analysis")
 
