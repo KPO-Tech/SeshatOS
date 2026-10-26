@@ -27,8 +27,9 @@ export type FolderPlan = {
 
 export type FolderPlanFiles = { collection: string; total: number; offset: number; files: string[] }
 
-export function analyseFolder(path: string) {
-  return api.post<FolderPlan>('/knowledge/folder-plans', { path })
+/** Analyses the folder of a source: the backend uses the source's own folder, so the plan's collections belong to it. */
+export function analyseSource(sourceId: string) {
+  return api.post<FolderPlan>('/knowledge/folder-plans', { source_id: sourceId })
 }
 
 export function renameCollection(planId: string, index: number, name: string) {

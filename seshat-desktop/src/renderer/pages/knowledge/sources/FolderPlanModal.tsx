@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SoftButton } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import {
-  analyseFolder,
+  analyseSource,
   collectionFiles,
   createCollections,
   mergeCollections,
@@ -11,6 +11,7 @@ import {
   type FolderPlan,
   type FolderPlanCollection
 } from './folderPlanApi'
+import type { KnowledgeSource } from '../collections/sourcesApi'
 import { createdSentence, formatSize, planSentence, plural, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
 
 type LoadedFiles = { files: string[]; total: number }
@@ -24,8 +25,7 @@ function errorText(err: unknown, fallback: string): string {
 
 // Proposes the collections of a folder of this computer, and lets the person adjust them. The folder is listed, not read; the plan lives
 // on the backend until it is thrown away or used. Creating the collections records the files where they are, waiting to be indexed.
-export function FolderPlanModal({ onClose }: { onClose: () => void }) {
-  const [path, setPath] = useState('')
+export function FolderPlanModal({ source, onClose, onCreated }: { source: KnowledgeSource; onClose: () => void; onCreated: () => void }) {
   const [plan, setPlan] = useState<FolderPlan | null>(null)
   const [busy, setBusy] = useState<'analysing' | 'editing' | 'creating' | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -36,6 +36,12 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
   const [files, setFiles] = useState<Record<number, LoadedFiles>>({})
   const [showLeftOut, setShowLeftOut] = useState(false)
   const [created, setCreated] = useState<CreatedCollection[] | null>(null)
+
+  // The source says which folder to analyse: the analysis starts when the dialog opens.
+  useEffect(() => {
+    void analyse()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -55,17 +61,12 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
     setFiles({})
   }
 
-  async function browse() {
-    const result = await window.seshat?.dialog?.openDirectory?.()
-    if (result && !result.canceled && result.filePaths[0]) setPath(result.filePaths[0])
-  }
-
   async function analyse() {
-    if (!path.trim() || busy) return
+    if (busy) return
     setBusy('analysing')
     setError(null)
     try {
-      showPlan(await analyseFolder(path.trim()))
+      showPlan(await analyseSource(source.id))
     } catch (err) {
       setError(errorText(err, 'The folder could not be analysed.'))
     } finally {
@@ -79,6 +80,7 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
     setError(null)
     try {
       setCreated((await createCollections(plan.id)).collections)
+      onCreated()
     } catch (err) {
       setError(errorText(err, 'The collections could not be created.'))
     } finally {
@@ -141,9 +143,9 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
       >
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[var(--border-soft)] px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-[16px] font-semibold text-[var(--text-primary)]">Collections from a folder</h2>
+            <h2 className="text-[16px] font-semibold text-[var(--text-primary)]">Collections from {source.name}</h2>
             <p className="mt-1 text-[12px] leading-5 text-[var(--text-muted)]">
-              Seshat lists the files of a folder of this computer and proposes collections. It does not read, copy or send the files.
+              Seshat lists the files of this source and proposes collections. It does not read, copy or send the files.
             </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="flex size-8 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
@@ -172,17 +174,10 @@ export function FolderPlanModal({ onClose }: { onClose: () => void }) {
           ) : (
           <>
           <div className="flex items-center gap-2">
-            <input
-              value={path}
-              onChange={(event) => setPath(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && void analyse()}
-              placeholder="Folder, for example C:\Users\you\Documents\Archive"
-              aria-label="Folder to analyse"
-              className={`${inputClass} flex-1`}
-              spellCheck={false}
-            />
-            {typeof window.seshat?.dialog?.openDirectory === 'function' && <SoftButton onClick={() => void browse()} disabled={busy !== null}>Browse...</SoftButton>}
-            <SoftButton tone="primary" onClick={() => void analyse()} disabled={!path.trim() || busy !== null}>
+            <div className="flex h-9 min-w-0 flex-1 items-center rounded-md border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-secondary)]" title={source.root}>
+              <span className="truncate">{source.root}</span>
+            </div>
+            <SoftButton tone="primary" onClick={() => void analyse()} disabled={busy !== null}>
               {busy === 'analysing' ? 'Analysing...' : plan ? 'Analyse again' : 'Analyse'}
             </SoftButton>
           </div>

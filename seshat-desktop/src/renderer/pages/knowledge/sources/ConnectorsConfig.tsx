@@ -14,7 +14,8 @@ import {
   syncConnectorAccount
 } from './connectorsApi'
 import { StaticConnectorForm } from './StaticConnectorForm'
-import { FolderPlanModal } from './FolderPlanModal'
+import { useNavigate } from 'react-router'
+import { AddSourceDialog } from '../collections/AddSourceDialog'
 import { useDeviceMode } from '../useCanManage'
 import type { ConnectAccountPayload, ConnectorAccount, ConnectorDefinition, ConnectorKind, Corpus } from './connectorTypes'
 
@@ -28,6 +29,7 @@ export function ConnectorsConfig() {
   const [filter, setFilter] = useState<'all' | 'Knowledge' | 'Actions'>('all')
   const [openKind, setOpenKind] = useState<string | null>(null)
   const [folderOpen, setFolderOpen] = useState(false)
+  const navigate = useNavigate()
   const mode = useDeviceMode()
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
@@ -203,7 +205,7 @@ export function ConnectorsConfig() {
                 {group === 'Knowledge' && showFolder && (
                   <PluginCard
                     title="Local folder"
-                    description="Propose collections from a folder of this computer. The files are listed, not read."
+                    description="Add a folder of this computer as a source. Nothing is read until you analyse it."
                     icon={<FolderIcon />}
                     connected={false}
                     onOpen={() => setFolderOpen(true)}
@@ -230,7 +232,15 @@ export function ConnectorsConfig() {
         </div>
       )}
 
-      {folderOpen && <FolderPlanModal onClose={() => setFolderOpen(false)} />}
+      {folderOpen && (
+        <AddSourceDialog
+          onClose={() => setFolderOpen(false)}
+          onAdded={() => {
+            setFolderOpen(false)
+            navigate('/knowledge/collections')
+          }}
+        />
+      )}
 
       {opened && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-8 py-8 backdrop-blur-sm" onMouseDown={() => setOpenKind(null)}>
@@ -268,7 +278,7 @@ export function ConnectorsConfig() {
   )
 }
 
-const LOCAL_FOLDER_TEXT = 'local folder propose collections from a folder of this computer. the files are listed, not read.'
+const LOCAL_FOLDER_TEXT = 'local folder add a folder of this computer as a source. nothing is read until you analyse it.'
 
 function FolderIcon() {
   return (
