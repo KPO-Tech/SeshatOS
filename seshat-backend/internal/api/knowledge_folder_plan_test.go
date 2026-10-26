@@ -33,7 +33,7 @@ func folderPlanApp() *App {
 }
 
 func postFolderPlan(app *App, userID, body string) *httptest.ResponseRecorder {
-	req := withPrincipal(httptest.NewRequest(http.MethodPost, "/api/v1/knowledge/folder-plans", strings.NewReader(body)), userID)
+	req := withPrincipal(httptest.NewRequest(http.MethodPost, "/knowledge/folder-plans", strings.NewReader(body)), userID)
 	rec := httptest.NewRecorder()
 	app.handleKnowledgeFolderPlans(rec, req)
 	return rec
@@ -94,11 +94,11 @@ func quote(s string) string {
 func TestAnAnalysisNeedsASignedInPersonAndAPost(t *testing.T) {
 	app := folderPlanApp()
 	rec := httptest.NewRecorder()
-	app.handleKnowledgeFolderPlans(rec, httptest.NewRequest(http.MethodPost, "/api/v1/knowledge/folder-plans", strings.NewReader(`{}`)))
+	app.handleKnowledgeFolderPlans(rec, httptest.NewRequest(http.MethodPost, "/knowledge/folder-plans", strings.NewReader(`{}`)))
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("without a principal: status %d, want 401", rec.Code)
 	}
-	req := withPrincipal(httptest.NewRequest(http.MethodGet, "/api/v1/knowledge/folder-plans", nil), "user-1")
+	req := withPrincipal(httptest.NewRequest(http.MethodGet, "/knowledge/folder-plans", nil), "user-1")
 	rec = httptest.NewRecorder()
 	app.handleKnowledgeFolderPlans(rec, req)
 	if rec.Code != http.StatusMethodNotAllowed {
@@ -116,7 +116,7 @@ func TestADeviceConnectedToAnOrganizationDoesNotAnalyseFolders(t *testing.T) {
 }
 
 func getFiles(app *App, userID, id, query string) *httptest.ResponseRecorder {
-	req := withPrincipal(httptest.NewRequest(http.MethodGet, "/api/v1/knowledge/folder-plans/"+id+"/files?"+query, nil), userID)
+	req := withPrincipal(httptest.NewRequest(http.MethodGet, "/knowledge/folder-plans/"+id+"/files?"+query, nil), userID)
 	rec := httptest.NewRecorder()
 	app.handleKnowledgeFolderPlan(rec, req)
 	return rec
@@ -157,5 +157,93 @@ func TestAnotherPersonCannotReadAnAnalysis(t *testing.T) {
 	}
 	if rec := getFiles(app, "user-1", "unknown", "collection=0"); rec.Code != http.StatusNotFound {
 		t.Errorf("an unknown id: status %d, want 404", rec.Code)
+	}
+}
+
+func patchFolderPlan(app *App, userID, id, body string) *httptest.ResponseRecorder {
+	req := withPrincipal(httptest.NewRequest(http.MethodPatch, "/knowledge/folder-plans/"+id, strings.NewReader(body)), userID)
+	rec := httptest.NewRecorder()
+	app.handleKnowledgeFolderPlan(rec, req)
+	return rec
+}
+
+func analysedPlan(t *testing.T, app *App) folderPlanResponse {
+	t.Helper()
+	body, _ := json.Marshal(map[string]string{"path": archiveOnDisk(t)})
+	var plan folderPlanResponse
+	if err := json.Unmarshal(postFolderPlan(app, "user-1", string(body)).Body.Bytes(), &plan); err != nil {
+		t.Fatal(err)
+	}
+	return plan
+}
+
+func TestAPlanCanBeRenamedMergedAndRemovedFrom(t *testing.T) {
+	app := folderPlanApp()
+	plan := analysedPlan(t, app)
+
+	rec := patchFolderPlan(app, "user-1", plan.ID, `{"op":"rename","index":1,"name":"Memos"}`)
+	var renamed folderPlanResponse
+	_ = json.Unmarshal(rec.Body.Bytes(), &renamed)
+	if rec.Code != http.StatusOK || renamed.Collections[0].Name != "Contracts" || renamed.Collections[1].Name != "Memos" {
+		t.Fatalf("rename: status %d, %s", rec.Code, rec.Body.String())
+	}
+
+	rec = patchFolderPlan(app, "user-1", plan.ID, `{"op":"merge","indexes":[0,1],"name":"Everything"}`)
+	var merged folderPlanResponse
+	_ = json.Unmarshal(rec.Body.Bytes(), &merged)
+	if rec.Code != http.StatusOK || len(merged.Collections) != 1 || merged.Collections[0].FileCount != 8 || merged.Collections[0].Index != 0 {
+		t.Fatalf("merge: status %d, %s", rec.Code, rec.Body.String())
+	}
+
+	rec = patchFolderPlan(app, "user-1", plan.ID, `{"op":"remove","index":0}`)
+	var removed folderPlanResponse
+	_ = json.Unmarshal(rec.Body.Bytes(), &removed)
+	if rec.Code != http.StatusOK || len(removed.Collections) != 0 || removed.ExcludedByReason["removed from the plan"] != 8 {
+		t.Fatalf("remove: status %d, %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestAChangeThatTheStoredPlanCannotTakeIsRefusedAndChangesNothing(t *testing.T) {
+	app := folderPlanApp()
+	plan := analysedPlan(t, app)
+	bad := map[string]string{
+		"an unknown change":  `{"op":"delete-everything"}`,
+		"a missing index":    `{"op":"remove","index":9}`,
+		"a name taken":       `{"op":"rename","index":0,"name":"notes"}`,
+		"merging only one":   `{"op":"merge","indexes":[0],"name":"X"}`,
+		"a body that is bad": `[`,
+	}
+	for name, body := range bad {
+		if rec := patchFolderPlan(app, "user-1", plan.ID, body); rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400 (%s)", name, rec.Code, rec.Body.String())
+		}
+	}
+	rec := getFiles(app, "user-1", plan.ID, "collection=1")
+	var page struct {
+		Collection string `json:"collection"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &page)
+	if page.Collection != "Notes" {
+		t.Errorf("the plan changed after refused edits: %q", page.Collection)
+	}
+}
+
+func TestAnotherPersonCannotChangeAPlanAndOtherMethodsAreRefused(t *testing.T) {
+	app := folderPlanApp()
+	plan := analysedPlan(t, app)
+	if rec := patchFolderPlan(app, "user-2", plan.ID, `{"op":"remove","index":0}`); rec.Code != http.StatusNotFound {
+		t.Errorf("another person: status %d, want 404", rec.Code)
+	}
+	req := withPrincipal(httptest.NewRequest(http.MethodDelete, "/knowledge/folder-plans/"+plan.ID, nil), "user-1")
+	rec := httptest.NewRecorder()
+	app.handleKnowledgeFolderPlan(rec, req)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("a DELETE: status %d, want 405", rec.Code)
+	}
+	req = httptest.NewRequest(http.MethodPatch, "/knowledge/folder-plans/"+plan.ID, strings.NewReader(`{}`))
+	rec = httptest.NewRecorder()
+	app.handleKnowledgeFolderPlan(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("without a person: status %d, want 401", rec.Code)
 	}
 }

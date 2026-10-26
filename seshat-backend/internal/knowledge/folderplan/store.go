@@ -3,6 +3,7 @@ package folderplan
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"sort"
 	"sync"
 	"time"
@@ -10,7 +11,8 @@ import (
 	"github.com/KPO-Tech/seshat-runtime/pkg/collectionplan"
 )
 
-// Analysis is a plan made from a folder, kept for the person who asked for it.
+// Analysis is a plan made from a folder, kept for the person who asked for it. A stored Analysis is never changed in place (Update stores
+// a new version), so one that was read can be used without a lock.
 type Analysis struct {
 	ID      string
 	UserID  string
@@ -74,6 +76,42 @@ func (s *Store) Get(userID, id string) (*Analysis, bool) {
 		return nil, false
 	}
 	return a, true
+}
+
+// Update changes an analysis for the person it was made for: fn works on a copy, which replaces the analysis only if it succeeds.
+func (s *Store) Update(userID, id string, fn func(*Analysis) error) (*Analysis, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.expireLocked()
+	a, ok := s.items[id]
+	if !ok || a.UserID != userID {
+		return nil, ErrNotFound
+	}
+	draft := *a
+	draft.Plan = clonePlan(a.Plan)
+	if err := fn(&draft); err != nil {
+		return nil, err
+	}
+	// A new version replaces the old one in the store; whoever holds the old one (a request reading it) keeps a plan that never changes.
+	s.items[id] = &draft
+	return &draft, nil
+}
+
+// ErrNotFound is returned for an analysis that does not exist, has expired, or belongs to someone else.
+var ErrNotFound = errors.New("no such analysis")
+
+// clonePlan copies the collections and the lists of a plan, so that an edit that fails half way leaves the plan untouched.
+func clonePlan(p collectionplan.Plan) collectionplan.Plan {
+	out := collectionplan.Plan{
+		Excluded:   append([]collectionplan.Excluded(nil), p.Excluded...),
+		Duplicates: append([]collectionplan.Duplicate(nil), p.Duplicates...),
+	}
+	for _, c := range p.Collections {
+		c.Files = append([]string(nil), c.Files...)
+		c.Folders = append([]string(nil), c.Folders...)
+		out.Collections = append(out.Collections, c)
+	}
+	return out
 }
 
 func (s *Store) expireLocked() {
