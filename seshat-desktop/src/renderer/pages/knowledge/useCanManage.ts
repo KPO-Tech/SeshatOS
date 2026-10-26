@@ -18,6 +18,21 @@ function loadMode(): Promise<DeviceMode | null> {
   return modeRequest
 }
 
+/** The mode of this device (alone on this computer, or paired with SeshatCloud), or null until it is known. */
+export function useDeviceMode(): DeviceMode | null {
+  const [mode, setMode] = useState<DeviceMode | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    void loadMode().then((next) => {
+      if (!cancelled) setMode(next)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return mode
+}
+
 /** Whether the person can open the pages that manage Knowledge (Sources, Settings), and whether that is known yet. */
 export function useCanManageKnowledge(): { allowed: boolean; known: boolean } {
   const roles = useAuthStore((state) => state.roles)
