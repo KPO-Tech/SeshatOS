@@ -124,6 +124,8 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/corpora", app.authMiddleware(http.HandlerFunc(app.handleCorpora)))
 	apiV1.Handle("/corpora/", app.authMiddleware(http.HandlerFunc(app.handleCorpusByID)))
 	apiV1.Handle("/knowledge/search", app.authMiddleware(http.HandlerFunc(app.handleKnowledgeSearch)))
+	apiV1.Handle("/knowledge/sources", app.authMiddleware(http.HandlerFunc(app.handleKnowledgeSources)))
+	apiV1.Handle("/knowledge/sources/", app.authMiddleware(http.HandlerFunc(app.handleKnowledgeSource)))
 	apiV1.Handle("/knowledge/folder-plans", app.authMiddleware(http.HandlerFunc(app.handleKnowledgeFolderPlans)))
 	apiV1.Handle("/knowledge/folder-plans/", app.authMiddleware(http.HandlerFunc(app.handleKnowledgeFolderPlan)))
 

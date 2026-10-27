@@ -3,14 +3,16 @@ package knowledge
 import "time"
 
 type Corpus struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"user_id"`
-	WorkspaceID string    `json:"workspace_id,omitempty"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	ChunkCount  int       `json:"chunk_count"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          string `json:"id"`
+	UserID      string `json:"user_id"`
+	WorkspaceID string `json:"workspace_id,omitempty"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	// SourceID is the knowledge source the collection comes from; empty for the default source (made in the app).
+	SourceID   string    `json:"source_id,omitempty"`
+	ChunkCount int       `json:"chunk_count"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type CorpusFile struct {
@@ -21,6 +23,8 @@ type CorpusFile struct {
 	ChunkCount int        `json:"chunk_count"`
 	IngestedAt *time.Time `json:"ingested_at,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
+	// SourcePath is where the file is on this computer, for a file indexed from a folder; empty for an uploaded one. Never sent to a client.
+	SourcePath string `json:"-"`
 }
 
 // DownloadedFile carries a corpus file's raw bytes and the metadata needed

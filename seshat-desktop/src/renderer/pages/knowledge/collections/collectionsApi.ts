@@ -7,6 +7,8 @@ export type Collection = {
   chunkCount: number
   fileCount: number | null
   updatedAt: number
+  // The source the collection comes from; empty for the default one (made in the app).
+  sourceId: string
 }
 
 export type FileStatus = 'pending' | 'ingested' | 'failed'
@@ -28,7 +30,7 @@ export type IndexingJob = {
   createdAt: number
 }
 
-type CorpusRow = { id: string; name: string; description?: string; chunk_count?: number; file_count?: number; updated_at?: number }
+type CorpusRow = { id: string; name: string; description?: string; chunk_count?: number; file_count?: number; updated_at?: number; source_id?: string }
 type FileRow = { file_id: string; filename: string; status: string; chunk_count?: number; created_at?: number }
 type JobRow = { id: string; file_id: string; status: string; last_error?: string; created_at?: number }
 
@@ -39,7 +41,8 @@ function toCollection(row: CorpusRow): Collection {
     description: row.description ?? '',
     chunkCount: row.chunk_count ?? 0,
     fileCount: typeof row.file_count === 'number' ? row.file_count : null,
-    updatedAt: row.updated_at ?? 0
+    updatedAt: row.updated_at ?? 0,
+    sourceId: row.source_id ?? ''
   }
 }
 
@@ -100,6 +103,12 @@ export function removeDocument(id: string, fileId: string) {
 export function retryIndexing(id: string, fileId: string, job: IndexingJob | undefined) {
   const base = `/corpora/${encodeURIComponent(id)}/ingest`
   return job ? api.post(`${base}/jobs/${encodeURIComponent(job.id)}/retry`) : api.post(base, { file_id: fileId })
+}
+
+/** Queues the indexing of every document of a collection that is still waiting (a collection of a folder source); says how many it queued. */
+export async function indexCollection(id: string): Promise<number> {
+  const answer = await api.post<{ queued?: number }>(`/corpora/${encodeURIComponent(id)}/ingest`, { all: true })
+  return answer.queued ?? 0
 }
 
 /** Whether an embedding model is set: without one, documents are kept but never indexed. Null when it cannot be known. */

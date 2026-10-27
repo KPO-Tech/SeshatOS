@@ -1,75 +1,60 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { FolderOpen, Plus } from '@icon-park/react'
-import { CollectionDialog } from './CollectionDialog'
-import { createCollection, type Collection } from './collectionsApi'
+import { Plus } from '@icon-park/react'
+import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
+import { useDeviceMode } from '../useCanManage'
+import { AddSourceDialog } from './AddSourceDialog'
 import { plural } from './fileStatus'
-import { IndexingNotice } from './IndexingNotice'
+import { SourceIcon } from './SourceIcon'
+import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
 
-const formatDay = (seconds: number) => (seconds ? new Date(seconds * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '')
-
-function CollectionCard({ collection, onOpen }: { collection: Collection; onOpen: () => void }) {
-  const documents = collection.fileCount === null ? null : plural(collection.fileCount, 'document', 'documents')
+function SourceCard({ icon, title, detail, count, onOpen }: { icon: React.ReactNode; title: string; detail: string; count: number; onOpen: () => void }) {
   return (
     <button
       type="button"
       onClick={onOpen}
       className="group flex cursor-pointer flex-col items-start gap-3 rounded-2xl border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] p-4 text-left transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-soft))] hover:shadow-[0_10px_26px_rgba(31,27,23,0.08)]"
     >
-      <span className="flex size-9 items-center justify-center rounded-[10px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-        <FolderOpen size={18} />
-      </span>
+      <span className="flex size-9 items-center justify-center rounded-[10px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">{icon}</span>
       <span className="min-w-0 max-w-full">
-        <span className="block truncate text-[14.5px] font-medium text-[var(--text-primary)]">{collection.name}</span>
-        <span className="mt-1 line-clamp-2 min-h-[38px] text-[12.5px] leading-[19px] text-[var(--text-muted)]">{collection.description || 'No description'}</span>
+        <span className="block truncate text-[14.5px] font-medium text-[var(--text-primary)]">{title}</span>
+        <span className="mt-1 line-clamp-2 min-h-[38px] break-all text-[12.5px] leading-[19px] text-[var(--text-muted)]">{detail}</span>
       </span>
-      <span className="text-[12px] text-[var(--text-muted)]">
-        {[documents, collection.updatedAt ? `Updated ${formatDay(collection.updatedAt)}` : null].filter(Boolean).join('   ')}
-      </span>
+      <span className="text-[12px] text-[var(--text-muted)]">{plural(count, 'collection', 'collections')}</span>
     </button>
   )
 }
 
+// The root of Collections: the places collections come from. The collections themselves are inside each source.
 export function CollectionsPage() {
   const navigate = useNavigate()
-  const { collections, loading, failed, indexingConfigured, reload } = useCollectionList()
-  const [creating, setCreating] = useState(false)
+  const { collections, sources, loading, failed, reload } = useCollectionList()
+  const deviceMode = useDeviceMode()
+  const [addingSource, setAddingSource] = useState(false)
+  // Folder sources are kept on this computer: a device connected to an organization takes its collections from the organization's server.
+  const canAddSource = deviceMode === 'standalone'
 
-  const open = (id: string) => navigate(`/knowledge/collections/${encodeURIComponent(id)}`)
-
-  async function create(name: string, description: string) {
-    const created = await createCollection(name, description)
-    setCreating(false)
-    await reload()
-    open(created.id)
-  }
+  const countIn = (sourceId: string) => collections.filter((c) => c.sourceId === sourceId).length
 
   return (
     <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pb-12 pt-10">
       <div className="mx-auto w-full max-w-[880px]" style={{ animation: 'slide-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="m-0 text-[30px] font-normal leading-[1.15] tracking-[-0.01em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
-              Collections
-            </h1>
-            <p className="mb-0 mt-2 text-[13.5px] leading-[21px] text-[var(--text-muted)]">The documents Knowledge answers from. Each collection keeps its own documents.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
-          >
-            <Plus size={14} />
-            New collection
-          </button>
+          <h1 className="m-0 text-[30px] font-normal leading-[1.15] tracking-[-0.01em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
+            Collections
+          </h1>
+          {canAddSource && (
+            <button
+              type="button"
+              onClick={() => setAddingSource(true)}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              <Plus size={14} />
+              Add source
+            </button>
+          )}
         </div>
-
-        {indexingConfigured === false && collections.length > 0 && (
-          <div className="mt-6">
-            <IndexingNotice />
-          </div>
-        )}
 
         {failed && (
           <p className="mb-0 mt-8 text-[13px] text-[var(--accent-danger)]" role="alert">
@@ -77,35 +62,31 @@ export function CollectionsPage() {
           </p>
         )}
 
-        {!loading && !failed && collections.length === 0 && (
-          <div className="mt-16 flex flex-col items-center text-center">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-              <FolderOpen size={22} />
-            </span>
-            <h2 className="mb-0 mt-5 text-[20px] font-normal text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
-              No collection yet
-            </h2>
-            <p className="mb-0 mt-2 max-w-[380px] text-[13px] leading-[20px] text-[var(--text-muted)]">Create one, add documents to it, and Ask answers from them.</p>
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="mt-5 cursor-pointer rounded-[10px] border-0 bg-[var(--accent-primary)] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
-            >
-              Create a collection
-            </button>
-          </div>
-        )}
-
-        {collections.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {collections.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} onOpen={() => open(collection.id)} />
+        {!loading && !failed && (
+          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <SourceCard
+              icon={<SeshatLogo size={20} />}
+              title="Seshat"
+              detail="The collections made and filled in the app."
+              count={countIn(DEFAULT_SOURCE_ID)}
+              onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
+            />
+            {sources.map((source) => (
+              <SourceCard key={source.id} icon={<SourceIcon icon={source.icon} />} title={source.name} detail={source.root} count={countIn(source.id)} onOpen={() => navigate(sourcePath(source.id))} />
             ))}
           </div>
         )}
       </div>
 
-      {creating && <CollectionDialog title="New collection" submitLabel="Create" onSubmit={create} onClose={() => setCreating(false)} />}
+      {addingSource && (
+        <AddSourceDialog
+          onClose={() => setAddingSource(false)}
+          onAdded={async () => {
+            setAddingSource(false)
+            await reload()
+          }}
+        />
+      )}
     </div>
   )
 }

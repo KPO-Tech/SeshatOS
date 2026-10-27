@@ -26,10 +26,12 @@ type Corpus struct {
 	WorkspaceID string
 	Name        string
 	Description string
-	Status      string
-	ChunkCount  int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	// SourceID is the knowledge source the collection comes from; empty for the default source (made in the app).
+	SourceID   string
+	Status     string
+	ChunkCount int
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type CorpusFile struct {
@@ -40,6 +42,9 @@ type CorpusFile struct {
 	ChunkCount int
 	IngestedAt *time.Time
 	CreatedAt  time.Time
+	// SourcePath is the absolute path of the file on this computer, for a file that is indexed from where it is (a folder of this
+	// computer) rather than uploaded; empty for every other file.
+	SourcePath string
 }
 
 type CreateCorpusParams struct {
@@ -47,6 +52,7 @@ type CreateCorpusParams struct {
 	WorkspaceID string // optional
 	Name        string
 	Description string
+	SourceID    string // optional: empty for the default source
 }
 
 type UpdateCorpusParams struct {
@@ -60,6 +66,7 @@ type UpsertCorpusFileParams struct {
 	Filename   string
 	Status     string
 	ChunkCount int
+	SourcePath string
 }
 
 // ─── GORM private models ─────────────────────────────────────────────────────
@@ -71,6 +78,7 @@ type gCorpus struct {
 	Name          string  `gorm:"not null"`
 	Description   string  `gorm:"not null;default:''"`
 	Status        string  `gorm:"not null;default:'active';index"`
+	SourceID      string  `gorm:"column:source_id;size:64;not null;default:'';index"`
 	ChunkCount    int     `gorm:"column:chunk_count;not null;default:0"`
 	CreatedAtUnix int64   `gorm:"column:created_at_unix;autoCreateTime:unix"`
 	UpdatedAtUnix int64   `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
@@ -86,6 +94,7 @@ type gCorpusFile struct {
 	ChunkCount     int    `gorm:"column:chunk_count;not null;default:0"`
 	IngestedAtUnix *int64 `gorm:"column:ingested_at_unix"`
 	CreatedAtUnix  int64  `gorm:"column:created_at_unix;autoCreateTime:unix"`
+	SourcePath     string `gorm:"column:source_path;not null;default:''"`
 }
 
 func (gCorpusFile) TableName() string { return "corpus_files" }
@@ -98,6 +107,7 @@ func corpusFromGorm(g gCorpus) Corpus {
 		UserID:      g.UserID,
 		Name:        g.Name,
 		Description: g.Description,
+		SourceID:    g.SourceID,
 		Status:      g.Status,
 		ChunkCount:  g.ChunkCount,
 		CreatedAt:   time.Unix(g.CreatedAtUnix, 0).UTC(),
@@ -117,6 +127,7 @@ func corpusFileFromGorm(g gCorpusFile) CorpusFile {
 		Status:     g.Status,
 		ChunkCount: g.ChunkCount,
 		CreatedAt:  time.Unix(g.CreatedAtUnix, 0).UTC(),
+		SourcePath: g.SourcePath,
 	}
 	if g.IngestedAtUnix != nil {
 		t := time.Unix(*g.IngestedAtUnix, 0).UTC()
@@ -151,6 +162,7 @@ func (s *CorpusStore) Create(ctx context.Context, params CreateCorpusParams) (*C
 		UserID:        params.UserID,
 		Name:          params.Name,
 		Description:   params.Description,
+		SourceID:      params.SourceID,
 		Status:        CorpusStatusActive,
 		CreatedAtUnix: now.Unix(),
 		UpdatedAtUnix: now.Unix(),
@@ -254,6 +266,7 @@ func (s *CorpusStore) AddFile(ctx context.Context, params UpsertCorpusFileParams
 		Status:        status,
 		ChunkCount:    params.ChunkCount,
 		CreatedAtUnix: now.Unix(),
+		SourcePath:    params.SourcePath,
 	}
 	if err := s.db.GormDB().WithContext(ctx).
 		Clauses(clause.OnConflict{DoNothing: true}).
@@ -262,6 +275,19 @@ func (s *CorpusStore) AddFile(ctx context.Context, params UpsertCorpusFileParams
 	}
 	cf := corpusFileFromGorm(row)
 	return &cf, nil
+}
+
+// FindLocalFiles returns the corpus files of a folder source that have this id: the same file can be in more than one collection.
+func (s *CorpusStore) FindLocalFiles(ctx context.Context, fileID string) ([]CorpusFile, error) {
+	var rows []gCorpusFile
+	if err := s.db.GormDB().WithContext(ctx).Where("file_id = ? AND source_path <> ''", fileID).Find(&rows).Error; err != nil {
+		return nil, fmt.Errorf("find local files: %w", err)
+	}
+	out := make([]CorpusFile, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, corpusFileFromGorm(r))
+	}
+	return out, nil
 }
 
 // UpdateFileStatus updates the ingest status for a corpus file record.

@@ -14,14 +14,16 @@ const TONES: Record<FileState['tone'], string> = {
 type Props = {
   file: CollectionFile
   state: FileState
+  onOpen: () => void
   onRetry: () => void
   onRemove: () => void
 }
 
-export function DocumentRow({ file, state, onRetry, onRemove }: Props) {
+export function DocumentRow({ file, state, onOpen, onRetry, onRemove }: Props) {
   const canRetry = state.tone === 'failed' || state.tone === 'waiting'
   return (
     <li className="group flex items-center gap-3 border-0 border-b border-solid border-[var(--border-soft)] px-1 py-2.5 last:border-b-0">
+      <button type="button" onClick={onOpen} title={`Read ${file.name}`} aria-label={`Read ${file.name}`} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left">
       <FileKindIcon kind={kindOfFile(file.name)} size={30} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13.5px] text-[var(--text-primary)]" title={file.name}>
@@ -36,6 +38,7 @@ export function DocumentRow({ file, state, onRetry, onRemove }: Props) {
           {state.detail && state.tone === 'failed' && <span className="min-w-0 truncate">{state.detail}</span>}
         </div>
       </div>
+      </button>
       <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
         {canRetry && (
           <button

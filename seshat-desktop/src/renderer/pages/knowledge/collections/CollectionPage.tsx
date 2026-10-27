@@ -4,10 +4,12 @@ import { Delete, Edit, Left, Upload } from '@icon-park/react'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { CollectionDialog } from './CollectionDialog'
 import { ConfirmDialog } from './ConfirmDialog'
-import { addDocument, deleteCollection, removeDocument, retryIndexing, updateCollection } from './collectionsApi'
+import { addDocument, deleteCollection, indexCollection, removeDocument, retryIndexing, updateCollection, type CollectionFile } from './collectionsApi'
 import { DocumentRow } from './DocumentRow'
+import { openDocument } from './openDocument'
 import { fileState, plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
+import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionDetail } from './useCollectionDetail'
 
 const message = (error: unknown, fallback: string) => (error instanceof Error && error.message ? error.message : fallback)
@@ -18,13 +20,15 @@ export function CollectionPage() {
   const { collection, files, jobOf, indexingConfigured, loading, failed, reload } = useCollectionDetail(id)
   const { toasts, show } = useToast()
   const [renaming, setRenaming] = useState(false)
+  const [indexing, setIndexing] = useState(false)
   const [uploading, setUploading] = useState<string[]>([])
   const [dragging, setDragging] = useState(false)
   const [confirming, setConfirming] = useState<{ title: string; message: string; label: string; run: () => Promise<void> } | null>(null)
   const picker = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
 
-  const back = () => navigate('/knowledge/collections')
+  // Back to the source the collection is in.
+  const back = () => navigate(sourcePath(collection?.sourceId || DEFAULT_SOURCE_ID))
 
   async function add(list: File[]) {
     for (const file of list) {
@@ -49,6 +53,27 @@ export function CollectionPage() {
 
   function askRemove(fileId: string, name: string) {
     setConfirming({ title: 'Remove the document', message: `${name} will be removed from this collection and no longer used to answer.`, label: 'Remove', run: () => remove(fileId) })
+  }
+
+  async function indexWaiting() {
+    setIndexing(true)
+    try {
+      const queued = await indexCollection(id)
+      show(queued === 0 ? 'Nothing is waiting to be indexed' : `${plural(queued, 'document', 'documents')} queued for indexing`, 'ok')
+      await reload()
+    } catch (error) {
+      show(message(error, 'The indexing could not be started'), 'err')
+    } finally {
+      setIndexing(false)
+    }
+  }
+
+  async function read(file: CollectionFile) {
+    try {
+      if (!(await openDocument(file))) show(`There is no preview for this kind of file yet: ${file.name}`, 'err')
+    } catch (error) {
+      show(message(error, 'The document could not be opened'), 'err')
+    }
   }
 
   async function remove(fileId: string) {
@@ -101,13 +126,17 @@ export function CollectionPage() {
           This collection could not be read.
         </p>
         <button type="button" onClick={back} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--accent-primary)] underline">
-          Back to the collections
+          Back
         </button>
       </div>
     )
   }
 
   const passages = files.reduce((total, file) => total + file.chunkCount, 0)
+  const indexed = files.filter((file) => file.status === 'ingested').length
+  const failedCount = files.filter((file) => fileState(file, jobOf(file.fileId)).tone === 'failed').length
+  // Documents of a folder source are indexed on request: the ones with no indexing job yet.
+  const waiting = collection?.sourceId ? files.filter((file) => file.status === 'pending' && fileState(file, jobOf(file.fileId)).tone === 'waiting').length : 0
 
   return (
     <div
@@ -141,6 +170,8 @@ export function CollectionPage() {
                 <p className="mb-0 mt-2.5 text-[12px] text-[var(--text-muted)]">
                   {plural(files.length, 'document', 'documents')}
                   {passages > 0 && `   ${plural(passages, 'passage', 'passages')}`}
+                  {indexed > 0 && indexed < files.length && `   ${indexed} indexed`}
+                  {failedCount > 0 && `   ${failedCount} failed`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -162,10 +193,20 @@ export function CollectionPage() {
                 >
                   <Delete size={14} />
                 </button>
+                {waiting > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void indexWaiting()}
+                    disabled={indexing}
+                    className="ml-1 flex cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {indexing ? 'Starting...' : `Index ${plural(waiting, 'document', 'documents')}`}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => picker.current?.click()}
-                  className="ml-1 flex cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+                  className={`ml-1 flex cursor-pointer items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-medium transition-colors ${waiting > 0 ? 'border border-app-border-subtle bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]' : 'border-0 bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-hover)]'}`}
                 >
                   <Upload size={14} />
                   Add documents
@@ -203,6 +244,7 @@ export function CollectionPage() {
                   key={file.fileId}
                   file={file}
                   state={fileState(file, jobOf(file.fileId))}
+                  onOpen={() => void read(file)}
                   onRetry={() => void retry(file.fileId)}
                   onRemove={() => askRemove(file.fileId, file.name)}
                 />

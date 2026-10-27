@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router'
 import { AskPage } from './ask/AskPage'
 import { CollectionPage } from './collections/CollectionPage'
 import { CollectionsPage } from './collections/CollectionsPage'
+import { SourcePage } from './collections/SourcePage'
 import { SearchPage } from './search/SearchPage'
 import { SettingsPage } from './settings/SettingsPage'
 import { SourcesPage } from './sources/SourcesPage'
@@ -23,6 +24,7 @@ export function KnowledgePage() {
         <Route index element={<AskPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="collections" element={<CollectionsPage />} />
+        <Route path="collections/source/:sourceId" element={<SourcePage />} />
         <Route path="collections/:id" element={<CollectionPage />} />
         <Route path="sources" element={manage(<SourcesPage />)} />
         <Route path="settings" element={manage(<SettingsPage />)} />

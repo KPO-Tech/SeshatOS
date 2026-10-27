@@ -251,6 +251,10 @@ func (s *Service) AttachFile(ctx context.Context, principal *backendauth.Princip
 // all - unlike RemoteService's implementation, which is the one that
 // actually needs a corpus lookup (see that type's doc comment).
 func (s *Service) DownloadFile(ctx context.Context, principal *backendauth.Principal, fileID string) (*DownloadedFile, error) {
+	// A file of a folder source is read from where it is, not from the file store.
+	if IsLocalFileID(fileID) {
+		return s.readLocalFile(ctx, principal, fileID)
+	}
 	if s == nil || s.files == nil || s.artifacts == nil {
 		return nil, bkerr.Unavailable("file store not configured", nil)
 	}
@@ -328,6 +332,10 @@ func (s *Service) EnqueueIngest(ctx context.Context, principal *backendauth.Prin
 	}
 	if s.jobs == nil {
 		return nil, bkerr.Unavailable("ingestion job store not configured", nil)
+	}
+	// A file of a folder source is indexed from where it is: it is not in the file store.
+	if IsLocalFileID(params.FileID) {
+		return s.EnqueueLocalFile(ctx, principal, params.CorpusID, params.FileID)
 	}
 	if s.files == nil {
 		return nil, bkerr.Unavailable("file store not configured", nil)
@@ -559,6 +567,10 @@ func (s *Service) ProcessNextIngestionJob(ctx context.Context) (bool, error) {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 func (s *Service) processIngestionJob(ctx context.Context, job db.KnowledgeIngestionJob) {
+	if IsLocalFileID(job.FileID) {
+		s.processLocalJob(ctx, job)
+		return
+	}
 	if _, err := s.corpora.GetFile(ctx, job.CorpusID, job.FileID); err != nil {
 		_ = s.jobs.MarkSkipped(ctx, job.ID, "corpus file detached before ingestion")
 		return
@@ -846,6 +858,7 @@ func corpusFromDB(r db.Corpus) *Corpus {
 		WorkspaceID: r.WorkspaceID,
 		Name:        r.Name,
 		Description: r.Description,
+		SourceID:    r.SourceID,
 		ChunkCount:  r.ChunkCount,
 		CreatedAt:   r.CreatedAt,
 		UpdatedAt:   r.UpdatedAt,
@@ -861,6 +874,7 @@ func corpusFileFromDB(r db.CorpusFile) *CorpusFile {
 		ChunkCount: r.ChunkCount,
 		IngestedAt: r.IngestedAt,
 		CreatedAt:  r.CreatedAt,
+		SourcePath: r.SourcePath,
 	}
 }
 

@@ -3,12 +3,17 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 	"github.com/KPO-Tech/seshat-runtime/pkg/collectionplan"
 )
@@ -28,20 +33,31 @@ type folderPlanCollection struct {
 	Sample    []string `json:"sample"`
 }
 
+type folderPlanExcluded struct {
+	Path   string `json:"path"`
+	Reason string `json:"reason"`
+}
+
+type folderPlanDuplicate struct {
+	Path string `json:"path"`
+	Of   string `json:"of"`
+}
+
 type folderPlanResponse struct {
-	ID               string                     `json:"id"`
-	Root             string                     `json:"root"`
-	Listed           int                        `json:"listed"`
-	Collections      []folderPlanCollection     `json:"collections"`
-	ExcludedCount    int                        `json:"excluded_count"`
-	ExcludedByReason map[string]int             `json:"excluded_by_reason"`
-	Excluded         []collectionplan.Excluded  `json:"excluded"`
-	DuplicateCount   int                        `json:"duplicate_count"`
-	Duplicates       []collectionplan.Duplicate `json:"duplicates"`
+	ID               string                 `json:"id"`
+	SourceID         string                 `json:"source_id,omitempty"`
+	Root             string                 `json:"root"`
+	Listed           int                    `json:"listed"`
+	Collections      []folderPlanCollection `json:"collections"`
+	ExcludedCount    int                    `json:"excluded_count"`
+	ExcludedByReason map[string]int         `json:"excluded_by_reason"`
+	Excluded         []folderPlanExcluded   `json:"excluded"`
+	DuplicateCount   int                    `json:"duplicate_count"`
+	Duplicates       []folderPlanDuplicate  `json:"duplicates"`
 }
 
 func folderPlanSummary(an *folderplan.Analysis) folderPlanResponse {
-	resp := folderPlanResponse{ID: an.ID, Root: an.Root, Listed: an.Listed, ExcludedByReason: map[string]int{}}
+	resp := folderPlanResponse{ID: an.ID, SourceID: an.SourceID, Root: an.Root, Listed: an.Listed, ExcludedByReason: map[string]int{}}
 	for i, c := range an.Plan.Collections {
 		item := folderPlanCollection{Index: i, Name: c.Name, FileCount: len(c.Files), Bytes: c.Bytes, Folders: c.Folders, Sample: c.Files}
 		if len(item.Folders) > 20 {
@@ -60,14 +76,17 @@ func folderPlanSummary(an *folderplan.Analysis) folderPlanResponse {
 		}
 		resp.ExcludedByReason[reason]++
 	}
-	resp.Excluded = an.Plan.Excluded
-	if len(resp.Excluded) > maxListed {
-		resp.Excluded = resp.Excluded[:maxListed]
+	resp.Excluded = []folderPlanExcluded{}
+	for _, e := range an.Plan.Excluded[:min(len(an.Plan.Excluded), maxListed)] {
+		resp.Excluded = append(resp.Excluded, folderPlanExcluded{Path: e.Path, Reason: e.Reason})
 	}
 	resp.DuplicateCount = len(an.Plan.Duplicates)
-	resp.Duplicates = an.Plan.Duplicates
-	if len(resp.Duplicates) > maxListed {
-		resp.Duplicates = resp.Duplicates[:maxListed]
+	resp.Duplicates = []folderPlanDuplicate{}
+	for _, d := range an.Plan.Duplicates[:min(len(an.Plan.Duplicates), maxListed)] {
+		resp.Duplicates = append(resp.Duplicates, folderPlanDuplicate{Path: d.Path, Of: d.Of})
+	}
+	if resp.Collections == nil {
+		resp.Collections = []folderPlanCollection{}
 	}
 	return resp
 }
@@ -93,10 +112,24 @@ func (a *App) handleKnowledgeFolderPlans(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	var body struct {
-		Path string `json:"path"`
+		Path     string `json:"path"`
+		SourceID string `json:"source_id"`
 	}
 	if !decodeJSONBody(w, r, &body) {
 		return
+	}
+	// A plan made for a source analyses the folder of that source, whatever path is sent.
+	if body.SourceID != "" {
+		svc, ok := a.localKnowledge(w)
+		if !ok {
+			return
+		}
+		src, err := svc.GetSource(r.Context(), principal, body.SourceID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		body.Path = src.Root
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), folderPlanTimeout)
 	defer cancel()
@@ -115,28 +148,74 @@ func (a *App) handleKnowledgeFolderPlans(w http.ResponseWriter, r *http.Request)
 		writeJSONError(w, http.StatusInternalServerError, "the folder could not be analysed: "+err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, folderPlanSummary(a.folderPlans.Add(principal.User.ID, root, listed, plan)))
+	writeJSON(w, http.StatusOK, folderPlanSummary(a.folderPlans.AddFor(principal.User.ID, body.SourceID, root, listed, plan)))
 }
 
 // handleKnowledgeFolderPlan serves what hangs under /knowledge/folder-plans/{id}:
 //
-//	GET /api/v1/knowledge/folder-plans/{id}/files?collection=<index>&offset=<n>&limit=<n>   the files of one collection
+//	GET   /api/v1/knowledge/folder-plans/{id}/files?collection=<index>&offset=<n>&limit=<n>   the files of one collection
+//	POST  /api/v1/knowledge/folder-plans/{id}/create   makes the collections of the plan (see createFolderPlanCollections)
+//	PATCH /api/v1/knowledge/folder-plans/{id}   {"op":"rename","index":0,"name":"..."} | {"op":"remove","index":0} | {"op":"merge","indexes":[0,2],"name":"..."}
+//
+// A change only reorganises the files the scan found, by the index of the collections of the plan the person is looking at; the answer
+// to a change is the new plan, whose indexes may have moved (collections are kept in order of name).
 func (a *App) handleKnowledgeFolderPlan(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 	principal, _ := authPrincipalFromContext(r.Context())
 	if principal == nil {
 		writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	parts := strings.Split(strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/v1/knowledge/folder-plans/"), "/"), "/")
-	if len(parts) != 2 || parts[1] != "files" {
+	// The router has already taken "/api/v1" off the path.
+	parts := strings.Split(strings.Trim(strings.TrimPrefix(r.URL.Path, "/knowledge/folder-plans/"), "/"), "/")
+	switch {
+	case r.Method == http.MethodGet && len(parts) == 2 && parts[1] == "files":
+		a.serveFolderPlanFiles(w, r, principal.User.ID, parts[0])
+	case r.Method == http.MethodPatch && len(parts) == 1 && parts[0] != "":
+		a.editFolderPlan(w, r, principal.User.ID, parts[0])
+	case r.Method == http.MethodPost && len(parts) == 2 && parts[1] == "create":
+		a.createFolderPlanCollections(w, r, principal, parts[0])
+	case len(parts) == 2 && (parts[1] == "files" || parts[1] == "create"), len(parts) == 1 && parts[0] != "":
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	default:
 		http.NotFound(w, r)
+	}
+}
+
+func (a *App) editFolderPlan(w http.ResponseWriter, r *http.Request, userID, id string) {
+	var body struct {
+		Op      string `json:"op"`
+		Index   int    `json:"index"`
+		Indexes []int  `json:"indexes"`
+		Name    string `json:"name"`
+	}
+	if !decodeJSONBody(w, r, &body) {
 		return
 	}
-	an, ok := a.folderPlans.Get(principal.User.ID, parts[0])
+	an, err := a.folderPlans.Update(userID, id, func(an *folderplan.Analysis) error {
+		switch body.Op {
+		case "rename":
+			return folderplan.Rename(an, body.Index, body.Name)
+		case "remove":
+			return folderplan.Remove(an, body.Index)
+		case "merge":
+			return folderplan.Merge(an, body.Indexes, body.Name)
+		}
+		return fmt.Errorf("%w: unknown change %q", folderplan.ErrInvalidEdit, body.Op)
+	})
+	switch {
+	case errors.Is(err, folderplan.ErrNotFound):
+		writeJSONError(w, http.StatusNotFound, "no such analysis: it may have expired, analyse the folder again")
+	case errors.Is(err, folderplan.ErrInvalidEdit):
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+	case err != nil:
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+	default:
+		writeJSON(w, http.StatusOK, folderPlanSummary(an))
+	}
+}
+
+func (a *App) serveFolderPlanFiles(w http.ResponseWriter, r *http.Request, userID, id string) {
+	an, ok := a.folderPlans.Get(userID, id)
 	if !ok {
 		writeJSONError(w, http.StatusNotFound, "no such analysis: it may have expired, analyse the folder again")
 		return
@@ -161,4 +240,64 @@ func (a *App) handleKnowledgeFolderPlan(w http.ResponseWriter, r *http.Request) 
 	page := append([]string(nil), files[offset:end]...)
 	sort.Strings(page)
 	writeJSON(w, http.StatusOK, map[string]any{"collection": an.Plan.Collections[index].Name, "total": len(files), "offset": offset, "files": page})
+}
+
+type createdCollectionResponse struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	FileCount int    `json:"file_count"`
+}
+
+// createFolderPlanCollections makes the collections of a plan, as the plan stands when the request arrives.
+//
+//	POST /api/v1/knowledge/folder-plans/{id}/create
+//
+// The files stay where they are: each collection records them, waiting to be indexed, with the path the scan found them at. Nothing is
+// read and nothing is indexed here. All collections are made or none; a name the person already uses is refused (409), and the plan is
+// kept so that they can rename it and ask again. Once the collections exist the plan is spent, so that asking twice cannot make them twice.
+func (a *App) createFolderPlanCollections(w http.ResponseWriter, r *http.Request, principal *backendauth.Principal, id string) {
+	if a.connectedServerURL != "" {
+		writeJSONError(w, http.StatusConflict, "folders can be used on this computer only, not on a device connected to an organization")
+		return
+	}
+	svc, ok := a.backend.Knowledge.(*knowledge.Service)
+	if !ok {
+		writeJSONError(w, http.StatusNotImplemented, "collections from a folder are not supported in connected mode")
+		return
+	}
+	an, ok := a.folderPlans.Get(principal.User.ID, id)
+	if !ok {
+		writeJSONError(w, http.StatusNotFound, "no such analysis: it may have expired, analyse the folder again")
+		return
+	}
+	if len(an.Plan.Collections) == 0 {
+		writeJSONError(w, http.StatusBadRequest, "the plan has no collection")
+		return
+	}
+	collections := make([]knowledge.LocalCollection, 0, len(an.Plan.Collections))
+	for _, c := range an.Plan.Collections {
+		lc := knowledge.LocalCollection{Name: c.Name, Description: "From " + an.Root}
+		for _, rel := range c.Files {
+			lc.Files = append(lc.Files, knowledge.LocalFile{Path: filepath.Join(an.Root, filepath.FromSlash(rel)), Name: rel})
+		}
+		collections = append(collections, lc)
+	}
+	made, err := svc.CreateLocalCollections(r.Context(), principal, an.SourceID, collections)
+	if err != nil {
+		writeBackendError(w, err)
+		return
+	}
+	a.folderPlans.Delete(principal.User.ID, id)
+	resp := make([]createdCollectionResponse, 0, len(made))
+	for _, m := range made {
+		a.backend.Audit.Log(r.Context(), backendaudit.LogParams{
+			ActorUserID:  principal.User.ID,
+			Action:       backendaudit.ActionCorpusCreate,
+			ResourceType: "corpus",
+			ResourceID:   m.Corpus.ID,
+			IPAddress:    a.clientIP(r),
+		})
+		resp = append(resp, createdCollectionResponse{ID: m.Corpus.ID, Name: m.Corpus.Name, FileCount: m.FileCount})
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"collections": resp})
 }

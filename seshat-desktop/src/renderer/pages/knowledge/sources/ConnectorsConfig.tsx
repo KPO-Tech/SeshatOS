@@ -14,6 +14,9 @@ import {
   syncConnectorAccount
 } from './connectorsApi'
 import { StaticConnectorForm } from './StaticConnectorForm'
+import { useNavigate } from 'react-router'
+import { AddSourceDialog } from '../collections/AddSourceDialog'
+import { useDeviceMode } from '../useCanManage'
 import type { ConnectAccountPayload, ConnectorAccount, ConnectorDefinition, ConnectorKind, Corpus } from './connectorTypes'
 
 export function ConnectorsConfig() {
@@ -25,6 +28,9 @@ export function ConnectorsConfig() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'Knowledge' | 'Actions'>('all')
   const [openKind, setOpenKind] = useState<string | null>(null)
+  const [folderOpen, setFolderOpen] = useState(false)
+  const navigate = useNavigate()
+  const mode = useDeviceMode()
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
   async function load() {
@@ -129,10 +135,12 @@ export function ConnectorsConfig() {
 
   const needle = query.trim().toLowerCase()
   const matching = connectorCatalog.filter((item) => `${item.title} ${item.description}`.toLowerCase().includes(needle))
+  // A folder of this computer is analysed on this computer only: a device paired with an organization keeps its collections on the server.
+  const showFolder = mode === 'standalone' && (filter === 'all' || filter === 'Knowledge') && LOCAL_FOLDER_TEXT.includes(needle)
   const groups = (['Knowledge', 'Actions'] as const)
     .filter((group) => filter === 'all' || filter === group)
     .map((group) => ({ group, items: matching.filter((item) => item.category === group) }))
-    .filter((entry) => entry.items.length > 0)
+    .filter((entry) => entry.items.length > 0 || (entry.group === 'Knowledge' && showFolder))
   const opened = connectorCatalog.find((item) => item.kind === openKind) ?? null
 
   return (
@@ -194,6 +202,15 @@ export function ConnectorsConfig() {
             <div key={group}>
               <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{group}</h2>
               <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-2.5">
+                {group === 'Knowledge' && showFolder && (
+                  <PluginCard
+                    title="Local folder"
+                    description="Add a folder of this computer as a source. Nothing is read until you analyse it."
+                    icon={<FolderIcon />}
+                    connected={false}
+                    onOpen={() => setFolderOpen(true)}
+                  />
+                )}
                 {items.map((definition) => {
                   const accounts = accountsByKind[definition.kind] ?? []
                   const needsAttention = accounts.some((account) => Boolean(account.last_error))
@@ -213,6 +230,16 @@ export function ConnectorsConfig() {
             </div>
           ))}
         </div>
+      )}
+
+      {folderOpen && (
+        <AddSourceDialog
+          onClose={() => setFolderOpen(false)}
+          onAdded={() => {
+            setFolderOpen(false)
+            navigate('/knowledge/collections')
+          }}
+        />
       )}
 
       {opened && (
@@ -248,5 +275,17 @@ export function ConnectorsConfig() {
         </div>
       )}
     </section>
+  )
+}
+
+const LOCAL_FOLDER_TEXT = 'local folder add a folder of this computer as a source. nothing is read until you analyse it.'
+
+function FolderIcon() {
+  return (
+    <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] bg-[var(--accent-primary)]/12 text-[var(--accent-primary)]">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4.2a1.5 1.5 0 0 1 1.1.5l1.2 1.4a1.5 1.5 0 0 0 1.1.5h7.4A1.5 1.5 0 0 1 21 9.9v8.6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z" />
+      </svg>
+    </span>
   )
 }
