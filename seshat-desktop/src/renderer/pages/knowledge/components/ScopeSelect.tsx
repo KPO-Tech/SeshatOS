@@ -9,10 +9,12 @@ type Props = {
   collections: KnowledgeCollection[]
   scope: AskScope
   onChange: (scope: AskScope) => void
+  // Where the menu opens: above the pill (the default, for the input of a page) or below it.
+  placement?: 'up' | 'down'
 }
 
 // Where a question looks: every collection the person can read, or one. The same pill and menu as the model selector of the chat input.
-export function ScopeSelect({ collections, scope, onChange }: Props) {
+export function ScopeSelect({ collections, scope, onChange, placement = 'up' }: Props) {
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   const current = collections.find((item) => item.id === scope.collectionId)
@@ -54,7 +56,7 @@ export function ScopeSelect({ collections, scope, onChange }: Props) {
       />
       {open && (
         <SelectorMenu
-          placement="up"
+          placement={placement}
           className="min-w-[260px]"
           searchable
           options={options}

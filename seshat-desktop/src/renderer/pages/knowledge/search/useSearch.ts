@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
-import type { Passage } from '../chat/knowledgeSearchResults'
 import { searchPassages } from './searchApi'
+import type { Hit } from './searchModel'
 
 export type SearchState =
   | { phase: 'idle' }
   | { phase: 'loading'; query: string }
-  | { phase: 'done'; query: string; passages: Passage[]; collectionsSearched: number }
+  | { phase: 'done'; query: string; hits: Hit[]; collectionsSearched: number }
   | { phase: 'failed'; query: string }
 
 export function useSearch() {
