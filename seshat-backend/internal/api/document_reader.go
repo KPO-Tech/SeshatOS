@@ -229,6 +229,7 @@ func (a *App) nativeDocStatusResponse() map[string]any {
 	return map[string]any{
 		"model_dir":    documentreading.NativeDocModelsDir(),
 		"models":       documentreading.NativeDocModelFiles,
+		"model_status": documentreading.NativeDocModelStatuses(),
 		"packs":        nativeDocPacksResponse(),
 		"active_pack":  documentreading.NativeDocActivePack(),
 		"download":     a.nativeDocDownloadState(),

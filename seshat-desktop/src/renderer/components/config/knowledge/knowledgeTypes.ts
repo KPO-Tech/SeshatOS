@@ -120,9 +120,18 @@ export type NativeDocPack = {
   active: boolean
 }
 
+/** One model file of the local reader: what is on disk, and whether the reader can work without it. */
+export type NativeDocModelStatus = {
+  file: string
+  installed: boolean
+  size_bytes: number
+  required: boolean
+}
+
 export type NativeDocStatusResult = {
   model_dir: string
   models: string[]
+  model_status?: NativeDocModelStatus[]
   packs?: NativeDocPack[]
   active_pack?: string
   download: NativeDocDownloadState
