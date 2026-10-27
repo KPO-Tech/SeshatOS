@@ -5,14 +5,15 @@ import (
 	"unicode"
 )
 
-// hybridWeightFor is how much a search leans on the words of the query, between 0 (the meaning only) and 1 (the words only).
+// hybridWeightFor is how much a search leans on the words of the query: 0 is the meaning only, 1 is the words only.
 //
-// A question in plain words is better served by the meaning alone: measured on 49 questions over 192 documents, mixing in the
-// keyword ranking took the share of questions answered at the first place from 0.94 to 0.85, and from 0.62 to 0.12 for the
-// questions that share almost no word with their answer, because the keyword ranking of a sentence is dominated by common words
-// and by the longest documents. A query that carries an identifier (a number, a code, a CUSIP, a regulation number) is the
-// opposite: the meaning cannot tell two codes apart, and the keywords find it at once (0.62 of such questions answered first by the
-// meaning alone, 0.88 when the words are mixed in).
+// A question in plain words is served by the meaning alone: the keyword ranking of a sentence is dominated by common words and by
+// the longest documents, and mixing it in took the questions that share almost no word with their answer from 0.62 answered first
+// to 0.12-0.25 (a fixed share of 0.3, or a reciprocal rank fusion), and the ordinary ones from 0.91 to 0.85. A query that carries an
+// identifier (a number, a code, a CUSIP, a regulation number) is the opposite: the meaning cannot tell two codes apart (0.62 of
+// them answered first), the words find them at once (1.00), and a share of 0.3 of the meaning only gets in the way (0.75 to 0.88).
+// So the two are not mixed: a query with a code is searched by its words alone, which also spares the embedding call.
+// Measured on 57 questions over 192 documents with mistral-embed; the sample is small and the same questions chose the rule.
 func hybridWeightFor(query string) float32 {
 	if carriesIdentifier(query) {
 		return identifierHybridWeight
@@ -21,8 +22,8 @@ func hybridWeightFor(query string) float32 {
 }
 
 const (
-	// identifierHybridWeight keeps the vector similarity dominant while rewarding the literal match of a code.
-	identifierHybridWeight float32 = 0.3
+	// identifierHybridWeight is the words only: the embedding of the query is not even asked for.
+	identifierHybridWeight float32 = 1
 	plainHybridWeight      float32 = 0
 
 	// minIdentifierLength is the number of letters and digits from which a token that holds a digit is taken for an identifier: a
