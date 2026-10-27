@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { FolderOpen } from '@icon-park/react'
+import { FileText, FolderOpen } from '@icon-park/react'
 import type { FileKind } from '../chat/passageSources'
 import { FileKindIcon } from '../components/FileKindIcon'
 import { KIND_LABEL, type Facets, type Filters } from './searchModel'
@@ -9,6 +9,8 @@ type Props = {
   facets: Facets
   filters: Filters
   total: number
+  // How many documents there are of every kind: the figure of "All types".
+  kindsTotal: number
   onToggleCollection: (id: string) => void
   onAllCollections: () => void
   onKind: (kind: FileKind | null) => void
@@ -39,7 +41,7 @@ function Row({ active, onClick, icon, label, count }: { active: boolean; onClick
 }
 
 // The two lists on the left of the results: the collections, and the kinds of document, each with the number of documents it holds.
-export function FilterPanel({ title, facets, filters, total, onToggleCollection, onAllCollections, onKind }: Props) {
+export function FilterPanel({ title, facets, filters, total, kindsTotal, onToggleCollection, onAllCollections, onKind }: Props) {
   return (
     <aside aria-label={title} className="flex min-h-0 w-[220px] shrink-0 flex-col gap-3">
       <section className={`${CARD} flex min-h-0 flex-col`}>
@@ -55,6 +57,7 @@ export function FilterPanel({ title, facets, filters, total, onToggleCollection,
       <section className={`${CARD} flex min-h-0 flex-col`}>
         <h2 className="m-0 mb-1.5 shrink-0 px-1.5 text-[13px] font-semibold text-[var(--text-primary)]">Document type</h2>
         <ul className="no-scrollbar m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0">
+          <Row active={filters.kind === null} onClick={() => onKind(null)} icon={<FileText size={14} />} label="All types" count={kindsTotal} />
           {facets.kinds.map(({ kind, count }) => (
             <Row key={kind} active={filters.kind === kind} onClick={() => onKind(filters.kind === kind ? null : kind)} icon={<FileKindIcon kind={kind} size={16} />} label={KIND_LABEL[kind]} count={count} />
           ))}

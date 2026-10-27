@@ -12,8 +12,9 @@ import { fetchDocuments } from './libraryApi'
 import { ResultRow, type View } from './ResultRow'
 import { MAX_PASSAGES } from './searchApi'
 import { SearchBar } from './SearchBar'
-import { facetsOf, filterDocs, groupDocs, KIND_LABEL, KIND_ORDER, NO_FILTERS, sortDocs, withListing, type Doc, type Facets, type Filters, type SortKey } from './searchModel'
+import { facetsOf, filterDocs, groupDocs, KIND_ORDER, NO_FILTERS, sortDocs, withListing, type Doc, type Facets, type Filters, type SortKey } from './searchModel'
 import { useLibrary } from './useLibrary'
+import { useLibraryTotals } from './useLibraryTotals'
 import { useSearch } from './useSearch'
 
 const CARD = 'rounded-[18px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]'
@@ -41,6 +42,7 @@ export function SearchPage() {
   // Before a search the documents are read a page at a time, narrowed and sorted by the database: whatever the number of documents,
   // only the pages that are scrolled to are read. After a search the few passages found are narrowed here.
   const browseSort = sort === 'name' ? 'name' : 'recent'
+  const totals = useLibraryTotals()
   const library = useLibrary({ corpusIds: [...filters.collectionIds], kind: filters.kind, sort: browseSort, enabled: !searching })
 
   const found = useMemo<Doc[]>(() => (state.phase === 'done' ? withListing(groupDocs(state.hits), listing) : []), [state, listing])
@@ -57,7 +59,6 @@ export function SearchPage() {
     }
   }, [done, ofKind, inCollections, library.collections, library.kinds])
   const collectionsTotal = facets.collections.reduce((sum, item) => sum + item.count, 0)
-  const kindsTotal = facets.kinds.reduce((sum, item) => sum + item.count, 0)
   const resultCount = done ? shown.length : library.total
 
   const selected = shown.find((doc) => doc.key === selectedKey) ?? null
@@ -161,15 +162,6 @@ export function SearchPage() {
           {searching && scopePill}
         </div>
 
-        {kindsTotal > 0 && (
-          <div role="tablist" aria-label="Kind of document" className="mt-2.5 flex flex-wrap gap-1.5">
-            <KindTab label="All" count={kindsTotal} active={filters.kind === null} onClick={() => setFilters({ ...filters, kind: null })} />
-            {facets.kinds.map(({ kind, count }) => (
-              <KindTab key={kind} label={KIND_LABEL[kind]} count={count} active={filters.kind === kind} onClick={() => setFilters({ ...filters, kind: filters.kind === kind ? null : kind })} />
-            ))}
-          </div>
-        )}
-
         {collectionsFailed && (
           <p className="mb-0 mt-2 text-[12.5px] text-[var(--accent-danger)]" role="alert">
             The collections could not be read.
@@ -181,16 +173,17 @@ export function SearchPage() {
         {(done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
           <FilterPanel
             title={done ? 'Refine results' : 'Browse'}
-            facets={facets}
+            facets={{ collections: facets.collections, kinds: totals.kinds.length > 0 ? totals.kinds : facets.kinds }}
             filters={filters}
             total={collectionsTotal}
+            kindsTotal={totals.total}
             onToggleCollection={toggleCollection}
             onAllCollections={() => setFilters({ ...filters, collectionIds: new Set() })}
             onKind={(kind) => setFilters({ ...filters, kind })}
           />
         )}
 
-        <section className={`${CARD} flex min-h-0 min-w-0 flex-1 flex-col p-3`}>
+        <section className={`${CARD} @container flex min-h-0 min-w-0 flex-1 flex-col p-3`}>
           <div className="mb-2.5 flex shrink-0 items-center justify-between gap-3">
             <h2 className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-[var(--text-primary)]">
               {done ? 'Results' : 'Documents'}
@@ -201,10 +194,13 @@ export function SearchPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/knowledge', { state: { question: state.query } })}
-                  className="flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-[12px] text-[var(--accent-primary)] hover:underline"
+                  title="Ask a question about this search"
+                  className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-0 bg-transparent p-0 text-[12px] text-[var(--accent-primary)] hover:underline"
                 >
                   <Message size={12} />
-                  Ask a question about this
+                  <span>
+                    Ask<span className="hidden @2xl:inline"> a question about this</span>
+                  </span>
                 </button>
               )}
               <select
@@ -287,23 +283,5 @@ export function SearchPage() {
         {selected && !viewerOpen && <DocumentDetails doc={selected} terms={terms} onOpen={(page) => void open(selected, page)} onClose={() => setSelectedKey(null)} />}
       </div>
     </div>
-  )
-}
-
-function KindTab({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={[
-        'flex h-7 cursor-pointer items-center gap-1.5 rounded-[9px] border px-2.5 text-[12px] font-medium transition-colors',
-        active ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-app-border-subtle bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
-      ].join(' ')}
-    >
-      {label}
-      <span className={['text-[11px]', active ? 'text-white/80' : 'text-[var(--text-muted)]'].join(' ')}>{count}</span>
-    </button>
   )
 }
