@@ -14,10 +14,10 @@ import (
 // Source is a place the collections of a person come from other than the app itself. Adding one reads nothing: collections are made from
 // it afterwards.
 type Source struct {
-	ID    string `json:"id"`
-	Kind  string `json:"kind"`
-	Name  string `json:"name"`
-	Root  string `json:"root,omitempty"`
+	ID   string `json:"id"`
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	Root string `json:"root,omitempty"`
 	// Icon is the key of the icon the person chose; empty for the kind's own.
 	Icon  string `json:"icon,omitempty"`
 	Count int    `json:"collection_count"`

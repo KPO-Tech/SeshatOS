@@ -18,11 +18,11 @@ const (
 // KnowledgeSource is a place the collections of a person come from, other than the app itself: a folder of this computer for now.
 // Adding one reads nothing; collections are made from it later.
 type KnowledgeSource struct {
-	ID        string
-	UserID    string
-	Kind      string
-	Name      string
-	Root      string
+	ID     string
+	UserID string
+	Kind   string
+	Name   string
+	Root   string
 	// Icon is the key of the icon the person chose for the source; empty for the kind's own.
 	Icon      string
 	CreatedAt time.Time

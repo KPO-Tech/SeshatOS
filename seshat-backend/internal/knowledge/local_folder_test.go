@@ -184,7 +184,7 @@ func TestTheFilesOfAFolderSourceAreIndexedFromWhereTheyAreCheapestFirst(t *testi
 	p := testPrincipal("user-1")
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "big.md"), []byte("# Big\n\n"+strings.Repeat("Retention of records is required for seven years. ", 200)), 0o644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "small.txt"), []byte("The audit committee meets quarterly."), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "small.txt"), []byte(strings.Repeat("The audit committee meets quarterly. ", 60)), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "broken.pdf"), []byte("not a pdf at all"), 0o644))
 
 	src, err := svc.CreateFolderSource(ctx, p, "", dir, "")

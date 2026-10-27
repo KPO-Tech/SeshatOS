@@ -19,7 +19,7 @@ type Analysis struct {
 	// SourceID is the knowledge source the plan was made for; empty for a folder that is not a source.
 	SourceID string
 	Root     string
-	Created time.Time
+	Created  time.Time
 	// Listed is how many entries the scan found, before the plan left some out.
 	Listed int
 	Plan   collectionplan.Plan

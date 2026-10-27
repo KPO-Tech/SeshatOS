@@ -11,8 +11,8 @@ import (
 
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
-	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 )
 
 const maxUploadSize = 100 << 20 // 100 MB
