@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { baseName, facetsOf, fileIdOfKey, filterDocs, folderOf, groupDocs, sortDocs, NO_FILTERS, type Hit } from './searchModel'
+import { ago, baseName, docOfFile, facetsOf, fileIdOfKey, filterDocs, folderOf, groupDocs, sortDocs, withListing, NO_FILTERS, type Hit } from './searchModel'
 
 const hit = (over: Partial<Hit>): Hit => ({ ref: 'r', score: 0.5, corpusId: 'c1', collection: 'Legal', fileId: 'f1', path: 'Legal/a.pdf', pages: [], section: '', text: 't', ...over })
 
@@ -8,6 +8,8 @@ describe('names', () => {
     expect(baseName('Legal/Contracts/a.pdf')).toBe('a.pdf')
     expect(folderOf('Legal/Contracts/a.pdf')).toBe('Legal / Contracts')
     expect(folderOf('a.pdf')).toBe('')
+    expect(folderOf('Legal/Contracts/a.pdf', 'Legal')).toBe('Contracts')
+    expect(folderOf('Legal/a.pdf', 'Legal')).toBe('')
     expect(baseName('')).toBe('')
   })
 
@@ -55,5 +57,31 @@ describe('groupDocs', () => {
     expect(filterDocs(docs, { collectionIds: new Set(), kind: 'pdf' }).map((d) => d.fileId)).toEqual(['f1'])
     expect(sortDocs(docs, 'relevance').map((d) => d.fileId)).toEqual(['f2', 'f1'])
     expect(sortDocs(docs, 'name').map((d) => d.name)).toEqual(['a.pdf', 'b.xlsx'])
+  })
+})
+
+describe('listing', () => {
+  const listed = docOfFile({ id: 'c1', name: 'Legal' }, { fileId: 'f1', name: 'Legal/Contracts/a.pdf', chunkCount: 12, createdAt: 1000 })
+
+  it('lists a file as a document with no passage matched, without repeating the collection as a folder', () => {
+    expect(listed).toMatchObject({ name: 'a.pdf', folder: 'Contracts', kind: 'pdf', chunkCount: 12, addedAt: 1000, hits: [] })
+  })
+
+  it('gives the documents of a search what the listing knows of them, and sorts by recency', () => {
+    const found = groupDocs([hit({ fileId: 'f1', path: 'Legal/Contracts/a.pdf' })])
+    expect(withListing(found, [listed])[0]).toMatchObject({ addedAt: 1000, chunkCount: 12, hits: [expect.anything()] })
+    const newer = { ...listed, key: 'k2', name: 'b.pdf', addedAt: 2000 }
+    expect(sortDocs([listed, newer], 'recent').map((doc) => doc.name)).toEqual(['b.pdf', 'a.pdf'])
+  })
+})
+
+describe('ago', () => {
+  const now = 1_000_000 * 1000
+  it('says how long ago', () => {
+    expect(ago(0, now)).toBe('')
+    expect(ago(1_000_000 - 30, now)).toBe('just now')
+    expect(ago(1_000_000 - 5 * 60, now)).toBe('5 minutes ago')
+    expect(ago(1_000_000 - 3600, now)).toBe('1 hour ago')
+    expect(ago(1_000_000 - 3 * 86400, now)).toBe('3 days ago')
   })
 })

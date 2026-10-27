@@ -27,10 +27,15 @@ export type Doc = {
   // The best score of its passages.
   score: number
   pages: number[]
+  // The passages of it that matched; none when the document is only listed.
   hits: Hit[]
+  // When it was added to its collection, in seconds; 0 when not known.
+  addedAt: number
+  // How many passages it was indexed as.
+  chunkCount: number
 }
 
-export type SortKey = 'relevance' | 'name'
+export type SortKey = 'relevance' | 'recent' | 'name'
 
 export type Filters = {
   // Empty: every collection.
@@ -46,10 +51,11 @@ export function baseName(path: string): string {
   return path.split(/[\\/]/).filter(Boolean).pop() ?? path
 }
 
-/** The folders of a document, "Legal / Contracts" for "Legal/Contracts/a.pdf", or nothing. */
-export function folderOf(path: string): string {
-  const parts = path.split(/[\\/]/).filter(Boolean)
-  return parts.slice(0, -1).join(' / ')
+/** The folders of a document, "Legal / Contracts" for "Legal/Contracts/a.pdf", or nothing. A first folder that is the name of the collection is not repeated. */
+export function folderOf(path: string, collection = ''): string {
+  const folders = path.split(/[\\/]/).filter(Boolean).slice(0, -1)
+  if (folders.length > 0 && folders[0] === collection) folders.shift()
+  return folders.join(' / ')
 }
 
 /** The id of the file a passage key points at: "rag/{collection}/{file}#chunk-3". */
@@ -72,11 +78,13 @@ export function groupDocs(hits: readonly Hit[]): Doc[] {
         fileId: hit.fileId,
         path: hit.path,
         name: baseName(hit.path) || hit.collection,
-        folder: folderOf(hit.path),
+        folder: folderOf(hit.path, hit.collection),
         kind: kindOfFile(hit.path),
         score: hit.score,
         pages: [],
-        hits: []
+        hits: [],
+        addedAt: 0,
+        chunkCount: 0
       }
       byKey.set(key, doc)
       docs.push(doc)
@@ -118,6 +126,7 @@ export function filterDocs(docs: readonly Doc[], filters: Filters): Doc[] {
 }
 
 export function sortDocs(docs: readonly Doc[], key: SortKey): Doc[] {
+  if (key === 'recent') return [...docs].sort((a, b) => b.addedAt - a.addedAt || a.name.localeCompare(b.name))
   if (key === 'name') return [...docs].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }))
   return [...docs].sort((a, b) => b.score - a.score)
 }
@@ -125,4 +134,44 @@ export function sortDocs(docs: readonly Doc[], key: SortKey): Doc[] {
 /** "2 passages", "1 passage". */
 export function countLabel(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`
+}
+
+/** A document of a collection as it is listed, before any search. */
+export function docOfFile(collection: { id: string; name: string }, file: { fileId: string; name: string; chunkCount: number; createdAt: number }): Doc {
+  return {
+    key: `${collection.id}\u0000${file.fileId}`,
+    corpusId: collection.id,
+    collection: collection.name,
+    fileId: file.fileId,
+    path: file.name,
+    name: baseName(file.name) || collection.name,
+    folder: folderOf(file.name, collection.name),
+    kind: kindOfFile(file.name),
+    score: 0,
+    pages: [],
+    hits: [],
+    addedAt: file.createdAt,
+    chunkCount: file.chunkCount
+  }
+}
+
+/** The documents of a search with what the listing knows of them (when they were added, how many passages they hold). */
+export function withListing(docs: readonly Doc[], listing: readonly Doc[]): Doc[] {
+  const known = new Map(listing.map((doc) => [doc.key, doc]))
+  return docs.map((doc) => {
+    const entry = known.get(doc.key)
+    return entry ? { ...doc, addedAt: entry.addedAt, chunkCount: entry.chunkCount } : doc
+  })
+}
+
+/** "just now", "5 minutes ago", "2 hours ago", "3 days ago", or a date for what is older than a month. */
+export function ago(seconds: number, now: number = Date.now()): string {
+  if (!seconds) return ''
+  const diff = Math.max(0, Math.round(now / 1000 - seconds))
+  const unit = (value: number, name: string) => `${value} ${name}${value === 1 ? '' : 's'} ago`
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return unit(Math.floor(diff / 60), 'minute')
+  if (diff < 86400) return unit(Math.floor(diff / 3600), 'hour')
+  if (diff < 30 * 86400) return unit(Math.floor(diff / 86400), 'day')
+  return new Date(seconds * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }

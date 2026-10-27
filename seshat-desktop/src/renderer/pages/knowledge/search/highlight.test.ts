@@ -6,6 +6,11 @@ describe('queryTerms', () => {
     expect(queryTerms('Résumé "notice" (period), notice 90-days')).toEqual(['resume', 'notice', 'period', '90', 'days'])
     expect(queryTerms('  ...  ')).toEqual([])
   })
+
+  it('leaves out the filler words of a question, unless it is made of nothing else', () => {
+    expect(queryTerms('What should a company do after intruders get into its computers?')).toEqual(['company', 'intruders', 'get', 'computers'])
+    expect(queryTerms('what is it')).toEqual(['what', 'is', 'it'])
+  })
 })
 
 describe('highlight', () => {

@@ -5,7 +5,8 @@ import { pagesLabel } from '../chat/passageSources'
 import { FileKindIcon } from '../components/FileKindIcon'
 import { Highlighted } from './Highlighted'
 import { snippet } from './highlight'
-import { countLabel, KIND_LABEL, type Doc, type Hit } from './searchModel'
+import { DocumentIndexPanel } from '../collections/DocumentIndexPanel'
+import { ago, countLabel, KIND_LABEL, type Doc, type Hit } from './searchModel'
 
 type Props = {
   doc: Doc
@@ -15,7 +16,7 @@ type Props = {
   onClose: () => void
 }
 
-type Tab = 'matches' | 'details'
+type Tab = 'matches' | 'index' | 'details'
 
 function size(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -26,11 +27,12 @@ function size(bytes: number): string {
 // The document selected in the results: what matched in it, and what is known of it. Nothing is written for the person here: the
 // passages are the ones the search found, as they are in the document.
 export function DocumentDetails({ doc, terms, onOpen, onClose }: Props) {
-  const [tab, setTab] = useState<Tab>('matches')
+  const first: Tab = doc.hits.length > 0 ? 'matches' : 'details'
+  const [tab, setTab] = useState<Tab>(first)
   const [bytes, setBytes] = useState<number | null>(null)
 
   useEffect(() => {
-    setTab('matches')
+    setTab(doc.hits.length > 0 ? 'matches' : 'details')
     setBytes(null)
     let cancelled = false
     api
@@ -40,24 +42,26 @@ export function DocumentDetails({ doc, terms, onOpen, onClose }: Props) {
     return () => {
       cancelled = true
     }
-  }, [doc.key, doc.fileId])
+  }, [doc.key, doc.fileId, doc.hits.length])
 
   const details: [string, string][] = [
     ['Type', KIND_LABEL[doc.kind]],
     ['Collection', doc.collection],
     ['Folder', doc.folder || 'None'],
     ['Size', bytes === null ? '' : size(bytes)],
-    ['Pages matched', pagesLabel(doc.pages).replace(/^pp?\. /, '') || 'Not known'],
-    ['Passages matched', String(doc.hits.length)]
+    ['Added', ago(doc.addedAt)],
+    ['Indexed as', doc.chunkCount > 0 ? countLabel(doc.chunkCount, 'passage', 'passages') : ''],
+    ['Pages matched', doc.pages.length > 0 ? pagesLabel(doc.pages).replace(/^pp?\. /, '') : ''],
+    ['Passages matched', doc.hits.length > 0 ? String(doc.hits.length) : '']
   ].filter((row): row is [string, string] => row[1] !== '')
 
   return (
-    <aside aria-label="Selected document" className="flex w-[340px] shrink-0 flex-col self-start rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]">
+    <aside aria-label="Selected document" className="sticky top-0 flex max-h-[calc(100vh-3rem)] w-[340px] shrink-0 flex-col self-start overflow-y-auto rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]">
       <div className="flex items-start gap-3 border-b border-app-border-subtle p-4">
         <FileKindIcon kind={doc.kind} size={40} />
         <div className="min-w-0 flex-1">
           <h2 className="m-0 break-words text-[15px] font-semibold leading-[20px] text-[var(--text-primary)]">{doc.name}</h2>
-          <p className="m-0 mt-0.5 truncate text-[12px] text-[var(--text-muted)]">{[KIND_LABEL[doc.kind], countLabel(doc.hits.length, 'passage', 'passages')].join('  •  ')}</p>
+          <p className="m-0 mt-0.5 truncate text-[12px] text-[var(--text-muted)]">{[KIND_LABEL[doc.kind], doc.hits.length > 0 ? countLabel(doc.hits.length, 'passage matched', 'passages matched') : doc.chunkCount > 0 ? countLabel(doc.chunkCount, 'passage', 'passages') : ''].filter(Boolean).join('  •  ')}</p>
         </div>
         <button type="button" onClick={onClose} aria-label="Close the details" className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)]">
           <CloseSmall size={16} />
@@ -67,15 +71,15 @@ export function DocumentDetails({ doc, terms, onOpen, onClose }: Props) {
       <div className="p-4 pb-3">
         <button
           type="button"
-          onClick={() => onOpen(doc.pages[0])}
+          onClick={() => onOpen(doc.hits.length > 0 ? doc.pages[0] : undefined)}
           className="h-9 w-full cursor-pointer rounded-[10px] border-0 bg-[var(--accent-primary)] text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
         >
-          {doc.pages.length > 0 ? `Open at page ${doc.pages[0]}` : 'Open'}
+          {doc.pages.length > 0 && doc.hits.length > 0 ? `Open at page ${doc.pages[0]}` : 'Open'}
         </button>
       </div>
 
       <div role="tablist" className="flex gap-5 border-b border-app-border-subtle px-4">
-        {(['matches', 'details'] as const).map((id) => (
+        {(doc.hits.length > 0 ? (['matches', 'index', 'details'] as const) : (['index', 'details'] as const)).map((id) => (
           <button
             key={id}
             type="button"
@@ -87,13 +91,17 @@ export function DocumentDetails({ doc, terms, onOpen, onClose }: Props) {
               tab === id ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             ].join(' ')}
           >
-            {id === 'matches' ? 'Matches' : 'Details'}
+            {id === 'matches' ? 'Matches' : id === 'index' ? 'Index' : 'Details'}
           </button>
         ))}
       </div>
 
-      {tab === 'matches' ? (
-        <ul className="m-0 flex max-h-[52vh] list-none flex-col gap-2 overflow-y-auto p-4">
+      {tab === 'index' ? (
+        <div className="p-4">
+          <DocumentIndexPanel corpusId={doc.corpusId} fileId={doc.fileId} />
+        </div>
+      ) : tab === 'matches' ? (
+        <ul className="m-0 flex list-none flex-col gap-2 p-4">
           {doc.hits.map((hit: Hit) => (
             <li key={hit.ref}>
               <button
