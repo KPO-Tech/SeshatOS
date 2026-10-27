@@ -182,13 +182,16 @@ func (s *CorpusStore) GetByID(ctx context.Context, id string) (*Corpus, error) {
 	err := s.db.GormDB().WithContext(ctx).Where("id = ?", id).First(&row).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("corpus not found")
+			return nil, ErrCorpusNotFound
 		}
 		return nil, fmt.Errorf("get corpus: %w", err)
 	}
 	c := corpusFromGorm(row)
 	return &c, nil
 }
+
+// ErrCorpusNotFound is returned by GetByID for a collection that does not exist, as opposed to one that could not be read.
+var ErrCorpusNotFound = errors.New("corpus not found")
 
 func (s *CorpusStore) Update(ctx context.Context, id string, params UpdateCorpusParams) (*Corpus, error) {
 	if strings.TrimSpace(id) == "" {

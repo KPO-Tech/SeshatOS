@@ -21,6 +21,12 @@ describe('fileState', () => {
     expect(fileState(file('pending'), job('queued'))).toEqual({ tone: 'working', label: 'Waiting' })
   })
 
+  it('shows a file as being indexed when a new attempt runs after a failed one', () => {
+    expect(fileState(file('failed'), job('running'))).toEqual({ tone: 'working', label: 'Indexing' })
+    expect(fileState(file('failed'), job('pending'))).toEqual({ tone: 'working', label: 'Waiting' })
+    expect(isInProgress(file('failed'), fileState(file('failed'), job('running')))).toBe(true)
+  })
+
   it('keeps watching only what is still on its way', () => {
     expect(isInProgress(file('pending'), fileState(file('pending'), job('running')))).toBe(true)
     expect(isInProgress(file('pending'), fileState(file('pending'), undefined))).toBe(false)
