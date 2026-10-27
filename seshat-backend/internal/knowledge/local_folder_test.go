@@ -240,3 +240,46 @@ func TestTheFilesOfAFolderSourceAreIndexedFromWhereTheyAreCheapestFirst(t *testi
 	require.NoError(t, err)
 	require.NotEmpty(t, res.Results, "what was indexed can be searched")
 }
+
+func TestThePassagesOfAnIndexedFileCanBeRead(t *testing.T) {
+	database := openTestDB(t)
+	svc := newTestService(t, database, newTestArtifactStore(t))
+	ctx := context.Background()
+	p := testPrincipal("user-1")
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "policy.md"), []byte("# Policy\n\n"+strings.Repeat("Retention of records is required for seven years. ", 120)), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "other.txt"), []byte("Unrelated text kept in the same collection."), 0o644))
+
+	src, err := svc.CreateFolderSource(ctx, p, "", dir, "")
+	require.NoError(t, err)
+	made, err := svc.CreateLocalCollections(ctx, p, src.ID, []knowledge.LocalCollection{{Name: "Docs", Files: []knowledge.LocalFile{
+		{Path: filepath.Join(dir, "policy.md"), Name: "policy.md"},
+		{Path: filepath.Join(dir, "other.txt"), Name: "other.txt"},
+	}}})
+	require.NoError(t, err)
+	corpusID := made[0].Corpus.ID
+	_, err = svc.EnqueueAllLocal(ctx, p, corpusID)
+	require.NoError(t, err)
+	for {
+		processed, err := svc.ProcessNextIngestionJob(ctx)
+		require.NoError(t, err)
+		if !processed {
+			break
+		}
+	}
+
+	policy := knowledge.LocalFileID(filepath.Join(dir, "policy.md"))
+	chunks, err := svc.FileChunks(ctx, p, corpusID, policy)
+	require.NoError(t, err)
+	require.Greater(t, len(chunks), 1, "a long document is cut into several passages")
+	var all strings.Builder
+	for i, chunk := range chunks {
+		require.Equal(t, i, chunk.Position, "in the order of the document")
+		all.WriteString(chunk.Text)
+	}
+	require.Contains(t, all.String(), "Retention of records")
+	require.NotContains(t, all.String(), "Unrelated", "the passages of this file only, not of the others in the collection")
+
+	_, err = svc.FileChunks(ctx, testPrincipal("user-2"), corpusID, policy)
+	require.Error(t, err, "another person cannot read them")
+}

@@ -197,6 +197,7 @@ func (a *App) handleCorpora(w http.ResponseWriter, r *http.Request) {
 //	POST   /corpora/{id}/files        → attach file
 //	GET    /corpora/{id}/files        → list attached files
 //	DELETE /corpora/{id}/files/{fid}  → detach file
+//	GET    /corpora/{id}/files/{fid}/chunks → the passages the file was indexed as
 //	POST   /corpora/{id}/ingest       → enqueue an ingest job
 //	GET    /corpora/{id}/ingest/jobs  → list ingest jobs
 //	GET    /corpora/{id}/ingest/jobs/{jid} → get one ingest job
@@ -284,6 +285,28 @@ func (a *App) handleCorpusByID(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) handleCorpusFiles(w http.ResponseWriter, r *http.Request, corpusID string, parts []string) {
 	principal, _ := authPrincipalFromContext(r.Context())
+
+	if len(parts) == 4 && parts[3] == "chunks" {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		svc, ok := a.localKnowledge(w)
+		if !ok {
+			return
+		}
+		chunks, err := svc.FileChunks(r.Context(), principal, corpusID, parts[2])
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		items := make([]map[string]any, 0, len(chunks))
+		for _, chunk := range chunks {
+			items = append(items, map[string]any{"position": chunk.Position, "text": chunk.Text})
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"chunks": items, "count": len(items)})
+		return
+	}
 
 	if len(parts) == 3 {
 		fileID := parts[2]
