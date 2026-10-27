@@ -26,16 +26,17 @@ export function Shell() {
   const isAdminRoute = pathname.startsWith('/admin')
   // Knowledge opens documents in the right panel, as the chat does.
   const isKnowledge = pathname.startsWith('/knowledge')
-  const wasKnowledgeRef = useRef(isKnowledge)
+  const previousPathnameRef = useRef(pathname)
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
   useSessionsSync()
 
-  // The documents opened from Knowledge are closed when leaving it (a conversation closes its own).
+  // The documents opened from Knowledge are closed when its page changes (a conversation closes its own).
   useEffect(() => {
-    if (wasKnowledgeRef.current && !isKnowledge && !isConversation) useUIStore.getState().closeAllRightPanels()
-    wasKnowledgeRef.current = isKnowledge
-  }, [isKnowledge, isConversation])
+    const previous = previousPathnameRef.current
+    previousPathnameRef.current = pathname
+    if (previous !== pathname && previous.startsWith('/knowledge') && !isConversation) useUIStore.getState().closeAllRightPanels()
+  }, [pathname, isConversation])
 
   // The names of the connectors, so tool rows in chat say "GitHub" and not "connector-github".
   useEffect(() => {
