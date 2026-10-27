@@ -2,6 +2,7 @@ package knowledge
 
 import (
 	"context"
+	"errors"
 	"mime"
 	"os"
 	"path/filepath"
@@ -58,12 +59,26 @@ func (s *Service) localFile(ctx context.Context, principal *backendauth.Principa
 		return nil, bkerr.Internal(err.Error(), err)
 	}
 	for _, row := range rows {
+		// A store that could not be read (busy, or failing) is not a file that is gone: only a collection or a source that does not exist
+		// skips the row, so a job that hit a passing fault is tried again instead of being failed as "not found".
 		corpus, err := s.corpora.GetByID(ctx, row.CorpusID)
-		if err != nil || s.checkAccess(principal, corpus) != nil || corpus.SourceID == "" {
+		if errors.Is(err, db.ErrCorpusNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, bkerr.Internal(err.Error(), err)
+		}
+		if s.checkAccess(principal, corpus) != nil || corpus.SourceID == "" {
 			continue
 		}
 		source, err := s.corpora.GetSource(ctx, corpus.SourceID)
-		if err != nil || !within(source.Root, row.SourcePath) {
+		if errors.Is(err, db.ErrKnowledgeSourceNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, bkerr.Internal(err.Error(), err)
+		}
+		if !within(source.Root, row.SourcePath) {
 			continue
 		}
 		return &row, nil
