@@ -70,7 +70,7 @@ export function CollectionPage() {
 
   async function read(file: CollectionFile) {
     try {
-      if (!(await openDocument(file))) show(`There is no preview for this kind of file yet: ${file.name}`, 'err')
+      if (!(await openDocument(file, id))) show(`There is no preview for this kind of file yet: ${file.name}`, 'err')
     } catch (error) {
       show(message(error, 'The document could not be opened'), 'err')
     }

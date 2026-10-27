@@ -21,6 +21,8 @@ type RightPanelFields = {
   plainText?: boolean
   documentPath?: string
   documentFileId?: string
+  // The collection a document was opened from: set, the panel offers the passages the document was indexed as.
+  indexSource?: { corpusId: string; fileId: string }
   // Capability ID from POST /artifacts/preview - see ArtifactPreviewPanel.tsx.
   artifactPreviewId?: string
   browserUrl?: string

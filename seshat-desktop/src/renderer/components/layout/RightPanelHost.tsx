@@ -1,5 +1,6 @@
-import { useRef } from 'react'
-import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
+import { useRef, useState } from 'react'
+import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, ListView, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
+import { DocumentIndexPanel } from '@renderer/pages/knowledge/collections/DocumentIndexPanel'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { useUIStore } from '@renderer/stores/ui'
 import { useSessionStore } from '@renderer/stores/session'
@@ -181,6 +182,14 @@ function PanelFrame({
     )
   }
 
+  return <GenericPanelFrame key={panel.id} panel={panel} isMaximized={isMaximized} onClose={onClose} onToggleMaximize={onToggleMaximize} />
+}
+
+// The frame of a panel that has no header of its own. A document opened from a collection also gets a button that swaps the viewer for the
+// passages the document was indexed as.
+function GenericPanelFrame({ panel, isMaximized, onClose, onToggleMaximize }: { panel: RightPanelInstance; isMaximized: boolean; onClose: () => void; onToggleMaximize: () => void }) {
+  const [showIndex, setShowIndex] = useState(false)
+  const indexSource = panel.indexSource
   return (
     <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
       <div className="flex min-h-[46px] shrink-0 items-center justify-between gap-2 border-b border-app-border-subtle px-3 py-2">
@@ -192,6 +201,21 @@ function PanelFrame({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {indexSource && (
+            <button
+              className={[
+                'mr-1 flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] border px-2.5 text-[12px] font-semibold transition-colors duration-150',
+                showIndex ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-app-border-subtle bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text'
+              ].join(' ')}
+              type="button"
+              onClick={() => setShowIndex((shown) => !shown)}
+              aria-pressed={showIndex}
+              title={showIndex ? 'Back to the document' : 'The passages this document was indexed as'}
+            >
+              <ListView size={13} />
+              {showIndex ? 'Document' : 'Index'}
+            </button>
+          )}
           <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" type="button" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
             <WindowMaximizeIcon />
           </button>
@@ -201,7 +225,11 @@ function PanelFrame({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto bg-app-surface p-3">{renderPanelBody(panel)}</div>
+      <div className="min-h-0 flex-1 overflow-auto bg-app-surface p-3">
+        {/* The viewer stays mounted under the index, so coming back finds the page it was on. */}
+        <div className={showIndex && indexSource ? 'hidden' : 'contents'}>{renderPanelBody(panel)}</div>
+        {showIndex && indexSource && <DocumentIndexPanel corpusId={indexSource.corpusId} fileId={indexSource.fileId} />}
+      </div>
     </aside>
   )
 }

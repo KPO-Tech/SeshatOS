@@ -50,6 +50,15 @@ function toStatus(raw: string): FileStatus {
   return raw === 'ingested' || raw === 'failed' ? raw : 'pending'
 }
 
+/** One piece of a document as it was indexed. */
+export type Passage = { position: number; text: string }
+
+/** The passages a document of a collection was indexed as, in the order of the document. */
+export async function fetchPassages(corpusId: string, fileId: string): Promise<Passage[]> {
+  const data = await api.get<{ chunks?: Passage[] }>(`/corpora/${encodeURIComponent(corpusId)}/files/${encodeURIComponent(fileId)}/chunks`)
+  return data.chunks ?? []
+}
+
 export async function listCollections(): Promise<Collection[]> {
   const data = await api.get<{ corpora?: CorpusRow[] }>('/corpora')
   return (data.corpora ?? []).map(toCollection)
