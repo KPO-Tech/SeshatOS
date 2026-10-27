@@ -34,14 +34,14 @@ export function ResultRow({ doc, terms, selected, view, onSelect }: Props) {
         onClick={onSelect}
         aria-pressed={selected}
         className={[
-          'flex h-full w-full cursor-pointer gap-4 rounded-[14px] border px-4 py-3.5 text-left transition-colors',
+          'flex h-full w-full cursor-pointer gap-3.5 rounded-[12px] border px-3.5 py-3 text-left transition-colors',
           grid ? 'flex-col' : 'items-start',
           selected
             ? 'border-[color-mix(in_srgb,var(--accent-primary)_60%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_7%,var(--surface-panel))]'
             : 'border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] hover:bg-[var(--surface-hover)]'
         ].join(' ')}
       >
-        <FileKindIcon kind={doc.kind} size={grid ? 40 : 46} />
+        <FileKindIcon kind={doc.kind} size={grid ? 36 : 40} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[15px] font-semibold text-[var(--text-primary)]" title={doc.path}>
             {doc.name}

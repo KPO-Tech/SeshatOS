@@ -56,7 +56,7 @@ export function DocumentDetails({ doc, terms, onOpen, onClose }: Props) {
   ].filter((row): row is [string, string] => row[1] !== '')
 
   return (
-    <aside aria-label="Selected document" className="sticky top-0 flex max-h-[calc(100vh-3rem)] w-[340px] shrink-0 flex-col self-start overflow-y-auto rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]">
+    <aside aria-label="Selected document" className="no-scrollbar flex min-h-0 w-[320px] shrink-0 flex-col overflow-y-auto rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]">
       <div className="flex items-start gap-3 border-b border-app-border-subtle p-4">
         <FileKindIcon kind={doc.kind} size={40} />
         <div className="min-w-0 flex-1">

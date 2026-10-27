@@ -14,7 +14,7 @@ type Props = {
   onKind: (kind: FileKind | null) => void
 }
 
-const CARD = 'rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] p-3.5'
+const CARD = 'rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] p-2.5'
 
 function Row({ active, onClick, icon, label, count }: { active: boolean; onClick: () => void; icon: ReactNode; label: string; count: number }) {
   return (
@@ -24,7 +24,7 @@ function Row({ active, onClick, icon, label, count }: { active: boolean; onClick
         onClick={onClick}
         aria-pressed={active}
         className={[
-          'flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] border-0 px-2.5 py-2 text-left text-[13px] transition-colors',
+          'flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] border-0 px-2 py-1.5 text-left text-[12.5px] transition-colors',
           active ? 'bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
         ].join(' ')}
       >
@@ -41,10 +41,10 @@ function Row({ active, onClick, icon, label, count }: { active: boolean; onClick
 // The two lists on the left of the results: the collections, and the kinds of document, each with the number of documents it holds.
 export function FilterPanel({ title, facets, filters, total, onToggleCollection, onAllCollections, onKind }: Props) {
   return (
-    <aside aria-label={title} className="sticky top-0 flex w-[240px] shrink-0 flex-col gap-3 self-start">
-      <section className={CARD}>
-        <h2 className="m-0 mb-2 px-1 text-[13.5px] font-semibold text-[var(--text-primary)]">Collections</h2>
-        <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+    <aside aria-label={title} className="flex min-h-0 w-[220px] shrink-0 flex-col gap-3">
+      <section className={`${CARD} flex min-h-0 flex-col`}>
+        <h2 className="m-0 mb-1.5 shrink-0 px-1.5 text-[13px] font-semibold text-[var(--text-primary)]">Collections</h2>
+        <ul className="no-scrollbar m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0">
           <Row active={filters.collectionIds.size === 0} onClick={onAllCollections} icon={<FolderOpen size={14} />} label="All collections" count={total} />
           {facets.collections.map((collection) => (
             <Row key={collection.id} active={filters.collectionIds.has(collection.id)} onClick={() => onToggleCollection(collection.id)} icon={<FolderOpen size={14} />} label={collection.name} count={collection.count} />
@@ -52,9 +52,9 @@ export function FilterPanel({ title, facets, filters, total, onToggleCollection,
         </ul>
       </section>
 
-      <section className={CARD}>
-        <h2 className="m-0 mb-2 px-1 text-[13.5px] font-semibold text-[var(--text-primary)]">Document type</h2>
-        <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+      <section className={`${CARD} flex min-h-0 flex-col`}>
+        <h2 className="m-0 mb-1.5 shrink-0 px-1.5 text-[13px] font-semibold text-[var(--text-primary)]">Document type</h2>
+        <ul className="no-scrollbar m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0">
           {facets.kinds.map(({ kind, count }) => (
             <Row key={kind} active={filters.kind === kind} onClick={() => onKind(filters.kind === kind ? null : kind)} icon={<FileKindIcon kind={kind} size={16} />} label={KIND_LABEL[kind]} count={count} />
           ))}

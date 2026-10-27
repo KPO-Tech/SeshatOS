@@ -25,5 +25,10 @@ export function useSearch() {
     }
   }, [])
 
-  return { state, run }
+  const reset = useCallback(() => {
+    latest.current += 1
+    setState({ phase: 'idle' })
+  }, [])
+
+  return { state, run, reset }
 }

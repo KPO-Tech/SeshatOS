@@ -98,7 +98,7 @@ export function groupDocs(hits: readonly Hit[]): Doc[] {
 }
 
 export const KIND_LABEL: Record<FileKind, string> = { pdf: 'PDF', docx: 'Word', xlsx: 'Excel', pptx: 'Slides', md: 'Text', other: 'Other' }
-const KIND_ORDER: FileKind[] = ['pdf', 'docx', 'xlsx', 'pptx', 'md', 'other']
+export const KIND_ORDER: FileKind[] = ['pdf', 'docx', 'xlsx', 'pptx', 'md', 'other']
 
 export type Facets = {
   collections: { id: string; name: string; count: number }[]

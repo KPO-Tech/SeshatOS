@@ -39,7 +39,7 @@ export function SearchBar({ value, busy, autoFocus, onChange, onSubmit }: Props)
     <form
       onSubmit={submit}
       role="search"
-      className="flex h-[52px] w-full items-center gap-3 rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] pl-4 pr-1.5 transition-[border-color,box-shadow] duration-[160ms] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_16%,transparent)]"
+      className="flex h-11 w-full items-center gap-2.5 rounded-[14px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] pl-3.5 pr-1.5 transition-[border-color,box-shadow] duration-[160ms] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_16%,transparent)]"
     >
       <Search size={17} className="shrink-0 text-app-text-muted" />
       <input
@@ -68,9 +68,9 @@ export function SearchBar({ value, busy, autoFocus, onChange, onSubmit }: Props)
         type="submit"
         disabled={!value.trim() || busy}
         aria-label="Search"
-        className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[12px] border-0 bg-[var(--accent-primary)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[color-mix(in_srgb,var(--surface-panel)_82%,var(--surface-root))] disabled:text-app-text-muted"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border-0 bg-[var(--accent-primary)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[color-mix(in_srgb,var(--surface-panel)_82%,var(--surface-root))] disabled:text-app-text-muted"
       >
-        <Search size={17} />
+        <Search size={15} />
       </button>
     </form>
   )
