@@ -229,6 +229,7 @@ func (a *App) nativeDocStatusResponse() map[string]any {
 	return map[string]any{
 		"model_dir":    documentreading.NativeDocModelsDir(),
 		"models":       documentreading.NativeDocModelFiles,
+		"model_status": documentreading.NativeDocModelStatuses(),
 		"packs":        nativeDocPacksResponse(),
 		"active_pack":  documentreading.NativeDocActivePack(),
 		"download":     a.nativeDocDownloadState(),
@@ -321,6 +322,9 @@ func (a *App) runNativeDocDownload(pack string) {
 	a.nativeDocDownload.Status = "completed"
 	a.nativeDocDownload.Error = ""
 	a.nativeDocDownload.FilesCompleted = a.nativeDocDownload.FileCount
+	// The models are there: bring the OCR up now, so Settings says Ready without a second step. A document that needs it would do the
+	// same, and a machine where it fails is told by the reader.
+	_, _ = documentreading.InitNativeDocRuntime()
 }
 
 func (a *App) handleDocumentReaderTest(w http.ResponseWriter, r *http.Request, store *db.DocumentReaderConfigStore) {

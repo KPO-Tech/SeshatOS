@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
+import { NativeModelsPanel } from './NativeModelsPanel'
 import { packOptions } from './ocrPacks'
 import { downloadNativeDocumentReaderModels, fetchNativeDocumentReaderStatus, initializeNativeDocumentReader, saveDocumentReaderConfig, testDocumentReaderConfig } from './knowledgeApi'
-import type { DocumentReaderConfig, NativeDocDownloadState, NativeDocPack, SystemStatus, TestState } from './knowledgeTypes'
+import type { DocumentReaderConfig, NativeDocDownloadState, NativeDocModelStatus, NativeDocPack, SystemStatus, TestState } from './knowledgeTypes'
 
 export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }: {
   config: DocumentReaderConfig | null
@@ -23,6 +24,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const [nativeDownload, setNativeDownload] = useState<NativeDocDownloadState | null>(null)
   const [nativeModelDir, setNativeModelDir] = useState<string | null>(null)
   const [nativePacks, setNativePacks] = useState<NativeDocPack[]>([])
+  const [nativeModels, setNativeModels] = useState<NativeDocModelStatus[]>([])
   const [selectedPack, setSelectedPack] = useState<string | null>(null)
   const [testError, setTestError] = useState<string | null>(null)
   const [nativeInitError, setNativeInitError] = useState<string | null>(null)
@@ -54,6 +56,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
         setNativeModelDir(status.model_dir)
         setNativeDownload(status.download)
         setNativePacks(status.packs ?? [])
+        setNativeModels(status.model_status ?? [])
         setSelectedPack((current) => current ?? status.active_pack ?? null)
         onSystemChanged?.(status.capabilities)
         if (status.download.status === 'running') {
@@ -198,6 +201,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
       setNativeModelDir(status.model_dir)
       setNativeDownload(status.download)
       setNativePacks(status.packs ?? [])
+      setNativeModels(status.model_status ?? [])
       onSystemChanged?.(status.capabilities)
       if (status.download.status === 'completed') {
         setDownloadingNative(false)
@@ -235,14 +239,10 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
           <Capability label="Native OCR" ready={nativeDocReady} detail={nativeDocDetail} />
           <Capability label="Vision fallback" ready={visionConfigured} detail={visionConfigured ? 'Configured' : 'Later'} />
         </div>
-        {nativeModelDir && (
-          <div className="truncate rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)]">
-            Models: {nativeModelDir}
-          </div>
-        )}
         <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[12px] font-semibold text-[var(--text-muted)]">
           {nativeSetupMessage}
         </div>
+        <NativeModelsPanel statuses={nativeModels} folder={nativeModelDir} />
         {nativePacks.length > 1 && (
           <Field label="Languages to read">
             <CustomSelect value={selectedPack ?? ''} options={packOptions(nativePacks)} onChange={setSelectedPack} disabled={downloadingNative} />
@@ -257,10 +257,10 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
           </SoftButton>
           {nativeInitError && <span className="min-w-0 truncate text-[11px] font-semibold text-[var(--accent-primary)]">{nativeInitError}</span>}
         </div>
-        {nativeDownload && nativeDownload.status !== 'idle' && (
+        {nativeDownload?.status === 'running' && (
           <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2">
             <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-[var(--text-muted)]">
-              <span className="truncate">{nativeDownload.status === 'running' ? nativeDownload.current_file || 'Downloading models' : nativeDownload.status}</span>
+              <span className="truncate">{nativeDownload.current_file || 'Downloading models'}</span>
               <span>{nativeDownload.file_index ?? nativeDownload.files_completed ?? 0}/{nativeDownload.file_count ?? 0} {formatBytes(nativeDownload.bytes_downloaded, nativeDownload.bytes_total)}</span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">

@@ -68,6 +68,44 @@ func NativeDocModelsAvailable() bool {
 	return true
 }
 
+// NativeDocModelStatus says whether one of the files the native OCR reads is on disk, so Settings can show each model on its own.
+type NativeDocModelStatus struct {
+	File      string `json:"file"`
+	Installed bool   `json:"installed"`
+	SizeBytes int64  `json:"size_bytes"`
+	// Required is false for the models the reader can do without (the layout and the table structure): a page is then read as lines of text.
+	Required bool `json:"required"`
+}
+
+// NativeDocModelStatuses lists every model file with its state, in the order they work on a scanned page.
+func NativeDocModelStatuses() []NativeDocModelStatus {
+	dir := NativeDocModelsDir()
+	statuses := make([]NativeDocModelStatus, 0, len(NativeDocModelFiles))
+	for _, name := range NativeDocModelFiles {
+		required := false
+		for _, need := range nativeDocRequiredModelFiles {
+			required = required || need == name
+		}
+		candidates := []string{name}
+		if name == "rec.ort" {
+			// The Latin recognizer is a plain ONNX file, read when there is no rec.ort.
+			candidates = append(candidates, "rec.onnx")
+		}
+		status := NativeDocModelStatus{File: name, Required: required}
+		for _, candidate := range candidates {
+			path := filepath.Join(dir, candidate)
+			if usableModelFile(path) {
+				if info, err := os.Stat(path); err == nil {
+					status.Installed, status.SizeBytes = true, info.Size()
+				}
+				break
+			}
+		}
+		statuses = append(statuses, status)
+	}
+	return statuses
+}
+
 func NativeDocReady() bool {
 	return nativeDocCompiled() && nativedoc.Initialized() && NativeDocModelsAvailable()
 }
