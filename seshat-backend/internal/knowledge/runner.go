@@ -47,6 +47,10 @@ func (r *Runner) Start(ctx context.Context) {
 	if r == nil || r.service == nil || r.service.jobs == nil {
 		return
 	}
+	// The runner is the only worker: a job still marked running was left by an app that closed or crashed on it.
+	if err := r.service.jobs.RecoverInterrupted(ctx); err != nil {
+		log.Printf("[knowledge] could not recover interrupted ingestion jobs: %v", err)
+	}
 	go r.loop(ctx)
 }
 

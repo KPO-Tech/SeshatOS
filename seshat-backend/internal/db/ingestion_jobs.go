@@ -204,16 +204,9 @@ func (s *KnowledgeIngestionJobStore) ClaimNextDue(ctx context.Context, staleAfte
 	now := time.Now().UTC()
 	var claimed *KnowledgeIngestionJob
 	err := s.db.GormDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		requeueBefore := now.Add(-staleAfter).Unix()
 		if staleAfter > 0 {
-			if err := tx.Model(&gKnowledgeIngestionJob{}).
-				Where("status = ? AND started_at_unix IS NOT NULL AND started_at_unix <= ?", IngestionJobStatusRunning, requeueBefore).
-				Updates(map[string]any{
-					"status":           IngestionJobStatusPending,
-					"next_run_at_unix": now.Unix(),
-					"updated_at_unix":  now.Unix(),
-				}).Error; err != nil {
-				return fmt.Errorf("requeue stale ingestion jobs: %w", err)
+			if err := requeueInterrupted(tx, now, now.Add(-staleAfter).Unix()); err != nil {
+				return err
 			}
 		}
 
@@ -261,6 +254,46 @@ func (s *KnowledgeIngestionJobStore) ClaimNextDue(ctx context.Context, staleAfte
 		return nil, err
 	}
 	return claimed, nil
+}
+
+// interruptedMessage is what a file is told when the app stopped, or crashed, while it was being read, as many times as it may be tried.
+const interruptedMessage = "indexing stopped while this file was being read, more than once: the app was closed or ran out of resources on it. It was set aside; try it again from its row"
+
+// requeueInterrupted takes the jobs that were running since startedBefore or earlier, which no worker is running any more, out of the
+// running state: back to waiting when they may still be tried, failed with a reason when they were already tried as often as allowed.
+// Without the second case a file that makes the app crash was started again at every launch, for ever.
+func requeueInterrupted(tx *gorm.DB, now time.Time, startedBefore int64) error {
+	interrupted := "status = ? AND started_at_unix IS NOT NULL AND started_at_unix <= ?"
+	if err := tx.Model(&gKnowledgeIngestionJob{}).
+		Where(interrupted+" AND attempt_count >= max_attempts", IngestionJobStatusRunning, startedBefore).
+		Updates(map[string]any{
+			"status":            IngestionJobStatusFailed,
+			"last_error":        interruptedMessage,
+			"next_run_at_unix":  nil,
+			"completed_at_unix": nil,
+			"updated_at_unix":   now.Unix(),
+		}).Error; err != nil {
+		return fmt.Errorf("fail interrupted ingestion jobs: %w", err)
+	}
+	if err := tx.Model(&gKnowledgeIngestionJob{}).
+		Where(interrupted, IngestionJobStatusRunning, startedBefore).
+		Updates(map[string]any{
+			"status":           IngestionJobStatusPending,
+			"next_run_at_unix": now.Unix(),
+			"updated_at_unix":  now.Unix(),
+		}).Error; err != nil {
+		return fmt.Errorf("requeue interrupted ingestion jobs: %w", err)
+	}
+	return nil
+}
+
+// RecoverInterrupted deals with every job that is marked running: to be called when the one worker starts, when none can really be
+// running, so a job left by a closed or crashed app is not waited on for the stale timeout.
+func (s *KnowledgeIngestionJobStore) RecoverInterrupted(ctx context.Context) error {
+	now := time.Now().UTC()
+	return s.db.GormDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return requeueInterrupted(tx, now, now.Unix())
+	})
 }
 
 func (s *KnowledgeIngestionJobStore) MarkCompleted(ctx context.Context, id string, chunkCount int) error {
