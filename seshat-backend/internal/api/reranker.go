@@ -55,6 +55,11 @@ func (a *App) handleRerankerConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.Contains(r.URL.Path, "/settings/reranker/models") {
+		a.handleRerankerModels(w, r, store)
+		return
+	}
+
 	tail := strings.TrimRight(r.URL.Path, "/")
 	if strings.HasSuffix(tail, "/test") || strings.HasSuffix(tail, "/detect-model") || strings.HasSuffix(tail, "/list-models") {
 		if r.Method != http.MethodPost {

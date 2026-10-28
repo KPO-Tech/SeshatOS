@@ -1,5 +1,5 @@
 import { api } from '@renderer/api/client'
-import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, RerankerConfig, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
+import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, RerankerConfig, RerankerModel, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
 
 export type KnowledgeSnapshot = {
   corpora: Corpus[]
@@ -116,4 +116,21 @@ export function fetchNativeDocumentReaderStatus() {
 
 export function downloadNativeDocumentReaderModels(pack?: string) {
   return api.post<NativeDocDownloadResult>('/settings/document-reader/native/download', pack ? { pack } : {})
+}
+
+export function listRerankerSetups() {
+  return api.get<{ models: RerankerModel[] }>('/settings/reranker/models')
+}
+
+/** Sets a rerank model up; with `use`, it becomes the one the search uses. Returns the list as it is after. */
+export function addRerankerSetup(config: { base_url: string; model: string; api_key?: string; provider_setting_id?: string; use?: boolean }) {
+  return api.post<{ models: RerankerModel[] }>('/settings/reranker/models', config)
+}
+
+export function useRerankerSetup(id: string) {
+  return api.post<{ models: RerankerModel[] }>(`/settings/reranker/models/${encodeURIComponent(id)}/use`, {})
+}
+
+export function removeRerankerSetup(id: string) {
+  return api.delete<{ models: RerankerModel[] }>(`/settings/reranker/models/${encodeURIComponent(id)}`)
 }

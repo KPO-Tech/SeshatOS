@@ -17,6 +17,15 @@ export type RerankerConfig = {
   updated_at?: number
 }
 
+/** A rerank model the person has set up. `active` is the one the search uses now. */
+export type RerankerModel = {
+  id: string
+  base_url: string
+  model: string
+  has_api_key: boolean
+  active: boolean
+}
+
 export type DocumentReaderConfig = {
   base_url: string
   enabled: boolean
