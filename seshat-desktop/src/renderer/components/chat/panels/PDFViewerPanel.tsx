@@ -12,6 +12,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 type Props = {
   fileId: string
   filename: string
+  // The page to show first, when the document is opened at a passage.
+  initialPage?: number
 }
 
 type LayoutMode = 'pages' | 'width'
@@ -79,9 +81,10 @@ function applyPDFLayout(
 // exactly this: embedding the viewer without pulling in its full generic
 // web app (toolbar chrome, l10n, etc.) - this component supplies its own
 // minimal toolbar instead.
-export function PDFViewerPanel({ fileId, filename }: Props) {
+export function PDFViewerPanel({ fileId, filename, initialPage }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
+  const initialPageRef = useRef(initialPage ?? 1)
   const pdfViewerRef = useRef<PdfViewerInstance | null>(null)
   const pdfModesRef = useRef<Pick<PdfViewerModule, 'ScrollMode' | 'SpreadMode'> | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -175,6 +178,13 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
           pdfWorker.destroy()
           return
         }
+        const loaded = pdfDocument
+        if (initialPageRef.current > 1) {
+          // The pages are not laid out before this event: asking for one earlier is ignored.
+          eventBus?.on('pagesinit', () => {
+            pdfViewer.currentPageNumber = Math.min(initialPageRef.current, loaded.numPages)
+          })
+        }
         pdfViewer.setDocument(pdfDocument)
         linkService.setDocument(pdfDocument, null)
         setPageCount(pdfDocument.numPages)
@@ -200,6 +210,13 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
     // pdfjsLib are stable module-level singletons, not real dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId])
+
+  // The same document opened again at another passage: go to its page.
+  useEffect(() => {
+    initialPageRef.current = initialPage ?? 1
+    const viewer = pdfViewerRef.current
+    if (status === 'ready' && viewer && initialPage && initialPage >= 1) viewer.currentPageNumber = Math.min(initialPage, viewer.pagesCount)
+  }, [initialPage, status])
 
   function setLayout(mode: LayoutMode) {
     setLayoutMode(mode)

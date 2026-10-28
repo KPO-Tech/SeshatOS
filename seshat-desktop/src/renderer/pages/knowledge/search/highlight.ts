@@ -1,4 +1,13 @@
-// The words of a query as the search index sees them: letters and digits, case and accents ignored, each once.
+// Words that carry no meaning of their own in a question: marking them in the passages would light up half of every line.
+const FILLER = new Set(
+  ('a an the of to in on at by for and or is are was were be been it its as do does did what which who whom how why when where should can could ' +
+    'would will with from that this these those into after before about than then there their they you your we our if not no ' +
+    'le la les un une des du de et ou est sont que qui quel quels quelle quelles comment pourquoi quand dans sur pour par avec ce cette ces se sa son ses ne pas')
+    .split(' ')
+)
+
+// The words of a query as the search index sees them: letters and digits, case and accents ignored, each once. The filler words of a
+// question are left out, unless the question is made of nothing else.
 export function queryTerms(query: string): string[] {
   const words = query.match(/[\p{L}\p{N}]+/gu) ?? []
   const terms: string[] = []
@@ -6,7 +15,8 @@ export function queryTerms(query: string): string[] {
     const term = fold(word)
     if (!terms.includes(term)) terms.push(term)
   }
-  return terms
+  const meaningful = terms.filter((term) => !FILLER.has(term) && (term.length > 1 || /\d/.test(term)))
+  return meaningful.length > 0 ? meaningful : terms
 }
 
 // Lower case and without accents, one character for one character, so that a position in the folded text is a position in the original.

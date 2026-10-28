@@ -294,7 +294,7 @@ function renderPanelBody(panel: RightPanelInstance) {
       return <SubagentPanel sessionId={panel.sessionId ?? ''} toolUseId={panel.subagentToolUseId ?? ''} />
     case 'pdf':
       return panel.documentFileId ? (
-        <PDFViewerPanel fileId={panel.documentFileId} filename={panel.title} />
+        <PDFViewerPanel fileId={panel.documentFileId} filename={panel.title} initialPage={panel.documentPage} />
       ) : (
         <EmptyState title="PDF preview" description="This PDF couldn't be opened." />
       )
