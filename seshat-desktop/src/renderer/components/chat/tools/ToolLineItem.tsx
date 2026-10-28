@@ -41,8 +41,8 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
 }) {
   // web_search/web_fetch/read_url/read_document_url used to render here too,
   // but are now silent (see toolDisplay.tsx) and never reach this component.
-  // bash stays here (unlike those) since it still needs to auto-expand
-  // inline on running/error - but it gets the same static-label + detail
+  // bash stays here (unlike those) since it still needs to open
+  // inline on error or on a click - but it gets the same static-label + detail
   // split as the other preview tools instead of one long sentence, just
   // without their bigger card (isBigRow below).
   const isPreviewTool =
@@ -56,10 +56,12 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const isRunning = status === 'running' || status === 'pending'
   const isError = status === 'failed'
   const isCompleted = status === 'completed'
-  // Live and erroring rows are open; a bash row can also be opened and closed by a click (see toggle() below), the other tools open
-  // their own panel instead.
+  // A row stays closed while its tool runs, so a long turn does not fill the screen with output; an erroring row is open, and so is a
+  // question waiting for its answer. A bash row can be opened and closed by a click (see toggle() below), the other tools open their own
+  // panel instead.
   const [opened, setOpened] = useState(false)
-  const expanded = autoExpand || isRunning || isError || opened
+  const awaitingAnswer = isRunning && tool.name === 'ask_user_question'
+  const expanded = autoExpand || isError || awaitingAnswer || opened
   const label = isPreviewTool ? toolLabel(tool.name) : summarizeTool(tool)
   const detail = isPreviewTool ? previewDetail(tool) : ''
   const meta = isPreviewTool ? previewMeta(tool) : ''
