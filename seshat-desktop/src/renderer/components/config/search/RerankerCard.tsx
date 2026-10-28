@@ -1,16 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { ProviderSetting } from '@renderer/api/types'
+import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
-import { detectRerankerModel, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
+import { detectRerankerModel, listRerankerModels, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { RerankerConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
 
 const RERANKER_PRESETS = [
   { id: 'tei', label: 'TEI local', base_url: 'http://localhost:8083/rerank', model: 'BAAI/bge-reranker-v2-m3' },
   { id: 'langsearch', label: 'LangSearch', base_url: 'https://api.langsearch.com/v1/rerank', model: 'langsearch-reranker-v1' },
-  { id: 'cohere', label: 'Cohere compatible', base_url: 'https://api.cohere.com/v2/rerank', model: 'rerank-v3.5' },
+  { id: 'openrouter', label: 'OpenRouter', base_url: 'https://openrouter.ai/api/v1/rerank', model: 'cohere/rerank-v3.5' },
+  { id: 'cohere', label: 'Cohere', base_url: 'https://api.cohere.com/v2/rerank', model: 'rerank-v3.5' },
+  { id: 'voyage', label: 'Voyage AI', base_url: 'https://api.voyageai.com/v1/rerank', model: 'rerank-2.5' },
   { id: 'custom', label: 'Custom endpoint', base_url: '', model: '' }
 ]
 
-export function RerankerCard({ config, onSaved }: { config: RerankerConfig | null; onSaved: (config: RerankerConfig) => void }) {
+// The hosted providers whose rerank models are listed by the app.
+const LISTED = ['openrouter', 'cohere', 'voyage']
+
+export function RerankerCard({ config, providers, onSaved }: { config: RerankerConfig | null; providers: ProviderSetting[]; onSaved: (config: RerankerConfig) => void }) {
   const [preset, setPreset] = useState('tei')
   const [form, setForm] = useState({
     base_url: config?.base_url || RERANKER_PRESETS[0].base_url,
@@ -24,6 +31,25 @@ export function RerankerCard({ config, onSaved }: { config: RerankerConfig | nul
   const [testError, setTestError] = useState<string | null>(null)
   const [latency, setLatency] = useState<number | null>(null)
   const [detecting, setDetecting] = useState(false)
+  const [models, setModels] = useState<string[]>([])
+  // The provider of Config > Providers whose key the OpenRouter models can use, when the person has it set up.
+  const ownProvider = useMemo(() => (preset === 'openrouter' ? (providers.find((item) => item.has_api_key && item.provider.toLowerCase() === 'openrouter') ?? null) : null), [providers, preset])
+  const [useOwnKey, setUseOwnKey] = useState(true)
+
+  // The models a hosted provider offers, read when it is chosen (or already chosen when the card opens).
+  useEffect(() => {
+    if (!LISTED.includes(preset)) {
+      setModels([])
+      return
+    }
+    let cancelled = false
+    listRerankerModels({ provider: preset })
+      .then((result) => !cancelled && setModels(result.models ?? []))
+      .catch(() => !cancelled && setModels([]))
+    return () => {
+      cancelled = true
+    }
+  }, [preset])
 
   useEffect(() => {
     if (!config) return
@@ -54,6 +80,7 @@ export function RerankerCard({ config, onSaved }: { config: RerankerConfig | nul
       api_key: '',
       enabled: true
     }))
+    setUseOwnKey(true)
     setDirty(true)
     setTesting('idle')
   }
@@ -85,7 +112,8 @@ export function RerankerCard({ config, onSaved }: { config: RerankerConfig | nul
       const result = await testRerankerConfig({
         base_url: form.base_url,
         model: form.model,
-        api_key: form.api_key || undefined
+        api_key: form.api_key || undefined,
+        provider_setting_id: ownProvider && useOwnKey && !form.api_key ? ownProvider.id : undefined
       })
       setTesting(result.ok ? 'ok' : 'error')
       setLatency(result.latency_ms)
@@ -103,7 +131,8 @@ export function RerankerCard({ config, onSaved }: { config: RerankerConfig | nul
         base_url: form.base_url,
         model: form.model,
         enabled: form.enabled,
-        api_key: form.api_key || undefined
+        api_key: form.api_key || undefined,
+        provider_setting_id: ownProvider && useOwnKey && !form.api_key ? ownProvider.id : undefined
       })
       onSaved(saved)
       setForm((current) => ({ ...current, api_key: '' }))
@@ -119,7 +148,7 @@ export function RerankerCard({ config, onSaved }: { config: RerankerConfig | nul
   const presetOptions: SelectOption[] = RERANKER_PRESETS.map((item) => ({
     value: item.id,
     label: item.label,
-    description: item.id === 'tei' ? 'Local reranking server' : item.id === 'custom' ? 'Bring your own endpoint' : item.model,
+    description: item.id === 'tei' ? 'Local reranking server' : item.id === 'custom' ? 'Bring your own endpoint' : item.id === 'openrouter' ? 'Cohere, Voyage, Qwen and more, one key' : item.model,
     icon: <RerankerIcon name={item.id} />
   }))
 
@@ -141,12 +170,28 @@ export function RerankerCard({ config, onSaved }: { config: RerankerConfig | nul
         </div>
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
           <Field label="Model">
-            <TextInput value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="BAAI/bge-reranker-v2-m3" />
+            <TextInput list="knowledge-rerank-models" value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="BAAI/bge-reranker-v2-m3" />
+            <datalist id="knowledge-rerank-models">
+              {models.map((model) => <option key={model} value={model} />)}
+            </datalist>
           </Field>
           <Field label="API key">
-            <TextInput type="password" value={form.api_key} onChange={(event) => update('api_key', event.target.value)} placeholder={config?.has_api_key ? 'Keep current key' : 'Optional'} autoComplete="new-password" />
+            <TextInput
+              type="password"
+              value={form.api_key}
+              onChange={(event) => update('api_key', event.target.value)}
+              placeholder={ownProvider && useOwnKey ? `Key of ${ownProvider.name}` : config?.has_api_key ? 'Keep current key' : 'Optional'}
+              autoComplete="new-password"
+            />
           </Field>
         </div>
+
+        {ownProvider && (
+          <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--text-secondary)]">
+            <input type="checkbox" checked={useOwnKey} onChange={(event) => { setUseOwnKey(event.target.checked); setDirty(true); setTesting('idle') }} className="size-3.5 cursor-pointer accent-[var(--accent-primary)]" />
+            Use the key of your {ownProvider.name} provider, no need to type it again
+          </label>
+        )}
 
         <ResultMessage state={testing} error={testError} latency={latency} />
 
@@ -181,6 +226,13 @@ function RerankerIcon({ name }: { name: string }) {
         <rect width="24" height="24" rx="6" fill="#2957D9" />
         <path d="M8 7v10h8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="m10 14 2-3 2 2 2-4" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    openrouter: <ProviderIcon provider="openrouter" size={24} />,
+    voyage: (
+      <>
+        <rect width="24" height="24" rx="6" fill="#1F4D4A" />
+        <path d="m7 8 5 9 5-9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </>
     ),
     cohere: (

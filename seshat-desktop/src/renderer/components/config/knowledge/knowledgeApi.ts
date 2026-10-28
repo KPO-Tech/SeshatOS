@@ -50,6 +50,8 @@ export function saveEmbedderConfig(config: {
   model: string
   enabled: boolean
   api_key?: string
+  // Takes the key of one of the person's providers (Config > Providers) instead of a key typed here.
+  provider_setting_id?: string
 }) {
   return api.put<EmbedderConfig>('/settings/embedder', config)
 }
@@ -59,6 +61,7 @@ export function testEmbedderConfig(config: {
   base_url: string
   model: string
   api_key?: string
+  provider_setting_id?: string
 }) {
   return api.post<TestResult>('/settings/embedder/test', config)
 }
@@ -72,6 +75,7 @@ export function saveRerankerConfig(config: {
   model: string
   enabled: boolean
   api_key?: string
+  provider_setting_id?: string
 }) {
   return api.put<RerankerConfig>('/settings/reranker', config)
 }
@@ -80,8 +84,14 @@ export function testRerankerConfig(config: {
   base_url: string
   model: string
   api_key?: string
+  provider_setting_id?: string
 }) {
   return api.post<TestResult>('/settings/reranker/test', config)
+}
+
+/** The rerank models a hosted provider offers (OpenRouter's from its own listing); an error says why the list is not the live one. */
+export function listRerankerModels(config: { provider: string }) {
+  return api.post<{ models: string[]; error: string | null }>('/settings/reranker/list-models', config)
 }
 
 export function detectRerankerModel(config: { base_url: string }) {

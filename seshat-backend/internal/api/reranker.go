@@ -56,13 +56,15 @@ func (a *App) handleRerankerConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tail := strings.TrimRight(r.URL.Path, "/")
-	if strings.HasSuffix(tail, "/test") || strings.HasSuffix(tail, "/detect-model") {
+	if strings.HasSuffix(tail, "/test") || strings.HasSuffix(tail, "/detect-model") || strings.HasSuffix(tail, "/list-models") {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		if strings.HasSuffix(tail, "/test") {
 			a.handleRerankerTest(w, r, store)
+		} else if strings.HasSuffix(tail, "/list-models") {
+			a.handleRerankerListModels(w, r)
 		} else {
 			a.handleRerankerDetectModel(w, r, store)
 		}
@@ -84,9 +86,19 @@ func (a *App) handleRerankerConfig(w http.ResponseWriter, r *http.Request) {
 			APIKey  *string `json:"api_key"`
 			Model   string  `json:"model"`
 			Enabled bool    `json:"enabled"`
+			// ProviderSettingID takes the key of one of the person's providers (Config > Providers) instead of a key typed here.
+			ProviderSettingID string `json:"provider_setting_id"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
+		}
+		if body.ProviderSettingID != "" && (body.APIKey == nil || *body.APIKey == "") {
+			key, err := a.providerKeyFor(r.Context(), principal, body.ProviderSettingID)
+			if err != nil {
+				writeBackendError(w, err)
+				return
+			}
+			body.APIKey = &key
 		}
 		cfg, err := store.Upsert(r.Context(), db.UpsertRerankerConfigParams{
 			BaseURL: body.BaseURL,
@@ -119,6 +131,7 @@ func (a *App) applyRerankerConfig(ctx context.Context, cfg *db.RerankerConfig, s
 		BaseURL: strings.TrimSpace(cfg.BaseURL),
 		APIKey:  apiKey,
 		Model:   strings.TrimSpace(cfg.Model),
+		Style:   rerankStyleFor(cfg.BaseURL),
 		Timeout: 15 * time.Second,
 	}))
 }
@@ -155,12 +168,23 @@ func (a *App) handleRerankerTest(w http.ResponseWriter, r *http.Request, store *
 		BaseURL string `json:"base_url"`
 		APIKey  string `json:"api_key"`
 		Model   string `json:"model"`
+		// ProviderSettingID tests with the key of one of the person's providers.
+		ProviderSettingID string `json:"provider_setting_id"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
 
 	baseURL := strings.TrimSpace(body.BaseURL)
 	model := strings.TrimSpace(body.Model)
 	apiKey := strings.TrimSpace(body.APIKey)
+	if apiKey == "" && body.ProviderSettingID != "" {
+		principal, _ := authPrincipalFromContext(r.Context())
+		key, err := a.providerKeyFor(r.Context(), principal, body.ProviderSettingID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		apiKey = key
+	}
 	if baseURL == "" || model == "" {
 		if cfg, err := store.Get(r.Context()); err == nil && cfg != nil {
 			if baseURL == "" {
@@ -189,6 +213,7 @@ func (a *App) handleRerankerTest(w http.ResponseWriter, r *http.Request, store *
 		BaseURL: strings.TrimRight(baseURL, "/"),
 		APIKey:  apiKey,
 		Model:   model,
+		Style:   rerankStyleFor(baseURL),
 		Timeout: 10 * time.Second,
 	})
 	start := time.Now()

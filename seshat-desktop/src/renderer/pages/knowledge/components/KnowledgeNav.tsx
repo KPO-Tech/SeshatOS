@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router'
 import { SidebarItem } from '@renderer/components/layout/sidebar/SidebarItem'
+import { useDialogsStore } from '@renderer/stores/dialogs'
 import { KNOWLEDGE_NAV, tabFromPath, type KnowledgeTab } from '../nav'
 import { useCanManageKnowledge } from '../useCanManage'
 
@@ -10,8 +11,14 @@ export function KnowledgeNav({ collapsed }: { collapsed: boolean }) {
   const navigate = useNavigate()
   const { allowed: canManage } = useCanManageKnowledge()
   const active = tabFromPath(pathname)
+  const openConfig = useDialogsStore((state) => state.openConfig)
 
   function select(tab: KnowledgeTab) {
+    // The models Knowledge searches with are set in Config, not on a page of its own.
+    if (tab === 'settings') {
+      openConfig('search')
+      return
+    }
     navigate(tab === 'ask' ? '/knowledge' : `/knowledge/${tab}`)
   }
 

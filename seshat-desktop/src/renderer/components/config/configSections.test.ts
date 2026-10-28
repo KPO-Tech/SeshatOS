@@ -11,12 +11,11 @@ describe('hiddenConfigSections', () => {
     expect(hiddenConfigSections(FULL_EDITION)).toEqual([])
   })
 
-  // The settings of Knowledge (its models, its sources) are in the Knowledge page, and the agents are in the Skills page: Config does
-  // not have those sections any more, whatever the edition.
+  // The sections of the local features stay, whatever the edition: the models Knowledge searches with are in Config > Search.
   it('never hides the sections of the local features', () => {
     for (const edition of [PUBLIC_EDITION, FULL_EDITION]) {
       const hidden: string[] = hiddenConfigSections(edition)
-      for (const id of ['documents', 'titles', 'audio', 'models', 'providers', 'storage', 'mcp', 'environment', 'skills']) expect(hidden).not.toContain(id)
+      for (const id of ['documents', 'search', 'titles', 'audio', 'models', 'providers', 'storage', 'mcp', 'environment', 'skills']) expect(hidden).not.toContain(id)
     }
   })
 })
