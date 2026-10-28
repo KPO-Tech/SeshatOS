@@ -16,7 +16,7 @@ export function AskPage() {
   const navigate = useNavigate()
   const startingQuestion = (useLocation().state as { question?: string } | null)?.question ?? ''
   const { collections, failed: collectionsFailed } = useCollections()
-  const { turns, busy, ask, stop, startError, modelLoading, configured } = useKnowledgeConversation()
+  const { turns, busy, ask, stop, startError, modelLoading, configured, models } = useKnowledgeConversation()
   const [scope, setScope] = useState<AskScope>({ collectionId: null })
   const [opened, setOpened] = useState<Passage | null>(null)
   // The beginning of a question chosen on the screen, to put in the input.
@@ -41,6 +41,7 @@ export function AskPage() {
       collections={collections}
       scope={scope}
       busy={busy}
+      models={models}
       autoFocus
       initialValue={turns.length === 0 ? startingQuestion : ''}
       prefill={prefill}

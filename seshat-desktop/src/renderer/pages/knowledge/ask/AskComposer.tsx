@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { Down, Globe, Paperclip, Send } from '@icon-park/react'
+import { Paperclip, Send } from '@icon-park/react'
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
+import { ModelSelect } from '../components/ModelSelect'
 import { ScopeSelect } from '../components/ScopeSelect'
+import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
 import type { AskScope, KnowledgeCollection } from '../chat/useCollections'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -12,6 +14,8 @@ type Props = {
   collections: KnowledgeCollection[]
   scope: AskScope
   busy: boolean
+  // The models that can write the answer, and the one chosen.
+  models: { choices: ModelChoice[]; selectedId: string | null; loading: boolean; select: (id: string) => void }
   placeholder?: string
   // A question to start from, for instance the words of a search.
   initialValue?: string
@@ -24,7 +28,7 @@ type Props = {
 }
 
 // The input of the Ask view, made like the chat input: the same card, text size, selector pill and send button.
-export function AskComposer({ collections, scope, busy, placeholder = 'Ask about your documents', initialValue = '', autoFocus, prefill, onScopeChange, onSubmit, onStop }: Props) {
+export function AskComposer({ collections, scope, busy, models, placeholder = 'Ask about your documents', initialValue = '', autoFocus, prefill, onScopeChange, onSubmit, onStop }: Props) {
   const [value, setValue] = useState(initialValue)
   const field = useRef<HTMLTextAreaElement>(null)
   const canSend = value.trim() !== '' && !busy
@@ -88,16 +92,7 @@ export function AskComposer({ collections, scope, busy, placeholder = 'Ask about
         </div>
 
         <div className="flex min-w-0 shrink-0 items-center gap-2">
-          <button
-            type="button"
-            disabled
-            title="Choosing the language of the answer is not available yet"
-            className="flex h-7 shrink-0 cursor-not-allowed items-center gap-1.5 rounded-[9px] border border-app-border-subtle bg-transparent px-2 text-[12px] text-app-text-muted opacity-60"
-          >
-            <Globe size={13} />
-            FR
-            <Down size={12} />
-          </button>
+          <ModelSelect choices={models.choices} selectedId={models.selectedId} loading={models.loading} onSelect={models.select} />
           <span className="flex items-center gap-1.5 text-[12px] text-app-text-muted opacity-60" title="Searching the web is not available yet">
             Web
             <span aria-hidden="true" className="flex h-[18px] w-8 items-center rounded-full bg-[var(--surface-hover)] p-0.5">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CAPABILITIES, EXAMPLES, SUGGESTIONS } from './askContent'
+import { CAPABILITIES, EXAMPLES } from './askContent'
 
 describe('what the Ask screen offers', () => {
   it('starts a question with every card that is available, and with none that is not', () => {
@@ -10,9 +10,8 @@ describe('what the Ask screen offers', () => {
     expect(CAPABILITIES.filter((capability) => capability.soon).map((capability) => capability.id)).toEqual(['data', 'sources'])
   })
 
-  it('gives each suggestion and example the beginning of a question, with an id of its own', () => {
-    for (const entry of [...SUGGESTIONS, ...EXAMPLES]) expect(entry.prompt.trim().length).toBeGreaterThan(0)
-    expect(new Set(SUGGESTIONS.map((suggestion) => suggestion.id)).size).toBe(SUGGESTIONS.length)
+  it('gives each example the beginning of a question, with an id of its own', () => {
+    for (const entry of EXAMPLES) expect(entry.prompt.trim().length).toBeGreaterThan(0)
     expect(new Set(EXAMPLES.map((example) => example.id)).size).toBe(EXAMPLES.length)
   })
 })

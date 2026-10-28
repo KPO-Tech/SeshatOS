@@ -22,15 +22,6 @@ export const CAPABILITIES: Capability[] = [
   { id: 'sources', title: 'Work with sources', description: 'Combine multiple files and data sources', prompt: '', soon: true }
 ]
 
-export type Suggestion = { id: string; label: string; prompt: string }
-
-export const SUGGESTIONS: Suggestion[] = [
-  { id: 'summarize', label: 'Summarize this document', prompt: 'Summarize this document: ' },
-  { id: 'compare', label: 'Compare two files', prompt: 'Compare these two files: ' },
-  { id: 'insights', label: 'Extract key insights', prompt: 'Extract the key insights from ' },
-  { id: 'report', label: 'Generate a report', prompt: 'Generate a report on ' }
-]
-
 export type Example = { id: string; label: string; prompt: string }
 
 export const EXAMPLES: Example[] = [

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { ChartHistogram, Code, FileText, Light, Message, ShareOne, Scale } from '@icon-park/react'
+import { ChartHistogram, Code, FileText, Light, Message, ShareOne } from '@icon-park/react'
 import { AskIllustration } from './AskIllustration'
-import { CAPABILITIES, SUGGESTIONS, type CapabilityId } from './askContent'
+import { CAPABILITIES, type CapabilityId } from './askContent'
 
 const ICONS: Record<CapabilityId, ReactNode> = {
   answer: <Message size={20} />,
@@ -54,29 +54,6 @@ export function AskHero({ onPick }: Props) {
           </li>
         ))}
       </ul>
-
-      <ul className="m-0 mt-4 flex w-full list-none flex-wrap items-center justify-center gap-2 p-0">
-        {SUGGESTIONS.map((suggestion) => (
-          <li key={suggestion.id}>
-            <button
-              type="button"
-              onClick={() => onPick(suggestion.prompt)}
-              className="flex h-9 cursor-pointer items-center gap-2 rounded-full border border-app-border-subtle bg-transparent px-3.5 text-[12.5px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-            >
-              <span className="text-[var(--accent-primary)]">{SUGGESTION_ICONS[suggestion.id]}</span>
-              {suggestion.label}
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
-
-const SUGGESTION_ICONS: Record<string, ReactNode> = {
-  summarize: <Light size={14} />,
-  compare: <Scale size={14} />,
-  insights: <ChartHistogram size={14} />,
-  report: <FileText size={14} />
-}
-
