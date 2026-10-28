@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
+import { ProviderKeyField } from './ProviderKeyField'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from '@renderer/components/config/knowledge/knowledgeApi'
@@ -25,6 +26,9 @@ const MODEL_HINTS: Record<string, string[]> = {
 
 // The kinds of provider of Config > Providers whose key an embedding provider of this card can take.
 const PROVIDER_KINDS: Record<string, string[]> = { openai: ['openai'], mistral: ['mistral'], gemini: ['gemini', 'google'], openrouter: ['openrouter'] }
+
+// What a service is called where the person is told to add its provider.
+const MISSING_NAMES: Record<string, string> = { openai: 'OpenAI', mistral: 'Mistral', gemini: 'Google Gemini', openrouter: 'OpenRouter' }
 
 export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderConfig | null; providers: ProviderSetting[]; onSaved: (config: EmbedderConfig) => void }) {
   const [form, setForm] = useState({
@@ -145,13 +149,15 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
   // The vectors of the documents already indexed belong to the model saved: another model cannot read them.
   const changesModel = Boolean(config?.is_configured && config.model && (form.model !== config.model || form.provider !== config.provider))
   const suggestions = detectedModels.length > 0 ? detectedModels : MODEL_HINTS[form.provider] ?? []
+  const readyProvider = (id: string) => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[id] ?? []).includes(item.provider.toLowerCase()))
+  const ready = (id: string, fallback: string) => (readyProvider(id) ? `Uses your ${readyProvider(id)?.name} provider` : fallback)
   const providerOptions: SelectOption[] = [
     { value: 'tei', label: 'TEI local', description: 'Local embeddings server', icon: <ProviderIcon provider="tei" size={24} /> },
     { value: 'ollama', label: 'Ollama local', description: 'Local Ollama models', icon: <ProviderIcon provider="ollama" size={24} /> },
-    { value: 'openai', label: 'OpenAI', description: 'OpenAI embeddings API', icon: <ProviderIcon provider="openai" size={24} /> },
-    { value: 'mistral', label: 'Mistral', description: 'Mistral embeddings API', icon: <ProviderIcon provider="mistral" size={24} /> },
-    { value: 'gemini', label: 'Google Gemini', description: 'Gemini OpenAI-compatible endpoint', icon: <ProviderIcon provider="gemini" size={24} /> },
-    { value: 'openrouter', label: 'OpenRouter', description: 'Dozens of embedding models, one key', icon: <ProviderIcon provider="openrouter" size={24} /> }
+    { value: 'openai', label: 'OpenAI', description: ready('openai', 'OpenAI embeddings API'), icon: <ProviderIcon provider="openai" size={24} /> },
+    { value: 'mistral', label: 'Mistral', description: ready('mistral', 'Mistral embeddings API'), icon: <ProviderIcon provider="mistral" size={24} /> },
+    { value: 'gemini', label: 'Google Gemini', description: ready('gemini', 'Gemini OpenAI-compatible endpoint'), icon: <ProviderIcon provider="gemini" size={24} /> },
+    { value: 'openrouter', label: 'OpenRouter', description: ready('openrouter', 'Dozens of embedding models, one key'), icon: <ProviderIcon provider="openrouter" size={24} /> }
   ]
 
   return (
@@ -178,23 +184,21 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
               {suggestions.map((model) => <option key={model} value={model} />)}
             </datalist>
           </Field>
-          <Field label="API key">
-            <TextInput
-              type="password"
-              value={form.api_key}
-              onChange={(event) => update('api_key', event.target.value)}
-              placeholder={ownProvider && useOwnKey ? `Key of ${ownProvider.name}` : config?.has_api_key ? 'Keep current key' : 'Optional local'}
-              autoComplete="new-password"
-            />
-          </Field>
+          <ProviderKeyField
+            ownProvider={ownProvider}
+            missingProviderName={MISSING_NAMES[form.provider]}
+            useOwnKey={useOwnKey}
+            onUseOwnKey={(use) => {
+              setUseOwnKey(use)
+              setDirty(true)
+              setTesting('idle')
+            }}
+            apiKey={form.api_key}
+            onApiKey={(key) => update('api_key', key)}
+            hasStoredKey={Boolean(config?.has_api_key)}
+            emptyPlaceholder="Optional local"
+          />
         </div>
-
-        {ownProvider && (
-          <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--text-secondary)]">
-            <input type="checkbox" checked={useOwnKey} onChange={(event) => { setUseOwnKey(event.target.checked); setDirty(true); setTesting('idle') }} className="size-3.5 cursor-pointer accent-[var(--accent-primary)]" />
-            Use the key of your {ownProvider.name} provider, no need to type it again
-          </label>
-        )}
 
         {changesModel && (
           <p className="m-0 rounded-md border border-[var(--accent-primary)]/35 bg-[var(--accent-primary)]/10 px-3 py-2 text-[12px] leading-[18px] text-[var(--text-secondary)]">

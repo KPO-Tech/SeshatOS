@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
+import { ProviderKeyField } from './ProviderKeyField'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { detectRerankerModel, listRerankerModels, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { RerankerConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
@@ -13,6 +14,11 @@ const RERANKER_PRESETS = [
   { id: 'voyage', label: 'Voyage AI', base_url: 'https://api.voyageai.com/v1/rerank', model: 'rerank-2.5' },
   { id: 'custom', label: 'Custom endpoint', base_url: '', model: '' }
 ]
+
+// The kinds of provider of Config > Providers whose key a rerank service can use, and what the service is called where the person is
+// told to add its provider.
+const PROVIDER_KINDS: Record<string, string[]> = { openrouter: ['openrouter'], cohere: ['cohere'], voyage: ['voyage', 'voyageai'] }
+const MISSING_NAMES: Record<string, string> = { openrouter: 'OpenRouter', cohere: 'Cohere', voyage: 'Voyage AI' }
 
 // The hosted providers whose rerank models are listed by the app.
 const LISTED = ['openrouter', 'cohere', 'voyage']
@@ -33,7 +39,7 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
   const [detecting, setDetecting] = useState(false)
   const [models, setModels] = useState<string[]>([])
   // The provider of Config > Providers whose key the OpenRouter models can use, when the person has it set up.
-  const ownProvider = useMemo(() => (preset === 'openrouter' ? (providers.find((item) => item.has_api_key && item.provider.toLowerCase() === 'openrouter') ?? null) : null), [providers, preset])
+  const ownProvider = useMemo(() => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[preset] ?? []).includes(item.provider.toLowerCase())) ?? null, [providers, preset])
   const [useOwnKey, setUseOwnKey] = useState(true)
 
   // The models a hosted provider offers, read when it is chosen (or already chosen when the card opens).
@@ -145,10 +151,11 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
     }
   }
 
+  const readyProvider = (id: string) => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[id] ?? []).includes(item.provider.toLowerCase()))
   const presetOptions: SelectOption[] = RERANKER_PRESETS.map((item) => ({
     value: item.id,
     label: item.label,
-    description: item.id === 'tei' ? 'Local reranking server' : item.id === 'custom' ? 'Bring your own endpoint' : item.id === 'openrouter' ? 'Cohere, Voyage, Qwen and more, one key' : item.model,
+    description: item.id === 'tei' ? 'Local reranking server' : item.id === 'custom' ? 'Bring your own endpoint' : readyProvider(item.id) ? `Uses your ${readyProvider(item.id)?.name} provider` : item.id === 'openrouter' ? 'Cohere, Voyage, Qwen and more, one key' : item.model,
     icon: <RerankerIcon name={item.id} />
   }))
 
@@ -175,23 +182,21 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
               {models.map((model) => <option key={model} value={model} />)}
             </datalist>
           </Field>
-          <Field label="API key">
-            <TextInput
-              type="password"
-              value={form.api_key}
-              onChange={(event) => update('api_key', event.target.value)}
-              placeholder={ownProvider && useOwnKey ? `Key of ${ownProvider.name}` : config?.has_api_key ? 'Keep current key' : 'Optional'}
-              autoComplete="new-password"
-            />
-          </Field>
+          <ProviderKeyField
+            ownProvider={ownProvider}
+            missingProviderName={MISSING_NAMES[preset]}
+            useOwnKey={useOwnKey}
+            onUseOwnKey={(use) => {
+              setUseOwnKey(use)
+              setDirty(true)
+              setTesting('idle')
+            }}
+            apiKey={form.api_key}
+            onApiKey={(key) => update('api_key', key)}
+            hasStoredKey={Boolean(config?.has_api_key)}
+            emptyPlaceholder="Optional"
+          />
         </div>
-
-        {ownProvider && (
-          <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--text-secondary)]">
-            <input type="checkbox" checked={useOwnKey} onChange={(event) => { setUseOwnKey(event.target.checked); setDirty(true); setTesting('idle') }} className="size-3.5 cursor-pointer accent-[var(--accent-primary)]" />
-            Use the key of your {ownProvider.name} provider, no need to type it again
-          </label>
-        )}
 
         <ResultMessage state={testing} error={testError} latency={latency} />
 
