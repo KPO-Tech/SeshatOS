@@ -5,6 +5,7 @@ import type { ChatAttachment } from '@renderer/stores/session'
 import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
 import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
+import type { AnswerExtras } from '@renderer/components/chat/messages/answerExtras'
 
 type LiveActivity = {
   label: string
@@ -26,6 +27,8 @@ type MessageListProps = {
   onDenyTool: (toolUseId: string) => void
   onSubmitToolPrompt: (promptId: string, value: unknown) => void
   onRetryMessage: (text: string, attachments?: ChatAttachment[]) => void
+  // What a host surface adds under message i (see answerExtras.ts); the chat adds nothing.
+  extrasFor?: (index: number) => AnswerExtras | undefined
 }
 
 export function MessageList({
@@ -43,6 +46,7 @@ export function MessageList({
   onDenyTool,
   onSubmitToolPrompt,
   onRetryMessage,
+  extrasFor,
 }: MessageListProps) {
   // The files each turn created or edited, listed under the message that ends the turn.
   const changedFiles = useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming])
@@ -106,6 +110,7 @@ export function MessageList({
                 changedFiles={changedFiles.get(i)}
                 webSources={webSources.get(i)}
                 consultedPages={consulted.get(i)}
+                extras={extrasFor?.(i)}
                 onApproveTool={onApproveTool}
                 onDenyTool={onDenyTool}
                 onSubmitToolPrompt={onSubmitToolPrompt}

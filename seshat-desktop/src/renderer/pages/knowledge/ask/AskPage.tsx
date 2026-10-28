@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Message } from '@icon-park/react'
 import type { Passage } from '../chat/knowledgeSearchResults'
@@ -10,27 +9,17 @@ import { AskComposer } from './AskComposer'
 import { AskHero } from './AskHero'
 import { AskSidebar } from './AskSidebar'
 import { HowItWorks } from './HowItWorks'
-import { TurnView } from './TurnView'
+import { AskConversation } from './AskConversation'
 
 export function AskPage() {
   const navigate = useNavigate()
   const startingQuestion = (useLocation().state as { question?: string } | null)?.question ?? ''
   const { collections, failed: collectionsFailed } = useCollections()
-  const { turns, busy, ask, stop, startError, modelLoading, configured, models } = useKnowledgeConversation()
+  const { turns, busy, ask, stop, startError, modelLoading, configured, models, sessionId, sendMessage } = useKnowledgeConversation()
   const [scope, setScope] = useState<AskScope>({ collectionId: null })
   const [opened, setOpened] = useState<Passage | null>(null)
   // The beginning of a question chosen on the screen, to put in the input.
   const [prefill, setPrefill] = useState<{ text: string; nonce: number } | undefined>(undefined)
-  const scroller = useRef<HTMLDivElement>(null)
-  const last = turns.at(-1)
-  const writtenLength = last?.text.length ?? 0
-
-  useEffect(() => {
-    const element = scroller.current
-    if (!element) return
-    if (element.scrollHeight - element.scrollTop - element.clientHeight < 160) element.scrollTo({ top: element.scrollHeight })
-  }, [turns.length, writtenLength, last?.phase])
-
   const onOpenPassage = useCallback((passage: Passage) => setOpened(passage), [])
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
@@ -102,13 +91,14 @@ export function AskPage() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div ref={scroller} className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pt-8">
-        <div className="mx-auto flex max-w-[var(--chat-max-width)] flex-col gap-12 pb-10">
-          {turns.map((turn) => (
-            <TurnView key={turn.id} turn={turn} scopeName={scopeName} onOpenPassage={onOpenPassage} />
-          ))}
-        </div>
-      </div>
+      <AskConversation
+        sessionId={sessionId ?? ''}
+        isStreaming={busy}
+        sendMessage={sendMessage}
+        scopeName={scopeName}
+        onAsk={(question) => void ask(question, scope.collectionId)}
+        onOpenPassage={onOpenPassage}
+      />
       <div className="shrink-0 px-6 pb-5">
         <div className="mx-auto max-w-[var(--chat-max-width)]">
           {composer}
