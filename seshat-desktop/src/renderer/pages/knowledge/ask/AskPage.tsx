@@ -5,12 +5,15 @@ import { useCollections, type AskScope } from '../chat/useCollections'
 import { useKnowledgeConversation } from '../chat/useKnowledgeConversation'
 import { PassageDrawer } from '../components/PassageDrawer'
 import { AskComposer } from './AskComposer'
+import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
+import { openDocument } from '../collections/openDocument'
 import { AskConversation } from './AskConversation'
 import { AskHeader } from './AskHeader'
 import { AskHero } from './AskHero'
 import { AskHistory } from './AskHistory'
 import { AskSessionSidebar } from './AskSessionSidebar'
 import { AskSidebar } from './AskSidebar'
+import type { OpenHow } from './askExtras'
 
 export function AskPage() {
   const navigate = useNavigate()
@@ -27,7 +30,21 @@ export function AskPage() {
     reset()
     setOpened(null)
   }, [reset])
-  const onOpenPassage = useCallback((passage: Passage) => setOpened(passage), [])
+  // A document is open in the right panel: it takes the place of the column of cards.
+  const documentOpen = useUIStore((state) => flattenRightPanels(state.rightColumns).some((panel) => Boolean(panel.documentFileId)))
+  // A citation opens the document at the cited place, with the passage marked; a document of the list under the answer opens at its page,
+  // with nothing marked. A passage whose file is not known (a conversation from before the tool said it) or that has no viewer is read in
+  // the drawer.
+  const onOpenPassage = useCallback(async (passage: Passage, how: OpenHow = 'cited') => {
+    if (passage.fileId && passage.corpusId) {
+      const highlight = how === 'cited' && passage.pages.length > 0 ? { text: passage.text, pages: passage.pages } : undefined
+      if (await openDocument({ fileId: passage.fileId, name: passage.file }, passage.corpusId, passage.pages[0], highlight)) {
+        setOpened(null)
+        return
+      }
+    }
+    setOpened(passage)
+  }, [])
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
   const problem = startError ?? (collectionsFailed ? 'Knowledge is not available: the collections could not be read.' : !configured && !modelLoading ? 'Configure a provider in Settings before asking.' : null)
@@ -99,9 +116,11 @@ export function AskPage() {
         <PassageDrawer passage={opened} onClose={() => setOpened(null)} />
       </section>
 
-      <div className="hidden min-h-0 xl:flex">
-        {started && sessionId ? <AskSessionSidebar sessionId={sessionId} /> : <AskSidebar onPick={(text) => setPrefill({ text, nonce: Date.now() })} />}
-      </div>
+      {!documentOpen && (
+        <div className="hidden min-h-0 xl:flex">
+          {started && sessionId ? <AskSessionSidebar sessionId={sessionId} /> : <AskSidebar onPick={(text) => setPrefill({ text, nonce: Date.now() })} />}
+        </div>
+      )}
     </div>
   )
 }
