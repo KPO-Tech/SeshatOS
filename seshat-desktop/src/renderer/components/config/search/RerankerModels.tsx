@@ -46,7 +46,7 @@ export function RerankerModels({ version, onChanged }: { version: string; onChan
       <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Your rerank models</div>
       <ul className="m-0 grid list-none gap-1.5 p-0">
         {models.map((item) => (
-          <li key={item.id} className="flex items-center gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2">
+          <li key={item.id} className="flex items-center gap-3 rounded-md border border-[var(--border-soft)] px-3 py-2">
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{item.model || 'Default model'}</div>
               <div className="truncate text-[11.5px] text-[var(--text-muted)]">{hostOf(item.base_url)}</div>

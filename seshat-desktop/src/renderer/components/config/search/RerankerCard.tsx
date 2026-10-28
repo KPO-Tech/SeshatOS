@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
+import { ModelCombobox } from './ModelCombobox'
 import { ProviderKeyField } from './ProviderKeyField'
 import { RerankerModels } from './RerankerModels'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
@@ -181,10 +182,7 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
         </div>
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
           <Field label="Model">
-            <TextInput list="knowledge-rerank-models" value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="BAAI/bge-reranker-v2-m3" />
-            <datalist id="knowledge-rerank-models">
-              {models.map((model) => <option key={model} value={model} />)}
-            </datalist>
+            <ModelCombobox value={form.model} options={models} onChange={(model) => update('model', model)} placeholder="BAAI/bge-reranker-v2-m3" />
           </Field>
           <ProviderKeyField
             ownProvider={ownProvider}
