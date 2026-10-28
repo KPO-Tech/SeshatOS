@@ -13,6 +13,7 @@ import { useUIStore } from '@renderer/stores/ui'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 import { modelAlias } from '@renderer/lib/modelAlias'
+import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoice } from '@renderer/lib/defaultModel'
 import './Home.css'
@@ -45,22 +46,6 @@ function splitModelChoiceId(id: string): { providerId: string; modelId: string }
     providerId: id.slice(0, separator),
     modelId: id.slice(separator + 2),
   }
-}
-
-function providerInitials(name: string, kind: string): string {
-  const source = name.trim() || kind.trim() || 'AI'
-  const parts = source.split(/[\s._-]+/).filter(Boolean)
-  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-  return source.slice(0, 2).toUpperCase()
-}
-
-function providerDisplayName(name: string, kind: string): string {
-  const displayName = name.trim()
-  const providerKind = kind.trim()
-  if (!displayName) return providerKind
-  if (!providerKind) return displayName
-  if (displayName.toLowerCase() === providerKind.toLowerCase()) return displayName
-  return displayName
 }
 
 export function Home() {
@@ -436,17 +421,7 @@ export function Home() {
                 ? <ProviderIcon provider={selectedModelChoice.providerKind} size={13} />
                 : undefined
             }
-            modelOptions={
-              allModelChoices.length > 0
-                ? allModelChoices.map((choice) => ({
-                    id: choice.id,
-                    label: modelAlias(choice.model.display_name || choice.model.model_id),
-                    description: providerDisplayName(choice.providerName, choice.providerKind),
-                    icon: <ProviderIcon provider={choice.providerKind} size={17} />,
-                    prefix: providerInitials(choice.providerName, choice.providerKind),
-                  }))
-                : undefined
-            }
+            modelOptions={allModelChoices.length > 0 ? modelSelectorOptions(allModelChoices) : undefined}
             selectedModelId={selectedModelChoiceId}
             onModelSelect={handleModelSelect}
             modelMenuPlacement="down"
