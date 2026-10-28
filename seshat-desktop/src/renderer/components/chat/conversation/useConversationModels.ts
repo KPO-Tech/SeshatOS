@@ -5,7 +5,7 @@ import { fetchProviderModels, useProviders } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import type { ChatSession } from '@renderer/stores/session'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
-import { pickDefaultChoice } from '@renderer/lib/defaultModel'
+import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
 
 export type ModelChoice = {
   id: string
@@ -135,12 +135,14 @@ export function useConversationModels({ sessionId, session, updateSession, onSav
     const sessionChoice = session?.providerSettingId && session?.modelId
       ? allModelChoices.find((choice) => choice.providerId === session.providerSettingId && choice.model.model_id === session.modelId)
       : null
+    // A conversation takes its own model; a new one takes the default, once every provider that could give it has answered.
     const def = sessionChoice
-      ?? pickDefaultChoice(chatProviders, allModelChoices)
-      ?? allModelChoices[0]
+      ?? pickDefaultChoiceWhenSettled(chatProviders, allModelChoices, (provider) => modelsByProvider[provider.id] !== undefined)
+      ?? (chatProviders.every((provider) => modelsByProvider[provider.id] !== undefined) ? allModelChoices[0] : null)
+    if (!def) return
     setSelectedProviderId(def.providerId)
     setSelectedModelId(def.model.model_id)
-  }, [allModelChoices, chatProviders, selectedModelChoice, selectedModelProviderStillLoading, session?.providerSettingId, session?.modelId])
+  }, [allModelChoices, chatProviders, modelsByProvider, selectedModelChoice, selectedModelProviderStillLoading, session?.providerSettingId, session?.modelId])
 
   const handleModelSelect = useCallback((choiceId: string) => {
     const choice = splitModelChoiceId(choiceId)
