@@ -39,7 +39,7 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
   const { scrollRef, rowVirtualizer } = useConversationScroll({ messageCount: messages.length, streaming })
 
   return (
-    <div className="conv-root">
+    <div className="conv-root !bg-transparent">
       <MessageList
         sessionId={sessionId}
         messages={messages}

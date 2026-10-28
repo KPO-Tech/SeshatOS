@@ -7,12 +7,14 @@ import { useUIStore } from '@renderer/stores/ui'
 import { useConversationModels } from '@renderer/components/chat/conversation/useConversationModels'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
+import { useConversationSessionLoad } from '@renderer/components/chat/conversation/useConversationSessionLoad'
 import { deriveTurns } from './askTurns'
 
 // The agent the Ask view talks to: built into seshat-backend (internal/knowledge/agent), with its own prompt and one read-only tool.
 export const KNOWLEDGE_AGENT_SLUG = 'knowledge'
 
 const NO_MESSAGES: never[] = []
+const noop = () => undefined
 
 // A conversation of the Ask view. It is a conversation of the chat, with the Knowledge agent: the chat engine streams, stops, keeps the
 // history and the model; this reads its messages as questions, excerpts and answers.
@@ -22,6 +24,8 @@ export function useKnowledgeConversation() {
   const permissionMode = useUIStore((state) => state.permissionMode)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [startError, setStartError] = useState<string | null>(null)
+  // A conversation of the history that was opened: its messages are fetched, which those of a new one never are.
+  const [openedId, setOpenedId] = useState<string | null>(null)
   const waiting = useRef<{ question: string; collectionId: string | null } | null>(null)
 
   const session = useSessionStore((state) => (sessionId ? state.sessions.find((item) => item.id === sessionId) : undefined))
@@ -35,6 +39,9 @@ export function useKnowledgeConversation() {
   const { sendMessage, stopMessage, isStreaming } = useChat(sessionId ?? '')
   const messages = useSessionStore((state) => (sessionId ? state.sessions.find((session) => session.id === sessionId)?.messages : undefined)) ?? NO_MESSAGES
   const turns = useMemo(() => deriveTurns(messages, isStreaming), [messages, isStreaming])
+
+  const openedSession = useSessionStore((state) => (openedId ? state.sessions.find((item) => item.id === openedId) : undefined))
+  const { loading: loadingSession } = useConversationSessionLoad({ sessionId: openedId ?? undefined, session: openedSession, updateSession, sendMessage, setInputValue: noop })
 
   // The first question waits for the conversation to exist, so that the chat hook is bound to it when it is sent.
   useEffect(() => {
@@ -61,7 +68,9 @@ export function useKnowledgeConversation() {
         const response = await api.post<{ session_id: string }>('/sessions', {
           provider_setting_id: choice.providerId,
           model_id: choice.model.model_id,
-          permission_mode: permissionMode
+          permission_mode: permissionMode,
+          // Kept by the server, so that the conversation is the Ask view's after a restart and stays out of the chat's recent list.
+          source: 'knowledge'
         })
         const now = new Date().toISOString()
         addSession({
@@ -89,8 +98,22 @@ export function useKnowledgeConversation() {
     if (isStreaming) void stopMessage()
     waiting.current = null
     setStartError(null)
+    setOpenedId(null)
     setSessionId(null)
   }, [isStreaming, stopMessage])
+
+  // Goes on with a conversation of the history.
+  const open = useCallback(
+    (id: string) => {
+      if (id === sessionId) return
+      if (isStreaming) void stopMessage()
+      waiting.current = null
+      setStartError(null)
+      setOpenedId(id)
+      setSessionId(id)
+    },
+    [isStreaming, sessionId, stopMessage]
+  )
 
   return {
     turns,
@@ -98,6 +121,8 @@ export function useKnowledgeConversation() {
     ask,
     stop: stopMessage,
     reset,
+    open,
+    loadingSession,
     startError,
     modelLoading,
     configured,
