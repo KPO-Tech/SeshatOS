@@ -4,8 +4,10 @@ import { useChat } from '@renderer/hooks/useChat'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
+import { useConversationModels } from '@renderer/components/chat/conversation/useConversationModels'
+import { isChatProviderUsable } from '@renderer/lib/chatProviders'
+import { useProvidersStore } from '@renderer/stores/providers'
 import { deriveTurns } from './askTurns'
-import { useDefaultModel } from './useDefaultModel'
 
 // The agent the Ask view talks to: built into seshat-backend (internal/knowledge/agent), with its own prompt and one read-only tool.
 export const KNOWLEDGE_AGENT_SLUG = 'knowledge'
@@ -15,12 +17,20 @@ const NO_MESSAGES: never[] = []
 // A conversation of the Ask view. It is a conversation of the chat, with the Knowledge agent: the chat engine streams, stops, keeps the
 // history and the model; this reads its messages as questions, excerpts and answers.
 export function useKnowledgeConversation() {
-  const { choice, loading: modelLoading, configured } = useDefaultModel()
-  const permissionMode = useUIStore((state) => state.permissionMode)
   const addSession = useSessionStore((state) => state.addSession)
+  const updateSession = useSessionStore((state) => state.updateSession)
+  const permissionMode = useUIStore((state) => state.permissionMode)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [startError, setStartError] = useState<string | null>(null)
   const waiting = useRef<{ question: string; collectionId: string | null } | null>(null)
+
+  const session = useSessionStore((state) => (sessionId ? state.sessions.find((item) => item.id === sessionId) : undefined))
+  // The model that writes the answers: the one chosen in the input, which is the default one until another is chosen, and which a
+  // conversation already begun changes for its next questions.
+  const models = useConversationModels({ sessionId: sessionId ?? undefined, session, updateSession })
+  const choice = models.selectedModelChoice
+  const configured = useProvidersStore((state) => state.providers.some(isChatProviderUsable))
+  const modelLoading = models.loadingModelProviderIds.length > 0 && models.allModelChoices.length === 0
 
   const { sendMessage, stopMessage, isStreaming } = useChat(sessionId ?? '')
   const messages = useSessionStore((state) => (sessionId ? state.sessions.find((session) => session.id === sessionId)?.messages : undefined)) ?? NO_MESSAGES
@@ -49,7 +59,7 @@ export function useKnowledgeConversation() {
       }
       try {
         const response = await api.post<{ session_id: string }>('/sessions', {
-          provider_setting_id: choice.provider.id,
+          provider_setting_id: choice.providerId,
           model_id: choice.model.model_id,
           permission_mode: permissionMode
         })
@@ -60,8 +70,8 @@ export function useKnowledgeConversation() {
           messages: [],
           createdAt: now,
           updatedAt: now,
-          providerSettingId: choice.provider.id,
-          providerLabel: choice.provider.name,
+          providerSettingId: choice.providerId,
+          providerLabel: choice.providerName,
           modelId: choice.model.model_id,
           modelLabel: choice.model.display_name || choice.model.model_id,
           source: 'knowledge'
@@ -82,5 +92,16 @@ export function useKnowledgeConversation() {
     setSessionId(null)
   }, [isStreaming, stopMessage])
 
-  return { turns, busy: isStreaming, ask, stop: stopMessage, reset, startError, modelLoading, configured, hasConversation: sessionId !== null }
+  return {
+    turns,
+    busy: isStreaming,
+    ask,
+    stop: stopMessage,
+    reset,
+    startError,
+    modelLoading,
+    configured,
+    hasConversation: sessionId !== null,
+    models: { choices: models.allModelChoices, selectedId: models.selectedModelChoiceId, select: models.handleModelSelect, loading: modelLoading }
+  }
 }
