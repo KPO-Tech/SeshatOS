@@ -1,5 +1,5 @@
 import { api } from '@renderer/api/client'
-import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, RerankerConfig, RerankerModel, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
+import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, ReembedStatus, RerankerConfig, RerankerModel, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
 
 export type KnowledgeSnapshot = {
   corpora: Corpus[]
@@ -133,4 +133,17 @@ export function useRerankerSetup(id: string) {
 
 export function removeRerankerSetup(id: string) {
   return api.delete<{ models: RerankerModel[] }>(`/settings/reranker/models/${encodeURIComponent(id)}`)
+}
+
+export function getReembedStatus() {
+  return api.get<ReembedStatus>('/knowledge/reembed')
+}
+
+/** Makes the vectors of every collection again with the model now in use, in the background. */
+export function startReembed() {
+  return api.post<ReembedStatus>('/knowledge/reembed')
+}
+
+export function stopReembed() {
+  return api.delete<ReembedStatus>('/knowledge/reembed')
 }

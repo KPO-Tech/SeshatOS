@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
@@ -23,6 +24,12 @@ type Service struct {
 	rag                      *rag.Service
 	resolveDocumentConverter func(ctx context.Context) documentreader.Converter
 	documentProcessor        *documentreading.Processor
+
+	// The embedder of the app and what to do once every vector was made with it (see reembed.go).
+	live        *LiveEmbedder
+	reembedDone func(ctx context.Context, key string)
+	reembedMu   sync.Mutex
+	reembed     *reembedJob
 }
 
 func NewService(

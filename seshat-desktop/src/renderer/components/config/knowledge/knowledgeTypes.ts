@@ -6,6 +6,19 @@ export type EmbedderConfig = {
   enabled: boolean
   is_configured: boolean
   updated_at?: number
+  /** The vectors of the collections were made with another model than this one: the search by meaning is wrong until they are made again. */
+  vectors_stale?: boolean
+  /** It cannot be told which model the vectors were made with (the model was changed before this was recorded). */
+  vectors_unknown?: boolean
+}
+
+/** The making of the vectors again, with the model now in use. `done` and `total` count passages. */
+export type ReembedStatus = {
+  state: 'idle' | 'running' | 'done' | 'failed' | 'cancelled'
+  model?: string
+  done: number
+  total: number
+  error?: string
 }
 
 export type RerankerConfig = {

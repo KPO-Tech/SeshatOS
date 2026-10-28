@@ -47,6 +47,8 @@ type App struct {
 	nativeDocDownloadMu  sync.Mutex
 	nativeDocDownload    *nativeDocDownloadState
 	rerankerStore        *db.RerankerConfigStore
+	// applyEmbedder puts the embedding model that was just saved in use, so that no restart is needed.
+	applyEmbedder func(ctx context.Context) error
 	localSTTStore        *db.LocalSTTConfigStore
 	localTitleStore      *db.LocalTitleConfigStore
 	sandboxConfigStore   *db.SandboxConfigStore
@@ -117,6 +119,7 @@ type AppConfig struct {
 	ProviderSettingStore  *db.ProviderSettingStore
 	DocumentReaderStore   *db.DocumentReaderConfigStore
 	RerankerStore         *db.RerankerConfigStore
+	ApplyEmbedder         func(ctx context.Context) error
 	LocalSTTStore         *db.LocalSTTConfigStore
 	LocalTitleStore       *db.LocalTitleConfigStore
 	SandboxConfigStore    *db.SandboxConfigStore
@@ -169,6 +172,7 @@ func NewApp(cfg AppConfig) *App {
 		providerSettingStore:  cfg.ProviderSettingStore,
 		documentReaderStore:   cfg.DocumentReaderStore,
 		rerankerStore:         cfg.RerankerStore,
+		applyEmbedder:         cfg.ApplyEmbedder,
 		localSTTStore:         cfg.LocalSTTStore,
 		localTitleStore:       cfg.LocalTitleStore,
 		sandboxConfigStore:    cfg.SandboxConfigStore,
