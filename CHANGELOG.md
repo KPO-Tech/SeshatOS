@@ -29,6 +29,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Sources under a chat answer.** The pages the agent consulted are listed once each, folded, and the links to them in the text become citations.
 - **Rich answers.** The agent can answer with drawn components (tables, figures, steps, notes) that fill in while the answer streams. It is on by default and can be turned off in Config > Agents > Answers.
 - **Architecture drawings in an answer.** The agent can draw a system as coloured panels holding items with icons (generic icons and technology logos), with arrows between them.
+- **Colours and complex tables in rich answers.** Tables, figures, headings, items and panels can take a colour to mark a concept, and a table can group its columns under a heading, have section and total rows, and merge cells.
 - **The model menu folds the models under their provider**, all folded when it opens and one open at a time, so a provider with hundreds of models no longer fills the menu.
 - **A top bar for Config and Settings**, and Sources laid out like Plugins.
 

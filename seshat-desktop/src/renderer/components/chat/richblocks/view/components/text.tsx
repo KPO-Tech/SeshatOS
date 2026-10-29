@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import type { ComponentProps } from '../NodeView'
-import { TONE_BOX, TONE_TEXT, toneOf } from '../tones'
+import { TONE_BOX, TONE_TEXT, toneOf, toneOrNull } from '../tones'
 
 const HEADING_CLASS: Record<number, string> = {
   1: 'text-[20px] font-semibold',
@@ -11,7 +11,8 @@ const HEADING_CLASS: Record<number, string> = {
 
 function Heading({ props }: ComponentProps) {
   const level = typeof props.level === 'number' ? Math.min(4, Math.max(1, Math.round(props.level))) : 2
-  return <div role="heading" aria-level={level} className={`mt-1 text-app-text ${HEADING_CLASS[level]}`}>{String(props.text)}</div>
+  const tone = toneOrNull(props.tone)
+  return <div role="heading" aria-level={level} className={`mt-1 ${tone && tone !== 'neutral' ? TONE_TEXT[tone] : 'text-app-text'} ${HEADING_CLASS[level]}`}>{String(props.text)}</div>
 }
 
 function Markdown({ props }: ComponentProps) {

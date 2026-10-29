@@ -1,10 +1,12 @@
 import type { ArgSpec, ArgType, ComponentSpec } from './types'
+import { TONE_NAMES } from './tones'
 
 const str: ArgType = { t: 'string' }
 const num: ArgType = { t: 'number' }
 const bool: ArgType = { t: 'boolean' }
 const scalar: ArgType = { t: 'scalar' }
 const cell: ArgType = { t: 'cell' }
+const row: ArgType = { t: 'row' }
 const action: ArgType = { t: 'action' }
 const target: ArgType = { t: 'target' }
 const icon: ArgType = { t: 'icon' }
@@ -15,9 +17,8 @@ const list = (item: ArgType): ArgType => ({ t: 'list', item })
 const req = (name: string, type: ArgType): ArgSpec => ({ name, type })
 const opt = (name: string, type: ArgType): ArgSpec => ({ name, type, optional: true })
 
-const tone = enumOf('neutral', 'info', 'success', 'warning', 'danger')
+const tone = enumOf(...TONE_NAMES)
 const anyNode = node()
-const hue = enumOf('neutral', 'blue', 'violet', 'green', 'orange', 'red', 'teal', 'yellow')
 
 // Arguments are positional and append-only: add at the end, never reorder or remove.
 export const COMPONENT_SPECS: ComponentSpec[] = [
@@ -36,7 +37,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
   { name: 'Separator', group: 'Layout', description: 'A thin rule.', args: [] },
 
   { name: 'Heading', group: 'Text', description: 'A heading inside a block.',
-    args: [req('text', str), opt('level', num)] },
+    args: [req('text', str), opt('level', num), opt('tone', tone)] },
   { name: 'Markdown', group: 'Text', description: 'A paragraph of plain text.',
     args: [req('text', str)] },
   { name: 'Callout', group: 'Text', description: 'A highlighted note: info, success, warning or danger.',
@@ -46,12 +47,18 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
   { name: 'Quote', group: 'Text', description: 'A quotation with its source.',
     args: [req('text', str), opt('source', str)] },
 
-  { name: 'Table', group: 'Data', description: 'Rows and columns. A cell is a text, a number, a Badge, a FileRef or a Link.',
-    args: [req('columns', list(node('Col'))), req('rows', list(list(cell))), opt('caption', str), opt('sortable', bool)] },
-  { name: 'Col', group: 'Data', description: 'A column of Table: its label and how its values are formatted.',
-    args: [req('label', str), opt('kind', enumOf('text', 'number', 'percent', 'money', 'date')), opt('align', enumOf('left', 'right', 'center'))] },
+  { name: 'Table', group: 'Data', description: 'Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup.',
+    args: [req('columns', list(node('Col', 'ColGroup'))), req('rows', list(row)), opt('caption', str), opt('sortable', bool), opt('striped', bool), opt('compact', bool)] },
+  { name: 'Col', group: 'Data', description: 'A column of Table: its label, how its values are formatted, and a tone that tints the whole column.',
+    args: [req('label', str), opt('kind', enumOf('text', 'number', 'percent', 'money', 'date')), opt('align', enumOf('left', 'right', 'center')), opt('tone', tone)] },
+  { name: 'ColGroup', group: 'Data', description: 'A heading over several Cols of a Table.',
+    args: [req('label', str), req('columns', list(node('Col'))), opt('tone', tone)] },
+  { name: 'Row', group: 'Data', description: 'A row of a Table that is more than a list of cells: kind section is a title across the whole table, total is a bold closing row, header repeats the column heads.',
+    args: [req('cells', list(cell)), opt('tone', tone), opt('kind', enumOf('normal', 'section', 'total', 'header'))] },
+  { name: 'Cell', group: 'Data', description: 'One cell of a Table with its own colour, weight, alignment or size: colspan merges cells to the right, rowspan merges the cells below (leave them out of the next rows).',
+    args: [req('content', cell), opt('tone', tone), opt('bold', bool), opt('colspan', num), opt('rowspan', num), opt('align', enumOf('left', 'right', 'center'))] },
   { name: 'Metric', group: 'Data', description: 'One figure with its label and its change.',
-    args: [req('label', str), req('value', scalar), opt('delta', scalar), opt('trend', enumOf('up', 'down', 'flat')), opt('note', str)] },
+    args: [req('label', str), req('value', scalar), opt('delta', scalar), opt('trend', enumOf('up', 'down', 'flat')), opt('note', str), opt('tone', tone)] },
   { name: 'MetricRow', group: 'Data', description: 'Several Metric side by side.',
     args: [req('metrics', list(node('Metric')))] },
   { name: 'Timeline', group: 'Data', description: 'Events in time order.',
@@ -90,9 +97,9 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
   { name: 'Architecture', group: 'Architecture', description: 'The frame of a system drawing: it lays Panels out and draws the Flow arrows over them.',
     args: [req('children', list(anyNode)), opt('flows', list(node('Flow'))), opt('title', str)] },
   { name: 'Panel', group: 'Architecture', description: 'A coloured box with a title and an icon that holds Items or other Panels, in a column or in a wrapping row. Give it its own name to link it with a Flow.',
-    args: [req('children', list(anyNode)), opt('title', str), opt('tone', hue), opt('icon', icon), opt('dashed', bool), opt('direction', enumOf('column', 'row'))] },
+    args: [req('children', list(anyNode)), opt('title', str), opt('tone', tone), opt('icon', icon), opt('dashed', bool), opt('direction', enumOf('column', 'row'))] },
   { name: 'Item', group: 'Architecture', description: 'A line with an icon, a label and a caption; boxed draws it as a card. Give it its own name to link it with a Flow.',
-    args: [req('label', str), opt('icon', icon), opt('caption', str), opt('boxed', bool)] },
+    args: [req('label', str), opt('icon', icon), opt('caption', str), opt('boxed', bool), opt('tone', tone)] },
   { name: 'Flow', group: 'Architecture', description: 'An arrow between two Panels or Items, by the names of their statements. Only inside the flows of an Architecture.',
     args: [req('from', target), req('to', target), opt('label', str), opt('both', bool), opt('style', enumOf('solid', 'dashed'))] },
 
@@ -126,7 +133,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     args: [req('label', str), req('action', action)] }
 ]
 
-export const CELL_COMPONENTS = ['Badge', 'FileRef', 'Link'] as const
+// What a table cell may hold besides text and numbers. FileRef and Link join when the app draws them.
+export const CELL_COMPONENTS = ['Badge', 'Item', 'Cell'] as const
 
 export const SPEC_BY_NAME: ReadonlyMap<string, ComponentSpec> = new Map(
   COMPONENT_SPECS.map((spec) => [spec.name, spec])

@@ -10,7 +10,7 @@
     {
       "name": "Card",
       "group": "Layout",
-      "signature": "Card(children: [Component], title?: text, tone?: neutral|info|success|warning|danger)",
+      "signature": "Card(children: [Component], title?: text, tone?: tone)",
       "description": "A bordered block with an optional title."
     },
     {
@@ -28,7 +28,7 @@
     {
       "name": "Heading",
       "group": "Text",
-      "signature": "Heading(text: text, level?: number)",
+      "signature": "Heading(text: text, level?: number, tone?: tone)",
       "description": "A heading inside a block."
     },
     {
@@ -40,13 +40,13 @@
     {
       "name": "Callout",
       "group": "Text",
-      "signature": "Callout(tone: neutral|info|success|warning|danger, title: text, body?: text)",
+      "signature": "Callout(tone: tone, title: text, body?: text)",
       "description": "A highlighted note: info, success, warning or danger."
     },
     {
       "name": "Badge",
       "group": "Text",
-      "signature": "Badge(text: text, tone?: neutral|info|success|warning|danger)",
+      "signature": "Badge(text: text, tone?: tone)",
       "description": "A short status label."
     },
     {
@@ -58,19 +58,37 @@
     {
       "name": "Table",
       "group": "Data",
-      "signature": "Table(columns: [Col], rows: [[text|number|Badge|FileRef|Link]], caption?: text, sortable?: true|false)",
-      "description": "Rows and columns. A cell is a text, a number, a Badge, a FileRef or a Link."
+      "signature": "Table(columns: [Col|ColGroup], rows: [[cell]|Row], caption?: text, sortable?: true|false, striped?: true|false, compact?: true|false)",
+      "description": "Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup."
     },
     {
       "name": "Col",
       "group": "Data",
-      "signature": "Col(label: text, kind?: text|number|percent|money|date, align?: left|right|center)",
-      "description": "A column of Table: its label and how its values are formatted."
+      "signature": "Col(label: text, kind?: text|number|percent|money|date, align?: left|right|center, tone?: tone)",
+      "description": "A column of Table: its label, how its values are formatted, and a tone that tints the whole column."
+    },
+    {
+      "name": "ColGroup",
+      "group": "Data",
+      "signature": "ColGroup(label: text, columns: [Col], tone?: tone)",
+      "description": "A heading over several Cols of a Table."
+    },
+    {
+      "name": "Row",
+      "group": "Data",
+      "signature": "Row(cells: [text|number|Badge|Item|Cell], tone?: tone, kind?: normal|section|total|header)",
+      "description": "A row of a Table that is more than a list of cells: kind section is a title across the whole table, total is a bold closing row, header repeats the column heads."
+    },
+    {
+      "name": "Cell",
+      "group": "Data",
+      "signature": "Cell(content: text|number|Badge|Item|Cell, tone?: tone, bold?: true|false, colspan?: number, rowspan?: number, align?: left|right|center)",
+      "description": "One cell of a Table with its own colour, weight, alignment or size: colspan merges cells to the right, rowspan merges the cells below (leave them out of the next rows)."
     },
     {
       "name": "Metric",
       "group": "Data",
-      "signature": "Metric(label: text, value: text|number, delta?: text|number, trend?: up|down|flat, note?: text)",
+      "signature": "Metric(label: text, value: text|number, delta?: text|number, trend?: up|down|flat, note?: text, tone?: tone)",
       "description": "One figure with its label and its change."
     },
     {
@@ -88,13 +106,13 @@
     {
       "name": "Panel",
       "group": "Architecture",
-      "signature": "Panel(children: [Component], title?: text, tone?: neutral|blue|violet|green|orange|red|teal|yellow, icon?: icon, dashed?: true|false, direction?: column|row)",
+      "signature": "Panel(children: [Component], title?: text, tone?: tone, icon?: icon, dashed?: true|false, direction?: column|row)",
       "description": "A coloured box with a title and an icon that holds Items or other Panels, in a column or in a wrapping row. Give it its own name to link it with a Flow."
     },
     {
       "name": "Item",
       "group": "Architecture",
-      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false)",
+      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone)",
       "description": "A line with an icon, a label and a caption; boxed draws it as a card. Give it its own name to link it with a Flow."
     },
     {
@@ -114,18 +132,6 @@
       "group": "Guidance",
       "signature": "Step(title: text, body?: text, status?: todo|doing|done|blocked)",
       "description": "One step of Steps."
-    },
-    {
-      "name": "FileRef",
-      "group": "Sources",
-      "signature": "FileRef(path: text, label?: text, page?: number, line?: number)",
-      "description": "A file or a place in a file; a click opens it in the app."
-    },
-    {
-      "name": "Link",
-      "group": "Sources",
-      "signature": "Link(label: text, url: text)",
-      "description": "A link to a web page."
     }
   ],
   "icons": {
@@ -319,10 +325,25 @@
       "supabase"
     ]
   },
+  "tones": [
+    "neutral",
+    "info",
+    "success",
+    "warning",
+    "danger",
+    "blue",
+    "violet",
+    "green",
+    "orange",
+    "red",
+    "teal",
+    "yellow"
+  ],
   "examples": [
     "root = Stack([title, kpis, table, note])\ntitle = Heading(\"Terminal agents compared\", 2)\nkpis = MetricRow([m1, m2])\nm1 = Metric(\"Tools compared\", 5)\nm2 = Metric(\"With a native sandbox\", 3, \"+1\", \"up\")\ntable = Table([Col(\"Tool\"), Col(\"Sandbox\"), Col(\"Memory\")], rows)\nrows = [[\"Claude Code\", Badge(\"yes\", \"success\"), \"CLAUDE.md\"], [\"Aider\", Badge(\"no\", \"danger\"), \"chat history\"]]\nnote = Callout(\"warning\", \"Not documented\", \"OpenCode does not document its internal database schema.\")",
     "root = Steps([s1, s2, s3])\ns1 = Step(\"Install the runtime\", \"Run the installer, then restart the terminal.\", \"done\")\ns2 = Step(\"Add a provider key\", \"Open Settings, then Providers.\", \"doing\")\ns3 = Step(\"Send a first message\")",
     "root = Card([summary, plan], \"Migration status\", \"info\")\nsummary = MetricRow([Metric(\"Tables moved\", 14, \"+3\", \"up\", \"this week\"), Metric(\"Left\", 6)])\nplan = Section(\"Next\", [Steps([Step(\"Move the audit tables\", null, \"doing\"), Step(\"Switch the reads\", null, \"todo\")])])",
-    "root = Architecture([clients, runtime, storage], [f1, f2, f3], \"Local app\")\nclients = Panel([ui, docs], \"Inputs\", \"violet\", \"monitor\", false, \"row\")\nui = Item(\"Desktop UI\", \"monitor\", \"React\", true)\ndocs = Item(\"Documents\", \"files\", \"PDF, DOCX\", true)\nruntime = Panel([api, jobs, agents], \"Runtime\", \"orange\", \"si:go\", false, \"row\")\napi = Item(\"HTTP API\", \"api\", \"Commands, streaming\", true)\njobs = Item(\"Jobs\", \"workflow\", \"Indexing\", true)\nagents = Item(\"Agents\", \"ai\", \"LLM, tools\", true)\nstorage = Panel([sql, olap], \"Storage\", \"blue\", \"database\", true, \"row\")\nsql = Item(\"SQLite\", \"si:sqlite\", \"Transactions\", true)\nolap = Item(\"DuckDB\", \"si:duckdb\", \"Analytics\", true)\nf1 = Flow(\"ui\", \"api\", null, true)\nf2 = Flow(\"docs\", \"jobs\", \"ingest\")\nf3 = Flow(\"api\", \"sql\")"
+    "root = Architecture([clients, runtime, storage], [f1, f2, f3], \"Local app\")\nclients = Panel([ui, docs], \"Inputs\", \"violet\", \"monitor\", false, \"row\")\nui = Item(\"Desktop UI\", \"monitor\", \"React\", true)\ndocs = Item(\"Documents\", \"files\", \"PDF, DOCX\", true)\nruntime = Panel([api, jobs, agents], \"Runtime\", \"orange\", \"si:go\", false, \"row\")\napi = Item(\"HTTP API\", \"api\", \"Commands, streaming\", true)\njobs = Item(\"Jobs\", \"workflow\", \"Indexing\", true)\nagents = Item(\"Agents\", \"ai\", \"LLM, tools\", true)\nstorage = Panel([sql, olap], \"Storage\", \"blue\", \"database\", true, \"row\")\nsql = Item(\"SQLite\", \"si:sqlite\", \"Transactions\", true)\nolap = Item(\"DuckDB\", \"si:duckdb\", \"Analytics\", true)\nf1 = Flow(\"ui\", \"api\", null, true)\nf2 = Flow(\"docs\", \"jobs\", \"ingest\")\nf3 = Flow(\"api\", \"sql\")",
+    "root = Table([Col(\"Tool\"), install, writes], rows, \"Three engines compared\", false, true)\ninstall = ColGroup(\"Install\", [Col(\"Size (MB)\", \"number\"), Col(\"Setup\")])\nwrites = ColGroup(\"Writes\", [Col(\"Concurrent\"), Col(\"Mode\")], \"violet\")\nrows = [Row([\"Embedded\"], \"blue\", \"section\"), [\"SQLite\", 1, \"None\", Cell(\"one writer\", \"warning\"), \"WAL\"], [\"DuckDB\", 30, \"None\", Cell(\"one writer\", \"warning\"), \"Columnar\"], Row([\"Server\"], \"blue\", \"section\"), [\"PostgreSQL\", 300, \"Installer\", Cell(\"many writers\", \"success\", true), \"MVCC\"], Row([\"Smallest\", \"SQLite\"], null, \"total\")]"
   ]
 }
