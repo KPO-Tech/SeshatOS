@@ -39,7 +39,7 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if block == "" {
 		t.Fatal("the embedded catalog must produce a block")
 	}
-	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:"} {
+	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more"} {
 		if !strings.Contains(block, want) {
 			t.Errorf("the block must mention %q", want)
 		}
