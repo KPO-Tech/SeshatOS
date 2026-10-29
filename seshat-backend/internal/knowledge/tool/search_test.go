@@ -200,3 +200,32 @@ func TestRef(t *testing.T) {
 }
 
 var _ tools.Tool = (*SearchTool)(nil)
+
+func TestSearchTool_Call_SaysWhichFileEachExcerptComesFrom(t *testing.T) {
+	backend := &fakeBackend{
+		corpora: []knowledge.Corpus{{ID: "c1", Name: "Legal"}},
+		results: map[string]*rag.SearchResponse{
+			"c1": {CorpusID: "c1", Results: []rag.SearchResult{
+				{Key: "rag/c1/file-9#chunk-3", Text: "sixty days", Score: 0.9},
+				{Key: "odd-key", Text: "thirty days", Score: 0.7},
+			}},
+		},
+	}
+	result, err := NewSearchTool(backend).Call(principalCtx(), tools.CallInput{Parsed: map[string]any{"query": "notice"}}, nil)
+	if err != nil {
+		t.Fatalf("Call: %v", err)
+	}
+	sources, ok := result.Metadata.Additional["passages"].([]passageSource)
+	if !ok || len(sources) != 2 {
+		t.Fatalf("expected 2 passage sources in the metadata, got %+v", result.Metadata.Additional["passages"])
+	}
+	if want := (passageSource{Ref: Ref("c1", "rag/c1/file-9#chunk-3"), CorpusID: "c1", FileID: "file-9"}); sources[0] != want {
+		t.Errorf("first source = %+v, want %+v", sources[0], want)
+	}
+	if sources[1].FileID != "" || sources[1].CorpusID != "c1" {
+		t.Errorf("a key of another shape names no file but keeps its collection, got %+v", sources[1])
+	}
+	if strings.Contains(result.Content, "file-9") {
+		t.Errorf("the file id is for the interface, not for the model, but the text has it:\n%s", result.Content)
+	}
+}

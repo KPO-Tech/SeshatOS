@@ -10,15 +10,16 @@ export function baseName(name: string): string {
 
 /**
  * Opens a document of a collection in the right panel, with the viewers the chat uses (PDF, Word, Excel, PowerPoint, text and Markdown).
- * Returns false when there is no viewer for this kind of file, so the caller can say so.
+ * Opened at a page, and with a passage marked when one is given (a PDF). Returns false when there is no viewer for this kind of file, so
+ * the caller can say so.
  */
-export async function openDocument(file: Pick<CollectionFile, 'fileId' | 'name'>, corpusId: string, page?: number): Promise<boolean> {
+export async function openDocument(file: Pick<CollectionFile, 'fileId' | 'name'>, corpusId: string, page?: number, highlight?: { text: string; pages: number[] }): Promise<boolean> {
   const attachment: ChatAttachment = { id: file.fileId, filename: baseName(file.name), upload_status: 'uploaded' }
   const action = resolveAttachmentOpenAction(attachment, undefined)
   const { openRightPanel } = useUIStore.getState()
   const indexSource = { corpusId, fileId: file.fileId }
   if (action.kind === 'panel') {
-    openRightPanel({ kind: action.panel, title: attachment.filename, documentFileId: file.fileId, documentPage: page, indexSource })
+    openRightPanel({ kind: action.panel, title: attachment.filename, documentFileId: file.fileId, documentPage: page, documentHighlight: highlight, indexSource })
     return true
   }
   if (action.kind === 'text') {

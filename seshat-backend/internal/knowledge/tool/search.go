@@ -120,6 +120,7 @@ func (t *SearchTool) Call(ctx context.Context, input tools.CallInput, _ tools.Ca
 		Additional: map[string]any{
 			"corpora_searched": res.CorporaSearched,
 			"result_count":     len(res.Results),
+			"passages":         passageSources(res.Results),
 		},
 	}
 	return result, nil
@@ -183,6 +184,32 @@ func formatResults(query string, results []knowledge.TaggedSearchResult) string 
 		sb.WriteString("\n\n")
 	}
 	return strings.TrimRight(sb.String(), "\n")
+}
+
+// passageSource says which document an excerpt comes from, so that the interface can open it at the cited place. It travels in the
+// metadata of the result, not in the text the model reads.
+type passageSource struct {
+	Ref      string `json:"ref"`
+	CorpusID string `json:"corpus_id"`
+	FileID   string `json:"file_id,omitempty"`
+}
+
+func passageSources(results []knowledge.TaggedSearchResult) []passageSource {
+	sources := make([]passageSource, 0, len(results))
+	for _, r := range results {
+		sources = append(sources, passageSource{Ref: Ref(r.CorpusID, r.Key), CorpusID: r.CorpusID, FileID: fileIDOfKey(r.Key)})
+	}
+	return sources
+}
+
+// fileIDOfKey is the file a chunk key points at: keys follow "rag/{corpusID}/{fileID}#chunk-{i}". A key of another shape gives "".
+func fileIDOfKey(key string) string {
+	parts := strings.Split(key, "/")
+	if len(parts) < 3 || parts[0] != "rag" {
+		return ""
+	}
+	id, _, _ := strings.Cut(parts[2], "#")
+	return id
 }
 
 // Ref identifies one excerpt of one corpus, the same way every time it is found: an agent cites it, and the interface finds it again in

@@ -20,6 +20,7 @@ import { NotebookToolView } from './renderers/NotebookToolView'
 import { PatchToolView } from './renderers/PatchToolView'
 import { ProseToolView } from './renderers/ProseToolView'
 import { RagSearchToolView } from './renderers/RagSearchToolView'
+import { KnowledgeReadToolView } from './renderers/KnowledgeReadToolView'
 import { ReadToolView } from './renderers/ReadToolView'
 import { SttToolView } from './renderers/SttToolView'
 import { TtsToolView } from './renderers/TtsToolView'
@@ -162,6 +163,7 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
   // (see seshat-backend internal/knowledge/tool) - same result shape, so it
   // shares RagSearchToolView's source cards.
   knowledge_search: { label: 'Knowledge Search', groupable: false, render: RagSearchToolView, snippet: (t) => compact(str(t, 'query'), 40) },
+  knowledge_read: { label: 'Knowledge Read', groupable: false, render: KnowledgeReadToolView, snippet: (t) => compact(str(t, 'file'), 40) },
   rag_ingest: { label: 'Ingest', silent: true, snippet: (t) => str(t, 'corpus_id') },
 
   // Internal discovery & control.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { modelOfProvider, pickDefaultModel } from './defaultModel'
+import { modelOfProvider, pickDefaultChoiceWhenSettled, pickDefaultModel } from './defaultModel'
 
 const model = (model_id: string, is_default = false) => ({ model_id, is_default })
 const provider = (id: string, is_default: boolean, model_id?: string) => ({ id, is_default, model_id })
@@ -37,5 +37,27 @@ describe('pickDefaultModel', () => {
 
   it('gives nothing when no provider has a model', () => {
     expect(pickDefaultModel([provider('empty', true)], () => [])).toBeNull()
+  })
+})
+
+describe('pickDefaultChoiceWhenSettled', () => {
+  const choice = (providerId: string, model_id: string, is_default = false) => ({ providerId, model: model(model_id, is_default) })
+  const providers = [provider('slow', false, 'slow-pick'), provider('fast', false)]
+  const loaded = (ids: string[]) => (p: { id: string }) => ids.includes(p.id)
+
+  it('waits while a provider that comes before the pick has not answered', () => {
+    // fast answered first: the first provider, slow, could still be the default
+    expect(pickDefaultChoiceWhenSettled(providers, [choice('fast', 'fast-a', true)], loaded(['fast']))).toBeNull()
+  })
+
+  it('gives the same model whatever the order the catalogs arrived in', () => {
+    const all = [choice('slow', 'slow-pick'), choice('slow', 'slow-other'), choice('fast', 'fast-a', true)]
+    expect(pickDefaultChoiceWhenSettled(providers, all, loaded(['slow', 'fast']))?.model.model_id).toBe('slow-pick')
+    expect(pickDefaultChoiceWhenSettled(providers, all, loaded(['fast', 'slow']))?.model.model_id).toBe('slow-pick')
+  })
+
+  it('does not wait for a provider after the pick, and moves on from a provider with no model', () => {
+    expect(pickDefaultChoiceWhenSettled(providers, [choice('slow', 'slow-pick')], loaded(['slow']))?.model.model_id).toBe('slow-pick')
+    expect(pickDefaultChoiceWhenSettled(providers, [choice('fast', 'fast-a', true)], loaded(['slow', 'fast']))?.model.model_id).toBe('fast-a')
   })
 })
