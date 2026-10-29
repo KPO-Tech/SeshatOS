@@ -2,7 +2,8 @@ import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ChatInput } from './ChatInput'
 import { ContextGauge } from './ContextGauge'
 import type { ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
-import { providerDisplayName, providerInitials, type ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
+import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
+import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { modelAlias } from '@renderer/lib/modelAlias'
 
 type SendMessageOptions = {
@@ -133,13 +134,7 @@ export function ConversationComposer({
               ? <ProviderIcon provider={selectedModelChoice.providerKind} size={13} />
               : undefined
           }
-          modelOptions={allModelChoices.length > 0 ? allModelChoices.map((choice) => ({
-            id: choice.id,
-            label: modelAlias(choice.model.display_name || choice.model.model_id),
-            description: providerDisplayName(choice.providerName, choice.providerKind),
-            icon: <ProviderIcon provider={choice.providerKind} size={17} />,
-            prefix: providerInitials(choice.providerName, choice.providerKind),
-          })) : undefined}
+          modelOptions={allModelChoices.length > 0 ? modelSelectorOptions(allModelChoices) : undefined}
           selectedModelId={selectedModelChoiceId}
           onModelSelect={handleModelSelect}
           modelDisabled={loadingModelProviderIds.length > 0 && allModelChoices.length === 0}
