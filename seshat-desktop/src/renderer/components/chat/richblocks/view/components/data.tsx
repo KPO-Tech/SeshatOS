@@ -4,6 +4,7 @@ import { isNode } from '../../lang/parseUi'
 import type { ComponentProps } from '../NodeView'
 import { NodeList, NodeView } from '../NodeView'
 import { Expandable, useExpanded } from '../expand/Expandable'
+import { hasMarkdown, MarkdownText } from '../text/MarkdownText'
 import { buildTableModel, type Align, type BodyCell, type BodyRow, type HeaderCell } from '../table/tableModel'
 import { TONES, toneOrNull } from '../tones'
 
@@ -40,6 +41,7 @@ function CellContent({ cell }: { cell: Pick<BodyCell, 'content' | 'column'> }) {
   if (content === undefined || content === null) return null
   if (isNode(content)) return <NodeView node={content} />
   const text = formatCell(content, cell.column?.kind ?? 'text')
+  if (typeof content === 'string' && hasMarkdown(content)) return <MarkdownText text={content} />
   return text.includes('\n') ? <span className="whitespace-pre-line">{text}</span> : <>{text}</>
 }
 

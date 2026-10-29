@@ -56,7 +56,9 @@ Format: one statement per line, name = Component(arguments). Arguments are posit
 	richUIChartNote = `In a Curve the formula is text in x: + - * / ^, sin cos tan exp ln log sqrt abs, pi and e, as 3x^2 or 3*x^2 or (x+1)(x-1). For a mathematics exercise, explain the steps in Markdown outside the block (LaTeX between $ signs works) and draw f, its derivative and the area in Plot blocks, with the roots and extrema as Dots.
 
 `
-	richUICoreNotes = `An action is written @Ask("message the reader would send you"), @OpenFile("path") or @OpenUrl("https://..."). Use @Ask for a follow-up, worded as the reader would say it, in their language; use only the path of a file you really read, and a real address. Offer Choices only when there is a real fork, never as a habit, and at most once per answer.
+	richUICoreNotes = `The text of a component is Markdown: bold, italics, lists, links and code fences are drawn. Use a Card or a Callout only for what must stand apart or carry a colour; never put code, an ordinary paragraph or a list in a Card or a Markdown component when normal Markdown outside the block says it as well.
+
+An action is written @Ask("message the reader would send you"), @OpenFile("path") or @OpenUrl("https://..."). Use @Ask for a follow-up, worded as the reader would say it, in their language; use only the path of a file you really read, and a real address. Offer Choices only when there is a real fork, never as a habit, and at most once per answer.
 
 Colour marks a concept. Give a tone to what matters (a recommended option, a risk, a total, a status) and leave the rest without one: one or two tones in a table are enough, and a table needs none by default.
 

@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 import { TONE_BOX, TONE_TEXT, toneOf, toneOrNull } from '../tones'
 
@@ -16,7 +17,7 @@ function Heading({ props }: ComponentProps) {
 }
 
 function Markdown({ props }: ComponentProps) {
-  return <p className="my-1 whitespace-pre-wrap text-app-text">{String(props.text)}</p>
+  return <MarkdownText text={String(props.text)} className="my-1 text-app-text" />
 }
 
 function Callout({ props }: ComponentProps) {
@@ -24,7 +25,7 @@ function Callout({ props }: ComponentProps) {
   return (
     <div role="note" className={`my-3 rounded-lg border px-3.5 py-2.5 ${TONE_BOX[tone]}`}>
       <div className={`text-[13px] font-semibold ${tone === 'neutral' ? 'text-app-text' : TONE_TEXT[tone]}`}>{String(props.title)}</div>
-      {typeof props.body === 'string' && <div className="mt-0.5 text-[13px] text-app-text-secondary">{props.body}</div>}
+      {typeof props.body === 'string' && <MarkdownText text={props.body} className="mt-0.5 text-[13px] text-app-text-secondary" />}
     </div>
   )
 }
@@ -41,7 +42,7 @@ function Badge({ props }: ComponentProps) {
 function Quote({ props }: ComponentProps) {
   return (
     <blockquote className="my-3 border-0 border-l-2 border-app-border pl-3 text-app-text-secondary">
-      <div>{String(props.text)}</div>
+      <MarkdownText text={String(props.text)} />
       {typeof props.source === 'string' && <div className="mt-1 text-xs text-app-text-muted">{props.source}</div>}
     </blockquote>
   )

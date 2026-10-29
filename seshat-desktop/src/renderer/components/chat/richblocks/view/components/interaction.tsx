@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { isNode } from '../../lang/parseUi'
 import type { UiAction } from '../../lang/types'
 import { actionState, readAction, runAction, useRichActionBridge } from '../actions/richActions'
+import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 
 function Button({ props }: ComponentProps) {
@@ -124,7 +125,7 @@ function Citation({ props }: ComponentProps) {
           {place}
         </span>
       </div>
-      {typeof props.quote === 'string' && <div className="mt-1 border-0 border-l-2 border-app-border pl-2.5 text-[13px] italic text-app-text-secondary">{props.quote}</div>}
+      {typeof props.quote === 'string' && <MarkdownText text={props.quote} className="mt-1 border-0 border-l-2 border-solid border-app-border pl-2.5 text-[13px] italic text-app-text-secondary" />}
     </div>
   )
 }
