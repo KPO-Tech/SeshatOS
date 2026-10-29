@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
+import { FreeModelNote, isFreeModel } from './FreeModelNote'
 import { ModelCombobox } from './ModelCombobox'
 import { ProviderKeyField } from './ProviderKeyField'
 import { RerankerModels } from './RerankerModels'
@@ -199,6 +200,8 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
             emptyPlaceholder="Optional"
           />
         </div>
+
+        {isFreeModel(form.model) && <FreeModelNote what="rerank" />}
 
         <ResultMessage state={testing} error={testError} latency={latency} />
 

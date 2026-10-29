@@ -409,6 +409,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gRerankerModel{})
 			},
 		},
+		{
+			ID:    "20261028_059_embedder_vectors_model",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gEmbedderConfig{})
+			},
+		},
 	}
 }
 

@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
+import { FreeModelNote, isFreeModel } from './FreeModelNote'
 import { ModelCombobox } from './ModelCombobox'
 import { ProviderKeyField } from './ProviderKeyField'
+import { ReembedPanel } from './ReembedPanel'
+import { api } from '@renderer/api/client'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from '@renderer/components/config/knowledge/knowledgeApi'
@@ -148,6 +151,8 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
   }
 
   // The vectors of the documents already indexed belong to the model saved: another model cannot read them.
+  // The configuration says whether the vectors are up to date: read it again once they were made again.
+  const refreshConfig = useCallback(() => void api.get<EmbedderConfig>('/settings/embedder').then(onSaved).catch(() => undefined), [onSaved])
   const changesModel = Boolean(config?.is_configured && config.model && (form.model !== config.model || form.provider !== config.provider))
   const suggestions = detectedModels.length > 0 ? detectedModels : MODEL_HINTS[form.provider] ?? []
   const readyProvider = (id: string) => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[id] ?? []).includes(item.provider.toLowerCase()))
@@ -207,11 +212,15 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
             <div className="min-w-0">
               <div className="text-[12.5px] font-semibold text-[var(--text-primary)]">Documents already indexed use {config?.model}</div>
               <p className="m-0 mt-0.5 text-[12px] leading-[18px] text-[var(--text-muted)]">
-                Their vectors will not match this model, so the search by meaning will not find them until they are indexed again. The search by words keeps working.
+                Once saved, their vectors will not match this model: the search by meaning is wrong until you make them again (a button appears after saving). The search by words keeps working.
               </p>
             </div>
           </div>
         )}
+
+        {isFreeModel(form.model) && <FreeModelNote what="embedding" />}
+
+        <ReembedPanel config={config} unsaved={dirty} onDone={refreshConfig} />
 
         <ResultMessage state={testing} error={testError} latency={latency} />
 

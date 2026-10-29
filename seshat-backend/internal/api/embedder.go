@@ -23,6 +23,10 @@ type embedderConfigResponse struct {
 	Enabled      bool   `json:"enabled"`
 	IsConfigured bool   `json:"is_configured"`
 	UpdatedAt    int64  `json:"updated_at,omitempty"`
+	// VectorsStale is true when the vectors of the collections were made with another model than the one in use: the search by meaning is
+	// then wrong until they are made again. VectorsUnknown is true when it cannot be told (a model changed before this was recorded).
+	VectorsStale   bool `json:"vectors_stale"`
+	VectorsUnknown bool `json:"vectors_unknown"`
 }
 
 func embedderConfigToResponse(cfg *db.EmbedderConfig) embedderConfigResponse {
@@ -35,13 +39,15 @@ func embedderConfigToResponse(cfg *db.EmbedderConfig) embedderConfigResponse {
 		updatedAt = cfg.UpdatedAt.Unix()
 	}
 	return embedderConfigResponse{
-		Provider:     cfg.Provider,
-		BaseURL:      cfg.BaseURL,
-		Model:        cfg.Model,
-		HasAPIKey:    cfg.HasAPIKey,
-		Enabled:      cfg.Enabled,
-		IsConfigured: isConfigured,
-		UpdatedAt:    updatedAt,
+		Provider:       cfg.Provider,
+		BaseURL:        cfg.BaseURL,
+		Model:          cfg.Model,
+		HasAPIKey:      cfg.HasAPIKey,
+		Enabled:        cfg.Enabled,
+		IsConfigured:   isConfigured,
+		UpdatedAt:      updatedAt,
+		VectorsStale:   cfg.VectorsModel != "" && cfg.VectorsModel != cfg.Key(),
+		VectorsUnknown: isConfigured && cfg.VectorsModel == "",
 	}
 }
 
@@ -138,6 +144,12 @@ func (a *App) handleEmbedderConfig(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			writeBackendError(w, bkerr.Internal("failed to save embedder config: "+err.Error(), err))
 			return
+		}
+		if a.applyEmbedder != nil {
+			if err := a.applyEmbedder(r.Context()); err != nil {
+				writeBackendError(w, bkerr.Internal("the embedder was saved but could not be put in use: "+err.Error(), err))
+				return
+			}
 		}
 		writeJSON(w, http.StatusOK, embedderConfigToResponse(cfg))
 
