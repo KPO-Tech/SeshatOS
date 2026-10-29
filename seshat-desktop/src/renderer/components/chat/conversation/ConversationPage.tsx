@@ -145,7 +145,7 @@ export function ConversationPage() {
   })
 
   // Virtual list - renders only the rows visible in the viewport.
-  const { scrollRef, rowVirtualizer } = useConversationScroll({
+  const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({
     messageCount: visibleMessages.length,
     streaming,
   })
@@ -197,6 +197,16 @@ export function ConversationPage() {
         onPlanReject={handlePlanDeny}
         onSubmitToolPrompt={onSubmitToolPrompt}
       />
+
+      <div className="conv-jump-anchor">
+        {away && (
+          <button type="button" className="conv-jump" onClick={scrollToBottom} title="Go to the latest message" aria-label="Go to the latest message">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 3v9.5M3.75 8.5 8 12.75l4.25-4.25" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       <ConversationComposer
         sessionId={id}
