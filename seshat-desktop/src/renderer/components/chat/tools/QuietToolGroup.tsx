@@ -5,6 +5,8 @@ import { SilentToolView } from './renderers/SilentToolView'
 import { ToolLineItem } from './ToolLineItem'
 import { THINKING_MARKDOWN_CLASS } from './thinkingMarkdownClass'
 import { thinkingPreview } from '../messages/thinkingPreview'
+import { formatThinkingDuration } from '../messages/thinkingTime'
+import { useThinkingDuration } from '../messages/useThinkingDuration'
 import { toolStatus } from './quietGroupPhrase'
 import { isSilentTool, toolSnippet } from './toolDisplay'
 import type { ToolBlockProps } from './types'
@@ -17,7 +19,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 type Props = {
   items: QuietGroupItem[]
   sessionId?: string
-  revealThinking?: boolean
+  /** True while the last step of this group is still being written: if it is a thought, its time is counted. */
+  live?: boolean
   autoExpandTools?: boolean
   onSubmitPrompt?: ToolBlockProps['onSubmitPrompt']
 }
@@ -28,13 +31,13 @@ type Props = {
 // summary someone has to click to see anything. Each step keeps its own
 // expand-for-details affordance (ToolLineItem/SilentToolView/thinking below)
 // - only the outer "collapse the whole run into one line" behavior is gone.
-export function QuietToolGroup({ items, sessionId, revealThinking = false, autoExpandTools = false, onSubmitPrompt }: Props) {
+export function QuietToolGroup({ items, sessionId, live = false, autoExpandTools = false, onSubmitPrompt }: Props) {
   return (
     <div className="m-0 flex flex-col">
       <div className="m-0 flex flex-col gap-1.5">
-        {items.map((item) => {
+        {items.map((item, position) => {
           if (item.kind === 'thinking') {
-            return <ThinkingGroupItem key={item.thinkingId} thinkingId={item.thinkingId} thinking={item.thinking} sessionId={sessionId} revealThinking={revealThinking} />
+            return <ThinkingGroupItem key={item.thinkingId} thinkingId={item.thinkingId} thinking={item.thinking} sessionId={sessionId} live={live && position === items.length - 1} />
           }
           const tool = item.tool
           const status = toolStatus(tool)
@@ -77,17 +80,18 @@ function ThinkingGroupItem({
   thinkingId,
   thinking,
   sessionId,
-  revealThinking = false,
+  live = false,
 }: {
   thinkingId: string
   thinking: string
   sessionId?: string
-  revealThinking?: boolean
+  live?: boolean
 }) {
   const storedExpansion = useUIStore((s) => s.thinkingExpansion[thinkingId])
-  const expanded = storedExpansion ?? revealThinking
+  const expanded = storedExpansion ?? false
   const setThinkingExpansion = useUIStore((s) => s.setThinkingExpansion)
   const preview = expanded ? '' : thinkingPreview(thinking)
+  const seconds = useThinkingDuration(sessionId, thinking, live)
 
   function toggle() {
     setThinkingExpansion(thinkingId, !expanded)
@@ -112,8 +116,11 @@ function ThinkingGroupItem({
             — {preview}
           </span>
         )}
-        <span className={cx('ml-auto inline-flex shrink-0 items-center not-italic opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
-          <Down size={10} />
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1.5">
+          {seconds !== null && <span className="not-italic tabular-nums" aria-label="Time spent thinking">{formatThinkingDuration(seconds)}</span>}
+          <span className={cx('inline-flex shrink-0 items-center not-italic opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
+            <Down size={10} />
+          </span>
         </span>
       </div>
       {expanded && (
