@@ -32,6 +32,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Rich answers.** The agent can answer with drawn components (tables, figures, steps, notes) that fill in while the answer streams. It is on by default and can be turned off in Config > Agents > Answers.
 - **Architecture drawings in an answer.** The agent can draw a system as coloured panels holding items with icons (generic icons and technology logos), with arrows between them.
 - **Colours and complex tables in rich answers.** Tables, figures, headings, items and panels can take a colour to mark a concept, and a table can group its columns under a heading, have section and total rows, and merge cells.
+- **Charts in an answer: data charts, plots of formulas, and charts for machine learning.** Bars, lines, areas, pies and scatter plots; a plot of formulas with the derivative and the integral computed for you, the area under a curve with its value, and marked roots and extrema (a mathematics exercise can be answered with all its graphs); histograms, confusion and correlation matrices, learning curves. They are drawn in the colours of the app and show the values under the pointer.
 - **The model menu folds the models under their provider**, all folded when it opens and one open at a time, so a provider with hundreds of models no longer fills the menu.
 - **A top bar for Config and Settings**, and Sources laid out like Plugins.
 

@@ -39,12 +39,16 @@ Besides Markdown, the desktop app draws structured components from a fenced bloc
 - a procedure of three steps or more: Steps;
 - key figures: Metric items inside a MetricRow;
 - a warning, a caveat or a status the reader must not miss: Callout.
-- the architecture of a system, its layers or a data flow: an Architecture of Panels that hold Items with icons, and Flow arrows between them.
+- the architecture of a system, its layers or a data flow: an Architecture of Panels that hold Items with icons, and Flow arrows between them;
+- numbers to compare or follow: BarChart, LineChart (a learning curve is one), AreaChart, PieChart; the spread of values: Histogram; a confusion or a correlation matrix: Heatmap; points and a fitted line: ScatterChart, or a Plot with Points;
+- a function, its derivative, its integral or the area under it: a Plot of Curves, where op derivative or integral draws them for you, Shade for an area (the legend gives its value) and Dot for a root or an extremum.
 Everything else stays normal Markdown outside the block: explanations, reasoning, code and commands, short lists. A short answer needs no block. At most three blocks per answer.
 
 Format: one statement per line, name = Component(arguments). Arguments are positional, in the order listed; a name ending in ? is optional, and null skips an optional argument in the middle. Strings use double quotes, lists use [a, b], and a name can be used before it is defined. Write the line root = ... first, then the parts it uses, with the data last. Use only the components and arguments below, never invent one.
 
 For an Architecture, write each Panel or Item you want to link as its own named statement, and name it in quotes in a Flow: Flow("api", "storage"). Put linked boxes side by side or one above the other, so that an arrow does not cross a third box. Keep a Panel to a handful of Items and the label of a Flow to a few words.
+
+In a Curve the formula is text in x: + - * / ^, sin cos tan exp ln log sqrt abs, pi and e, as 3x^2 or 3*x^2 or (x+1)(x-1). For a mathematics exercise, explain the steps in Markdown outside the block (LaTeX between $ signs works) and draw f, its derivative and the area in Plot blocks, with the roots and extrema as Dots.
 
 Colour marks a concept. Give a tone to what matters (a recommended option, a risk, a total, a status) and leave the rest without one: one or two tones in a table are enough, and a table needs none by default.
 
