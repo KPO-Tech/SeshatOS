@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from '@renderer/api/client'
+import { clearSlideHighlight, highlightPassageInSlides, slideElement } from '@renderer/lib/slidePassageHighlight'
 
 type Props = {
   fileId: string
   filename: string
+  // The slide to show first (counted from 1), and the passage to mark there.
+  initialSlide?: number
+  highlight?: { text: string; pages: number[] }
 }
 
 type PptxPreviewer = {
@@ -29,13 +33,26 @@ function fitPresentationSize(host: HTMLElement): { width: number; height: number
 // Renders .pptx in-browser through pptx-preview. The package is intentionally
 // isolated here so we can swap it later without changing attachment routing
 // or right-panel state.
-export function PptxPreviewPanel({ fileId, filename }: Props) {
+export function PptxPreviewPanel({ fileId, filename, initialSlide, highlight }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
   const [size, setSize] = useState({ width: 0, height: 0 })
   const dataRef = useRef<{ fileId: string; data: ArrayBuffer } | null>(null)
+  const targetRef = useRef({ initialSlide, highlight })
+  targetRef.current = { initialSlide, highlight }
+
+  // Marks the passage and brings its slide into view; with no passage found, the slide the document was opened at.
+  function showTarget() {
+    const container = containerRef.current
+    if (!container) return
+    clearSlideHighlight(container)
+    const { initialSlide: slide, highlight: wanted } = targetRef.current
+    const marked = wanted ? highlightPassageInSlides(container, wanted.text) : null
+    const target = marked ?? (slide ? slideElement(container, slide) : null)
+    target?.scrollIntoView({ block: marked ? 'center' : 'start' })
+  }
 
   // Drawn again when the panel changes size (dragged wider, maximized): the slides follow the space they have.
   useEffect(() => {
@@ -79,7 +96,9 @@ export function PptxPreviewPanel({ fileId, filename }: Props) {
         const previewer = init(containerRef.current, { width, height, mode: 'list' }) as PptxPreviewer
         // preview() takes ownership of the buffer: it is given a copy so that drawing again at another size can start from the same bytes.
         await Promise.resolve(previewer.preview(data.slice(0)))
-        if (!cancelled) setStatus('ready')
+        if (cancelled) return
+        showTarget()
+        setStatus('ready')
       } catch (err) {
         if (cancelled) return
         const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to render presentation'
@@ -93,7 +112,14 @@ export function PptxPreviewPanel({ fileId, filename }: Props) {
       cancelled = true
       if (containerRef.current) containerRef.current.innerHTML = ''
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId, size.width, size.height])
+
+  // The document opened again at another passage: go to it without drawing the slides again.
+  useEffect(() => {
+    if (status === 'ready') showTarget()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSlide, highlight])
 
   return (
     <div className="relative h-full min-h-0">

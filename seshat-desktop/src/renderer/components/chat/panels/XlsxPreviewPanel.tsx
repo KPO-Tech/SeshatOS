@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ExcelJS from 'exceljs'
 import { api, ApiError } from '@renderer/api/client'
+import { locatePassageInSheets } from '@renderer/lib/sheetPassageLocator'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -9,6 +10,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 type Props = {
   fileId: string
   filename: string
+  // The passage to mark: the sheet that holds it is shown and its cells are marked.
+  highlight?: { text: string; pages: number[] }
 }
 
 type SheetData = { name: string; rows: string[][] }
@@ -42,7 +45,8 @@ function cellText(cell: ExcelJS.Cell): string {
 // Renders a .xlsx workbook's real content directly in the browser. exceljs
 // parses the workbook client-side, then this panel exposes the sheets as
 // scrollable HTML tables.
-export function XlsxPreviewPanel({ fileId, filename }: Props) {
+export function XlsxPreviewPanel({ fileId, filename, highlight }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [sheets, setSheets] = useState<SheetData[] | null>(null)
   const [activeSheet, setActiveSheet] = useState(0)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -97,6 +101,17 @@ export function XlsxPreviewPanel({ fileId, filename }: Props) {
     }
   }, [fileId])
 
+  // Where the passage is: the sheet that holds it is shown, and its cells are marked.
+  const place = useMemo(() => (sheets && highlight ? locatePassageInSheets(sheets, highlight.text) : null), [sheets, highlight])
+  useEffect(() => {
+    if (place) setActiveSheet(place.sheet)
+  }, [place])
+  const marked = place && place.sheet === activeSheet ? new Set(place.cells.map(([row, column]) => `${row}:${column}`)) : null
+  useEffect(() => {
+    if (marked) scrollRef.current?.querySelector('.passage-highlight')?.scrollIntoView({ block: 'center' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [place, activeSheet])
+
   const current = sheets?.[activeSheet]
   const truncated = (current?.rows.length ?? 0) >= MAX_PREVIEW_ROWS
 
@@ -124,7 +139,7 @@ export function XlsxPreviewPanel({ fileId, filename }: Props) {
           })}
         </div>
       )}
-      <div className="xlsx-preview-scroll min-h-0 flex-1 overflow-auto bg-white">
+      <div className="xlsx-preview-scroll min-h-0 flex-1 overflow-auto bg-white" ref={scrollRef}>
         {current && current.rows.length > 0 ? (
           <>
             <table className="border-collapse whitespace-nowrap text-[12px] text-[#1c1a17]">
@@ -132,7 +147,7 @@ export function XlsxPreviewPanel({ fileId, filename }: Props) {
                 {current.rows.map((row, ri) => (
                   <tr key={ri}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="border border-[#e4dfd4] px-2 py-1">{cell}</td>
+                      <td key={ci} className={cx('border border-[#e4dfd4] px-2 py-1', marked?.has(`${ri}:${ci}`) && 'passage-highlight')}>{cell}</td>
                     ))}
                   </tr>
                 ))}

@@ -7,7 +7,7 @@ import { useKnowledgeConversation } from '../chat/useKnowledgeConversation'
 import { PassageDrawer } from '../components/PassageDrawer'
 import { AskComposer } from './AskComposer'
 import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
-import { openDocument } from '../collections/openDocument'
+import { openDocument, passageTarget } from '../collections/openDocument'
 import { AskConversation } from './AskConversation'
 import { AskHeader } from './AskHeader'
 import { AskHero } from './AskHero'
@@ -40,8 +40,8 @@ export function AskPage() {
     async (passage: Passage, how: OpenHow = 'cited') => {
       const origin = passage.fileId && passage.corpusId ? { fileId: passage.fileId, corpusId: passage.corpusId } : await resolvePassageFile(passage, collections)
       if (origin) {
-        const highlight = how === 'cited' && passage.pages.length > 0 ? { text: passage.text, pages: passage.pages } : undefined
-        if (await openDocument({ fileId: origin.fileId, name: passage.file }, origin.corpusId, passage.pages[0], highlight)) {
+        const target = passageTarget(passage.text, passage.pages)
+        if (await openDocument({ fileId: origin.fileId, name: passage.file }, origin.corpusId, target.page, how === 'cited' ? target.highlight : undefined)) {
           setOpened(null)
           return
         }
