@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { renderAsync } from 'docx-preview'
 import { api, ApiError } from '@renderer/api/client'
+import { clearPassageMarks, highlightPassageInElement } from '@renderer/lib/textPassageHighlight'
 
 type Props = {
   fileId: string
   filename: string
+  // The passage to mark and bring into view.
+  highlight?: { text: string; pages: number[] }
 }
 
 function base64ToArrayBuffer(dataUrl: string): ArrayBuffer {
@@ -18,7 +21,7 @@ const SCROLL_PADDING = 0 // keep in sync with .docx-preview-scroll's padding bel
 // Renders a .docx file's real content directly in the browser. docx-preview
 // parses the document XML client-side, which keeps the default preview path
 // local to the renderer and avoids server-side document rendering.
-export function DocxPreviewPanel({ fileId, filename }: Props) {
+export function DocxPreviewPanel({ fileId, filename, highlight }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   // The page's real width in CSS px, as docx-preview laid it out (its own
@@ -30,6 +33,17 @@ export function DocxPreviewPanel({ fileId, filename }: Props) {
   const naturalWidthRef = useRef(0)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
+  const highlightRef = useRef(highlight)
+  highlightRef.current = highlight
+
+  // Marks the passage in the pages and brings it into view. A Word file has no fixed page to go to, so the passage is found by its words.
+  function showPassage() {
+    const container = containerRef.current
+    if (!container) return
+    clearPassageMarks(container)
+    const wanted = highlightRef.current
+    if (wanted) highlightPassageInElement(container, wanted.text)?.scrollIntoView({ block: 'center' })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -71,6 +85,7 @@ export function DocxPreviewPanel({ fileId, filename }: Props) {
         // zoom applied yet).
         naturalWidthRef.current = containerRef.current.scrollWidth
         applyScale()
+        showPassage()
         setStatus('ready')
       } catch (err) {
         if (cancelled) return
@@ -89,7 +104,14 @@ export function DocxPreviewPanel({ fileId, filename }: Props) {
       cancelled = true
       resizeObserver.disconnect()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId])
+
+  // The document opened again at another passage.
+  useEffect(() => {
+    if (status === 'ready') showPassage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlight])
 
   return (
     <div className="relative h-full min-h-0">

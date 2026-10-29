@@ -13,12 +13,14 @@ import { ArtifactPreviewPanel } from '@renderer/components/chat/panels/ArtifactP
 import { DocxPreviewPanel } from '@renderer/components/chat/panels/DocxPreviewPanel'
 import { XlsxPreviewPanel } from '@renderer/components/chat/panels/XlsxPreviewPanel'
 import { PptxPreviewPanel } from '@renderer/components/chat/panels/PptxPreviewPanel'
+import { MarkedNote, textLines } from '@renderer/components/chat/panels/MarkedNote'
 import { BrowserPanel } from '@renderer/components/chat/panels/BrowserPanel'
 import { ShellPanel } from '@renderer/components/chat/panels/ShellPanel'
 import { EmptyState } from '@renderer/components/chat/panels/EmptyState'
 import { KnowledgePanel } from '@renderer/components/chat/panels/KnowledgePanel'
 import { flattenRightPanels } from '@renderer/stores/ui'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
+import { FLOATING_PANEL_WIDTH, isFloatingColumn } from './floatingColumn'
 import type { RightPanelInstance, RightPanelKind, RightPanelColumn } from '@renderer/stores/ui'
 
 export function RightPanelHost() {
@@ -99,9 +101,14 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
     document.addEventListener('mouseup', onUp)
   }
 
+  const floating = isFloatingColumn(column)
+
   return (
-    <div className="relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]" style={{ width: `${column.width}px` }}>
-      <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />
+    <div
+      className={floating ? 'relative flex h-full min-w-0 flex-col bg-[var(--chat-bg)]' : 'relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]'}
+      style={{ width: `${floating ? FLOATING_PANEL_WIDTH : column.width}px` }}
+    >
+      {!floating && <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />}
       {column.panels.map((panel, index) => (
         <div
           key={panel.id}
@@ -280,9 +287,15 @@ function renderPanelBody(panel: RightPanelInstance) {
         )
       }
       return panel.plainText ? (
-        <pre className="m-0 whitespace-pre-wrap rounded-app-md border border-app-border-subtle bg-[var(--color-code-bg)] p-3 font-mono text-[var(--font-size-sm)] leading-relaxed text-[var(--color-code-fg)]">{panel.markdown}</pre>
+        <MarkedNote highlight={panel.documentHighlight}>
+          <pre className="m-0 whitespace-pre-wrap rounded-app-md border border-app-border-subtle bg-[var(--color-code-bg)] p-3 font-mono text-[var(--font-size-sm)] leading-relaxed text-[var(--color-code-fg)]">
+            {panel.documentHighlight ? textLines(panel.markdown) : panel.markdown}
+          </pre>
+        </MarkedNote>
       ) : (
-        <MarkdownView sessionId={panel.sessionId}>{panel.markdown}</MarkdownView>
+        <MarkedNote highlight={panel.documentHighlight}>
+          <MarkdownView sessionId={panel.sessionId}>{panel.markdown}</MarkdownView>
+        </MarkedNote>
       )
     case 'browser':
       return <BrowserPanel url={panel.browserUrl} contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'} />
@@ -300,19 +313,19 @@ function renderPanelBody(panel: RightPanelInstance) {
       )
     case 'docx':
       return panel.documentFileId ? (
-        <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Document preview" description="This document couldn't be opened." />
       )
     case 'xlsx':
       return panel.documentFileId ? (
-        <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Spreadsheet preview" description="This spreadsheet couldn't be opened." />
       )
     case 'pptx':
       return panel.documentFileId ? (
-        <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} initialSlide={panel.documentPage} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Presentation preview" description="This presentation couldn't be opened." />
       )

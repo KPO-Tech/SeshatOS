@@ -1,6 +1,7 @@
 import { fetchAttachmentTextPreview, resolveAttachmentOpenAction } from '@renderer/components/chat/attachments/attachmentPreview'
 import type { ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { useUIStore } from '@renderer/stores/ui'
+import { slideNumberOf } from '@renderer/lib/slidePassageHighlight'
 import type { CollectionFile } from './collectionsApi'
 
 /** The name of a document without the folders it is in: "Legal/Contracts/a.pdf" is shown as "a.pdf". */
@@ -9,8 +10,16 @@ export function baseName(name: string): string {
 }
 
 /**
+ * Where a passage is, to open its document there and mark it: the page the index gave it (a PDF), else the slide its text names (a
+ * presentation); the mark is searched for in the text of the document by the viewer, whichever the format.
+ */
+export function passageTarget(text: string, pages: readonly number[]): { page?: number; highlight?: { text: string; pages: number[] } } {
+  return { page: pages[0] ?? slideNumberOf(text), highlight: text ? { text, pages: [...pages] } : undefined }
+}
+
+/**
  * Opens a document of a collection in the right panel, with the viewers the chat uses (PDF, Word, Excel, PowerPoint, text and Markdown).
- * Opened at a page, and with a passage marked when one is given (a PDF). Returns false when there is no viewer for this kind of file, so
+ * Opened at a page or a slide, and with a passage marked when one is given. Returns false when there is no viewer for this kind of file, so
  * the caller can say so.
  */
 export async function openDocument(file: Pick<CollectionFile, 'fileId' | 'name'>, corpusId: string, page?: number, highlight?: { text: string; pages: number[] }): Promise<boolean> {
@@ -25,7 +34,7 @@ export async function openDocument(file: Pick<CollectionFile, 'fileId' | 'name'>
   if (action.kind === 'text') {
     const text = await fetchAttachmentTextPreview(attachment)
     if (!text) return false
-    openRightPanel({ kind: 'markdown', title: attachment.filename, markdown: text.markdown, documentFileId: file.fileId, plainText: text.plainText, indexSource })
+    openRightPanel({ kind: 'markdown', title: attachment.filename, markdown: text.markdown, documentFileId: file.fileId, plainText: text.plainText, documentHighlight: highlight, indexSource })
     return true
   }
   return false
