@@ -32,9 +32,9 @@ export const SPACINGS: ReadonlyArray<{ value: Spacing; label: string; messageGap
 ]
 
 export const CONTENT_WIDTHS: ReadonlyArray<{ value: ContentWidth; label: string; px: number }> = [
-  { value: 'narrow', label: 'Narrow', px: 680 },
-  { value: 'default', label: 'Default', px: 768 },
-  { value: 'wide', label: 'Wide', px: 960 }
+  { value: 'narrow', label: 'Narrow', px: 820 },
+  { value: 'default', label: 'Default', px: 1100 },
+  { value: 'wide', label: 'Wide', px: 1280 }
 ]
 
 const storageKey = 'seshat.appearance'
