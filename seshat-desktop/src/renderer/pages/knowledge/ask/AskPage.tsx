@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import type { Passage } from '../chat/knowledgeSearchResults'
+import { resolvePassageFile } from '../chat/passageFile'
 import { useCollections, type AskScope } from '../chat/useCollections'
 import { useKnowledgeConversation } from '../chat/useKnowledgeConversation'
 import { PassageDrawer } from '../components/PassageDrawer'
@@ -33,18 +34,22 @@ export function AskPage() {
   // A document is open in the right panel: it takes the place of the column of cards.
   const documentOpen = useUIStore((state) => flattenRightPanels(state.rightColumns).some((panel) => Boolean(panel.documentFileId)))
   // A citation opens the document at the cited place, with the passage marked; a document of the list under the answer opens at its page,
-  // with nothing marked. A passage whose file is not known (a conversation from before the tool said it) or that has no viewer is read in
-  // the drawer.
-  const onOpenPassage = useCallback(async (passage: Passage, how: OpenHow = 'cited') => {
-    if (passage.fileId && passage.corpusId) {
-      const highlight = how === 'cited' && passage.pages.length > 0 ? { text: passage.text, pages: passage.pages } : undefined
-      if (await openDocument({ fileId: passage.fileId, name: passage.file }, passage.corpusId, passage.pages[0], highlight)) {
-        setOpened(null)
-        return
+  // with nothing marked. A passage whose search did not name its file (a conversation from before it did) is looked for by the names of its
+  // collection and its file; one that cannot be found, or that has no viewer, is read in the drawer.
+  const onOpenPassage = useCallback(
+    async (passage: Passage, how: OpenHow = 'cited') => {
+      const origin = passage.fileId && passage.corpusId ? { fileId: passage.fileId, corpusId: passage.corpusId } : await resolvePassageFile(passage, collections)
+      if (origin) {
+        const highlight = how === 'cited' && passage.pages.length > 0 ? { text: passage.text, pages: passage.pages } : undefined
+        if (await openDocument({ fileId: origin.fileId, name: passage.file }, origin.corpusId, passage.pages[0], highlight)) {
+          setOpened(null)
+          return
+        }
       }
-    }
-    setOpened(passage)
-  }, [])
+      setOpened(passage)
+    },
+    [collections]
+  )
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
   const problem = startError ?? (collectionsFailed ? 'Knowledge is not available: the collections could not be read.' : !configured && !modelLoading ? 'Configure a provider in Settings before asking.' : null)

@@ -167,7 +167,7 @@ export function SearchPage() {
       </section>
 
       <div className="flex min-h-0 flex-1 gap-3">
-        {(done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
+        {openFileId === null && (done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
           <FilterPanel
             title={done ? 'Refine results' : 'Browse'}
             facets={{ collections: facets.collections, kinds: totals.kinds.length > 0 ? totals.kinds : facets.kinds }}
