@@ -1,5 +1,5 @@
 import { api } from '@renderer/api/client'
-import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, ReembedStatus, RerankerConfig, RerankerModel, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
+import type { Corpus, DocumentReaderConfig, EmbedderConfig, IndraStatusResult, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, ReembedStatus, RerankerConfig, RerankerModel, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
 
 export type KnowledgeSnapshot = {
   corpora: Corpus[]
@@ -116,6 +116,23 @@ export function fetchNativeDocumentReaderStatus() {
 
 export function downloadNativeDocumentReaderModels(pack?: string) {
   return api.post<NativeDocDownloadResult>('/settings/document-reader/native/download', pack ? { pack } : {})
+}
+
+export function fetchIndraStatus() {
+  return api.get<IndraStatusResult>('/settings/document-reader/indra/status')
+}
+
+/** Installs Indra OCR in the background. The licence must be accepted: `license_version` is the text that was shown. */
+export function installIndra(licenseVersion: string) {
+  return api.post<IndraStatusResult>('/settings/document-reader/indra/install', { accept_license: true, license_version: licenseVersion })
+}
+
+export function setIndraEnabled(enabled: boolean) {
+  return api.post<IndraStatusResult>('/settings/document-reader/indra/enabled', { enabled })
+}
+
+export function removeIndra() {
+  return api.post<IndraStatusResult>('/settings/document-reader/indra/remove', {})
 }
 
 export function listRerankerSetups() {

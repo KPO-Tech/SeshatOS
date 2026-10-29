@@ -167,4 +167,32 @@ export type NativeDocDownloadResult = {
   capabilities: Partial<SystemStatus>
 }
 
+/** Indra OCR, the optional reader of scanned pages that a person installs after accepting the licence of its weights. */
+export type IndraStatus = {
+  license_accepted: boolean
+  license_version: string
+  license_url: string
+  project_url: string
+  installed: boolean
+  enabled: boolean
+  ready: boolean
+  version: string
+  size_mb: number
+  python_found: boolean
+  dir: string
+}
+
+export type IndraInstallState = {
+  status: 'idle' | 'running' | 'completed' | 'failed'
+  step?: string
+  step_index?: number
+  step_count?: number
+  error?: string
+}
+
+export type IndraStatusResult = {
+  indra: IndraStatus
+  install: IndraInstallState
+}
+
 export type TestState = 'idle' | 'running' | 'ok' | 'error'
