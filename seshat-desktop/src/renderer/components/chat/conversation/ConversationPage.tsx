@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useParams } from 'react-router'
 import { useSessionStore, EMPTY_STREAMING, DEFAULT_AGENT_STATE } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
@@ -18,6 +18,7 @@ import { useLiveActivityForAgent } from '../messages/liveActivity'
 import { MessageList } from '../messages/MessageList'
 import { useToast, ToastStack } from '@renderer/components/ui/Toast'
 import { useChat } from '@renderer/hooks/useChat'
+import { RichActionProvider } from '../richblocks/view/actions/richActions'
 import './ConversationPage.css'
 
 export function ConversationPage() {
@@ -109,6 +110,8 @@ export function ConversationPage() {
     openRightPanel,
   })
 
+  const askFromAnswer = useCallback((text: string) => void sendMessage(text), [sendMessage])
+
   const { loading: sessionLoading } = useConversationSessionLoad({
     sessionId: id,
     session,
@@ -163,6 +166,7 @@ export function ConversationPage() {
   }
 
   return (
+    <RichActionProvider ask={askFromAnswer} busy={isStreaming}>
     <div className="conv-root">
       <ToastStack toasts={toasts} />
 
@@ -229,6 +233,7 @@ export function ConversationPage() {
         onExecutionModeChange={handleExecutionModeSelect}
       />
     </div>
+    </RichActionProvider>
   )
 }
 

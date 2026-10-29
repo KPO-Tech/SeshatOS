@@ -149,8 +149,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     args: [req('label', str), req('action', action)] }
 ]
 
-// What a table cell may hold besides text and numbers. FileRef and Link join when the app draws them.
-export const CELL_COMPONENTS = ['Badge', 'Item', 'Cell'] as const
+// What a table cell may hold besides text and numbers.
+export const CELL_COMPONENTS = ['Badge', 'Item', 'Cell', 'FileRef', 'Link'] as const
 
 export const SPEC_BY_NAME: ReadonlyMap<string, ComponentSpec> = new Map(
   COMPONENT_SPECS.map((spec) => [spec.name, spec])

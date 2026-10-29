@@ -3,6 +3,7 @@ import { architectureComponents } from './components/architecture'
 import { chartComponents } from './components/charts'
 import { dataComponents } from './components/data'
 import { guidanceComponents } from './components/guidance'
+import { interactionComponents } from './components/interaction'
 import { layoutComponents } from './components/layout'
 import { plotComponents } from './components/plot'
 import { statsComponents } from './components/stats'
@@ -17,7 +18,8 @@ export const REGISTRY: Record<string, ComponentType<ComponentProps>> = {
   ...architectureComponents,
   ...chartComponents,
   ...plotComponents,
-  ...statsComponents
+  ...statsComponents,
+  ...interactionComponents
 }
 
 export const DRAWN_COMPONENTS: readonly string[] = Object.keys(REGISTRY)
