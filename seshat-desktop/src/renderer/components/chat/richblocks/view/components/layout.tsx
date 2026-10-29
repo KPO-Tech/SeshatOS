@@ -10,7 +10,7 @@ function Stack({ props }: ComponentProps) {
   const row = props.direction === 'row'
   const gap = GAP[props.gap as keyof typeof GAP] ?? GAP.md
   return (
-    <div className={`my-3 flex ${row ? 'flex-row flex-wrap items-start' : 'flex-col'} ${gap}`}>
+    <div className={`my-3 flex ${row ? 'flex-row flex-wrap items-stretch [&>*]:min-w-[14rem] [&>*]:flex-1' : 'flex-col'} ${gap}`}>
       <NodeList nodes={props.children} />
     </div>
   )

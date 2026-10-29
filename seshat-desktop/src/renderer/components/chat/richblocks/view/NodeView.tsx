@@ -2,11 +2,11 @@ import type { UiNode } from '../lang/types'
 import { isNode } from '../lang/parseUi'
 import { REGISTRY } from './registry'
 
-export type ComponentProps = { props: Record<string, unknown> }
+export type ComponentProps = { props: Record<string, unknown>; id?: string }
 
 export function NodeView({ node }: { node: UiNode }) {
   const Component = REGISTRY[node.name]
-  if (Component) return <Component props={node.props} />
+  if (Component) return <Component props={node.props} id={node.id} />
   return <NotDrawn node={node} />
 }
 

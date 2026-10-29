@@ -1,4 +1,5 @@
 import type { ArgType, ComponentSpec } from './types'
+import { brandIconNames, genericIconNames } from '../view/icons/iconCatalog'
 import { PROMPT_EXAMPLES } from './examples'
 import { COMPONENT_SPECS, SPEC_BY_NAME } from './specs'
 
@@ -12,6 +13,8 @@ export interface PromptComponent {
 export interface PromptSpec {
   version: 1
   components: PromptComponent[]
+  /** What an icon argument may be: names of generic icons, and slugs of technology logos (written si:slug). */
+  icons: { names: string[]; brands: string[] }
   examples: string[]
 }
 
@@ -26,6 +29,8 @@ function typeLabel(type: ArgType): string {
     case 'list': return `[${typeLabel(type.item)}]`
     case 'cell': return 'text|number|Badge|FileRef|Link'
     case 'action': return '@Ask("text")|@OpenFile(path)|@OpenUrl(url)'
+    case 'target': return 'name'
+    case 'icon': return 'icon'
   }
 }
 
@@ -59,6 +64,7 @@ export function buildPromptSpec(drawn: readonly string[]): PromptSpec {
       signature: signature(spec),
       description: spec.description
     })),
+    icons: { names: genericIconNames(), brands: brandIconNames() },
     examples: PROMPT_EXAMPLES
   }
 }

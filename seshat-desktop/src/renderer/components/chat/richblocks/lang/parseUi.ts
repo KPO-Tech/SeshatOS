@@ -61,9 +61,16 @@ export function isNode(value: unknown): value is UiNode {
 }
 
 function materialize(value: Value, type: ArgType, ctx: Context): Outcome<unknown> {
+  if (value.k === 'ref' && type.t === 'target') return pointAt(value.name, ctx)
   if (value.k === 'ref') return followReference(value.name, type, ctx)
 
   switch (type.t) {
+    case 'target':
+      if (value.k === 'str' && value.v.trim() !== '') return value.v.trim()
+      return mismatch(ctx, 'the name of a box', value)
+    case 'icon':
+      if (value.k === 'str' && value.v.trim() !== '') return value.v.trim()
+      return mismatch(ctx, 'an icon name', value)
     case 'string':
       if (value.k === 'str') return value.v
       if (value.k === 'num') return String(value.v)
@@ -113,7 +120,18 @@ function followReference(name: string, type: ArgType, ctx: Context): Outcome<unk
   ctx.stack.push(name)
   const result = materialize(target.value, type, ctx)
   ctx.stack.pop()
+  // A box reached through its name keeps it, so that a Flow can point at it.
+  if (isNode(result) && result.id === undefined) return { ...result, id: name }
   return result
+}
+
+function pointAt(name: string, ctx: Context): Outcome<string> {
+  if (!ctx.statements.has(name)) {
+    ctx.unresolved.add(name)
+    if (!ctx.streaming) report(ctx, 'unresolved-reference', `${name} is used but never defined.`)
+    return FAIL
+  }
+  return name
 }
 
 function materializeList(value: Value, item: ArgType, ctx: Context): Outcome<unknown[]> {

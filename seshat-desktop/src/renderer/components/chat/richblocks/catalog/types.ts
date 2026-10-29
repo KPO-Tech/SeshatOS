@@ -8,6 +8,10 @@ export type ArgType =
   | { t: 'list'; item: ArgType }
   | { t: 'cell' }
   | { t: 'action' }
+  /** The name of a statement, written in quotes or bare. It is not followed: it points at the element that statement made. */
+  | { t: 'target' }
+  /** The name of an icon (see view/icons), kept as text: an unknown one draws nothing. */
+  | { t: 'icon' }
 
 export interface ArgSpec {
   name: string

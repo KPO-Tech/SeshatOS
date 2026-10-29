@@ -45,8 +45,8 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 		}
 	}
 	// Every turn pays for this block: a catalog that grows past this should be a deliberate choice.
-	if words := len(strings.Fields(block)); words > 900 {
-		t.Errorf("the block is %d words long, keep it under 900", words)
+	if words := len(strings.Fields(block)); words > 1200 {
+		t.Errorf("the block is %d words long, keep it under 1200", words)
 	}
 }
 
