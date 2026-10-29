@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { isNode } from '../../lang/parseUi'
 import type { ComponentProps } from '../NodeView'
 import { NodeList, NodeView } from '../NodeView'
+import { Expandable, useExpanded } from '../expand/Expandable'
 import { buildTableModel, type Align, type BodyCell, type BodyRow, type HeaderCell } from '../table/tableModel'
 import { TONES, toneOrNull } from '../tones'
 
@@ -12,6 +13,10 @@ function formatCell(value: unknown, kind: string): string {
   }
   return String(value)
 }
+
+/** A table with more rows or columns than these is offered in the large view even when it fits the column. */
+const LONG_TABLE = 12
+const WIDE_TABLE = 6
 
 const ALIGN: Record<Align, string> = { left: 'text-left', right: 'text-right', center: 'text-center' }
 
@@ -45,6 +50,7 @@ function HeaderRow({ cells, padding, sortable, sort, onSort }: {
   sort: { index: number; down: boolean } | null
   onSort: (index: number) => void
 }) {
+  const expanded = useExpanded()
   return (
     <tr>
       {cells.map((cell, index) => (
@@ -53,7 +59,7 @@ function HeaderRow({ cells, padding, sortable, sort, onSort }: {
           scope="col"
           colSpan={cell.colSpan}
           rowSpan={cell.rowSpan}
-          className={`border-0 border-b border-app-border-subtle font-medium text-app-text-secondary ${padding} ${ALIGN[cell.align]} ${strongOf(cell.tone)}`}
+          className={`${expanded ? 'sticky top-0 z-10 bg-[var(--surface-panel)]' : ''} border-0 border-b border-app-border-subtle font-medium text-app-text-secondary ${padding} ${ALIGN[cell.align]} ${strongOf(cell.tone)}`}
         >
           {sortable && cell.leaf !== undefined ? (
             <button type="button" onClick={() => onSort(cell.leaf as number)} className="cursor-pointer border-0 bg-transparent p-0 font-medium text-inherit">
@@ -102,7 +108,8 @@ function Table({ props }: ComponentProps) {
   const model = useMemo(() => buildTableModel(props.columns, props.rows), [props.columns, props.rows])
   const sortable = props.sortable === true && !model.complex
   const [sort, setSort] = useState<{ index: number; down: boolean } | null>(null)
-  const padding = props.compact === true ? 'px-2.5 py-1' : 'px-3 py-2'
+  const expanded = useExpanded()
+  const padding = expanded ? 'min-w-[7rem] px-4 py-2.5' : props.compact === true ? 'px-2.5 py-1' : 'px-3 py-2'
 
   const rows = useMemo(() => {
     if (!sort) return model.rows
@@ -117,8 +124,8 @@ function Table({ props }: ComponentProps) {
   const onSort = (index: number) => setSort((current) => (current?.index === index ? { index, down: !current.down } : { index, down: false }))
 
   return (
-    <div className="my-3 overflow-x-auto rounded-lg border border-app-border-subtle">
-      <table className={`w-full border-collapse ${props.compact === true ? 'text-[12px]' : 'text-[13px]'}`}>
+    <Expandable label={typeof props.caption === 'string' ? props.caption : 'Table'} force={model.rows.length > LONG_TABLE || model.leaves.length > WIDE_TABLE} scrollX className="my-3 overflow-hidden rounded-lg border border-app-border-subtle">
+      <table className={`w-full border-collapse ${expanded || props.compact !== true ? 'text-[13px]' : 'text-[12px]'}`}>
         {typeof props.caption === 'string' && <caption className="px-3 py-2 text-left text-xs text-app-text-muted">{props.caption}</caption>}
         <thead>
           {model.headerRows.map((cells, index) => (
@@ -131,7 +138,7 @@ function Table({ props }: ComponentProps) {
           ))}
         </tbody>
       </table>
-    </div>
+    </Expandable>
   )
 }
 

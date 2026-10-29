@@ -24,7 +24,7 @@
   --chat-font-size: 14px;
   --message-gap: 36px;
   --list-item-pad-y: 6px;
-  --chat-max-width: 1100px;
+  --chat-max-width: 900px;
   /* The background of the conversation, which the session panel shares so its cards float beside the chat. */
   --chat-bg: color-mix(in srgb, var(--surface-root) 68%, var(--surface-panel));
   --sidebar-width: 240px;

@@ -6,6 +6,7 @@ import { RichIcon } from '../icons/RichIcon'
 import { TONES, toneOf, toneOrNull } from '../tones'
 import type { ComponentProps } from '../NodeView'
 import { NodeList } from '../NodeView'
+import { Expandable } from '../expand/Expandable'
 
 function Panel({ props, id }: ComponentProps) {
   const hue = TONES[toneOf(props.tone)]
@@ -48,7 +49,7 @@ function Item({ props, id }: ComponentProps) {
   )
 }
 
-function Architecture({ props }: ComponentProps) {
+function ArchitectureFrame({ props }: ComponentProps) {
   const frame = useRef<HTMLDivElement>(null)
   const [drawn, setDrawn] = useState<DrawnFlow[]>([])
   const [size, setSize] = useState({ w: 0, h: 0 })
@@ -115,6 +116,16 @@ function Architecture({ props }: ComponentProps) {
         </>
       )}
     </div>
+  )
+}
+
+const TALL_DRAWING = 560
+
+function Architecture({ props, id }: ComponentProps) {
+  return (
+    <Expandable label={typeof props.title === 'string' ? props.title : 'Architecture'} maxHeight={TALL_DRAWING}>
+      <ArchitectureFrame props={props} id={id} />
+    </Expandable>
   )
 }
 
