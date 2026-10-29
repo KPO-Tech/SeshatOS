@@ -27,6 +27,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 #### Chat
 
 - **Sources under a chat answer.** The pages the agent consulted are listed once each, folded, and the links to them in the text become citations.
+- **The agent's thinking stays folded while it is written, and shows how long it took.** The time is counted in seconds at the right of the row while the thought is being written, and kept when it ends.
 - **Rich answers.** The agent can answer with drawn components (tables, figures, steps, notes) that fill in while the answer streams. It is on by default and can be turned off in Config > Agents > Answers.
 - **Architecture drawings in an answer.** The agent can draw a system as coloured panels holding items with icons (generic icons and technology logos), with arrows between them.
 - **The model menu folds the models under their provider**, all folded when it opens and one open at a time, so a provider with hundreds of models no longer fills the menu.

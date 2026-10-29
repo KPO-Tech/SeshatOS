@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware'
 import { renamedStorage } from '@renderer/lib/renamedStorage'
 import type { RAGSearchResult } from '@renderer/api/types'
 import { useSessionStore } from '@renderer/stores/session'
+import { keepNewestDurations } from '@renderer/components/chat/messages/thinkingTime'
+
+const MAX_THINKING_DURATIONS = 400
 
 type Theme = 'light' | 'dark'
 export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'shell' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
@@ -205,6 +208,8 @@ type UIState = {
   windowWidth: number
   permissionMode: UIPermissionMode
   thinkingExpansion: Record<string, boolean>
+  // Seconds each thought took, by thinkingKey: measured in the client while it was written, since nothing stamps it.
+  thinkingDurations: Record<string, number>
   // Answers already submitted within a still-open ask_user_question call,
   // keyed by `${toolUseId}:${questionIndex}` - AskUserPanel's own local
   // state doesn't survive it, since the panel unmounts and remounts between
@@ -241,6 +246,7 @@ type UIState = {
   togglePermissionMode: () => void
   setPermissionMode: (mode: UIPermissionMode) => void
   setThinkingExpansion: (thinkingId: string, expanded: boolean) => void
+  setThinkingDuration: (key: string, seconds: number) => void
   setAskUserAnswer: (key: string, value: string) => void
   rememberApproval: (signature: string) => void
   forgetApproval: (signature: string) => void
@@ -261,6 +267,7 @@ export const useUIStore = create<UIState>()(
       // "auto" ("Smart"). See ChatInput.tsx's PERMISSION_CYCLE comment.
       permissionMode: 'auto',
       thinkingExpansion: {},
+      thinkingDurations: {},
       askUserAnswers: {},
       rememberedApprovals: {},
 
@@ -532,6 +539,9 @@ export const useUIStore = create<UIState>()(
           },
         })),
 
+      setThinkingDuration: (key, seconds) =>
+        set((s) => ({ thinkingDurations: keepNewestDurations({ ...s.thinkingDurations, [key]: seconds }, MAX_THINKING_DURATIONS) })),
+
       setAskUserAnswer: (key, value) =>
         set((s) => ({
           askUserAnswers: {
@@ -573,6 +583,7 @@ export const useUIStore = create<UIState>()(
         sidebarWidth: s.sidebarWidth,
         permissionMode: s.permissionMode,
         thinkingExpansion: s.thinkingExpansion,
+        thinkingDurations: s.thinkingDurations,
         askUserAnswers: s.askUserAnswers,
         rememberedApprovals: s.rememberedApprovals,
       }),
