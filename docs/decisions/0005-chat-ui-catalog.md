@@ -74,7 +74,8 @@ Rules:
 - Rendering starts at `root`. A statement nothing reaches is not rendered.
 - A name can be used before it is defined. An unresolved name means "not yet", not an error, until the block closes.
 - Arguments are positional, in the order the catalog lists them. Optional arguments come last; `null` skips one in the
-  middle.
+  middle. A call also accepts an argument by name after the positional ones (`Stack([a, b], direction="row")`): models write
+  it whatever the prompt says, and a block that failed on it was shown as raw code.
 - Strings accept inline Markdown (bold, code, links) where a component says so.
 - Actions are values: `@Ask("text")` sends a message as the user, `@OpenFile(path, page?, line?)` opens a document in the
   app, `@OpenUrl(url)` opens a link. A button or a choice takes one.
