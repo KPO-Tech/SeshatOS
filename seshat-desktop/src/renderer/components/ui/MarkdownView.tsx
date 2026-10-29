@@ -13,6 +13,7 @@ import { citedPages, type MarkdownNode } from '@renderer/lib/markdownLinks'
 import type { WebSource } from '@renderer/lib/webSources'
 import { WebCitation } from '@renderer/components/sources/WebCitation'
 import { RichBlock } from '@renderer/components/chat/richblocks/view/RichBlock'
+import { isRichBlockNode } from '@renderer/components/chat/richblocks/view/isRichBlockNode'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -353,7 +354,9 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </p>
             )
           },
-          pre({ children }) {
+          pre({ node, children }: { node?: unknown; children?: ReactNode }) {
+            // A seshat-ui block draws components, which a pre would set in monospace, on one line, and clip.
+            if (isRichBlockNode(node)) return <>{children}</>
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
           },
           table({ children }) {
