@@ -402,6 +402,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeIngestionJob{})
 			},
 		},
+		{
+			ID:    "20261028_058_reranker_models",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gRerankerModel{})
+			},
+		},
 	}
 }
 

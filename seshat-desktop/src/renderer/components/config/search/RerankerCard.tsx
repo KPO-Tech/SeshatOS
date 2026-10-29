@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
+import { ModelCombobox } from './ModelCombobox'
 import { ProviderKeyField } from './ProviderKeyField'
+import { RerankerModels } from './RerankerModels'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
-import { detectRerankerModel, listRerankerModels, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
+import { api } from '@renderer/api/client'
+import { addRerankerSetup, detectRerankerModel, listRerankerModels, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { RerankerConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
 
 const RERANKER_PRESETS = [
@@ -133,14 +136,15 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
   async function save() {
     setSaving(true)
     try {
-      const saved = await saveRerankerConfig({
-        base_url: form.base_url,
-        model: form.model,
-        enabled: form.enabled,
-        api_key: form.api_key || undefined,
-        provider_setting_id: ownProvider && useOwnKey && !form.api_key ? ownProvider.id : undefined
-      })
-      onSaved(saved)
+      const key = form.api_key || undefined
+      const providerId = ownProvider && useOwnKey && !form.api_key ? ownProvider.id : undefined
+      if (form.enabled) {
+        // A model set up joins the list and is the one in use.
+        await addRerankerSetup({ base_url: form.base_url, model: form.model, api_key: key, provider_setting_id: providerId, use: true })
+        onSaved(await api.get<RerankerConfig>('/settings/reranker'))
+      } else {
+        onSaved(await saveRerankerConfig({ base_url: form.base_url, model: form.model, enabled: false, api_key: key, provider_setting_id: providerId }))
+      }
       setForm((current) => ({ ...current, api_key: '' }))
       setDirty(false)
     } catch (error) {
@@ -167,6 +171,7 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
       action={<ToggleSwitch enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
     >
       <div className="grid gap-4">
+        <RerankerModels version={`${config?.base_url}|${config?.model}|${config?.enabled}`} onChanged={() => void api.get<RerankerConfig>('/settings/reranker').then(onSaved)} />
         <div className="grid gap-3 md:grid-cols-[250px_minmax(0,1fr)]">
           <Field label="Endpoint">
             <CustomSelect value={preset} options={presetOptions} onChange={choosePreset} />
@@ -177,10 +182,7 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
         </div>
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
           <Field label="Model">
-            <TextInput list="knowledge-rerank-models" value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="BAAI/bge-reranker-v2-m3" />
-            <datalist id="knowledge-rerank-models">
-              {models.map((model) => <option key={model} value={model} />)}
-            </datalist>
+            <ModelCombobox value={form.model} options={models} onChange={(model) => update('model', model)} placeholder="BAAI/bge-reranker-v2-m3" />
           </Field>
           <ProviderKeyField
             ownProvider={ownProvider}
@@ -210,7 +212,7 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
             {testing === 'running' ? 'Testing...' : 'Test'}
           </SoftButton>
           <SoftButton type="button" tone={dirty ? 'primary' : 'success'} onClick={() => void save()} disabled={!dirty || saving} className="ml-auto">
-            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+            {saving ? 'Saving...' : dirty ? (form.enabled ? 'Save and use' : 'Save changes') : 'Saved'}
           </SoftButton>
         </div>
       </div>

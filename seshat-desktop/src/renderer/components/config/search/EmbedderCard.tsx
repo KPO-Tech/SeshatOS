@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ProviderSetting } from '@renderer/api/types'
+import { ModelCombobox } from './ModelCombobox'
 import { ProviderKeyField } from './ProviderKeyField'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
@@ -178,11 +179,8 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
         </div>
 
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
-          <Field label={detectedModels.length > 0 ? `Model (${detectedModels.length} detected)` : 'Model'}>
-            <TextInput list="knowledge-embedding-models" value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="text-embedding-3-small" />
-            <datalist id="knowledge-embedding-models">
-              {suggestions.map((model) => <option key={model} value={model} />)}
-            </datalist>
+          <Field label="Model">
+            <ModelCombobox value={form.model} options={suggestions} onChange={(model) => update('model', model)} placeholder="text-embedding-3-small" />
           </Field>
           <ProviderKeyField
             ownProvider={ownProvider}
@@ -201,16 +199,24 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
         </div>
 
         {changesModel && (
-          <p className="m-0 rounded-md border border-[var(--accent-primary)]/35 bg-[var(--accent-primary)]/10 px-3 py-2 text-[12px] leading-[18px] text-[var(--text-secondary)]">
-            This is not the model the documents were indexed with ({config?.model}). Their vectors stay those of the previous model, so the search by meaning will not find
-            them until they are indexed again, and the words alone still work.
-          </p>
+          <div className="flex gap-3 rounded-lg border border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/8 px-3.5 py-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px shrink-0" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v5M12 16.5v.01" />
+            </svg>
+            <div className="min-w-0">
+              <div className="text-[12.5px] font-semibold text-[var(--text-primary)]">Documents already indexed use {config?.model}</div>
+              <p className="m-0 mt-0.5 text-[12px] leading-[18px] text-[var(--text-muted)]">
+                Their vectors will not match this model, so the search by meaning will not find them until they are indexed again. The search by words keeps working.
+              </p>
+            </div>
+          </div>
         )}
 
         <ResultMessage state={testing} error={testError} latency={latency} />
 
         <div className="flex flex-wrap items-center gap-2">
-          {(form.provider === 'tei' || form.provider === 'ollama' || form.provider === 'openrouter') && (
+          {(form.provider === 'tei' || form.provider === 'ollama') && (
             <SoftButton type="button" onClick={() => void detectModels()} disabled={detecting || !form.base_url}>
               {detecting ? 'Detecting...' : 'Detect models'}
             </SoftButton>
