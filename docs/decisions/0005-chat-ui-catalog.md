@@ -49,7 +49,7 @@ comparisons, status and sources, and the chart is one component among others, no
    to the model once `BarChart` and `LineChart` exist.
 7. **Free HTML, SVG animation and 3D are a second layer** (a `Widget` component backed by a sandboxed iframe), decided in a
    separate record. The name `Widget` is reserved here.
-8. **It is a preference, on by default.** The user preference `rich_answers_enabled` (Settings, General, Answers) decides
+8. **It is a preference, on by default.** The user preference `rich_answers_enabled` (Config, Agents, Answers) decides
    whether the model is taught the components. It is stored as an opt-out (`rich_answers_disabled`) so that a user who never
    chose, and a row written before the column existed, get the default. A save that omits the field keeps the stored choice.
    Turning it off removes only this block from the prompt; a `seshat-ui` block already in a conversation still draws.
