@@ -39,7 +39,7 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if block == "" {
 		t.Fatal("the embedded catalog must produce a block")
 	}
-	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more", "a few words", "Plot(", "Curve(", "Histogram(", "Heatmap(", "Choices(", "@Ask(", "Architecture(", "Icons, for the icon argument"} {
+	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more", "a few words", "Plot(", "Curve(", "Histogram(", "Heatmap(", "Choices(", "@Ask(", "Architecture(", "Icons, for the icon argument", "text of a component is Markdown"} {
 		if !strings.Contains(block, want) {
 			t.Errorf("the block must mention %q", want)
 		}
@@ -67,8 +67,8 @@ func TestRichAnswersCoreLeavesOutTheFamilies(t *testing.T) {
 	}
 	// Most turns pay for the core, so it is the figure to keep small.
 	words := len(strings.Fields(core))
-	if words > 1150 {
-		t.Errorf("the core is %d words long, keep it under 1150", words)
+	if words > 1200 {
+		t.Errorf("the core is %d words long, keep it under 1200", words)
 	}
 	if full := len(strings.Fields(richAnswersBlock(richUIAllFamilies))); words > full*6/10 {
 		t.Errorf("the core (%d words) should be well under the full block (%d)", words, full)

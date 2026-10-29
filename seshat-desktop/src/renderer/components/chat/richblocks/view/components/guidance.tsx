@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { isNode } from '../../lang/parseUi'
+import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 
 const STATUS_MARK: Record<string, string> = { todo: '', doing: '...', done: 'ok', blocked: '!' }
@@ -23,7 +24,7 @@ function Steps({ props }: ComponentProps) {
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-semibold text-app-text">{String(step.props.title)}</div>
-              {typeof step.props.body === 'string' && <div className="mt-0.5 text-[13px] text-app-text-secondary">{step.props.body}</div>}
+              {typeof step.props.body === 'string' && <MarkdownText text={step.props.body} className="mt-0.5 text-[13px] text-app-text-secondary" />}
             </div>
           </li>
         )

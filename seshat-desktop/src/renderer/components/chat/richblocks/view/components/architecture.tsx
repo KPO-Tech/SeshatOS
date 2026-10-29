@@ -4,6 +4,7 @@ import { isNode } from '../../lang/parseUi'
 import { measureFlows, type DrawnFlow } from '../architecture/measureFlows'
 import { RichIcon } from '../icons/RichIcon'
 import { TONES, toneOf, toneOrNull } from '../tones'
+import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 import { NodeList } from '../NodeView'
 import { Expandable } from '../expand/Expandable'
@@ -43,7 +44,7 @@ function Item({ props, id }: ComponentProps) {
       <RichIcon name={icon} size={boxed ? 22 : 16} className={`mt-px ${style && tone !== 'neutral' ? style.accent : 'text-app-text-secondary'}`} />
       <div className="min-w-0">
         <div className="text-[13px] font-medium leading-snug text-app-text">{String(props.label)}</div>
-        {typeof props.caption === 'string' && <div className="mt-0.5 text-[11.5px] leading-snug text-app-text-muted">{props.caption}</div>}
+        {typeof props.caption === 'string' && <MarkdownText text={props.caption} className="mt-0.5 text-[11.5px] leading-snug text-app-text-muted" />}
       </div>
     </div>
   )
