@@ -1558,7 +1558,14 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
 		// Structured components are on unless the user turned them off in Settings.
 		if s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal) {
-			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock(richUIFamiliesFor(p.Prompt)))
+			families := richUIFamiliesFor(p.Prompt)
+			// A follow-up that names nothing is about what the last answers drew.
+			if families != richUIAllFamilies && p.SessionID != "" {
+				if messages, err := s.loadSessionMessages(ctx, p.SessionID); err == nil {
+					families = families.union(richUIFamiliesInHistory(messages))
+				}
+			}
+			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock(families))
 		}
 	}
 	// Surfaces: the runtime's prompt was written for its terminal UI, so the

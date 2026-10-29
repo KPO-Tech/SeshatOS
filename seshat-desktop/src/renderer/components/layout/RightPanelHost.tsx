@@ -166,6 +166,7 @@ function PanelFrame({
         <FilesPanel
           sessionId={panel.sessionId ?? ''}
           focusToolId={panel.focusToolId}
+          focusPath={panel.focusPath}
           isMaximized={isMaximized}
           onClose={onClose}
           onToggleMaximize={onToggleMaximize}

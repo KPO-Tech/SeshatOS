@@ -4,14 +4,16 @@ import type { UiAction } from '../../lang/types'
 export type RichActionBridge = {
   /** Sends a message as the user. Absent where an answer is shown without a conversation under it. */
   ask?: (text: string) => void
+  /** Opens a file named by an answer inside the app. Absent where there is no panel to show it: the system opens it. */
+  openFile?: (path: string) => void
   /** True while an answer is being written: a follow-up would interrupt it. */
   busy: boolean
 }
 
 const RichActionContext = createContext<RichActionBridge>({ busy: false })
 
-export function RichActionProvider({ ask, busy, children }: RichActionBridge & { children: ReactNode }) {
-  const value = useMemo(() => ({ ask, busy }), [ask, busy])
+export function RichActionProvider({ ask, openFile, busy, children }: RichActionBridge & { children: ReactNode }) {
+  const value = useMemo(() => ({ ask, openFile, busy }), [ask, openFile, busy])
   return <RichActionContext.Provider value={value}>{children}</RichActionContext.Provider>
 }
 
@@ -37,5 +39,6 @@ export function runAction(action: UiAction | null, bridge: RichActionBridge): vo
   const [first] = action.args
   if (action.name === 'Ask') bridge.ask?.(String(first))
   else if (action.name === 'OpenUrl') void window.seshat?.openExternal?.(String(first))
+  else if (bridge.openFile) bridge.openFile(String(first))
   else void window.seshat?.openPath?.(String(first))
 }

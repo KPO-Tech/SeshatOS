@@ -23,8 +23,9 @@ The catalog named Button, Choices, FileRef, Citation, SourceList and Link, and p
 
 ## Not decided here
 
-- Opening a file inside the app's own files panel, at a line or a page: `FileRef` opens it with the system for now, because the
-  panel keeps its tabs in its own state and has no entry point from outside.
+- Opening a file at a line or a page. Since 2026-10-29 a text file named by `FileRef` opens as a tab in the Files panel (the
+  conversation page gives the bridge an `openFile`, and the panel takes a `focusPath`); a relative path is the project's, and a
+  file the panel cannot show (PDF, image, Office, archive) still opens with the system. The line and the page are not used yet.
 - An action that runs a tool or changes a file (a button that applies a patch): it needs the permission model, not only a bridge.
 - Forms and inputs inside an answer, and an answer that updates in place.
 - Cost of the prompt, which grows again (about 190 words); loading the detail of a family only when needed is still open.
