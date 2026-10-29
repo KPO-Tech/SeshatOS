@@ -96,7 +96,8 @@
    scoped overrides stay in CSS instead of Tailwind component classes. */
 
 /* The text a citation points at, marked in the text layer of a page (see lib/pdfPassageHighlight.ts). */
-.pdf-viewer-container .textLayer .passage-highlight {
+.pdf-viewer-container .textLayer .passage-highlight,
+.pptx-preview-wrapper .passage-highlight {
   background-color: rgba(255, 196, 0, 0.38);
   border-radius: 2px;
   box-shadow: 0 0 0 1px rgba(255, 196, 0, 0.5);

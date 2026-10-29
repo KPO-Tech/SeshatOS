@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { Message, Search, Sort } from '@icon-park/react'
 import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
 import { useCollections, type AskScope } from '../chat/useCollections'
-import { openDocument } from '../collections/openDocument'
+import { openDocument, passageTarget } from '../collections/openDocument'
 import { ChoiceSelect } from '../components/ChoiceSelect'
 import { ScopeSelect } from '../components/ScopeSelect'
 import { FilterPanel } from './FilterPanel'
@@ -121,8 +121,8 @@ export function SearchPage() {
   async function open(doc: Doc, hit?: Hit) {
     setOpenError(null)
     try {
-      const highlight = hit && hit.pages.length > 0 ? { text: hit.text, pages: hit.pages } : undefined
-      if (!(await openDocument({ fileId: doc.fileId, name: doc.path }, doc.corpusId, hit?.pages[0], highlight))) setOpenError(`There is no preview for this kind of file yet: ${doc.name}`)
+      const target = hit ? passageTarget(hit.text, hit.pages) : undefined
+      if (!(await openDocument({ fileId: doc.fileId, name: doc.path }, doc.corpusId, target?.page, target?.highlight))) setOpenError(`There is no preview for this kind of file yet: ${doc.name}`)
     } catch {
       setOpenError(`${doc.name} could not be opened.`)
     }

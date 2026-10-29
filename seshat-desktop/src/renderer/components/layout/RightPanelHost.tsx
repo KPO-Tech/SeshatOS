@@ -312,7 +312,7 @@ function renderPanelBody(panel: RightPanelInstance) {
       )
     case 'pptx':
       return panel.documentFileId ? (
-        <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} initialSlide={panel.documentPage} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Presentation preview" description="This presentation couldn't be opened." />
       )
