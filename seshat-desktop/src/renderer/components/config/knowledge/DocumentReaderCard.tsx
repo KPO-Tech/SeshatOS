@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
+import { IndraPanel } from './IndraPanel'
 import { NativeModelsPanel } from './NativeModelsPanel'
 import { packOptions } from './ocrPacks'
 import { downloadNativeDocumentReaderModels, fetchNativeDocumentReaderStatus, initializeNativeDocumentReader, saveDocumentReaderConfig, testDocumentReaderConfig } from './knowledgeApi'
@@ -271,6 +272,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
             </div>
           </div>
         )}
+        <IndraPanel />
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <Capability label="External reader" ready={externalReachable ?? externalConfigured} detail={externalDetail} />
           <Capability label="External conversion" ready={externalConversion ?? externalConfigured} detail={externalConversion === false ? system?.document_external_conversion_error || 'Unavailable' : externalConversion ? 'Available' : externalConfigured ? 'Configured' : 'Optional'} />

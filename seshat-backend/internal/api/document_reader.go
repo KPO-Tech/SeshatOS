@@ -70,6 +70,10 @@ func documentReaderConfigToResponse(cfg *db.DocumentReaderConfig) documentReader
 // GET  /api/v1/settings/document-reader/native/status
 // POST /api/v1/settings/document-reader/native/download
 // POST /api/v1/settings/document-reader/native/init
+// GET  /api/v1/settings/document-reader/indra/status
+// POST /api/v1/settings/document-reader/indra/install
+// POST /api/v1/settings/document-reader/indra/enabled
+// POST /api/v1/settings/document-reader/indra/remove
 func (a *App) handleDocumentReaderConfig(w http.ResponseWriter, r *http.Request) {
 	principal, _ := authPrincipalFromContext(r.Context())
 	if principal == nil {
@@ -90,6 +94,10 @@ func (a *App) handleDocumentReaderConfig(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		a.handleDocumentReaderTest(w, r, store)
+		return
+	}
+	if strings.Contains(tail, "/indra/") {
+		a.handleDocumentReaderIndra(w, r, tail)
 		return
 	}
 	if strings.HasSuffix(tail, "/native/status") {

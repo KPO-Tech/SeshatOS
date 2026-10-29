@@ -46,6 +46,8 @@ type App struct {
 	documentReaderDiag   *documentReaderDiagnostic
 	nativeDocDownloadMu  sync.Mutex
 	nativeDocDownload    *nativeDocDownloadState
+	indraInstallMu       sync.Mutex
+	indraInstall         *indraInstallState
 	rerankerStore        *db.RerankerConfigStore
 	// applyEmbedder puts the embedding model that was just saved in use, so that no restart is needed.
 	applyEmbedder      func(ctx context.Context) error

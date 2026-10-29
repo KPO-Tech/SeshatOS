@@ -492,7 +492,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 				external = client
 			}
 		}
-		return documentreading.NewPolicyConverterWithLocalAdvanced(documentreading.NewNativeDocConverter(), external, preferExternal)
+		return documentreading.NewPolicyConverterWithLocalAdvanced(documentreading.NewLocalAdvancedConverter(documentreading.NewNativeDocConverter()), external, preferExternal)
 	}
 	if documentreading.NativeDocAutoInitEnabled() {
 		if capabilities, initErr := documentreading.InitNativeDocRuntime(); initErr != nil {
