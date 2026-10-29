@@ -2,8 +2,11 @@ package query
 
 import (
 	"context"
+	"slices"
 	"testing"
 
+	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
+	knowledgetool "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/tool"
 	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
@@ -248,5 +251,29 @@ func TestSDKRuntimeResearchKeysChangeBuildsANewClient(t *testing.T) {
 	removed, _, _ := runtime.clientForInput(context.Background(), QueryInput{})
 	if removed == first || removed == rotated {
 		t.Fatal("a removed key must not be served by a client that still holds it")
+	}
+}
+
+// stubKnowledge is a knowledge backend that is there (a tool without one is disabled) and is never called.
+type stubKnowledge struct{ backendknowledge.Backend }
+
+// TestSDKRuntimeHostToolsReachTheClientsBuiltForTurns guards RegisterHostTool: a turn runs on a client built for it, not on the base
+// client, so a tool registered on the base client alone never reached a conversation (the Ask view's agent was left without
+// knowledge_search and the model wrote its call as text).
+func TestSDKRuntimeHostToolsReachTheClientsBuiltForTurns(t *testing.T) {
+	runtime := newTestSDKRuntime(t)
+	if err := runtime.RegisterHostTool(knowledgetool.NewSearchTool(stubKnowledge{})); err != nil {
+		t.Fatalf("RegisterHostTool failed: %v", err)
+	}
+
+	for name, input := range map[string]QueryInput{"base provider": {}, "a user": {UserID: "usr_1"}} {
+		client, release, err := runtime.clientForInput(context.Background(), input)
+		if err != nil {
+			t.Fatalf("%s: clientForInput failed: %v", name, err)
+		}
+		defer release()
+		if !slices.Contains(client.ToolNames(), knowledgetool.ToolName) {
+			t.Errorf("%s: the client built for the turn has no %s: %v", name, knowledgetool.ToolName, client.ToolNames())
+		}
 	}
 }

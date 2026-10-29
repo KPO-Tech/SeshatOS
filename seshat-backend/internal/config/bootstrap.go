@@ -1108,11 +1108,11 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// *knowledge.Service or connected-mode *cloudknowledge.RemoteService),
 	// which only exists after seshat.NewApp runs its own fallback logic.
 	if backendApp.Knowledge != nil {
-		if err := queryClient.RegisterTool(knowledgeTools.NewSearchTool(backendApp.Knowledge)); err != nil {
+		if err := runtime.RegisterHostTool(knowledgeTools.NewSearchTool(backendApp.Knowledge)); err != nil {
 			fmt.Fprintf(os.Stderr, "[API] Avertissement: knowledge_search tool non enregistré: %v\n", err)
 		}
 		// knowledge_read: the text of one document of a collection, read through the same backend (see its doc in internal/knowledge/tool).
-		if err := queryClient.RegisterTool(knowledgeTools.NewReadTool(backendApp.Knowledge)); err != nil {
+		if err := runtime.RegisterHostTool(knowledgeTools.NewReadTool(backendApp.Knowledge)); err != nil {
 			fmt.Fprintf(os.Stderr, "[API] Avertissement: knowledge_read tool non enregistré: %v\n", err)
 		}
 	}
