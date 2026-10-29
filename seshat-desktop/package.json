@@ -20,6 +20,7 @@
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "lint": "oxlint src",
+    "ui-catalog": "node scripts/generate-ui-catalog.mjs",
     "test": "vitest run && npm run test:ipc",
     "test:watch": "vitest",
     "build:backend:win": "node ../scripts/build-desktop-sidecar.mjs windows amd64",

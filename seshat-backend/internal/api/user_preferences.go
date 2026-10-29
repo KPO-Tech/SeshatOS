@@ -22,13 +22,15 @@ type userPreferencesResponse struct {
 	// MaxSubAgentDepth is the user-configured spawn depth limit (1–5). 0 = server default (3).
 	MaxSubAgentDepth int `json:"max_sub_agent_depth"`
 	// MemoryEnabled is the user's opt-in to long-term memory (extraction and recall). Off by default.
-	MemoryEnabled bool  `json:"memory_enabled"`
-	UpdatedAt     int64 `json:"updated_at,omitempty"`
+	MemoryEnabled bool `json:"memory_enabled"`
+	// RichAnswersEnabled lets the agent answer with structured components (tables, figures, steps). On by default.
+	RichAnswersEnabled bool  `json:"rich_answers_enabled"`
+	UpdatedAt          int64 `json:"updated_at,omitempty"`
 }
 
 func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
 	if p == nil {
-		return userPreferencesResponse{}
+		return userPreferencesResponse{RichAnswersEnabled: true}
 	}
 	return userPreferencesResponse{
 		UserID:                    p.UserID,
@@ -42,6 +44,7 @@ func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
 		AutomationPermissionMode:  p.AutomationPermissionMode,
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
 		MemoryEnabled:             p.MemoryEnabled,
+		RichAnswersEnabled:        !p.RichAnswersDisabled,
 		UpdatedAt:                 p.UpdatedAt.Unix(),
 	}
 }
@@ -99,6 +102,8 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			MaxSubAgentDepth          int    `json:"max_sub_agent_depth"`
 			// MemoryEnabled is a pointer so a client that does not know the field leaves the stored choice alone.
 			MemoryEnabled *bool `json:"memory_enabled"`
+			// RichAnswersEnabled is a pointer for the same reason.
+			RichAnswersEnabled *bool `json:"rich_answers_enabled"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
@@ -121,6 +126,10 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 		} else {
 			memoryEnabled = a.backend.Preferences.MemoryEnabled(r.Context(), principal)
 		}
+		richAnswersEnabled := a.backend.Preferences.RichAnswersEnabled(r.Context(), principal)
+		if body.RichAnswersEnabled != nil {
+			richAnswersEnabled = *body.RichAnswersEnabled
+		}
 		saved, err := a.backend.Preferences.Upsert(r.Context(), principal, preferences.UpsertParams{
 			PreferredName:             body.PreferredName,
 			Profession:                body.Profession,
@@ -132,6 +141,7 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			AutomationPermissionMode:  body.AutomationPermissionMode,
 			MaxSubAgentDepth:          body.MaxSubAgentDepth,
 			MemoryEnabled:             memoryEnabled,
+			RichAnswersDisabled:       !richAnswersEnabled,
 		})
 		if err != nil {
 			writeBackendError(w, err)

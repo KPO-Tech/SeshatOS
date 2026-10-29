@@ -285,3 +285,46 @@ func TestMemoryIsOffWhenPreferencesCannotBeRead(t *testing.T) {
 		t.Fatal("a service without a provider must mean memory off")
 	}
 }
+
+// ─── rich answers opt-out ─────────────────────────────────────────────────────
+
+func TestRichAnswersAreOnUntilTheUserTurnsThemOff(t *testing.T) {
+	svc := openPreferencesService(t)
+	ctx := context.Background()
+	principal := principalFor("usr_rich")
+
+	if !svc.RichAnswersEnabled(ctx, principal) {
+		t.Fatal("rich answers must be on for a user who never chose")
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{PreferredName: "Ada"}); err != nil {
+		t.Fatal(err)
+	}
+	if !svc.RichAnswersEnabled(ctx, principal) {
+		t.Fatal("saving other preferences must not turn rich answers off")
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{RichAnswersDisabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	if svc.RichAnswersEnabled(ctx, principal) {
+		t.Fatal("rich answers should be off after the user turned them off")
+	}
+	if !svc.RichAnswersEnabled(ctx, principalFor("usr_other")) {
+		t.Fatal("one user's choice must not apply to another")
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{RichAnswersDisabled: false}); err != nil {
+		t.Fatal(err)
+	}
+	if !svc.RichAnswersEnabled(ctx, principal) {
+		t.Fatal("rich answers should be back on")
+	}
+}
+
+func TestRichAnswersAreOnWhenPreferencesCannotBeRead(t *testing.T) {
+	var svc *Service
+	if !svc.RichAnswersEnabled(context.Background(), principalFor("u")) {
+		t.Fatal("a missing service must leave the default on")
+	}
+	if !NewService(nil).RichAnswersEnabled(context.Background(), principalFor("u")) {
+		t.Fatal("a service without a provider must leave the default on")
+	}
+}

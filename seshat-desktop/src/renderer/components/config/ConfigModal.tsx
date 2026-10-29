@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { User } from '@renderer/api/types'
+import { AnswersConfig } from './answers/AnswersConfig'
 import { CloudConfig } from './cloud/CloudConfig'
 import { EnvironmentConfig } from './environment/EnvironmentConfig'
 import { hiddenConfigSections } from './configSections'
@@ -29,6 +30,7 @@ export type ConfigSection =
   | 'environment'
   | 'storage'
   | 'skills'
+  | 'answers'
   | 'cloud'
 
 type Props = {
@@ -52,6 +54,7 @@ const allSections: SectionDef[] = [
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },
   { id: 'storage', label: 'Storage', icon: 'storage', group: 'Workspace Runtime', description: 'Local filesystem, object storage, and cache locations.' },
   { id: 'skills', label: 'Skills', icon: 'skills', group: 'Agents', description: 'Skill repositories downloaded to this machine and the groups they provide.' },
+  { id: 'answers', label: 'Answers', icon: 'agent', group: 'Agents', description: 'How the agent presents its answers: drawn components, and more preferences later.' },
   { id: 'cloud', label: 'SeshatCloud', icon: 'connectors', group: 'Workspace Runtime', description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
 ]
 
@@ -131,6 +134,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'environment' && <EnvironmentConfig />}
               {activeSection === 'storage' && <StorageConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
+              {activeSection === 'answers' && <AnswersConfig />}
               {activeSection === 'cloud' && <CloudConfig />}
             </div>
           </div>

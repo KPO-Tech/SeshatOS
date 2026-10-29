@@ -229,6 +229,8 @@ export type UserPreferences = {
   max_sub_agent_depth?: number
   /** Opt-in to long-term memory (notes extracted from conversations and recalled into prompts). Off by default. */
   memory_enabled?: boolean
+  /** Answers may use drawn components (tables, figures, steps). On unless the person turned it off. */
+  rich_answers_enabled?: boolean
   updated_at?: number
 }
 

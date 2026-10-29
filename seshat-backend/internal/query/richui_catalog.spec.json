@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "name": "Stack",
+      "group": "Layout",
+      "signature": "Stack(children: [Component], direction?: column|row, gap?: sm|md|lg)",
+      "description": "Lays its children out in a column or a row."
+    },
+    {
+      "name": "Card",
+      "group": "Layout",
+      "signature": "Card(children: [Component], title?: text, tone?: neutral|info|success|warning|danger)",
+      "description": "A bordered block with an optional title."
+    },
+    {
+      "name": "Section",
+      "group": "Layout",
+      "signature": "Section(title: text, children: [Component], open?: true|false, collapsible?: true|false)",
+      "description": "A titled part of the answer, collapsible when it is long."
+    },
+    {
+      "name": "Separator",
+      "group": "Layout",
+      "signature": "Separator()",
+      "description": "A thin rule."
+    },
+    {
+      "name": "Heading",
+      "group": "Text",
+      "signature": "Heading(text: text, level?: number)",
+      "description": "A heading inside a block."
+    },
+    {
+      "name": "Markdown",
+      "group": "Text",
+      "signature": "Markdown(text: text)",
+      "description": "A paragraph of plain text."
+    },
+    {
+      "name": "Callout",
+      "group": "Text",
+      "signature": "Callout(tone: neutral|info|success|warning|danger, title: text, body?: text)",
+      "description": "A highlighted note: info, success, warning or danger."
+    },
+    {
+      "name": "Badge",
+      "group": "Text",
+      "signature": "Badge(text: text, tone?: neutral|info|success|warning|danger)",
+      "description": "A short status label."
+    },
+    {
+      "name": "Quote",
+      "group": "Text",
+      "signature": "Quote(text: text, source?: text)",
+      "description": "A quotation with its source."
+    },
+    {
+      "name": "Table",
+      "group": "Data",
+      "signature": "Table(columns: [Col], rows: [[text|number|Badge|FileRef|Link]], caption?: text, sortable?: true|false)",
+      "description": "Rows and columns. A cell is a text, a number, a Badge, a FileRef or a Link."
+    },
+    {
+      "name": "Col",
+      "group": "Data",
+      "signature": "Col(label: text, kind?: text|number|percent|money|date, align?: left|right|center)",
+      "description": "A column of Table: its label and how its values are formatted."
+    },
+    {
+      "name": "Metric",
+      "group": "Data",
+      "signature": "Metric(label: text, value: text|number, delta?: text|number, trend?: up|down|flat, note?: text)",
+      "description": "One figure with its label and its change."
+    },
+    {
+      "name": "MetricRow",
+      "group": "Data",
+      "signature": "MetricRow(metrics: [Metric])",
+      "description": "Several Metric side by side."
+    },
+    {
+      "name": "Steps",
+      "group": "Guidance",
+      "signature": "Steps(items: [Step])",
+      "description": "An ordered procedure."
+    },
+    {
+      "name": "Step",
+      "group": "Guidance",
+      "signature": "Step(title: text, body?: text, status?: todo|doing|done|blocked)",
+      "description": "One step of Steps."
+    },
+    {
+      "name": "FileRef",
+      "group": "Sources",
+      "signature": "FileRef(path: text, label?: text, page?: number, line?: number)",
+      "description": "A file or a place in a file; a click opens it in the app."
+    },
+    {
+      "name": "Link",
+      "group": "Sources",
+      "signature": "Link(label: text, url: text)",
+      "description": "A link to a web page."
+    }
+  ],
+  "examples": [
+    "root = Stack([title, kpis, table, note])\ntitle = Heading(\"Terminal agents compared\", 2)\nkpis = MetricRow([m1, m2])\nm1 = Metric(\"Tools compared\", 5)\nm2 = Metric(\"With a native sandbox\", 3, \"+1\", \"up\")\ntable = Table([Col(\"Tool\"), Col(\"Sandbox\"), Col(\"Memory\")], rows)\nrows = [[\"Claude Code\", Badge(\"yes\", \"success\"), \"CLAUDE.md\"], [\"Aider\", Badge(\"no\", \"danger\"), \"chat history\"]]\nnote = Callout(\"warning\", \"Not documented\", \"OpenCode does not document its internal database schema.\")",
+    "root = Steps([s1, s2, s3])\ns1 = Step(\"Install the runtime\", \"Run the installer, then restart the terminal.\", \"done\")\ns2 = Step(\"Add a provider key\", \"Open Settings, then Providers.\", \"doing\")\ns3 = Step(\"Send a first message\")",
+    "root = Card([summary, plan], \"Migration status\", \"info\")\nsummary = MetricRow([Metric(\"Tables moved\", 14, \"+3\", \"up\", \"this week\"), Metric(\"Left\", 6)])\nplan = Section(\"Next\", [Steps([Step(\"Move the audit tables\", null, \"doing\"), Step(\"Switch the reads\", null, \"todo\")])])"
+  ]
+}
