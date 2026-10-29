@@ -41,8 +41,9 @@ export function AskPage() {
     reset()
     setOpened(null)
   }, [reset])
-  // A document is open in the right panel: it takes the place of the column of cards.
-  const documentOpen = useUIStore((state) => flattenRightPanels(state.rightColumns).some((panel) => Boolean(panel.documentFileId)))
+  // A panel is open on the right (a document, the session, the browser, a tool): it takes the place of the column of cards, which the session
+  // panel shows too.
+  const panelOpen = useUIStore((state) => flattenRightPanels(state.rightColumns).length > 0)
   // A citation opens the document at the cited place, with the passage marked; a document of the list under the answer opens at its page,
   // with nothing marked. A passage whose search did not name its file (a conversation from before it did) is looked for by the names of its
   // collection and its file; one that cannot be found, or that has no viewer, is read in the drawer.
@@ -145,7 +146,7 @@ export function AskPage() {
         <PassageDrawer passage={opened} onClose={() => setOpened(null)} />
       </section>
 
-      {!documentOpen && (
+      {!panelOpen && (
         <div className="hidden min-h-0 xl:flex">
           {started && sessionId ? <AskSessionSidebar sessionId={sessionId} /> : <AskSidebar onPick={(text) => !blocker && setPrefill({ text, nonce: Date.now() })} />}
         </div>

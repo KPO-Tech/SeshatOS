@@ -27,7 +27,9 @@ function permissionModeColor(mode: UIPermissionMode): 'green' | 'orange' | 'red'
 // (next to Home/Back/Forward) so that row could go away entirely. Computer/
 // Browser/Terminal only render once a conversation is open; permission mode
 // is a global setting, so it's available from Home too.
-export function TitlebarSessionControls({ conversationId }: { conversationId: string | null }) {
+//
+// In the Ask view only the session and the browser are offered: its agent has no shell, and its permissions are not the person's to set.
+export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { conversationId: string | null; variant?: 'chat' | 'knowledge' }) {
   const permissionMode = useUIStore((s) => s.permissionMode)
   const setPermissionMode = useUIStore((s) => s.setPermissionMode)
   const { computerOpen, browserOpen, terminalOpen, toggleComputer, toggleBrowser, toggleTerminal } =
@@ -56,9 +58,10 @@ export function TitlebarSessionControls({ conversationId }: { conversationId: st
         <>
           <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Session" active={computerOpen} onClick={toggleComputer} />
           <IconButton icon={<Globe size={14} />} variant="ghost" size={26} title="Browser" active={browserOpen} onClick={toggleBrowser} />
-          <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title="Terminal" active={terminalOpen} onClick={toggleTerminal} />
+          {variant === 'chat' && <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title="Terminal" active={terminalOpen} onClick={toggleTerminal} />}
         </>
       )}
+      {variant === 'chat' && (
       <div className="relative">
         <IconButton
           icon={<Shield size={14} />}
@@ -77,6 +80,7 @@ export function TitlebarSessionControls({ conversationId }: { conversationId: st
           />
         )}
       </div>
+      )}
     </div>
   )
 }

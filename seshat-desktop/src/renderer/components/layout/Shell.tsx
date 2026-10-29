@@ -11,6 +11,7 @@ import { RightPanelHost } from './RightPanelHost'
 import { Sidebar } from './sidebar/Sidebar'
 import { ThemeToggleButton } from './ThemeToggleButton'
 import { Titlebar } from './Titlebar'
+import { useAskSessionStore } from '@renderer/stores/askSession'
 import { TitlebarSessionControls } from './TitlebarSessionControls'
 import { UpdateBanner } from './UpdateBanner'
 
@@ -26,6 +27,8 @@ export function Shell() {
   const isAdminRoute = pathname.startsWith('/admin')
   // Knowledge opens documents in the right panel, as the chat does.
   const isKnowledge = pathname.startsWith('/knowledge')
+  // The conversation the Ask view has open: its session and browser panels are offered in the title bar like a chat's.
+  const askSessionId = useAskSessionStore((state) => state.sessionId)
   const previousPathnameRef = useRef(pathname)
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
@@ -93,7 +96,13 @@ export function Shell() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--surface-root)] text-[var(--text-primary)]">
       <Titlebar
-        right={(isChatHome || isConversation) ? <TitlebarSessionControls conversationId={conversationId} /> : undefined}
+        right={
+          isChatHome || isConversation ? (
+            <TitlebarSessionControls conversationId={conversationId} />
+          ) : isKnowledge && askSessionId ? (
+            <TitlebarSessionControls conversationId={askSessionId} variant="knowledge" />
+          ) : undefined
+        }
         onHome={() => navigate('/')}
         onBack={() => navigate(-1)}
         onForward={() => navigate(1)}
