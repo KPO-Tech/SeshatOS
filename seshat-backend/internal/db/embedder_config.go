@@ -19,8 +19,10 @@ type gEmbedderConfig struct {
 	APIKeyEncrypted string `gorm:"column:api_key_encrypted;type:text;not null;default:''"`
 	Model           string `gorm:"column:model;size:256;not null;default:''"`
 	Enabled         bool   `gorm:"column:enabled;not null;default:true"`
-	UpdatedAtUnix   int64  `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
-	CreatedAtUnix   int64  `gorm:"column:created_at_unix;autoCreateTime:unix"`
+	// VectorsModel is the key (see EmbedderKey) of the model the vectors of the collections were made with; empty when it is not known.
+	VectorsModel  string `gorm:"column:vectors_model;size:512;not null;default:''"`
+	UpdatedAtUnix int64  `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
+	CreatedAtUnix int64  `gorm:"column:created_at_unix;autoCreateTime:unix"`
 }
 
 func (gEmbedderConfig) TableName() string { return "embedder_config" }
@@ -31,8 +33,10 @@ type EmbedderConfig struct {
 	Model     string
 	HasAPIKey bool
 	Enabled   bool
-	UpdatedAt time.Time
-	CreatedAt time.Time
+	// VectorsModel is the key of the model the vectors of the collections were made with, empty when it is not known.
+	VectorsModel string
+	UpdatedAt    time.Time
+	CreatedAt    time.Time
 }
 
 type UpsertEmbedderConfigParams struct {
@@ -124,6 +128,7 @@ func (s *EmbedderConfigStore) Upsert(ctx context.Context, p UpsertEmbedderConfig
 			Model:           strings.TrimSpace(p.Model),
 			Enabled:         p.Enabled,
 		}
+		row.VectorsModel = EmbedderKey(row.Provider, row.BaseURL, row.Model)
 		if err := s.db.gormDB.WithContext(ctx).Create(&row).Error; err != nil {
 			return nil, err
 		}
@@ -143,6 +148,11 @@ func (s *EmbedderConfigStore) Upsert(ctx context.Context, p UpsertEmbedderConfig
 	if p.APIKey != nil {
 		updates["api_key_encrypted"] = encryptedKey
 	}
+	// The vectors already made belong to the model that was in use: remember it before it is replaced, unless it is already known.
+	before := EmbedderKey(row.Provider, row.BaseURL, row.Model)
+	if row.VectorsModel == "" && row.BaseURL != "" && row.Model != "" && before != EmbedderKey(provider, p.BaseURL, p.Model) {
+		updates["vectors_model"] = before
+	}
 	if err := s.db.gormDB.WithContext(ctx).
 		Model(&gEmbedderConfig{}).
 		Where("id = ?", embedderConfigID).
@@ -153,14 +163,29 @@ func (s *EmbedderConfigStore) Upsert(ctx context.Context, p UpsertEmbedderConfig
 	return s.Get(ctx)
 }
 
+// EmbedderKey names an embedding model by its provider, endpoint and model: what tells the vectors made by one from the vectors made by
+// another.
+func EmbedderKey(provider, baseURL, model string) string {
+	return strings.ToLower(strings.TrimSpace(provider)) + "|" + strings.TrimRight(strings.ToLower(strings.TrimSpace(baseURL)), "/") + "|" + strings.TrimSpace(model)
+}
+
+// Key is the EmbedderKey of the configuration.
+func (c EmbedderConfig) Key() string { return EmbedderKey(c.Provider, c.BaseURL, c.Model) }
+
+// SetVectorsModel records the model the vectors of the collections were made with.
+func (s *EmbedderConfigStore) SetVectorsModel(ctx context.Context, key string) error {
+	return s.db.gormDB.WithContext(ctx).Model(&gEmbedderConfig{}).Where("id = ?", embedderConfigID).Update("vectors_model", key).Error
+}
+
 func embedderConfigFromModel(row gEmbedderConfig) EmbedderConfig {
 	return EmbedderConfig{
-		Provider:  row.Provider,
-		BaseURL:   row.BaseURL,
-		Model:     row.Model,
-		HasAPIKey: row.APIKeyEncrypted != "",
-		Enabled:   row.Enabled,
-		UpdatedAt: time.Unix(row.UpdatedAtUnix, 0).UTC(),
-		CreatedAt: time.Unix(row.CreatedAtUnix, 0).UTC(),
+		VectorsModel: row.VectorsModel,
+		Provider:     row.Provider,
+		BaseURL:      row.BaseURL,
+		Model:        row.Model,
+		HasAPIKey:    row.APIKeyEncrypted != "",
+		Enabled:      row.Enabled,
+		UpdatedAt:    time.Unix(row.UpdatedAtUnix, 0).UTC(),
+		CreatedAt:    time.Unix(row.CreatedAtUnix, 0).UTC(),
 	}
 }

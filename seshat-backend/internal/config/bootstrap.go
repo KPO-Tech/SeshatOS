@@ -613,6 +613,30 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		fmt.Printf("[API] pgvector utilise une DB dédiée PostgreSQL\n")
 	}
 
+	// The embedder everything shares. Changing the model in Config > Search replaces what is inside, so it takes effect without a restart.
+	liveEmbedder := &backendknowledge.LiveEmbedder{}
+	// applyEmbedder reads the embedding model that was just saved and puts it in use.
+	applyEmbedder := func(ctx context.Context) error {
+		cfg, err := embedderConfigStore.Get(ctx)
+		if err != nil {
+			return err
+		}
+		if cfg == nil || !cfg.Enabled || cfg.BaseURL == "" || cfg.Model == "" {
+			liveEmbedder.Set(nil, "")
+			return nil
+		}
+		saved, _ := embedderConfigStore.GetDecryptedAPIKey(ctx)
+		linkedKind, linkedKey, linked := resolveCapabilityCredential(ctx, capabilityLinkStore, settingStore, backendsettings.CapabilityEmbeddings)
+		key := embedderAPIKey(saved, cfg.Provider, linkedKind, linkedKey, linked)
+		next := &ragembedder.Config{BaseURL: cfg.BaseURL, APIKey: key, Model: cfg.Model, Provider: ragembedder.Provider(cfg.Provider)}
+		if !next.IsConfigured() {
+			liveEmbedder.Set(nil, "")
+			return nil
+		}
+		liveEmbedder.Set(ragembedder.New(next), cfg.Key())
+		return nil
+	}
+
 	var ragService *rag.Service
 	var ragVectorStore vector.Store
 	var ragEmbedder rag.Embedder
@@ -628,9 +652,8 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		// key" - see internal/db/capability_links.go) takes precedence over
 		// the embedder's own standalone key, so the same OpenAI credential
 		// configured for chat doesn't have to be pasted a second time here.
-		if _, linkedKey, ok := resolveCapabilityCredential(ctx, capabilityLinkStore, settingStore, backendsettings.CapabilityEmbeddings); ok {
-			apiKeyFromDB = linkedKey
-		}
+		linkedKind, linkedKey, linked := resolveCapabilityCredential(ctx, capabilityLinkStore, settingStore, backendsettings.CapabilityEmbeddings)
+		apiKeyFromDB = embedderAPIKey(apiKeyFromDB, dbEmb.Provider, linkedKind, linkedKey, linked)
 		embedderCfg = &ragembedder.Config{
 			BaseURL:  dbEmb.BaseURL,
 			APIKey:   apiKeyFromDB,
@@ -677,13 +700,12 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		ChromaDatabase:             config.ChromaDatabase,
 	}
 	if vs, err := vector.NewStore(ctx, vectorCfg); err == nil {
-		var embedder rag.Embedder
 		if embedderCfg.IsConfigured() {
-			embedder = ragembedder.New(embedderCfg)
+			liveEmbedder.Set(ragembedder.New(embedderCfg), db.EmbedderKey(string(embedderCfg.Provider), embedderCfg.BaseURL, embedderCfg.Model))
 		}
-		ragService = rag.NewService(artifactStore, vs, embedder, documentChunker)
+		ragService = rag.NewService(artifactStore, vs, liveEmbedder, documentChunker)
 		ragVectorStore = vs
-		ragEmbedder = embedder
+		ragEmbedder = liveEmbedder
 		backendName := string(vectorCfg.StoreKind)
 		if backendName == "" {
 			backendName = "sqlite"
@@ -1181,6 +1203,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		ProviderSettingStore:  settingStore,
 		DocumentReaderStore:   documentReaderConfigStore,
 		RerankerStore:         rerankerConfigStore,
+		ApplyEmbedder:         applyEmbedder,
 		LocalSTTStore:         localSTTConfigStore,
 		LocalTitleStore:       localTitleConfigStore,
 		SandboxConfigStore:    sandboxConfigStore,
@@ -1207,6 +1230,11 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// pipeline server-side (internal/server/knowledge.Runner), so there is
 	// nothing for a local runner to do.
 	if localKnowledge, ok := backendApp.Knowledge.(*backendknowledge.Service); ok {
+		localKnowledge.WithLiveEmbedder(liveEmbedder, func(ctx context.Context, key string) {
+			if err := embedderConfigStore.SetVectorsModel(ctx, key); err != nil {
+				fmt.Fprintf(os.Stderr, "[API] Avertissement: modèle des vecteurs non enregistré: %v\n", err)
+			}
+		})
 		knowledgeRunner := backendknowledge.NewRunner(localKnowledge, backendknowledge.RunnerConfig{
 			PollInterval: 500 * time.Millisecond,
 			MaxPerTick:   4,

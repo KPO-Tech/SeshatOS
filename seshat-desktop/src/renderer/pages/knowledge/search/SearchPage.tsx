@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Message, Search } from '@icon-park/react'
-import { useUIStore } from '@renderer/stores/ui'
+import { Message, Search, Sort } from '@icon-park/react'
+import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
 import { useCollections, type AskScope } from '../chat/useCollections'
 import { openDocument } from '../collections/openDocument'
+import { ChoiceSelect } from '../components/ChoiceSelect'
 import { ScopeSelect } from '../components/ScopeSelect'
-import { DocumentDetails } from './DocumentDetails'
 import { FilterPanel } from './FilterPanel'
 import { queryTerms } from './highlight'
 import { fetchDocuments } from './libraryApi'
 import { ResultRow, type View } from './ResultRow'
 import { MAX_PASSAGES } from './searchApi'
 import { SearchBar } from './SearchBar'
-import { facetsOf, filterDocs, groupDocs, KIND_ORDER, NO_FILTERS, sortDocs, withListing, type Doc, type Facets, type Filters, type SortKey } from './searchModel'
+import { facetsOf, filterDocs, groupDocs, KIND_ORDER, NO_FILTERS, sortDocs, withListing, type Doc, type Facets, type Filters, type Hit, type SortKey } from './searchModel'
 import { useLibrary } from './useLibrary'
 import { useLibraryTotals } from './useLibraryTotals'
 import { useSearch } from './useSearch'
@@ -28,12 +28,11 @@ export function SearchPage() {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [sort, setSort] = useState<SortKey | null>(null)
   const [view, setView] = useState<View>('list')
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [openError, setOpenError] = useState<string | null>(null)
   // What is known of the documents a search found (when they were added, how many passages they hold).
   const [listing, setListing] = useState<Doc[]>([])
-  // The viewer takes the right of the screen when a document is open: the details give it the room.
-  const viewerOpen = useUIStore((s) => s.rightColumns.length > 0)
+  // The document open in the viewer on the right, to mark its row.
+  const openFileId = useUIStore((s) => flattenRightPanels(s.rightColumns).find((panel) => panel.documentFileId)?.documentFileId ?? null)
 
   const done = state.phase === 'done'
   const searching = state.phase !== 'idle'
@@ -61,18 +60,22 @@ export function SearchPage() {
   const collectionsTotal = facets.collections.reduce((sum, item) => sum + item.count, 0)
   const resultCount = done ? shown.length : library.total
 
-  const selected = shown.find((doc) => doc.key === selectedKey) ?? null
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
-  // Clearing the bar goes back to the list of documents.
+  // Clearing the bar goes back to the list of documents, and closes the document that was open beside the results: it belonged to the search.
+  const closeRightPanel = useUIStore((s) => s.closeRightPanel)
+  const lastQuery = useRef(query)
   useEffect(() => {
     if (query === '' && state.phase !== 'idle') reset()
-  }, [query, state.phase, reset])
+    if (query === '' && lastQuery.current !== '') {
+      for (const panel of flattenRightPanels(useUIStore.getState().rightColumns)) if (panel.documentFileId) closeRightPanel(panel.id)
+    }
+    lastQuery.current = query
+  }, [query, state.phase, reset, closeRightPanel])
 
   // A new search starts from every document again, and the documents it found are asked for what the listing knows of them.
   useEffect(() => {
     setFilters(NO_FILTERS)
-    setSelectedKey(null)
     setOpenError(null)
     setSort(null)
     setListing([])
@@ -92,7 +95,6 @@ export function SearchPage() {
   // The collection chosen at the top narrows the list of documents; it is where a search looks.
   useEffect(() => {
     setFilters({ collectionIds: new Set(scope.collectionId ? [scope.collectionId] : []), kind: null })
-    setSelectedKey(null)
   }, [scope.collectionId])
 
   // The end of the list is scrolled to: the next page.
@@ -115,10 +117,12 @@ export function SearchPage() {
       return { ...current, collectionIds: next }
     })
 
-  async function open(doc: Doc, page?: number) {
+  // A result opens its document at the passage found, with the passage marked; a document only listed (no search) opens on its first page.
+  async function open(doc: Doc, hit?: Hit) {
     setOpenError(null)
     try {
-      if (!(await openDocument({ fileId: doc.fileId, name: doc.path }, doc.corpusId, page))) setOpenError(`There is no preview for this kind of file yet: ${doc.name}`)
+      const highlight = hit && hit.pages.length > 0 ? { text: hit.text, pages: hit.pages } : undefined
+      if (!(await openDocument({ fileId: doc.fileId, name: doc.path }, doc.corpusId, hit?.pages[0], highlight))) setOpenError(`There is no preview for this kind of file yet: ${doc.name}`)
     } catch {
       setOpenError(`${doc.name} could not be opened.`)
     }
@@ -170,7 +174,7 @@ export function SearchPage() {
       </section>
 
       <div className="flex min-h-0 flex-1 gap-3">
-        {(done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
+        {openFileId === null && (done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
           <FilterPanel
             title={done ? 'Refine results' : 'Browse'}
             facets={{ collections: facets.collections, kinds: totals.kinds.length > 0 ? totals.kinds : facets.kinds }}
@@ -184,12 +188,12 @@ export function SearchPage() {
         )}
 
         <section className={`${CARD} @container flex min-h-0 min-w-0 flex-1 flex-col p-3`}>
-          <div className="mb-2.5 flex shrink-0 items-center justify-between gap-3">
+          <div className="mb-2.5 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <h2 className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-[var(--text-primary)]">
               {done ? 'Results' : 'Documents'}
               {(done || library.total > 0) && <span className="text-[12.5px] font-normal text-[var(--text-muted)]">{resultCount}</span>}
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {done && shown.length > 0 && (
                 <button
                   type="button"
@@ -203,18 +207,7 @@ export function SearchPage() {
                   </span>
                 </button>
               )}
-              <select
-                value={sortKey}
-                onChange={(event) => setSort(event.target.value as SortKey)}
-                aria-label="Sort"
-                className="h-8 cursor-pointer rounded-[9px] border border-app-border-subtle bg-transparent px-2 text-[12px] text-[var(--text-primary)]"
-              >
-                {sortOptions.map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+              <ChoiceSelect label="Sort" icon={<Sort size={12} />} choices={sortOptions} value={sortKey} onChange={setSort} />
               <div className="flex overflow-hidden rounded-[9px] border border-app-border-subtle" role="group" aria-label="View">
                 {(['list', 'grid'] as const).map((mode) => (
                   <button
@@ -266,9 +259,9 @@ export function SearchPage() {
                 )}
                 {done && found.length > 0 && shown.length === 0 && <p className="m-0 text-[13px] text-[var(--text-secondary)]">No document is left with these filters.</p>}
                 {shown.length > 0 && (
-                  <ul className={['m-0 list-none gap-2 p-0', view === 'grid' ? 'grid grid-cols-1 xl:grid-cols-2' : 'flex flex-col'].join(' ')}>
+                  <ul className={['m-0 list-none gap-2.5 p-0', view === 'grid' ? 'grid grid-cols-1 @2xl:grid-cols-2 @6xl:grid-cols-3' : 'flex flex-col'].join(' ')}>
                     {shown.map((doc) => (
-                      <ResultRow key={doc.key} doc={doc} terms={terms} view={view} selected={doc.key === selected?.key} onSelect={() => setSelectedKey(doc.key === selected?.key ? null : doc.key)} />
+                      <ResultRow key={doc.key} doc={doc} terms={terms} view={view} opened={doc.fileId === openFileId} onOpen={(hit) => void open(doc, hit)} />
                     ))}
                   </ul>
                 )}
@@ -280,7 +273,6 @@ export function SearchPage() {
           </div>
         </section>
 
-        {selected && !viewerOpen && <DocumentDetails doc={selected} terms={terms} onOpen={(page) => void open(selected, page)} onClose={() => setSelectedKey(null)} />}
       </div>
     </div>
   )

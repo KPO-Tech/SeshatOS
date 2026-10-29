@@ -14,6 +14,7 @@ import { SkillsConfig } from './skills/SkillsConfig'
 import { StorageConfig } from './storage/StorageConfig'
 import { TitlesConfig } from './titles/TitlesConfig'
 import { WebSearchConfig } from './web-search/WebSearchConfig'
+import { SearchConfig } from './search/SearchConfig'
 import { edition } from '@renderer/lib/edition'
 
 export type ConfigSection =
@@ -22,6 +23,7 @@ export type ConfigSection =
   | 'titles'
   | 'web-search'
   | 'documents'
+  | 'search'
   | 'image'
   | 'audio'
   | 'mcp'
@@ -45,6 +47,7 @@ const allSections: SectionDef[] = [
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
   { id: 'documents', label: 'Documents', icon: 'book', group: 'Capabilities', description: 'Read scanned PDFs and photos of documents on this computer, in the languages you choose.' },
+  { id: 'search', label: 'Search', icon: 'search', group: 'Capabilities', description: 'The embedding and reranking models that Knowledge searches your documents with.' },
   { id: 'image', label: 'Images', icon: 'media', group: 'Capabilities', description: 'The provider, model, size and quality the agent uses to create images.' },
   { id: 'audio', label: 'Audio', icon: 'media', group: 'Capabilities', description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
@@ -124,6 +127,7 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'titles' && <TitlesConfig />}
               {activeSection === 'web-search' && <WebSearchConfig />}
               {activeSection === 'documents' && <DocumentsConfig />}
+              {activeSection === 'search' && <SearchConfig />}
               {activeSection === 'image' && <ImageConfig />}
               {activeSection === 'audio' && <AudioConfig />}
               {activeSection === 'mcp' && <MCPConfig />}

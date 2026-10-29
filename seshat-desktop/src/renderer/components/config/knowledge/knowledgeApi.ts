@@ -1,5 +1,5 @@
 import { api } from '@renderer/api/client'
-import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, RerankerConfig, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
+import type { Corpus, DocumentReaderConfig, EmbedderConfig, NativeDocDownloadResult, NativeDocInitResult, NativeDocStatusResult, ReembedStatus, RerankerConfig, RerankerModel, StorageStatus, SystemStatus, TestResult } from './knowledgeTypes'
 
 export type KnowledgeSnapshot = {
   corpora: Corpus[]
@@ -50,6 +50,8 @@ export function saveEmbedderConfig(config: {
   model: string
   enabled: boolean
   api_key?: string
+  // Takes the key of one of the person's providers (Config > Providers) instead of a key typed here.
+  provider_setting_id?: string
 }) {
   return api.put<EmbedderConfig>('/settings/embedder', config)
 }
@@ -59,6 +61,7 @@ export function testEmbedderConfig(config: {
   base_url: string
   model: string
   api_key?: string
+  provider_setting_id?: string
 }) {
   return api.post<TestResult>('/settings/embedder/test', config)
 }
@@ -72,6 +75,7 @@ export function saveRerankerConfig(config: {
   model: string
   enabled: boolean
   api_key?: string
+  provider_setting_id?: string
 }) {
   return api.put<RerankerConfig>('/settings/reranker', config)
 }
@@ -80,8 +84,14 @@ export function testRerankerConfig(config: {
   base_url: string
   model: string
   api_key?: string
+  provider_setting_id?: string
 }) {
   return api.post<TestResult>('/settings/reranker/test', config)
+}
+
+/** The rerank models a hosted provider offers (OpenRouter's from its own listing); an error says why the list is not the live one. */
+export function listRerankerModels(config: { provider: string }) {
+  return api.post<{ models: string[]; error: string | null }>('/settings/reranker/list-models', config)
 }
 
 export function detectRerankerModel(config: { base_url: string }) {
@@ -106,4 +116,34 @@ export function fetchNativeDocumentReaderStatus() {
 
 export function downloadNativeDocumentReaderModels(pack?: string) {
   return api.post<NativeDocDownloadResult>('/settings/document-reader/native/download', pack ? { pack } : {})
+}
+
+export function listRerankerSetups() {
+  return api.get<{ models: RerankerModel[] }>('/settings/reranker/models')
+}
+
+/** Sets a rerank model up; with `use`, it becomes the one the search uses. Returns the list as it is after. */
+export function addRerankerSetup(config: { base_url: string; model: string; api_key?: string; provider_setting_id?: string; use?: boolean }) {
+  return api.post<{ models: RerankerModel[] }>('/settings/reranker/models', config)
+}
+
+export function useRerankerSetup(id: string) {
+  return api.post<{ models: RerankerModel[] }>(`/settings/reranker/models/${encodeURIComponent(id)}/use`, {})
+}
+
+export function removeRerankerSetup(id: string) {
+  return api.delete<{ models: RerankerModel[] }>(`/settings/reranker/models/${encodeURIComponent(id)}`)
+}
+
+export function getReembedStatus() {
+  return api.get<ReembedStatus>('/knowledge/reembed')
+}
+
+/** Makes the vectors of every collection again with the model now in use, in the background. */
+export function startReembed() {
+  return api.post<ReembedStatus>('/knowledge/reembed')
+}
+
+export function stopReembed() {
+  return api.delete<ReembedStatus>('/knowledge/reembed')
 }

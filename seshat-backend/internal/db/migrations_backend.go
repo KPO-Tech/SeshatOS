@@ -403,7 +403,21 @@ func backendMigrations() []schemaMigration {
 			},
 		},
 		{
-			ID:    "20261029_058_user_preferences_rich_answers",
+			ID:    "20261028_058_reranker_models",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gRerankerModel{})
+			},
+		},
+		{
+			ID:    "20261028_059_embedder_vectors_model",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gEmbedderConfig{})
+			},
+		},
+		{
+			ID:    "20261029_060_user_preferences_rich_answers",
 			Scope: migrationScopeBackend,
 			Run: func(ctx context.Context, db *DB) error {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
