@@ -222,6 +222,54 @@
       "group": "Guidance",
       "signature": "Step(title: text, body?: text, status?: todo|doing|done|blocked)",
       "description": "One step of Steps."
+    },
+    {
+      "name": "FileRef",
+      "group": "Sources",
+      "signature": "FileRef(path: text, label?: text, page?: number, line?: number)",
+      "description": "A file or a place in a file; a click opens it in the app."
+    },
+    {
+      "name": "Citation",
+      "group": "Sources",
+      "signature": "Citation(label: text, source: text, quote?: text, page?: number)",
+      "description": "A passage taken from a source, with its place."
+    },
+    {
+      "name": "SourceList",
+      "group": "Sources",
+      "signature": "SourceList(sources: [Source])",
+      "description": "The sources an answer relies on."
+    },
+    {
+      "name": "Source",
+      "group": "Sources",
+      "signature": "Source(title: text, url?: text, path?: text, note?: text)",
+      "description": "One source of SourceList."
+    },
+    {
+      "name": "Link",
+      "group": "Sources",
+      "signature": "Link(label: text, url: text)",
+      "description": "A link to a web page."
+    },
+    {
+      "name": "Button",
+      "group": "Interaction",
+      "signature": "Button(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url), variant?: primary|secondary)",
+      "description": "A button that runs an action."
+    },
+    {
+      "name": "Choices",
+      "group": "Interaction",
+      "signature": "Choices(options: [Choice], title?: text)",
+      "description": "Suggested follow-ups under the answer. At most one per answer."
+    },
+    {
+      "name": "Choice",
+      "group": "Interaction",
+      "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url))",
+      "description": "One follow-up of Choices."
     }
   ],
   "icons": {
