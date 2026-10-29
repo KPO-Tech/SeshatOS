@@ -19,6 +19,7 @@ import { EmptyState } from '@renderer/components/chat/panels/EmptyState'
 import { KnowledgePanel } from '@renderer/components/chat/panels/KnowledgePanel'
 import { flattenRightPanels } from '@renderer/stores/ui'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
+import { FLOATING_PANEL_WIDTH, isFloatingColumn } from './floatingColumn'
 import type { RightPanelInstance, RightPanelKind, RightPanelColumn } from '@renderer/stores/ui'
 
 export function RightPanelHost() {
@@ -99,9 +100,14 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
     document.addEventListener('mouseup', onUp)
   }
 
+  const floating = isFloatingColumn(column)
+
   return (
-    <div className="relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]" style={{ width: `${column.width}px` }}>
-      <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />
+    <div
+      className={floating ? 'relative flex h-full min-w-0 flex-col bg-[var(--chat-bg)]' : 'relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]'}
+      style={{ width: `${floating ? FLOATING_PANEL_WIDTH : column.width}px` }}
+    >
+      {!floating && <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />}
       {column.panels.map((panel, index) => (
         <div
           key={panel.id}
