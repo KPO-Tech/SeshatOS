@@ -1,6 +1,6 @@
 # 0003 - Rich answers in chat: the agent describes, the client renders
 
-Status: proposed, 2026-10-09. Nothing is built yet. Written down so the idea is not lost.
+Status: superseded by [0005](0005-chat-ui-catalog.md), 2026-10-29. Nothing was built from this record. Written down so the idea is not lost.
 
 ## Context
 

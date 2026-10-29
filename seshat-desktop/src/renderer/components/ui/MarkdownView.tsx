@@ -12,6 +12,7 @@ import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImag
 import { citedPages, type MarkdownNode } from '@renderer/lib/markdownLinks'
 import type { WebSource } from '@renderer/lib/webSources'
 import { WebCitation } from '@renderer/components/sources/WebCitation'
+import { RichBlock } from '@renderer/components/chat/richblocks/view/RichBlock'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -314,6 +315,10 @@ export function MarkdownView({ children, className, streaming = false, sessionId
   const markdownComponents = useMemo<Components>(() => ({
           code({ inline, className, children, ...props }: CodeProps) {
             const match = /language-(\w+)/.exec(className || '')
+            if (!inline && /(^|\s)language-seshat-ui(\s|$)/.test(className || '')) {
+              const code = String(children).replace(/\n$/, '')
+              return <RichBlock code={code} streaming={streaming} fallback={<CodeBlock language="seshat-ui" code={code} />} />
+            }
             if (!inline && match && !streaming) {
               const code = String(children).replace(/\n$/, '')
               if (match[1] === 'mermaid') {
