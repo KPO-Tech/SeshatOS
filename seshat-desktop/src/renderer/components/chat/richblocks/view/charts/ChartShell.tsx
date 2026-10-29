@@ -28,7 +28,7 @@ function ChartFigure({ title, legend, ratio = 0.5, minHeight = 220, maxHeight = 
   const [ref, width] = useElementWidth<HTMLDivElement>()
   const height = Math.round(Math.min(maxHeight, Math.max(minHeight, width * ratio)))
   return (
-    <figure className="m-0 my-3 rounded-lg border border-app-border-subtle bg-app-surface p-3">
+    <figure className="m-0 rounded-lg border border-app-border-subtle bg-app-surface p-3">
       {title && <figcaption className="mb-1.5 text-[13px] font-semibold text-app-text">{title}</figcaption>}
       {legend && legend.length > 0 && (
         <ul className="m-0 mb-1.5 flex list-none flex-wrap gap-x-3.5 gap-y-1 p-0 text-[11.5px] text-app-text-secondary">
@@ -51,7 +51,7 @@ function ChartFigure({ title, legend, ratio = 0.5, minHeight = 220, maxHeight = 
 /** The frame of a chart: a title, a legend, and a drawing area that is told its width and gives back an SVG of that size. It can be saved as an image. */
 export function ChartShell(props: Props) {
   return (
-    <Expandable label={props.title ?? 'Chart'} mode="download">
+    <Expandable label={props.title ?? 'Chart'} mode="download" className="my-3">
       <ChartFigure {...props} />
     </Expandable>
   )
