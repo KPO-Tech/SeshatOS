@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import type { ComponentProps } from '../NodeView'
 import { Axes, plotArea } from '../charts/Axes'
 import { ChartShell } from '../charts/ChartShell'
+import { Expandable } from '../expand/Expandable'
 import { finite, numbers, strings, text } from '../charts/readers'
 import { formatTick, linear, niceDomain, niceTicks } from '../charts/scale'
 import { seriesAccent } from '../charts/seriesTone'
@@ -74,6 +75,7 @@ function Heatmap({ props }: ComponentProps) {
   const accent = seriesAccent(0, props.tone)
 
   return (
+    <Expandable label={text(props.title) ?? 'Heatmap'} force>
     <figure className="m-0 my-3 overflow-x-auto rounded-lg border border-app-border-subtle bg-app-surface p-3">
       {text(props.title) && <figcaption className="mb-2 text-[13px] font-semibold text-app-text">{text(props.title)}</figcaption>}
       <div className="grid w-fit min-w-full gap-1" style={{ gridTemplateColumns: `auto repeat(${cols.length}, minmax(3.2rem, 1fr))` }}>
@@ -101,6 +103,7 @@ function Heatmap({ props }: ComponentProps) {
         ))}
       </div>
     </figure>
+    </Expandable>
   )
 }
 
