@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
-import { SelectorMenu, SelectorPill, type SelectorOption } from '@renderer/components/ui/SelectorPill'
-import { providerDisplayName, providerInitials, type ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
+import { SelectorMenu, SelectorPill } from '@renderer/components/ui/SelectorPill'
+import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
+import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { modelAlias } from '@renderer/lib/modelAlias'
 
 type Props = {
@@ -31,17 +32,7 @@ export function ModelSelect({ choices, selectedId, loading, onSelect }: Props) {
     }
   }, [open])
 
-  const options = useMemo<SelectorOption[]>(
-    () =>
-      choices.map((choice) => ({
-        id: choice.id,
-        label: modelAlias(choice.model.display_name || choice.model.model_id),
-        description: providerDisplayName(choice.providerName, choice.providerKind),
-        icon: <ProviderIcon provider={choice.providerKind} size={17} />,
-        prefix: providerInitials(choice.providerName, choice.providerKind)
-      })),
-    [choices]
-  )
+  const options = useMemo(() => modelSelectorOptions(choices), [choices])
 
   const label = current ? modelAlias(current.model.display_name || current.model.model_id) : loading ? 'Loading models' : 'No model'
 

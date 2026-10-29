@@ -87,7 +87,6 @@ export function MessageList({
           const msg = messages[virtualRow.index]
           const i = virtualRow.index
           const revealThinking = isStreaming && msg.role === 'assistant' && i === messages.length - 1
-          const autoExpandTools = revealThinking
           const showLiveActivity = revealThinking && !pendingPermission && !pendingAskUser
           const showCompleted = justCompleted && msg.role === 'assistant' && i === messages.length - 1 && !pendingPermission && !pendingAskUser
           return (
@@ -104,7 +103,6 @@ export function MessageList({
                 isFirst={i === 0}
                 compact={msg.role === 'assistant' && i > 0 && messages[i - 1]?.role === 'assistant'}
                 revealThinking={revealThinking}
-                autoExpandTools={autoExpandTools}
                 liveActivity={showLiveActivity ? liveActivity : undefined}
                 justCompleted={showCompleted}
                 changedFiles={changedFiles.get(i)}
