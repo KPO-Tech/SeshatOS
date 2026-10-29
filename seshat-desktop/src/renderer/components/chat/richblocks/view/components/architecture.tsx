@@ -3,24 +3,12 @@ import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useSta
 import { isNode } from '../../lang/parseUi'
 import { routeFlow, type Point } from '../architecture/routeFlow'
 import { RichIcon } from '../icons/RichIcon'
+import { TONES, toneOf, toneOrNull } from '../tones'
 import type { ComponentProps } from '../NodeView'
 import { NodeList } from '../NodeView'
 
-const HUES = {
-  neutral: { box: 'border-app-border-subtle bg-app-surface', icon: 'text-app-text-secondary' },
-  blue: { box: 'border-blue-500/35 bg-blue-500/10', icon: 'text-blue-500' },
-  violet: { box: 'border-violet-500/35 bg-violet-500/10', icon: 'text-violet-500' },
-  green: { box: 'border-emerald-500/35 bg-emerald-500/10', icon: 'text-emerald-500' },
-  orange: { box: 'border-orange-500/35 bg-orange-500/10', icon: 'text-orange-500' },
-  red: { box: 'border-rose-500/35 bg-rose-500/10', icon: 'text-rose-500' },
-  teal: { box: 'border-teal-500/35 bg-teal-500/10', icon: 'text-teal-500' },
-  yellow: { box: 'border-amber-500/35 bg-amber-500/10', icon: 'text-amber-500' }
-} as const
-
-type Hue = keyof typeof HUES
-
 function Panel({ props, id }: ComponentProps) {
-  const hue = HUES[(props.tone as Hue) in HUES ? (props.tone as Hue) : 'neutral']
+  const hue = TONES[toneOf(props.tone)]
   const title = typeof props.title === 'string' ? props.title : undefined
   const icon = typeof props.icon === 'string' ? props.icon : undefined
   const row = props.direction === 'row'
@@ -29,7 +17,7 @@ function Panel({ props, id }: ComponentProps) {
     <div data-ui-id={id} className={`flex min-w-0 flex-col gap-2.5 rounded-xl border p-3 ${hue.box} ${props.dashed === true ? 'border-dashed' : ''}`}>
       {(title || icon) && (
         <div className="flex items-center gap-2 text-[14px] font-semibold text-app-text">
-          <RichIcon name={icon} size={20} className={hue.icon} />
+          <RichIcon name={icon} size={20} className={hue.accent} />
           {title}
         </div>
       )}
@@ -43,12 +31,14 @@ function Panel({ props, id }: ComponentProps) {
 function Item({ props, id }: ComponentProps) {
   const boxed = props.boxed === true
   const icon = typeof props.icon === 'string' ? props.icon : undefined
+  const tone = toneOrNull(props.tone)
+  const style = tone ? TONES[tone] : null
   return (
     <div
       data-ui-id={id}
-      className={boxed ? 'flex items-start gap-2.5 rounded-lg border border-app-border-subtle bg-app-surface px-3 py-2.5' : 'flex items-start gap-2'}
+      className={boxed ? `flex items-start gap-2.5 rounded-lg border px-3 py-2.5 ${style ? style.box : 'border-app-border-subtle bg-app-surface'}` : 'flex items-start gap-2'}
     >
-      <RichIcon name={icon} size={boxed ? 22 : 16} className="mt-px text-app-text-secondary" />
+      <RichIcon name={icon} size={boxed ? 22 : 16} className={`mt-px ${style && tone !== 'neutral' ? style.accent : 'text-app-text-secondary'}`} />
       <div className="min-w-0">
         <div className="text-[13px] font-medium leading-snug text-app-text">{String(props.label)}</div>
         {typeof props.caption === 'string' && <div className="mt-0.5 text-[11.5px] leading-snug text-app-text-muted">{props.caption}</div>}

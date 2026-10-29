@@ -99,6 +99,9 @@ function materialize(value: Value, type: ArgType, ctx: Context): Outcome<unknown
     case 'cell':
       if (value.k === 'str' || value.k === 'num') return value.v
       return materialize(value, { t: 'node', of: CELL_COMPONENTS }, ctx)
+    case 'row':
+      if (value.k === 'arr') return materializeList(value, { t: 'cell' }, ctx)
+      return materialize(value, { t: 'node', of: ['Row'] }, ctx)
     case 'action':
       return materializeAction(value, ctx)
     case 'node':

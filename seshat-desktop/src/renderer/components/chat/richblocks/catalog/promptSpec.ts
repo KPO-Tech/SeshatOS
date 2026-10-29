@@ -1,7 +1,8 @@
 import type { ArgType, ComponentSpec } from './types'
 import { brandIconNames, genericIconNames } from '../view/icons/iconCatalog'
+import { TONE_NAMES } from './tones'
 import { PROMPT_EXAMPLES } from './examples'
-import { COMPONENT_SPECS, SPEC_BY_NAME } from './specs'
+import { CELL_COMPONENTS, COMPONENT_SPECS, SPEC_BY_NAME } from './specs'
 
 export interface PromptComponent {
   name: string
@@ -15,6 +16,8 @@ export interface PromptSpec {
   components: PromptComponent[]
   /** What an icon argument may be: names of generic icons, and slugs of technology logos (written si:slug). */
   icons: { names: string[]; brands: string[] }
+  /** The values of every argument written tone. */
+  tones: string[]
   examples: string[]
 }
 
@@ -24,10 +27,11 @@ function typeLabel(type: ArgType): string {
     case 'number': return 'number'
     case 'boolean': return 'true|false'
     case 'scalar': return 'text|number'
-    case 'enum': return type.values.join('|')
+    case 'enum': return type.values.length === TONE_NAMES.length && TONE_NAMES.every((name, i) => type.values[i] === name) ? 'tone' : type.values.join('|')
     case 'node': return type.of ? type.of.join('|') : 'Component'
     case 'list': return `[${typeLabel(type.item)}]`
-    case 'cell': return 'text|number|Badge|FileRef|Link'
+    case 'cell': return 'text|number|Badge|Item|Cell'
+    case 'row': return '[cell]|Row'
     case 'action': return '@Ask("text")|@OpenFile(path)|@OpenUrl(url)'
     case 'target': return 'name'
     case 'icon': return 'icon'
@@ -42,7 +46,8 @@ function signature(spec: ComponentSpec): string {
 function collectNames(type: ArgType, into: Set<string>): void {
   if (type.t === 'node' && type.of) type.of.forEach((name) => into.add(name))
   if (type.t === 'list') collectNames(type.item, into)
-  if (type.t === 'cell') ['Badge', 'FileRef', 'Link'].forEach((name) => into.add(name))
+  if (type.t === 'cell') CELL_COMPONENTS.forEach((name) => into.add(name))
+  if (type.t === 'row') into.add('Row')
 }
 
 /** The components the model is told about: the ones the app draws, and the pieces those take as arguments. */
@@ -65,6 +70,7 @@ export function buildPromptSpec(drawn: readonly string[]): PromptSpec {
       description: spec.description
     })),
     icons: { names: genericIconNames(), brands: brandIconNames() },
+    tones: [...TONE_NAMES],
     examples: PROMPT_EXAMPLES
   }
 }

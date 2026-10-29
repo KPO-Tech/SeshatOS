@@ -225,3 +225,23 @@ answer in Markdown. A component that fails on this set is changed or removed, no
 5. Charts.
 6. `Diagram` with auto layout.
 7. The rest of the catalog, then the `Widget` record.
+
+## Update: tones and complex tables (2026-10-29)
+
+Components can take a colour to mark a concept, and a table can be complex. All of it is append-only on the argument lists
+above.
+
+- **Tones.** One list for every `tone` argument: neutral, info, success, warning, danger (what a thing means) and blue,
+  violet, green, orange, red, teal, yellow (plain hues). It is written once in the prompt, not in each signature. `tone` is now
+  also taken by `Heading`, `Metric`, `Item` and `Col`; `Card`, `Callout`, `Badge`, `TimelineItem` and `Panel` take the whole
+  list.
+- **Table.** `Table(columns, rows, caption?, sortable?, striped?, compact?)`. A row is a list of cells or a `Row`. A column is a
+  `Col` or a `ColGroup(label, columns, tone?)`, which puts a heading over several columns (two heading rows).
+- **Row(cells, tone?, kind?)**: `kind` is normal, section (one cell across the whole table, as a title), total (bold, ruled
+  above) or header (a repeated heading).
+- **Cell(content, tone?, bold?, colspan?, rowspan?, align?)** colours, weights, aligns or merges one cell. Cells are placed the
+  way an HTML table places them: a `rowspan` takes its column in the rows below, so those rows leave it out, and a `colspan`
+  is cut at the last column.
+- **Sorting** is off for a table with merged cells, grouped columns or special rows.
+- A table cell may be a text, a number, a `Badge`, an `Item` or a `Cell`. `FileRef` and `Link` join when the app draws them:
+  before this they were taught for cells although nothing drew them.

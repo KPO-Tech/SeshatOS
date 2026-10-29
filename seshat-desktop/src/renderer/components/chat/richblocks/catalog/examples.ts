@@ -28,5 +28,9 @@ sql = Item("SQLite", "si:sqlite", "Transactions", true)
 olap = Item("DuckDB", "si:duckdb", "Analytics", true)
 f1 = Flow("ui", "api", null, true)
 f2 = Flow("docs", "jobs", "ingest")
-f3 = Flow("api", "sql")`
+f3 = Flow("api", "sql")`,
+  `root = Table([Col("Tool"), install, writes], rows, "Three engines compared", false, true)
+install = ColGroup("Install", [Col("Size (MB)", "number"), Col("Setup")])
+writes = ColGroup("Writes", [Col("Concurrent"), Col("Mode")], "violet")
+rows = [Row(["Embedded"], "blue", "section"), ["SQLite", 1, "None", Cell("one writer", "warning"), "WAL"], ["DuckDB", 30, "None", Cell("one writer", "warning"), "Columnar"], Row(["Server"], "blue", "section"), ["PostgreSQL", 300, "Installer", Cell("many writers", "success", true), "MVCC"], Row(["Smallest", "SQLite"], null, "total")]`
 ]

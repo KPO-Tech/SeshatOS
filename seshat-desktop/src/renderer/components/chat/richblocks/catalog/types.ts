@@ -7,6 +7,8 @@ export type ArgType =
   | { t: 'node'; of?: readonly string[] }
   | { t: 'list'; item: ArgType }
   | { t: 'cell' }
+  /** One row of a table: a list of cells, or a Row. */
+  | { t: 'row' }
   | { t: 'action' }
   /** The name of a statement, written in quotes or bare. It is not followed: it points at the element that statement made. */
   | { t: 'target' }
