@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Expandable, useExpanded } from '../expand/Expandable'
+import { Expandable } from '../expand/Expandable'
 import { useElementWidth } from './useElementWidth'
 
 export type LegendItem = { label: string; accent: string; dashed?: boolean; swatch?: 'line' | 'box' | 'dot' }
@@ -26,8 +26,7 @@ function Swatch({ item }: { item: LegendItem }) {
 
 function ChartFigure({ title, legend, ratio = 0.5, minHeight = 220, maxHeight = 400, children }: Props) {
   const [ref, width] = useElementWidth<HTMLDivElement>()
-  const expanded = useExpanded()
-  const height = Math.round(Math.min(expanded ? maxHeight * 1.6 : maxHeight, Math.max(minHeight, width * ratio)))
+  const height = Math.round(Math.min(maxHeight, Math.max(minHeight, width * ratio)))
   return (
     <figure className="m-0 my-3 rounded-lg border border-app-border-subtle bg-app-surface p-3">
       {title && <figcaption className="mb-1.5 text-[13px] font-semibold text-app-text">{title}</figcaption>}
@@ -49,10 +48,10 @@ function ChartFigure({ title, legend, ratio = 0.5, minHeight = 220, maxHeight = 
   )
 }
 
-/** The frame of a chart: a title, a legend, and a drawing area that is told its width and gives back an SVG of that size. It can be opened large and saved as an image. */
+/** The frame of a chart: a title, a legend, and a drawing area that is told its width and gives back an SVG of that size. It can be saved as an image. */
 export function ChartShell(props: Props) {
   return (
-    <Expandable label={props.title ?? 'Chart'} force>
+    <Expandable label={props.title ?? 'Chart'} mode="download">
       <ChartFigure {...props} />
     </Expandable>
   )

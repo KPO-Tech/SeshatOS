@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { downloadPng, downloadSvg } from './exportFigure'
+import { DownloadMenu } from './DownloadMenu'
 
 const ExpandedContext = createContext(false)
 
@@ -10,6 +10,11 @@ export const useExpanded = () => useContext(ExpandedContext)
 type Props = {
   label: string
   children: ReactNode
+  /**
+   * What the corner button does. "expand" opens the content in a large view, offered when it is too big for the column (or forced);
+   * "download" is for a figure that is fine as it is: the button saves it as an image, and there is no large view.
+   */
+  mode?: 'expand' | 'download'
   /** Offer the button even when nothing overflows, for a component that is long rather than wide. */
   force?: boolean
   /** Offer the button when the content is taller than this many pixels. */
@@ -20,23 +25,13 @@ type Props = {
   className?: string
 }
 
+const CORNER_BUTTON =
+  'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-solid border-app-border-subtle bg-[var(--surface-panel)] text-app-text-secondary opacity-70 shadow-sm transition-opacity hover:bg-[var(--surface-hover)] hover:text-app-text group-hover/expand:opacity-100 focus-visible:opacity-100'
+
 function ExpandIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9" />
-    </svg>
-  )
-}
-
-const FORMATS = [
-  { id: 'png', name: 'PNG image', note: 'Twice the size, sharp' },
-  { id: 'svg', name: 'SVG image', note: 'Scales without loss' }
-] as const
-
-function DownloadIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M8 2v8M4.5 6.75 8 10.25l3.5-3.5M2.5 13.5h11" />
     </svg>
   )
 }
@@ -52,34 +47,19 @@ function CloseIcon() {
 function LargeView({ label, onClose, className, children }: { label: string; onClose: () => void; className?: string; children: ReactNode }) {
   const close = useRef<HTMLButtonElement>(null)
   const figure = useRef<HTMLDivElement>(null)
-  const [failed, setFailed] = useState(false)
-  const [menu, setMenu] = useState(false)
-
-  const save = (format: 'svg' | 'png') => {
-    const element = figure.current
-    if (!element) return
-    setMenu(false)
-    setFailed(false)
-    try {
-      if (format === 'svg') downloadSvg(element, label)
-      else void downloadPng(element, label).catch(() => setFailed(true))
-    } catch {
-      setFailed(true)
-    }
-  }
 
   useEffect(() => close.current?.focus(), [])
 
+  // While the download menu is open, Esc belongs to it.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
+      if (event.key !== 'Escape' || document.querySelector('[role="menu"]')) return
       event.stopPropagation()
-      if (menu) setMenu(false)
-      else onClose()
+      onClose()
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [onClose, menu])
+  }, [onClose])
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-6" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -87,39 +67,11 @@ function LargeView({ label, onClose, className, children }: { label: string; onC
         <div className="flex shrink-0 items-center justify-between gap-3 border-0 border-b border-solid border-app-border-subtle px-4 py-2.5">
           <div className="truncate text-[13px] font-semibold text-app-text">{label}</div>
           <div className="flex shrink-0 items-center gap-1">
-            {failed && <span className="mr-1 text-xs text-app-error">Could not save the image</span>}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMenu((open) => !open)}
-                title="Download"
-                aria-label="Download"
-                aria-haspopup="menu"
-                aria-expanded={menu}
-                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
-              >
-                <DownloadIcon />
-              </button>
-              {menu && (
-                <>
-                  <div className="fixed inset-0 z-10" onMouseDown={() => setMenu(false)} />
-                  <div role="menu" className="absolute right-0 top-9 z-20 w-44 rounded-lg border border-app-border bg-app-surface-elevated p-1 shadow-[var(--shadow-medium)]">
-                    {FORMATS.map((format) => (
-                      <button
-                        key={format.id}
-                        type="button"
-                        role="menuitem"
-                        onClick={() => save(format.id)}
-                        className="flex w-full cursor-pointer flex-col items-start gap-0.5 rounded-md border-0 bg-transparent px-2.5 py-1.5 text-left hover:bg-[var(--surface-hover)]"
-                      >
-                        <span className="text-[13px] font-medium text-app-text">{format.name}</span>
-                        <span className="text-[11px] text-app-text-muted">{format.note}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+            <DownloadMenu
+              label={label}
+              target={() => figure.current}
+              buttonClassName="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
+            />
             <button ref={close} type="button" onClick={onClose} aria-label="Close" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text">
               <CloseIcon />
             </button>
@@ -138,8 +90,8 @@ function LargeView({ label, onClose, className, children }: { label: string; onC
   )
 }
 
-/** Shows the content in the answer and, when it is too big for the column, a button that opens it in a large view. */
-export function Expandable({ label, children, force = false, maxHeight, scrollX = false, className = '' }: Props) {
+/** Shows the content in the answer, with a corner button that opens it in a large view or saves it as an image. */
+export function Expandable({ label, children, mode = 'expand', force = false, maxHeight, scrollX = false, className = '' }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const [tooBig, setTooBig] = useState(false)
   const [open, setOpen] = useState(false)
@@ -147,7 +99,7 @@ export function Expandable({ label, children, force = false, maxHeight, scrollX 
 
   useLayoutEffect(() => {
     const element = box.current
-    if (!element || inside) return
+    if (!element || inside || mode === 'download') return
     const measure = () => {
       const wide = element.scrollWidth > element.clientWidth + 1
       const tall = maxHeight !== undefined && element.scrollHeight > maxHeight
@@ -158,24 +110,23 @@ export function Expandable({ label, children, force = false, maxHeight, scrollX 
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [inside, maxHeight, children])
+  }, [inside, mode, maxHeight, children])
 
   if (inside) return <>{children}</>
-  const offer = force || tooBig
+  const offer = mode === 'download' || force || tooBig
 
   return (
     <div className={`group/expand relative ${className}`}>
       <div ref={box} className={scrollX ? 'overflow-x-auto' : undefined}>
         {children}
       </div>
-      {offer && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          title="Open in a large view"
-          aria-label={`Open ${label} in a large view`}
-          className="absolute right-2 top-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-solid border-app-border-subtle bg-[var(--surface-panel)] text-app-text-secondary opacity-70 shadow-sm transition-opacity hover:bg-[var(--surface-hover)] hover:text-app-text group-hover/expand:opacity-100 focus-visible:opacity-100"
-        >
+      {offer && mode === 'download' && (
+        <div className="absolute right-2 top-2">
+          <DownloadMenu label={label} target={() => (box.current?.firstElementChild as HTMLElement | null) ?? box.current} buttonClassName={CORNER_BUTTON} />
+        </div>
+      )}
+      {offer && mode === 'expand' && (
+        <button type="button" onClick={() => setOpen(true)} title="Open in a large view" aria-label={`Open ${label} in a large view`} className={`absolute right-2 top-2 ${CORNER_BUTTON}`}>
           <ExpandIcon />
         </button>
       )}
