@@ -94,6 +94,13 @@
 
 /* Third-party document viewers generate their own nested DOM, so these
    scoped overrides stay in CSS instead of Tailwind component classes. */
+
+/* The text a citation points at, marked in the text layer of a page (see lib/pdfPassageHighlight.ts). */
+.pdf-viewer-container .textLayer .passage-highlight {
+  background-color: rgba(255, 196, 0, 0.38);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 196, 0, 0.5);
+}
 .pdf-viewer-container .pdfViewer .page {
   margin: 10px;
   border: none;

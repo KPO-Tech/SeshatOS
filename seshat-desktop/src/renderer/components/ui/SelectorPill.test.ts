@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterSelectorOptions, type SelectorOption } from './SelectorPill'
+import { filterSelectorOptions, groupSelectorOptions, type SelectorOption } from './SelectorPill'
 
 const options: SelectorOption[] = [
   { id: '1', label: 'GLM 5.1', description: 'Z.AI' },
@@ -19,5 +19,26 @@ describe('filterSelectorOptions', () => {
 
   it('returns nothing when no option matches', () => {
     expect(filterSelectorOptions(options, 'zzz')).toEqual([])
+  })
+})
+
+describe('groupSelectorOptions', () => {
+  const models: SelectorOption[] = [
+    { id: 'a', label: 'glm-5.1', group: 'zai', groupLabel: 'Z.ai' },
+    { id: 'b', label: 'claude', group: 'or', groupLabel: 'OpenRouter' },
+    { id: 'c', label: 'glm-5', group: 'zai', groupLabel: 'Z.ai' },
+    { id: 'd', label: 'loose' }
+  ]
+
+  it('groups the options in the order the groups first appear, and leaves out an option with no group', () => {
+    const groups = groupSelectorOptions(models)
+    expect(groups.map((group) => [group.id, group.label, group.options.map((option) => option.id)])).toEqual([
+      ['zai', 'Z.ai', ['a', 'c']],
+      ['or', 'OpenRouter', ['b']]
+    ])
+  })
+
+  it('names a group by its id when it has no label', () => {
+    expect(groupSelectorOptions([{ id: 'x', label: 'x', group: 'local' }])[0].label).toBe('local')
   })
 })
