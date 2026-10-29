@@ -50,7 +50,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Web search and web fetch open inline in the chat**, under their row, instead of in the session panel. The card is the same (the selected results, the fetched page) and the row opens and closes with a click; it stays closed while the tool runs and opens when the tool failed.
 - **The session cards (Environment, Context, Activity) sit beside the chat** instead of in a framed panel: no border, no shadow, no handle to resize them, the background of the chat, and a fixed narrow width. A panel with a document, a file or a terminal keeps its frame.
 - **seshat-runtime v1.12.4.** It fixes GO-2026-6866 and GO-2026-6860 in `golang.org/x/net`, which are reached when web pages or HTML documents are read, and moves `x/crypto`, `x/sys`, `x/sync` and `x/text` with it.
-- **Tables and drawings in an answer go a little beyond the text column** (up to 180 px each side, less when a panel is open beside the chat), so they have room while the text keeps its reading width. A note or a list of steps stays at the width of the text.
+- **The conversation is wider, and the messages and the composer have exactly the same width.** The default width goes from 768 to 1100 px (Narrow 820, Wide 1280), so tables and drawings have room, and the composer lines up with the answers. It is still capped, so a large window is not filled.
 
 ### Fixed
 

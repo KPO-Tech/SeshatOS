@@ -24,7 +24,7 @@ describe('appearanceVars', () => {
       '--chat-font-size': '14px',
       '--message-gap': '36px',
       '--list-item-pad-y': '6px',
-      '--chat-max-width': '768px'
+      '--chat-max-width': '1100px'
     })
   })
 
