@@ -102,6 +102,8 @@ export function useKnowledgeConversation() {
     modelLoading,
     configured,
     hasConversation: sessionId !== null,
+    sessionId,
+    sendMessage,
     models: { choices: models.allModelChoices, selectedId: models.selectedModelChoiceId, select: models.handleModelSelect, loading: modelLoading }
   }
 }
