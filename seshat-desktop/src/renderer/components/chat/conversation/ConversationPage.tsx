@@ -19,6 +19,7 @@ import { MessageList } from '../messages/MessageList'
 import { useToast, ToastStack } from '@renderer/components/ui/Toast'
 import { useChat } from '@renderer/hooks/useChat'
 import { RichActionProvider } from '../richblocks/view/actions/richActions'
+import { filePlace } from '../richblocks/view/actions/filePlace'
 import './ConversationPage.css'
 
 export function ConversationPage() {
@@ -111,6 +112,14 @@ export function ConversationPage() {
   })
 
   const askFromAnswer = useCallback((text: string) => void sendMessage(text), [sendMessage])
+  const openFromAnswer = useCallback(
+    (path: string) => {
+      const place = filePlace(path, session?.projectPath)
+      if (place.where === 'system') void window.seshat?.openPath?.(place.path)
+      else openRightPanel({ kind: 'files', title: 'Files', sessionId: id, focusPath: place.path })
+    },
+    [session?.projectPath, openRightPanel, id],
+  )
 
   const { loading: sessionLoading } = useConversationSessionLoad({
     sessionId: id,
@@ -166,7 +175,7 @@ export function ConversationPage() {
   }
 
   return (
-    <RichActionProvider ask={askFromAnswer} busy={isStreaming}>
+    <RichActionProvider ask={askFromAnswer} openFile={openFromAnswer} busy={isStreaming}>
     <div className="conv-root">
       <ToastStack toasts={toasts} />
 

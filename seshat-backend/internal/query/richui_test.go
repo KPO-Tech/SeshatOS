@@ -136,3 +136,46 @@ func TestBuildContextInput_RichAnswersAreOnWithoutPreferences(t *testing.T) {
 		t.Fatal("the feature is on by default")
 	}
 }
+
+func richUIMessage(role types.Role, text string) types.Message {
+	return types.Message{Role: role, Content: []types.ContentBlock{types.TextContent{Text: text}}}
+}
+
+func TestRichUIFamiliesInHistory(t *testing.T) {
+	plot := richUIMessage(types.RoleAssistant, "Here it is.\n```seshat-ui\nroot = Plot([c], -3, 3)\nc = Curve(\"x^3\")\n```")
+	drawing := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Architecture([p], [])\np = Panel([], \"Core\")\n```")
+	table := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Table([Col(\"A\")], [[\"1\"]])\n```")
+	asked := richUIMessage(types.RoleUser, "```seshat-ui\nroot = Plot([], 0, 1)\n```")
+
+	if got := richUIFamiliesInHistory([]types.Message{plot}); got != (richUIFamilies{charts: true}) {
+		t.Errorf("a plot brings the charts family back, got %+v", got)
+	}
+	if got := richUIFamiliesInHistory([]types.Message{drawing, table}); got != (richUIFamilies{architecture: true}) {
+		t.Errorf("a drawing brings the architecture family back, got %+v", got)
+	}
+	if got := richUIFamiliesInHistory([]types.Message{table}); got != (richUIFamilies{}) {
+		t.Errorf("a table needs no family, got %+v", got)
+	}
+	if got := richUIFamiliesInHistory([]types.Message{asked}); got != (richUIFamilies{}) {
+		t.Errorf("only what the assistant drew counts, got %+v", got)
+	}
+	if got := richUIFamiliesInHistory([]types.Message{plot, drawing}); got != richUIAllFamilies {
+		t.Errorf("both families are found, got %+v", got)
+	}
+
+	old := []types.Message{plot}
+	for i := 0; i < richUIHistoryWindow; i++ {
+		old = append(old, richUIMessage(types.RoleUser, "and the next one?"))
+	}
+	if got := richUIFamiliesInHistory(old); got != (richUIFamilies{}) {
+		t.Errorf("a plot older than the window is forgotten, got %+v", got)
+	}
+}
+
+func TestRichUIFamiliesInText(t *testing.T) {
+	// Words in a Markdown explanation are not a call: only a seshat-ui block counts.
+	prose := richUIMessage(types.RoleAssistant, "The Plot( function is described above, and an Architecture( too.")
+	if got := richUIFamiliesInHistory([]types.Message{prose}); got != (richUIFamilies{}) {
+		t.Errorf("prose is not a block, got %+v", got)
+	}
+}

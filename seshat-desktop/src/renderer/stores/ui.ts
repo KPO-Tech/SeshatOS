@@ -43,6 +43,8 @@ type RightPanelFields = {
   // when a tool row is clicked from the chat transcript instead of
   // expanding inline (see ToolLineItem.tsx).
   focusToolId?: string
+  // A file the Files panel should open as a tab, set when an answer points at one (a FileRef).
+  focusPath?: string
 }
 
 // `width` is not a per-panel property - it belongs to the column a panel

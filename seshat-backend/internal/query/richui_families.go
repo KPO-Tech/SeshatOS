@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 // Two parts of the catalog cost a lot and apply to few requests: the drawings of an architecture (with the icon lists they need) and
@@ -176,4 +178,70 @@ func usesAny(example string, names []string) bool {
 		}
 	}
 	return false
+}
+
+// How many of the latest messages of a session are read for the families they already used.
+const richUIHistoryWindow = 12
+
+func (f richUIFamilies) union(other richUIFamilies) richUIFamilies {
+	return richUIFamilies{architecture: f.architecture || other.architecture, charts: f.charts || other.charts}
+}
+
+var (
+	richUIUsesOnce         sync.Once
+	richUIUsesArchitecture *regexp.Regexp
+	richUIUsesCharts       *regexp.Regexp
+)
+
+// richUIUsesOf matches a call of any component of the two families, whatever the words of the request were.
+func richUIUsesOf() (architecture, charts *regexp.Regexp) {
+	richUIUsesOnce.Do(func() {
+		catalog := richUICatalogLoaded()
+		if catalog == nil {
+			return
+		}
+		var archNames, chartNames []string
+		for _, c := range catalog.Components {
+			switch c.Group {
+			case richUIArchitectureGroup:
+				archNames = append(archNames, regexp.QuoteMeta(c.Name))
+			case richUIChartsGroup:
+				chartNames = append(chartNames, regexp.QuoteMeta(c.Name))
+			}
+		}
+		compile := func(names []string) *regexp.Regexp {
+			if len(names) == 0 {
+				return nil
+			}
+			return regexp.MustCompile(`(?:^|[^A-Za-z])(?:` + strings.Join(names, "|") + `)\(`)
+		}
+		richUIUsesArchitecture, richUIUsesCharts = compile(archNames), compile(chartNames)
+	})
+	return richUIUsesArchitecture, richUIUsesCharts
+}
+
+// richUIFamiliesInHistory returns the families that the latest answers of a session already drew. A follow-up that names nothing
+// ("and for x squared?", "now the second one") is about what was just shown, so the model keeps what it needs to continue it.
+func richUIFamiliesInHistory(messages []types.Message) richUIFamilies {
+	arch, charts := richUIUsesOf()
+	var found richUIFamilies
+	read := 0
+	for i := len(messages) - 1; i >= 0 && read < richUIHistoryWindow; i-- {
+		read++
+		if messages[i].Role != types.RoleAssistant {
+			continue
+		}
+		for _, block := range messages[i].Content {
+			text, ok := block.(types.TextContent)
+			if !ok || !strings.Contains(text.Text, richUIFence+"seshat-ui") {
+				continue
+			}
+			found.architecture = found.architecture || (arch != nil && arch.MatchString(text.Text))
+			found.charts = found.charts || (charts != nil && charts.MatchString(text.Text))
+		}
+		if found == richUIAllFamilies {
+			break
+		}
+	}
+	return found
 }

@@ -25,13 +25,12 @@ about 2 290 words with the charts, the plots and the interactions. Most turns ne
 
 ## Consequences
 
-- A turn that names nothing falls back to the core, so a follow-up such as "and for x^2?" after a plot has its family only if the
-  new message carries a word or a formula. The prompt only sees the latest message; reading the session for earlier blocks would
-  fix it and is not done.
+- Since 2026-10-29 the session is read too: the families that the last 12 messages' answers drew (a call of a component of the
+  family inside a seshat-ui block) are kept, so a follow-up that names nothing ("and the next one?") continues with what it needs.
+  A turn that names nothing, after answers that drew nothing of the families, still gets the core.
 - A word list is a heuristic and will miss some requests. It errs towards loading (the cost of a false hit is some tokens, that of a
   miss is a Markdown table where a chart was wanted).
 
 ## Not decided here
 
 - A tool the model calls to read a family's details when it decides to draw, which would not depend on words.
-- Teaching families from the earlier blocks of the session.
