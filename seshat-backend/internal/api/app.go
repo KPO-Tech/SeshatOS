@@ -48,11 +48,11 @@ type App struct {
 	nativeDocDownload    *nativeDocDownloadState
 	rerankerStore        *db.RerankerConfigStore
 	// applyEmbedder puts the embedding model that was just saved in use, so that no restart is needed.
-	applyEmbedder func(ctx context.Context) error
-	localSTTStore        *db.LocalSTTConfigStore
-	localTitleStore      *db.LocalTitleConfigStore
-	sandboxConfigStore   *db.SandboxConfigStore
-	storageConfigStore   *db.StorageConfigStore
+	applyEmbedder      func(ctx context.Context) error
+	localSTTStore      *db.LocalSTTConfigStore
+	localTitleStore    *db.LocalTitleConfigStore
+	sandboxConfigStore *db.SandboxConfigStore
+	storageConfigStore *db.StorageConfigStore
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
 	longTermExtractor     *longterm.Extractor

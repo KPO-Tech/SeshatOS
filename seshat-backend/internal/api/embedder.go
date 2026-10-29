@@ -39,13 +39,13 @@ func embedderConfigToResponse(cfg *db.EmbedderConfig) embedderConfigResponse {
 		updatedAt = cfg.UpdatedAt.Unix()
 	}
 	return embedderConfigResponse{
-		Provider:     cfg.Provider,
-		BaseURL:      cfg.BaseURL,
-		Model:        cfg.Model,
-		HasAPIKey:    cfg.HasAPIKey,
-		Enabled:      cfg.Enabled,
-		IsConfigured: isConfigured,
-		UpdatedAt:    updatedAt,
+		Provider:       cfg.Provider,
+		BaseURL:        cfg.BaseURL,
+		Model:          cfg.Model,
+		HasAPIKey:      cfg.HasAPIKey,
+		Enabled:        cfg.Enabled,
+		IsConfigured:   isConfigured,
+		UpdatedAt:      updatedAt,
 		VectorsStale:   cfg.VectorsModel != "" && cfg.VectorsModel != cfg.Key(),
 		VectorsUnknown: isConfigured && cfg.VectorsModel == "",
 	}
