@@ -29,7 +29,12 @@ const richUIFence = "```"
 
 const richUIIntro = `## Rich answers
 
-Besides Markdown, the desktop app can draw structured components from a fenced block whose language is seshat-ui. Use one only when it clearly beats plain Markdown: a comparison, a set of figures, a status, a procedure. Keep explanations, reasoning and caveats as normal prose outside the block. At most three blocks per answer, and never a block for a short answer.
+Besides Markdown, the desktop app draws structured components from a fenced block whose language is seshat-ui. Use them for these shapes of content:
+- a comparison of several items on several criteria: a Table, never a Markdown table;
+- a procedure of three steps or more: Steps;
+- key figures: Metric items inside a MetricRow;
+- a warning, a caveat or a status the reader must not miss: Callout.
+Everything else stays normal Markdown outside the block: explanations, reasoning, code and commands, short lists. A short answer needs no block. At most three blocks per answer.
 
 Format: one statement per line, name = Component(arguments). Arguments are positional, in the order listed; a name ending in ? is optional, and null skips an optional argument in the middle. Strings use double quotes, lists use [a, b], and a name can be used before it is defined. Write the line root = ... first, then the parts it uses, with the data last. Use only the components and arguments below, never invent one.`
 
