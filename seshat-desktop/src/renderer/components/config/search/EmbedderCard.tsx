@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { ProviderSetting } from '@renderer/api/types'
+import { ProviderKeyField } from './ProviderKeyField'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from '@renderer/components/config/knowledge/knowledgeApi'
@@ -8,6 +10,7 @@ const BASE_URLS: Record<string, string> = {
   openai: 'https://api.openai.com/v1',
   mistral: 'https://api.mistral.ai/v1',
   gemini: 'https://generativelanguage.googleapis.com/v1beta/openai',
+  openrouter: 'https://openrouter.ai/api/v1',
   ollama: 'http://localhost:11434',
   tei: 'http://localhost:8082/v1'
 }
@@ -16,11 +19,18 @@ const MODEL_HINTS: Record<string, string[]> = {
   openai: ['text-embedding-3-small', 'text-embedding-3-large'],
   mistral: ['mistral-embed'],
   gemini: ['gemini-embedding-001'],
+  openrouter: ['openai/text-embedding-3-small', 'qwen/qwen3-embedding-8b', 'baai/bge-m3'],
   ollama: [],
   tei: []
 }
 
-export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | null; onSaved: (config: EmbedderConfig) => void }) {
+// The kinds of provider of Config > Providers whose key an embedding provider of this card can take.
+const PROVIDER_KINDS: Record<string, string[]> = { openai: ['openai'], mistral: ['mistral'], gemini: ['gemini', 'google'], openrouter: ['openrouter'] }
+
+// What a service is called where the person is told to add its provider.
+const MISSING_NAMES: Record<string, string> = { openai: 'OpenAI', mistral: 'Mistral', gemini: 'Google Gemini', openrouter: 'OpenRouter' }
+
+export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderConfig | null; providers: ProviderSetting[]; onSaved: (config: EmbedderConfig) => void }) {
   const [form, setForm] = useState({
     provider: config?.provider || 'tei',
     base_url: config?.base_url || BASE_URLS.tei,
@@ -35,6 +45,9 @@ export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | nul
   const [latency, setLatency] = useState<number | null>(null)
   const [detectedModels, setDetectedModels] = useState<string[]>([])
   const [detecting, setDetecting] = useState(false)
+  // The provider of Config > Providers whose key this one can use, when the person has it set up.
+  const ownProvider = useMemo(() => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[form.provider] ?? []).includes(item.provider.toLowerCase())) ?? null, [providers, form.provider])
+  const [useOwnKey, setUseOwnKey] = useState(true)
 
   useEffect(() => {
     if (!config) return
@@ -62,15 +75,18 @@ export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | nul
       model: MODEL_HINTS[provider]?.[0] || '',
       api_key: ''
     }))
+    setUseOwnKey(true)
     setDirty(true)
     setTesting('idle')
+    // The list of models of a hosted provider that publishes one is read as soon as it is chosen.
+    if (provider === 'openrouter') void detectModels(provider, BASE_URLS[provider])
   }
 
-  async function detectModels() {
+  async function detectModels(provider: string = form.provider, baseUrl: string = form.base_url) {
     setDetecting(true)
     setTestError(null)
     try {
-      const result = await detectEmbedderModels({ provider: form.provider, base_url: form.base_url })
+      const result = await detectEmbedderModels({ provider, base_url: baseUrl })
       if (result.error) {
         setTesting('error')
         setTestError(result.error)
@@ -96,7 +112,8 @@ export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | nul
         provider: form.provider,
         base_url: form.base_url,
         model: form.model,
-        api_key: form.api_key || undefined
+        api_key: form.api_key || undefined,
+        provider_setting_id: ownProvider && useOwnKey && !form.api_key ? ownProvider.id : undefined
       })
       setTesting(result.ok ? 'ok' : 'error')
       setLatency(result.latency_ms)
@@ -115,7 +132,8 @@ export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | nul
         base_url: form.base_url,
         model: form.model,
         enabled: form.enabled,
-        api_key: form.api_key || undefined
+        api_key: form.api_key || undefined,
+        provider_setting_id: ownProvider && useOwnKey && !form.api_key ? ownProvider.id : undefined
       })
       onSaved(saved)
       setForm((current) => ({ ...current, api_key: '' }))
@@ -128,13 +146,18 @@ export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | nul
     }
   }
 
+  // The vectors of the documents already indexed belong to the model saved: another model cannot read them.
+  const changesModel = Boolean(config?.is_configured && config.model && (form.model !== config.model || form.provider !== config.provider))
   const suggestions = detectedModels.length > 0 ? detectedModels : MODEL_HINTS[form.provider] ?? []
+  const readyProvider = (id: string) => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[id] ?? []).includes(item.provider.toLowerCase()))
+  const ready = (id: string, fallback: string) => (readyProvider(id) ? `Uses your ${readyProvider(id)?.name} provider` : fallback)
   const providerOptions: SelectOption[] = [
     { value: 'tei', label: 'TEI local', description: 'Local embeddings server', icon: <ProviderIcon provider="tei" size={24} /> },
     { value: 'ollama', label: 'Ollama local', description: 'Local Ollama models', icon: <ProviderIcon provider="ollama" size={24} /> },
-    { value: 'openai', label: 'OpenAI', description: 'OpenAI embeddings API', icon: <ProviderIcon provider="openai" size={24} /> },
-    { value: 'mistral', label: 'Mistral', description: 'Mistral embeddings API', icon: <ProviderIcon provider="mistral" size={24} /> },
-    { value: 'gemini', label: 'Google Gemini', description: 'Gemini OpenAI-compatible endpoint', icon: <ProviderIcon provider="gemini" size={24} /> }
+    { value: 'openai', label: 'OpenAI', description: ready('openai', 'OpenAI embeddings API'), icon: <ProviderIcon provider="openai" size={24} /> },
+    { value: 'mistral', label: 'Mistral', description: ready('mistral', 'Mistral embeddings API'), icon: <ProviderIcon provider="mistral" size={24} /> },
+    { value: 'gemini', label: 'Google Gemini', description: ready('gemini', 'Gemini OpenAI-compatible endpoint'), icon: <ProviderIcon provider="gemini" size={24} /> },
+    { value: 'openrouter', label: 'OpenRouter', description: ready('openrouter', 'Dozens of embedding models, one key'), icon: <ProviderIcon provider="openrouter" size={24} /> }
   ]
 
   return (
@@ -161,15 +184,33 @@ export function EmbedderCard({ config, onSaved }: { config: EmbedderConfig | nul
               {suggestions.map((model) => <option key={model} value={model} />)}
             </datalist>
           </Field>
-          <Field label="API key">
-            <TextInput type="password" value={form.api_key} onChange={(event) => update('api_key', event.target.value)} placeholder={config?.has_api_key ? 'Keep current key' : 'Optional local'} autoComplete="new-password" />
-          </Field>
+          <ProviderKeyField
+            ownProvider={ownProvider}
+            missingProviderName={MISSING_NAMES[form.provider]}
+            useOwnKey={useOwnKey}
+            onUseOwnKey={(use) => {
+              setUseOwnKey(use)
+              setDirty(true)
+              setTesting('idle')
+            }}
+            apiKey={form.api_key}
+            onApiKey={(key) => update('api_key', key)}
+            hasStoredKey={Boolean(config?.has_api_key)}
+            emptyPlaceholder="Optional local"
+          />
         </div>
+
+        {changesModel && (
+          <p className="m-0 rounded-md border border-[var(--accent-primary)]/35 bg-[var(--accent-primary)]/10 px-3 py-2 text-[12px] leading-[18px] text-[var(--text-secondary)]">
+            This is not the model the documents were indexed with ({config?.model}). Their vectors stay those of the previous model, so the search by meaning will not find
+            them until they are indexed again, and the words alone still work.
+          </p>
+        )}
 
         <ResultMessage state={testing} error={testError} latency={latency} />
 
         <div className="flex flex-wrap items-center gap-2">
-          {(form.provider === 'tei' || form.provider === 'ollama') && (
+          {(form.provider === 'tei' || form.provider === 'ollama' || form.provider === 'openrouter') && (
             <SoftButton type="button" onClick={() => void detectModels()} disabled={detecting || !form.base_url}>
               {detecting ? 'Detecting...' : 'Detect models'}
             </SoftButton>

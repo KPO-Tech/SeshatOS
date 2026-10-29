@@ -114,9 +114,19 @@ func (a *App) handleEmbedderConfig(w http.ResponseWriter, r *http.Request) {
 			APIKey   *string `json:"api_key"`
 			Model    string  `json:"model"`
 			Enabled  bool    `json:"enabled"`
+			// ProviderSettingID takes the key of one of the person's providers (Config > Providers) instead of a key typed here.
+			ProviderSettingID string `json:"provider_setting_id"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
+		}
+		if body.ProviderSettingID != "" && (body.APIKey == nil || *body.APIKey == "") {
+			key, err := a.providerKeyFor(r.Context(), principal, body.ProviderSettingID)
+			if err != nil {
+				writeBackendError(w, err)
+				return
+			}
+			body.APIKey = &key
 		}
 		cfg, err := store.Upsert(r.Context(), db.UpsertEmbedderConfigParams{
 			Provider: body.Provider,
@@ -217,6 +227,8 @@ func (a *App) handleEmbedderTest(w http.ResponseWriter, r *http.Request, store *
 		BaseURL  string `json:"base_url"`
 		APIKey   string `json:"api_key"`
 		Model    string `json:"model"`
+		// ProviderSettingID tests with the key of one of the person's providers.
+		ProviderSettingID string `json:"provider_setting_id"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
 
@@ -224,6 +236,15 @@ func (a *App) handleEmbedderTest(w http.ResponseWriter, r *http.Request, store *
 	baseURL := strings.TrimSpace(body.BaseURL)
 	model := strings.TrimSpace(body.Model)
 	apiKey := strings.TrimSpace(body.APIKey)
+	if apiKey == "" && body.ProviderSettingID != "" {
+		principal, _ := authPrincipalFromContext(r.Context())
+		key, err := a.providerKeyFor(r.Context(), principal, body.ProviderSettingID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		apiKey = key
+	}
 
 	// Fill from DB if fields not provided in request
 	if baseURL == "" || model == "" {
@@ -325,6 +346,20 @@ func (a *App) handleEmbedderDetectModels(w http.ResponseWriter, r *http.Request,
 			"embedding_models": []string{modelID},
 			"llm_models":       []string{},
 		})
+		return
+	}
+
+	if strings.ToLower(provider) == "openrouter" {
+		models, err := openRouterEmbeddingModels(r.Context())
+		if err != nil || len(models) == 0 {
+			message := "the list of OpenRouter could not be read"
+			if err != nil {
+				message += ": " + err.Error()
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"error": message, "embedding_models": []string{}, "llm_models": []string{}})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"embedding_models": models, "llm_models": []string{}})
 		return
 	}
 
