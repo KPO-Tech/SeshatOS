@@ -11,6 +11,10 @@ describe('hasMarkdown', () => {
     expect(hasMarkdown('line one\nline two')).toBe(true)
   })
 
+  it('sees a citation of Ask, which is a link by the time it reaches a cell', () => {
+    expect(hasMarkdown('EUR 200,000 [•](#cite-k7f3a91)')).toBe(true)
+  })
+
   it('leaves a plain cell alone', () => {
     expect(hasMarkdown('SQLite')).toBe(false)
     expect(hasMarkdown('12 Mo')).toBe(false)

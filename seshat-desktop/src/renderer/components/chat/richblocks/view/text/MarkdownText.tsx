@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useRichLink } from '../links/richLinks'
 
 /** True when a text uses Markdown that a plain paragraph would show as stray symbols. */
 export function hasMarkdown(text: string): boolean {
@@ -12,6 +13,16 @@ function openLink(event: { preventDefault: () => void }, href: string | undefine
   if (!href || !/^https?:\/\//i.test(href)) return
   event.preventDefault()
   void window.seshat?.openExternal?.(href)
+}
+
+function Anchor({ href, children }: { href?: string; children?: ReactNode }) {
+  const custom = useRichLink()?.(href)
+  if (custom) return <>{custom}</>
+  return (
+    <a href={href} onClick={(event) => openLink(event, href)} className="cursor-pointer text-[var(--accent-primary)] underline-offset-2 hover:underline">
+      {children}
+    </a>
+  )
 }
 
 // The text inside a component is small and sits in a box, so the spacing is tight and the first and last blocks touch the edges.
@@ -27,11 +38,7 @@ const components: Components = {
   h3: ({ children }) => <div className="mb-1 mt-2 font-semibold text-app-text first:mt-0">{children}</div>,
   h4: ({ children }) => <div className="mb-1 mt-2 font-semibold text-app-text first:mt-0">{children}</div>,
   blockquote: ({ children }) => <blockquote className="my-1.5 border-0 border-l-2 border-solid border-app-border pl-2.5 text-app-text-secondary">{children}</blockquote>,
-  a: ({ href, children }: { href?: string; children?: ReactNode }) => (
-    <a href={href} onClick={(event) => openLink(event, href)} className="cursor-pointer text-[var(--accent-primary)] underline-offset-2 hover:underline">
-      {children}
-    </a>
-  ),
+  a: Anchor,
   pre: ({ children }) => <pre className="my-2 overflow-x-auto rounded-md border border-solid border-app-border-subtle bg-[var(--surface-muted)] px-3 py-2 font-mono text-[12px] leading-relaxed first:mt-0 last:mb-0">{children}</pre>,
   code: ({ className, children }) =>
     className ? (
