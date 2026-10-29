@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { isNode } from '../../lang/parseUi'
-import { routeFlow, type Point } from '../architecture/routeFlow'
+import { measureFlows, type DrawnFlow } from '../architecture/measureFlows'
 import { RichIcon } from '../icons/RichIcon'
 import { TONES, toneOf, toneOrNull } from '../tones'
 import type { ComponentProps } from '../NodeView'
@@ -14,9 +14,9 @@ function Panel({ props, id }: ComponentProps) {
   const row = props.direction === 'row'
   const holdsPanels = Array.isArray(props.children) && props.children.some((child) => isNode(child) && child.name === 'Panel')
   return (
-    <div data-ui-id={id} className={`flex min-w-0 flex-col gap-2.5 rounded-xl border p-3 ${hue.box} ${props.dashed === true ? 'border-dashed' : ''}`}>
+    <div data-ui-id={id} data-ui-panel className={`flex min-w-0 flex-col gap-2.5 rounded-xl border p-3 ${hue.box} ${props.dashed === true ? 'border-dashed' : ''}`}>
       {(title || icon) && (
-        <div className="flex items-center gap-2 text-[14px] font-semibold text-app-text">
+        <div data-ui-header className="flex w-fit max-w-full items-center gap-2 text-[14px] font-semibold text-app-text">
           <RichIcon name={icon} size={20} className={hue.accent} />
           {title}
         </div>
@@ -36,6 +36,7 @@ function Item({ props, id }: ComponentProps) {
   return (
     <div
       data-ui-id={id}
+      data-ui-item
       className={boxed ? `flex items-start gap-2.5 rounded-lg border px-3 py-2.5 ${style ? style.box : 'border-app-border-subtle bg-app-surface'}` : 'flex items-start gap-2'}
     >
       <RichIcon name={icon} size={boxed ? 22 : 16} className={`mt-px ${style && tone !== 'neutral' ? style.accent : 'text-app-text-secondary'}`} />
@@ -46,8 +47,6 @@ function Item({ props, id }: ComponentProps) {
     </div>
   )
 }
-
-type DrawnFlow = { key: string; d: string; label?: string; at: Point; both: boolean; dashed: boolean }
 
 function Architecture({ props }: ComponentProps) {
   const frame = useRef<HTMLDivElement>(null)
@@ -60,27 +59,7 @@ function Architecture({ props }: ComponentProps) {
     const root = frame.current
     if (!root) return
     const origin = root.getBoundingClientRect()
-    const rectOf = (id: string) => {
-      const el = root.querySelector(`[data-ui-id="${CSS.escape(id)}"]`)
-      if (!el) return null
-      const r = el.getBoundingClientRect()
-      return { x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: r.height }
-    }
-    const next: DrawnFlow[] = []
-    flows.forEach((flow, index) => {
-      const from = rectOf(String(flow.props.from))
-      const to = rectOf(String(flow.props.to))
-      const route = from && to ? routeFlow(from, to) : null
-      if (!route) return
-      next.push({
-        key: `${index}-${flow.props.from}-${flow.props.to}`,
-        d: route.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' '),
-        label: typeof flow.props.label === 'string' ? flow.props.label : undefined,
-        at: route.label,
-        both: flow.props.both === true,
-        dashed: flow.props.style === 'dashed'
-      })
-    })
+    const next = measureFlows(root, flows)
     setDrawn((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next))
     setSize((current) => (current.w === origin.width && current.h === origin.height ? current : { w: origin.width, h: origin.height }))
   }, [flows])
@@ -127,7 +106,7 @@ function Architecture({ props }: ComponentProps) {
                 <span
                   key={`${flow.key}-label`}
                   style={{ left: flow.at.x, top: flow.at.y }}
-                  className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded bg-[var(--surface-root)] px-1.5 py-px text-[11px] text-app-text-secondary"
+                  className="pointer-events-none absolute max-w-[150px] -translate-x-1/2 -translate-y-1/2 rounded bg-[var(--surface-root)] px-1.5 py-px text-center text-[11px] leading-[14px] text-app-text-secondary"
                 >
                   {flow.label}
                 </span>

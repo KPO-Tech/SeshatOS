@@ -52,6 +52,22 @@ only chooses the structure, the colours, the icons and which blocks are linked.
 - `Diagram` (graph with automatic layout), sequence and ER diagrams: complementary, for later.
 - Whether `Flow` may also link a Panel to a box in another `Architecture`.
 
+## Update: arrows that avoid the boxes (2026-10-29)
+
+The first routing only looked at the two boxes of an arrow, so it crossed the title of a panel or an item in between, drew two
+arrows on top of each other, and put a label over the text of a box. The arrows are now routed against what is drawn:
+
+- **Obstacles.** The items and the titles (the icon and the text, not the whole width of the panel) are measured with the
+  boxes. For each arrow the router tries the plain route, elbows and steps, and detours that clear what stands in their band,
+  and keeps the one that goes through the fewest obstacles; the plain route wins when nothing beats it.
+- **Climbing.** An arrow may start or end on a panel around its item, up to the last one that does not hold the other end, when
+  that avoids crossing the title of the panel its item sits in. Going up costs more than a longer path, so it is the last resort.
+- **No overlap.** A route that runs along an arrow already drawn is penalised, so two flows between the same panels take
+  different paths.
+- **Labels.** A label is at most 150 px wide (it wraps onto a second line). It goes on its arrow at the first spot that covers no
+  box, no other arrow and no other label; failing that beside the arrow, a little further each time; failing that where it
+  covers least. The prompt asks for a few words.
+
 ## Limits
 
 An arrow is routed from the two boxes only. It can cross a third box standing between them; the answer is to put the boxes in

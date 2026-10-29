@@ -8,7 +8,7 @@ const MIN_OVERLAP = 24
 const right = (r: Rect) => r.x + r.w
 const bottom = (r: Rect) => r.y + r.h
 
-function middle(points: Point[]): Point {
+export function middlePoint(points: Point[]): Point {
   const i = Math.floor((points.length - 1) / 2)
   return { x: (points[i].x + points[i + 1].x) / 2, y: (points[i].y + points[i + 1].y) / 2 }
 }
@@ -50,5 +50,5 @@ export function routeFlow(a: Rect, b: Rect): Route | null {
     const mid = (from + to) / 2
     points = [{ x: from, y: ay }, { x: mid, y: ay }, { x: mid, y: by }, { x: to, y: by }]
   }
-  return { points, label: middle(points) }
+  return { points, label: middlePoint(points) }
 }
