@@ -34,7 +34,7 @@ export async function openDocument(file: Pick<CollectionFile, 'fileId' | 'name'>
   if (action.kind === 'text') {
     const text = await fetchAttachmentTextPreview(attachment)
     if (!text) return false
-    openRightPanel({ kind: 'markdown', title: attachment.filename, markdown: text.markdown, documentFileId: file.fileId, plainText: text.plainText, indexSource })
+    openRightPanel({ kind: 'markdown', title: attachment.filename, markdown: text.markdown, documentFileId: file.fileId, plainText: text.plainText, documentHighlight: highlight, indexSource })
     return true
   }
   return false

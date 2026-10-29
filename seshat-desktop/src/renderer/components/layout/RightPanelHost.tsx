@@ -13,6 +13,7 @@ import { ArtifactPreviewPanel } from '@renderer/components/chat/panels/ArtifactP
 import { DocxPreviewPanel } from '@renderer/components/chat/panels/DocxPreviewPanel'
 import { XlsxPreviewPanel } from '@renderer/components/chat/panels/XlsxPreviewPanel'
 import { PptxPreviewPanel } from '@renderer/components/chat/panels/PptxPreviewPanel'
+import { MarkedNote, textLines } from '@renderer/components/chat/panels/MarkedNote'
 import { BrowserPanel } from '@renderer/components/chat/panels/BrowserPanel'
 import { ShellPanel } from '@renderer/components/chat/panels/ShellPanel'
 import { EmptyState } from '@renderer/components/chat/panels/EmptyState'
@@ -280,9 +281,15 @@ function renderPanelBody(panel: RightPanelInstance) {
         )
       }
       return panel.plainText ? (
-        <pre className="m-0 whitespace-pre-wrap rounded-app-md border border-app-border-subtle bg-[var(--color-code-bg)] p-3 font-mono text-[var(--font-size-sm)] leading-relaxed text-[var(--color-code-fg)]">{panel.markdown}</pre>
+        <MarkedNote highlight={panel.documentHighlight}>
+          <pre className="m-0 whitespace-pre-wrap rounded-app-md border border-app-border-subtle bg-[var(--color-code-bg)] p-3 font-mono text-[var(--font-size-sm)] leading-relaxed text-[var(--color-code-fg)]">
+            {panel.documentHighlight ? textLines(panel.markdown) : panel.markdown}
+          </pre>
+        </MarkedNote>
       ) : (
-        <MarkdownView sessionId={panel.sessionId}>{panel.markdown}</MarkdownView>
+        <MarkedNote highlight={panel.documentHighlight}>
+          <MarkdownView sessionId={panel.sessionId}>{panel.markdown}</MarkdownView>
+        </MarkedNote>
       )
     case 'browser':
       return <BrowserPanel url={panel.browserUrl} contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'} />
@@ -300,13 +307,13 @@ function renderPanelBody(panel: RightPanelInstance) {
       )
     case 'docx':
       return panel.documentFileId ? (
-        <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Document preview" description="This document couldn't be opened." />
       )
     case 'xlsx':
       return panel.documentFileId ? (
-        <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Spreadsheet preview" description="This spreadsheet couldn't be opened." />
       )
