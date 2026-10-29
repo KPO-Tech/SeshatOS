@@ -23,7 +23,7 @@ type OverlayProps = { area: PlotArea; hover: Hover | null; onMove: (event: Mouse
 export function CrosshairOverlay({ area, hover, onMove, onLeave }: OverlayProps) {
   return (
     <g>
-      {hover && <line x1={hover.px} x2={hover.px} y1={area.top} y2={area.top + area.height} className="stroke-app-text-muted" strokeWidth="1" strokeDasharray="3 3" pointerEvents="none" />}
+      {hover && <line data-export-skip x1={hover.px} x2={hover.px} y1={area.top} y2={area.top + area.height} className="stroke-app-text-muted" strokeWidth="1" strokeDasharray="3 3" pointerEvents="none" />}
       <rect x={area.left} y={area.top} width={area.width} height={area.height} fill="transparent" onMouseMove={onMove} onMouseLeave={onLeave} />
     </g>
   )
@@ -35,6 +35,7 @@ export function CrosshairTip({ hover, width, top }: { hover: Hover | null; width
   const flip = hover.px > width / 2
   return (
     <div
+      data-export-skip
       className="pointer-events-none absolute z-10 min-w-[110px] rounded-md border border-app-border bg-app-surface-elevated px-2.5 py-1.5 text-[11.5px] shadow-[var(--shadow-medium)]"
       style={{ left: hover.px, top: top + 6, transform: `translateX(${flip ? 'calc(-100% - 10px)' : '10px'})` }}
     >

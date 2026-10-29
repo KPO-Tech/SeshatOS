@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { downloadPng, downloadSvg } from './exportFigure'
 
 const ExpandedContext = createContext(false)
 
@@ -27,6 +28,19 @@ function ExpandIcon() {
   )
 }
 
+const FORMATS = [
+  { id: 'png', name: 'PNG image', note: 'Twice the size, sharp' },
+  { id: 'svg', name: 'SVG image', note: 'Scales without loss' }
+] as const
+
+function DownloadIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 2v8M4.5 6.75 8 10.25l3.5-3.5M2.5 13.5h11" />
+    </svg>
+  )
+}
+
 function CloseIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
@@ -37,30 +51,85 @@ function CloseIcon() {
 
 function LargeView({ label, onClose, className, children }: { label: string; onClose: () => void; className?: string; children: ReactNode }) {
   const close = useRef<HTMLButtonElement>(null)
+  const figure = useRef<HTMLDivElement>(null)
+  const [failed, setFailed] = useState(false)
+  const [menu, setMenu] = useState(false)
+
+  const save = (format: 'svg' | 'png') => {
+    const element = figure.current
+    if (!element) return
+    setMenu(false)
+    setFailed(false)
+    try {
+      if (format === 'svg') downloadSvg(element, label)
+      else void downloadPng(element, label).catch(() => setFailed(true))
+    } catch {
+      setFailed(true)
+    }
+  }
+
+  useEffect(() => close.current?.focus(), [])
 
   useEffect(() => {
-    close.current?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       event.stopPropagation()
-      onClose()
+      if (menu) setMenu(false)
+      else onClose()
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [onClose])
+  }, [onClose, menu])
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-6" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div role="dialog" aria-modal="true" aria-label={label} className="flex max-h-full w-full max-w-[min(96vw,1700px)] flex-col overflow-hidden rounded-xl border border-app-border bg-[var(--surface-panel)] shadow-2xl">
         <div className="flex shrink-0 items-center justify-between gap-3 border-0 border-b border-solid border-app-border-subtle px-4 py-2.5">
           <div className="truncate text-[13px] font-semibold text-app-text">{label}</div>
-          <button ref={close} type="button" onClick={onClose} aria-label="Close" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text">
-            <CloseIcon />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {failed && <span className="mr-1 text-xs text-app-error">Could not save the image</span>}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenu((open) => !open)}
+                title="Download"
+                aria-label="Download"
+                aria-haspopup="menu"
+                aria-expanded={menu}
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
+              >
+                <DownloadIcon />
+              </button>
+              {menu && (
+                <>
+                  <div className="fixed inset-0 z-10" onMouseDown={() => setMenu(false)} />
+                  <div role="menu" className="absolute right-0 top-9 z-20 w-44 rounded-lg border border-app-border bg-app-surface-elevated p-1 shadow-[var(--shadow-medium)]">
+                    {FORMATS.map((format) => (
+                      <button
+                        key={format.id}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => save(format.id)}
+                        className="flex w-full cursor-pointer flex-col items-start gap-0.5 rounded-md border-0 bg-transparent px-2.5 py-1.5 text-left hover:bg-[var(--surface-hover)]"
+                      >
+                        <span className="text-[13px] font-medium text-app-text">{format.name}</span>
+                        <span className="text-[11px] text-app-text-muted">{format.note}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button ref={close} type="button" onClick={onClose} aria-label="Close" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text">
+              <CloseIcon />
+            </button>
+          </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-5 pb-5 pt-2">
           <ExpandedContext.Provider value>
-            <div className={className}>{children}</div>
+            <div ref={figure} className={`w-fit min-w-full ${className ?? ''}`}>
+              {children}
+            </div>
           </ExpandedContext.Provider>
         </div>
       </div>
