@@ -109,7 +109,7 @@ export function AskPage() {
 
   return (
     <div className="flex min-h-0 flex-1 gap-3 overflow-hidden px-5 pb-4 pt-4">
-      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[18px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]">
+      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <AskHeader compact={started} historyOpen={historyOpen} onToggleHistory={() => setHistoryOpen((value) => !value)} onNew={newQuestion} />
         {historyOpen && (
           <AskHistory

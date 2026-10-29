@@ -20,6 +20,7 @@ import { useToast, ToastStack } from '@renderer/components/ui/Toast'
 import { useChat } from '@renderer/hooks/useChat'
 import { RichActionProvider } from '../richblocks/view/actions/richActions'
 import { filePlace } from '../richblocks/view/actions/filePlace'
+import { JumpToLatest } from './JumpToLatest'
 import './ConversationPage.css'
 
 export function ConversationPage() {
@@ -207,15 +208,7 @@ export function ConversationPage() {
         onSubmitToolPrompt={onSubmitToolPrompt}
       />
 
-      <div className="conv-jump-anchor">
-        {away && (
-          <button type="button" className="conv-jump" onClick={scrollToBottom} title="Go to the latest message" aria-label="Go to the latest message">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M8 3v9.5M3.75 8.5 8 12.75l4.25-4.25" />
-            </svg>
-          </button>
-        )}
-      </div>
+      <JumpToLatest away={away} onJump={scrollToBottom} />
 
       <ConversationComposer
         sessionId={id}

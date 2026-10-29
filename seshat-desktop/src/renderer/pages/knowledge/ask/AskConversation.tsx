@@ -5,6 +5,7 @@ import { MessageList } from '@renderer/components/chat/messages/MessageList'
 import { useLiveActivityForAgent } from '@renderer/components/chat/messages/liveActivity'
 import { useConversationRuntimeActions } from '@renderer/components/chat/conversation/useConversationRuntimeActions'
 import { useConversationScroll } from '@renderer/components/chat/conversation/useConversationScroll'
+import { JumpToLatest } from '@renderer/components/chat/conversation/JumpToLatest'
 import type { Passage } from '../chat/knowledgeSearchResults'
 import { askExtras, type OpenHow } from './askExtras'
 import '@renderer/components/chat/conversation/ConversationPage.css'
@@ -36,7 +37,7 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
   const extras = useMemo(() => askExtras(messages, scopeName, onOpenPassage), [messages, scopeName, onOpenPassage])
 
   const { onApproveTool, onDenyTool, onSubmitToolPrompt } = useConversationRuntimeActions({ sessionId, pendingPermission, sendMessage })
-  const { scrollRef, rowVirtualizer } = useConversationScroll({ messageCount: messages.length, streaming })
+  const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({ messageCount: messages.length, streaming })
 
   return (
     <div className="conv-root !bg-transparent">
@@ -56,6 +57,7 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
         onRetryMessage={(text) => onAsk(text)}
         extrasFor={(index) => extras[index]}
       />
+      <JumpToLatest away={away} onJump={scrollToBottom} />
     </div>
   )
 }
