@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Message, Search } from '@icon-park/react'
+import { Message, Search, Sort } from '@icon-park/react'
 import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
 import { useCollections, type AskScope } from '../chat/useCollections'
 import { openDocument } from '../collections/openDocument'
+import { ChoiceSelect } from '../components/ChoiceSelect'
 import { ScopeSelect } from '../components/ScopeSelect'
 import { FilterPanel } from './FilterPanel'
 import { queryTerms } from './highlight'
@@ -61,10 +62,16 @@ export function SearchPage() {
 
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
-  // Clearing the bar goes back to the list of documents.
+  // Clearing the bar goes back to the list of documents, and closes the document that was open beside the results: it belonged to the search.
+  const closeRightPanel = useUIStore((s) => s.closeRightPanel)
+  const lastQuery = useRef(query)
   useEffect(() => {
     if (query === '' && state.phase !== 'idle') reset()
-  }, [query, state.phase, reset])
+    if (query === '' && lastQuery.current !== '') {
+      for (const panel of flattenRightPanels(useUIStore.getState().rightColumns)) if (panel.documentFileId) closeRightPanel(panel.id)
+    }
+    lastQuery.current = query
+  }, [query, state.phase, reset, closeRightPanel])
 
   // A new search starts from every document again, and the documents it found are asked for what the listing knows of them.
   useEffect(() => {
@@ -181,12 +188,12 @@ export function SearchPage() {
         )}
 
         <section className={`${CARD} @container flex min-h-0 min-w-0 flex-1 flex-col p-3`}>
-          <div className="mb-2.5 flex shrink-0 items-center justify-between gap-3">
+          <div className="mb-2.5 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <h2 className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-[var(--text-primary)]">
               {done ? 'Results' : 'Documents'}
               {(done || library.total > 0) && <span className="text-[12.5px] font-normal text-[var(--text-muted)]">{resultCount}</span>}
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {done && shown.length > 0 && (
                 <button
                   type="button"
@@ -200,18 +207,7 @@ export function SearchPage() {
                   </span>
                 </button>
               )}
-              <select
-                value={sortKey}
-                onChange={(event) => setSort(event.target.value as SortKey)}
-                aria-label="Sort"
-                className="h-8 cursor-pointer rounded-[9px] border border-app-border-subtle bg-transparent px-2 text-[12px] text-[var(--text-primary)]"
-              >
-                {sortOptions.map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+              <ChoiceSelect label="Sort" icon={<Sort size={12} />} choices={sortOptions} value={sortKey} onChange={setSort} />
               <div className="flex overflow-hidden rounded-[9px] border border-app-border-subtle" role="group" aria-label="View">
                 {(['list', 'grid'] as const).map((mode) => (
                   <button
@@ -263,7 +259,7 @@ export function SearchPage() {
                 )}
                 {done && found.length > 0 && shown.length === 0 && <p className="m-0 text-[13px] text-[var(--text-secondary)]">No document is left with these filters.</p>}
                 {shown.length > 0 && (
-                  <ul className={['m-0 list-none gap-2 p-0', view === 'grid' ? 'grid grid-cols-1 xl:grid-cols-2' : 'flex flex-col'].join(' ')}>
+                  <ul className={['m-0 list-none gap-2.5 p-0', view === 'grid' ? 'grid grid-cols-1 @2xl:grid-cols-2 @6xl:grid-cols-3' : 'flex flex-col'].join(' ')}>
                     {shown.map((doc) => (
                       <ResultRow key={doc.key} doc={doc} terms={terms} view={view} opened={doc.fileId === openFileId} onOpen={(hit) => void open(doc, hit)} />
                     ))}
