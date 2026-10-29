@@ -46,6 +46,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Models and sources of Knowledge are in its own pages**, and the agents are managed next to the skills.
 - **Providers are foldable and searchable in Config > Models, and the default model applies.** A new conversation takes the default model once every provider that could give it has answered.
 - **Tool rows stay closed while their tool runs** (chat and Ask). A row opens when its tool failed, when it is a question waiting for your answer, or on a click.
+- **Web search and web fetch open inline in the chat**, under their row, instead of in the session panel. The card is the same (the selected results, the fetched page) and the row opens and closes with a click; it stays closed while the tool runs and opens when the tool failed.
 - **The session cards (Environment, Context, Activity) sit beside the chat** instead of in a framed panel: no border, no shadow, no handle to resize them, the background of the chat, and a fixed narrow width. A panel with a document, a file or a terminal keeps its frame.
 - **seshat-runtime v1.12.4.** It fixes GO-2026-6866 and GO-2026-6860 in `golang.org/x/net`, which are reached when web pages or HTML documents are read, and moves `x/crypto`, `x/sys`, `x/sync` and `x/text` with it.
 
