@@ -48,6 +48,8 @@ export interface UiAction {
 export interface UiNode {
   kind: 'element'
   name: string
+  /** The name of the statement this element was reached through, which a Flow can point at. */
+  id?: string
   props: Record<string, unknown>
 }
 

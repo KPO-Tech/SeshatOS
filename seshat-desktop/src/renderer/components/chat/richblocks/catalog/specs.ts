@@ -6,6 +6,8 @@ const bool: ArgType = { t: 'boolean' }
 const scalar: ArgType = { t: 'scalar' }
 const cell: ArgType = { t: 'cell' }
 const action: ArgType = { t: 'action' }
+const target: ArgType = { t: 'target' }
+const icon: ArgType = { t: 'icon' }
 const enumOf = (...values: string[]): ArgType => ({ t: 'enum', values })
 const node = (...of: string[]): ArgType => ({ t: 'node', of: of.length > 0 ? of : undefined })
 const list = (item: ArgType): ArgType => ({ t: 'list', item })
@@ -15,6 +17,7 @@ const opt = (name: string, type: ArgType): ArgSpec => ({ name, type, optional: t
 
 const tone = enumOf('neutral', 'info', 'success', 'warning', 'danger')
 const anyNode = node()
+const hue = enumOf('neutral', 'blue', 'violet', 'green', 'orange', 'red', 'teal', 'yellow')
 
 // Arguments are positional and append-only: add at the end, never reorder or remove.
 export const COMPONENT_SPECS: ComponentSpec[] = [
@@ -83,6 +86,15 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     args: [req('from', str), req('to', str), opt('label', str), opt('style', enumOf('solid', 'dashed'))] },
   { name: 'Group', group: 'Relations', description: 'A frame around several Node ids.',
     args: [req('id', str), req('title', str), req('nodeIds', list(str))] },
+
+  { name: 'Architecture', group: 'Architecture', description: 'The frame of a system drawing: it lays Panels out and draws the Flow arrows over them.',
+    args: [req('children', list(anyNode)), opt('flows', list(node('Flow'))), opt('title', str)] },
+  { name: 'Panel', group: 'Architecture', description: 'A coloured box with a title and an icon that holds Items or other Panels, in a column or in a wrapping row. Give it its own name to link it with a Flow.',
+    args: [req('children', list(anyNode)), opt('title', str), opt('tone', hue), opt('icon', icon), opt('dashed', bool), opt('direction', enumOf('column', 'row'))] },
+  { name: 'Item', group: 'Architecture', description: 'A line with an icon, a label and a caption; boxed draws it as a card. Give it its own name to link it with a Flow.',
+    args: [req('label', str), opt('icon', icon), opt('caption', str), opt('boxed', bool)] },
+  { name: 'Flow', group: 'Architecture', description: 'An arrow between two Panels or Items, by the names of their statements. Only inside the flows of an Architecture.',
+    args: [req('from', target), req('to', target), opt('label', str), opt('both', bool), opt('style', enumOf('solid', 'dashed'))] },
 
   { name: 'Steps', group: 'Guidance', description: 'An ordered procedure.',
     args: [req('items', list(node('Step')))] },
