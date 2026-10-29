@@ -64,3 +64,35 @@
   justify-content: center;
   color: var(--text-muted);
 }
+
+/* A zero-height strip just above the composer, so the button follows the composer's height. */
+.conv-jump-anchor {
+  position: relative;
+  height: 0;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.conv-jump {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-panel);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-medium);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.conv-jump:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
