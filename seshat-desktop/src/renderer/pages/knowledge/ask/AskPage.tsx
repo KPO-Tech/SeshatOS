@@ -6,6 +6,12 @@ import { useCollections, type AskScope } from '../chat/useCollections'
 import { useKnowledgeConversation } from '../chat/useKnowledgeConversation'
 import { PassageDrawer } from '../components/PassageDrawer'
 import { AskComposer } from './AskComposer'
+import { AskNotices } from './AskNotices'
+import { AskState } from './AskState'
+import { askNotices, askStop, type AskAction } from './askReadiness'
+import { useEmbedderState } from './useEmbedderState'
+import { useDeviceMode, useCanManageKnowledge } from '../useCanManage'
+import { useDialogsStore } from '@renderer/stores/dialogs'
 import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
 import { openDocument, passageTarget } from '../collections/openDocument'
 import { AskConversation } from './AskConversation'
@@ -19,7 +25,11 @@ import type { OpenHow } from './askExtras'
 export function AskPage() {
   const navigate = useNavigate()
   const startingQuestion = (useLocation().state as { question?: string } | null)?.question ?? ''
-  const { collections, failed: collectionsFailed } = useCollections()
+  const { collections, loading: collectionsLoading, failed: collectionsFailed, reload: reloadCollections } = useCollections()
+  const mode = useDeviceMode()
+  const { allowed: canManage } = useCanManageKnowledge()
+  const embedder = useEmbedderState()
+  const openConfig = useDialogsStore((state) => state.openConfig)
   const { busy, ask, stop, startError, modelLoading, configured, models, sessionId, sendMessage, open, reset } = useKnowledgeConversation()
   const started = sessionId !== null
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -50,15 +60,28 @@ export function AskPage() {
     },
     [collections]
   )
+  // What stops a question being asked (shown in place of the start of the screen), and what only warns.
+  const readiness = { loading: collectionsLoading, collectionsFailed, collectionCount: collections.length, mode, canManage, embedder }
+  const blocker = started ? null : askStop(readiness)
+  const notices = askNotices(readiness)
+  const onStateAction = useCallback(
+    (action: AskAction) => {
+      if (action === 'retry') reloadCollections()
+      else if (action === 'add-source') navigate('/knowledge/sources')
+      else openConfig('search')
+    },
+    [navigate, openConfig, reloadCollections]
+  )
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
-  const problem = startError ?? (collectionsFailed ? 'Knowledge is not available: the collections could not be read.' : !configured && !modelLoading ? 'Configure a provider in Settings before asking.' : null)
+  const problem = startError ?? (!configured && !modelLoading ? 'Configure a provider in Settings before asking.' : null)
 
   const composer = (
     <AskComposer
       collections={collections}
       scope={scope}
       busy={busy}
+      blocked={blocker ? blocker.title : undefined}
       models={models}
       autoFocus
       initialValue={started ? '' : startingQuestion}
@@ -109,11 +132,12 @@ export function AskPage() {
           />
         ) : (
           <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
-            <AskHero onPick={(text) => setPrefill({ text, nonce: Date.now() })} />
+            {blocker ? <AskState stop={blocker} onAction={onStateAction} /> : <AskHero onPick={(text) => setPrefill({ text, nonce: Date.now() })} />}
           </div>
         )}
 
         <div className="shrink-0 px-5 pb-4 pt-2">
+          {!blocker && <AskNotices notices={notices} onAction={onStateAction} />}
           {composer}
           {notice}
         </div>
@@ -123,7 +147,7 @@ export function AskPage() {
 
       {!documentOpen && (
         <div className="hidden min-h-0 xl:flex">
-          {started && sessionId ? <AskSessionSidebar sessionId={sessionId} /> : <AskSidebar onPick={(text) => setPrefill({ text, nonce: Date.now() })} />}
+          {started && sessionId ? <AskSessionSidebar sessionId={sessionId} /> : <AskSidebar onPick={(text) => !blocker && setPrefill({ text, nonce: Date.now() })} />}
         </div>
       )}
     </div>

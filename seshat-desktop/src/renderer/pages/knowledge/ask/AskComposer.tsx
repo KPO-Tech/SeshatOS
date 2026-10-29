@@ -17,6 +17,8 @@ type Props = {
   // The models that can write the answer, and the one chosen.
   models: { choices: ModelChoice[]; selectedId: string | null; loading: boolean; select: (id: string) => void }
   placeholder?: string
+  // Why no question can be asked now (the collections could not be read, there is none): the input is shut and says so.
+  blocked?: string
   // A question to start from, for instance the words of a search.
   initialValue?: string
   autoFocus?: boolean
@@ -28,10 +30,10 @@ type Props = {
 }
 
 // The input of the Ask view, made like the chat input: the same card, text size, selector pill and send button.
-export function AskComposer({ collections, scope, busy, models, placeholder = 'Ask about your documents', initialValue = '', autoFocus, prefill, onScopeChange, onSubmit, onStop }: Props) {
+export function AskComposer({ collections, scope, busy, models, placeholder = 'Ask about your documents', blocked, initialValue = '', autoFocus, prefill, onScopeChange, onSubmit, onStop }: Props) {
   const [value, setValue] = useState(initialValue)
   const field = useRef<HTMLTextAreaElement>(null)
-  const canSend = value.trim() !== '' && !busy
+  const canSend = value.trim() !== '' && !busy && !blocked
 
   useEffect(() => {
     if (!prefill) return
@@ -70,11 +72,12 @@ export function AskComposer({ collections, scope, busy, models, placeholder = 'A
         rows={1}
         value={value}
         autoFocus={autoFocus}
-        placeholder={placeholder}
+        placeholder={blocked ?? placeholder}
+        disabled={Boolean(blocked)}
         aria-label="Your question"
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={onKeyDown}
-        className="min-h-5 w-full resize-none border-0 bg-transparent text-[13px] leading-[1.55] text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted"
+        className="min-h-5 w-full resize-none border-0 bg-transparent text-[13px] disabled:cursor-not-allowed leading-[1.55] text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted"
       />
 
       <div className="mt-2.5 flex items-center justify-between gap-2.5">
