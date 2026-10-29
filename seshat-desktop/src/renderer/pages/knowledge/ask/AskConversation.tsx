@@ -6,7 +6,7 @@ import { useLiveActivityForAgent } from '@renderer/components/chat/messages/live
 import { useConversationRuntimeActions } from '@renderer/components/chat/conversation/useConversationRuntimeActions'
 import { useConversationScroll } from '@renderer/components/chat/conversation/useConversationScroll'
 import type { Passage } from '../chat/knowledgeSearchResults'
-import { askExtras } from './askExtras'
+import { askExtras, type OpenHow } from './askExtras'
 import '@renderer/components/chat/conversation/ConversationPage.css'
 
 type Props = {
@@ -17,7 +17,7 @@ type Props = {
   scopeName: string | null
   // A question asked again (the chat's retry and regenerate), with the scope the person now has.
   onAsk: (question: string) => void
-  onOpenPassage: (passage: Passage) => void
+  onOpenPassage: (passage: Passage, how: OpenHow) => void
 }
 
 // The conversation of the Ask view: the messages of the chat, drawn by the chat's own components (text, thinking, tool calls), with the

@@ -23,6 +23,8 @@ type RightPanelFields = {
   documentFileId?: string
   // The page a document opens on, when it is opened at a passage.
   documentPage?: number
+  // The passage a citation points at: marked in the document, on the pages it covers.
+  documentHighlight?: { text: string; pages: number[] }
   // The collection a document was opened from: set, the panel offers the passages the document was indexed as.
   indexSource?: { corpusId: string; fileId: string }
   // Capability ID from POST /artifacts/preview - see ArtifactPreviewPanel.tsx.
@@ -350,9 +352,12 @@ export const useUIStore = create<UIState>()(
             nextPanels[pi] = { ...nextPanels[pi], ...panel, id }
             nextColumns[ci] = {
               ...nextColumns[ci],
-              width: READABLE_PANEL_KINDS.has(panel.kind)
-                ? (panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed))
-                : nextColumns[ci].width,
+              // A document opened again (at another citation) keeps the width the person gave it.
+              width: DOCUMENT_PANEL_KINDS.has(panel.kind)
+                ? (panel.width ?? nextColumns[ci].width)
+                : READABLE_PANEL_KINDS.has(panel.kind)
+                  ? (panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed))
+                  : nextColumns[ci].width,
               panels: nextPanels,
             }
             return { rightColumns: nextColumns }

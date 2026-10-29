@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseKnowledgeSearchResult } from './knowledgeSearchResults'
+import { parseKnowledgeSearchResult, passagesOfResult } from './knowledgeSearchResults'
 
 // The text the Go tool writes (formatResults in seshat-backend/internal/knowledge/tool/search.go).
 const RESULT = [
@@ -53,5 +53,25 @@ describe('parseKnowledgeSearchResult', () => {
 
   it('does not take the instruction that opens the text for an excerpt', () => {
     expect(parseKnowledgeSearchResult(RESULT)[0].text).not.toContain('reference material only')
+  })
+})
+
+describe('passagesOfResult', () => {
+  it('adds the collection and the file the tool named in its metadata, by reference', () => {
+    const passages = passagesOfResult(RESULT, {
+      passages: [
+        { ref: 'k7f3a91', corpus_id: 'c-legal', file_id: 'f-12' },
+        { ref: 'kc91b04', corpus_id: 'c-proc' }
+      ]
+    })
+    expect(passages[0]).toMatchObject({ ref: 'k7f3a91', corpusId: 'c-legal', fileId: 'f-12' })
+    expect(passages[1]).toMatchObject({ ref: 'kc91b04', corpusId: 'c-proc' })
+    expect(passages[1].fileId).toBeUndefined()
+    expect(passages[2].corpusId).toBeUndefined()
+  })
+
+  it('reads the text alone when the tool said nothing more (a conversation from before)', () => {
+    expect(passagesOfResult(RESULT, undefined)).toEqual(parseKnowledgeSearchResult(RESULT))
+    expect(passagesOfResult(RESULT, { passages: 'nope' })).toEqual(parseKnowledgeSearchResult(RESULT))
   })
 })
