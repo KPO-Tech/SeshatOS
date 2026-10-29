@@ -98,6 +98,96 @@
       "description": "Several Metric side by side."
     },
     {
+      "name": "BarChart",
+      "group": "Charts",
+      "signature": "BarChart(labels: [text], series: [Series], mode?: grouped|stacked, unit?: text, horizontal?: true|false, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "Bars, one group per label and one bar per series."
+    },
+    {
+      "name": "LineChart",
+      "group": "Charts",
+      "signature": "LineChart(labels: [text], series: [Series], unit?: text, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "Lines over ordered labels: a trend, a learning curve (loss and accuracy per epoch)."
+    },
+    {
+      "name": "AreaChart",
+      "group": "Charts",
+      "signature": "AreaChart(labels: [text], series: [Series], unit?: text, stacked?: true|false, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "Filled lines over ordered labels."
+    },
+    {
+      "name": "PieChart",
+      "group": "Charts",
+      "signature": "PieChart(labels: [text], values: [number], donut?: true|false, title?: text)",
+      "description": "Shares of a whole."
+    },
+    {
+      "name": "ScatterChart",
+      "group": "Charts",
+      "signature": "ScatterChart(series: [Points], xLabel?: text, yLabel?: text, title?: text)",
+      "description": "Points on two axes, one colour per Points."
+    },
+    {
+      "name": "Series",
+      "group": "Charts",
+      "signature": "Series(name: text, values: [number], tone?: tone)",
+      "description": "A named list of values, one per label."
+    },
+    {
+      "name": "Points",
+      "group": "Charts",
+      "signature": "Points(name: text, points: [[number]], tone?: tone, line?: true|false)",
+      "description": "A named list of [x, y] points, for ScatterChart or a Plot; line joins them in order (a path, an ROC curve)."
+    },
+    {
+      "name": "Plot",
+      "group": "Charts",
+      "signature": "Plot(layers: [Curve|Shade|Dot|VLine|HLine|Points], xmin: number, xmax: number, ymin?: number, ymax?: number, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "A graph of formulas in x over [xmin, xmax], with the layers drawn on the same axes. The vertical range is automatic unless given."
+    },
+    {
+      "name": "Curve",
+      "group": "Charts",
+      "signature": "Curve(expr: text, label?: text, tone?: tone, dashed?: true|false, op?: value|derivative|integral)",
+      "description": "A formula in x (x^3 - 3x + 1, sin(2x)/x, e^(-x^2); + - * / ^, sin cos tan exp ln sqrt abs, pi, e). op derivative draws its derivative and integral its antiderivative from xmin, both computed numerically."
+    },
+    {
+      "name": "Shade",
+      "group": "Charts",
+      "signature": "Shade(expr: text, from: number, to: number, label?: text, tone?: tone)",
+      "description": "The area between a formula and the x axis from one bound to another; the legend gives its value (the definite integral)."
+    },
+    {
+      "name": "Dot",
+      "group": "Charts",
+      "signature": "Dot(x: number, y: number, label?: text, tone?: tone)",
+      "description": "A marked point of a Plot (a root, an extremum, an inflection point), with its label."
+    },
+    {
+      "name": "VLine",
+      "group": "Charts",
+      "signature": "VLine(x: number, label?: text, tone?: tone)",
+      "description": "A vertical guide of a Plot at x (an asymptote, a bound)."
+    },
+    {
+      "name": "HLine",
+      "group": "Charts",
+      "signature": "HLine(y: number, label?: text, tone?: tone)",
+      "description": "A horizontal guide of a Plot at y (an asymptote, a threshold, a mean)."
+    },
+    {
+      "name": "Histogram",
+      "group": "Charts",
+      "signature": "Histogram(values: [number], bins?: number, title?: text, xLabel?: text, tone?: tone)",
+      "description": "The distribution of a list of values, in equal bins (a residual, a feature, a weight)."
+    },
+    {
+      "name": "Heatmap",
+      "group": "Charts",
+      "signature": "Heatmap(rows: [text], cols: [text], values: [[number]], title?: text, tone?: tone, decimals?: number)",
+      "description": "A grid of numbers shaded by value: a confusion matrix, a correlation matrix, an attention map."
+    },
+    {
       "name": "Architecture",
       "group": "Architecture",
       "signature": "Architecture(children: [Component], flows?: [Flow], title?: text)",
@@ -344,6 +434,8 @@
     "root = Steps([s1, s2, s3])\ns1 = Step(\"Install the runtime\", \"Run the installer, then restart the terminal.\", \"done\")\ns2 = Step(\"Add a provider key\", \"Open Settings, then Providers.\", \"doing\")\ns3 = Step(\"Send a first message\")",
     "root = Card([summary, plan], \"Migration status\", \"info\")\nsummary = MetricRow([Metric(\"Tables moved\", 14, \"+3\", \"up\", \"this week\"), Metric(\"Left\", 6)])\nplan = Section(\"Next\", [Steps([Step(\"Move the audit tables\", null, \"doing\"), Step(\"Switch the reads\", null, \"todo\")])])",
     "root = Architecture([clients, runtime, storage], [f1, f2, f3], \"Local app\")\nclients = Panel([ui, docs], \"Inputs\", \"violet\", \"monitor\", false, \"row\")\nui = Item(\"Desktop UI\", \"monitor\", \"React\", true)\ndocs = Item(\"Documents\", \"files\", \"PDF, DOCX\", true)\nruntime = Panel([api, jobs, agents], \"Runtime\", \"orange\", \"si:go\", false, \"row\")\napi = Item(\"HTTP API\", \"api\", \"Commands, streaming\", true)\njobs = Item(\"Jobs\", \"workflow\", \"Indexing\", true)\nagents = Item(\"Agents\", \"ai\", \"LLM, tools\", true)\nstorage = Panel([sql, olap], \"Storage\", \"blue\", \"database\", true, \"row\")\nsql = Item(\"SQLite\", \"si:sqlite\", \"Transactions\", true)\nolap = Item(\"DuckDB\", \"si:duckdb\", \"Analytics\", true)\nf1 = Flow(\"ui\", \"api\", null, true)\nf2 = Flow(\"docs\", \"jobs\", \"ingest\")\nf3 = Flow(\"api\", \"sql\")",
-    "root = Table([Col(\"Tool\"), install, writes], rows, \"Three engines compared\", false, true)\ninstall = ColGroup(\"Install\", [Col(\"Size (MB)\", \"number\"), Col(\"Setup\")])\nwrites = ColGroup(\"Writes\", [Col(\"Concurrent\"), Col(\"Mode\")], \"violet\")\nrows = [Row([\"Embedded\"], \"blue\", \"section\"), [\"SQLite\", 1, \"None\", Cell(\"one writer\", \"warning\"), \"WAL\"], [\"DuckDB\", 30, \"None\", Cell(\"one writer\", \"warning\"), \"Columnar\"], Row([\"Server\"], \"blue\", \"section\"), [\"PostgreSQL\", 300, \"Installer\", Cell(\"many writers\", \"success\", true), \"MVCC\"], Row([\"Smallest\", \"SQLite\"], null, \"total\")]"
+    "root = Table([Col(\"Tool\"), install, writes], rows, \"Three engines compared\", false, true)\ninstall = ColGroup(\"Install\", [Col(\"Size (MB)\", \"number\"), Col(\"Setup\")])\nwrites = ColGroup(\"Writes\", [Col(\"Concurrent\"), Col(\"Mode\")], \"violet\")\nrows = [Row([\"Embedded\"], \"blue\", \"section\"), [\"SQLite\", 1, \"None\", Cell(\"one writer\", \"warning\"), \"WAL\"], [\"DuckDB\", 30, \"None\", Cell(\"one writer\", \"warning\"), \"Columnar\"], Row([\"Server\"], \"blue\", \"section\"), [\"PostgreSQL\", 300, \"Installer\", Cell(\"many writers\", \"success\", true), \"MVCC\"], Row([\"Smallest\", \"SQLite\"], null, \"total\")]",
+    "root = Stack([intro, plot, curve])\nintro = Heading(\"f(x) = x^3 - 3x + 1 and its derivative\", 3)\nplot = Plot([f, slope, extremum1, extremum2, axis], -3, 3, null, null, \"f and f'\", \"x\", \"y\")\nf = Curve(\"x^3 - 3x + 1\", \"f(x)\", \"blue\")\nslope = Curve(\"3x^2 - 3\", \"f'(x)\", \"orange\", true)\nextremum1 = Dot(-1, 3, \"local maximum (-1, 3)\", \"red\")\nextremum2 = Dot(1, -1, \"local minimum (1, -1)\", \"red\")\naxis = HLine(0)\ncurve = Plot([Curve(\"x^3 - 3x + 1\", \"f(x)\"), Shade(\"x^3 - 3x + 1\", -2, 2, \"area under f\")], -3, 3, null, null, \"Integral from -2 to 2\")",
+    "root = Stack([loss, matrix, errors])\nloss = LineChart([\"1\", \"2\", \"3\", \"4\", \"5\"], [Series(\"train\", [0.92, 0.55, 0.38, 0.29, 0.24]), Series(\"validation\", [0.95, 0.63, 0.47, 0.42, 0.41])], null, \"Loss per epoch\", \"epoch\", \"loss\")\nmatrix = Heatmap([\"cat\", \"dog\", \"bird\"], [\"cat\", \"dog\", \"bird\"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], \"Confusion matrix\", \"blue\", 0)\nerrors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, \"Residuals\", \"error\")"
   ]
 }

@@ -39,14 +39,14 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if block == "" {
 		t.Fatal("the embedded catalog must produce a block")
 	}
-	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more", "a few words"} {
+	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more", "a few words", "Plot(", "Curve(", "Histogram(", "Heatmap("} {
 		if !strings.Contains(block, want) {
 			t.Errorf("the block must mention %q", want)
 		}
 	}
 	// Every turn pays for this block: a catalog that grows past this should be a deliberate choice.
-	if words := len(strings.Fields(block)); words > 1500 {
-		t.Errorf("the block is %d words long, keep it under 1500", words)
+	if words := len(strings.Fields(block)); words > 2100 {
+		t.Errorf("the block is %d words long, keep it under 2100", words)
 	}
 }
 

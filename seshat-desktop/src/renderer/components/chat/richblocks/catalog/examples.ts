@@ -32,5 +32,18 @@ f3 = Flow("api", "sql")`,
   `root = Table([Col("Tool"), install, writes], rows, "Three engines compared", false, true)
 install = ColGroup("Install", [Col("Size (MB)", "number"), Col("Setup")])
 writes = ColGroup("Writes", [Col("Concurrent"), Col("Mode")], "violet")
-rows = [Row(["Embedded"], "blue", "section"), ["SQLite", 1, "None", Cell("one writer", "warning"), "WAL"], ["DuckDB", 30, "None", Cell("one writer", "warning"), "Columnar"], Row(["Server"], "blue", "section"), ["PostgreSQL", 300, "Installer", Cell("many writers", "success", true), "MVCC"], Row(["Smallest", "SQLite"], null, "total")]`
+rows = [Row(["Embedded"], "blue", "section"), ["SQLite", 1, "None", Cell("one writer", "warning"), "WAL"], ["DuckDB", 30, "None", Cell("one writer", "warning"), "Columnar"], Row(["Server"], "blue", "section"), ["PostgreSQL", 300, "Installer", Cell("many writers", "success", true), "MVCC"], Row(["Smallest", "SQLite"], null, "total")]`,
+  `root = Stack([intro, plot, curve])
+intro = Heading("f(x) = x^3 - 3x + 1 and its derivative", 3)
+plot = Plot([f, slope, extremum1, extremum2, axis], -3, 3, null, null, "f and f'", "x", "y")
+f = Curve("x^3 - 3x + 1", "f(x)", "blue")
+slope = Curve("3x^2 - 3", "f'(x)", "orange", true)
+extremum1 = Dot(-1, 3, "local maximum (-1, 3)", "red")
+extremum2 = Dot(1, -1, "local minimum (1, -1)", "red")
+axis = HLine(0)
+curve = Plot([Curve("x^3 - 3x + 1", "f(x)"), Shade("x^3 - 3x + 1", -2, 2, "area under f")], -3, 3, null, null, "Integral from -2 to 2")`,
+  `root = Stack([loss, matrix, errors])
+loss = LineChart(["1", "2", "3", "4", "5"], [Series("train", [0.92, 0.55, 0.38, 0.29, 0.24]), Series("validation", [0.95, 0.63, 0.47, 0.42, 0.41])], null, "Loss per epoch", "epoch", "loss")
+matrix = Heatmap(["cat", "dog", "bird"], ["cat", "dog", "bird"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], "Confusion matrix", "blue", 0)
+errors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, "Residuals", "error")`
 ]
