@@ -35,18 +35,85 @@ func appendedPrompt(t *testing.T, svc *Service) string {
 }
 
 func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
-	block := richAnswersBlock()
+	block := richAnswersBlock(richUIAllFamilies)
 	if block == "" {
 		t.Fatal("the embedded catalog must produce a block")
 	}
-	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more", "a few words", "Plot(", "Curve(", "Histogram(", "Heatmap(", "Choices(", "@Ask("} {
+	for _, want := range []string{"seshat-ui", "root = ", "Table(", "Metric(", "Callout(", "Steps(", "Examples:", "never a Markdown table", "three steps or more", "a few words", "Plot(", "Curve(", "Histogram(", "Heatmap(", "Choices(", "@Ask(", "Architecture(", "Icons, for the icon argument"} {
 		if !strings.Contains(block, want) {
 			t.Errorf("the block must mention %q", want)
 		}
 	}
-	// Every turn pays for this block: a catalog that grows past this should be a deliberate choice.
+	if strings.Contains(block, "More components exist") {
+		t.Error("nothing is left out of the full block, so nothing is offered")
+	}
+	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice.
 	if words := len(strings.Fields(block)); words > 2400 {
-		t.Errorf("the block is %d words long, keep it under 2400", words)
+		t.Errorf("the full block is %d words long, keep it under 2400", words)
+	}
+}
+
+func TestRichAnswersCoreLeavesOutTheFamilies(t *testing.T) {
+	core := richAnswersBlock(richUIFamilies{})
+	for _, want := range []string{"seshat-ui", "Table(", "Steps(", "Choices(", "@Ask(", "Examples:", "More components exist"} {
+		if !strings.Contains(core, want) {
+			t.Errorf("the core must mention %q", want)
+		}
+	}
+	for _, unwanted := range []string{"Architecture(", "Panel(", "Plot(", "Curve(", "BarChart(", "Heatmap(", "Icons, for the icon argument", "Technology logos"} {
+		if strings.Contains(core, unwanted) {
+			t.Errorf("the core must not mention %q", unwanted)
+		}
+	}
+	// Most turns pay for the core, so it is the figure to keep small.
+	words := len(strings.Fields(core))
+	if words > 1150 {
+		t.Errorf("the core is %d words long, keep it under 1150", words)
+	}
+	if full := len(strings.Fields(richAnswersBlock(richUIAllFamilies))); words > full*6/10 {
+		t.Errorf("the core (%d words) should be well under the full block (%d)", words, full)
+	}
+}
+
+func TestRichAnswersFamiliesAreTaughtOnlyWhenAsked(t *testing.T) {
+	architecture := richAnswersBlock(richUIFamilies{architecture: true})
+	if !strings.Contains(architecture, "Architecture(") || strings.Contains(architecture, "Plot(") {
+		t.Error("the architecture family brings the drawings and not the plots")
+	}
+	charts := richAnswersBlock(richUIFamilies{charts: true})
+	if !strings.Contains(charts, "Plot(") || !strings.Contains(charts, "formula is text in x") || strings.Contains(charts, "Architecture(") {
+		t.Error("the charts family brings the plots and not the drawings")
+	}
+	// An example that draws a component left out is left out with it, and no other.
+	if strings.Contains(richAnswersBlock(richUIFamilies{}), "Flow(") || !strings.Contains(richAnswersBlock(richUIFamilies{}), "```seshat-ui") {
+		t.Error("the core keeps the examples that need nothing left out, and only those")
+	}
+}
+
+func TestRichUIFamiliesFor(t *testing.T) {
+	cases := []struct {
+		prompt       string
+		architecture bool
+		charts       bool
+	}{
+		{"compare these two tools", false, false},
+		{"Explique-moi la différence entre SQLite et DuckDB", false, false},
+		{"fais un schéma de l'architecture de mon application", true, false},
+		{"draw a diagram of the data flow", true, true},
+		{"trace la courbe d'apprentissage de ce modèle", false, true},
+		{"Calcule la dérivée de f(x) = x^3 - 3x + 1", false, true},
+		{"montre la matrice de confusion", false, true},
+		{"what is the ROC curve", false, true},
+		{"explain the process of photosynthesis", false, false},
+		{"help me with a pie chart", false, true},
+		{"please process the list", false, false},
+		{"Show it as a chart", false, true},
+	}
+	for _, c := range cases {
+		got := richUIFamiliesFor(c.prompt)
+		if got.architecture != c.architecture || got.charts != c.charts {
+			t.Errorf("%q: got architecture=%v charts=%v, want architecture=%v charts=%v", c.prompt, got.architecture, got.charts, c.architecture, c.charts)
+		}
 	}
 }
 
