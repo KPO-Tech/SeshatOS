@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Down, CheckCorrect } from '@icon-park/react'
 
@@ -12,7 +12,11 @@ function cx(...classes: Array<string | false | null | undefined>) {
 // className, since Tailwind can't shrink-to-fit content in a dropdown that
 // also needs a floor width.
 const SELECTOR_MENU_CLASS =
-  'absolute left-0 top-[calc(100%+6px)] z-30 flex max-h-[min(252px,calc(100vh-190px))] min-w-[140px] max-w-[min(320px,calc(100vw-32px))] flex-col gap-0 overflow-hidden rounded-app-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-root))] p-1 shadow-[0_18px_48px_rgba(31,27,23,0.17)]'
+  'absolute left-0 top-[calc(100%+6px)] z-30 flex min-w-[140px] max-w-[min(320px,calc(100vw-32px))] flex-col gap-0 overflow-hidden rounded-app-md border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-root))] p-1 shadow-[0_18px_48px_rgba(31,27,23,0.17)]'
+
+// A menu of folded groups shows more at once than a flat list: its rows are the group names.
+const SELECTOR_MENU_HEIGHT = 'max-h-[min(252px,calc(100vh-190px))]'
+const SELECTOR_MENU_GROUPED_HEIGHT = 'max-h-[min(360px,calc(100vh-190px))]'
 
 const SELECTOR_LIST_CLASS =
   'min-h-0 flex-1 overflow-y-auto [scrollbar-color:color-mix(in_srgb,var(--text-muted)_28%,transparent)_transparent] [scrollbar-width:thin]'
@@ -69,6 +73,28 @@ export type SelectorOption = {
   description?: string
   icon?: ReactNode
   prefix?: string
+  // Options that share a group are listed under a header that folds, one group open at a time (the models of a provider, for instance).
+  // group identifies it; groupLabel and groupIcon are what its header shows.
+  group?: string
+  groupLabel?: string
+  groupIcon?: ReactNode
+}
+
+export type SelectorGroup = { id: string; label: string; icon?: ReactNode; options: SelectorOption[] }
+
+/** The options of a grouped menu by group, in the order the groups first appear. An option with no group is not listed. */
+export function groupSelectorOptions(options: SelectorOption[]): SelectorGroup[] {
+  const groups: SelectorGroup[] = []
+  for (const option of options) {
+    if (!option.group) continue
+    let group = groups.find((item) => item.id === option.group)
+    if (!group) {
+      group = { id: option.group, label: option.groupLabel || option.group, icon: option.groupIcon, options: [] }
+      groups.push(group)
+    }
+    group.options.push(option)
+  }
+  return groups
 }
 
 type SelectorMenuProps = {
@@ -102,11 +128,14 @@ export function SelectorMenu({
   const showSearch = searchable && options.length > SEARCH_ABOVE
   const visible = useMemo(() => (showSearch ? filterSelectorOptions(options, query) : options), [options, query, showSearch])
   const virtualized = visible.length > VIRTUALIZE_ABOVE
+  const grouped = useMemo(() => options.some((option) => option.group), [options])
+  const searching = query.trim() !== ''
 
   return (
     <div
       className={cx(
         SELECTOR_MENU_CLASS,
+        grouped ? SELECTOR_MENU_GROUPED_HEIGHT : SELECTOR_MENU_HEIGHT,
         align === 'right' && 'left-auto right-0',
         placement === 'up' && 'bottom-[calc(100%+6px)] top-auto',
         className,
@@ -124,6 +153,8 @@ export function SelectorMenu({
       )}
       {visible.length === 0 ? (
         <div className="px-[7px] py-2 text-[var(--font-size-xs)] text-app-text-muted">No match.</div>
+      ) : grouped ? (
+        <GroupedOptionList options={visible} selectedId={selectedId} onSelect={onSelect} expandAll={searching} />
       ) : virtualized ? (
         <VirtualOptionList options={visible} selectedId={selectedId} onSelect={onSelect} />
       ) : (
@@ -136,6 +167,69 @@ export function SelectorMenu({
     </div>
   )
 }
+
+// The options under one header per group, all folded to begin with so that the providers can be read at once; only one group is open at a
+// time. While a search is typed every group with a match is open, so that nothing found is hidden.
+function GroupedOptionList({ options, selectedId, onSelect, expandAll }: { options: SelectorOption[]; selectedId?: string | null; onSelect: (id: string) => void; expandAll: boolean }) {
+  const groups = useMemo(() => groupSelectorOptions(options), [options])
+  const [open, setOpen] = useState<string | null>(null)
+  const root = useRef<HTMLDivElement>(null)
+
+  // The group that opens goes to the top of the list, under the eyes, since the ones above it fold at the same time; a new search starts
+  // from the top.
+  useEffect(() => {
+    const list = root.current
+    if (!list) return
+    const header = open ? list.querySelector<HTMLElement>(`[data-group="${CSS.escape(open)}"]`) : null
+    list.scrollTop = header ? header.offsetTop - list.offsetTop : 0
+  }, [open, expandAll, options])
+
+  return (
+    <div ref={root} className={SELECTOR_LIST_CLASS}>
+      {groups.map((group) => {
+        const expanded = expandAll || open === group.id
+        const holdsSelection = group.options.some((option) => option.id === selectedId)
+        return (
+          <div key={group.id} data-group={group.id}>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setOpen(expanded && !expandAll ? null : group.id)}
+              className={cx(
+                'flex min-h-[32px] w-full min-w-0 cursor-pointer items-center gap-[7px] rounded-none border border-transparent bg-transparent px-[7px] py-1.5 text-left text-[var(--font-size-sm)] font-semibold hover:bg-[color-mix(in_srgb,var(--surface-muted)_48%,var(--surface-panel))]',
+                holdsSelection ? 'text-app-primary' : 'text-app-text',
+              )}
+            >
+              {group.icon && (
+                <span className="inline-flex size-[17px] shrink-0 items-center justify-center [&_svg]:block [&_svg]:size-[17px]" aria-hidden="true">
+                  {group.icon}
+                </span>
+              )}
+              <span className="min-w-0 flex-1 truncate">{group.label}</span>
+              <span className="shrink-0 text-[var(--font-size-2xs)] font-medium text-app-text-muted">{group.options.length}</span>
+              <Down size={10} className={cx('shrink-0 text-app-text-muted transition-transform duration-150', expanded && 'rotate-180')} />
+            </button>
+            {expanded &&
+              (group.options.length > VIRTUALIZE_ABOVE ? (
+                <div className="flex max-h-[220px] flex-col pl-3">
+                  <VirtualOptionList options={group.options.map(withoutDescription)} selectedId={selectedId} onSelect={onSelect} />
+                </div>
+              ) : (
+                <div className="pl-3">
+                  {group.options.map((option) => (
+                    <OptionButton key={option.id} option={withoutDescription(option)} selected={option.id === selectedId} onSelect={onSelect} />
+                  ))}
+                </div>
+              ))}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Under its header a group already says where the options come from.
+const withoutDescription = (option: SelectorOption): SelectorOption => ({ ...option, description: undefined })
 
 function VirtualOptionList({ options, selectedId, onSelect }: { options: SelectorOption[]; selectedId?: string | null; onSelect: (id: string) => void }) {
   const scrollRef = useRef<HTMLDivElement>(null)

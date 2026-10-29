@@ -8,6 +8,10 @@ export type Passage = {
   pages: number[]
   section: string
   text: string
+  // The collection and the file the excerpt is in, when the tool said (it does in its metadata, not in its text): what lets the document
+  // be opened at the excerpt.
+  corpusId?: string
+  fileId?: string
 }
 
 // The line that introduces an excerpt, as seshat-backend/internal/knowledge/tool writes it:
@@ -57,4 +61,20 @@ export function parseKnowledgeSearchResult(content: string | undefined): Passage
   }
   close()
   return passages
+}
+
+/** The excerpts of a knowledge_search result, each with the collection and the file the tool named for it in its metadata. */
+export function passagesOfResult(content: string | undefined, metadata: Record<string, unknown> | undefined): Passage[] {
+  const passages = parseKnowledgeSearchResult(content)
+  const sources = Array.isArray(metadata?.passages) ? (metadata.passages as Array<{ ref?: unknown; corpus_id?: unknown; file_id?: unknown }>) : []
+  if (sources.length === 0) return passages
+  return passages.map((passage) => {
+    const source = sources.find((item) => item.ref === passage.ref)
+    if (!source) return passage
+    return {
+      ...passage,
+      ...(typeof source.corpus_id === 'string' && source.corpus_id ? { corpusId: source.corpus_id } : {}),
+      ...(typeof source.file_id === 'string' && source.file_id ? { fileId: source.file_id } : {})
+    }
+  })
 }

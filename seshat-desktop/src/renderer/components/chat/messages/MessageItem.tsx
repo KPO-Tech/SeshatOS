@@ -24,6 +24,7 @@ import type { WebSource } from '@renderer/lib/webSources'
 import { PromptEditor } from './PromptEditor'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
+import type { AnswerExtras } from './answerExtras'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -175,6 +176,8 @@ type Props = {
   endsTurn?: boolean
   webSources?: WebSource[]
   consultedPages?: WebSource[]
+  // What a host surface adds to an answer: citations in its text, and something under the end of the turn (see answerExtras.ts).
+  extras?: AnswerExtras
 }
 
 export type QuietGroupItem =
@@ -321,7 +324,7 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
   return { text, attachments: messageAttachments(message) }
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
   const [editing, setEditing] = useState(false)
   if (isCompactionDivider(message)) {
     const first = message.content[0]
@@ -424,7 +427,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                   isUser && message.status === 'error' && 'border-app-error',
                 )}
               >
-                <MarkdownView sessionId={sessionId} sources={edition.sources ? consultedPages : undefined}>{block.text}</MarkdownView>
+                <MarkdownView sessionId={sessionId} sources={edition.sources ? consultedPages : undefined} renderLink={isUser ? undefined : extras?.renderLink}>{isUser || !extras?.prepare ? block.text : extras.prepare(block.text)}</MarkdownView>
                 {isUser && message.status === 'error' && (
                   <button
                     type="button"
@@ -477,6 +480,8 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
             <SourcesDisclosure items={webSourceItems(webSources)} sessionId={sessionId} />
           </div>
         )}
+
+        {extras?.footer && !liveActivity && endsTurn && !isUser && <div className="mt-4">{extras.footer}</div>}
 
         {liveActivity && <LiveActivityBlock label={liveActivity.label} detail={liveActivity.detail} />}
         {!liveActivity && justCompleted && <CompletionFlash />}
