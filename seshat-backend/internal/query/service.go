@@ -1558,7 +1558,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
 		// Structured components are on unless the user turned them off in Settings.
 		if s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal) {
-			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock())
+			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock(richUIFamiliesFor(p.Prompt)))
 		}
 	}
 	// Surfaces: the runtime's prompt was written for its terminal UI, so the
