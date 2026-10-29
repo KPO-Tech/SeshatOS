@@ -76,7 +76,7 @@ function ArchitectureFrame({ props }: ComponentProps) {
   }, [measure])
 
   return (
-    <div ref={frame} className="relative my-3 flex flex-col gap-9">
+    <div ref={frame} className="relative flex flex-col gap-9">
       {typeof props.title === 'string' && <div className="text-[16px] font-semibold text-app-text">{props.title}</div>}
       <NodeList nodes={props.children} />
       {drawn.length > 0 && (
@@ -123,7 +123,7 @@ const TALL_DRAWING = 560
 
 function Architecture({ props, id }: ComponentProps) {
   return (
-    <Expandable label={typeof props.title === 'string' ? props.title : 'Architecture'} maxHeight={TALL_DRAWING}>
+    <Expandable label={typeof props.title === 'string' ? props.title : 'Architecture'} maxHeight={TALL_DRAWING} className="my-3">
       <ArchitectureFrame props={props} id={id} />
     </Expandable>
   )
