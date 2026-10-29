@@ -1,19 +1,8 @@
-import type { ComponentType } from 'react'
 import type { UiNode } from '../lang/types'
 import { isNode } from '../lang/parseUi'
-import { dataComponents } from './components/data'
-import { guidanceComponents } from './components/guidance'
-import { layoutComponents } from './components/layout'
-import { textComponents } from './components/text'
+import { REGISTRY } from './registry'
 
 export type ComponentProps = { props: Record<string, unknown> }
-
-const REGISTRY: Record<string, ComponentType<ComponentProps>> = {
-  ...layoutComponents,
-  ...textComponents,
-  ...dataComponents,
-  ...guidanceComponents
-}
 
 export function NodeView({ node }: { node: UiNode }) {
   const Component = REGISTRY[node.name]

@@ -87,6 +87,16 @@ func (s *Service) MemoryEnabled(ctx context.Context, principal *backendauth.Prin
 	return err == nil && prefs != nil && prefs.MemoryEnabled
 }
 
+// RichAnswersEnabled reports whether answers may use structured components. It is true unless the user turned it off, and
+// stays true when preferences cannot be read: the feature is on by default.
+func (s *Service) RichAnswersEnabled(ctx context.Context, principal *backendauth.Principal) bool {
+	if s == nil || s.provider == nil || principal == nil {
+		return true
+	}
+	prefs, err := s.provider.Get(ctx, principal)
+	return err != nil || prefs == nil || !prefs.RichAnswersDisabled
+}
+
 func (s *Service) ValidatePermissionMode(raw string) bool {
 	if raw == "" {
 		return true

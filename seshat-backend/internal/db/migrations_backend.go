@@ -402,6 +402,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeIngestionJob{})
 			},
 		},
+		{
+			ID:    "20261029_058_user_preferences_rich_answers",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
+			},
+		},
 	}
 }
 

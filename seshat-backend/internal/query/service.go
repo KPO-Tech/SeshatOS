@@ -66,6 +66,7 @@ type preferencesProvider interface {
 	BuildSystemPromptBlock(ctx context.Context, principal *backendauth.Principal) (string, error)
 	ResolvePermissionModes(ctx context.Context, principal *backendauth.Principal, origin types.ExecutionOrigin) (types.PermissionMode, error)
 	MemoryEnabled(ctx context.Context, principal *backendauth.Principal) bool
+	RichAnswersEnabled(ctx context.Context, principal *backendauth.Principal) bool
 }
 
 type knowledgeProvider interface {
@@ -1555,6 +1556,10 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	if !knowledgeProfile {
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
+		// Structured components are on unless the user turned them off in Settings.
+		if s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal) {
+			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock())
+		}
 	}
 	// Surfaces: the runtime's prompt was written for its terminal UI, so the
 	// two instructions that are false here (where the agent is running, and how

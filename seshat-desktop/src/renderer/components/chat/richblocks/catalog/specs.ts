@@ -34,7 +34,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
 
   { name: 'Heading', group: 'Text', description: 'A heading inside a block.',
     args: [req('text', str), opt('level', num)] },
-  { name: 'Markdown', group: 'Text', description: 'Formatted text with inline Markdown.',
+  { name: 'Markdown', group: 'Text', description: 'A paragraph of plain text.',
     args: [req('text', str)] },
   { name: 'Callout', group: 'Text', description: 'A highlighted note: info, success, warning or danger.',
     args: [req('tone', tone), req('title', str), opt('body', str)] },

@@ -1,3 +1,4 @@
+import { AnswersSettings } from './AnswersSettings'
 import { ChevronDownIcon, Panel, Row, SectionDivider, ToggleRow } from './SettingsPrimitives'
 
 type Props = {
@@ -37,6 +38,10 @@ export function GeneralSettings({
             </button>
           </div>
         </section>
+
+        <SectionDivider />
+
+        <AnswersSettings />
 
         <SectionDivider />
 

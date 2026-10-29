@@ -38,15 +38,21 @@ comparisons, status and sources, and the chart is one component among others, no
 3. **Carrier: a fenced block** with language `seshat-ui`, inside normal Markdown, so prose and components mix freely. It
    degrades to a readable code block anywhere else. A `render_ui` tool is a later, cleaner carrier (other hosts, text
    fallback), and does not change the language.
-4. **One catalog, defined once.** The components are defined in the desktop in TypeScript with a Zod schema each. A script
-   generates `catalog.spec.json` (names, argument names and types, description, example). The backend embeds that file to build
-   the prompt block; the desktop uses the same definitions to parse and render. The prompt is never edited by hand.
+4. **One catalog, defined once.** The components are defined in the desktop as plain TypeScript data (name, positional
+   arguments with their types, description), which the parser also validates against. `npm run ui-catalog` writes
+   `seshat-backend/internal/query/richui_catalog.spec.json` (signatures, descriptions, worked examples). The backend embeds that
+   file to build the prompt block; a desktop test fails when the file is out of date. The prompt is never edited by hand, and
+   it teaches only the components the app can draw today, so the catalog can be larger than what the model is told.
 5. **Progressive rendering.** The block renders while it streams. Raw code is shown only if nothing could be parsed when the
    block closes.
 6. **Mermaid stays**, for quick diagrams. The old `chart` fence stays readable for stored messages, but is no longer taught
    to the model once `BarChart` and `LineChart` exist.
 7. **Free HTML, SVG animation and 3D are a second layer** (a `Widget` component backed by a sandboxed iframe), decided in a
    separate record. The name `Widget` is reserved here.
+8. **It is a preference, on by default.** The user preference `rich_answers_enabled` (Settings, General, Answers) decides
+   whether the model is taught the components. It is stored as an opt-out (`rich_answers_disabled`) so that a user who never
+   chose, and a row written before the column existed, get the default. A save that omits the field keeps the stored choice.
+   Turning it off removes only this block from the prompt; a `seshat-ui` block already in a conversation still draws.
 
 ## The language
 
