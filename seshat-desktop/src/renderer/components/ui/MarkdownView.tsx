@@ -318,7 +318,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
             const match = /language-(\w+)/.exec(className || '')
             if (!inline && /(^|\s)language-seshat-ui(\s|$)/.test(className || '')) {
               const code = String(children).replace(/\n$/, '')
-              return <RichBlock code={code} streaming={streaming} fallback={<CodeBlock language="seshat-ui" code={code} />} />
+              return <RichBlock code={code} streaming={streaming} fallback={<CodeBlock language="seshat-ui" code={code} />} renderLink={renderLink} />
             }
             if (!inline && match && !streaming) {
               const code = String(children).replace(/\n$/, '')

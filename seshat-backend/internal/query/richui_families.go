@@ -82,8 +82,17 @@ var (
 	richUICatalogData *richUICatalog
 
 	richUIBlocksMu sync.Mutex
-	richUIBlocks   = map[richUIFamilies]string{}
+	richUIBlocks   = map[richUIBlockKey]string{}
 )
+
+// richUIBlockKey tells apart the four combinations of families, for the general agent and for the Knowledge agent.
+type richUIBlockKey struct {
+	families  richUIFamilies
+	knowledge bool
+}
+
+// The catalog group the Knowledge agent is not taught: it cites through the references of its searches, which the app draws.
+const richUISourcesGroup = "Sources"
 
 func richUICatalogLoaded() *richUICatalog {
 	richUICatalogOnce.Do(func() {
@@ -98,22 +107,29 @@ func richUICatalogLoaded() *richUICatalog {
 
 // richAnswersBlock returns the instructions that teach the model the seshat-ui components that the families ask for. It is empty
 // if the embedded catalog cannot be read, so a broken file costs the feature, never the turn.
-func richAnswersBlock(families richUIFamilies) string {
+func richAnswersBlock(families richUIFamilies) string { return richBlock(families, false) }
+
+// richKnowledgeAnswersBlock is the same for the Knowledge agent: no source components, only the @Ask action, and the rules that keep
+// a component as faithful to the excerpts as a sentence.
+func richKnowledgeAnswersBlock(families richUIFamilies) string { return richBlock(families, true) }
+
+func richBlock(families richUIFamilies, knowledge bool) string {
 	catalog := richUICatalogLoaded()
 	if catalog == nil {
 		return ""
 	}
 	richUIBlocksMu.Lock()
 	defer richUIBlocksMu.Unlock()
-	if block, ok := richUIBlocks[families]; ok {
+	key := richUIBlockKey{families: families, knowledge: knowledge}
+	if block, ok := richUIBlocks[key]; ok {
 		return block
 	}
-	block := buildRichUIBlock(catalog, families)
-	richUIBlocks[families] = block
+	block := buildRichUIBlock(catalog, families, knowledge)
+	richUIBlocks[key] = block
 	return block
 }
 
-func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies) string {
+func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge bool) string {
 	var b strings.Builder
 	b.WriteString(richUIHead)
 	if families.architecture {
@@ -122,14 +138,28 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies) string {
 	if families.charts {
 		b.WriteString(richUIChartShapes)
 	}
-	b.WriteString(richUIInteractionShape)
+	if knowledge {
+		b.WriteString(richUIKnowledgeInteractionShape)
+	} else {
+		b.WriteString(richUIInteractionShape)
+	}
+	b.WriteString(richUIFormatNote)
 	if families.architecture {
 		b.WriteString(richUIArchitectureNote)
 	}
 	if families.charts {
 		b.WriteString(richUIChartNote)
 	}
-	b.WriteString(richUICoreNotes)
+	b.WriteString(richUITextNote)
+	if knowledge {
+		b.WriteString(richUIKnowledgeActionNote)
+	} else {
+		b.WriteString(richUIActionNote)
+	}
+	b.WriteString(richUIStyleNotes)
+	if knowledge {
+		b.WriteString(richUIKnowledgeRules)
+	}
 	if families != richUIAllFamilies {
 		b.WriteString(richUIOffer)
 	}
@@ -137,8 +167,8 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies) string {
 	b.WriteString("\n\nComponents:\n")
 	var left []string
 	for _, c := range catalog.Components {
-		if families.has(c.Group) {
-			b.WriteString("- " + c.Signature + ": " + c.Description + "\n")
+		if families.has(c.Group) && !(knowledge && c.Group == richUISourcesGroup) {
+			b.WriteString("- " + forAudience(c.Signature, knowledge) + ": " + c.Description + "\n")
 		} else {
 			left = append(left, c.Name)
 		}
@@ -167,6 +197,16 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies) string {
 		b.WriteString("\n" + richUIFence + "seshat-ui\n" + example + "\n" + richUIFence + "\n")
 	}
 	return strings.TrimRight(b.String(), "\n")
+}
+
+// The action of a Button or a Choice is written with its three kinds; the Knowledge agent has only the question.
+const richUIAllActions = `@Ask("text")|@OpenFile(path)|@OpenUrl(url)`
+
+func forAudience(signature string, knowledge bool) string {
+	if !knowledge {
+		return signature
+	}
+	return strings.ReplaceAll(signature, richUIAllActions, `@Ask("text")`)
 }
 
 // usesAny reports whether the example draws one of the components that were left out. A name is a whole identifier, so Item is

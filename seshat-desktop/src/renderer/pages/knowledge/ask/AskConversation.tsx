@@ -6,6 +6,7 @@ import { useLiveActivityForAgent } from '@renderer/components/chat/messages/live
 import { useConversationRuntimeActions } from '@renderer/components/chat/conversation/useConversationRuntimeActions'
 import { useConversationScroll } from '@renderer/components/chat/conversation/useConversationScroll'
 import { JumpToLatest } from '@renderer/components/chat/conversation/JumpToLatest'
+import { RichActionProvider } from '@renderer/components/chat/richblocks/view/actions/richActions'
 import type { Passage } from '../chat/knowledgeSearchResults'
 import { askExtras, type OpenHow } from './askExtras'
 import '@renderer/components/chat/conversation/ConversationPage.css'
@@ -40,6 +41,8 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
   const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({ messageCount: messages.length, streaming })
 
   return (
+    // A follow-up of a component (a Choice, a Button) is a question like the ones of the composer, with the scope the person has now.
+    <RichActionProvider ask={onAsk} busy={isStreaming}>
     <div className="conv-root !bg-transparent">
       <MessageList
         sessionId={sessionId}
@@ -59,5 +62,6 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
       />
       <JumpToLatest away={away} onJump={scrollToBottom} />
     </div>
+    </RichActionProvider>
   )
 }

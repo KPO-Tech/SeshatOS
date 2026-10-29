@@ -1557,16 +1557,12 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
 		// Structured components are on unless the user turned them off in Settings.
-		if s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal) {
-			families := richUIFamiliesFor(p.Prompt)
-			// A follow-up that names nothing is about what the last answers drew.
-			if families != richUIAllFamilies && p.SessionID != "" {
-				if messages, err := s.loadSessionMessages(ctx, p.SessionID); err == nil {
-					families = families.union(richUIFamiliesInHistory(messages))
-				}
-			}
-			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock(families))
+		if s.richAnswersOn(ctx, p) {
+			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock(s.richFamilies(ctx, p)))
 		}
+	} else if s.richAnswersOn(ctx, p) {
+		// The Knowledge agent is told everything else by its own prompt, but the components are drawn by the same view.
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richKnowledgeAnswersBlock(s.richFamilies(ctx, p)))
 	}
 	// Surfaces: the runtime's prompt was written for its terminal UI, so the
 	// two instructions that are false here (where the agent is running, and how
@@ -1720,4 +1716,21 @@ func toolAllowlistFromPatterns(patterns []string) (allowed []string, restrict bo
 		}
 	}
 	return patterns, len(patterns) > 0
+}
+
+// richAnswersOn is true unless the person turned the structured components off in Settings.
+func (s *Service) richAnswersOn(ctx context.Context, p ContextBuildParams) bool {
+	return s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal)
+}
+
+// richFamilies decides which families of components this turn is taught: the ones its request asks for, and the ones the latest answers
+// of the session drew, since a follow-up that names nothing is about what they showed.
+func (s *Service) richFamilies(ctx context.Context, p ContextBuildParams) richUIFamilies {
+	families := richUIFamiliesFor(p.Prompt)
+	if families != richUIAllFamilies && p.SessionID != "" {
+		if messages, err := s.loadSessionMessages(ctx, p.SessionID); err == nil {
+			families = families.union(richUIFamiliesInHistory(messages))
+		}
+	}
+	return families
 }

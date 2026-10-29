@@ -72,3 +72,45 @@ func TestBuildContextInput_KnowledgeAgentIsToldWhenTheQuestionIsLimitedToACollec
 		t.Fatal("only the Knowledge agent is given the scope block")
 	}
 }
+
+func TestKnowledgeAgentIsTaughtTheComponentsWithoutTheSourcesOnes(t *testing.T) {
+	for _, families := range []richUIFamilies{{}, richUIAllFamilies} {
+		block := richKnowledgeAnswersBlock(families)
+		for _, want := range []string{"## Rich answers", "Table(", "Choices(", "@Ask(", "comes from the excerpts", "[k7f3a91]"} {
+			if !strings.Contains(block, want) {
+				t.Errorf("the Knowledge block must mention %q", want)
+			}
+		}
+		// Its sources are drawn by the app from the references it cites, and a file of the person's machine means nothing to it.
+		for _, unwanted := range []string{"Citation(", "SourceList(", "Source(", "FileRef(", "Link(", "@OpenFile", "@OpenUrl"} {
+			if strings.Contains(block, unwanted) {
+				t.Errorf("the Knowledge block must not mention %q", unwanted)
+			}
+		}
+	}
+	general := richAnswersBlock(richUIAllFamilies)
+	if strings.Contains(general, "comes from the excerpts") || !strings.Contains(general, "SourceList(") {
+		t.Error("the general agent keeps its own block")
+	}
+	if words := len(strings.Fields(richKnowledgeAnswersBlock(richUIFamilies{}))); words > 1200 {
+		t.Errorf("the Knowledge core is %d words long, keep it under 1200", words)
+	}
+}
+
+func TestBuildContextInput_KnowledgeAgentGetsRichAnswersUnlessTurnedOff(t *testing.T) {
+	appended := func(svc *Service) string {
+		input, _ := svc.BuildContextInput(context.Background(), ContextBuildParams{Prompt: "Compare the two contracts", AgentSlug: knowledgeagent.Slug})
+		if input.AppendSystemPrompt == nil {
+			return ""
+		}
+		return *input.AppendSystemPrompt
+	}
+	on := appended(&Service{agents: fakeAgentsProvider{def: knowledgeagent.Definition()}, preferences: fakePreferences{richAnswers: true}})
+	if !strings.Contains(on, "## Rich answers") || !strings.Contains(on, "comes from the excerpts") {
+		t.Fatal("the Knowledge agent is taught the components when they are on")
+	}
+	off := appended(&Service{agents: fakeAgentsProvider{def: knowledgeagent.Definition()}, preferences: fakePreferences{richAnswers: false}})
+	if strings.Contains(off, "seshat-ui") {
+		t.Fatal("turning the components off applies to the Knowledge agent too")
+	}
+}
