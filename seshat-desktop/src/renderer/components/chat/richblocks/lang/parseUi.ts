@@ -146,7 +146,28 @@ function materializeNode(value: Value, only: readonly string[] | undefined, ctx:
   return materializeCall(spec, value.args, ctx)
 }
 
-function materializeCall(spec: ComponentSpec, args: Value[], ctx: Context): Outcome<UiNode> {
+/** Puts the arguments of a call in the order of the catalog: those given by place first, then those given by name. */
+function arrangeArguments(spec: ComponentSpec, args: Value[], ctx: Context): Value[] {
+  const arranged: Value[] = []
+  for (const given of args) {
+    if (given.k !== 'named') {
+      arranged.push(given)
+      continue
+    }
+    const index = spec.args.findIndex((arg) => arg.name === given.name)
+    if (index === -1) {
+      report(ctx, 'bad-argument', `${spec.name} has no argument "${given.name}".`, signature(spec))
+    } else if (arranged[index] !== undefined) {
+      report(ctx, 'bad-argument', `${spec.name} got "${given.name}" twice.`)
+    } else {
+      arranged[index] = given.value
+    }
+  }
+  return arranged
+}
+
+function materializeCall(spec: ComponentSpec, rawArgs: Value[], ctx: Context): Outcome<UiNode> {
+  const args = arrangeArguments(spec, rawArgs, ctx)
   if (args.length > spec.args.length) {
     report(ctx, 'extra-arguments', `${spec.name} takes ${spec.args.length} arguments, ${args.length} were given.`)
   }
@@ -209,6 +230,7 @@ function describe(value: Value): string {
     case 'call': return `the component ${value.name}`
     case 'action': return `the action @${value.name}`
     case 'ref': return `the name ${value.name}`
+    case 'named': return `the named argument ${value.name}`
   }
 }
 

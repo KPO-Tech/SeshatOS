@@ -8,6 +8,8 @@ export type Value =
   | { k: 'call'; name: string; args: Value[] }
   | { k: 'action'; name: string; args: Value[] }
   | { k: 'ref'; name: string }
+  /** `name = value` inside a call: the argument is given by its name instead of its place. */
+  | { k: 'named'; name: string; value: Value }
 
 export interface Statement {
   name: string

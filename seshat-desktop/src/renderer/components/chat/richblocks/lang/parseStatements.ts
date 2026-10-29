@@ -5,6 +5,7 @@ class SyntaxProblem extends Error {}
 const STATEMENT_START = /([A-Za-z_][A-Za-z0-9_]*)[ \t]*=(?!=)/y
 const NEXT_STATEMENT = /\n[ \t]*[A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=)/g
 const IDENT = /[A-Za-z_][A-Za-z0-9_]*/y
+const NAMED_ARGUMENT = /([A-Za-z_][A-Za-z0-9_]*)[ 	]*=(?!=)/y
 const NUMBER = /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/y
 const PARTIAL_NUMBER = /-\.?|-?\d+\.|-?\d+(?:\.\d+)?[eE][+-]?/y
 
@@ -89,7 +90,7 @@ class Reader {
     const name = this.match(IDENT) as string
     this.skipInlineSpace()
     if (this.src[this.pos] === '(') {
-      return { k: 'call', name, args: this.sequence('(', ')', () => this.value()) }
+      return { k: 'call', name, args: this.sequence('(', ')', () => this.argument()) }
     }
     if (name === 'true') return { k: 'bool', v: true }
     if (name === 'false') return { k: 'bool', v: false }
@@ -103,7 +104,15 @@ class Reader {
     if (name === null) throw new SyntaxProblem('an action name is expected after "@"')
     this.skipInlineSpace()
     if (this.src[this.pos] !== '(') return { k: 'action', name, args: [] }
-    return { k: 'action', name, args: this.sequence('(', ')', () => this.value()) }
+    return { k: 'action', name, args: this.sequence('(', ')', () => this.argument()) }
+  }
+
+  /** An argument of a call: a value, or `name = value`, which models write although the language gives arguments by place. */
+  private argument(): Value {
+    this.skipSpace()
+    const head = this.match(NAMED_ARGUMENT)
+    if (head === null) return this.value()
+    return { k: 'named', name: head.slice(0, head.indexOf('=')).trim(), value: this.value() }
   }
 
   private entry(): [string, Value] {
