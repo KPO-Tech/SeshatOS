@@ -15,6 +15,8 @@ const BASE_URLS: Record<string, string> = {
   mistral: 'https://api.mistral.ai/v1',
   gemini: 'https://generativelanguage.googleapis.com/v1beta/openai',
   openrouter: 'https://openrouter.ai/api/v1',
+  voyage: 'https://api.voyageai.com/v1',
+  jina: 'https://api.jina.ai/v1',
   ollama: 'http://localhost:11434',
   tei: 'http://localhost:8082/v1'
 }
@@ -22,8 +24,10 @@ const BASE_URLS: Record<string, string> = {
 const MODEL_HINTS: Record<string, string[]> = {
   openai: ['text-embedding-3-small', 'text-embedding-3-large'],
   mistral: ['mistral-embed'],
-  gemini: ['gemini-embedding-001'],
+  gemini: ['gemini-embedding-001', 'gemini-embedding-2'],
   openrouter: ['openai/text-embedding-3-small', 'qwen/qwen3-embedding-8b', 'baai/bge-m3'],
+  voyage: ['voyage-4', 'voyage-4-large', 'voyage-4-lite'],
+  jina: ['jina-embeddings-v5-text-small', 'jina-embeddings-v5-text-nano', 'jina-embeddings-v4'],
   ollama: [],
   tei: []
 }
@@ -82,8 +86,9 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
     setUseOwnKey(true)
     setDirty(true)
     setTesting('idle')
-    // The list of models of a hosted provider that publishes one is read as soon as it is chosen.
-    if (provider === 'openrouter') void detectModels(provider, BASE_URLS[provider])
+    // The models of a hosted provider (its own list, read live for OpenRouter) are asked for as soon as it is chosen; the hints above show
+    // meanwhile.
+    if (provider !== 'tei' && provider !== 'ollama') void detectModels(provider, BASE_URLS[provider])
   }
 
   async function detectModels(provider: string = form.provider, baseUrl: string = form.base_url) {
@@ -163,6 +168,8 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
     { value: 'openai', label: 'OpenAI', description: ready('openai', 'OpenAI embeddings API'), icon: <ProviderIcon provider="openai" size={24} /> },
     { value: 'mistral', label: 'Mistral', description: ready('mistral', 'Mistral embeddings API'), icon: <ProviderIcon provider="mistral" size={24} /> },
     { value: 'gemini', label: 'Google Gemini', description: ready('gemini', 'Gemini OpenAI-compatible endpoint'), icon: <ProviderIcon provider="gemini" size={24} /> },
+    { value: 'voyage', label: 'Voyage AI', description: 'Retrieval embeddings, with a key from Voyage', icon: <ProviderIcon provider="voyage" size={24} /> },
+    { value: 'jina', label: 'Jina AI', description: 'Multilingual embeddings, with a key from Jina', icon: <ProviderIcon provider="jina" size={24} /> },
     { value: 'openrouter', label: 'OpenRouter', description: ready('openrouter', 'Dozens of embedding models, one key'), icon: <ProviderIcon provider="openrouter" size={24} /> }
   ]
 

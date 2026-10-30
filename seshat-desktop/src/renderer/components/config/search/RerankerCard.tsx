@@ -16,6 +16,7 @@ const RERANKER_PRESETS = [
   { id: 'openrouter', label: 'OpenRouter', base_url: 'https://openrouter.ai/api/v1/rerank', model: 'cohere/rerank-v3.5' },
   { id: 'cohere', label: 'Cohere', base_url: 'https://api.cohere.com/v2/rerank', model: 'rerank-v3.5' },
   { id: 'voyage', label: 'Voyage AI', base_url: 'https://api.voyageai.com/v1/rerank', model: 'rerank-2.5' },
+  { id: 'jina', label: 'Jina AI', base_url: 'https://api.jina.ai/v1/rerank', model: 'jina-reranker-v3.5' },
   { id: 'custom', label: 'Custom endpoint', base_url: '', model: '' }
 ]
 
@@ -25,7 +26,7 @@ const PROVIDER_KINDS: Record<string, string[]> = { openrouter: ['openrouter'], c
 const MISSING_NAMES: Record<string, string> = { openrouter: 'OpenRouter', cohere: 'Cohere', voyage: 'Voyage AI' }
 
 // The hosted providers whose rerank models are listed by the app.
-const LISTED = ['openrouter', 'cohere', 'voyage']
+const LISTED = ['openrouter', 'cohere', 'voyage', 'jina']
 
 export function RerankerCard({ config, providers, onSaved }: { config: RerankerConfig | null; providers: ProviderSetting[]; onSaved: (config: RerankerConfig) => void }) {
   const [preset, setPreset] = useState('tei')

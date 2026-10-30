@@ -250,7 +250,7 @@ func (a *App) handleKnowledgeGDriveAccountSync(w http.ResponseWriter, r *http.Re
 		ExpiresAt:    secret.ExpiresAt,
 	}, account.SyncCursor)
 	if err != nil {
-		_ = a.backend.KnowledgeGDriveAccounts.UpdateSyncState(r.Context(), db.UpdateConnectorAccountSyncParams{
+		recordSyncState(r.Context(), a.backend.KnowledgeGDriveAccounts, db.UpdateConnectorAccountSyncParams{
 			ID: accountID, SyncCursor: account.SyncCursor, LastSyncedAt: time.Now(), LastError: err.Error(),
 		})
 		writeJSONError(w, http.StatusBadGateway, "drive sync failed: "+err.Error())
@@ -275,7 +275,7 @@ func (a *App) handleKnowledgeGDriveAccountSync(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	_ = a.backend.KnowledgeGDriveAccounts.UpdateSyncState(r.Context(), db.UpdateConnectorAccountSyncParams{
+	recordSyncState(r.Context(), a.backend.KnowledgeGDriveAccounts, db.UpdateConnectorAccountSyncParams{
 		ID: accountID, SyncCursor: nextCursor, LastSyncedAt: time.Now(),
 	})
 	writeJSON(w, http.StatusOK, map[string]any{"synced_items": len(items), "ingested": ingested})

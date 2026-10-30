@@ -11,6 +11,30 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-31
+
+### Highlights
+
+- **Updates install with one click**, and a downloaded update is no longer missed.
+- **Formulas are drawn everywhere in an answer**, while it is written, and a request for illustrations draws them in the chat.
+- **Voyage, Jina and more models for the embeddings and the rerank of Knowledge.**
+
+### Added
+
+- **Jina AI and the newer Cohere and Voyage models for the rerank of Knowledge.** Config > Search offers Jina (`jina-reranker-v3.5` and three more), Cohere adds `rerank-v5.0-pro`, `rerank-v5.0-fast` and `rerank-v4.0-fast`, and Voyage adds `rerank-3` and `rerank-3-lite` (seshat-runtime v1.12.5). The default of Cohere and Voyage stays the model that was measured.
+- **Voyage AI and Jina AI for the embeddings of Knowledge, and each provider offers its own models.** Config > Search can now use Voyage (`voyage-4` and its variants) or Jina (`jina-embeddings-v5` and `v4`) with a key from them, and Gemini offers `gemini-embedding-2` next to `gemini-embedding-001`. The list of models of a provider comes from the app, not from a copy in the screen; Gemini and Mistral used to be offered OpenAI's models when asked for their list.
+
+### Fixed
+
+- **A long answer from a z.ai model (GLM) no longer ends in "The provider took too long".** z.ai sent the arguments of a tool call only when it had finished writing them, so a long file or illustration left the connection silent until the app gave up. The runtime (v1.12.6) now asks z.ai to stream them.
+- **A request body that is not valid JSON is refused, and a skill file cannot be read through a link that leaves its folder.** The test and model-listing calls of the embedder, reranker, document reader and web search read a broken body as an empty request; they now answer 400. A failed save of the sync state of a connector is written to the log instead of being dropped. The skill file endpoint follows links before checking that the file is inside the skill folder.
+- **Asking for illustrations or figures now draws them in the chat.** A request such as "explain gradient descent with visual illustrations" did not bring the chart components to the model, which then wrote a file or an HTML page instead of answering. The words illustration, visual, figure, gradient and optimisation now bring them, and the prompt tells the model to draw in the answer and write no file unless asked.
+- **A formula that ends at the end of a line no longer swallows the rest of the answer.** A model writes a displayed formula as `$$` ... `\end{array}$$`, with the closing `$$` after the last line of content, and the Markdown reader only closes a formula on a line of its own: everything after it, up to the end of the message, was drawn as one failed formula, in red or as grey code. Such formulas are now closed where the model meant them to end, and a `$$` that has no partner is shown as text.
+- **Formulas are drawn in cards and tables, and while the answer is written.** A formula in a card, a callout, a step or a table cell showed its `$…$` source, and in a message the formulas appeared only once it was finished. They are now typeset as they close, and one that cannot be read stays as muted text instead of turning the paragraph red.
+- **You can scroll up while the agent writes.** The conversation followed the end of the answer so eagerly that a scroll up was taken back down before it started. Scrolling up (wheel, touch, keys or the scrollbar) now stops the follow at once, and it starts again when you come back to the end or use the arrow.
+- **An update installs with one click and no wizard.** Restarting into a downloaded update runs the installer silently and opens the app again by itself, instead of showing the installer's pages.
+- **A downloaded update is no longer missed.** The app remembers that an update is ready and shows it when a window opens, and Settings > About has a Check for updates button and a Restart and install button.
+
 ## [0.2.0] - 2026-10-30
 
 ### Highlights

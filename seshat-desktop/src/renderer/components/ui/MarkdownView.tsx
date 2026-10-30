@@ -3,7 +3,7 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import { normalizeMathDelimiters, sealOpenFences } from '@renderer/lib/markdownText'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
+import { KatexMath, isMathBlockNode, mathKind } from '@renderer/lib/math'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
@@ -296,6 +296,8 @@ type CodeProps = {
   children?: ReactNode
 }
 
+const REMARK_PLUGINS = [remarkGfm, remarkMath]
+
 export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources, renderLink }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
   // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
@@ -315,6 +317,8 @@ export function MarkdownView({ children, className, streaming = false, sessionId
   // updated in place like any other React content.
   const markdownComponents = useMemo<Components>(() => ({
           code({ inline, className, children, ...props }: CodeProps) {
+            const kind = mathKind(className)
+            if (kind) return <KatexMath tex={String(children).replace(/\n$/, '')} display={kind === 'display'} />
             const match = /language-(\w+)/.exec(className || '')
             if (!inline && /(^|\s)language-seshat-ui(\s|$)/.test(className || '')) {
               const code = String(children).replace(/\n$/, '')
@@ -356,7 +360,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           },
           pre({ node, children }: { node?: unknown; children?: ReactNode }) {
             // A seshat-ui block draws components, which a pre would set in monospace, on one line, and clip.
-            if (isRichBlockNode(node)) return <>{children}</>
+            if (isRichBlockNode(node) || isMathBlockNode(node)) return <>{children}</>
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
           },
           table({ children }) {
@@ -441,14 +445,9 @@ export function MarkdownView({ children, className, streaming = false, sessionId
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
       <ReactMarkdown
-        // KaTeX and Prism re-parse their whole input on every render; while
-        // streaming, `content` changes on every token, which would mean
-        // re-running both on every single chunk. Both are skipped here and
-        // only applied once the message is complete (final non-streaming
-        // render), trading a plain-text flash for smooth token-by-token
-        // rendering during the stream itself.
-        remarkPlugins={streaming ? [remarkGfm] : [remarkGfm, remarkMath]}
-        rehypePlugins={streaming ? [] : [rehypeKatex]}
+        // The formulas are drawn while the answer streams: remark-math finds the closed ones, and KatexMath keeps what it typeset by
+        // formula, so a token only costs the formula it completes. Prism still waits for the message to be complete (see `code`).
+        remarkPlugins={REMARK_PLUGINS}
         components={markdownComponents}
       >
         {content}

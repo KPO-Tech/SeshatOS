@@ -12,6 +12,8 @@ export function UpdateBanner() {
   useEffect(() => {
     const updates = window.seshat?.updates
     if (!updates) return
+    // The announcement is sent once, possibly before this window listened: ask for an update that is already downloaded.
+    void updates.ready().then((payload) => { if (payload) setVersion(payload.version) }).catch(() => undefined)
     return updates.onDownloaded((payload) => {
       setVersion(payload.version)
       setDismissed(false)
@@ -25,7 +27,7 @@ export function UpdateBanner() {
       role="status"
       className="fixed bottom-4 left-4 z-50 flex max-w-[360px] items-center gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-3 text-[13px] text-[var(--text-primary)] shadow-lg"
     >
-      <span className="min-w-0 flex-1">SeshatOS {version} is ready to install.</span>
+      <span className="min-w-0 flex-1">SeshatOS {version} is ready. Restart to install it.</span>
       <button
         type="button"
         disabled={installing}
@@ -35,7 +37,7 @@ export function UpdateBanner() {
         }}
         className="cursor-pointer rounded-md border-0 bg-[var(--accent-primary)] px-3 py-1 text-[12px] font-semibold text-white disabled:cursor-default disabled:opacity-60"
       >
-        {installing ? 'Restarting…' : 'Restart'}
+        {installing ? 'Restarting…' : 'Restart and install'}
       </button>
       <button
         type="button"
