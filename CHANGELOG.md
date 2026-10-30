@@ -11,6 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-30
+
+### Highlights
+
+- **Knowledge is in this release**, with Ask, Search, Collections and Sources. SeshatCloud accounts and the cloud stay off in the public build; the Store and sources are on.
+- **Rich answers**: tables, drawings, charts, buttons and follow-up choices, drawn while the answer streams.
+- **Indra OCR**, an optional reader for scanned pages, and a first-run setup that connects a model.
+
 ### Added
 
 #### Knowledge
@@ -85,6 +93,13 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Individual SeshatCloud accounts and the person of a local device manage their own Knowledge**; sign out is disabled on the local workspace.
 - **A web search provider is tested with what is typed**, before saving.
 - **`source_path` is added to the documents of existing databases.**
+- **A citation names its document by its file name**, not only its collection; the search now names the file even when the index kept no name with the passage.
+- **A citation to a document that was removed still shows the passage**, with a note saying the document is no longer in the collection, instead of failing to open.
+- **The OCR models are checked after download.** Each model file is pinned to a revision and a SHA-256; a file that is not the expected one is refused and not kept.
+- **A file named in a rich answer opens, and never starts a program.** A file reference of a project opens in the Files panel when the system cannot open it; a program or script (`.exe`, `.bat`, `.sh`, `.msi`, `.lnk` and the like) is never opened from an answer, and only web links (`http`, `https`) are followed. A button or a choice shows what it will send or open when hovered.
+- **The public build shows Knowledge, the Store and sources**; accounts and the cloud are hidden.
+- **macOS and unsigned installers are said plainly.** The macOS image is marked experimental and has no built-in OCR for scans yet (Indra can read them); the installers are not signed, and the README explains the first launch.
+- **Dependencies:** `npm audit fix` applied to the desktop lockfile.
 
 ## [0.1.2] - 2026-10-23
 
