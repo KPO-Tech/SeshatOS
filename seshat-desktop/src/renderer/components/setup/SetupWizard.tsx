@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ComponentCard } from './ComponentCard'
 import { InstallProgress } from './InstallProgress'
-import { fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes } from './setupFormat'
+import { fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes, type SetupComponentId } from './setupFormat'
 import type { useSetup } from './useSetup'
 
 type Step = 'welcome' | 'choose' | 'installing' | 'done'
@@ -117,8 +117,13 @@ export function SetupWizard({ setup }: { setup: Setup }) {
   }
 
   async function skip() {
-    await setup.run({})
+    await setup.run({ title: { install: false, modelId: '' } })
     await setup.finish()
+  }
+
+  async function retry() {
+    const failed = (Object.keys(progress) as SetupComponentId[]).filter((id) => progress[id]?.status === 'error' && choices[id])
+    await setup.run(Object.fromEntries(failed.map((id) => [id, choices[id]])), { keepProgress: true })
   }
 
   return (
@@ -135,7 +140,7 @@ export function SetupWizard({ setup }: { setup: Setup }) {
         {step === 'welcome' && (
           <>
             <SeshatLogo size={104} />
-            <Heading title="Welcome to SeshatOS">Your AI workspace, running on your computer. Two quick choices and you are in.</Heading>
+            <Heading title="Welcome to SeshatOS">Your AI workspace, running on your computer. A few quick choices and you are in.</Heading>
             <ul className="m-0 grid w-full max-w-[460px] list-none gap-3.5 p-0 text-[14.5px] leading-[1.5] text-[var(--text-secondary)]">
               {[
                 ['Private by design', 'Your files and conversations stay on this computer.'],
@@ -216,7 +221,7 @@ export function SetupWizard({ setup }: { setup: Setup }) {
             <SeshatLogo size={88} />
             <Heading title={hadError ? 'Almost there' : "You're all set"}>
               {hadError
-                ? 'Something could not be downloaded. SeshatOS works without it, and you can try again in Config.'
+                ? 'Something could not be downloaded. You can try again now, or later in Config. SeshatOS works without it.'
                 : 'Everything you chose is ready. You can change any of it later in Config.'}
             </Heading>
             {Object.keys(progress).length > 0 && (
@@ -224,7 +229,16 @@ export function SetupWizard({ setup }: { setup: Setup }) {
                 <InstallProgress progress={progress} />
               </div>
             )}
-            <PrimaryButton onClick={() => void setup.finish()}>Open SeshatOS</PrimaryButton>
+            <div className="flex gap-3">
+              {hadError && (
+                <QuietButton disabled={running} onClick={() => void retry()}>
+                  {running ? 'Trying again' : 'Try again'}
+                </QuietButton>
+              )}
+              <PrimaryButton disabled={running} onClick={() => void setup.finish()}>
+                Open SeshatOS
+              </PrimaryButton>
+            </div>
           </>
         )}
 

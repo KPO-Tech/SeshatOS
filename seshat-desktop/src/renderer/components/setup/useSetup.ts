@@ -38,10 +38,11 @@ export function useSetup() {
   }, [bridge])
 
   const run = useCallback(
-    async (selection: Choices) => {
+    async (selection: Choices, options: { keepProgress?: boolean } = {}) => {
       if (!bridge) return
       const chosen = (['title', 'speech', 'ocr'] as const).filter((id) => selection[id]?.install)
-      setProgress(Object.fromEntries(chosen.map((id) => [id, { status: 'waiting', receivedBytes: 0, totalBytes: 0 }])))
+      const waiting = Object.fromEntries(chosen.map((id) => [id, { status: 'waiting', receivedBytes: 0, totalBytes: 0 }])) as Progress
+      setProgress((current) => (options.keepProgress ? { ...current, ...waiting } : waiting))
       setRunning(true)
       const stop = bridge.onProgress((event) => {
         setProgress((current) => ({

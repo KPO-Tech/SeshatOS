@@ -122,6 +122,21 @@ function serverBinaryPath(): string | null {
   return join(whisperDir(), 'bin', asset.binaryRelPath)
 }
 
+// Sizes of the release archives, so the setup can count the engine in what it asks the person to download.
+const ARCHIVE_BYTES: Record<string, number> = {
+  'whisper-bin-x64.zip': 7_982_101,
+  'whisper-bin-ubuntu-x64.tar.gz': 9_379_235,
+  'whisper-bin-ubuntu-arm64.tar.gz': 4_555_819
+}
+
+/** What the engine adds to a download: nothing when it is already on this computer. */
+export function whisperEngineDownloadBytes(): number {
+  const asset = platformAsset()
+  const binaryPath = serverBinaryPath()
+  if (!asset || (binaryPath && existsSync(binaryPath))) return 0
+  return ARCHIVE_BYTES[asset.archiveName] ?? 0
+}
+
 function isWhisperSupported(): boolean {
   return platformAsset() !== null
 }

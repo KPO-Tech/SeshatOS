@@ -93,7 +93,7 @@ type ShellExitEvent = { id: string; exitCode: number; signal?: number }
 type SetupComponentId = 'title' | 'speech' | 'ocr'
 type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean; installed?: boolean; active?: boolean }
 type SetupPlan = {
-  components: Array<{ id: SetupComponentId; available: boolean; unavailableReason?: string; defaultOn?: boolean; note?: string; options: SetupOption[] }>
+  components: Array<{ id: SetupComponentId; available: boolean; unavailableReason?: string; defaultOn?: boolean; note?: string; engineBytes?: number; options: SetupOption[] }>
   freeDiskBytes: number | null
 }
 type SetupSelection = Partial<Record<SetupComponentId, { install: boolean; modelId: string }>>

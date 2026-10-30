@@ -2,8 +2,15 @@ import { mkdir, readFile, statfs, writeFile } from 'fs/promises'
 import { cpus, totalmem } from 'os'
 import { join } from 'path'
 import { app } from 'electron'
-import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL, activateModel as activateTitleModel, disableLlama, getLlamaStatus } from './llama-manager'
-import { MODEL_CATALOG as SPEECH_MODELS, activateModel as activateSpeechModel, downloadModel as downloadSpeechModel, enableLocalWhisper, getWhisperStatus } from './whisper-manager'
+import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL, activateModel as activateTitleModel, disableLlama, getLlamaStatus, llamaEngineDownloadBytes } from './llama-manager'
+import {
+  MODEL_CATALOG as SPEECH_MODELS,
+  activateModel as activateSpeechModel,
+  downloadModel as downloadSpeechModel,
+  enableLocalWhisper,
+  getWhisperStatus,
+  whisperEngineDownloadBytes
+} from './whisper-manager'
 import { resolveRuntimeRoot } from './runtime'
 import { downloadOcrPack, ocrSuitability, pickRecommendedPack, readOcrPacks } from './setup-ocr'
 import { withInstalled } from './setup-options'
@@ -41,6 +48,8 @@ export type SetupComponent = {
   /** False when this computer is better left without it: the wizard starts with it unticked, and says why in note. */
   defaultOn?: boolean
   note?: string
+  /** What the engine that runs the models adds to the download, 0 when it is already on this computer. */
+  engineBytes?: number
   options: SetupOption[]
 }
 
@@ -162,8 +171,18 @@ async function ocrComponent(): Promise<SetupComponent> {
   }
 }
 
+function whisperUnavailableReason(): string {
+  return process.platform === 'darwin' ? 'Local dictation is not available on macOS yet.' : 'Not available on this system yet.'
+}
+
 export async function getSetupPlan(): Promise<SetupPlan> {
-  const [llama, whisper, free, ocr] = await Promise.all([getLlamaStatus(), getWhisperStatus(), freeDiskBytes(), ocrComponent()])
+  const [llama, whisper, free, ocr, llamaEngineBytes] = await Promise.all([
+    getLlamaStatus(),
+    getWhisperStatus(),
+    freeDiskBytes(),
+    ocrComponent(),
+    llamaEngineDownloadBytes()
+  ])
   return {
     freeDiskBytes: free,
     components: [
@@ -171,12 +190,14 @@ export async function getSetupPlan(): Promise<SetupPlan> {
         id: 'title',
         available: llama.supported,
         unavailableReason: llama.supported ? undefined : 'Not available on this system yet.',
+        engineBytes: llamaEngineBytes,
         options: titleOptions(llama.downloadedModelIds, llama.activeModelId)
       },
       {
         id: 'speech',
         available: whisper.supported,
-        unavailableReason: whisper.supported ? undefined : 'Not available on this system yet.',
+        unavailableReason: whisper.supported ? undefined : whisperUnavailableReason(),
+        engineBytes: whisperEngineDownloadBytes(),
         options: speechOptions(whisper.downloadedModelIds, whisper.activeModelId)
       },
       ocr
@@ -211,9 +232,9 @@ async function installOcr(packId: string, report: Report): Promise<void> {
 }
 
 /**
- * Installs what was chosen, all the components at the same time, and reports each as it goes. A component left out stays off: the title
- * model is turned off so it is not downloaded behind the person's back; speech was never on by itself. One that fails does not stop the
- * others.
+ * Installs what was chosen, all the components at the same time, and reports each as it goes. A component unticked stays off: the title
+ * model is turned off so it is not downloaded behind the person's back; speech was never on by itself. A component missing from the
+ * selection is left as it is, which is how a retry runs only what failed. One that fails does not stop the others.
  */
 export async function runSetup(selection: SetupSelection, report: Report): Promise<void> {
   const plan: Array<[SetupComponentId, (modelId: string, report: Report) => Promise<void>]> = [
@@ -225,7 +246,8 @@ export async function runSetup(selection: SetupSelection, report: Report): Promi
     id: component,
     run: async () => {
       const choice = selection[component]
-      if (!choice?.install) {
+      if (!choice) return
+      if (!choice.install) {
         if (component === 'title') await disableLlama().catch(() => {})
         report({ component, status: 'done', message: 'Skipped' })
         return
