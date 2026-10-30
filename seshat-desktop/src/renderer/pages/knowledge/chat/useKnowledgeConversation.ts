@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '@renderer/api/client'
 import { useChat } from '@renderer/hooks/useChat'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
+import { useAskSessionStore } from '@renderer/stores/askSession'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 import { useConversationModels } from '@renderer/components/chat/conversation/useConversationModels'
@@ -23,6 +24,16 @@ export function useKnowledgeConversation() {
   const updateSession = useSessionStore((state) => state.updateSession)
   const permissionMode = useUIStore((state) => state.permissionMode)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  // The title bar offers the panels of the conversation (the session, the browser) while this view has one open.
+  const publishSession = useAskSessionStore((state) => state.setSessionId)
+  useEffect(() => {
+    publishSession(sessionId)
+    return () => {
+      publishSession(null)
+      // The panels of a conversation that is left (a new question, another one of the history) do not stay on the next one.
+      if (sessionId) useUIStore.getState().closeRightPanelsForSession(sessionId)
+    }
+  }, [sessionId, publishSession])
   const [startError, setStartError] = useState<string | null>(null)
   // A conversation of the history that was opened: its messages are fetched, which those of a new one never are.
   const [openedId, setOpenedId] = useState<string | null>(null)
