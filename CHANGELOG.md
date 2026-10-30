@@ -14,6 +14,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 ### Added
 
 - **Jina AI and the newer Cohere and Voyage models for the rerank of Knowledge.** Config > Search offers Jina (`jina-reranker-v3.5` and three more), Cohere adds `rerank-v5.0-pro`, `rerank-v5.0-fast` and `rerank-v4.0-fast`, and Voyage adds `rerank-3` and `rerank-3-lite` (seshat-runtime v1.12.5). The default of Cohere and Voyage stays the model that was measured.
+- **Voyage AI and Jina AI for the embeddings of Knowledge, and each provider offers its own models.** Config > Search can now use Voyage (`voyage-4` and its variants) or Jina (`jina-embeddings-v5` and `v4`) with a key from them, and Gemini offers `gemini-embedding-2` next to `gemini-embedding-001`. The list of models of a provider comes from the app, not from a copy in the screen; Gemini and Mistral used to be offered OpenAI's models when asked for their list.
 
 ### Fixed
 
