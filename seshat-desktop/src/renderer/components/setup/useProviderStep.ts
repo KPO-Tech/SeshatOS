@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createProviderSetting, fetchProviderChoices, fetchProviderSettings, setDefaultProvider, syncProviderModels } from '@renderer/components/config/providers/providerApi'
+import { checkProviderKey, createProviderSetting, fetchProviderChoices, fetchProviderSettings, setDefaultProvider, syncProviderModels } from '@renderer/components/config/providers/providerApi'
 import type { ProviderChoice } from '@renderer/components/config/providers/providerTypes'
 import { initialProviderForm, isCodexProvider } from '@renderer/components/config/providers/providerUtils'
 
-export type ProviderStepStatus = 'loading' | 'idle' | 'saving' | 'connected'
+export type ProviderStepStatus = 'loading' | 'idle' | 'checking' | 'saving' | 'connected'
 
 // The cloud and local providers the runtime ships with, offered when the person connects a model for the first time. Providers that need
 // a browser sign-in stay in Config.
@@ -15,6 +15,8 @@ export function useProviderStep() {
   const [status, setStatus] = useState<ProviderStepStatus>('loading')
   const [connectedName, setConnectedName] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // What the check could not settle (provider out of reach, answer not understood): the person may save the key anyway.
+  const [unverified, setUnverified] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -50,33 +52,59 @@ export function useProviderStep() {
       setSelectedId(id)
       setApiKey('')
       setError(null)
+      setUnverified(null)
       setBaseUrl(initialProviderForm(choices.find((entry) => entry.id === id)).base_url)
     },
     [choices]
   )
 
-  const connect = useCallback(async () => {
-    if (!selected || !canConnect || status === 'saving') return
-    setStatus('saving')
-    setError(null)
-    try {
-      const created = await createProviderSetting({
-        provider: form.provider,
-        name: selected.name,
-        auth_kind: form.auth_kind,
-        api_key: needsKey ? apiKey.trim() : undefined,
-        base_url: baseUrl.trim() && baseUrl.trim() !== selected.base_url ? baseUrl.trim() : undefined
-      })
-      await setDefaultProvider(created.id).catch(() => {})
-      await syncProviderModels(created.id).catch(() => {})
-      setApiKey('')
-      setConnectedName(selected.name)
-      setStatus('connected')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'The provider could not be saved.')
-      setStatus('idle')
-    }
-  }, [apiKey, baseUrl, canConnect, form, needsKey, selected, status])
+  const connect = useCallback(
+    async (saveAnyway = false) => {
+      if (!selected || !canConnect || status === 'saving' || status === 'checking') return
+      setError(null)
+      setUnverified(null)
+      const address = baseUrl.trim() && baseUrl.trim() !== selected.base_url ? baseUrl.trim() : undefined
+      if (!saveAnyway) {
+        setStatus('checking')
+        try {
+          const check = await checkProviderKey({ provider: form.provider, api_key: needsKey ? apiKey.trim() : undefined, base_url: address })
+          if (check.status === 'rejected') {
+            setError(check.message ?? 'The provider rejected this key.')
+            setStatus('idle')
+            return
+          }
+          if (check.status !== 'ok') {
+            setUnverified(check.message ?? 'The key could not be checked.')
+            setStatus('idle')
+            return
+          }
+        } catch {
+          setUnverified('The key could not be checked.')
+          setStatus('idle')
+          return
+        }
+      }
+      setStatus('saving')
+      try {
+        const created = await createProviderSetting({
+          provider: form.provider,
+          name: selected.name,
+          auth_kind: form.auth_kind,
+          api_key: needsKey ? apiKey.trim() : undefined,
+          base_url: address
+        })
+        await setDefaultProvider(created.id).catch(() => {})
+        await syncProviderModels(created.id).catch(() => {})
+        setApiKey('')
+        setConnectedName(selected.name)
+        setStatus('connected')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'The provider could not be saved.')
+        setStatus('idle')
+      }
+    },
+    [apiKey, baseUrl, canConnect, form, needsKey, selected, status]
+  )
 
-  return { choices, selected, selectedId, select, apiKey, setApiKey, baseUrl, setBaseUrl, needsKey, canConnect, status, connectedName, error, connect }
+  return { choices, selected, selectedId, select, apiKey, setApiKey, baseUrl, setBaseUrl, needsKey, canConnect, status, connectedName, error, unverified, connect }
 }

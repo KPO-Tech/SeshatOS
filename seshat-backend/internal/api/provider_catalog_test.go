@@ -135,3 +135,60 @@ func TestACatalogProviderSettingIsCreatedWithItsOwnModels(t *testing.T) {
 		}
 	}
 }
+
+func TestProviderKeyCheckAsksTheProviderAndStoresNothing(t *testing.T) {
+	app, _ := newSettingsTestApp(t, nil)
+	router := CreateRouter(defaultAPIConfig, app)
+	token := loginAs(t, router, "admin@settings.test", "adminpass")
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer sk-good" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		_, _ = w.Write([]byte(`{"data":[]}`))
+	}))
+	defer provider.Close()
+
+	check := func(key string) string {
+		body := `{"provider":"openai","api_key":"` + key + `","base_url":"` + provider.URL + `"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/settings/providers/check-key", strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("check-key: got %d, body=%s", rec.Code, rec.Body.String())
+		}
+		var out struct {
+			Status string `json:"status"`
+		}
+		if err := json.NewDecoder(rec.Body).Decode(&out); err != nil {
+			t.Fatal(err)
+		}
+		return out.Status
+	}
+	if got := check("sk-good"); got != "ok" {
+		t.Fatalf("good key: got %q", got)
+	}
+	if got := check("sk-bad"); got != "rejected" {
+		t.Fatalf("bad key: got %q", got)
+	}
+
+	list := httptest.NewRequest(http.MethodGet, "/api/v1/settings/providers", nil)
+	list.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, list)
+	if strings.Contains(rec.Body.String(), `"provider":"openai"`) {
+		t.Fatalf("checking a key must not save a provider: %s", rec.Body.String())
+	}
+}
+
+func TestProviderKeyCheckNeedsASignedInUser(t *testing.T) {
+	app, _ := newSettingsTestApp(t, nil)
+	router := CreateRouter(defaultAPIConfig, app)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/settings/providers/check-key", strings.NewReader(`{"provider":"openai"}`))
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("got %d, want 401", rec.Code)
+	}
+}
