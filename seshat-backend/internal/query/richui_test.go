@@ -108,6 +108,8 @@ func TestRichUIFamiliesFor(t *testing.T) {
 		{"help me with a pie chart", false, true},
 		{"please process the list", false, false},
 		{"Show it as a chart", false, true},
+		{"expliques moi la descente de gradient avec des illustrations visuelles", false, true},
+		{"explain gradient descent with visual figures", false, true},
 	}
 	for _, c := range cases {
 		got := richUIFamiliesFor(c.prompt)
