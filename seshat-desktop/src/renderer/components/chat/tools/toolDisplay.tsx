@@ -19,6 +19,7 @@ import { McpToolView } from './renderers/McpToolView'
 import { NotebookToolView } from './renderers/NotebookToolView'
 import { PatchToolView } from './renderers/PatchToolView'
 import { ProseToolView } from './renderers/ProseToolView'
+import { KnowledgeSearchToolView } from './renderers/KnowledgeSearchToolView'
 import { RagSearchToolView } from './renderers/RagSearchToolView'
 import { KnowledgeReadToolView } from './renderers/KnowledgeReadToolView'
 import { ReadToolView } from './renderers/ReadToolView'
@@ -160,9 +161,10 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
 
   rag_search: { label: 'RAG Search', render: RagSearchToolView },
   // The tool Chat's agent actually uses to search every accessible corpus
-  // (see seshat-backend internal/knowledge/tool) - same result shape, so it
-  // shares RagSearchToolView's source cards.
-  knowledge_search: { label: 'Knowledge Search', groupable: false, render: RagSearchToolView, snippet: (t) => compact(str(t, 'query'), 40) },
+  // (see seshat-backend internal/knowledge/tool). Its excerpts carry a
+  // reference, pages and a section, which RagSearchToolView's older header
+  // does not read, so it has its own view.
+  knowledge_search: { label: 'Knowledge Search', groupable: false, render: KnowledgeSearchToolView, snippet: (t) => compact(str(t, 'query'), 40) },
   knowledge_read: { label: 'Knowledge Read', groupable: false, render: KnowledgeReadToolView, snippet: (t) => compact(str(t, 'file'), 40) },
   rag_ingest: { label: 'Ingest', silent: true, snippet: (t) => str(t, 'corpus_id') },
 
