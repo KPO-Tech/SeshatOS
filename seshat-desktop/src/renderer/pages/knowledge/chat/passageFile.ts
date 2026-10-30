@@ -28,3 +28,20 @@ export async function resolvePassageFile(passage: Passage, collections: readonly
   }
   return null
 }
+
+/** Whether a document is still in the list a collection holds. */
+export function isKept(files: readonly Pick<CollectionFile, 'fileId'>[], fileId: string): boolean {
+  return files.some((file) => file.fileId === fileId)
+}
+
+/**
+ * Whether a document a citation points at is still in its collection: a conversation outlives the documents it quoted. A collection that
+ * cannot be read says nothing about the document, so the caller tries to open it as before.
+ */
+export async function stillInCollection(corpusId: string, fileId: string): Promise<boolean> {
+  try {
+    return isKept(await listFiles(corpusId), fileId)
+  } catch {
+    return true
+  }
+}

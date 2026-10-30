@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import type { Passage } from '../chat/knowledgeSearchResults'
-import { resolvePassageFile } from '../chat/passageFile'
+import { resolvePassageFile, stillInCollection } from '../chat/passageFile'
 import { useCollections, type AskScope } from '../chat/useCollections'
 import { useKnowledgeConversation } from '../chat/useKnowledgeConversation'
 import { PassageDrawer } from '../components/PassageDrawer'
@@ -22,6 +22,9 @@ import { AskSessionSidebar } from './AskSessionSidebar'
 import { AskSidebar } from './AskSidebar'
 import type { OpenHow } from './askExtras'
 
+// A citation of a conversation outlives the document it quotes: the passage is shown as the agent read it, and the message says why the document does not open.
+const REMOVED_NOTE = 'This document is no longer in the collection. This is the passage the answer rested on, as the agent read it.'
+
 export function AskPage() {
   const navigate = useNavigate()
   const startingQuestion = (useLocation().state as { question?: string } | null)?.question ?? ''
@@ -34,7 +37,7 @@ export function AskPage() {
   const started = sessionId !== null
   const [historyOpen, setHistoryOpen] = useState(false)
   const [scope, setScope] = useState<AskScope>({ collectionId: null })
-  const [opened, setOpened] = useState<Passage | null>(null)
+  const [opened, setOpened] = useState<{ passage: Passage; note?: string } | null>(null)
   // The beginning of a question chosen on the screen, to put in the input.
   const [prefill, setPrefill] = useState<{ text: string; nonce: number } | undefined>(undefined)
   const newQuestion = useCallback(() => {
@@ -50,6 +53,10 @@ export function AskPage() {
   const onOpenPassage = useCallback(
     async (passage: Passage, how: OpenHow = 'cited') => {
       const origin = passage.fileId && passage.corpusId ? { fileId: passage.fileId, corpusId: passage.corpusId } : await resolvePassageFile(passage, collections)
+      if (origin && !(await stillInCollection(origin.corpusId, origin.fileId))) {
+        setOpened({ passage, note: REMOVED_NOTE })
+        return
+      }
       if (origin) {
         const target = passageTarget(passage.text, passage.pages)
         if (await openDocument({ fileId: origin.fileId, name: passage.file }, origin.corpusId, target.page, how === 'cited' ? target.highlight : undefined)) {
@@ -57,7 +64,7 @@ export function AskPage() {
           return
         }
       }
-      setOpened(passage)
+      setOpened({ passage })
     },
     [collections]
   )
@@ -143,7 +150,7 @@ export function AskPage() {
           {notice}
         </div>
 
-        <PassageDrawer passage={opened} onClose={() => setOpened(null)} />
+        <PassageDrawer passage={opened?.passage ?? null} note={opened?.note} onClose={() => setOpened(null)} />
       </section>
 
       {!panelOpen && (
