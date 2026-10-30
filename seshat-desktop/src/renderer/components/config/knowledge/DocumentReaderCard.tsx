@@ -117,7 +117,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const nativeDocInitialized = system?.document_nativedoc_runtime_initialized === true
   const nativeDocModels = system?.document_nativedoc_models_available === true
   const nativeDocReady = system?.document_nativedoc_ready === true
-  const nativeDocDetail = nativeDocReady ? 'Ready' : !nativeDocCompiled ? 'CGO build needed' : !nativeDocModels ? 'Needs models' : !nativeDocInitialized ? 'Needs runtime' : 'Unavailable'
+  const nativeDocDetail = nativeDocReady ? 'Ready' : !nativeDocCompiled ? 'Not in this version' : !nativeDocModels ? 'Needs models' : !nativeDocInitialized ? 'Needs runtime' : 'Unavailable'
   const canInitializeNative = nativeDocCompiled && nativeDocModels && !nativeDocReady
   const chosenPack = nativePacks.find((pack) => pack.id === selectedPack) ?? null
   const chosenPackReady = chosenPack ? chosenPack.installed && chosenPack.active : nativeDocModels
@@ -133,9 +133,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const nativeSetupMessage = nativeDocReady
     ? 'Native OCR is ready for local scanned PDFs.'
     : !nativeDocCompiled
-      ? nativeDocModels
-        ? 'DeepDoc models are present, but the bundled desktop backend was built without CGO/nativedoc support. Start a nativedoc-enabled backend to initialize local OCR.'
-        : 'The bundled desktop backend was built without CGO/nativedoc support. Model download is optional until a nativedoc-enabled backend is available.'
+      ? 'This version of SeshatOS has no built-in reader for scanned documents (the macOS version does not have it yet). The optional Indra reader in this section can read them.'
       : !nativeDocModels
         ? 'Download DeepDoc models before initializing native OCR.'
         : 'Models are present. Initialize native OCR to enable local scanned-PDF processing.'
