@@ -28,15 +28,22 @@ function fold(text: string): string {
 
 export type Segment = { text: string; hit: boolean }
 
-/** The text cut in pieces, the words of the query marked. */
+/** How many times a word of the query is marked in one text: a word that comes back four times lights up the line for nothing. */
+export const MARKS_PER_TERM = 2
+
+/** The text cut in pieces, the words of the query marked (each at most MARKS_PER_TERM times). */
 export function highlight(text: string, terms: readonly string[]): Segment[] {
   if (terms.length === 0 || text === '') return [{ text, hit: false }]
   const wanted = new Set(terms)
   const folded = fold(text)
   const segments: Segment[] = []
+  const marked = new Map<string, number>()
   let last = 0
   for (const match of folded.matchAll(/[\p{L}\p{N}]+/gu)) {
     if (!wanted.has(match[0])) continue
+    const count = marked.get(match[0]) ?? 0
+    if (count >= MARKS_PER_TERM) continue
+    marked.set(match[0], count + 1)
     const start = match.index ?? 0
     if (start > last) segments.push({ text: text.slice(last, start), hit: false })
     segments.push({ text: text.slice(start, start + match[0].length), hit: true })

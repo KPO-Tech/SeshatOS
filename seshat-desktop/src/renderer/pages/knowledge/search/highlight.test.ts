@@ -50,3 +50,11 @@ describe('snippet', () => {
     expect(snippet('word '.repeat(100), ['absent'], 50).endsWith('...')).toBe(true)
   })
 })
+
+describe('highlight caps', () => {
+  it('marks a word that comes back only twice', () => {
+    const segments = highlight('NIST one NIST two NIST three NIST four', ['nist'])
+    expect(segments.filter((segment) => segment.hit)).toHaveLength(2)
+    expect(segments.map((segment) => segment.text).join('')).toBe('NIST one NIST two NIST three NIST four')
+  })
+})
