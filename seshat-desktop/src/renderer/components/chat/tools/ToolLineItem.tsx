@@ -10,6 +10,7 @@ import { basename, fmtDuration, parseAskUserAnswers, resolveAskUserQuestions } f
 import { summarizeTool, toolResultSubtitle, toolStatus } from './quietGroupPhrase'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
+import { opensWide } from './readableTools'
 import type { ToolBlockProps } from './types'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -98,7 +99,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       return
     }
     // What a knowledge search or a document read returns is text to read: its panel opens as wide as a document's.
-    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: tool.name === 'knowledge_search' || tool.name === 'knowledge_read' })
+    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
   }
 
   return (
