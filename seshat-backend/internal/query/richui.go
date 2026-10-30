@@ -37,6 +37,8 @@ Besides Markdown, the desktop app draws structured components from a fenced bloc
 - a procedure of three steps or more: Steps;
 - key figures: Metric items inside a MetricRow;
 - a warning, a caveat or a status the reader must not miss: Callout.
+
+For figures or illustrations, draw them in the answer with these components; write no file or HTML page unless asked.
 `
 	richUIArchitectureShape = `- the architecture of a system, its layers or a data flow: an Architecture of Panels that hold Items with icons, and Flow arrows between them;
 `
