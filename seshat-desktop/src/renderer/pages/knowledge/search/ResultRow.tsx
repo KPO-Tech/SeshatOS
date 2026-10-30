@@ -111,6 +111,9 @@ export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = f
                 )}
               </span>
             )}
+            {!found && doc.preview && (
+              <span className={['mt-0.5 block text-[12.5px] leading-[18px] text-[var(--text-secondary)] [overflow-wrap:anywhere]', grid ? 'line-clamp-3' : 'line-clamp-2'].join(' ')}>{doc.preview}</span>
+            )}
             {found && excerpt && (
               <span className={['mt-1 block text-[13px] leading-[19px] text-[var(--text-secondary)] [overflow-wrap:anywhere]', grid ? 'line-clamp-4' : 'line-clamp-3'].join(' ')}>
                 <Highlighted text={excerpt} terms={terms} />

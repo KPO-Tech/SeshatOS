@@ -37,7 +37,7 @@ export function useLibrary({ corpusIds, kind, sort, enabled }: Params): Library 
     const id = (latest.current += 1)
     loadingMore.current = false
     setLoading(true)
-    fetchDocuments({ corpusIds: idsKey ? idsKey.split('\u0001') : [], kind, sort, limit: PAGE, offset: 0 })
+    fetchDocuments({ corpusIds: idsKey ? idsKey.split('\u0001') : [], kind, sort, limit: PAGE, offset: 0, preview: true })
       .then((page) => {
         if (id !== latest.current) return
         setDocs(page.docs)
@@ -54,7 +54,7 @@ export function useLibrary({ corpusIds, kind, sort, enabled }: Params): Library 
     if (loadingMore.current || loading || docs.length >= total) return
     loadingMore.current = true
     const id = latest.current
-    fetchDocuments({ corpusIds: idsKey ? idsKey.split('\u0001') : [], kind, sort, limit: PAGE, offset: docs.length })
+    fetchDocuments({ corpusIds: idsKey ? idsKey.split('\u0001') : [], kind, sort, limit: PAGE, offset: docs.length, preview: true })
       .then((page) => {
         if (id !== latest.current) return
         setDocs((current) => {

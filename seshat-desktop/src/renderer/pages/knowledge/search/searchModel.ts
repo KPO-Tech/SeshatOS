@@ -33,6 +33,8 @@ export type Doc = {
   addedAt: number
   // How many passages it was indexed as.
   chunkCount: number
+  // The beginning of its text, when the listing was asked for it: what tells apart documents whose names say nothing.
+  preview?: string
 }
 
 export type SortKey = 'relevance' | 'recent' | 'name'
@@ -137,7 +139,7 @@ export function countLabel(count: number, one: string, many: string): string {
 }
 
 /** A document of a collection as it is listed, before any search. */
-export function docOfFile(collection: { id: string; name: string }, file: { fileId: string; name: string; chunkCount: number; createdAt: number }): Doc {
+export function docOfFile(collection: { id: string; name: string }, file: { fileId: string; name: string; chunkCount: number; createdAt: number; preview?: string }): Doc {
   return {
     key: `${collection.id}\u0000${file.fileId}`,
     corpusId: collection.id,
@@ -151,7 +153,8 @@ export function docOfFile(collection: { id: string; name: string }, file: { file
     pages: [],
     hits: [],
     addedAt: file.createdAt,
-    chunkCount: file.chunkCount
+    chunkCount: file.chunkCount,
+    ...(file.preview ? { preview: file.preview } : {})
   }
 }
 
