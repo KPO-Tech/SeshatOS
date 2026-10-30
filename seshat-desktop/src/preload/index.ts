@@ -290,6 +290,7 @@ const seshatBridge = {
   updates: {
     checkNow: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('updates:check-now'),
     quitAndInstall: () => ipcRenderer.invoke('updates:quit-and-install'),
+    ready: (): Promise<{ version: string } | null> => ipcRenderer.invoke('updates:ready'),
     onAvailable: (listener: (payload: { version: string }) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, payload: { version: string }) => listener(payload)
       ipcRenderer.on('updates:available', handler)
