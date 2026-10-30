@@ -70,6 +70,7 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
         )}
       </button>
 
+      {available && !on && !note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">Skipped for now. You can add it later in Config.</p>}
       {available && !on && note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">{note}</p>}
 
       {on && choice && options.length > 0 && (

@@ -1,4 +1,5 @@
-import { formatBytes } from './setupFormat'
+import { formatBytes, formatDuration, formatRate, remainingSeconds } from './setupFormat'
+import { useTransferRate } from './useTransferRate'
 import type { Progress } from './useSetup'
 
 const LABELS = { title: 'Smart titles', speech: 'Voice dictation', ocr: 'Scanned documents' } as const
@@ -31,6 +32,8 @@ type Overall = { receivedBytes: number; totalBytes: number; percent: number }
 // The items being downloaded, one line each, with how far each one is. They download at the same time: when the plan is given, a bar above
 // shows how far all of it is.
 export function InstallProgress({ progress, overall }: { progress: Progress; overall?: Overall }) {
+  const rate = useTransferRate(overall?.receivedBytes ?? 0)
+  const left = overall ? remainingSeconds(overall.receivedBytes, overall.totalBytes, rate) : null
   const items = (Object.keys(LABELS) as Array<keyof typeof LABELS>).filter((id) => progress[id])
   return (
     <div className="grid gap-3">
@@ -45,6 +48,11 @@ export function InstallProgress({ progress, overall }: { progress: Progress; ove
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-muted)]">
             <div className="h-full rounded-full bg-[var(--accent-primary)] transition-[width] duration-300" style={{ width: `${overall.percent}%` }} />
           </div>
+          {left !== null && (
+            <p className="m-0 mt-2.5 text-[12.5px] text-[var(--text-muted)]">
+              {formatRate(rate)} · {left < 10 ? 'Almost done' : `About ${formatDuration(left)} left`}
+            </p>
+          )}
         </div>
       )}
       <ul className="m-0 grid list-none gap-3 p-0">
@@ -71,7 +79,7 @@ export function InstallProgress({ progress, overall }: { progress: Progress; ove
               </div>
               {item.status === 'error' && item.message && (
                 <p className="m-0 mt-2.5 text-[12.5px] leading-[1.5] text-[var(--text-muted)]">
-                  {item.message} You can try again later in Config.
+                  {item.message} You can try again here, or later in Config.
                 </p>
               )}
             </li>

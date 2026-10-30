@@ -3,11 +3,13 @@ import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ComponentCard } from './ComponentCard'
 import { InstallProgress } from './InstallProgress'
 import { ProviderStep } from './ProviderStep'
+import { SetupRecap } from './SetupRecap'
+import { StepBar, type SetupStep } from './StepBar'
 import { fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes, type SetupComponentId } from './setupFormat'
 import { useProviderStep } from './useProviderStep'
 import type { useSetup } from './useSetup'
 
-type Step = 'welcome' | 'provider' | 'choose' | 'installing' | 'done'
+type Step = SetupStep
 type Setup = ReturnType<typeof useSetup>
 
 const ENTER = { animation: 'fade-in 320ms ease both' } as const
@@ -33,20 +35,6 @@ function QuietButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
     >
       {children}
     </button>
-  )
-}
-
-function Steps({ current }: { current: Step }) {
-  const order: Step[] = ['welcome', 'provider', 'choose', 'installing', 'done']
-  return (
-    <div className="flex items-center gap-2" aria-hidden="true">
-      {order.map((step) => (
-        <span
-          key={step}
-          className={['h-1.5 rounded-full transition-all duration-300', step === current ? 'w-8 bg-[var(--accent-primary)]' : 'w-1.5 bg-[var(--border-strong)]'].join(' ')}
-        />
-      ))}
-    </div>
   )
 }
 
@@ -138,6 +126,10 @@ export function SetupWizard({ setup }: { setup: Setup }) {
             'radial-gradient(60% 50% at 50% -5%, color-mix(in srgb, var(--accent-primary) 20%, transparent), transparent 70%), radial-gradient(40% 35% at 100% 100%, color-mix(in srgb, var(--accent-primary) 9%, transparent), transparent 70%)'
         }}
       />
+
+      <div className="absolute inset-x-0 top-7 z-10 flex justify-center px-6">
+        <StepBar current={step} />
+      </div>
 
       <div className="relative z-10 flex w-full max-w-[680px] flex-col items-center gap-8" key={step} style={ENTER}>
         {step === 'welcome' && (
@@ -247,6 +239,7 @@ export function SetupWizard({ setup }: { setup: Setup }) {
                 <InstallProgress progress={progress} />
               </div>
             )}
+            <SetupRecap modelConnected={provider.status === 'connected'} />
             <div className="flex gap-3">
               {hadError && (
                 <QuietButton disabled={running} onClick={() => void retry()}>
@@ -260,7 +253,6 @@ export function SetupWizard({ setup }: { setup: Setup }) {
           </>
         )}
 
-        <Steps current={step} />
       </div>
     </main>
   )

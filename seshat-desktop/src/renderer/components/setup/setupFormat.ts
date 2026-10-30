@@ -4,6 +4,28 @@ export function formatBytes(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1_000_000))} MB`
 }
 
+export function formatRate(bytesPerSecond: number): string {
+  if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return ''
+  if (bytesPerSecond >= 100_000) return `${(bytesPerSecond / 1_000_000).toFixed(1)} MB/s`
+  return `${Math.max(1, Math.round(bytesPerSecond / 1000))} KB/s`
+}
+
+/** How long is left, in words a person would say: rounded, so the figure does not jump every second. */
+export function formatDuration(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return ''
+  if (seconds < 10) return 'a few seconds'
+  if (seconds < 60) return `${Math.min(55, Math.round(seconds / 5) * 5)} s`
+  const minutes = Math.ceil(seconds / 60)
+  if (minutes < 60) return `${minutes} min`
+  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`
+}
+
+/** Seconds left at the current rate, or null while there is no rate to go by. */
+export function remainingSeconds(receivedBytes: number, totalBytes: number, bytesPerSecond: number): number | null {
+  if (bytesPerSecond <= 0 || totalBytes <= receivedBytes) return null
+  return (totalBytes - receivedBytes) / bytesPerSecond
+}
+
 export type Choice = { install: boolean; modelId: string }
 export type SetupComponentId = 'title' | 'speech' | 'ocr'
 export type Choices = Partial<Record<SetupComponentId, Choice>>

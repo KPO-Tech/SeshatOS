@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bytesToDownload, defaultChoices, fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes } from './setupFormat'
+import { bytesToDownload, defaultChoices, fitsOnDisk, formatBytes, formatDuration, formatRate, overallProgress, remainingSeconds, totalDownloadBytes } from './setupFormat'
 
 const plan = {
   components: [
@@ -139,5 +139,28 @@ describe('models already on the computer', () => {
   it('leaves an installed component out of the overall progress', () => {
     const plan = { components: [speech({ small: true }, 'small')] }
     expect(overallProgress(plan, { speech: { install: true, modelId: 'small' } }, {})).toEqual({ receivedBytes: 0, totalBytes: 0, percent: 0 })
+  })
+})
+
+describe('transfer figures', () => {
+  it('writes a rate in the unit that fits it', () => {
+    expect(formatRate(12_400_000)).toBe('12.4 MB/s')
+    expect(formatRate(640_000)).toBe('0.6 MB/s')
+    expect(formatRate(80_000)).toBe('80 KB/s')
+    expect(formatRate(0)).toBe('')
+  })
+
+  it('rounds the time left so it does not jump', () => {
+    expect(formatDuration(4)).toBe('a few seconds')
+    expect(formatDuration(33)).toBe('35 s')
+    expect(formatDuration(59)).toBe('55 s')
+    expect(formatDuration(61)).toBe('2 min')
+    expect(formatDuration(3_700)).toBe('1 h 2 min')
+  })
+
+  it('gives no time left without a rate or when everything is there', () => {
+    expect(remainingSeconds(100, 1_000, 0)).toBeNull()
+    expect(remainingSeconds(1_000, 1_000, 50)).toBeNull()
+    expect(remainingSeconds(100, 1_000, 100)).toBe(9)
   })
 })
