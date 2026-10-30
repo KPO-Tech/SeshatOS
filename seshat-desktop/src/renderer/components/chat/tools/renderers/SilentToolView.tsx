@@ -8,6 +8,7 @@ import { PlanArtifactCard } from '@renderer/components/chat/messages/PlanArtifac
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { basename } from '../helpers'
 import { categoryIcon, hasCustomRender, isFileTool, renderToolBody, toolLabel } from '../toolDisplay'
+import { opensWide } from '../readableTools'
 import { isWebTool } from '../webTools'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -110,7 +111,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       useUIStore.getState().openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
       return
     }
-    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id })
+    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
   }
 
   const clickable = expandable || canOpenPlan
