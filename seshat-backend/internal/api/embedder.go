@@ -12,6 +12,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/http"
 	cloudknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/knowledge"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	ragembedder "github.com/KPO-Tech/seshat-runtime/pkg/rag/embedder"
 )
 
@@ -376,14 +377,14 @@ func (a *App) handleEmbedderDetectModels(w http.ResponseWriter, r *http.Request,
 	}
 
 	if strings.ToLower(provider) != "ollama" {
-		// OpenAI-compatible: return static well-known embedding models
+		// A hosted provider: the models it publishes (from the catalog). Any other OpenAI-compatible server gets the OpenAI list as before.
+		profile, ok := settings.EmbeddingProfileFor(provider)
+		if !ok {
+			profile, _ = settings.EmbeddingProfileFor("openai")
+		}
 		writeJSON(w, http.StatusOK, map[string]any{
-			"embedding_models": []string{
-				"text-embedding-3-small",
-				"text-embedding-3-large",
-				"text-embedding-ada-002",
-			},
-			"llm_models": []string{},
+			"embedding_models": profile.ModelIDs(),
+			"llm_models":       []string{},
 		})
 		return
 	}

@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Voyage AI and Jina AI for the embeddings of Knowledge, and each provider offers its own models.** Config > Search can now use Voyage (`voyage-4` and its variants) or Jina (`jina-embeddings-v5` and `v4`) with a key from them, and Gemini offers `gemini-embedding-2` next to `gemini-embedding-001`. The list of models of a provider comes from the app, not from a copy in the screen; Gemini and Mistral used to be offered OpenAI's models when asked for their list.
+
 ### Fixed
 
 - **Formulas are drawn in cards and tables, and while the answer is written.** A formula in a card, a callout, a step or a table cell showed its `$…$` source, and in a message the formulas appeared only once it was finished. They are now typeset as they close, and one that cannot be read stays as muted text instead of turning the paragraph red.
