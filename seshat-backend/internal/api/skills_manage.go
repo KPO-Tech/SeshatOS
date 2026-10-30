@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,6 +11,30 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	backendskills "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
 )
+
+var errOutsideSkillRoot = errors.New("path is outside the skill folder")
+
+// resolveInsideSkillRoot is the real file that a path inside a skill folder names. Links are followed before the check, so a link left
+// in the folder cannot lead a read out of it. A file that does not exist is an error of its own, not "outside".
+func resolveInsideSkillRoot(root, relPath string) (string, error) {
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return "", err
+	}
+	real, err := filepath.EvalSymlinks(filepath.Join(root, filepath.FromSlash(relPath)))
+	if err != nil {
+		// A name that climbs out of the folder is refused as such, whether or not the target exists.
+		if rel, relErr := filepath.Rel(filepath.Clean(root), filepath.Join(root, filepath.FromSlash(relPath))); relErr != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return "", errOutsideSkillRoot
+		}
+		return "", err
+	}
+	rel, err := filepath.Rel(realRoot, real)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
+		return "", errOutsideSkillRoot
+	}
+	return real, nil
+}
 
 // skillDTO is the serializable view of a skill — excludes function fields.
 type skillDTO struct {
@@ -293,11 +318,13 @@ func (a *App) handleSkillFile(w http.ResponseWriter, r *http.Request, name strin
 		}
 	}
 
-	absPath := filepath.Join(root, filepath.FromSlash(relPath))
-	cleanRoot := filepath.Clean(root) + string(filepath.Separator)
-	if !strings.HasPrefix(filepath.Clean(absPath)+string(filepath.Separator), cleanRoot) &&
-		filepath.Clean(absPath) != filepath.Clean(root) {
+	absPath, err := resolveInsideSkillRoot(root, relPath)
+	if errors.Is(err, errOutsideSkillRoot) {
 		writeBackendError(w, bkerr.InvalidInput("invalid path", nil))
+		return
+	}
+	if err != nil {
+		writeBackendError(w, bkerr.NotFound("file not found", err))
 		return
 	}
 

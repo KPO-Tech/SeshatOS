@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -411,6 +412,21 @@ func writeJSONError(w http.ResponseWriter, status int, message string) {
 //   - 400 for any other decode error
 func decodeJSONBody(w http.ResponseWriter, r *http.Request, v any) bool {
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			writeJSONError(w, http.StatusRequestEntityTooLarge, "request body too large (max 4 MB)")
+			return false
+		}
+		writeJSONError(w, http.StatusBadRequest, "invalid request body")
+		return false
+	}
+	return true
+}
+
+// decodeOptionalJSONBody is decodeJSONBody for a call whose body may be left out: an empty body keeps the zero value of v, while a
+// body that is not valid JSON is refused with a 400 instead of being read as an empty request.
+func decodeOptionalJSONBody(w http.ResponseWriter, r *http.Request, v any) bool {
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil && !errors.Is(err, io.EOF) {
 		var maxErr *http.MaxBytesError
 		if errors.As(err, &maxErr) {
 			writeJSONError(w, http.StatusRequestEntityTooLarge, "request body too large (max 4 MB)")

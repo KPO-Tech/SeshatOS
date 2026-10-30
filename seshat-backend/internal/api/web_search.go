@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -282,8 +281,8 @@ func (a *App) handleWebSearchProviderByName(w http.ResponseWriter, r *http.Reque
 			BaseURL      string  `json:"base_url"`
 			AuthUsername *string `json:"auth_username"`
 		}
-		if r.Body != nil {
-			_ = json.NewDecoder(r.Body).Decode(&typed)
+		if r.Body != nil && !decodeOptionalJSONBody(w, r, &typed) {
+			return
 		}
 		result, err := a.backend.WebSearch.TestProvider(r.Context(), principal, providerName, backendwebsearch.ProviderTestOverrides{
 			APIKey:       typed.APIKey,
