@@ -1,8 +1,11 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -376,7 +379,7 @@ func (a *App) handleConnectorAccountSync(w http.ResponseWriter, r *http.Request,
 		ExpiresAt:    secret.ExpiresAt,
 	}, account.SyncCursor)
 	if err != nil {
-		_ = accounts.UpdateSyncState(r.Context(), db.UpdateConnectorAccountSyncParams{
+		recordSyncState(r.Context(), accounts, db.UpdateConnectorAccountSyncParams{
 			ID: accountID, SyncCursor: account.SyncCursor, LastSyncedAt: time.Now(), LastError: err.Error(),
 		})
 		writeJSONError(w, http.StatusBadGateway, "sync failed: "+err.Error())
@@ -401,8 +404,21 @@ func (a *App) handleConnectorAccountSync(w http.ResponseWriter, r *http.Request,
 		}
 	}
 
-	_ = accounts.UpdateSyncState(r.Context(), db.UpdateConnectorAccountSyncParams{
+	recordSyncState(r.Context(), accounts, db.UpdateConnectorAccountSyncParams{
 		ID: accountID, SyncCursor: nextCursor, LastSyncedAt: time.Now(),
 	})
 	writeJSON(w, http.StatusOK, map[string]any{"synced_items": len(items), "ingested": ingested})
+}
+
+// syncStateStore is what a connector account offers to remember how its last sync went.
+type syncStateStore interface {
+	UpdateSyncState(ctx context.Context, p db.UpdateConnectorAccountSyncParams) error
+}
+
+// recordSyncState saves the outcome of a sync. A sync that worked must not turn into an error for the reader because its bookmark could
+// not be saved, but a failed save is written to the log: the next sync would start from the old cursor and read the same items again.
+func recordSyncState(ctx context.Context, store syncStateStore, params db.UpdateConnectorAccountSyncParams) {
+	if err := store.UpdateSyncState(ctx, params); err != nil {
+		fmt.Fprintf(os.Stderr, "[API] saving the sync state of account %s failed: %v\n", params.ID, err)
+	}
 }

@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -151,7 +150,9 @@ func (a *App) handleRerankerDetectModel(w http.ResponseWriter, r *http.Request, 
 	var body struct {
 		BaseURL string `json:"base_url"`
 	}
-	_ = json.NewDecoder(r.Body).Decode(&body)
+	if !decodeOptionalJSONBody(w, r, &body) {
+		return
+	}
 
 	baseURL := strings.TrimSpace(body.BaseURL)
 	if baseURL == "" {
@@ -176,7 +177,9 @@ func (a *App) handleRerankerTest(w http.ResponseWriter, r *http.Request, store *
 		// ProviderSettingID tests with the key of one of the person's providers.
 		ProviderSettingID string `json:"provider_setting_id"`
 	}
-	_ = json.NewDecoder(r.Body).Decode(&body)
+	if !decodeOptionalJSONBody(w, r, &body) {
+		return
+	}
 
 	baseURL := strings.TrimSpace(body.BaseURL)
 	model := strings.TrimSpace(body.Model)

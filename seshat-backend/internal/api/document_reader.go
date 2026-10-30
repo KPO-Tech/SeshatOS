@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -168,8 +167,8 @@ func (a *App) handleDocumentReaderNativeDownload(w http.ResponseWriter, r *http.
 	var body struct {
 		Pack string `json:"pack"`
 	}
-	if r.Body != nil {
-		_ = json.NewDecoder(r.Body).Decode(&body)
+	if r.Body != nil && !decodeOptionalJSONBody(w, r, &body) {
+		return
 	}
 	pack := strings.TrimSpace(body.Pack)
 	if pack == "" {
@@ -339,7 +338,9 @@ func (a *App) handleDocumentReaderTest(w http.ResponseWriter, r *http.Request, s
 	var body struct {
 		BaseURL string `json:"base_url"`
 	}
-	_ = json.NewDecoder(r.Body).Decode(&body)
+	if !decodeOptionalJSONBody(w, r, &body) {
+		return
+	}
 
 	baseURL := strings.TrimSpace(body.BaseURL)
 	if baseURL == "" {

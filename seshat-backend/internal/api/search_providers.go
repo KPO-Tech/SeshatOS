@@ -100,7 +100,9 @@ func (a *App) handleRerankerListModels(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Provider string `json:"provider"`
 	}
-	_ = json.NewDecoder(r.Body).Decode(&body)
+	if !decodeOptionalJSONBody(w, r, &body) {
+		return
+	}
 	provider := strings.ToLower(strings.TrimSpace(body.Provider))
 
 	var fromCatalog []string
