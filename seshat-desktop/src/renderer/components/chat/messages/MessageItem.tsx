@@ -9,6 +9,8 @@ import { AgentCardsRow } from '../tools/AgentToolView'
 import { QuietToolGroup } from '../tools/QuietToolGroup'
 import { THINKING_MARKDOWN_CLASS } from '../tools/thinkingMarkdownClass'
 import { thinkingPreview } from './thinkingPreview'
+import { formatThinkingDuration } from './thinkingTime'
+import { useThinkingDuration } from './useThinkingDuration'
 import { breaksGroup } from '../tools/quietGroupPhrase'
 import { isAgentTool, isGroupable } from '../tools/toolDisplay'
 import { AttachmentThumb } from '../attachments/AttachmentThumb'
@@ -17,9 +19,14 @@ import type { ChangedFile } from '@renderer/lib/changedFiles'
 import { ChangedFiles } from './ChangedFiles'
 import { InlineMedia, isInlineMedia } from './InlineMedia'
 import { MessageActions } from './MessageActions'
+import { edition } from '@renderer/lib/edition'
+import { SourcesDisclosure } from '@renderer/components/sources/SourcesDisclosure'
+import { webSourceItems } from '@renderer/components/sources/webSourceItems'
+import type { WebSource } from '@renderer/lib/webSources'
 import { PromptEditor } from './PromptEditor'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
+import type { AnswerExtras } from './answerExtras'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -77,17 +84,20 @@ function ThinkingBlock({
   thinkingId,
   thinking,
   sessionId,
-  revealThinking = false,
+  live = false,
 }: {
   thinkingId: string
   thinking: string
   sessionId?: string
-  revealThinking?: boolean
+  /** True while this is the part of the answer being written: the time is counted, and kept when it ends. */
+  live?: boolean
 }) {
   const storedExpansion = useUIStore((s) => s.thinkingExpansion[thinkingId])
-  const expanded = storedExpansion ?? revealThinking
+  // A thought stays folded while it is written, whatever its length: a person opens it if they want to read it.
+  const expanded = storedExpansion ?? false
   const setThinkingExpansion = useUIStore((s) => s.setThinkingExpansion)
   const preview = expanded ? '' : thinkingPreview(thinking)
+  const seconds = useThinkingDuration(sessionId, thinking, live)
   return (
     <div className="flex flex-col">
       {/* Deliberately plain - no border/background box like a tool row. Just
@@ -110,16 +120,19 @@ function ThinkingBlock({
             — {preview}
           </span>
         )}
-        <button
-          type="button"
-          className="ml-auto inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent not-italic text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
-          aria-label="Copy"
-          onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(thinking) }}
-        >
-          <Copy size={10} />
-        </button>
-        <span className={cx('inline-flex shrink-0 items-center not-italic opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
-          <Down size={10} />
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1.5">
+          {seconds !== null && <span className="not-italic tabular-nums" aria-label="Time spent thinking">{formatThinkingDuration(seconds)}</span>}
+          <button
+            type="button"
+            className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent not-italic text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
+            aria-label="Copy"
+            onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(thinking) }}
+          >
+            <Copy size={10} />
+          </button>
+          <span className={cx('inline-flex shrink-0 items-center not-italic opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
+            <Down size={10} />
+          </span>
         </span>
       </div>
       {expanded && (
@@ -169,6 +182,10 @@ type Props = {
   onRegenerate?: () => void
   // False for an assistant message that a later one of the same turn follows: the actions sit under the end of the turn only.
   endsTurn?: boolean
+  webSources?: WebSource[]
+  consultedPages?: WebSource[]
+  // What a host surface adds to an answer: citations in its text, and something under the end of the turn (see answerExtras.ts).
+  extras?: AnswerExtras
 }
 
 export type QuietGroupItem =
@@ -315,7 +332,7 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
   return { text, attachments: messageAttachments(message) }
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
   const [editing, setEditing] = useState(false)
   if (isCompactionDivider(message)) {
     const first = message.content[0]
@@ -384,7 +401,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                 key={firstToolId || `${message.id ?? 'msg'}-quiet-${i}`}
                 items={item.items}
                 sessionId={sessionId}
-                revealThinking={revealThinking}
+                live={revealThinking && i === renderItems.length - 1}
                 autoExpandTools={autoExpandTools}
                 onSubmitPrompt={onSubmitToolPrompt}
               />
@@ -418,7 +435,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                   isUser && message.status === 'error' && 'border-app-error',
                 )}
               >
-                <MarkdownView sessionId={sessionId}>{block.text}</MarkdownView>
+                <MarkdownView sessionId={sessionId} sources={edition.sources ? consultedPages : undefined} renderLink={isUser ? undefined : extras?.renderLink}>{isUser || !extras?.prepare ? block.text : extras.prepare(block.text)}</MarkdownView>
                 {isUser && message.status === 'error' && (
                   <button
                     type="button"
@@ -433,7 +450,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           }
           if (block.type === 'thinking') {
             const thinkingId = `${message.id ?? 'msg'}-thinking-${item.index}`
-            return <ThinkingBlock key={thinkingId} thinkingId={thinkingId} thinking={block.thinking} sessionId={sessionId} revealThinking={revealThinking} />
+            return <ThinkingBlock key={thinkingId} thinkingId={thinkingId} thinking={block.thinking} sessionId={sessionId} live={revealThinking && item.index === visibleBlocks.length - 1} />
           }
           if (block.type === 'tool_use') {
             const key = block.id || `${message.id ?? 'msg'}-tool-${item.index}`
@@ -465,6 +482,14 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
         })}
 
         {changedFiles && changedFiles.length > 0 && !liveActivity && <ChangedFiles files={changedFiles} sessionId={sessionId} />}
+
+        {webSources && webSources.length > 0 && !liveActivity && edition.sources && (
+          <div className="mt-4">
+            <SourcesDisclosure items={webSourceItems(webSources)} sessionId={sessionId} />
+          </div>
+        )}
+
+        {extras?.footer && !liveActivity && endsTurn && !isUser && <div className="mt-4">{extras.footer}</div>}
 
         {liveActivity && <LiveActivityBlock label={liveActivity.label} detail={liveActivity.detail} />}
         {!liveActivity && justCompleted && <CompletionFlash />}

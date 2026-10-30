@@ -6,6 +6,19 @@ export type EmbedderConfig = {
   enabled: boolean
   is_configured: boolean
   updated_at?: number
+  /** The vectors of the collections were made with another model than this one: the search by meaning is wrong until they are made again. */
+  vectors_stale?: boolean
+  /** It cannot be told which model the vectors were made with (the model was changed before this was recorded). */
+  vectors_unknown?: boolean
+}
+
+/** The making of the vectors again, with the model now in use. `done` and `total` count passages. */
+export type ReembedStatus = {
+  state: 'idle' | 'running' | 'done' | 'failed' | 'cancelled'
+  model?: string
+  done: number
+  total: number
+  error?: string
 }
 
 export type RerankerConfig = {
@@ -15,6 +28,15 @@ export type RerankerConfig = {
   enabled: boolean
   is_configured: boolean
   updated_at?: number
+}
+
+/** A rerank model the person has set up. `active` is the one the search uses now. */
+export type RerankerModel = {
+  id: string
+  base_url: string
+  model: string
+  has_api_key: boolean
+  active: boolean
 }
 
 export type DocumentReaderConfig = {
@@ -107,11 +129,33 @@ export type NativeDocDownloadState = {
   files_completed?: number
   error?: string
   model_dir: string
+  pack?: string
+}
+
+/** A recognizer for the native OCR: the alphabets it reads decide which languages come out with their accents. */
+export type NativeDocPack = {
+  id: string
+  label: string
+  languages: string[]
+  size_mb: number
+  installed: boolean
+  active: boolean
+}
+
+/** One model file of the local reader: what is on disk, and whether the reader can work without it. */
+export type NativeDocModelStatus = {
+  file: string
+  installed: boolean
+  size_bytes: number
+  required: boolean
 }
 
 export type NativeDocStatusResult = {
   model_dir: string
   models: string[]
+  model_status?: NativeDocModelStatus[]
+  packs?: NativeDocPack[]
+  active_pack?: string
   download: NativeDocDownloadState
   capabilities: Partial<SystemStatus>
 }
@@ -121,6 +165,34 @@ export type NativeDocDownloadResult = {
   already_running: boolean
   download: NativeDocDownloadState
   capabilities: Partial<SystemStatus>
+}
+
+/** Indra OCR, the optional reader of scanned pages that a person installs after accepting the licence of its weights. */
+export type IndraStatus = {
+  license_accepted: boolean
+  license_version: string
+  license_url: string
+  project_url: string
+  installed: boolean
+  enabled: boolean
+  ready: boolean
+  version: string
+  size_mb: number
+  python_found: boolean
+  dir: string
+}
+
+export type IndraInstallState = {
+  status: 'idle' | 'running' | 'completed' | 'failed'
+  step?: string
+  step_index?: number
+  step_count?: number
+  error?: string
+}
+
+export type IndraStatusResult = {
+  indra: IndraStatus
+  install: IndraInstallState
 }
 
 export type TestState = 'idle' | 'running' | 'ok' | 'error'

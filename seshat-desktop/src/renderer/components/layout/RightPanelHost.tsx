@@ -1,5 +1,6 @@
-import { useRef } from 'react'
-import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
+import { useRef, useState } from 'react'
+import { Book, Code, Computer, DocDetail, FilePdf, FileTextOne, Globe, ListView, Robot, FileWord, FileExcel, Terminal } from '@icon-park/react'
+import { DocumentIndexPanel } from '@renderer/pages/knowledge/collections/DocumentIndexPanel'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { useUIStore } from '@renderer/stores/ui'
 import { useSessionStore } from '@renderer/stores/session'
@@ -12,12 +13,14 @@ import { ArtifactPreviewPanel } from '@renderer/components/chat/panels/ArtifactP
 import { DocxPreviewPanel } from '@renderer/components/chat/panels/DocxPreviewPanel'
 import { XlsxPreviewPanel } from '@renderer/components/chat/panels/XlsxPreviewPanel'
 import { PptxPreviewPanel } from '@renderer/components/chat/panels/PptxPreviewPanel'
+import { MarkedNote, textLines } from '@renderer/components/chat/panels/MarkedNote'
 import { BrowserPanel } from '@renderer/components/chat/panels/BrowserPanel'
 import { ShellPanel } from '@renderer/components/chat/panels/ShellPanel'
 import { EmptyState } from '@renderer/components/chat/panels/EmptyState'
 import { KnowledgePanel } from '@renderer/components/chat/panels/KnowledgePanel'
 import { flattenRightPanels } from '@renderer/stores/ui'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
+import { FLOATING_PANEL_WIDTH, isFloatingColumn } from './floatingColumn'
 import type { RightPanelInstance, RightPanelKind, RightPanelColumn } from '@renderer/stores/ui'
 
 export function RightPanelHost() {
@@ -98,9 +101,14 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
     document.addEventListener('mouseup', onUp)
   }
 
+  const floating = isFloatingColumn(column)
+
   return (
-    <div className="relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]" style={{ width: `${column.width}px` }}>
-      <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />
+    <div
+      className={floating ? 'relative flex h-full min-w-0 flex-col bg-[var(--chat-bg)]' : 'relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]'}
+      style={{ width: `${floating ? FLOATING_PANEL_WIDTH : column.width}px` }}
+    >
+      {!floating && <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />}
       {column.panels.map((panel, index) => (
         <div
           key={panel.id}
@@ -158,6 +166,7 @@ function PanelFrame({
         <FilesPanel
           sessionId={panel.sessionId ?? ''}
           focusToolId={panel.focusToolId}
+          focusPath={panel.focusPath}
           isMaximized={isMaximized}
           onClose={onClose}
           onToggleMaximize={onToggleMaximize}
@@ -181,6 +190,14 @@ function PanelFrame({
     )
   }
 
+  return <GenericPanelFrame key={panel.id} panel={panel} isMaximized={isMaximized} onClose={onClose} onToggleMaximize={onToggleMaximize} />
+}
+
+// The frame of a panel that has no header of its own. A document opened from a collection also gets a button that swaps the viewer for the
+// passages the document was indexed as.
+function GenericPanelFrame({ panel, isMaximized, onClose, onToggleMaximize }: { panel: RightPanelInstance; isMaximized: boolean; onClose: () => void; onToggleMaximize: () => void }) {
+  const [showIndex, setShowIndex] = useState(false)
+  const indexSource = panel.indexSource
   return (
     <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
       <div className="flex min-h-[46px] shrink-0 items-center justify-between gap-2 border-b border-app-border-subtle px-3 py-2">
@@ -192,6 +209,21 @@ function PanelFrame({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {indexSource && (
+            <button
+              className={[
+                'mr-1 flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] border px-2.5 text-[12px] font-semibold transition-colors duration-150',
+                showIndex ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-app-border-subtle bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text'
+              ].join(' ')}
+              type="button"
+              onClick={() => setShowIndex((shown) => !shown)}
+              aria-pressed={showIndex}
+              title={showIndex ? 'Back to the document' : 'The passages this document was indexed as'}
+            >
+              <ListView size={13} />
+              {showIndex ? 'Document' : 'Index'}
+            </button>
+          )}
           <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" type="button" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
             <WindowMaximizeIcon />
           </button>
@@ -201,7 +233,11 @@ function PanelFrame({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto bg-app-surface p-3">{renderPanelBody(panel)}</div>
+      <div className="min-h-0 flex-1 overflow-auto bg-app-surface p-3">
+        {/* The viewer stays mounted under the index, so coming back finds the page it was on. */}
+        <div className={showIndex && indexSource ? 'hidden' : 'contents'}>{renderPanelBody(panel)}</div>
+        {showIndex && indexSource && <DocumentIndexPanel corpusId={indexSource.corpusId} fileId={indexSource.fileId} />}
+      </div>
     </aside>
   )
 }
@@ -252,9 +288,15 @@ function renderPanelBody(panel: RightPanelInstance) {
         )
       }
       return panel.plainText ? (
-        <pre className="m-0 whitespace-pre-wrap rounded-app-md border border-app-border-subtle bg-[var(--color-code-bg)] p-3 font-mono text-[var(--font-size-sm)] leading-relaxed text-[var(--color-code-fg)]">{panel.markdown}</pre>
+        <MarkedNote highlight={panel.documentHighlight}>
+          <pre className="m-0 whitespace-pre-wrap rounded-app-md border border-app-border-subtle bg-[var(--color-code-bg)] p-3 font-mono text-[var(--font-size-sm)] leading-relaxed text-[var(--color-code-fg)]">
+            {panel.documentHighlight ? textLines(panel.markdown) : panel.markdown}
+          </pre>
+        </MarkedNote>
       ) : (
-        <MarkdownView sessionId={panel.sessionId}>{panel.markdown}</MarkdownView>
+        <MarkedNote highlight={panel.documentHighlight}>
+          <MarkdownView sessionId={panel.sessionId}>{panel.markdown}</MarkdownView>
+        </MarkedNote>
       )
     case 'browser':
       return <BrowserPanel url={panel.browserUrl} contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'} />
@@ -266,25 +308,25 @@ function renderPanelBody(panel: RightPanelInstance) {
       return <SubagentPanel sessionId={panel.sessionId ?? ''} toolUseId={panel.subagentToolUseId ?? ''} />
     case 'pdf':
       return panel.documentFileId ? (
-        <PDFViewerPanel fileId={panel.documentFileId} filename={panel.title} />
+        <PDFViewerPanel fileId={panel.documentFileId} filename={panel.title} initialPage={panel.documentPage} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="PDF preview" description="This PDF couldn't be opened." />
       )
     case 'docx':
       return panel.documentFileId ? (
-        <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Document preview" description="This document couldn't be opened." />
       )
     case 'xlsx':
       return panel.documentFileId ? (
-        <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Spreadsheet preview" description="This spreadsheet couldn't be opened." />
       )
     case 'pptx':
       return panel.documentFileId ? (
-        <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} />
+        <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} initialSlide={panel.documentPage} highlight={panel.documentHighlight} />
       ) : (
         <EmptyState title="Presentation preview" description="This presentation couldn't be opened." />
       )

@@ -82,7 +82,9 @@ type SDKRuntime struct {
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
 	resolveSandboxMode    func(ctx context.Context) (sdk.SandboxKind, bool)
 	resolveManagedPolicy  func(ctx context.Context) *sdk.ManagedPolicy
-	mu                    sync.RWMutex
+	// hostTools are registered on every client built for a turn (see RegisterHostTool).
+	hostTools []sdk.Tool
+	mu        sync.RWMutex
 
 	clientCacheMu sync.Mutex
 	clientCache   map[clientCacheKey]*cachedRuntimeClient
@@ -147,6 +149,19 @@ func NewSDKRuntime(client *sdk.Client, baseConfig *sdk.ClientConfig) *SDKRuntime
 		baseConfig:  cloneClientConfig(baseConfig),
 		clientCache: make(map[clientCacheKey]*cachedRuntimeClient),
 	}
+}
+
+// RegisterHostTool adds a tool the host provides (not one of the engine's own) to the runtime. A turn never runs on the base client but
+// on a client built for it by clientForInput, which starts from the engine's own tools only: registering on the base client alone left
+// the tool out of every conversation, and the model, never told of it, wrote the call as text.
+func (r *SDKRuntime) RegisterHostTool(tool sdk.Tool) error {
+	if err := r.client.RegisterTool(tool); err != nil {
+		return err
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.hostTools = append(r.hostTools, tool)
+	return nil
 }
 
 // SetLocalSTTResolver attaches a resolver for a locally running whisper.cpp
@@ -764,6 +779,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 
 	r.mu.RLock()
 	ragArtifacts, ragVectors, ragEmbedder, ragChunker, ragCorpora := r.ragArtifacts, r.ragVectors, r.ragEmbedder, r.ragChunker, r.ragCorpora
+	hostTools := append([]sdk.Tool(nil), r.hostTools...)
 	r.mu.RUnlock()
 	if ragVectors != nil && ragCorpora != nil && len(input.RAGAllowedOwnerIDs) > 0 {
 		cfg.RAGService = rag.NewService(ragArtifacts, newUserScopedVectorStore(ragVectors, ragCorpora, input.RAGAllowedOwnerIDs), ragEmbedder, ragChunker)
@@ -801,6 +817,12 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 			return nil, nil, fmt.Errorf("create provider runtime client: %w", err)
 		}
 		return nil, nil, fmt.Errorf("create request runtime client: %w", err)
+	}
+	for _, tool := range hostTools {
+		if err := client.RegisterTool(tool); err != nil {
+			_ = client.Close()
+			return nil, nil, fmt.Errorf("register %s on the request runtime client: %w", tool.Definition().Name, err)
+		}
 	}
 
 	r.clientCacheMu.Lock()

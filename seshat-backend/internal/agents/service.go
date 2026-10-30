@@ -9,6 +9,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/agents"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	knowledgeagent "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/agent"
 	pkgagent "github.com/KPO-Tech/seshat-runtime/pkg/agent"
 	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 	"gorm.io/gorm"
@@ -110,6 +111,9 @@ func (s *Service) Create(ctx context.Context, p CreateParams) (*Agent, error) {
 	if slug == "" {
 		return nil, bkerr.InvalidInput("slug is required", nil)
 	}
+	if knowledgeagent.IsKnowledge(slug) {
+		return nil, bkerr.InvalidInput("slug \""+slug+"\" is reserved for a built-in agent", nil)
+	}
 	if !isValidSlug(slug) {
 		return nil, bkerr.InvalidInput("slug must be lowercase letters, digits, and hyphens only", nil)
 	}
@@ -200,7 +204,13 @@ func (s *Service) GetDefinition(ctx context.Context, principal *backendauth.Prin
 		return nil, false
 	}
 
-	// Check DB-stored custom agents first.
+	// The agents the product itself defines come first: what they may do is not something a stored agent or an organization preset
+	// can replace by taking the same slug.
+	if knowledgeagent.IsKnowledge(slug) {
+		return knowledgeagent.Definition(), true
+	}
+
+	// Check DB-stored custom agents.
 	if s != nil && s.store != nil {
 		row, err := s.store.GetBySlug(ctx, slug)
 		if err == nil && row != nil && row.Enabled {

@@ -10,6 +10,7 @@ process.env.SESHAT_RUNTIME_ROOT = resolve('runtime-root-fixture')
 
 import {
   assertLocalFilePath,
+  assertNotRunnable,
   assertPathWithinRuntimeRoot,
   assertUploadPayloadShape,
   normalizeAPIPath,
@@ -74,4 +75,15 @@ test('assertUploadPayloadShape rejects malformed upload envelopes', () => {
   assert.throws(() => assertUploadPayloadShape(null), /must be an object/)
   assert.throws(() => assertUploadPayloadShape({ fields: 'bad' }), /fields must be an array/)
   assert.throws(() => assertUploadPayloadShape({ files: 'bad' }), /files must be an array/)
+})
+
+test('assertNotRunnable lets documents through and refuses programs', () => {
+  const documents = ['report.pdf', 'notes.txt', 'sheet.xlsx', 'photo.PNG', 'archive.zip', 'README', 'a.exe.txt']
+  for (const name of documents) assert.equal(assertNotRunnable(join('C:', 'work', name)), join('C:', 'work', name))
+  for (const name of ['setup.exe', 'Setup.EXE', 'run.bat', 'x.ps1', 'x.js', 'link.lnk', 'x.dll', 'tool.sh', 'App.app', 'x.msi', 'x.jar']) {
+    assert.throws(() => assertNotRunnable(join('C:', 'work', name)), /is a program/, name)
+  }
+  // Windows drops trailing dots and spaces from a name: "setup.exe." is setup.exe.
+  assert.throws(() => assertNotRunnable('C:\\work\\setup.exe.'), /is a program/)
+  assert.throws(() => assertNotRunnable('C:\\work\\setup.exe  '), /is a program/)
 })

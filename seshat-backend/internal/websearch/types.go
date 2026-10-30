@@ -54,6 +54,17 @@ type UpsertProviderParams struct {
 	AuthUsername *string // nil = keep existing; ptr-to-"" = clear
 }
 
+// ProviderTestOverrides is what the person has typed in the form and not saved yet. The test of a provider uses it in place of what is
+// saved, so that a key can be tried before it is kept; nothing here is stored.
+type ProviderTestOverrides struct {
+	// APIKey, when not empty, is the key (or the password) to try.
+	APIKey *string
+	// BaseURL, when not empty, is the address to try.
+	BaseURL string
+	// AuthUsername, when set, is the user name or client id to try.
+	AuthUsername *string
+}
+
 // ProviderTestResult is returned by the test endpoint.
 type ProviderTestResult struct {
 	OK        bool

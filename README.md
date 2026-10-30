@@ -53,6 +53,12 @@ SeshatOS is under active construction. The desktop is being rebuilt chat-first; 
 | Dedicated Knowledge, Skills and Admin screens | Planned, in order after Chat |
 | Inbox, Companion, Team | Roadmap (after the MVP) |
 
+## The Knowledge agent
+
+Ask, in the Knowledge platform, is a chat conversation with a built-in agent that answers only from the documents the person can read, and cites them. It has two read-only tools (search and read), no shell, no web and no memory, and the collection limit is applied by the tools, not asked of the model. How it works, its tools and its current limits: [docs/knowledge-agent.md](docs/knowledge-agent.md).
+
+<p align="center"><img src="docs/img/knowledge-agent-workflow.svg" alt="Knowledge agent workflow: composer, chat session, built-in agent, one turn of searches and reads against the knowledge backend, citations in the Ask view" width="680"></p>
+
 ## SeshatOS and SeshatCloud: two halves of one offer
 
 | | SeshatOS (this repository) | [SeshatCloud](https://github.com/KPO-Tech/SeshatCloud) |
@@ -87,8 +93,15 @@ Installers are attached to each [release](https://github.com/KPO-Tech/SeshatOS/r
 |---|---|
 | Windows (64-bit) | the `.exe` installer |
 | Linux (64-bit) | the `.AppImage` (any distribution) or the `.deb` (Debian, Ubuntu) |
+| macOS (Apple silicon or Intel) | the `.dmg` for your processor. **Experimental**: it has not been run on a Mac yet, and it has no built-in reader for scanned documents (the optional Indra reader in Config > Documents can read them) |
 
-There is no macOS build yet. Every release also carries a `SHA256SUMS.txt` to check what you downloaded. The installers are not code-signed yet, so Windows SmartScreen may warn on the first launch.
+Every release also carries a `SHA256SUMS.txt` to check what you downloaded.
+
+**The installers are not signed yet** (a certificate costs money and the project has none). The first time you open one:
+
+- **Windows**: SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
+- **macOS**: right-click the app, choose **Open**, then confirm. The app does not update itself on macOS: download the new version from the release page.
+- **Linux**: nothing to confirm; make the `.AppImage` executable first (`chmod +x`).
 
 To build SeshatOS from source instead, see below.
 
@@ -99,7 +112,7 @@ git clone <this-repo>
 cd seshatos
 cp .env.example .env   # fill in at least one provider API key
 make setup              # first-time setup: Node deps + build
-make dev                 # start the local backend + desktop app
+make dev                 # start the local backend + desktop app, keeping your data (FRESH=1 starts as a brand new install)
 ```
 
 See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.

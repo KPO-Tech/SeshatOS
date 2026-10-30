@@ -1,0 +1,17 @@
+@keyframes knowledge-drawer-in {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*='slide-up'],
+  [style*='knowledge-drawer-in'] {
+    animation: none !important;
+  }
+}

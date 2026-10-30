@@ -17,6 +17,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
+	knowledgeagent "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/agent"
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	bkwebsearch "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
@@ -65,6 +66,7 @@ type preferencesProvider interface {
 	BuildSystemPromptBlock(ctx context.Context, principal *backendauth.Principal) (string, error)
 	ResolvePermissionModes(ctx context.Context, principal *backendauth.Principal, origin types.ExecutionOrigin) (types.PermissionMode, error)
 	MemoryEnabled(ctx context.Context, principal *backendauth.Principal) bool
+	RichAnswersEnabled(ctx context.Context, principal *backendauth.Principal) bool
 }
 
 type knowledgeProvider interface {
@@ -1470,6 +1472,11 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 
 	effectiveAgentSlug := strings.TrimSpace(p.AgentSlug)
 
+	// The Knowledge agent is told everything it needs by its own prompt. What the host adds for the other agents is left out: it teaches
+	// tools this agent does not have (write_file, the web), asks it to narrate before a search, and brings the person's memories and a
+	// pre-searched corpus into an agent that must answer from what its own search returns, cited.
+	knowledgeProfile := knowledgeagent.IsKnowledge(effectiveAgentSlug)
+
 	userID := ""
 	if p.Principal != nil {
 		userID = p.Principal.User.ID
@@ -1546,17 +1553,28 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	// ```mermaid support from general training data, so it needs to be told
 	// explicitly. Unconditional (not gated on principal/session) since it
 	// costs a fixed handful of tokens and applies to every surface.
-	input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
-	input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
+	if !knowledgeProfile {
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
+		// Structured components are on unless the user turned them off in Settings.
+		if s.richAnswersOn(ctx, p) {
+			input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richAnswersBlock(s.richFamilies(ctx, p)))
+		}
+	} else if s.richAnswersOn(ctx, p) {
+		// The Knowledge agent is told everything else by its own prompt, but the components are drawn by the same view.
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richKnowledgeAnswersBlock(s.richFamilies(ctx, p)))
+	}
 	// Surfaces: the runtime's prompt was written for its terminal UI, so the
 	// two instructions that are false here (where the agent is running, and how
 	// its answer is presented) are corrected rather than left to be followed.
-	input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, surfaceContextBlock)
+	if !knowledgeProfile {
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, surfaceContextBlock)
+	}
 	// Product content the runtime's prompt has no equivalent for. It teaches
 	// knowledge_search, so it is added only when that tool is reachable -
 	// describing a tool the agent does not have is the defect the runtime's own
 	// prompt test guards against.
-	if allowsKnowledgeSearch(input.AllowedTools) {
+	if !knowledgeProfile && allowsKnowledgeSearch(input.AllowedTools) {
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, knowledgeBaseBlock)
 	}
 
@@ -1568,7 +1586,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	}
 
 	// Layer user memories (explicit user-defined knowledge) after preferences.
-	if p.Principal != nil && s.memories != nil {
+	if p.Principal != nil && s.memories != nil && !knowledgeProfile {
 		memListStart := time.Now()
 		mems, err := s.memories.List(ctx, p.Principal)
 		memListMs = time.Since(memListStart).Milliseconds()
@@ -1585,7 +1603,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 
 	// Long-term memory: inject relevant entities found for the current prompt.
 	// Only for users who opted in to long-term memory.
-	if p.Principal != nil && s.memories != nil && s.preferences != nil && s.preferences.MemoryEnabled(ctx, p.Principal) {
+	if p.Principal != nil && s.memories != nil && s.preferences != nil && !knowledgeProfile && s.preferences.MemoryEnabled(ctx, p.Principal) {
 		ltmStart := time.Now()
 		block, err := s.memories.BuildContextBlock(ctx, p.Principal, p.Prompt)
 		memLTMMs = time.Since(ltmStart).Milliseconds()
@@ -1594,9 +1612,15 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		}
 	}
 
+	// The collection the person limited the question to: every search of the Knowledge agent is already restricted to it (see
+	// knowledge.WithScope), and it must not read an empty result as "the organization has nothing on this".
+	if knowledgeProfile && strings.TrimSpace(p.CorpusID) != "" {
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, knowledgeagent.ScopeBlock)
+	}
+
 	// RAG: build and append knowledge context block when a corpus is attached.
 	var ragResults []RAGSearchResult
-	if strings.TrimSpace(p.CorpusID) != "" && s.knowledge != nil {
+	if strings.TrimSpace(p.CorpusID) != "" && s.knowledge != nil && !knowledgeProfile {
 		if p.OnStage != nil {
 			p.OnStage("knowledge", "Searching knowledge base")
 		}
@@ -1692,4 +1716,21 @@ func toolAllowlistFromPatterns(patterns []string) (allowed []string, restrict bo
 		}
 	}
 	return patterns, len(patterns) > 0
+}
+
+// richAnswersOn is true unless the person turned the structured components off in Settings.
+func (s *Service) richAnswersOn(ctx context.Context, p ContextBuildParams) bool {
+	return s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal)
+}
+
+// richFamilies decides which families of components this turn is taught: the ones its request asks for, and the ones the latest answers
+// of the session drew, since a follow-up that names nothing is about what they showed.
+func (s *Service) richFamilies(ctx context.Context, p ContextBuildParams) richUIFamilies {
+	families := richUIFamiliesFor(p.Prompt)
+	if families != richUIAllFamilies && p.SessionID != "" {
+		if messages, err := s.loadSessionMessages(ctx, p.SessionID); err == nil {
+			families = families.union(richUIFamiliesInHistory(messages))
+		}
+	}
+	return families
 }

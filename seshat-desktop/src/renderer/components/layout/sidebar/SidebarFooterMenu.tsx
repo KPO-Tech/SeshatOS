@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Down, Logout, Message, Setting, SettingTwo, Shield } from '@icon-park/react'
+import { Down, Logout, Setting, SettingTwo, Shield } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
@@ -9,8 +9,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
-// Bottom-of-sidebar menu: Settings, Config, Feedback, Admin (organization
-// accounts) and Sign out.
+// Bottom-of-sidebar menu: Settings, Config, Admin (organization accounts)
+// and Sign out.
 export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
   const [open, setOpen] = useState(false)
   const { isAdmin, connected, go } = useSettingsMenu()
@@ -64,12 +64,11 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
           >
             <MenuButton icon={<SettingTwo theme="outline" size={14} />} label="Settings" onClick={() => pick(() => go('settings'))} />
             <MenuButton icon={<Setting theme="outline" size={14} />} label="Config" onClick={() => pick(() => go('config'))} />
-            <MenuButton icon={<Message theme="outline" size={14} />} label="Feedback" onClick={() => pick(() => go('feedback'))} />
             {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label="Admin" disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
             {edition.accounts && (
               <>
                 <div className="my-0.5 h-px bg-[var(--border-soft)]" aria-hidden="true" />
-                <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" onClick={() => pick(() => void logout())} />
+                <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" disabled={!connected} onClick={() => pick(() => void logout())} />
               </>
             )}
           </div>

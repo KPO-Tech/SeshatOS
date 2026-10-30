@@ -57,12 +57,14 @@ function joinPath(dir: string, name: string): string {
 export function FilesPanel({
   sessionId,
   focusToolId,
+  focusPath,
   isMaximized,
   onClose,
   onToggleMaximize,
 }: {
   sessionId: string
   focusToolId?: string
+  focusPath?: string
   isMaximized: boolean
   onClose: () => void
   onToggleMaximize: () => void
@@ -148,6 +150,12 @@ export function FilesPanel({
     if (tool) openToolTab(tool)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusToolId, fileTools])
+
+  // An answer pointed at a file: open it as a tab.
+  useEffect(() => {
+    if (focusPath) openPathTab(focusPath)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusPath])
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? null
   const activeLabel = activeTab ? tabLabel(activeTab) : 'Files'

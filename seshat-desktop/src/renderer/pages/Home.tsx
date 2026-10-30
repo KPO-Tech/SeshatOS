@@ -5,7 +5,7 @@ import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { api, ApiError } from '@renderer/api/client'
-import type { ProviderModel, ProviderSetting } from '@renderer/api/types'
+import type { ProviderModel } from '@renderer/api/types'
 import { useProviders, fetchProviderModels } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import { useSessionStore } from '@renderer/stores/session'
@@ -13,6 +13,9 @@ import { useUIStore } from '@renderer/stores/ui'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 import { modelAlias } from '@renderer/lib/modelAlias'
+import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
+import { isChatProviderUsable } from '@renderer/lib/chatProviders'
+import { pickDefaultChoice } from '@renderer/lib/defaultModel'
 import './Home.css'
 
 type ModelChoice = {
@@ -43,28 +46,6 @@ function splitModelChoiceId(id: string): { providerId: string; modelId: string }
     providerId: id.slice(0, separator),
     modelId: id.slice(separator + 2),
   }
-}
-
-function providerInitials(name: string, kind: string): string {
-  const source = name.trim() || kind.trim() || 'AI'
-  const parts = source.split(/[\s._-]+/).filter(Boolean)
-  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-  return source.slice(0, 2).toUpperCase()
-}
-
-function providerDisplayName(name: string, kind: string): string {
-  const displayName = name.trim()
-  const providerKind = kind.trim()
-  if (!displayName) return providerKind
-  if (!providerKind) return displayName
-  if (displayName.toLowerCase() === providerKind.toLowerCase()) return displayName
-  return displayName
-}
-
-function isChatProviderUsable(provider: ProviderSetting): boolean {
-  if (provider.provider === 'ollama') return true
-  if (provider.auth_kind === 'oauth') return provider.connection_status === 'connected'
-  return provider.has_api_key || provider.connection_status === 'ready'
 }
 
 export function Home() {
@@ -184,10 +165,10 @@ export function Home() {
     if (allModelChoices.length === 0) return
     if (selectedModelChoice) return
     if (loadingModelProviderIds.length > 0) return
-    const def = allModelChoices.find((choice) => choice.model.is_default) ?? allModelChoices[0]
+    const def = pickDefaultChoice(chatProviders, allModelChoices) ?? allModelChoices[0]
     setSelectedProviderId(def.providerId)
     setSelectedModelId(def.model.model_id)
-  }, [allModelChoices, selectedModelChoice, loadingModelProviderIds])
+  }, [allModelChoices, chatProviders, selectedModelChoice, loadingModelProviderIds])
 
   useEffect(() => {
     if (!selectedModelId || allModelChoices.length === 0) return
@@ -440,17 +421,7 @@ export function Home() {
                 ? <ProviderIcon provider={selectedModelChoice.providerKind} size={13} />
                 : undefined
             }
-            modelOptions={
-              allModelChoices.length > 0
-                ? allModelChoices.map((choice) => ({
-                    id: choice.id,
-                    label: modelAlias(choice.model.display_name || choice.model.model_id),
-                    description: providerDisplayName(choice.providerName, choice.providerKind),
-                    icon: <ProviderIcon provider={choice.providerKind} size={17} />,
-                    prefix: providerInitials(choice.providerName, choice.providerKind),
-                  }))
-                : undefined
-            }
+            modelOptions={allModelChoices.length > 0 ? modelSelectorOptions(allModelChoices) : undefined}
             selectedModelId={selectedModelChoiceId}
             onModelSelect={handleModelSelect}
             modelMenuPlacement="down"

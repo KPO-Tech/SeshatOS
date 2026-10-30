@@ -1,8 +1,20 @@
 import { mkdir, readFile, statfs, writeFile } from 'fs/promises'
+import { cpus, totalmem } from 'os'
 import { join } from 'path'
-import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL, activateModel as activateTitleModel, disableLlama, getLlamaStatus } from './llama-manager'
-import { MODEL_CATALOG as SPEECH_MODELS, activateModel as activateSpeechModel, downloadModel as downloadSpeechModel, enableLocalWhisper, getWhisperStatus } from './whisper-manager'
+import { app } from 'electron'
+import { MODEL_CATALOG as TITLE_MODELS, DEFAULT_MODEL_ID as DEFAULT_TITLE_MODEL, activateModel as activateTitleModel, disableLlama, getLlamaStatus, llamaEngineDownloadBytes } from './llama-manager'
+import {
+  MODEL_CATALOG as SPEECH_MODELS,
+  activateModel as activateSpeechModel,
+  downloadModel as downloadSpeechModel,
+  enableLocalWhisper,
+  getWhisperStatus,
+  whisperEngineDownloadBytes
+} from './whisper-manager'
 import { resolveRuntimeRoot } from './runtime'
+import { downloadOcrPack, ocrSuitability, pickRecommendedPack, readOcrPacks } from './setup-ocr'
+import { withInstalled } from './setup-options'
+import { runTogether, type SetupTask } from './setup-run'
 
 // What the person chooses to have on this computer the first time SeshatOS opens: the model that names conversations and the model that
 // transcribes the voice. Each choice is a download; the wizard of the renderer shows the plan, asks, then calls runSetup.
@@ -15,14 +27,29 @@ const TITLE_CHOICES = ['qwen2.5-0.5b', 'gemma-3-270m', 'qwen2.5-1.5b']
 const SPEECH_CHOICES = ['base', 'small', 'tiny']
 const RECOMMENDED = { title: DEFAULT_TITLE_MODEL, speech: 'base' } as const
 
-export type SetupComponentId = 'title' | 'speech'
+export type SetupComponentId = 'title' | 'speech' | 'ocr'
 
-export type SetupOption = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean }
+export type SetupOption = {
+  id: string
+  label: string
+  sizeBytes: number
+  description: string
+  recommended: boolean
+  /** Its files are already on this computer: choosing it downloads nothing. */
+  installed?: boolean
+  /** The one in use now. */
+  active?: boolean
+}
 
 export type SetupComponent = {
   id: SetupComponentId
   available: boolean
   unavailableReason?: string
+  /** False when this computer is better left without it: the wizard starts with it unticked, and says why in note. */
+  defaultOn?: boolean
+  note?: string
+  /** What the engine that runs the models adds to the download, 0 when it is already on this computer. */
+  engineBytes?: number
   options: SetupOption[]
 }
 
@@ -97,24 +124,65 @@ const DESCRIPTIONS: Record<string, string> = {
   tiny: 'The fastest and the lightest, with more mistakes.'
 }
 
-function titleOptions(): SetupOption[] {
-  return TITLE_CHOICES.flatMap((id) => {
+function titleOptions(installedIds: readonly string[], activeId?: string): SetupOption[] {
+  const options = TITLE_CHOICES.flatMap((id) => {
     const model = TITLE_MODELS.find((candidate) => candidate.id === id)
     return model
       ? [{ id: model.id, label: model.label.replace(/ Instruct$/, ''), sizeBytes: model.approxSizeBytes, description: DESCRIPTIONS[id] ?? model.description, recommended: model.id === RECOMMENDED.title }]
       : []
   })
+  return withInstalled(options, installedIds, activeId)
 }
 
-function speechOptions(): SetupOption[] {
-  return SPEECH_CHOICES.flatMap((id) => {
+function speechOptions(installedIds: readonly string[], activeId?: string): SetupOption[] {
+  const options = SPEECH_CHOICES.flatMap((id) => {
     const model = SPEECH_MODELS.find((candidate) => candidate.id === id)
     return model ? [{ id: model.id, label: model.label, sizeBytes: model.approxSizeBytes, description: DESCRIPTIONS[id] ?? model.description, recommended: model.id === RECOMMENDED.speech }] : []
   })
+  return withInstalled(options, installedIds, activeId)
+}
+
+// Reading scanned documents: the packs come from the backend (which knows them), the one offered first reads the language of the system,
+// and the box starts ticked only on a computer that can run it comfortably.
+async function ocrComponent(): Promise<SetupComponent> {
+  const report = await readOcrPacks()
+  if (!report || report.packs.length === 0) {
+    return { id: 'ocr', available: false, unavailableReason: 'Not part of this version of SeshatOS yet.', options: [] }
+  }
+  if (!report.compiled) {
+    return { id: 'ocr', available: false, unavailableReason: 'This version of SeshatOS cannot read scanned documents.', options: [] }
+  }
+  const recommended = pickRecommendedPack(report.packs, app.getLocale())
+  const suitability = ocrSuitability({ totalMemoryBytes: totalmem(), cpuCount: cpus().length })
+  return {
+    id: 'ocr',
+    available: true,
+    defaultOn: suitability.ok,
+    note: suitability.note,
+    options: report.packs.map((pack) => ({
+      id: pack.id,
+      label: pack.label.replace(/ \(.*\)$/, ''),
+      sizeBytes: pack.download_bytes,
+      description: pack.installed ? 'Already on this computer.' : pack.label,
+      recommended: pack.id === recommended,
+      installed: pack.installed,
+      active: pack.active
+    }))
+  }
+}
+
+function whisperUnavailableReason(): string {
+  return process.platform === 'darwin' ? 'Local dictation is not available on macOS yet.' : 'Not available on this system yet.'
 }
 
 export async function getSetupPlan(): Promise<SetupPlan> {
-  const [llama, whisper, free] = await Promise.all([getLlamaStatus(), getWhisperStatus(), freeDiskBytes()])
+  const [llama, whisper, free, ocr, llamaEngineBytes] = await Promise.all([
+    getLlamaStatus(),
+    getWhisperStatus(),
+    freeDiskBytes(),
+    ocrComponent(),
+    llamaEngineDownloadBytes()
+  ])
   return {
     freeDiskBytes: free,
     components: [
@@ -122,19 +190,24 @@ export async function getSetupPlan(): Promise<SetupPlan> {
         id: 'title',
         available: llama.supported,
         unavailableReason: llama.supported ? undefined : 'Not available on this system yet.',
-        options: titleOptions()
+        engineBytes: llamaEngineBytes,
+        options: titleOptions(llama.downloadedModelIds, llama.activeModelId)
       },
       {
         id: 'speech',
         available: whisper.supported,
-        unavailableReason: whisper.supported ? undefined : 'Not available on this system yet.',
-        options: speechOptions()
-      }
+        unavailableReason: whisper.supported ? undefined : whisperUnavailableReason(),
+        engineBytes: whisperEngineDownloadBytes(),
+        options: speechOptions(whisper.downloadedModelIds, whisper.activeModelId)
+      },
+      ocr
     ]
   }
 }
 
 function validModel(component: SetupComponentId, modelId: string): boolean {
+  // The backend knows the packs and refuses one it does not: here only a plain id is let through to its command line.
+  if (component === 'ocr') return /^[a-z0-9-]{1,32}$/.test(modelId)
   return (component === 'title' ? TITLE_CHOICES : SPEECH_CHOICES).includes(modelId)
 }
 
@@ -154,32 +227,43 @@ async function installSpeech(modelId: string, report: Report): Promise<void> {
   await enableLocalWhisper()
 }
 
+async function installOcr(packId: string, report: Report): Promise<void> {
+  await downloadOcrPack(packId, (progress) => report({ component: 'ocr', status: 'running', receivedBytes: progress.receivedBytes, totalBytes: progress.totalBytes }))
+}
+
 /**
- * Installs what was chosen, one component after the other, and reports each. A component left out stays off: the title model is turned
- * off so it is not downloaded behind the person's back; speech was never on by itself. One that fails does not stop the next one.
+ * Installs what was chosen, all the components at the same time, and reports each as it goes. A component unticked stays off: the title
+ * model is turned off so it is not downloaded behind the person's back; speech was never on by itself. A component missing from the
+ * selection is left as it is, which is how a retry runs only what failed. One that fails does not stop the others.
  */
 export async function runSetup(selection: SetupSelection, report: Report): Promise<void> {
   const plan: Array<[SetupComponentId, (modelId: string, report: Report) => Promise<void>]> = [
     ['title', installTitle],
-    ['speech', installSpeech]
+    ['speech', installSpeech],
+    ['ocr', installOcr]
   ]
-  for (const [component, install] of plan) {
-    const choice = selection[component]
-    if (!choice?.install) {
-      if (component === 'title') await disableLlama().catch(() => {})
-      report({ component, status: 'done', message: 'Skipped' })
-      continue
+  const tasks: SetupTask[] = plan.map(([component, install]) => ({
+    id: component,
+    run: async () => {
+      const choice = selection[component]
+      if (!choice) return
+      if (!choice.install) {
+        if (component === 'title') await disableLlama().catch(() => {})
+        report({ component, status: 'done', message: 'Skipped' })
+        return
+      }
+      if (!validModel(component, choice.modelId)) {
+        report({ component, status: 'error', message: 'That model is not one of the choices.' })
+        return
+      }
+      report({ component, status: 'running', receivedBytes: 0, totalBytes: 0 })
+      try {
+        await install(choice.modelId, report)
+        report({ component, status: 'done' })
+      } catch (error) {
+        report({ component, status: 'error', message: error instanceof Error ? error.message : String(error) })
+      }
     }
-    if (!validModel(component, choice.modelId)) {
-      report({ component, status: 'error', message: 'That model is not one of the choices.' })
-      continue
-    }
-    report({ component, status: 'running', receivedBytes: 0, totalBytes: 0 })
-    try {
-      await install(choice.modelId, report)
-      report({ component, status: 'done' })
-    } catch (error) {
-      report({ component, status: 'error', message: error instanceof Error ? error.message : String(error) })
-    }
-  }
+  }))
+  await runTogether(tasks, (id, error) => report({ component: id as SetupComponentId, status: 'error', message: error instanceof Error ? error.message : String(error) }))
 }

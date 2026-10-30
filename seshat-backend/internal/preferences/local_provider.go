@@ -61,6 +61,7 @@ func (p *LocalProvider) Upsert(ctx context.Context, principal *backendauth.Princ
 		AutomationPermissionMode:  params.AutomationPermissionMode,
 		MaxSubAgentDepth:          maxDepth,
 		MemoryEnabled:             params.MemoryEnabled,
+		RichAnswersDisabled:       params.RichAnswersDisabled,
 	})
 	if err != nil {
 		return nil, bkerr.Internal(err.Error(), err)
@@ -85,6 +86,7 @@ func fromDB(p *db.UserPreferences) UserPreferences {
 		AutomationPermissionMode:  p.AutomationPermissionMode,
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
 		MemoryEnabled:             p.MemoryEnabled,
+		RichAnswersDisabled:       p.RichAnswersDisabled,
 		UpdatedAt:                 p.UpdatedAt,
 	}
 }

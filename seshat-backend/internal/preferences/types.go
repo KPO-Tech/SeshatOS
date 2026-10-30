@@ -21,7 +21,10 @@ type UserPreferences struct {
 	MaxSubAgentDepth int
 	// MemoryEnabled reports whether the user opted in to long-term memory (extraction and recall). Off by default.
 	MemoryEnabled bool
-	UpdatedAt     time.Time
+	// RichAnswersDisabled is true when the user turned off structured components (tables, figures, steps) in answers.
+	// It is an opt-out so that the zero value, which is also what a user who never chose reads back, means on.
+	RichAnswersDisabled bool
+	UpdatedAt           time.Time
 }
 
 type UpsertParams struct {
@@ -35,6 +38,7 @@ type UpsertParams struct {
 	AutomationPermissionMode  string
 	MaxSubAgentDepth          int
 	MemoryEnabled             bool
+	RichAnswersDisabled       bool
 }
 
 // BuildSystemPromptBlock renders the preferences as a system prompt injection

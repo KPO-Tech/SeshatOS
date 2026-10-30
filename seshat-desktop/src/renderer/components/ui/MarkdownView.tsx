@@ -9,6 +9,11 @@ import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
+import { citedPages, type MarkdownNode } from '@renderer/lib/markdownLinks'
+import type { WebSource } from '@renderer/lib/webSources'
+import { WebCitation } from '@renderer/components/sources/WebCitation'
+import { RichBlock } from '@renderer/components/chat/richblocks/view/RichBlock'
+import { isRichBlockNode } from '@renderer/components/chat/richblocks/view/isRichBlockNode'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -273,6 +278,10 @@ type Props = {
   sessionId?: string
   /** "chat" (default) is the compact size of messages and side panels; "document" is the larger one of a page read on its own. */
   variant?: 'chat' | 'document'
+  /** The pages the agent consulted for this answer: a link to one of them is drawn as a citation. */
+  sources?: WebSource[]
+  /** Draws a link of its own, such as a citation chip, in place of the plain link: return null to leave the link as it is. */
+  renderLink?: (href: string | undefined) => ReactNode
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
@@ -287,8 +296,11 @@ type CodeProps = {
   children?: ReactNode
 }
 
-export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat' }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources, renderLink }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
+  // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
+  const sourcesKey = sources?.map((source) => source.url).join('|') ?? ''
+  const consulted = useMemo<WebSource[]>(() => sources ?? [], [sourcesKey])
 
   // react-markdown uses the identity of each entry here as the React element
   // type for that tag. A fresh object literal (recreated on every keystroke
@@ -304,6 +316,10 @@ export function MarkdownView({ children, className, streaming = false, sessionId
   const markdownComponents = useMemo<Components>(() => ({
           code({ inline, className, children, ...props }: CodeProps) {
             const match = /language-(\w+)/.exec(className || '')
+            if (!inline && /(^|\s)language-seshat-ui(\s|$)/.test(className || '')) {
+              const code = String(children).replace(/\n$/, '')
+              return <RichBlock code={code} streaming={streaming} fallback={<CodeBlock language="seshat-ui" code={code} />} renderLink={renderLink} />
+            }
             if (!inline && match && !streaming) {
               const code = String(children).replace(/\n$/, '')
               if (match[1] === 'mermaid') {
@@ -328,10 +344,19 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </code>
             )
           },
-          p({ children }) {
-            return <p className="mb-4 last:mb-0">{children}</p>
+          // The pages a paragraph or item cites by its links come as one small chip at its end.
+          p({ node, children }: { node?: unknown; children?: ReactNode }) {
+            const cited = citedPages(node as MarkdownNode | undefined, consulted)
+            return (
+              <p className="mb-4 last:mb-0">
+                {children}
+                {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
+              </p>
+            )
           },
-          pre({ children }) {
+          pre({ node, children }: { node?: unknown; children?: ReactNode }) {
+            // A seshat-ui block draws components, which a pre would set in monospace, on one line, and clip.
+            if (isRichBlockNode(node)) return <>{children}</>
             return <pre className="my-4 overflow-hidden rounded-md">{children}</pre>
           },
           table({ children }) {
@@ -353,8 +378,17 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           ol({ children }) {
             return <ol className="mb-4 list-decimal pl-6">{children}</ol>
           },
-          li({ children }) {
-            return <li className="mb-2 pl-1 last:mb-0">{children}</li>
+          li({ node, children }: { node?: unknown; children?: ReactNode }) {
+            const tree = node as MarkdownNode | undefined
+            // An item whose text sits in a paragraph of its own already gets its chip from that paragraph.
+            const ownText = !tree?.children?.some((child) => child.tagName === 'p')
+            const cited = ownText ? citedPages(tree, consulted) : []
+            return (
+              <li className="mb-2 pl-1 last:mb-0">
+                {children}
+                {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
+              </li>
+            )
           },
           h1({ children }) {
             return <h1 className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
@@ -383,6 +417,8 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           // instead of opening it anywhere sensible. Route through the
           // built-in browser panel instead.
           a({ href, children, ...props }: { href?: string; children?: ReactNode }) {
+            const custom = renderLink?.(href)
+            if (custom) return <>{custom}</>
             return (
               <a
                 href={href}
@@ -400,7 +436,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </a>
             )
           }
-        }), [streaming, sessionId])
+        }), [streaming, sessionId, consulted, renderLink])
 
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>

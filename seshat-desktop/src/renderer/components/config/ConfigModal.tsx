@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import type { User } from '@renderer/api/types'
-import { AgentsConfig } from './agents/AgentsConfig'
+import { AnswersConfig } from './answers/AnswersConfig'
 import { CloudConfig } from './cloud/CloudConfig'
-import { ConnectorsConfig } from './connectors/ConnectorsConfig'
 import { EnvironmentConfig } from './environment/EnvironmentConfig'
-import { KnowledgeConfig } from './knowledge/KnowledgeConfig'
+import { hiddenConfigSections } from './configSections'
+import { DocumentsConfig } from './documents/DocumentsConfig'
 import { MCPConfig } from './mcp/MCPConfig'
 import { ModelsConfig } from './models/ModelsConfig'
 import { AudioConfig } from './multimodal/AudioConfig'
@@ -14,6 +14,7 @@ import { SkillsConfig } from './skills/SkillsConfig'
 import { StorageConfig } from './storage/StorageConfig'
 import { TitlesConfig } from './titles/TitlesConfig'
 import { WebSearchConfig } from './web-search/WebSearchConfig'
+import { SearchConfig } from './search/SearchConfig'
 import { edition } from '@renderer/lib/edition'
 
 export type ConfigSection =
@@ -21,15 +22,15 @@ export type ConfigSection =
   | 'models'
   | 'titles'
   | 'web-search'
-  | 'knowledge'
+  | 'documents'
+  | 'search'
   | 'image'
   | 'audio'
   | 'mcp'
-  | 'connectors'
   | 'environment'
   | 'storage'
-  | 'agents'
   | 'skills'
+  | 'answers'
   | 'cloud'
 
 type Props = {
@@ -45,23 +46,20 @@ const allSections: SectionDef[] = [
   { id: 'models', label: 'Models', icon: 'model', group: 'AI Runtime', description: 'Choose defaults, model catalogs, aliases, and fallback behavior.' },
   { id: 'titles', label: 'Titles', icon: 'model', group: 'AI Runtime', description: 'Name new sessions with a small local model that runs alongside the answer.' },
   { id: 'web-search', label: 'Web Search', icon: 'search', group: 'AI Runtime', description: 'Search providers, domain policies, and web retrieval settings.' },
-  { id: 'knowledge', label: 'Knowledge', icon: 'book', group: 'Knowledge', description: 'Knowledge bases, retrieval models, document reading, and local OCR.' },
+  { id: 'documents', label: 'Documents', icon: 'book', group: 'Capabilities', description: 'Read scanned PDFs and photos of documents on this computer, in the languages you choose.' },
+  { id: 'search', label: 'Search', icon: 'search', group: 'Capabilities', description: 'The embedding and reranking models that Knowledge searches your documents with.' },
   { id: 'image', label: 'Images', icon: 'media', group: 'Capabilities', description: 'The provider, model, size and quality the agent uses to create images.' },
   { id: 'audio', label: 'Audio', icon: 'media', group: 'Capabilities', description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
   { id: 'mcp', label: 'MCP', icon: 'api', group: 'Workspace Runtime', description: 'MCP servers exposed to agents and tools.' },
-  { id: 'connectors', label: 'Connectors', icon: 'connectors', group: 'Workspace Runtime', description: 'External accounts and application connectors.' },
   { id: 'environment', label: 'Environment', icon: 'terminal', group: 'Workspace Runtime', description: 'Encrypted API keys, env vars, and backend restart flow.' },
   { id: 'storage', label: 'Storage', icon: 'storage', group: 'Workspace Runtime', description: 'Local filesystem, object storage, and cache locations.' },
-  { id: 'agents', label: 'Agents', icon: 'agent', group: 'Agents', description: 'Agent profiles, permissions, delegation defaults, and system instructions.' },
   { id: 'skills', label: 'Skills', icon: 'skills', group: 'Agents', description: 'Skill repositories downloaded to this machine and the groups they provide.' },
+  { id: 'answers', label: 'Answers', icon: 'agent', group: 'Agents', description: 'How the agent presents its answers: drawn components, and more preferences later.' },
   { id: 'cloud', label: 'SeshatCloud', icon: 'connectors', group: 'Workspace Runtime', description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
 ]
 
 // Sections kept in code but hidden from this edition (see lib/edition.ts).
-const hiddenSections = new Set<ConfigSection>([
-  ...(edition.knowledge ? [] : (['knowledge', 'connectors'] as const)),
-  ...(edition.cloud ? [] : (['cloud'] as const))
-])
+const hiddenSections = new Set<ConfigSection>(hiddenConfigSections(edition))
 const sections = allSections.filter((section) => !hiddenSections.has(section.id))
 
 export function ConfigModal({ user, initialSection = 'providers', onClose }: Props) {
@@ -71,14 +69,25 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-8 py-8 backdrop-blur-sm">
-      <div className="relative flex h-full max-h-[720px] w-full max-w-[1240px] overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]">
-        <aside className="no-scrollbar w-[220px] shrink-0 overflow-y-auto border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-2.5">
-          <div className="px-2 py-2">
-            <div className="text-[15px] font-semibold text-[var(--text-primary)]">Config</div>
-            <div className="mt-1 truncate text-[11px] text-[var(--text-muted)]">{edition.accounts ? displayName : 'This device'}</div>
+      <div className="relative flex h-full max-h-[720px] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]">
+        <header className="flex h-11 shrink-0 items-center justify-between border-b border-[var(--border-soft)] pl-4 pr-2">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="text-[14px] font-semibold text-[var(--text-primary)]">Config</span>
+            <span className="truncate text-[11.5px] text-[var(--text-muted)]">{edition.accounts ? displayName : 'This device'}</span>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-7 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            aria-label="Close config"
+          >
+            <CloseIcon />
+          </button>
+        </header>
 
-          <nav className="mt-4 space-y-3">
+        <div className="flex min-h-0 flex-1">
+        <aside className="no-scrollbar w-[220px] shrink-0 overflow-y-auto border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-2.5">
+          <nav className="space-y-3">
             {groupedSections().map(([group, items]) => (
               <div key={group}>
                 <div className="mb-1 px-3 text-[11px] font-medium text-[var(--text-muted)]">{group}</div>
@@ -105,19 +114,10 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
           </nav>
         </aside>
 
-        <section className="no-scrollbar min-w-0 flex-1 overflow-y-auto px-12 py-9">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-5 top-5 flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-            aria-label="Close config"
-          >
-            <CloseIcon />
-          </button>
-
+        <section className="no-scrollbar min-w-0 flex-1 overflow-y-auto px-10 py-7">
           <div className="mx-auto min-h-full max-w-[920px] pb-8">
-            <h1 className="text-[24px] font-semibold tracking-normal text-[var(--text-primary)]">{active.label}</h1>
-            <p className="mt-2 max-w-[620px] text-[13px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
+            <h1 className="text-[18px] font-semibold tracking-normal text-[var(--text-primary)]">{active.label}</h1>
+            <p className="mt-1.5 max-w-[620px] text-[12.5px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
               {active.description}
             </p>
 
@@ -126,19 +126,20 @@ export function ConfigModal({ user, initialSection = 'providers', onClose }: Pro
               {activeSection === 'models' && <ModelsConfig />}
               {activeSection === 'titles' && <TitlesConfig />}
               {activeSection === 'web-search' && <WebSearchConfig />}
-              {activeSection === 'knowledge' && <KnowledgeConfig />}
+              {activeSection === 'documents' && <DocumentsConfig />}
+              {activeSection === 'search' && <SearchConfig />}
               {activeSection === 'image' && <ImageConfig />}
               {activeSection === 'audio' && <AudioConfig />}
               {activeSection === 'mcp' && <MCPConfig />}
-              {activeSection === 'connectors' && <ConnectorsConfig />}
               {activeSection === 'environment' && <EnvironmentConfig />}
               {activeSection === 'storage' && <StorageConfig />}
-              {activeSection === 'agents' && <AgentsConfig />}
               {activeSection === 'skills' && <SkillsConfig />}
+              {activeSection === 'answers' && <AnswersConfig />}
               {activeSection === 'cloud' && <CloudConfig />}
             </div>
           </div>
         </section>
+        </div>
       </div>
     </div>
   )

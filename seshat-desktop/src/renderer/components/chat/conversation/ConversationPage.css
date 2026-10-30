@@ -25,7 +25,7 @@
 }
 
 .conv-virtual-row {
-  max-width: var(--chat-max-width, 768px);
+  max-width: var(--chat-max-width, 900px);
   margin: 0 auto;
   padding: 0 18px;
   box-sizing: border-box;
@@ -40,7 +40,7 @@
 }
 
 .conv-input-area {
-  padding: 0 16px 14px;
+  padding: 0 18px 14px;
   background: linear-gradient(
     to top,
     color-mix(in srgb, var(--surface-root) 66%, var(--surface-panel)) 72%,
@@ -50,7 +50,8 @@
 }
 
 .conv-input-inner {
-  max-width: calc(var(--chat-max-width, 880px) - 20px);
+  /* The width of a message (the column minus its own 18px of padding on each side), so the composer lines up with the answers. */
+  max-width: calc(var(--chat-max-width, 900px) - 36px);
   margin: 0 auto;
   width: 100%;
 }
@@ -62,4 +63,36 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
+}
+
+/* A zero-height strip just above the composer, so the button follows the composer's height. */
+.conv-jump-anchor {
+  position: relative;
+  height: 0;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.conv-jump {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-panel);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-medium);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.conv-jump:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }

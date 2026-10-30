@@ -1,6 +1,6 @@
 {
   "name": "seshat-desktop",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
@@ -16,9 +16,11 @@
   "scripts": {
     "start": "node scripts/start-desktop-dev.mjs",
     "dev": "node scripts/start-desktop-dev.mjs",
+    "dev:public": "node scripts/start-desktop-dev.mjs --edition=public",
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "lint": "oxlint src",
+    "ui-catalog": "node scripts/generate-ui-catalog.mjs",
     "test": "vitest run && npm run test:ipc",
     "test:watch": "vitest",
     "build:backend:win": "node ../scripts/build-desktop-sidecar.mjs windows amd64",

@@ -45,6 +45,7 @@ type nativeDocDownloadState struct {
 	UpdatedAt       int64  `json:"updated_at,omitempty"`
 	CompletedAt     int64  `json:"completed_at,omitempty"`
 	ModelDir        string `json:"model_dir"`
+	Pack            string `json:"pack,omitempty"`
 }
 
 func documentReaderConfigToResponse(cfg *db.DocumentReaderConfig) documentReaderConfigResponse {
@@ -69,6 +70,10 @@ func documentReaderConfigToResponse(cfg *db.DocumentReaderConfig) documentReader
 // GET  /api/v1/settings/document-reader/native/status
 // POST /api/v1/settings/document-reader/native/download
 // POST /api/v1/settings/document-reader/native/init
+// GET  /api/v1/settings/document-reader/indra/status
+// POST /api/v1/settings/document-reader/indra/install
+// POST /api/v1/settings/document-reader/indra/enabled
+// POST /api/v1/settings/document-reader/indra/remove
 func (a *App) handleDocumentReaderConfig(w http.ResponseWriter, r *http.Request) {
 	principal, _ := authPrincipalFromContext(r.Context())
 	if principal == nil {
@@ -89,6 +94,10 @@ func (a *App) handleDocumentReaderConfig(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		a.handleDocumentReaderTest(w, r, store)
+		return
+	}
+	if strings.Contains(tail, "/indra/") {
+		a.handleDocumentReaderIndra(w, r, tail)
 		return
 	}
 	if strings.HasSuffix(tail, "/native/status") {
@@ -155,7 +164,22 @@ func (a *App) handleDocumentReaderNativeStatus(w http.ResponseWriter, r *http.Re
 }
 
 func (a *App) handleDocumentReaderNativeDownload(w http.ResponseWriter, r *http.Request) {
-	job, started := a.startNativeDocDownload()
+	// The body is optional: {"pack": "latin"} picks the recognizer, no body keeps the active one.
+	var body struct {
+		Pack string `json:"pack"`
+	}
+	if r.Body != nil {
+		_ = json.NewDecoder(r.Body).Decode(&body)
+	}
+	pack := strings.TrimSpace(body.Pack)
+	if pack == "" {
+		pack = documentreading.NativeDocActivePack()
+	}
+	if _, ok := documentreading.NativeDocPackByID(pack); !ok {
+		writeBackendError(w, bkerr.InvalidInput("unknown native OCR pack: "+pack, nil))
+		return
+	}
+	job, started := a.startNativeDocDownload(pack)
 	status := http.StatusOK
 	if started {
 		status = http.StatusAccepted
@@ -183,10 +207,39 @@ func (a *App) handleDocumentReaderNativeInit(w http.ResponseWriter, r *http.Requ
 	})
 }
 
+type nativeDocPackResponse struct {
+	ID        string   `json:"id"`
+	Label     string   `json:"label"`
+	Languages []string `json:"languages"`
+	SizeMB    int      `json:"size_mb"`
+	Installed bool     `json:"installed"`
+	Active    bool     `json:"active"`
+}
+
+func nativeDocPacksResponse() []nativeDocPackResponse {
+	active := documentreading.NativeDocActivePack()
+	packs := documentreading.NativeDocPacks()
+	out := make([]nativeDocPackResponse, 0, len(packs))
+	for _, pack := range packs {
+		out = append(out, nativeDocPackResponse{
+			ID:        pack.ID,
+			Label:     pack.Label,
+			Languages: pack.Languages,
+			SizeMB:    pack.SizeMB,
+			Installed: documentreading.NativeDocPackInstalled(pack.ID),
+			Active:    pack.ID == active,
+		})
+	}
+	return out
+}
+
 func (a *App) nativeDocStatusResponse() map[string]any {
 	return map[string]any{
 		"model_dir":    documentreading.NativeDocModelsDir(),
 		"models":       documentreading.NativeDocModelFiles,
+		"model_status": documentreading.NativeDocModelStatuses(),
+		"packs":        nativeDocPacksResponse(),
+		"active_pack":  documentreading.NativeDocActivePack(),
 		"download":     a.nativeDocDownloadState(),
 		"capabilities": nativeDocCapabilitiesResponse(documentreading.DetectCapabilities()),
 	}
@@ -216,7 +269,7 @@ func (a *App) nativeDocDownloadState() nativeDocDownloadState {
 	return *a.nativeDocDownload
 }
 
-func (a *App) startNativeDocDownload() (nativeDocDownloadState, bool) {
+func (a *App) startNativeDocDownload(pack string) (nativeDocDownloadState, bool) {
 	if a == nil {
 		return nativeDocDownloadState{Status: "failed", Error: "app unavailable", ModelDir: documentreading.NativeDocModelsDir()}, false
 	}
@@ -232,16 +285,17 @@ func (a *App) startNativeDocDownload() (nativeDocDownloadState, bool) {
 		StartedAt: now,
 		UpdatedAt: now,
 		ModelDir:  documentreading.NativeDocModelsDir(),
+		Pack:      pack,
 	}
 	job := *a.nativeDocDownload
 	a.nativeDocDownloadMu.Unlock()
 
-	go a.runNativeDocDownload()
+	go a.runNativeDocDownload(pack)
 	return job, true
 }
 
-func (a *App) runNativeDocDownload() {
-	err := documentreading.DownloadNativeDocModels(context.Background(), func(progress documentreading.NativeDocDownloadProgress) {
+func (a *App) runNativeDocDownload(pack string) {
+	err := documentreading.DownloadNativeDocPack(context.Background(), pack, func(progress documentreading.NativeDocDownloadProgress) {
 		a.nativeDocDownloadMu.Lock()
 		defer a.nativeDocDownloadMu.Unlock()
 		if a.nativeDocDownload == nil {
@@ -275,7 +329,10 @@ func (a *App) runNativeDocDownload() {
 	}
 	a.nativeDocDownload.Status = "completed"
 	a.nativeDocDownload.Error = ""
-	a.nativeDocDownload.FilesCompleted = len(documentreading.NativeDocModelFiles)
+	a.nativeDocDownload.FilesCompleted = a.nativeDocDownload.FileCount
+	// The models are there: bring the OCR up now, so Settings says Ready without a second step. A document that needs it would do the
+	// same, and a machine where it fails is told by the reader.
+	_, _ = documentreading.InitNativeDocRuntime()
 }
 
 func (a *App) handleDocumentReaderTest(w http.ResponseWriter, r *http.Request, store *db.DocumentReaderConfigStore) {

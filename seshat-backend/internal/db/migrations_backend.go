@@ -374,6 +374,55 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gCapabilityOption{})
 			},
 		},
+		{
+			ID:    "20261026_054_corpus_file_source_path",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gCorpusFile{})
+			},
+		},
+		{
+			ID:    "20261026_055_knowledge_sources",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeSource{}, &gCorpus{})
+			},
+		},
+		{
+			ID:    "20261027_056_knowledge_source_icon",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeSource{})
+			},
+		},
+		{
+			ID:    "20261027_057_ingestion_job_priority",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gKnowledgeIngestionJob{})
+			},
+		},
+		{
+			ID:    "20261028_058_reranker_models",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gRerankerModel{})
+			},
+		},
+		{
+			ID:    "20261028_059_embedder_vectors_model",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gEmbedderConfig{})
+			},
+		},
+		{
+			ID:    "20261029_060_user_preferences_rich_answers",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
+			},
+		},
 	}
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Down } from '@icon-park/react'
 import { useContextUsage } from '@renderer/hooks/useContextUsage'
 import { currentSandboxMode } from '@renderer/components/config/environment/sandboxApi'
@@ -19,19 +19,25 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 const EMPTY: never[] = []
 
+// 'panel' is the cards of the session panel; 'ask' draws the same cards the way the Ask view draws the ones on its right (see AskSidebar).
+export type OverviewVariant = 'panel' | 'ask'
+const VariantContext = createContext<OverviewVariant>('panel')
+
 type Props = {
   sessionId: string
   webCount: number
   toolCount: number
-  onOpenWeb: () => void
-  onOpenTools: () => void
+  // The links to the lists behind the Activity card; a surface without those lists leaves them out.
+  onOpenWeb?: () => void
+  onOpenTools?: () => void
+  variant?: OverviewVariant
 }
 
 /**
  * The home of the session panel: a few cards, each answering one question (where do commands run, how full is the
  * context, what is connected, which files came out, how much happened). A card with nothing to show is not drawn.
  */
-export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onOpenTools }: Props) {
+export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onOpenTools, variant = 'panel' }: Props) {
   const agentState = useSessionStore((s) => s.getAgentState(sessionId))
   const session = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId))
   const openRightPanel = useUIStore((s) => s.openRightPanel)
@@ -207,10 +213,10 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
             <span>Last turn <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatDuration(agentState.lastTurnTiming.durationMs)}</b></span>
           </div>
         )}
-        {(toolCount > 0 || webCount > 0) && (
+        {((toolCount > 0 && onOpenTools) || (webCount > 0 && onOpenWeb)) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {toolCount > 0 && <PageLink onClick={onOpenTools}>All tools</PageLink>}
-            {webCount > 0 && <PageLink onClick={onOpenWeb}>Sites visited</PageLink>}
+            {toolCount > 0 && onOpenTools && <PageLink onClick={onOpenTools}>All tools</PageLink>}
+            {webCount > 0 && onOpenWeb && <PageLink onClick={onOpenWeb}>Sites visited</PageLink>}
           </div>
         )}
       </OverviewCard>
@@ -220,26 +226,31 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   if (cards.length === 0) {
     return <p className="m-0 p-1 text-[12px] italic text-[var(--text-muted)]">Nothing to show yet. This fills in as the conversation goes on.</p>
   }
-  return <div className="flex flex-col gap-3">{cards}</div>
+  return (
+    <VariantContext.Provider value={variant}>
+      <div className="flex flex-col gap-3">{cards}</div>
+    </VariantContext.Provider>
+  )
 }
 
 function OverviewCard({ title, count, children }: { title: string; count?: number; children: ReactNode }) {
   const [open, setOpen] = useState(true)
+  const ask = useContext(VariantContext) === 'ask'
   return (
-    <section className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
+    <section className={ask ? 'rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]' : 'rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]'}>
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border-0 bg-transparent px-3.5 py-2.5 text-left"
+        className={cx('flex w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent text-left', ask ? 'rounded-[16px] px-4 py-3' : 'rounded-xl px-3.5 py-2.5')}
       >
-        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</span>
+        <span className={cx('font-semibold text-[var(--text-primary)]', ask ? 'text-[13.5px]' : 'text-[13px]')}>{title}</span>
         <span className="flex items-center gap-2 text-[var(--text-muted)]">
           {count !== undefined && <span className="text-[11px] tabular-nums">{count}</span>}
           <Down size={11} className={cx('transition-transform duration-150', !open && '-rotate-90')} />
         </span>
       </button>
-      {open && <div className="px-3.5 pb-3">{children}</div>}
+      {open && <div className={ask ? 'px-4 pb-3.5' : 'px-3.5 pb-3'}>{children}</div>}
     </section>
   )
 }

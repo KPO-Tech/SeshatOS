@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useParams } from 'react-router'
 import { useSessionStore, EMPTY_STREAMING, DEFAULT_AGENT_STATE } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
@@ -18,6 +18,9 @@ import { useLiveActivityForAgent } from '../messages/liveActivity'
 import { MessageList } from '../messages/MessageList'
 import { useToast, ToastStack } from '@renderer/components/ui/Toast'
 import { useChat } from '@renderer/hooks/useChat'
+import { RichActionProvider } from '../richblocks/view/actions/richActions'
+import { filePlace } from '../richblocks/view/actions/filePlace'
+import { JumpToLatest } from './JumpToLatest'
 import './ConversationPage.css'
 
 export function ConversationPage() {
@@ -109,6 +112,19 @@ export function ConversationPage() {
     openRightPanel,
   })
 
+  const askFromAnswer = useCallback((text: string) => void sendMessage(text), [sendMessage])
+  const openFromAnswer = useCallback(
+    (path: string) => {
+      const place = filePlace(path, session?.projectPath)
+      const showInFiles = () => openRightPanel({ kind: 'files', title: 'Files', sessionId: id, focusPath: place.path })
+      // openPath only reaches the app's own data folder: a file of a project is opened by its path, and the main process refuses a program.
+      // What cannot be opened that way (a relative path with no project, a program) is shown in the Files panel instead of doing nothing.
+      if (place.where === 'system') (window.seshat?.openLocalPath?.(place.path) ?? Promise.reject(new Error('no bridge'))).catch(showInFiles)
+      else showInFiles()
+    },
+    [session?.projectPath, openRightPanel, id],
+  )
+
   const { loading: sessionLoading } = useConversationSessionLoad({
     sessionId: id,
     session,
@@ -142,7 +158,7 @@ export function ConversationPage() {
   })
 
   // Virtual list - renders only the rows visible in the viewport.
-  const { scrollRef, rowVirtualizer } = useConversationScroll({
+  const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({
     messageCount: visibleMessages.length,
     streaming,
   })
@@ -163,6 +179,7 @@ export function ConversationPage() {
   }
 
   return (
+    <RichActionProvider ask={askFromAnswer} openFile={openFromAnswer} busy={isStreaming}>
     <div className="conv-root">
       <ToastStack toasts={toasts} />
 
@@ -193,6 +210,8 @@ export function ConversationPage() {
         onPlanReject={handlePlanDeny}
         onSubmitToolPrompt={onSubmitToolPrompt}
       />
+
+      <JumpToLatest away={away} onJump={scrollToBottom} />
 
       <ConversationComposer
         sessionId={id}
@@ -229,6 +248,7 @@ export function ConversationPage() {
         onExecutionModeChange={handleExecutionModeSelect}
       />
     </div>
+    </RichActionProvider>
   )
 }
 

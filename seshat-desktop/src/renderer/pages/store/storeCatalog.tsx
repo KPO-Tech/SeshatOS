@@ -1,35 +1,46 @@
 import type { ReactNode } from 'react'
-import { ApplicationOne, Book, ChartHistogram, MailOpen, Peoples, Puzzle, Robot } from '@icon-park/react'
+import { ChartHistogram, MailOpen, Peoples, Robot } from '@icon-park/react'
+import { edition } from '@renderer/lib/edition'
 
-// Every platform SeshatOS can host, active or not yet built - the same
-// taxonomy the earlier desktop client already used for its apps
-// (knowledge, automation, companion, inbox, team), plus the platforms
-// already live here under their own sidebar entries. One list, so Store
-// stays the single place that says what exists and what's still ahead.
-//
-// color gives each app its own identity on the icon tile (muted, not a full
-// saturated brand color - matches the "warm dark, muted depth" palette
-// rather than a loud app-store rainbow). Reuses the existing accent tokens
-// where one already fits; the rest are one-off hex values in the same
-// desaturated register.
+// Every platform SeshatOS can host, ready or not yet built: the one list that
+// says what exists and what is still ahead. Skills and Plugins are not here:
+// they are tools of the chat, not platforms, and live in the sidebar.
 export type StoreApp = {
   id: string
   name: string
+  tagline: string
   description: string
-  icon: ReactNode
-  color: string
+  // The product icon (a file under public/brand, relative so it loads over file://) or, until one exists, a glyph.
+  logo?: string
+  icon?: ReactNode
+  // Where the app opens once it is ready. An app without a route is shown as coming soon.
   route?: string
+  // The app works on an organization's data and needs a SeshatCloud connection.
+  needsCloud?: boolean
+  featured?: boolean
 }
 
-export const ACTIVE_APPS: StoreApp[] = [
-  { id: 'skills', name: 'Skills', description: 'Reusable capabilities your agents can call on.', icon: <ApplicationOne size={22} />, color: 'var(--accent-info)', route: '/skills' },
-  { id: 'plugins', name: 'Plugins', description: 'Connect external accounts and MCP tools.', icon: <Puzzle size={22} />, color: '#9b8cd9', route: '/plugins' }
-]
-
-export const COMING_SOON_APPS: StoreApp[] = [
-  { id: 'knowledge', name: 'Knowledge', description: 'Turn your documents and connected sources into searchable, agent-ready knowledge.', icon: <Book size={22} />, color: 'var(--accent-success)' },
-  { id: 'data', name: 'Data', description: 'Explore and transform structured data with an agent at your side.', icon: <ChartHistogram size={22} />, color: '#5fb8c9' },
-  { id: 'inbox', name: 'Inbox', description: 'A connected mailbox with agent-assisted triage.', icon: <MailOpen size={22} />, color: 'var(--accent-warning)' },
-  { id: 'companion', name: 'Companion', description: 'A custom roster of agent personas.', icon: <Robot size={22} />, color: '#d98cc0' },
-  { id: 'team', name: 'Team', description: 'Multi-agent collaboration and team management.', icon: <Peoples size={22} />, color: '#8f9bb3' }
+export const STORE_APPS: StoreApp[] = [
+  {
+    id: 'knowledge',
+    name: 'Knowledge',
+    tagline: 'Search and ask across the documents of your organization.',
+    description: 'Connect your sources, find a document by keyword, or ask a question and read the answer next to the passages it comes from.',
+    logo: 'brand/knowledge-icon.svg',
+    route: edition.knowledgeApp ? '/knowledge' : undefined,
+    needsCloud: true,
+    featured: true
+  },
+  {
+    id: 'automation',
+    name: 'Automation',
+    tagline: 'Agent workflows that run on a schedule or a trigger.',
+    description: 'Build governed workflows where agents use your tools, ask for approval when needed, and leave a trace of what they did.',
+    logo: 'brand/automation-icon.svg',
+    needsCloud: true
+  },
+  { id: 'data', name: 'Data', tagline: 'Explore and transform structured data.', description: 'Work on tables and files with an agent at your side.', icon: <ChartHistogram size={20} /> },
+  { id: 'inbox', name: 'Inbox', tagline: 'A connected mailbox with agent triage.', description: 'Sort and answer mail with an agent that knows your context.', icon: <MailOpen size={20} /> },
+  { id: 'companion', name: 'Companion', tagline: 'A roster of agent personas.', description: 'Keep agents with their own role, tone and memory.', icon: <Robot size={20} /> },
+  { id: 'team', name: 'Team', tagline: 'Agents and people working together.', description: 'Share agents and follow multi-agent work as a team.', icon: <Peoples size={20} /> }
 ]

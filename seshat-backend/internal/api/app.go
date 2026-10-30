@@ -10,6 +10,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/artifactpreview"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
@@ -20,7 +21,9 @@ import (
 // all business logic lives in seshat.App.
 type App struct {
 	backend *seshat.App
-	db      *db.DB
+	// folderPlans keeps the collections proposed for a folder while the person looks at them (see knowledge_folder_plan.go).
+	folderPlans *folderplan.Store
+	db          *db.DB
 	// Direct DB stores not yet wrapped in backend services
 	modelStore          *db.ProviderModelStore
 	embedderStore       *db.EmbedderConfigStore
@@ -43,11 +46,15 @@ type App struct {
 	documentReaderDiag   *documentReaderDiagnostic
 	nativeDocDownloadMu  sync.Mutex
 	nativeDocDownload    *nativeDocDownloadState
+	indraInstallMu       sync.Mutex
+	indraInstall         *indraInstallState
 	rerankerStore        *db.RerankerConfigStore
-	localSTTStore        *db.LocalSTTConfigStore
-	localTitleStore      *db.LocalTitleConfigStore
-	sandboxConfigStore   *db.SandboxConfigStore
-	storageConfigStore   *db.StorageConfigStore
+	// applyEmbedder puts the embedding model that was just saved in use, so that no restart is needed.
+	applyEmbedder      func(ctx context.Context) error
+	localSTTStore      *db.LocalSTTConfigStore
+	localTitleStore    *db.LocalTitleConfigStore
+	sandboxConfigStore *db.SandboxConfigStore
+	storageConfigStore *db.StorageConfigStore
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
 	longTermExtractor     *longterm.Extractor
@@ -114,6 +121,7 @@ type AppConfig struct {
 	ProviderSettingStore  *db.ProviderSettingStore
 	DocumentReaderStore   *db.DocumentReaderConfigStore
 	RerankerStore         *db.RerankerConfigStore
+	ApplyEmbedder         func(ctx context.Context) error
 	LocalSTTStore         *db.LocalSTTConfigStore
 	LocalTitleStore       *db.LocalTitleConfigStore
 	SandboxConfigStore    *db.SandboxConfigStore
@@ -157,6 +165,7 @@ func NewApp(cfg AppConfig) *App {
 	}()
 	return &App{
 		oauthStates:           make(map[string]oauthState),
+		folderPlans:           folderplan.NewStore(time.Hour, 10),
 		backend:               cfg.Backend,
 		db:                    cfg.DB,
 		modelStore:            cfg.ModelStore,
@@ -165,6 +174,7 @@ func NewApp(cfg AppConfig) *App {
 		providerSettingStore:  cfg.ProviderSettingStore,
 		documentReaderStore:   cfg.DocumentReaderStore,
 		rerankerStore:         cfg.RerankerStore,
+		applyEmbedder:         cfg.ApplyEmbedder,
 		localSTTStore:         cfg.LocalSTTStore,
 		localTitleStore:       cfg.LocalTitleStore,
 		sandboxConfigStore:    cfg.SandboxConfigStore,

@@ -23,6 +23,10 @@ type embedderConfigResponse struct {
 	Enabled      bool   `json:"enabled"`
 	IsConfigured bool   `json:"is_configured"`
 	UpdatedAt    int64  `json:"updated_at,omitempty"`
+	// VectorsStale is true when the vectors of the collections were made with another model than the one in use: the search by meaning is
+	// then wrong until they are made again. VectorsUnknown is true when it cannot be told (a model changed before this was recorded).
+	VectorsStale   bool `json:"vectors_stale"`
+	VectorsUnknown bool `json:"vectors_unknown"`
 }
 
 func embedderConfigToResponse(cfg *db.EmbedderConfig) embedderConfigResponse {
@@ -35,13 +39,15 @@ func embedderConfigToResponse(cfg *db.EmbedderConfig) embedderConfigResponse {
 		updatedAt = cfg.UpdatedAt.Unix()
 	}
 	return embedderConfigResponse{
-		Provider:     cfg.Provider,
-		BaseURL:      cfg.BaseURL,
-		Model:        cfg.Model,
-		HasAPIKey:    cfg.HasAPIKey,
-		Enabled:      cfg.Enabled,
-		IsConfigured: isConfigured,
-		UpdatedAt:    updatedAt,
+		Provider:       cfg.Provider,
+		BaseURL:        cfg.BaseURL,
+		Model:          cfg.Model,
+		HasAPIKey:      cfg.HasAPIKey,
+		Enabled:        cfg.Enabled,
+		IsConfigured:   isConfigured,
+		UpdatedAt:      updatedAt,
+		VectorsStale:   cfg.VectorsModel != "" && cfg.VectorsModel != cfg.Key(),
+		VectorsUnknown: isConfigured && cfg.VectorsModel == "",
 	}
 }
 
@@ -114,9 +120,19 @@ func (a *App) handleEmbedderConfig(w http.ResponseWriter, r *http.Request) {
 			APIKey   *string `json:"api_key"`
 			Model    string  `json:"model"`
 			Enabled  bool    `json:"enabled"`
+			// ProviderSettingID takes the key of one of the person's providers (Config > Providers) instead of a key typed here.
+			ProviderSettingID string `json:"provider_setting_id"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
+		}
+		if body.ProviderSettingID != "" && (body.APIKey == nil || *body.APIKey == "") {
+			key, err := a.providerKeyFor(r.Context(), principal, body.ProviderSettingID)
+			if err != nil {
+				writeBackendError(w, err)
+				return
+			}
+			body.APIKey = &key
 		}
 		cfg, err := store.Upsert(r.Context(), db.UpsertEmbedderConfigParams{
 			Provider: body.Provider,
@@ -128,6 +144,12 @@ func (a *App) handleEmbedderConfig(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			writeBackendError(w, bkerr.Internal("failed to save embedder config: "+err.Error(), err))
 			return
+		}
+		if a.applyEmbedder != nil {
+			if err := a.applyEmbedder(r.Context()); err != nil {
+				writeBackendError(w, bkerr.Internal("the embedder was saved but could not be put in use: "+err.Error(), err))
+				return
+			}
 		}
 		writeJSON(w, http.StatusOK, embedderConfigToResponse(cfg))
 
@@ -217,6 +239,8 @@ func (a *App) handleEmbedderTest(w http.ResponseWriter, r *http.Request, store *
 		BaseURL  string `json:"base_url"`
 		APIKey   string `json:"api_key"`
 		Model    string `json:"model"`
+		// ProviderSettingID tests with the key of one of the person's providers.
+		ProviderSettingID string `json:"provider_setting_id"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
 
@@ -224,6 +248,15 @@ func (a *App) handleEmbedderTest(w http.ResponseWriter, r *http.Request, store *
 	baseURL := strings.TrimSpace(body.BaseURL)
 	model := strings.TrimSpace(body.Model)
 	apiKey := strings.TrimSpace(body.APIKey)
+	if apiKey == "" && body.ProviderSettingID != "" {
+		principal, _ := authPrincipalFromContext(r.Context())
+		key, err := a.providerKeyFor(r.Context(), principal, body.ProviderSettingID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		apiKey = key
+	}
 
 	// Fill from DB if fields not provided in request
 	if baseURL == "" || model == "" {
@@ -325,6 +358,20 @@ func (a *App) handleEmbedderDetectModels(w http.ResponseWriter, r *http.Request,
 			"embedding_models": []string{modelID},
 			"llm_models":       []string{},
 		})
+		return
+	}
+
+	if strings.ToLower(provider) == "openrouter" {
+		models, err := openRouterEmbeddingModels(r.Context())
+		if err != nil || len(models) == 0 {
+			message := "the list of OpenRouter could not be read"
+			if err != nil {
+				message += ": " + err.Error()
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"error": message, "embedding_models": []string{}, "llm_models": []string{}})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"embedding_models": models, "llm_models": []string{}})
 		return
 	}
 

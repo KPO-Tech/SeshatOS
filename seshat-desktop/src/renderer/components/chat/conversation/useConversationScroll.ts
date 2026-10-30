@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { StreamingBlock } from '@renderer/stores/session'
 
@@ -7,10 +7,14 @@ type UseConversationScrollArgs = {
   streaming: StreamingBlock[]
 }
 
+/** How far from the end the reader must be before a way back down is offered. */
+const JUMP_DISTANCE = 240
+
 export function useConversationScroll({ messageCount, streaming }: UseConversationScrollArgs) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
   const scrollRafRef = useRef<number | null>(null)
+  const [away, setAway] = useState(false)
 
   const rowVirtualizer = useVirtualizer({
     count: messageCount,
@@ -29,7 +33,9 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     if (!el) return
     function onScroll() {
       if (!el) return
-      isAtBottomRef.current = el.scrollTop + el.clientHeight >= el.scrollHeight - 60
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight
+      isAtBottomRef.current = distance <= 60
+      setAway(distance > JUMP_DISTANCE)
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
@@ -56,5 +62,16 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     }
   }, [])
 
-  return { scrollRef, rowVirtualizer }
+  // The rows below the reader are only estimated until they are drawn, so the first jump can fall short: the second one, once they are
+  // measured, lands on the last line.
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current
+    if (!el || messageCount === 0) return
+    isAtBottomRef.current = true
+    setAway(false)
+    rowVirtualizer.scrollToIndex(messageCount - 1, { align: 'end', behavior: 'auto' })
+    requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight }))
+  }, [messageCount]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { scrollRef, rowVirtualizer, away: away && messageCount > 0, scrollToBottom }
 }

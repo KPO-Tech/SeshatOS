@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from '@renderer/api/client'
-import type { ProviderModel, ProviderSetting } from '@renderer/api/types'
+import type { ProviderModel } from '@renderer/api/types'
 import { fetchProviderModels, useProviders } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import type { ChatSession } from '@renderer/stores/session'
+import { isChatProviderUsable } from '@renderer/lib/chatProviders'
+import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
 
 export type ModelChoice = {
   id: string
@@ -51,12 +53,6 @@ export function providerDisplayName(name: string, kind: string): string {
   if (!providerKind) return displayName
   if (displayName.toLowerCase() === providerKind.toLowerCase()) return displayName
   return displayName
-}
-
-function isChatProviderUsable(provider: ProviderSetting): boolean {
-  if (provider.provider === 'ollama') return true
-  if (provider.auth_kind === 'oauth') return provider.connection_status === 'connected'
-  return provider.has_api_key || provider.connection_status === 'ready'
 }
 
 export function useConversationModels({ sessionId, session, updateSession, onSaveError }: UseConversationModelsArgs) {
@@ -139,12 +135,14 @@ export function useConversationModels({ sessionId, session, updateSession, onSav
     const sessionChoice = session?.providerSettingId && session?.modelId
       ? allModelChoices.find((choice) => choice.providerId === session.providerSettingId && choice.model.model_id === session.modelId)
       : null
+    // A conversation takes its own model; a new one takes the default, once every provider that could give it has answered.
     const def = sessionChoice
-      ?? allModelChoices.find((choice) => choice.model.is_default)
-      ?? allModelChoices[0]
+      ?? pickDefaultChoiceWhenSettled(chatProviders, allModelChoices, (provider) => modelsByProvider[provider.id] !== undefined)
+      ?? (chatProviders.every((provider) => modelsByProvider[provider.id] !== undefined) ? allModelChoices[0] : null)
+    if (!def) return
     setSelectedProviderId(def.providerId)
     setSelectedModelId(def.model.model_id)
-  }, [allModelChoices, selectedModelChoice, selectedModelProviderStillLoading, session?.providerSettingId, session?.modelId])
+  }, [allModelChoices, chatProviders, modelsByProvider, selectedModelChoice, selectedModelProviderStillLoading, session?.providerSettingId, session?.modelId])
 
   const handleModelSelect = useCallback((choiceId: string) => {
     const choice = splitModelChoiceId(choiceId)

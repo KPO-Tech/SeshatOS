@@ -63,6 +63,8 @@ seshat-backend/
     ├── documentreading/         ← local-first/external-fallback document conversion
     ├── files/                   ← file management
     ├── knowledge/               ← RAG ingestion and retrieval
+    │   ├── agent/               ← the built-in Knowledge agent (prompt, exact tool list)
+    │   └── tool/                ← the knowledge_search tool
     ├── mcp/                     ← MCP configuration
     ├── memories/                ← user memory services
     ├── metrics/                 ← observability snapshot service
@@ -162,6 +164,10 @@ that agent.
 A custom agent's own system prompt still replaces the runtime's text entirely
 (`SystemPromptOverride`, from its definition), and the product blocks are
 appended to it too.
+
+The one exception is the built-in Knowledge agent (`internal/knowledge/agent`, see
+[knowledge-agent.md](knowledge-agent.md)): it is told everything by its own prompt, so
+the host leaves those blocks, the memories and the pre-searched corpus out for it.
 
 ---
 

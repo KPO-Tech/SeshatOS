@@ -1,4 +1,5 @@
 import type { User } from '@renderer/api/types'
+import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { AccountLine, Avatar, formatStatus, initialsFor, LogoutIcon, MetricRow, Panel, SectionDivider } from './SettingsPrimitives'
 
 type Props = {
@@ -8,6 +9,8 @@ type Props = {
 }
 
 export function AccountSettings({ user, displayName, onLogout }: Props) {
+  // Only an account paired with SeshatCloud can be signed out of: the local workspace has nothing to leave.
+  const { connected } = useSettingsMenu()
   return (
     <Panel title="Account">
       <div className="max-w-[820px] space-y-5">
@@ -26,7 +29,9 @@ export function AccountSettings({ user, displayName, onLogout }: Props) {
           <button
             type="button"
             onClick={onLogout}
-            className="flex size-10 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            disabled={!connected}
+            title={connected ? undefined : 'You are not signed in: this workspace is local'}
+            className="flex size-10 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-[var(--text-secondary)]"
             aria-label="Sign out"
           >
             <LogoutIcon />

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ConfigCard, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
+import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch } from './KnowledgePrimitives'
+import { IndraPanel } from './IndraPanel'
+import { NativeModelsPanel } from './NativeModelsPanel'
+import { packOptions } from './ocrPacks'
 import { downloadNativeDocumentReaderModels, fetchNativeDocumentReaderStatus, initializeNativeDocumentReader, saveDocumentReaderConfig, testDocumentReaderConfig } from './knowledgeApi'
-import type { DocumentReaderConfig, NativeDocDownloadState, SystemStatus, TestState } from './knowledgeTypes'
+import type { DocumentReaderConfig, NativeDocDownloadState, NativeDocModelStatus, NativeDocPack, SystemStatus, TestState } from './knowledgeTypes'
 
 export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }: {
   config: DocumentReaderConfig | null
@@ -21,6 +24,9 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const [downloadingNative, setDownloadingNative] = useState(false)
   const [nativeDownload, setNativeDownload] = useState<NativeDocDownloadState | null>(null)
   const [nativeModelDir, setNativeModelDir] = useState<string | null>(null)
+  const [nativePacks, setNativePacks] = useState<NativeDocPack[]>([])
+  const [nativeModels, setNativeModels] = useState<NativeDocModelStatus[]>([])
+  const [selectedPack, setSelectedPack] = useState<string | null>(null)
   const [testError, setTestError] = useState<string | null>(null)
   const [nativeInitError, setNativeInitError] = useState<string | null>(null)
   const [latency, setLatency] = useState<number | null>(null)
@@ -50,6 +56,9 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
         if (cancelled) return
         setNativeModelDir(status.model_dir)
         setNativeDownload(status.download)
+        setNativePacks(status.packs ?? [])
+        setNativeModels(status.model_status ?? [])
+        setSelectedPack((current) => current ?? status.active_pack ?? null)
         onSystemChanged?.(status.capabilities)
         if (status.download.status === 'running') {
           setDownloadingNative(true)
@@ -108,16 +117,23 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
   const nativeDocInitialized = system?.document_nativedoc_runtime_initialized === true
   const nativeDocModels = system?.document_nativedoc_models_available === true
   const nativeDocReady = system?.document_nativedoc_ready === true
-  const nativeDocDetail = nativeDocReady ? 'Ready' : !nativeDocCompiled ? 'CGO build needed' : !nativeDocModels ? 'Needs models' : !nativeDocInitialized ? 'Needs runtime' : 'Unavailable'
+  const nativeDocDetail = nativeDocReady ? 'Ready' : !nativeDocCompiled ? 'Not in this version' : !nativeDocModels ? 'Needs models' : !nativeDocInitialized ? 'Needs runtime' : 'Unavailable'
   const canInitializeNative = nativeDocCompiled && nativeDocModels && !nativeDocReady
-  const canDownloadNativeModels = !nativeDocModels && !downloadingNative
+  const chosenPack = nativePacks.find((pack) => pack.id === selectedPack) ?? null
+  const chosenPackReady = chosenPack ? chosenPack.installed && chosenPack.active : nativeDocModels
+  const canDownloadNativeModels = !chosenPackReady && !downloadingNative
+  const nativeModelsButton = downloadingNative
+    ? 'Downloading...'
+    : chosenPackReady
+      ? 'Models detected'
+      : chosenPack?.installed
+        ? 'Use this recognizer'
+        : 'Download models'
   const visionConfigured = system?.document_vision_fallback_configured === true
   const nativeSetupMessage = nativeDocReady
     ? 'Native OCR is ready for local scanned PDFs.'
     : !nativeDocCompiled
-      ? nativeDocModels
-        ? 'DeepDoc models are present, but the bundled desktop backend was built without CGO/nativedoc support. Start a nativedoc-enabled backend to initialize local OCR.'
-        : 'The bundled desktop backend was built without CGO/nativedoc support. Model download is optional until a nativedoc-enabled backend is available.'
+      ? 'This version of SeshatOS has no built-in reader for scanned documents (the macOS version does not have it yet). The optional Indra reader in this section can read them.'
       : !nativeDocModels
         ? 'Download DeepDoc models before initializing native OCR.'
         : 'Models are present. Initialize native OCR to enable local scanned-PDF processing.'
@@ -164,7 +180,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
     setDownloadingNative(true)
     setNativeInitError(null)
     try {
-      const started = await downloadNativeDocumentReaderModels()
+      const started = await downloadNativeDocumentReaderModels(selectedPack ?? undefined)
       setNativeModelDir(started.download.model_dir)
       setNativeDownload(started.download)
       onSystemChanged?.(started.capabilities)
@@ -183,6 +199,8 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
       if (cancelled()) return
       setNativeModelDir(status.model_dir)
       setNativeDownload(status.download)
+      setNativePacks(status.packs ?? [])
+      setNativeModels(status.model_status ?? [])
       onSystemChanged?.(status.capabilities)
       if (status.download.status === 'completed') {
         setDownloadingNative(false)
@@ -220,27 +238,28 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
           <Capability label="Native OCR" ready={nativeDocReady} detail={nativeDocDetail} />
           <Capability label="Vision fallback" ready={visionConfigured} detail={visionConfigured ? 'Configured' : 'Later'} />
         </div>
-        {nativeModelDir && (
-          <div className="truncate rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)]">
-            Models: {nativeModelDir}
-          </div>
-        )}
         <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[12px] font-semibold text-[var(--text-muted)]">
           {nativeSetupMessage}
         </div>
+        <NativeModelsPanel statuses={nativeModels} folder={nativeModelDir} />
+        {nativePacks.length > 1 && (
+          <Field label="Languages to read">
+            <CustomSelect value={selectedPack ?? ''} options={packOptions(nativePacks)} onChange={setSelectedPack} disabled={downloadingNative} />
+          </Field>
+        )}
         <div className="flex items-center gap-2">
           <SoftButton type="button" onClick={() => void downloadNativeModels()} disabled={!canDownloadNativeModels}>
-            {downloadingNative ? 'Downloading...' : nativeDocModels ? 'Models detected' : 'Download models'}
+            {nativeModelsButton}
           </SoftButton>
           <SoftButton type="button" onClick={() => void initializeNative()} disabled={!canInitializeNative || initializingNative} tone={nativeDocReady ? 'success' : 'default'}>
             {initializingNative ? 'Initializing...' : nativeDocReady ? 'Native OCR ready' : 'Initialize native OCR'}
           </SoftButton>
           {nativeInitError && <span className="min-w-0 truncate text-[11px] font-semibold text-[var(--accent-primary)]">{nativeInitError}</span>}
         </div>
-        {nativeDownload && nativeDownload.status !== 'idle' && (
+        {nativeDownload?.status === 'running' && (
           <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2">
             <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-[var(--text-muted)]">
-              <span className="truncate">{nativeDownload.status === 'running' ? nativeDownload.current_file || 'Downloading models' : nativeDownload.status}</span>
+              <span className="truncate">{nativeDownload.current_file || 'Downloading models'}</span>
               <span>{nativeDownload.file_index ?? nativeDownload.files_completed ?? 0}/{nativeDownload.file_count ?? 0} {formatBytes(nativeDownload.bytes_downloaded, nativeDownload.bytes_total)}</span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">
@@ -251,6 +270,7 @@ export function DocumentReaderCard({ config, system, onSaved, onSystemChanged }:
             </div>
           </div>
         )}
+        <IndraPanel />
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <Capability label="External reader" ready={externalReachable ?? externalConfigured} detail={externalDetail} />
           <Capability label="External conversion" ready={externalConversion ?? externalConfigured} detail={externalConversion === false ? system?.document_external_conversion_error || 'Unavailable' : externalConversion ? 'Available' : externalConfigured ? 'Configured' : 'Optional'} />

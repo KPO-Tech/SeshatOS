@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { Down } from '@icon-park/react'
 import type { ToolViewProps } from '../types'
 import type { ToolStatus } from '@renderer/api/types'
 import { useUIStore } from '@renderer/stores/ui'
@@ -5,7 +7,9 @@ import { useSessionStore } from '@renderer/stores/session'
 import { PlanArtifactCard } from '@renderer/components/chat/messages/PlanArtifactCard'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { basename } from '../helpers'
-import { categoryIcon, hasCustomRender, isFileTool, toolLabel } from '../toolDisplay'
+import { categoryIcon, hasCustomRender, isFileTool, renderToolBody, toolLabel } from '../toolDisplay'
+import { opensWide } from '../readableTools'
+import { isWebTool } from '../webTools'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -50,6 +54,8 @@ function submitPlanInfo(tool: Props['tool'], result: Props['result']): { name: s
 }
 
 export function SilentToolView({ tool, result, status, snippet, sessionId }: Props) {
+  // A web tool opens inline under its row, the same card the session panel showed; it stays closed while the tool runs.
+  const [opened, setOpened] = useState(false)
   const isError = result?.isError === true || status === 'failed'
   const isRunning = status === 'running' || status === 'pending'
   const isSubmitPlan = tool.name === 'submit_plan'
@@ -81,9 +87,16 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
   // non-clickable either way, since GenericToolView's raw Input/Output split
   // is the only thing there'd be to show.
   const hasRender = hasCustomRender(tool.name)
-  const expandable = !isPastedFile && (isError || hasRender)
+  const isWeb = isWebTool(tool.name)
+  const hasWebBody = isWeb && Boolean(result)
+  const expanded = hasWebBody && (opened || isError)
+  const expandable = isWeb ? hasWebBody : !isPastedFile && (isError || hasRender)
 
   function handleClick() {
+    if (isWeb) {
+      setOpened((value) => !value)
+      return
+    }
     if (canOpenPlan) {
       useUIStore.getState().openRightPanel({ kind: 'plan', title: planName, sessionId: sessionId!, planId })
       return
@@ -98,12 +111,12 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       useUIStore.getState().openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
       return
     }
-    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id })
+    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
   }
 
   const clickable = expandable || canOpenPlan
 
-  return (
+  const line = (
     <div
       className={cx(
         'inline-flex w-full select-none items-center gap-1.5 rounded-md py-[3px] pr-[5px] text-[10.5px] leading-snug text-app-text-muted',
@@ -113,6 +126,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       tabIndex={clickable ? 0 : undefined}
       onClick={clickable ? handleClick : undefined}
       onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') handleClick() } : undefined}
+      aria-expanded={isWeb && hasWebBody ? expanded : undefined}
     >
       <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
         {lineIcon(tool.name, isRunning, isError)}
@@ -120,6 +134,19 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       <span className="shrink-0 font-medium not-italic text-inherit">{label}</span>
       {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">failed</span>}
       {snippet && <span className="min-w-0 flex-1 truncate font-mono text-[10px] opacity-[0.62]">{snippet}</span>}
+      {isWeb && hasWebBody && (
+        <span className={cx('ml-auto inline-flex shrink-0 items-center opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
+          <Down size={10} />
+        </span>
+      )}
+    </div>
+  )
+
+  if (!isWeb) return line
+  return (
+    <div className="flex flex-col">
+      {line}
+      {expanded && <div className="pt-1">{renderToolBody({ tool, result, status, sessionId }, undefined)}</div>}
     </div>
   )
 }

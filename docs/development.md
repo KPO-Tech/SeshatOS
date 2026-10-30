@@ -76,6 +76,28 @@ The backend is meant for the desktop app on the same machine, so it is closed to
 - `POST /auth/local-session` (the "continue without an account" session, which needs no secret) requires the header `X-Seshat-Desktop-Proof`: the HMAC-SHA256 of `auth/local-session` under the desktop bridge secret file. The Electron main process sends it. In a plain browser during development the renderer cannot read that file: start the backend with `SESHAT_ALLOW_UNPROVEN_LOCAL_SESSION=true` (never for a packaged app).
 - The terminal websocket accepts a request without `Origin` (Electron's main process) or one whose `Origin` is the backend's own host.
 
+## One version of the app
+
+There is one version of the app. The main branch, `make dev` and a build you make yourself show everything: accounts, SeshatCloud, Knowledge, the store and the sources of an answer. `make dev-next` was the name of the second version and now only runs `make dev`.
+
+A release can still hide what is not ready. The release workflow builds the app with `VITE_SESHAT_EDITION=public` (three build steps in `.github/workflows/release-desktop.yml`), which shows what `PUBLIC_EDITION` in `seshat-desktop/src/renderer/lib/edition.ts` says: the local, single-user workspace of the first public version, with the Store, Knowledge and the sources of an answer, and without accounts or SeshatCloud. That value is what a release shows; change it, with the comment above it, to release with more or less. `npm run dev:public` (in `seshat-desktop`) runs the app the way such a release shows it. Nothing is removed by a flag: the hidden code stays compiled and typed.
+
+## Starting as a brand new install (FRESH=1)
+
+`make dev` keeps your data between starts: the providers you configured, your sessions and the wizard you went through stay. `make dev FRESH=1` starts the app as if it had just been installed: the first-run wizard shows, there is no account, no session, no model, nothing the app remembered. It uses an empty runtime root, `.cache/dev-fresh` in the project (git ignores `.cache/`), wiped at every start. Everything the app keeps sits under the runtime root, the backend database and the models as much as Electron's own storage, so one folder is enough. **Your own data (`~/.config/seshat`) is never read or touched in this mode.**
+
+```bash
+make dev                       # your data is kept between starts (FRESH=0, the default)
+make dev FRESH=1               # a brand new install, to try the first run
+make dev KEEP_MODELS=0         # also forget the models and the engines downloaded earlier, to try the first download
+make dev-reset                 # forget the fresh install completely, downloads included, and stop; the next make dev starts from nothing
+make dev NATIVE=0               # without the native OCR: a quicker build, and the box of the scanned documents is greyed out
+```
+
+What was downloaded is kept from one start to the next, because it is several hundred megabytes: the models of the titles, the voice and the OCR (`models/`, `whisper/ggml-*.bin`) and the engines that run them (`llama/bin`, `whisper/bin`). Everything else of the runtime root (the database, the accounts, the settings, the state of the wizard) starts empty. The wizard still shows; it finds what is already there, ticks it, and downloads nothing for it. `KEEP_MODELS=0` forgets the downloads too.
+
+`make dev` builds the backend with the native OCR (the reading of scanned documents) whenever it finds a C compiler (`gcc`), so the app you run is the app you ship and the first-run wizard offers the scanned documents. The first build downloads the native libraries (pdfium, onnxruntime) and takes a few minutes; the next ones are quick. `NATIVE=0` skips it, `NATIVE=1` requires it (and fails without a compiler; `make install-cgo-windows` installs one), and `make dev-native` is `make dev NATIVE=1`. An unpackaged app has no bundled backend, so `make` points the wizard to the one it built (`SESHAT_SETUP_BACKEND`). The OCR backend is `seshat-backend/bin/seshat-dev-native`, linked to pdfium: it does not start unless the pdfium folder is on the path, which `make dev` sets for it and for the app; `seshat-dev`, the one without the OCR, is never run in its place, and an older `seshat-dev` built with the OCR is removed.
+
 ## Start time of `make dev`
 
 `make dev` builds the backend into `seshat-backend/bin/seshat-dev` (`.exe` on Windows) when a file of the backend changed, and runs that binary. It used to run `go run`, which links a new executable of about 100 MB at every start. A start with nothing changed does not build at all.

@@ -12,6 +12,7 @@ import (
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	backendfiles "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/files"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 )
 
 const maxUploadSize = 100 << 20 // 100 MB
@@ -64,6 +65,15 @@ func (app *App) handleFileByID(w http.ResponseWriter, r *http.Request) {
 		case http.MethodGet:
 			f, err := app.backend.Files.GetFile(r.Context(), principal, fileID)
 			if err != nil {
+				if svc, ok := app.backend.Knowledge.(*knowledge.Service); ok && knowledge.IsLocalFileID(fileID) && isNotFound(err) {
+					info, kErr := svc.LocalFileInfo(r.Context(), principal, fileID)
+					if kErr != nil {
+						writeBackendError(w, kErr)
+						return
+					}
+					writeJSON(w, http.StatusOK, fileResponse{ID: info.ID, Filename: info.Filename, ContentType: info.ContentType, Size: info.Size})
+					return
+				}
 				writeBackendError(w, err)
 				return
 			}
@@ -201,6 +211,16 @@ func (app *App) handleFileMarkdown(w http.ResponseWriter, r *http.Request, _ any
 
 	markdown, _, err := app.backend.Files.ReadMarkdown(r.Context(), principal, fileID)
 	if err != nil {
+		if svc, ok := app.backend.Knowledge.(*knowledge.Service); ok && knowledge.IsLocalFileID(fileID) && isNotFound(err) {
+			text, kErr := svc.LocalFileMarkdown(r.Context(), principal, fileID)
+			if kErr != nil {
+				writeBackendError(w, kErr)
+				return
+			}
+			w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+			_, _ = w.Write([]byte(text))
+			return
+		}
 		writeBackendError(w, err)
 		return
 	}

@@ -6,6 +6,7 @@ import { useSessionStore } from '@renderer/stores/session'
 import { toolIcon } from '@renderer/components/chat/tools/helpers'
 import { renderToolBody, toolLabel, toolSnippet } from '@renderer/components/chat/tools/toolDisplay'
 import { toolStatus } from '@renderer/components/chat/tools/quietGroupPhrase'
+import { opensWide } from '@renderer/components/chat/tools/readableTools'
 import { SessionOverview } from './SessionOverview'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import type { StreamingBlock } from '@renderer/stores/session'
@@ -111,6 +112,17 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
   const focusedTool = focusedId ? tools.find((tool) => tool.id === focusedId) ?? null : null
   const focusedStatus = focusedTool ? toolStatus(focusedTool) : null
   const focusedIsSubagent = focusedTool ? isSubagentTool(focusedTool.name) : false
+
+  // The panel is the cards while no tool is shown, and a window while one is: the host reads which from the panel it holds, so the tool
+  // chosen here (from the list of the overview) or left (the home button) is told to the store. A text to read opens wide.
+  useEffect(() => {
+    // A tool just clicked is not in the list yet while it starts: wait for it rather than tell the store that nothing is shown.
+    if (focusedId && !focusedTool) return
+    const shown = focusedTool?.id
+    if ((focusToolId ?? undefined) === shown) return
+    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: shown, readable: focusedTool ? opensWide(focusedTool.name) : false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedId, focusedTool?.id])
 
   // The overview has no header; every other page has the slim one.
   const showHeader = Boolean(focusedTool) || view !== 'home'

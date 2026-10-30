@@ -378,7 +378,9 @@ func (s *Service) ResearchKeys(ctx context.Context, principal *backendauth.Princ
 	return keys
 }
 
-func (s *Service) TestProvider(ctx context.Context, principal *backendauth.Principal, providerName string) (*ProviderTestResult, error) {
+// TestProvider runs a search against a provider with its saved settings, or with what the person typed and has not saved when overrides
+// carries it.
+func (s *Service) TestProvider(ctx context.Context, principal *backendauth.Principal, providerName string, overrides ProviderTestOverrides) (*ProviderTestResult, error) {
 	if err := backendauth.EnsureAuthenticated(principal); err != nil {
 		return nil, err
 	}
@@ -399,6 +401,15 @@ func (s *Service) TestProvider(ctx context.Context, principal *backendauth.Princ
 		if row.HasAPIKey {
 			apiKey, _ = s.providerConfigs.GetDecryptedAPIKey(ctx, principal.User.ID, cat.Name)
 		}
+	}
+	if overrides.APIKey != nil && *overrides.APIKey != "" {
+		apiKey = *overrides.APIKey
+	}
+	if overrides.BaseURL != "" {
+		baseURL = overrides.BaseURL
+	}
+	if overrides.AuthUsername != nil {
+		authUsername = *overrides.AuthUsername
 	}
 
 	runCfg := SearchRunProvider{

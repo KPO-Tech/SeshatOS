@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -275,7 +276,20 @@ func (a *App) handleWebSearchProviderByName(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		result, err := a.backend.WebSearch.TestProvider(r.Context(), principal, providerName)
+		// The body is optional: what the person has typed and not saved yet, to try it before keeping it.
+		var typed struct {
+			APIKey       *string `json:"api_key"`
+			BaseURL      string  `json:"base_url"`
+			AuthUsername *string `json:"auth_username"`
+		}
+		if r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&typed)
+		}
+		result, err := a.backend.WebSearch.TestProvider(r.Context(), principal, providerName, backendwebsearch.ProviderTestOverrides{
+			APIKey:       typed.APIKey,
+			BaseURL:      typed.BaseURL,
+			AuthUsername: typed.AuthUsername,
+		})
 		if err != nil {
 			writeBackendError(w, err)
 			return

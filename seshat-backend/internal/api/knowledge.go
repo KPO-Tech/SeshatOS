@@ -16,9 +16,13 @@ type corpusResponse struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	ChunkCount  int    `json:"chunk_count"`
-	CreatedAt   int64  `json:"created_at"`
-	UpdatedAt   int64  `json:"updated_at"`
+	// SourceID is the source the collection comes from; empty for the default source.
+	SourceID   string `json:"source_id,omitempty"`
+	ChunkCount int    `json:"chunk_count"`
+	// FileCount is set on the list only: the number of documents the collection holds.
+	FileCount *int  `json:"file_count,omitempty"`
+	CreatedAt int64 `json:"created_at"`
+	UpdatedAt int64 `json:"updated_at"`
 }
 
 type corpusFileResponse struct {
@@ -58,6 +62,7 @@ func corpusToResponse(c knowledge.Corpus) corpusResponse {
 		WorkspaceID: c.WorkspaceID,
 		Name:        c.Name,
 		Description: c.Description,
+		SourceID:    c.SourceID,
 		ChunkCount:  c.ChunkCount,
 		CreatedAt:   c.CreatedAt.Unix(),
 		UpdatedAt:   c.UpdatedAt.Unix(),
@@ -128,7 +133,13 @@ func (a *App) handleCorpora(w http.ResponseWriter, r *http.Request) {
 		}
 		items := make([]corpusResponse, 0, len(corpora))
 		for _, c := range corpora {
-			items = append(items, corpusToResponse(c))
+			item := corpusToResponse(c)
+			// Best effort: a collection whose files cannot be listed is shown without a count.
+			if files, err := a.backend.Knowledge.ListFiles(r.Context(), principal, c.ID); err == nil {
+				count := len(files)
+				item.FileCount = &count
+			}
+			items = append(items, item)
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"corpora": items,
@@ -186,6 +197,7 @@ func (a *App) handleCorpora(w http.ResponseWriter, r *http.Request) {
 //	POST   /corpora/{id}/files        → attach file
 //	GET    /corpora/{id}/files        → list attached files
 //	DELETE /corpora/{id}/files/{fid}  → detach file
+//	GET    /corpora/{id}/files/{fid}/chunks → the passages the file was indexed as
 //	POST   /corpora/{id}/ingest       → enqueue an ingest job
 //	GET    /corpora/{id}/ingest/jobs  → list ingest jobs
 //	GET    /corpora/{id}/ingest/jobs/{jid} → get one ingest job
@@ -274,6 +286,28 @@ func (a *App) handleCorpusByID(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleCorpusFiles(w http.ResponseWriter, r *http.Request, corpusID string, parts []string) {
 	principal, _ := authPrincipalFromContext(r.Context())
 
+	if len(parts) == 4 && parts[3] == "chunks" {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		svc, ok := a.localKnowledge(w)
+		if !ok {
+			return
+		}
+		chunks, err := svc.FileChunks(r.Context(), principal, corpusID, parts[2])
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		items := make([]map[string]any, 0, len(chunks))
+		for _, chunk := range chunks {
+			items = append(items, map[string]any{"position": chunk.Position, "text": chunk.Text})
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"chunks": items, "count": len(items)})
+		return
+	}
+
 	if len(parts) == 3 {
 		fileID := parts[2]
 		switch r.Method {
@@ -340,8 +374,33 @@ func (a *App) handleCorpusIngest(w http.ResponseWriter, r *http.Request, corpusI
 
 	var body struct {
 		FileID string `json:"file_id"`
+		// All queues the indexing of every document of the collection that is still waiting (folder sources only).
+		All bool `json:"all"`
 	}
 	if !decodeJSONBody(w, r, &body) {
+		return
+	}
+	if body.All {
+		svc, ok := a.localKnowledge(w)
+		if !ok {
+			return
+		}
+		queued, err := svc.EnqueueAllLocal(r.Context(), principal, corpusID)
+		if err != nil {
+			writeBackendError(w, err)
+			return
+		}
+		if principal != nil {
+			a.backend.Audit.Log(r.Context(), backendaudit.LogParams{
+				ActorUserID:  principal.User.ID,
+				Action:       backendaudit.ActionKnowledgeIngest,
+				ResourceType: "corpus",
+				ResourceID:   corpusID,
+				IPAddress:    a.clientIP(r),
+				Metadata:     map[string]any{"queued": queued},
+			})
+		}
+		writeJSON(w, http.StatusAccepted, map[string]int{"queued": queued})
 		return
 	}
 	if strings.TrimSpace(body.FileID) == "" {

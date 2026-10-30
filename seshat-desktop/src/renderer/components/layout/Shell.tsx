@@ -11,6 +11,7 @@ import { RightPanelHost } from './RightPanelHost'
 import { Sidebar } from './sidebar/Sidebar'
 import { ThemeToggleButton } from './ThemeToggleButton'
 import { Titlebar } from './Titlebar'
+import { useAskSessionStore } from '@renderer/stores/askSession'
 import { TitlebarSessionControls } from './TitlebarSessionControls'
 import { UpdateBanner } from './UpdateBanner'
 
@@ -24,9 +25,21 @@ export function Shell() {
   const conversationId = pathname.match(/^\/conversation\/([^/]+)/)?.[1] ?? null
   const isChatHome = pathname === '/'
   const isAdminRoute = pathname.startsWith('/admin')
+  // Knowledge opens documents in the right panel, as the chat does.
+  const isKnowledge = pathname.startsWith('/knowledge')
+  // The conversation the Ask view has open: its session and browser panels are offered in the title bar like a chat's.
+  const askSessionId = useAskSessionStore((state) => state.sessionId)
+  const previousPathnameRef = useRef(pathname)
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
   useSessionsSync()
+
+  // The documents opened from Knowledge are closed when its page changes (a conversation closes its own).
+  useEffect(() => {
+    const previous = previousPathnameRef.current
+    previousPathnameRef.current = pathname
+    if (previous !== pathname && previous.startsWith('/knowledge') && !isConversation) useUIStore.getState().closeAllRightPanels()
+  }, [pathname, isConversation])
 
   // The names of the connectors, so tool rows in chat say "GitHub" and not "connector-github".
   useEffect(() => {
@@ -83,7 +96,13 @@ export function Shell() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--surface-root)] text-[var(--text-primary)]">
       <Titlebar
-        right={(isChatHome || isConversation) ? <TitlebarSessionControls conversationId={conversationId} /> : undefined}
+        right={
+          isChatHome || isConversation ? (
+            <TitlebarSessionControls conversationId={conversationId} />
+          ) : isKnowledge && askSessionId ? (
+            <TitlebarSessionControls conversationId={askSessionId} variant="knowledge" />
+          ) : undefined
+        }
         onHome={() => navigate('/')}
         onBack={() => navigate(-1)}
         onForward={() => navigate(1)}
@@ -121,7 +140,7 @@ export function Shell() {
               <Outlet />
             </ErrorBoundary>
           </div>
-          {isConversation && <RightPanelHost />}
+          {(isConversation || isKnowledge) && <RightPanelHost />}
           <ImageLightbox />
         </main>
       </div>

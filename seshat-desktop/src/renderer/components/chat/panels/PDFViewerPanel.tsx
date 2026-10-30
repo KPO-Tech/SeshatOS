@@ -3,6 +3,7 @@ import { Reduce, Add, Left, Right, LoadingOne } from '@icon-park/react'
 import { api, ApiError } from '@renderer/api/client'
 import { loadPdfViewerModule, pdfjsLib } from '@renderer/lib/pdfInteractiveViewer'
 import { createPDFWorkerPort } from '@renderer/lib/pdfWorker'
+import { clearPassageHighlight, highlightPassageOnPage } from '@renderer/lib/pdfPassageHighlight'
 import 'pdfjs-dist/web/pdf_viewer.css'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -12,6 +13,10 @@ function cx(...classes: Array<string | false | null | undefined>) {
 type Props = {
   fileId: string
   filename: string
+  // The page to show first, when the document is opened at a passage.
+  initialPage?: number
+  // The passage a citation points at: its text is marked on the pages it covers.
+  highlight?: { text: string; pages: number[] }
 }
 
 type LayoutMode = 'pages' | 'width'
@@ -79,9 +84,13 @@ function applyPDFLayout(
 // exactly this: embedding the viewer without pulling in its full generic
 // web app (toolbar chrome, l10n, etc.) - this component supplies its own
 // minimal toolbar instead.
-export function PDFViewerPanel({ fileId, filename }: Props) {
+export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
+  const initialPageRef = useRef(initialPage ?? 1)
+  const highlightRef = useRef(highlight)
+  // The view goes to the marked text once per highlight, not each time a page is drawn again (a zoom).
+  const scrolledToHighlightRef = useRef(false)
   const pdfViewerRef = useRef<PdfViewerInstance | null>(null)
   const pdfModesRef = useRef<Pick<PdfViewerModule, 'ScrollMode' | 'SpreadMode'> | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -131,6 +140,10 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
         eventBus.on('pagechanging', (e: { pageNumber: number }) => {
           if (!cancelled) setPageNumber(e.pageNumber)
         })
+        // A page's text exists once drawn, and again after a zoom: the marks are put again each time.
+        eventBus.on('textlayerrendered', () => {
+          if (!cancelled) applyHighlight()
+        })
 
         const metadata = await withTimeout(api.get<FileMetadata>(`/files/${fileId}`), PDF_OPEN_TIMEOUT_MS, 'PDF metadata')
         if (cancelled) return
@@ -175,6 +188,13 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
           pdfWorker.destroy()
           return
         }
+        const loaded = pdfDocument
+        if (initialPageRef.current > 1) {
+          // The pages are not laid out before this event: asking for one earlier is ignored.
+          eventBus?.on('pagesinit', () => {
+            pdfViewer.currentPageNumber = Math.min(initialPageRef.current, loaded.numPages)
+          })
+        }
         pdfViewer.setDocument(pdfDocument)
         linkService.setDocument(pdfDocument, null)
         setPageCount(pdfDocument.numPages)
@@ -200,6 +220,39 @@ export function PDFViewerPanel({ fileId, filename }: Props) {
     // pdfjsLib are stable module-level singletons, not real dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId])
+
+  // Marks the passage on the pages that are drawn; the ones drawn later are marked by the textlayerrendered event.
+  function applyHighlight() {
+    const container = containerRef.current
+    if (!container) return
+    clearPassageHighlight(container)
+    const wanted = highlightRef.current
+    if (!wanted) return
+    let first: HTMLElement | null = null
+    for (const page of wanted.pages) {
+      const span = highlightPassageOnPage(container, page, wanted.text)
+      if (span && !first) first = span
+    }
+    if (first && !scrolledToHighlightRef.current) {
+      scrolledToHighlightRef.current = true
+      first.scrollIntoView({ block: 'center' })
+    }
+  }
+
+  // The document opened again at another citation: its passage is the one marked.
+  useEffect(() => {
+    highlightRef.current = highlight
+    scrolledToHighlightRef.current = false
+    if (status === 'ready') applyHighlight()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlight, status])
+
+  // The same document opened again at another passage: go to its page.
+  useEffect(() => {
+    initialPageRef.current = initialPage ?? 1
+    const viewer = pdfViewerRef.current
+    if (status === 'ready' && viewer && initialPage && initialPage >= 1) viewer.currentPageNumber = Math.min(initialPage, viewer.pagesCount)
+  }, [initialPage, status])
 
   function setLayout(mode: LayoutMode) {
     setLayoutMode(mode)

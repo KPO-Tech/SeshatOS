@@ -1,0 +1,489 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "name": "Stack",
+      "group": "Layout",
+      "signature": "Stack(children: [Component], direction?: column|row, gap?: sm|md|lg)",
+      "description": "Lays its children out in a column or a row."
+    },
+    {
+      "name": "Card",
+      "group": "Layout",
+      "signature": "Card(children: [Component], title?: text, tone?: tone)",
+      "description": "A bordered block with an optional title."
+    },
+    {
+      "name": "Section",
+      "group": "Layout",
+      "signature": "Section(title: text, children: [Component], open?: true|false, collapsible?: true|false)",
+      "description": "A titled part of the answer, collapsible when it is long."
+    },
+    {
+      "name": "Separator",
+      "group": "Layout",
+      "signature": "Separator()",
+      "description": "A thin rule."
+    },
+    {
+      "name": "Heading",
+      "group": "Text",
+      "signature": "Heading(text: text, level?: number, tone?: tone)",
+      "description": "A heading inside a block."
+    },
+    {
+      "name": "Markdown",
+      "group": "Text",
+      "signature": "Markdown(text: text)",
+      "description": "A paragraph of plain text."
+    },
+    {
+      "name": "Callout",
+      "group": "Text",
+      "signature": "Callout(tone: tone, title: text, body?: text)",
+      "description": "A highlighted note: info, success, warning or danger."
+    },
+    {
+      "name": "Badge",
+      "group": "Text",
+      "signature": "Badge(text: text, tone?: tone)",
+      "description": "A short status label."
+    },
+    {
+      "name": "Quote",
+      "group": "Text",
+      "signature": "Quote(text: text, source?: text)",
+      "description": "A quotation with its source."
+    },
+    {
+      "name": "Table",
+      "group": "Data",
+      "signature": "Table(columns: [Col|ColGroup], rows: [[cell]|Row], caption?: text, sortable?: true|false, striped?: true|false, compact?: true|false)",
+      "description": "Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup."
+    },
+    {
+      "name": "Col",
+      "group": "Data",
+      "signature": "Col(label: text, kind?: text|number|percent|money|date, align?: left|right|center, tone?: tone)",
+      "description": "A column of Table: its label, how its values are formatted, and a tone that tints the whole column."
+    },
+    {
+      "name": "ColGroup",
+      "group": "Data",
+      "signature": "ColGroup(label: text, columns: [Col], tone?: tone)",
+      "description": "A heading over several Cols of a Table."
+    },
+    {
+      "name": "Row",
+      "group": "Data",
+      "signature": "Row(cells: [text|number|Badge|Item|Cell], tone?: tone, kind?: normal|section|total|header)",
+      "description": "A row of a Table that is more than a list of cells: kind section is a title across the whole table, total is a bold closing row, header repeats the column heads."
+    },
+    {
+      "name": "Cell",
+      "group": "Data",
+      "signature": "Cell(content: text|number|Badge|Item|Cell, tone?: tone, bold?: true|false, colspan?: number, rowspan?: number, align?: left|right|center)",
+      "description": "One cell of a Table with its own colour, weight, alignment or size: colspan merges cells to the right, rowspan merges the cells below (leave them out of the next rows)."
+    },
+    {
+      "name": "Metric",
+      "group": "Data",
+      "signature": "Metric(label: text, value: text|number, delta?: text|number, trend?: up|down|flat, note?: text, tone?: tone)",
+      "description": "One figure with its label and its change."
+    },
+    {
+      "name": "MetricRow",
+      "group": "Data",
+      "signature": "MetricRow(metrics: [Metric])",
+      "description": "Several Metric side by side."
+    },
+    {
+      "name": "BarChart",
+      "group": "Charts",
+      "signature": "BarChart(labels: [text], series: [Series], mode?: grouped|stacked, unit?: text, horizontal?: true|false, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "Bars, one group per label and one bar per series."
+    },
+    {
+      "name": "LineChart",
+      "group": "Charts",
+      "signature": "LineChart(labels: [text], series: [Series], unit?: text, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "Lines over ordered labels: a trend, a learning curve (loss and accuracy per epoch)."
+    },
+    {
+      "name": "AreaChart",
+      "group": "Charts",
+      "signature": "AreaChart(labels: [text], series: [Series], unit?: text, stacked?: true|false, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "Filled lines over ordered labels."
+    },
+    {
+      "name": "PieChart",
+      "group": "Charts",
+      "signature": "PieChart(labels: [text], values: [number], donut?: true|false, title?: text)",
+      "description": "Shares of a whole."
+    },
+    {
+      "name": "ScatterChart",
+      "group": "Charts",
+      "signature": "ScatterChart(series: [Points], xLabel?: text, yLabel?: text, title?: text)",
+      "description": "Points on two axes, one colour per Points."
+    },
+    {
+      "name": "Series",
+      "group": "Charts",
+      "signature": "Series(name: text, values: [number], tone?: tone)",
+      "description": "A named list of values, one per label."
+    },
+    {
+      "name": "Points",
+      "group": "Charts",
+      "signature": "Points(name: text, points: [[number]], tone?: tone, line?: true|false)",
+      "description": "A named list of [x, y] points, for ScatterChart or a Plot; line joins them in order (a path, an ROC curve)."
+    },
+    {
+      "name": "Plot",
+      "group": "Charts",
+      "signature": "Plot(layers: [Curve|Shade|Dot|VLine|HLine|Points], xmin: number, xmax: number, ymin?: number, ymax?: number, title?: text, xLabel?: text, yLabel?: text)",
+      "description": "A graph of formulas in x over [xmin, xmax], with the layers drawn on the same axes. The vertical range is automatic unless given."
+    },
+    {
+      "name": "Curve",
+      "group": "Charts",
+      "signature": "Curve(expr: text, label?: text, tone?: tone, dashed?: true|false, op?: value|derivative|integral)",
+      "description": "A formula in x (x^3 - 3x + 1, sin(2x)/x, e^(-x^2); + - * / ^, sin cos tan exp ln sqrt abs, pi, e). op derivative draws its derivative and integral its antiderivative from xmin, both computed numerically."
+    },
+    {
+      "name": "Shade",
+      "group": "Charts",
+      "signature": "Shade(expr: text, from: number, to: number, label?: text, tone?: tone)",
+      "description": "The area between a formula and the x axis from one bound to another; the legend gives its value (the definite integral)."
+    },
+    {
+      "name": "Dot",
+      "group": "Charts",
+      "signature": "Dot(x: number, y: number, label?: text, tone?: tone)",
+      "description": "A marked point of a Plot (a root, an extremum, an inflection point), with its label."
+    },
+    {
+      "name": "VLine",
+      "group": "Charts",
+      "signature": "VLine(x: number, label?: text, tone?: tone)",
+      "description": "A vertical guide of a Plot at x (an asymptote, a bound)."
+    },
+    {
+      "name": "HLine",
+      "group": "Charts",
+      "signature": "HLine(y: number, label?: text, tone?: tone)",
+      "description": "A horizontal guide of a Plot at y (an asymptote, a threshold, a mean)."
+    },
+    {
+      "name": "Histogram",
+      "group": "Charts",
+      "signature": "Histogram(values: [number], bins?: number, title?: text, xLabel?: text, tone?: tone)",
+      "description": "The distribution of a list of values, in equal bins (a residual, a feature, a weight)."
+    },
+    {
+      "name": "Heatmap",
+      "group": "Charts",
+      "signature": "Heatmap(rows: [text], cols: [text], values: [[number]], title?: text, tone?: tone, decimals?: number)",
+      "description": "A grid of numbers shaded by value: a confusion matrix, a correlation matrix, an attention map."
+    },
+    {
+      "name": "Architecture",
+      "group": "Architecture",
+      "signature": "Architecture(children: [Component], flows?: [Flow], title?: text)",
+      "description": "The frame of a system drawing: it lays Panels out and draws the Flow arrows over them."
+    },
+    {
+      "name": "Panel",
+      "group": "Architecture",
+      "signature": "Panel(children: [Component], title?: text, tone?: tone, icon?: icon, dashed?: true|false, direction?: column|row)",
+      "description": "A coloured box with a title and an icon that holds Items or other Panels, in a column or in a wrapping row. Give it its own name to link it with a Flow."
+    },
+    {
+      "name": "Item",
+      "group": "Architecture",
+      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone)",
+      "description": "A line with an icon, a label and a caption; boxed draws it as a card. Give it its own name to link it with a Flow."
+    },
+    {
+      "name": "Flow",
+      "group": "Architecture",
+      "signature": "Flow(from: name, to: name, label?: text, both?: true|false, style?: solid|dashed)",
+      "description": "An arrow between two Panels or Items, by the names of their statements. Only inside the flows of an Architecture."
+    },
+    {
+      "name": "Steps",
+      "group": "Guidance",
+      "signature": "Steps(items: [Step])",
+      "description": "An ordered procedure."
+    },
+    {
+      "name": "Step",
+      "group": "Guidance",
+      "signature": "Step(title: text, body?: text, status?: todo|doing|done|blocked)",
+      "description": "One step of Steps."
+    },
+    {
+      "name": "FileRef",
+      "group": "Sources",
+      "signature": "FileRef(path: text, label?: text, page?: number, line?: number)",
+      "description": "A file or a place in a file; a click opens it in the app."
+    },
+    {
+      "name": "Citation",
+      "group": "Sources",
+      "signature": "Citation(label: text, source: text, quote?: text, page?: number)",
+      "description": "A passage taken from a source, with its place."
+    },
+    {
+      "name": "SourceList",
+      "group": "Sources",
+      "signature": "SourceList(sources: [Source])",
+      "description": "The sources an answer relies on."
+    },
+    {
+      "name": "Source",
+      "group": "Sources",
+      "signature": "Source(title: text, url?: text, path?: text, note?: text)",
+      "description": "One source of SourceList."
+    },
+    {
+      "name": "Link",
+      "group": "Sources",
+      "signature": "Link(label: text, url: text)",
+      "description": "A link to a web page."
+    },
+    {
+      "name": "Button",
+      "group": "Interaction",
+      "signature": "Button(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url), variant?: primary|secondary)",
+      "description": "A button that runs an action."
+    },
+    {
+      "name": "Choices",
+      "group": "Interaction",
+      "signature": "Choices(options: [Choice], title?: text)",
+      "description": "Suggested follow-ups under the answer. At most one per answer."
+    },
+    {
+      "name": "Choice",
+      "group": "Interaction",
+      "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url))",
+      "description": "One follow-up of Choices."
+    }
+  ],
+  "icons": {
+    "names": [
+      "database",
+      "database-sync",
+      "database-search",
+      "database-network",
+      "server",
+      "storage",
+      "disk",
+      "cloud",
+      "memory",
+      "cpu",
+      "chip",
+      "file",
+      "files",
+      "document",
+      "folder",
+      "folder-open",
+      "folders",
+      "spreadsheet",
+      "table",
+      "sheet",
+      "text",
+      "notes",
+      "log",
+      "chart",
+      "line-chart",
+      "pie-chart",
+      "scatter-chart",
+      "graph",
+      "dashboard",
+      "analytics",
+      "user",
+      "users",
+      "team",
+      "key",
+      "lock",
+      "shield",
+      "security",
+      "fingerprint",
+      "settings",
+      "config",
+      "tools",
+      "search",
+      "filter",
+      "transform",
+      "code",
+      "terminal",
+      "api",
+      "bug",
+      "plugin",
+      "components",
+      "web",
+      "globe",
+      "network",
+      "connection",
+      "link",
+      "wifi",
+      "router",
+      "plug",
+      "mail",
+      "message",
+      "chat",
+      "inbox",
+      "send",
+      "bell",
+      "calendar",
+      "schedule",
+      "clock",
+      "timer",
+      "alarm",
+      "hourglass",
+      "refresh",
+      "sync",
+      "upload",
+      "download",
+      "export",
+      "backup",
+      "loading",
+      "monitor",
+      "desktop",
+      "phone",
+      "browser",
+      "layout",
+      "app",
+      "application",
+      "menu",
+      "ai",
+      "agent",
+      "brain",
+      "model",
+      "workflow",
+      "pipeline",
+      "layers",
+      "box",
+      "package",
+      "cube",
+      "tree",
+      "rocket",
+      "bolt",
+      "fire",
+      "eye",
+      "edit",
+      "delete",
+      "add",
+      "check",
+      "home",
+      "image",
+      "video",
+      "music",
+      "play",
+      "wallet",
+      "shop",
+      "book",
+      "library",
+      "map",
+      "compass",
+      "star",
+      "heart",
+      "flag"
+    ],
+    "brands": [
+      "sqlite",
+      "duckdb",
+      "postgresql",
+      "postgres",
+      "mysql",
+      "mariadb",
+      "redis",
+      "mongodb",
+      "clickhouse",
+      "snowflake",
+      "elasticsearch",
+      "kafka",
+      "rabbitmq",
+      "airflow",
+      "spark",
+      "pandas",
+      "go",
+      "python",
+      "typescript",
+      "javascript",
+      "rust",
+      "kotlin",
+      "swift",
+      "ruby",
+      "php",
+      "lua",
+      "cpp",
+      "dotnet",
+      "react",
+      "vue",
+      "svelte",
+      "angular",
+      "nextjs",
+      "tailwind",
+      "vite",
+      "nodejs",
+      "express",
+      "fastapi",
+      "flask",
+      "django",
+      "graphql",
+      "electron",
+      "tauri",
+      "pytorch",
+      "anthropic",
+      "ollama",
+      "docker",
+      "kubernetes",
+      "terraform",
+      "linux",
+      "apple",
+      "nginx",
+      "git",
+      "github",
+      "gitlab",
+      "githubactions",
+      "jenkins",
+      "prometheus",
+      "grafana",
+      "opentelemetry",
+      "datadog",
+      "sentry",
+      "googlecloud",
+      "cloudflare",
+      "vercel",
+      "firebase",
+      "supabase"
+    ]
+  },
+  "tones": [
+    "neutral",
+    "info",
+    "success",
+    "warning",
+    "danger",
+    "blue",
+    "violet",
+    "green",
+    "orange",
+    "red",
+    "teal",
+    "yellow"
+  ],
+  "examples": [
+    "root = Stack([title, kpis, table, note])\ntitle = Heading(\"Terminal agents compared\", 2)\nkpis = MetricRow([m1, m2])\nm1 = Metric(\"Tools compared\", 5)\nm2 = Metric(\"With a native sandbox\", 3, \"+1\", \"up\")\ntable = Table([Col(\"Tool\"), Col(\"Sandbox\"), Col(\"Memory\")], rows)\nrows = [[\"Claude Code\", Badge(\"yes\", \"success\"), \"CLAUDE.md\"], [\"Aider\", Badge(\"no\", \"danger\"), \"chat history\"]]\nnote = Callout(\"warning\", \"Not documented\", \"OpenCode does not document its internal database schema.\")",
+    "root = Steps([s1, s2, s3])\ns1 = Step(\"Install the runtime\", \"Run the installer, then restart the terminal.\", \"done\")\ns2 = Step(\"Add a provider key\", \"Open Settings, then Providers.\", \"doing\")\ns3 = Step(\"Send a first message\")",
+    "root = Card([summary, plan], \"Migration status\", \"info\")\nsummary = MetricRow([Metric(\"Tables moved\", 14, \"+3\", \"up\", \"this week\"), Metric(\"Left\", 6)])\nplan = Section(\"Next\", [Steps([Step(\"Move the audit tables\", null, \"doing\"), Step(\"Switch the reads\", null, \"todo\")])])",
+    "root = Architecture([clients, runtime, storage], [f1, f2, f3], \"Local app\")\nclients = Panel([ui, docs], \"Inputs\", \"violet\", \"monitor\", false, \"row\")\nui = Item(\"Desktop UI\", \"monitor\", \"React\", true)\ndocs = Item(\"Documents\", \"files\", \"PDF, DOCX\", true)\nruntime = Panel([api, jobs, agents], \"Runtime\", \"orange\", \"si:go\", false, \"row\")\napi = Item(\"HTTP API\", \"api\", \"Commands, streaming\", true)\njobs = Item(\"Jobs\", \"workflow\", \"Indexing\", true)\nagents = Item(\"Agents\", \"ai\", \"LLM, tools\", true)\nstorage = Panel([sql, olap], \"Storage\", \"blue\", \"database\", true, \"row\")\nsql = Item(\"SQLite\", \"si:sqlite\", \"Transactions\", true)\nolap = Item(\"DuckDB\", \"si:duckdb\", \"Analytics\", true)\nf1 = Flow(\"ui\", \"api\", null, true)\nf2 = Flow(\"docs\", \"jobs\", \"ingest\")\nf3 = Flow(\"api\", \"sql\")",
+    "root = Table([Col(\"Tool\"), install, writes], rows, \"Three engines compared\", false, true)\ninstall = ColGroup(\"Install\", [Col(\"Size (MB)\", \"number\"), Col(\"Setup\")])\nwrites = ColGroup(\"Writes\", [Col(\"Concurrent\"), Col(\"Mode\")], \"violet\")\nrows = [Row([\"Embedded\"], \"blue\", \"section\"), [\"SQLite\", 1, \"None\", Cell(\"one writer\", \"warning\"), \"WAL\"], [\"DuckDB\", 30, \"None\", Cell(\"one writer\", \"warning\"), \"Columnar\"], Row([\"Server\"], \"blue\", \"section\"), [\"PostgreSQL\", 300, \"Installer\", Cell(\"many writers\", \"success\", true), \"MVCC\"], Row([\"Smallest\", \"SQLite\"], null, \"total\")]",
+    "root = Stack([intro, plot, curve])\nintro = Heading(\"f(x) = x^3 - 3x + 1 and its derivative\", 3)\nplot = Plot([f, slope, extremum1, extremum2, axis], -3, 3, null, null, \"f and f'\", \"x\", \"y\")\nf = Curve(\"x^3 - 3x + 1\", \"f(x)\", \"blue\")\nslope = Curve(\"3x^2 - 3\", \"f'(x)\", \"orange\", true)\nextremum1 = Dot(-1, 3, \"local maximum (-1, 3)\", \"red\")\nextremum2 = Dot(1, -1, \"local minimum (1, -1)\", \"red\")\naxis = HLine(0)\ncurve = Plot([Curve(\"x^3 - 3x + 1\", \"f(x)\"), Shade(\"x^3 - 3x + 1\", -2, 2, \"area under f\")], -3, 3, null, null, \"Integral from -2 to 2\")",
+    "root = Stack([loss, matrix, errors])\nloss = LineChart([\"1\", \"2\", \"3\", \"4\", \"5\"], [Series(\"train\", [0.92, 0.55, 0.38, 0.29, 0.24]), Series(\"validation\", [0.95, 0.63, 0.47, 0.42, 0.41])], null, \"Loss per epoch\", \"epoch\", \"loss\")\nmatrix = Heatmap([\"cat\", \"dog\", \"bird\"], [\"cat\", \"dog\", \"bird\"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], \"Confusion matrix\", \"blue\", 0)\nerrors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, \"Residuals\", \"error\")"
+  ]
+}

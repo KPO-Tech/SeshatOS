@@ -151,6 +151,23 @@ function archiveName(): string | null {
   return null
 }
 
+// Sizes of the release archives (b11342), so the setup can count the engine in what it asks the person to download.
+const ARCHIVE_BYTES: Record<string, number> = {
+  [`llama-${LLAMA_RELEASE_TAG}-bin-win-cpu-x64.zip`]: 19_274_166,
+  [`llama-${LLAMA_RELEASE_TAG}-bin-win-cpu-arm64.zip`]: 12_117_198,
+  [`llama-${LLAMA_RELEASE_TAG}-bin-ubuntu-x64.tar.gz`]: 17_552_025,
+  [`llama-${LLAMA_RELEASE_TAG}-bin-ubuntu-arm64.tar.gz`]: 13_587_967,
+  [`llama-${LLAMA_RELEASE_TAG}-bin-macos-x64.tar.gz`]: 11_383_367,
+  [`llama-${LLAMA_RELEASE_TAG}-bin-macos-arm64.tar.gz`]: 11_828_239
+}
+
+/** What the engine adds to a download: nothing when it is already on this computer. */
+export async function llamaEngineDownloadBytes(): Promise<number> {
+  const archive = archiveName()
+  if (!archive || (await serverBinaryPath())) return 0
+  return ARCHIVE_BYTES[archive] ?? 0
+}
+
 function isLlamaSupported(): boolean {
   return archiveName() !== null
 }
