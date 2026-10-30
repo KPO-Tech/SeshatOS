@@ -5,13 +5,14 @@ type Props = {
   value: string
   busy: boolean
   autoFocus?: boolean
+  placeholder?: string
   onChange: (value: string) => void
   onSubmit: () => void
 }
 
 // The search bar of the page: a magnifier, the query, a button to clear it, and the button that searches. Ctrl+K from anywhere in the
 // page puts the cursor in it.
-export function SearchBar({ value, busy, autoFocus, onChange, onSubmit }: Props) {
+export function SearchBar({ value, busy, autoFocus, placeholder = 'Search your documents: a question, a topic, a number or a code', onChange, onSubmit }: Props) {
   const field = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export function SearchBar({ value, busy, autoFocus, onChange, onSubmit }: Props)
         ref={field}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search your documents: a question, a topic, a number or a code"
+        placeholder={placeholder}
         aria-label="Search"
         className="min-w-0 flex-1 border-0 bg-transparent py-1 text-[14.5px] text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted"
       />

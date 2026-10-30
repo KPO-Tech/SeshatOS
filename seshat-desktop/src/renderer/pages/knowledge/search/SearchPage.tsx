@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Message, Search, Sort } from '@icon-park/react'
+import { Message, Sort } from '@icon-park/react'
 import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
-import { useCollections, type AskScope } from '../chat/useCollections'
+import { useCollections } from '../chat/useCollections'
 import { openDocument, passageTarget } from '../collections/openDocument'
 import { ChoiceSelect } from '../components/ChoiceSelect'
-import { ScopeSelect } from '../components/ScopeSelect'
 import { FilterPanel } from './FilterPanel'
 import { queryTerms } from './highlight'
+import { looksLikeQuestion } from './question'
 import { fetchDocuments } from './libraryApi'
 import { ResultRow, type View } from './ResultRow'
 import { MAX_PASSAGES } from './searchApi'
@@ -17,14 +17,11 @@ import { useLibrary } from './useLibrary'
 import { useLibraryTotals } from './useLibraryTotals'
 import { useSearch } from './useSearch'
 
-const CARD = 'rounded-[18px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]'
-
 export function SearchPage() {
   const navigate = useNavigate()
   const { collections, failed: collectionsFailed } = useCollections()
   const { state, run, reset } = useSearch()
   const [query, setQuery] = useState('')
-  const [scope, setScope] = useState<AskScope>({ collectionId: null })
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [sort, setSort] = useState<SortKey | null>(null)
   const [view, setView] = useState<View>('list')
@@ -58,9 +55,14 @@ export function SearchPage() {
     }
   }, [done, ofKind, inCollections, library.collections, library.kinds])
   const collectionsTotal = facets.collections.reduce((sum, item) => sum + item.count, 0)
+  // Before a search the kinds are counted over the whole library; after one, over the documents it found, as the collections are.
+  const kinds = done ? facets.kinds : totals.kinds.length > 0 ? totals.kinds : facets.kinds
+  const kindsTotal = done ? inCollections.length : totals.total
   const resultCount = done ? shown.length : library.total
 
-  const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
+  // Where a search looks: the one collection chosen on the left before it, else all of them.
+  const scopeId = filters.collectionIds.size === 1 ? [...filters.collectionIds][0] : null
+  const scopeName = collections.find((item) => item.id === scopeId)?.name ?? null
 
   // Clearing the bar goes back to the list of documents, and closes the document that was open beside the results: it belonged to the search.
   const closeRightPanel = useUIStore((s) => s.closeRightPanel)
@@ -92,11 +94,6 @@ export function SearchPage() {
     }
   }, [state.phase === 'done' ? state.query : null])
 
-  // The collection chosen at the top narrows the list of documents; it is where a search looks.
-  useEffect(() => {
-    setFilters({ collectionIds: new Set(scope.collectionId ? [scope.collectionId] : []), kind: null })
-  }, [scope.collectionId])
-
   // The end of the list is scrolled to: the next page.
   const sentinel = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -107,7 +104,10 @@ export function SearchPage() {
     return () => observer.disconnect()
   }, [done, library.loadMore, library.docs.length])
 
-  const submit = () => void run(query, scope.collectionId)
+  const submit = () => void run(query, scopeId)
+  // A search that reads as a question is answered better by Ask, which writes the answer from the passages: it is offered beside the bar.
+  const asking = done && shown.length > 0 && looksLikeQuestion(state.query)
+  const ask = () => navigate('/knowledge', { state: { question: state.phase === 'done' ? state.query : query } })
 
   const toggleCollection = (id: string) =>
     setFilters((current) => {
@@ -139,32 +139,34 @@ export function SearchPage() {
         ['name', 'Name']
       ]
 
-  const scopePill = <ScopeSelect collections={collections} scope={scope} onChange={setScope} placement="down" />
-
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-4 pt-4">
-      <section className={`${CARD} shrink-0 p-3.5`}>
-        {!searching && (
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-                <Search size={18} />
-              </span>
-              <div className="min-w-0">
-                <h1 className="m-0 text-[17px] font-semibold leading-[1.2] text-[var(--text-primary)]">Search knowledge</h1>
-                <p className="m-0 truncate text-[12.5px] text-[var(--text-muted)]">Find the documents and the passages that answer you, across all your collections.</p>
-              </div>
-            </div>
-            {scopePill}
-          </div>
-        )}
-
+      <section className="shrink-0">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <SearchBar value={query} busy={state.phase === 'loading'} autoFocus onChange={setQuery} onSubmit={submit} />
+            <SearchBar
+              value={query}
+              busy={state.phase === 'loading'}
+              autoFocus
+              placeholder={scopeName ? `Search in ${scopeName}: a question, a topic, a number or a code` : undefined}
+              onChange={setQuery}
+              onSubmit={submit}
+            />
           </div>
-          {searching && scopePill}
+          {asking && (
+            <button
+              type="button"
+              onClick={ask}
+              title="Answer this question from your documents, with its sources"
+              className="flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-[14px] border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-3.5 text-[13px] font-semibold text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)]"
+            >
+              <Message size={15} />
+              Ask Seshat
+            </button>
+          )}
         </div>
+
+        {!searching && <p className="m-0 mt-2 px-1 text-[12.5px] text-[var(--text-muted)]">Find the documents and the passages that answer you, {scopeName ? `in ${scopeName}.` : 'across all your collections.'}</p>}
 
         {collectionsFailed && (
           <p className="mb-0 mt-2 text-[12.5px] text-[var(--accent-danger)]" role="alert">
@@ -177,27 +179,27 @@ export function SearchPage() {
         {openFileId === null && (done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
           <FilterPanel
             title={done ? 'Refine results' : 'Browse'}
-            facets={{ collections: facets.collections, kinds: totals.kinds.length > 0 ? totals.kinds : facets.kinds }}
+            facets={{ collections: facets.collections, kinds }}
             filters={filters}
             total={collectionsTotal}
-            kindsTotal={totals.total}
+            kindsTotal={kindsTotal}
             onToggleCollection={toggleCollection}
             onAllCollections={() => setFilters({ ...filters, collectionIds: new Set() })}
             onKind={(kind) => setFilters({ ...filters, kind })}
           />
         )}
 
-        <section className={`${CARD} @container flex min-h-0 min-w-0 flex-1 flex-col p-3`}>
+        <section className="@container flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="mb-2.5 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <h2 className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-[var(--text-primary)]">
               {done ? 'Results' : 'Documents'}
               {(done || library.total > 0) && <span className="text-[12.5px] font-normal text-[var(--text-muted)]">{resultCount}</span>}
             </h2>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              {done && shown.length > 0 && (
+              {done && shown.length > 0 && !asking && (
                 <button
                   type="button"
-                  onClick={() => navigate('/knowledge', { state: { question: state.query } })}
+                  onClick={ask}
                   title="Ask a question about this search"
                   className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-0 bg-transparent p-0 text-[12px] text-[var(--accent-primary)] hover:underline"
                 >
@@ -260,8 +262,17 @@ export function SearchPage() {
                 {done && found.length > 0 && shown.length === 0 && <p className="m-0 text-[13px] text-[var(--text-secondary)]">No document is left with these filters.</p>}
                 {shown.length > 0 && (
                   <ul className={['m-0 list-none gap-2.5 p-0', view === 'grid' ? 'grid grid-cols-1 @2xl:grid-cols-2 @6xl:grid-cols-3' : 'flex flex-col'].join(' ')}>
-                    {shown.map((doc) => (
-                      <ResultRow key={doc.key} doc={doc} terms={terms} view={view} opened={doc.fileId === openFileId} onOpen={(hit) => void open(doc, hit)} />
+                    {shown.map((doc, index) => (
+                      <ResultRow
+                        key={doc.key}
+                        doc={doc}
+                        terms={terms}
+                        view={view}
+                        opened={doc.fileId === openFileId}
+                        topScore={done ? shown.reduce((top, item) => Math.max(top, item.score), 0) : undefined}
+                        best={done && sortKey === 'relevance' && index === 0 && shown.length > 1}
+                        onOpen={(hit) => void open(doc, hit)}
+                      />
                     ))}
                   </ul>
                 )}
