@@ -11,6 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-31
+
+### Highlights
+
+- **Updates install with one click**, and a downloaded update is no longer missed.
+- **Formulas are drawn everywhere in an answer**, while it is written, and a request for illustrations draws them in the chat.
+- **Voyage, Jina and more models for the embeddings and the rerank of Knowledge.**
+
 ### Added
 
 - **Jina AI and the newer Cohere and Voyage models for the rerank of Knowledge.** Config > Search offers Jina (`jina-reranker-v3.5` and three more), Cohere adds `rerank-v5.0-pro`, `rerank-v5.0-fast` and `rerank-v4.0-fast`, and Voyage adds `rerank-3` and `rerank-3-lite` (seshat-runtime v1.12.5). The default of Cohere and Voyage stays the model that was measured.
@@ -18,6 +26,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **A long answer from a z.ai model (GLM) no longer ends in "The provider took too long".** z.ai sent the arguments of a tool call only when it had finished writing them, so a long file or illustration left the connection silent until the app gave up. The runtime (v1.12.6) now asks z.ai to stream them.
 - **A request body that is not valid JSON is refused, and a skill file cannot be read through a link that leaves its folder.** The test and model-listing calls of the embedder, reranker, document reader and web search read a broken body as an empty request; they now answer 400. A failed save of the sync state of a connector is written to the log instead of being dropped. The skill file endpoint follows links before checking that the file is inside the skill folder.
 - **Asking for illustrations or figures now draws them in the chat.** A request such as "explain gradient descent with visual illustrations" did not bring the chart components to the model, which then wrote a file or an HTML page instead of answering. The words illustration, visual, figure, gradient and optimisation now bring them, and the prompt tells the model to draw in the answer and write no file unless asked.
 - **A formula that ends at the end of a line no longer swallows the rest of the answer.** A model writes a displayed formula as `$$` ... `\end{array}$$`, with the closing `$$` after the last line of content, and the Markdown reader only closes a formula on a line of its own: everything after it, up to the end of the message, was drawn as one failed formula, in red or as grey code. Such formulas are now closed where the model meant them to end, and a `$$` that has no partner is shown as text.
