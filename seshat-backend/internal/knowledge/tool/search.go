@@ -114,6 +114,7 @@ func (t *SearchTool) Call(ctx context.Context, input tools.CallInput, _ tools.Ca
 		return tools.NewTextResult(fmt.Sprintf("No results found for %q in the collection the person chose. The search is limited to that collection; do not conclude that the information is absent from the rest of the organization.", query)), nil
 	}
 
+	t.nameFiles(ctx, principal, res.Results)
 	result := tools.NewJSONResult(res.Results)
 	result.Content = formatResults(query, res.Results)
 	result.Metadata = &tools.ResultMetadata{
@@ -154,6 +155,39 @@ func (t *SearchTool) FormatResult(data any) string {
 
 func (t *SearchTool) BackfillInput(_ context.Context, input map[string]any) map[string]any {
 	return input
+}
+
+// nameFiles gives an excerpt the name of its document when the index did not keep it with the chunk. Without it the header has no
+// file=, the answer's citation can only name the collection, and knowledge_read cannot be asked for the document by its name. A name that
+// cannot be found is left out, as before.
+func (t *SearchTool) nameFiles(ctx context.Context, principal *backendauth.Principal, results []knowledge.TaggedSearchResult) {
+	namesByCorpus := map[string]map[string]string{}
+	for i := range results {
+		r := &results[i]
+		if r.Metadata["filename"] != "" {
+			continue
+		}
+		fileID := fileIDOfKey(r.Key)
+		if fileID == "" {
+			continue
+		}
+		names, loaded := namesByCorpus[r.CorpusID]
+		if !loaded {
+			names = map[string]string{}
+			if files, err := t.backend.ListFiles(ctx, principal, r.CorpusID); err == nil {
+				for _, f := range files {
+					names[f.FileID] = f.Filename
+				}
+			}
+			namesByCorpus[r.CorpusID] = names
+		}
+		if name := names[fileID]; name != "" {
+			if r.Metadata == nil {
+				r.Metadata = map[string]string{}
+			}
+			r.Metadata["filename"] = name
+		}
+	}
 }
 
 func formatResults(query string, results []knowledge.TaggedSearchResult) string {

@@ -35,6 +35,10 @@ func (f *fakeBackend) GetCorpus(_ context.Context, _ *backendauth.Principal, cor
 	return nil, nil
 }
 
+func (f *fakeBackend) ListFiles(_ context.Context, _ *backendauth.Principal, _ string) ([]knowledge.CorpusFile, error) {
+	return nil, nil
+}
+
 func (f *fakeBackend) Search(_ context.Context, _ *backendauth.Principal, params knowledge.SearchParams) (*rag.SearchResponse, error) {
 	if resp, ok := f.results[params.CorpusID]; ok {
 		return resp, nil
@@ -227,5 +231,30 @@ func TestSearchTool_Call_SaysWhichFileEachExcerptComesFrom(t *testing.T) {
 	}
 	if strings.Contains(result.Content, "file-9") {
 		t.Errorf("the file id is for the interface, not for the model, but the text has it:\n%s", result.Content)
+	}
+}
+
+func TestSearchTool_Call_NamesTheDocumentWhenTheChunkKeptNoName(t *testing.T) {
+	backend := &readBackend{
+		fakeBackend: fakeBackend{
+			corpora: []knowledge.Corpus{{ID: "c1", Name: "Operations and Procurement"}},
+			results: map[string]*rag.SearchResponse{
+				"c1": {CorpusID: "c1", Results: []rag.SearchResult{
+					{Key: "rag/c1/f9#chunk-3", Text: "gloves", Score: 0.9, Metadata: map[string]string{"page_numbers": "[24]"}},
+					{Key: "rag/c1/unknown#chunk-0", Text: "other", Score: 0.5},
+				}},
+			},
+		},
+		files: map[string][]knowledge.CorpusFile{"c1": {{CorpusID: "c1", FileID: "f9", Filename: "OSHA-3151-ppe.pdf"}}},
+	}
+	result, err := NewSearchTool(backend).Call(principalCtx(), tools.CallInput{Parsed: map[string]any{"query": "gloves"}}, nil)
+	if err != nil || result.Error != nil {
+		t.Fatalf("Call: %v %v", err, result.Error)
+	}
+	if !strings.Contains(result.Content, "corpus=Operations and Procurement file=OSHA-3151-ppe.pdf pages=24") {
+		t.Errorf("the excerpt should carry the name of its document, got:\n%s", result.Content)
+	}
+	if strings.Count(result.Content, "file=") != 1 {
+		t.Errorf("a file that cannot be found must not get a name, got:\n%s", result.Content)
 	}
 }
