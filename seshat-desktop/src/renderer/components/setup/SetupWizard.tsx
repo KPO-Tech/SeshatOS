@@ -2,10 +2,12 @@ import { useState, type ReactNode } from 'react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ComponentCard } from './ComponentCard'
 import { InstallProgress } from './InstallProgress'
+import { ProviderStep } from './ProviderStep'
 import { fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes, type SetupComponentId } from './setupFormat'
+import { useProviderStep } from './useProviderStep'
 import type { useSetup } from './useSetup'
 
-type Step = 'welcome' | 'choose' | 'installing' | 'done'
+type Step = 'welcome' | 'provider' | 'choose' | 'installing' | 'done'
 type Setup = ReturnType<typeof useSetup>
 
 const ENTER = { animation: 'fade-in 320ms ease both' } as const
@@ -35,7 +37,7 @@ function QuietButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
 }
 
 function Steps({ current }: { current: Step }) {
-  const order: Step[] = ['welcome', 'choose', 'installing', 'done']
+  const order: Step[] = ['welcome', 'provider', 'choose', 'installing', 'done']
   return (
     <div className="flex items-center gap-2" aria-hidden="true">
       {order.map((step) => (
@@ -101,6 +103,7 @@ const COMPONENT_CARDS = {
 export function SetupWizard({ setup }: { setup: Setup }) {
   const { plan, choices, setChoices, progress, running } = setup
   const [step, setStep] = useState<Step>('welcome')
+  const provider = useProviderStep()
   if (!plan) return null
 
   const total = totalDownloadBytes(plan, choices)
@@ -156,7 +159,7 @@ export function SetupWizard({ setup }: { setup: Setup }) {
               ))}
             </ul>
             <div className="flex flex-col items-center gap-3">
-              <PrimaryButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Get started</PrimaryButton>
+              <PrimaryButton onClick={() => setStep('provider')}>Get started</PrimaryButton>
               <button
                 type="button"
                 onClick={() => void skip()}
@@ -165,6 +168,21 @@ export function SetupWizard({ setup }: { setup: Setup }) {
               >
                 Skip the setup
               </button>
+            </div>
+          </>
+        )}
+
+        {step === 'provider' && (
+          <>
+            <Heading title="Connect a model">SeshatOS answers through a model. Use a cloud provider with your own key, or a local one such as Ollama. You can add more later in Config.</Heading>
+            <ProviderStep provider={provider} />
+            <div className="flex gap-3">
+              <QuietButton onClick={() => setStep('welcome')}>Back</QuietButton>
+              {provider.status === 'connected' ? (
+                <PrimaryButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Continue</PrimaryButton>
+              ) : (
+                <QuietButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Skip for now</QuietButton>
+              )}
             </div>
           </>
         )}
@@ -195,7 +213,7 @@ export function SetupWizard({ setup }: { setup: Setup }) {
                 {!fits && ' · Not enough space for this choice'}
               </p>
               <div className="flex gap-3">
-                <QuietButton onClick={() => setStep('welcome')}>Back</QuietButton>
+                <QuietButton onClick={() => setStep('provider')}>Back</QuietButton>
                 <PrimaryButton disabled={!fits} onClick={() => void install()}>
                   {total > 0 ? `Install · ${formatBytes(total)}` : 'Continue'}
                 </PrimaryButton>
