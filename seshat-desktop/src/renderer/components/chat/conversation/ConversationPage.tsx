@@ -116,8 +116,11 @@ export function ConversationPage() {
   const openFromAnswer = useCallback(
     (path: string) => {
       const place = filePlace(path, session?.projectPath)
-      if (place.where === 'system') void window.seshat?.openPath?.(place.path)
-      else openRightPanel({ kind: 'files', title: 'Files', sessionId: id, focusPath: place.path })
+      const showInFiles = () => openRightPanel({ kind: 'files', title: 'Files', sessionId: id, focusPath: place.path })
+      // openPath only reaches the app's own data folder: a file of a project is opened by its path, and the main process refuses a program.
+      // What cannot be opened that way (a relative path with no project, a program) is shown in the Files panel instead of doing nothing.
+      if (place.where === 'system') (window.seshat?.openLocalPath?.(place.path) ?? Promise.reject(new Error('no bridge'))).catch(showInFiles)
+      else showInFiles()
     },
     [session?.projectPath, openRightPanel, id],
   )

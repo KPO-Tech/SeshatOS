@@ -5,7 +5,7 @@ import { spawn } from 'child_process'
 import { extname, join } from 'path'
 import { assertTrustedSender } from './trusted-sender'
 import { isExternalOpenAllowed } from '../url-safety'
-import { assertLocalFilePath, assertPathWithinRuntimeRoot, sanitizeSaveFileInput } from './validation'
+import { assertLocalFilePath, assertNotRunnable, assertPathWithinRuntimeRoot, sanitizeSaveFileInput } from './validation'
 
 // Mirrors the seshat engine's own candidateInstructionFiles (seshat SDK,
 // internal/engine/project_instructions.go) exactly, in the same order - the
@@ -39,7 +39,7 @@ export function registerSystemHandlers(ipcMain: IpcMain) {
 
   ipcMain.handle('system:open-local-path', async (event, filePath: string) => {
     assertTrustedSender(event)
-    const safePath = assertLocalFilePath(filePath)
+    const safePath = assertNotRunnable(assertLocalFilePath(filePath))
     const result = await shell.openPath(safePath)
     if (result) throw new Error(result)
   })

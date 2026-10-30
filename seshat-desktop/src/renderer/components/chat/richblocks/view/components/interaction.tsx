@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 import { useState } from 'react'
 import { isNode } from '../../lang/parseUi'
 import type { UiAction } from '../../lang/types'
-import { actionState, readAction, runAction, useRichActionBridge } from '../actions/richActions'
+import { actionState, actionTarget, readAction, runAction, useRichActionBridge } from '../actions/richActions'
 import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 
@@ -15,7 +15,7 @@ function Button({ props }: ComponentProps) {
     <button
       type="button"
       disabled={!enabled}
-      title={why}
+      title={why ?? actionTarget(action)}
       onClick={() => runAction(action, bridge)}
       className={`my-1 mr-2 inline-flex w-fit cursor-pointer items-center rounded-lg border px-3.5 py-1.5 text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
         primary
@@ -45,7 +45,7 @@ function Choices({ props }: ComponentProps) {
               key={index}
               type="button"
               disabled={!enabled}
-              title={why}
+              title={why ?? actionTarget(action)}
               onClick={() => {
                 setPicked(index)
                 runAction(action, bridge)
@@ -100,7 +100,7 @@ function Link({ props }: ComponentProps) {
   const action: UiAction = { kind: 'action', name: 'OpenUrl', args: [String(props.url)] }
   return (
     <a
-      href={String(props.url)}
+      href={/^https?:\/\//i.test(String(props.url)) ? String(props.url) : undefined}
       title={String(props.url)}
       onClick={(event) => {
         event.preventDefault()
