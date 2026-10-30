@@ -86,7 +86,7 @@ func (a *App) providerKeyFor(ctx context.Context, principal *backendauth.Princip
 func rerankStyleFor(baseURL string) string {
 	host := strings.ToLower(baseURL)
 	switch {
-	case strings.Contains(host, "openrouter.ai"), strings.Contains(host, "api.cohere.com"):
+	case strings.Contains(host, "openrouter.ai"), strings.Contains(host, "api.cohere.com"), strings.Contains(host, "api.jina.ai"):
 		return "cohere"
 	case strings.Contains(host, "voyageai.com"):
 		return "voyage"
