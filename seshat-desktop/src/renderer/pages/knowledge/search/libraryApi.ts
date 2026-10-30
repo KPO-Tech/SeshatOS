@@ -2,7 +2,7 @@ import { api } from '@renderer/api/client'
 import type { FileKind } from '../chat/passageSources'
 import { docOfFile, type Doc } from './searchModel'
 
-type DocumentRow = { corpus_id: string; corpus_name: string; file_id: string; filename: string; chunk_count: number; created_at: number }
+type DocumentRow = { corpus_id: string; corpus_name: string; file_id: string; filename: string; chunk_count: number; created_at: number; preview?: string }
 
 type DocumentsResponse = {
   documents?: DocumentRow[]
@@ -18,6 +18,8 @@ export type DocumentsQuery = {
   limit?: number
   offset?: number
   fileIds?: readonly string[]
+  // Ask for the beginning of the text of each document, for the list that is browsed.
+  preview?: boolean
 }
 
 export type DocumentsPage = {
@@ -37,9 +39,10 @@ export async function fetchDocuments(query: DocumentsQuery): Promise<DocumentsPa
   params.set('sort', query.sort ?? 'recent')
   params.set('limit', String(query.limit ?? 40))
   params.set('offset', String(query.offset ?? 0))
+  if (query.preview) params.set('preview', '1')
   const data = await api.get<DocumentsResponse>(`/knowledge/documents?${params.toString()}`)
   return {
-    docs: (data.documents ?? []).map((row) => docOfFile({ id: row.corpus_id, name: row.corpus_name }, { fileId: row.file_id, name: row.filename, chunkCount: row.chunk_count, createdAt: row.created_at })),
+    docs: (data.documents ?? []).map((row) => docOfFile({ id: row.corpus_id, name: row.corpus_name }, { fileId: row.file_id, name: row.filename, chunkCount: row.chunk_count, createdAt: row.created_at, preview: row.preview })),
     total: data.total ?? 0,
     collections: data.collections ?? [],
     kinds: (data.kinds ?? {}) as Partial<Record<FileKind, number>>

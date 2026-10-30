@@ -18,6 +18,7 @@ type documentItem struct {
 	Filename      string `json:"filename"`
 	ChunkCount    int    `json:"chunk_count"`
 	CreatedAtUnix int64  `json:"created_at"`
+	Preview       string `json:"preview,omitempty"`
 }
 
 type documentCount struct {
@@ -34,6 +35,7 @@ type documentCount struct {
 //	?file_id=x&file_id=y       only these files
 //	?sort=recent|name          default recent
 //	?limit=50&offset=0         a page; the limit is capped at 100
+//	?preview=1                 add the beginning of each document's text (one read of the passages per collection)
 func (a *App) handleKnowledgeDocuments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -75,14 +77,14 @@ func (a *App) handleKnowledgeDocuments(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	page, err := svc.ListDocuments(r.Context(), principal, knowledge.DocumentsQuery{CorpusIDs: corpusIDs, Kind: values.Get("kind"), FileIDs: fileIDs, Sort: sortKey, Limit: limit, Offset: offset})
+	page, err := svc.ListDocuments(r.Context(), principal, knowledge.DocumentsQuery{CorpusIDs: corpusIDs, Kind: values.Get("kind"), FileIDs: fileIDs, Sort: sortKey, Limit: limit, Offset: offset, Preview: values.Get("preview") == "1"})
 	if err != nil {
 		writeBackendError(w, err)
 		return
 	}
 	items := make([]documentItem, 0, len(page.Documents))
 	for _, doc := range page.Documents {
-		items = append(items, documentItem{CorpusID: doc.CorpusID, CorpusName: doc.Collection, FileID: doc.FileID, Filename: doc.Filename, ChunkCount: doc.ChunkCount, CreatedAtUnix: doc.CreatedAt})
+		items = append(items, documentItem{CorpusID: doc.CorpusID, CorpusName: doc.Collection, FileID: doc.FileID, Filename: doc.Filename, ChunkCount: doc.ChunkCount, CreatedAtUnix: doc.CreatedAt, Preview: doc.Preview})
 	}
 	collections := make([]documentCount, 0, len(page.Collections))
 	for _, collection := range page.Collections {

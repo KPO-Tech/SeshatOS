@@ -67,6 +67,12 @@ describe('listing', () => {
     expect(listed).toMatchObject({ name: 'a.pdf', folder: 'Contracts', kind: 'pdf', chunkCount: 12, addedAt: 1000, hits: [] })
   })
 
+  it('keeps the preview of a listed document, and none when there is none', () => {
+    const withPreview = docOfFile({ id: 'c1', name: 'Legal' }, { fileId: 'f2', name: 'b.pdf', chunkCount: 3, createdAt: 5, preview: 'The audit committee meets quarterly.' })
+    expect(withPreview.preview).toBe('The audit committee meets quarterly.')
+    expect('preview' in listed).toBe(false)
+  })
+
   it('gives the documents of a search what the listing knows of them, and sorts by recency', () => {
     const found = groupDocs([hit({ fileId: 'f1', path: 'Legal/Contracts/a.pdf' })])
     expect(withListing(found, [listed])[0]).toMatchObject({ addedAt: 1000, chunkCount: 12, hits: [expect.anything()] })
