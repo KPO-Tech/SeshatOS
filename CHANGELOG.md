@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **You can scroll up while the agent writes.** The conversation followed the end of the answer so eagerly that a scroll up was taken back down before it started. Scrolling up (wheel, touch, keys or the scrollbar) now stops the follow at once, and it starts again when you come back to the end or use the arrow.
+
 ## [0.2.0] - 2026-10-30
 
 ### Highlights

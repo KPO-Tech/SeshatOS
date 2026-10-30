@@ -31,14 +31,58 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
+    let lastTop = el.scrollTop
     function onScroll() {
       if (!el) return
       const distance = el.scrollHeight - el.scrollTop - el.clientHeight
-      isAtBottomRef.current = distance <= 60
+      const down = el.scrollTop > lastTop
+      lastTop = el.scrollTop
+      // Near the end the follow only starts again when the reader moves down: a small move up (the start of a wheel notch) does not.
+      if (distance > 60) isAtBottomRef.current = false
+      else if (down) isAtBottomRef.current = true
       setAway(distance > JUMP_DISTANCE)
     }
+    // The reader's intent, read from what they do rather than from how far they are: the browser animates a wheel notch over several
+    // frames, so the first scroll events of an upward move are still within JUMP of the end, and the follow below used to take the
+    // reader back down before they had left. Going up stops the follow at once; it starts again when they come back near the end.
+    function leave() {
+      isAtBottomRef.current = false
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current)
+        scrollRafRef.current = null
+      }
+    }
+    function onWheel(event: WheelEvent) {
+      if (event.deltaY < 0) leave()
+    }
+    let touchY = 0
+    function onTouchStart(event: TouchEvent) {
+      touchY = event.touches[0]?.clientY ?? 0
+    }
+    function onTouchMove(event: TouchEvent) {
+      if ((event.touches[0]?.clientY ?? 0) > touchY) leave()
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'ArrowUp' || event.key === 'PageUp' || event.key === 'Home') leave()
+    }
+    // A drag of the scrollbar is a pointer press on the scroller itself, not on a row.
+    function onPointerDown(event: PointerEvent) {
+      if (event.target === el) leave()
+    }
     el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
+    el.addEventListener('wheel', onWheel, { passive: true })
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: true })
+    el.addEventListener('keydown', onKeyDown)
+    el.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('keydown', onKeyDown)
+      el.removeEventListener('pointerdown', onPointerDown)
+    }
   }, [])
 
   useEffect(() => {
