@@ -25,6 +25,14 @@ export function readAction(value: unknown): UiAction | null {
   return action.kind === 'action' && Array.isArray(action.args) ? (action as UiAction) : null
 }
 
+/** What a button or a choice will do, for its tooltip: the label of an answer can say anything, the target is what counts. */
+export function actionTarget(action: UiAction | null): string | undefined {
+  if (!action || action.args.length === 0) return undefined
+  const target = String(action.args[0])
+  const verb = action.name === 'Ask' ? 'Sends' : action.name === 'OpenUrl' ? 'Opens' : 'Opens the file'
+  return `${verb}: ${target.length > 200 ? `${target.slice(0, 197)}...` : target}`
+}
+
 /** What an action can do here, and why not when it cannot. */
 export function actionState(action: UiAction | null, bridge: RichActionBridge): { enabled: boolean; why?: string } {
   if (!action) return { enabled: false, why: 'This action could not be read' }
@@ -40,5 +48,5 @@ export function runAction(action: UiAction | null, bridge: RichActionBridge): vo
   if (action.name === 'Ask') bridge.ask?.(String(first))
   else if (action.name === 'OpenUrl') void window.seshat?.openExternal?.(String(first))
   else if (bridge.openFile) bridge.openFile(String(first))
-  else void window.seshat?.openPath?.(String(first))
+  else void window.seshat?.openLocalPath?.(String(first))?.catch(() => undefined)
 }

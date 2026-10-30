@@ -1,4 +1,4 @@
-import { basename, isAbsolute, relative, resolve, sep } from 'path'
+import { basename, extname, isAbsolute, relative, resolve, sep } from 'path'
 import { resolveRuntimeRoot } from '../runtime'
 
 const API_PATH_PATTERN = /^\/[A-Za-z0-9._~!$&'()*+,;=:@/%?-]*$/
@@ -67,6 +67,22 @@ export function assertPathWithinRuntimeRoot(value: unknown, label = 'File path')
     throw new Error(`${label} must be within the app's data directory`)
   }
   return resolved
+}
+
+// What the system would run when asked to open it, instead of showing it. An answer (so a document the model read) can name a file and
+// draw a button for it: opening a program from a click on a label is refused here, whatever the renderer sends.
+const RUNNABLE_EXTENSIONS = new Set([
+  'exe', 'com', 'scr', 'bat', 'cmd', 'msi', 'msp', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse', 'wsf', 'wsh', 'hta', 'lnk', 'url', 'reg', 'cpl',
+  'jar', 'dll', 'sys', 'sh', 'command', 'app', 'pkg', 'dmg', 'appimage', 'deb', 'rpm', 'run', 'bin'
+])
+
+/** The path itself when the system would show it; an error when it would run it. Trailing dots and spaces are ignored: Windows does too. */
+export function assertNotRunnable(filePath: string, label = 'File path'): string {
+  const extension = extname(filePath.replace(/[. ]+$/, '')).slice(1).toLowerCase()
+  if (RUNNABLE_EXTENSIONS.has(extension)) {
+    throw new Error(`${label} is a program (.${extension}): it is not opened from an answer`)
+  }
+  return filePath
 }
 
 export function sanitizeSaveFileInput(defaultName: unknown, content: unknown): { defaultName: string; content: string } {

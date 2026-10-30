@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { parseUi } from '../../lang/parseUi'
 import type { UiAction } from '../../lang/types'
-import { actionState, readAction, runAction } from './richActions'
+import { actionState, actionTarget, readAction, runAction } from './richActions'
 
 const ask: UiAction = { kind: 'action', name: 'Ask', args: ['Explain the second row'] }
 const openFile: UiAction = { kind: 'action', name: 'OpenFile', args: ['C:/notes/a.md'] }
@@ -57,5 +57,22 @@ describe('the interaction components, as the model writes them', () => {
     const result = full('root = SourceList([Source("Spec", "https://example.com", null, "v2")])')
     expect(result.errors).toEqual([])
     expect(full('root = Citation("Rule 4", "handbook.pdf", "Keep it short", 12)').errors).toEqual([])
+  })
+})
+
+describe('actionTarget', () => {
+  it('says what a button will do, whatever its label says', () => {
+    expect(actionTarget(ask)).toBe('Sends: Explain the second row')
+    expect(actionTarget({ kind: 'action', name: 'OpenUrl', args: ['https://example.com/a'] })).toBe('Opens: https://example.com/a')
+    expect(actionTarget(openFile)).toBe('Opens the file: C:/notes/a.md')
+  })
+
+  it('has nothing to say for an action that could not be read', () => {
+    expect(actionTarget(null)).toBeUndefined()
+    expect(actionTarget({ kind: 'action', name: 'Ask', args: [] })).toBeUndefined()
+  })
+
+  it('cuts a very long target', () => {
+    expect(actionTarget({ kind: 'action', name: 'Ask', args: ['x'.repeat(500)] })?.length).toBeLessThan(230)
   })
 })
