@@ -59,6 +59,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **`make dev` keeps your data between starts** and builds the backend with the native OCR when there is a C compiler; `make dev-reset` forgets the dev install completely.
 - **The first-run setup connects a model.** A new step after the welcome lists the providers built into the runtime, takes the API key (or the address of a local Ollama), saves it, makes it the default and loads its models. It can be skipped, and a computer that already has a provider shows it as connected. Before, the setup ended on an app that could not answer until a provider was added in Config.
 - **The key is checked before it is saved.** A new `POST /settings/providers/check-key` asks the provider for its model list with the key and says `ok`, `rejected`, `unreachable` or `unchecked`; nothing is stored and the key is in no message. The setup step refuses a rejected key with the provider's verdict and offers "Save anyway" when the provider could not be asked.
+- **A clearer first-run setup.** A labeled step bar replaces the dots, the download shows its speed and the time left, a component left unticked says it can be added later in Config, and the last screen lists what is still to do when no model was connected.
 
 ### Changed
 
