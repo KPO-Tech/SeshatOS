@@ -8,7 +8,7 @@ import { assertTrustedSender } from './ipc/trusted-sender'
 // competing for network/CPU with an update check.
 const INITIAL_CHECK_DELAY_MS = 10_000
 
-let updateReadyToInstall = false
+let downloadedVersion: string | null = null
 
 function broadcast(channel: string, payload: unknown) {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -40,6 +40,10 @@ export function setupAutoUpdater(): void {
     ipcMain.handle('updates:quit-and-install', (event) => {
       assertTrustedSender(event)
     })
+    ipcMain.handle('updates:ready', (event) => {
+      assertTrustedSender(event)
+      return null
+    })
     return
   }
 
@@ -66,7 +70,7 @@ export function setupAutoUpdater(): void {
   })
 
   autoUpdater.on('update-downloaded', (info) => {
-    updateReadyToInstall = true
+    downloadedVersion = info.version
     log(`update downloaded: ${info.version}`)
     broadcast('updates:downloaded', { version: info.version })
   })
@@ -86,10 +90,17 @@ export function setupAutoUpdater(): void {
     }
   })
 
+  // The announcement of a downloaded update is sent once: a window that was not listening yet (or was opened later) asks for it here.
+  ipcMain.handle('updates:ready', (event) => {
+    assertTrustedSender(event)
+    return downloadedVersion ? { version: downloadedVersion } : null
+  })
+
+  // One click: the installer runs without its pages and the app opens again by itself. The folder chosen at the first install is kept.
   ipcMain.handle('updates:quit-and-install', (event) => {
     assertTrustedSender(event)
-    if (updateReadyToInstall) {
-      autoUpdater.quitAndInstall()
+    if (downloadedVersion) {
+      autoUpdater.quitAndInstall(true, true)
     }
   })
 

@@ -14,6 +14,8 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 ### Fixed
 
 - **You can scroll up while the agent writes.** The conversation followed the end of the answer so eagerly that a scroll up was taken back down before it started. Scrolling up (wheel, touch, keys or the scrollbar) now stops the follow at once, and it starts again when you come back to the end or use the arrow.
+- **An update installs with one click and no wizard.** Restarting into a downloaded update runs the installer silently and opens the app again by itself, instead of showing the installer's pages.
+- **A downloaded update is no longer missed.** The app remembers that an update is ready and shows it when a window opens, and Settings > About has a Check for updates button and a Restart and install button.
 
 ## [0.2.0] - 2026-10-30
 
