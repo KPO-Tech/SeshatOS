@@ -80,7 +80,7 @@ The backend is meant for the desktop app on the same machine, so it is closed to
 
 There is one version of the app. The main branch, `make dev` and a build you make yourself show everything: accounts, SeshatCloud, Knowledge, the store and the sources of an answer. `make dev-next` was the name of the second version and now only runs `make dev`.
 
-A release can still hide what is not ready. The release workflow builds the app with `VITE_SESHAT_EDITION=public` (three build steps in `.github/workflows/release-desktop.yml`), which switches the flags of `seshat-desktop/src/renderer/lib/edition.ts` off: the local, single-user workspace of the first public version. That value is what a release shows; change it, with the comment above it, to release with more or less. `npm run dev:public` (in `seshat-desktop`) runs the app the way such a release shows it. Nothing is removed by a flag: the hidden code stays compiled and typed.
+A release can still hide what is not ready. The release workflow builds the app with `VITE_SESHAT_EDITION=public` (three build steps in `.github/workflows/release-desktop.yml`), which shows what `PUBLIC_EDITION` in `seshat-desktop/src/renderer/lib/edition.ts` says: the local, single-user workspace of the first public version, with the Store, Knowledge and the sources of an answer, and without accounts or SeshatCloud. That value is what a release shows; change it, with the comment above it, to release with more or less. `npm run dev:public` (in `seshat-desktop`) runs the app the way such a release shows it. Nothing is removed by a flag: the hidden code stays compiled and typed.
 
 ## Starting as a brand new install (FRESH=1)
 

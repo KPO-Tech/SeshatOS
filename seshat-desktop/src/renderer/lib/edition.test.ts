@@ -9,9 +9,12 @@ describe('editionFor', () => {
     expect(editionFor('next')).toBe(FULL_EDITION)
   })
 
-  it('hides everything for the public edition', () => {
+  it('hides accounts and SeshatCloud for the public edition, and shows the rest', () => {
     expect(editionFor('public')).toBe(PUBLIC_EDITION)
-    expect(Object.values(PUBLIC_EDITION).every((on) => on === false)).toBe(true)
+    expect(PUBLIC_EDITION.accounts).toBe(false)
+    expect(PUBLIC_EDITION.cloud).toBe(false)
+    const shown = Object.entries(PUBLIC_EDITION).filter(([, on]) => on).map(([flag]) => flag)
+    expect(shown.sort()).toEqual(['knowledge', 'knowledgeApp', 'sources', 'store'])
   })
 
   it('has every flag on in the full edition, so a new flag cannot be forgotten off', () => {

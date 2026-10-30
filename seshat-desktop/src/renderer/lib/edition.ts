@@ -1,9 +1,10 @@
 // What the app shows. There is one version of it, with everything on: the code on the main branch, `make dev` and a build you make
 // yourself all show the same app.
 //
-// A release can still hide what is not ready: the release workflow builds with VITE_SESHAT_EDITION=public, which switches every flag
-// below off (the local, single-user workspace of the first public version). That one line of .github/workflows/release-desktop.yml is
-// the decision of what a release shows; nothing here is removed, a flag only hides code that stays compiled and typed.
+// A release can still hide what is not ready: the release workflow builds with VITE_SESHAT_EDITION=public, which shows what PUBLIC_EDITION
+// below says (the local, single-user workspace of the first public version, with the Store, Knowledge and the sources of an answer; no
+// account and no SeshatCloud). That one line of .github/workflows/release-desktop.yml is the decision of what a release shows; nothing
+// here is removed, a flag only hides code that stays compiled and typed.
 // `npm run dev:public` runs the app as a release would show it.
 export type Edition = {
   // Welcome screen with log in / create account / enterprise contact. Off: the
@@ -34,10 +35,10 @@ export const FULL_EDITION: Edition = {
 export const PUBLIC_EDITION: Edition = {
   accounts: false,
   cloud: false,
-  knowledge: false,
-  store: false,
-  knowledgeApp: false,
-  sources: false
+  knowledge: true,
+  store: true,
+  knowledgeApp: true,
+  sources: true
 }
 
 /** The edition a build was made for: the public one when asked for by name, the full one otherwise. */
