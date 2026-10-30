@@ -2,6 +2,8 @@ package documentreading
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -22,7 +24,9 @@ const (
 	// EnvNativeDocLatinBaseURL overrides where the Latin recognizer is downloaded from.
 	EnvNativeDocLatinBaseURL = "SESHAT_NATIVEDOC_LATIN_BASE_URL"
 
-	nativeDocLatinBaseURL = "https://huggingface.co/PaddlePaddle/latin_PP-OCRv5_mobile_rec_onnx/resolve/main"
+	// The Latin recognizer is also taken from a fixed revision and checked against a checksum (see nativeDocModelsRevision).
+	nativeDocLatinRevision = "89d3a50e2c27e2e7cceeab0e944c25c807d5db4f"
+	nativeDocLatinBaseURL  = "https://huggingface.co/PaddlePaddle/latin_PP-OCRv5_mobile_rec_onnx/resolve/" + nativeDocLatinRevision
 
 	// NativeDocPackDefault is the recognizer the models came with before packs existed: Chinese and English.
 	NativeDocPackDefault = "ch-en"
@@ -44,6 +48,10 @@ type nativeDocPackFile struct {
 	URL func() string
 	// CharDictFromYAML says the download is the inference.yml of a PaddleOCR model, whose character list is written to Name.
 	CharDictFromYAML bool
+	// SHA256 is the checksum of the download itself (before CharDictFromYAML reads it), checked when the file comes from the default address.
+	SHA256 string
+	// Pinned says whether the file comes from the default address, which SHA256 is the checksum of.
+	Pinned func() bool
 }
 
 // NativeDocPack is a recognizer and its character file.
@@ -63,8 +71,8 @@ func nativeDocPacks() []NativeDocPack {
 			Languages: []string{"zh", "en"},
 			SizeMB:    11,
 			files: []nativeDocPackFile{
-				{Name: "rec.ort", URL: func() string { return NativeDocModelsBaseURL() + "/rec.ort" }},
-				{Name: "ocr.res", URL: func() string { return NativeDocModelsBaseURL() + "/ocr.res" }},
+				{Name: "rec.ort", URL: func() string { return NativeDocModelsBaseURL() + "/rec.ort" }, SHA256: "a6eb83a8943d2dca6de8e1393420904bddd4dded455d72ca177ade63b56533d0", Pinned: nativeDocModelsPinned},
+				{Name: "ocr.res", URL: func() string { return NativeDocModelsBaseURL() + "/ocr.res" }, SHA256: "28b2362ad4ab2dc38769aa72feb535e3a9ddb3fd2a7585a05920e6393b1dc7f7", Pinned: nativeDocModelsPinned},
 			},
 		},
 		{
@@ -73,8 +81,8 @@ func nativeDocPacks() []NativeDocPack {
 			Languages: []string{"fr", "en", "es", "de", "it", "pt", "nl", "pl", "ro", "sv", "da", "no", "fi", "tr", "cs", "hu"},
 			SizeMB:    8,
 			files: []nativeDocPackFile{
-				{Name: "rec.onnx", URL: func() string { return nativeDocLatinBase() + "/inference.onnx" }},
-				{Name: "ocr.res", URL: func() string { return nativeDocLatinBase() + "/inference.yml" }, CharDictFromYAML: true},
+				{Name: "rec.onnx", URL: func() string { return nativeDocLatinBase() + "/inference.onnx" }, SHA256: "7888113072263cb471b93f66dd5e2ad70548dc526fa1ace760d0d973dd121498", Pinned: nativeDocLatinPinned},
+				{Name: "ocr.res", URL: func() string { return nativeDocLatinBase() + "/inference.yml" }, CharDictFromYAML: true, SHA256: "0bbe984570f597af3638e50bdf2e8276f3ab26a61966096538b3b0d1849f5c84", Pinned: nativeDocLatinPinned},
 			},
 		},
 	}
@@ -85,6 +93,10 @@ func nativeDocLatinBase() string {
 		return baseURL
 	}
 	return nativeDocLatinBaseURL
+}
+
+func nativeDocLatinPinned() bool {
+	return strings.TrimSpace(os.Getenv(EnvNativeDocLatinBaseURL)) == ""
 }
 
 // NativeDocPacks lists the recognizer packs.
@@ -242,7 +254,11 @@ func DownloadNativeDocPack(ctx context.Context, id string, onProgress func(Nativ
 		index++
 		progress := NativeDocDownloadProgress{File: name, FileIndex: index, FileCount: total}
 		url := NativeDocModelsBaseURL() + "/" + name
-		if err := fetchModelFile(ctx, client, url, filepath.Join(modelDir, name), progress, onProgress, nil); err != nil {
+		want := ""
+		if nativeDocModelsPinned() {
+			want = nativeDocSharedModelSHA256[name]
+		}
+		if err := fetchModelFile(ctx, client, url, filepath.Join(modelDir, name), want, progress, onProgress, nil); err != nil {
 			return err
 		}
 	}
@@ -258,7 +274,11 @@ func DownloadNativeDocPack(ctx context.Context, id string, onProgress func(Nativ
 		if id == NativeDocPackDefault && !usableModelFile(dest) && usableModelFile(filepath.Join(modelDir, file.Name)) && NativeDocActivePack() == id {
 			dest = filepath.Join(modelDir, file.Name)
 		}
-		if err := fetchModelFile(ctx, client, file.URL(), dest, progress, onProgress, transform); err != nil {
+		want := ""
+		if file.Pinned != nil && file.Pinned() {
+			want = file.SHA256
+		}
+		if err := fetchModelFile(ctx, client, file.URL(), dest, want, progress, onProgress, transform); err != nil {
 			return err
 		}
 	}
@@ -266,8 +286,8 @@ func DownloadNativeDocPack(ctx context.Context, id string, onProgress func(Nativ
 }
 
 // fetchModelFile downloads one file to dest unless a usable copy is there. When transform is set the download is passed through it
-// before being written.
-func fetchModelFile(ctx context.Context, client *http.Client, url, dest string, progress NativeDocDownloadProgress, onProgress func(NativeDocDownloadProgress), transform func([]byte) ([]byte, error)) error {
+// before being written. When wantSHA256 is set the download must have that checksum, or it is thrown away.
+func fetchModelFile(ctx context.Context, client *http.Client, url, dest, wantSHA256 string, progress NativeDocDownloadProgress, onProgress func(NativeDocDownloadProgress), transform func([]byte) ([]byte, error)) error {
 	name := progress.File
 	if usableModelFile(dest) {
 		progress.AlreadyAvailable = true
@@ -299,10 +319,12 @@ func fetchModelFile(ctx context.Context, client *http.Client, url, dest string, 
 	}
 	cleanup := func() { file.Close(); _ = os.Remove(part) }
 	var kept []byte
+	sum := sha256.New()
 	buf := make([]byte, 256*1024)
 	for {
 		n, readErr := resp.Body.Read(buf)
 		if n > 0 {
+			sum.Write(buf[:n])
 			if transform != nil {
 				kept = append(kept, buf[:n]...)
 			} else if _, err := file.Write(buf[:n]); err != nil {
@@ -321,6 +343,10 @@ func fetchModelFile(ctx context.Context, client *http.Client, url, dest string, 
 			cleanup()
 			return fmt.Errorf("read model download %s: %w", name, readErr)
 		}
+	}
+	if got := hex.EncodeToString(sum.Sum(nil)); wantSHA256 != "" && got != wantSHA256 {
+		cleanup()
+		return fmt.Errorf("download %s: the file is not the one expected (checksum %s, expected %s); it was not kept", name, got, wantSHA256)
 	}
 	if transform != nil {
 		out, err := transform(kept)

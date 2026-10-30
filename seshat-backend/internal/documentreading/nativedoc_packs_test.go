@@ -3,6 +3,8 @@ package documentreading
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -150,5 +152,66 @@ func TestUnknownNativeDocPack(t *testing.T) {
 	}
 	if err := ActivateNativeDocPack("klingon"); !errors.Is(err, ErrNativeDocUnknownPack) {
 		t.Fatalf("expected ErrNativeDocUnknownPack, got %v", err)
+	}
+}
+
+func TestFetchModelFileRefusesAFileWithAnotherChecksum(t *testing.T) {
+	body := bigFile("model")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write(body) }))
+	t.Cleanup(server.Close)
+	sum := sha256.Sum256(body)
+	good := hex.EncodeToString(sum[:])
+
+	dir := t.TempDir()
+	wrong := filepath.Join(dir, "wrong.ort")
+	err := fetchModelFile(context.Background(), &http.Client{}, server.URL, wrong, strings.Repeat("0", 64), NativeDocDownloadProgress{File: "wrong.ort"}, nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "not the one expected") {
+		t.Fatalf("a file with another checksum must be refused, got %v", err)
+	}
+	for _, left := range []string{wrong, wrong + ".part"} {
+		if _, statErr := os.Stat(left); statErr == nil {
+			t.Errorf("%s was kept", left)
+		}
+	}
+
+	right := filepath.Join(dir, "right.ort")
+	if err := fetchModelFile(context.Background(), &http.Client{}, server.URL, right, good, NativeDocDownloadProgress{File: "right.ort"}, nil, nil); err != nil {
+		t.Fatalf("a file with the expected checksum must be kept: %v", err)
+	}
+	if !usableModelFile(right) {
+		t.Error("the file with the expected checksum is not on disk")
+	}
+
+	free := filepath.Join(dir, "free.ort")
+	if err := fetchModelFile(context.Background(), &http.Client{}, server.URL, free, "", NativeDocDownloadProgress{File: "free.ort"}, nil, nil); err != nil {
+		t.Fatalf("no checksum asked, no check: %v", err)
+	}
+}
+
+func TestOwnMirrorIsNotCheckedAgainstTheDefaultChecksums(t *testing.T) {
+	t.Setenv(EnvNativeDocModelsBaseURL, "")
+	t.Setenv(EnvNativeDocLatinBaseURL, "")
+	if !nativeDocModelsPinned() || !nativeDocLatinPinned() {
+		t.Fatal("the default addresses carry checksums")
+	}
+	t.Setenv(EnvNativeDocModelsBaseURL, "http://mirror.local")
+	t.Setenv(EnvNativeDocLatinBaseURL, "http://mirror.local")
+	if nativeDocModelsPinned() || nativeDocLatinPinned() {
+		t.Fatal("a base URL set by the person is their own mirror: its files are not checked")
+	}
+}
+
+func TestEveryDefaultModelFileHasAChecksum(t *testing.T) {
+	for _, name := range nativeDocSharedModelFiles {
+		if len(nativeDocSharedModelSHA256[name]) != 64 {
+			t.Errorf("%s has no checksum", name)
+		}
+	}
+	for _, pack := range nativeDocPacks() {
+		for _, file := range pack.files {
+			if len(file.SHA256) != 64 || file.Pinned == nil {
+				t.Errorf("%s of pack %s has no checksum", file.Name, pack.ID)
+			}
+		}
 	}
 }

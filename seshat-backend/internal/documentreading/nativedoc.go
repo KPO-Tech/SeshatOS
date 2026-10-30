@@ -18,7 +18,18 @@ const EnvNativeDocModelsDir = "SESHAT_NATIVEDOC_MODELS_DIR"
 const EnvNativeDocModelsBaseURL = "SESHAT_NATIVEDOC_MODELS_BASE_URL"
 const EnvNativeDocAutoInit = "SESHAT_NATIVEDOC_AUTO_INIT"
 
-const nativeDocModelsBaseURL = "https://huggingface.co/InfiniFlow/deepdoc/resolve/main"
+// The models come from a fixed revision of the repository, not from its main branch, and each file is checked against the SHA-256 below
+// once downloaded: a file that changed upstream is refused instead of being loaded by the OCR runtime. Both apply to the default
+// address only; a base URL set by the environment is the person's own mirror or model, and is not checked.
+const nativeDocModelsRevision = "9c7aa2c730d7a242d7f04cf6109a6a239aefc717"
+const nativeDocModelsBaseURL = "https://huggingface.co/InfiniFlow/deepdoc/resolve/" + nativeDocModelsRevision
+
+// nativeDocSharedModelSHA256 are the checksums of the models every pack shares, at nativeDocModelsRevision.
+var nativeDocSharedModelSHA256 = map[string]string{
+	"det.ort":    "fd62614cbae0b073aa203b2393081e641826ecfc85414669458506d91e23c095",
+	"layout.ort": "55e3e5743ba2f2a03879578ac818089afa32bdedda51159d340bc2eec968b030",
+	"tsr.ort":    "24930ee6d025dc8e5c17587713d74a7d665d3ca8a464df015afb6e939af0d2f7",
+}
 
 var (
 	ErrNativeDocNotCompiled   = errors.New("nativedoc is not compiled into this backend")
@@ -49,6 +60,11 @@ func NativeDocModelsBaseURL() string {
 		return baseURL
 	}
 	return nativeDocModelsBaseURL
+}
+
+// nativeDocModelsPinned says whether the models are downloaded from the default address, the only one whose files have a known checksum.
+func nativeDocModelsPinned() bool {
+	return strings.TrimSpace(os.Getenv(EnvNativeDocModelsBaseURL)) == ""
 }
 
 func NativeDocModelsAvailable() bool {
