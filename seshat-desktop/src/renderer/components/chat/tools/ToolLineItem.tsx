@@ -97,7 +97,8 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
       return
     }
-    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id })
+    // What a knowledge search or a document read returns is text to read: its panel opens as wide as a document's.
+    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: tool.name === 'knowledge_search' || tool.name === 'knowledge_read' })
   }
 
   return (

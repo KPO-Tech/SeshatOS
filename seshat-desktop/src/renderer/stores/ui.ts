@@ -50,7 +50,8 @@ type RightPanelFields = {
 // `width` is not a per-panel property - it belongs to the column a panel
 // lives in. It's kept here only as an optional hint, used solely when this
 // panel ends up creating a brand-new column.
-export type RightPanelPayload = Partial<RightPanelFields> & { kind: RightPanelKind; title: string; width?: number }
+// `readable` opens a panel of a kind that is not one at the width of the readable ones (half the room): a tool whose result is text to read.
+export type RightPanelPayload = Partial<RightPanelFields> & { kind: RightPanelKind; title: string; width?: number; readable?: boolean }
 
 // A single open panel. `id` is a stable identity key (not random) so
 // re-opening "the same" panel (e.g. Computer for a session that's
@@ -189,10 +190,10 @@ function clampRightPanelWidth(width: number, windowWidth: number, sidebarCollaps
   return Math.round(Math.max(effectiveMin, Math.min(width, effectiveMax)))
 }
 
-function defaultRightPanelWidth(kind: RightPanelKind, windowWidth: number, sidebarCollapsed: boolean): number {
+function defaultRightPanelWidth(kind: RightPanelKind, windowWidth: number, sidebarCollapsed: boolean, readable = false): number {
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : currentSidebarWidth
   const available = Math.max(0, windowWidth - sidebarWidth)
-  const preferred = READABLE_PANEL_KINDS.has(kind)
+  const preferred = readable || READABLE_PANEL_KINDS.has(kind)
     ? available * 0.5
     : windowWidth * RIGHT_PANEL_WIDTH_RATIO
   return clampRightPanelWidth(preferred, windowWidth, sidebarCollapsed, 1)
@@ -327,8 +328,9 @@ export const useUIStore = create<UIState>()(
           }
         }),
 
-      openRightPanel: (panel) =>
+      openRightPanel: (payload) =>
         set((s) => {
+          const { readable = false, ...panel } = payload
           const id = buildRightPanelId(panel)
 
           // Auto-opened Computer panel tracks "the conversation you're
@@ -364,8 +366,8 @@ export const useUIStore = create<UIState>()(
               // A document opened again (at another citation) keeps the width the person gave it.
               width: DOCUMENT_PANEL_KINDS.has(panel.kind)
                 ? (panel.width ?? nextColumns[ci].width)
-                : READABLE_PANEL_KINDS.has(panel.kind)
-                  ? (panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed))
+                : READABLE_PANEL_KINDS.has(panel.kind) || readable
+                  ? (panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed, readable))
                   : nextColumns[ci].width,
               panels: nextPanels,
             }
@@ -391,7 +393,7 @@ export const useUIStore = create<UIState>()(
               nextPanels[pi] = instance
               nextColumns[ci] = {
                 ...nextColumns[ci],
-                width: panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed),
+                width: panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed, readable),
                 panels: nextPanels,
               }
               return { rightColumns: nextColumns }
@@ -405,7 +407,7 @@ export const useUIStore = create<UIState>()(
             const column: RightPanelColumn = {
               id: rightColumns[0]?.id ?? crypto.randomUUID(),
               panels: [instance],
-              width: panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed),
+              width: panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed, readable),
               split: 0.5,
             }
             return { rightColumns: [column] }
@@ -424,7 +426,7 @@ export const useUIStore = create<UIState>()(
           // stay single-column so the chat pane is never squeezed.
           if (rightColumns.length < columnLimit) {
             const defaultWidth = Math.round(
-              defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed)
+              defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed, readable)
             )
             const column: RightPanelColumn = {
               id: crypto.randomUUID(),
@@ -463,7 +465,7 @@ export const useUIStore = create<UIState>()(
             nextPanels[victim.pi] = instance
             return {
               ...c,
-              width: panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed),
+              width: panel.width ?? defaultRightPanelWidth(panel.kind, s.windowWidth, s.sidebarCollapsed, readable),
               panels: nextPanels,
             }
           })

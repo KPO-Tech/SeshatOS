@@ -44,7 +44,7 @@ function PassageRow({ passage, expanded }: { passage: Passage; expanded: boolean
         <Meter score={passage.score} />
       </div>
       <div
-        className={`whitespace-pre-wrap break-words text-[12.5px] leading-[1.6] text-app-text-secondary ${open ? '' : expanded ? 'line-clamp-6' : 'line-clamp-4'}`}
+        className={`whitespace-pre-wrap break-words leading-[1.6] text-app-text-secondary ${expanded ? 'text-[13.5px]' : 'text-[12.5px]'} ${open ? '' : expanded ? 'line-clamp-6' : 'line-clamp-4'}`}
       >
         {body}
       </div>
