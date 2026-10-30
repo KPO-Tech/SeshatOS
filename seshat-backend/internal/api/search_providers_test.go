@@ -65,6 +65,7 @@ func TestTheRerankModelsOfAProviderFallBackToTheCatalogWhenItsListCannotBeRead(t
 func TestTheShapeOfARerankRequestFollowsTheServiceTheEndpointBelongsTo(t *testing.T) {
 	require.Equal(t, "cohere", rerankStyleFor("https://openrouter.ai/api/v1/rerank"))
 	require.Equal(t, "cohere", rerankStyleFor("https://api.cohere.com/v2/rerank"))
+	require.Equal(t, "cohere", rerankStyleFor("https://api.jina.ai/v1/rerank"))
 	require.Equal(t, "voyage", rerankStyleFor("https://api.voyageai.com/v1/rerank"))
 	require.Equal(t, "", rerankStyleFor("http://localhost:8083/rerank"), "a local server gets the fields of every known server")
 }

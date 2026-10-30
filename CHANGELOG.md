@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Jina AI and the newer Cohere and Voyage models for the rerank of Knowledge.** Config > Search offers Jina (`jina-reranker-v3.5` and three more), Cohere adds `rerank-v5.0-pro`, `rerank-v5.0-fast` and `rerank-v4.0-fast`, and Voyage adds `rerank-3` and `rerank-3-lite` (seshat-runtime v1.12.5). The default of Cohere and Voyage stays the model that was measured.
+
 ### Fixed
 
 - **Formulas are drawn in cards and tables, and while the answer is written.** A formula in a card, a callout, a step or a table cell showed its `$…$` source, and in a message the formulas appeared only once it was finished. They are now typeset as they close, and one that cannot be read stays as muted text instead of turning the paragraph red.
