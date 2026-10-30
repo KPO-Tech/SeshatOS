@@ -40,8 +40,8 @@ and [0009](decisions/0009-lighter-rich-answers-prompt.md).
 
 - **Open a file at a line or a page.** `FileRef` opens a text file in the Files panel; the line and the page it can carry are not
   used yet, and the panel has no way to scroll to a line.
-- **A Widget layer.** A sandboxed iframe for what the catalog cannot say (a simulator, a small tool).
-- **Patch a drawing in place.** Change one box of an architecture drawing without drawing it again (an artifacts panel).
+- **Interactive widgets, artifacts and projects.** Sliders with live formulas, 3D scenes, HTML prototypes and real sites run and tested by the agent in the browser: three levels (declarative with state, an Artifacts panel, projects), how to make them reliable, the order to do them in, and the sources are in [0010](decisions/0010-interactive-widgets-and-artifacts.md). To discuss, not scheduled.
+- **Patch a drawing in place.** Change one box of an architecture drawing without drawing it again (it comes with the Artifacts panel of 0010).
 - **More kinds of curves.** Parametric and polar curves, implicit curves (a circle), inequalities, 3D surfaces, a neural network
   drawn as layers.
 - **Forms and inputs in an answer**, and an answer that updates in place.
