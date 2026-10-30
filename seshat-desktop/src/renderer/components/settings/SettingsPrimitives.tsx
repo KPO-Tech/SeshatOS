@@ -25,7 +25,7 @@ export function Panel({ title, children }: { title: string; children: ReactNode 
   )
 }
 
-export function Row({ title, description, action }: { title: string; description: string; action?: string }) {
+export function Row({ title, description, action, children }: { title: string; description: string; action?: string; children?: ReactNode }) {
   return (
     <div className="flex min-h-10 items-center justify-between gap-6">
       <div>
@@ -37,6 +37,7 @@ export function Row({ title, description, action }: { title: string; description
           {action}
         </button>
       )}
+      {children}
     </div>
   )
 }

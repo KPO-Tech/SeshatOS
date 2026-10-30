@@ -11,6 +11,11 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **An update installs with one click and no wizard.** Restarting into a downloaded update runs the installer silently and opens the app again by itself, instead of showing the installer's pages.
+- **A downloaded update is no longer missed.** The app remembers that an update is ready and shows it when a window opens, and Settings > About has a Check for updates button and a Restart and install button.
+
 ## [0.2.0] - 2026-10-30
 
 ### Highlights

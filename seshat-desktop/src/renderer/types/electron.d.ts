@@ -127,6 +127,7 @@ interface Window {
     updates?: {
       checkNow: () => Promise<{ ok: boolean; error?: string }>
       quitAndInstall: () => Promise<void>
+      ready: () => Promise<{ version: string } | null>
       onAvailable: (listener: (payload: { version: string }) => void) => () => void
       onNotAvailable: (listener: () => void) => () => void
       onDownloaded: (listener: (payload: { version: string }) => void) => () => void
