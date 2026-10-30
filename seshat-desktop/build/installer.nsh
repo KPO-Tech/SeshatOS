@@ -6,9 +6,9 @@
   !define MUI_BGCOLOR "2B2521"
   !define MUI_TEXTCOLOR "F1DEC8"
   !define MUI_WELCOMEPAGE_TITLE "Welcome to SeshatOS"
-  !define MUI_WELCOMEPAGE_TEXT "Your AI workspace, running on your computer.$\r$\n$\r$\nThis wizard installs SeshatOS. The first time you open it, you choose which models to download (the voice and the titles), or none.$\r$\n$\r$\nClick Next to continue."
+  !define MUI_WELCOMEPAGE_TEXT "Your AI workspace, running on your computer.$\r$\n$\r$\nThis wizard installs SeshatOS. It downloads nothing now: the first time you open it, you choose which local features to add (smart titles, voice dictation, scanned documents), or none.$\r$\n$\r$\nClick Next to continue."
   !define MUI_FINISHPAGE_TITLE "SeshatOS is installed"
-  !define MUI_FINISHPAGE_TEXT "Open SeshatOS to finish setting it up.$\r$\n$\r$\nYou can change everything you choose there later in Config."
+  !define MUI_FINISHPAGE_TEXT "Open SeshatOS to finish setting it up. The features you pick are downloaded then, from 80 MB to about 1 GB each, and you can change them later in Config."
   !insertmacro MUI_PAGE_WELCOME
 !macroend
 

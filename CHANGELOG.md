@@ -71,6 +71,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **The first-run setup tells the truth about what it downloads.** The total now counts the engines that run the models (llama.cpp, whisper.cpp) when they are not on the computer yet, the welcome no longer promises two choices when there are three, macOS says why local dictation is missing, and a failed download can be tried again from the last screen without redoing the others. The Windows installer text names the three features and says it downloads nothing itself.
 - **The arrows of an architecture drawing keep clear of the boxes.** They go around the titles and items in their way, climb to the panel when an item is boxed in, no longer run over each other, and their labels (now at most two lines) stay off the text of the boxes and of the other arrows.
 - **Ask answered "No passage found" with every model.** The Knowledge agent was never given its two tools (the client built for a turn started from the engine's own tools), so the request carried none and GLM models wrote their call as text. The agent now has them.
 - **Ask conversations are kept apart from the chat's** after a restart; they used to be created without telling the server which view they came from.

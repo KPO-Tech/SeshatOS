@@ -8,20 +8,26 @@ export type Choice = { install: boolean; modelId: string }
 export type SetupComponentId = 'title' | 'speech' | 'ocr'
 export type Choices = Partial<Record<SetupComponentId, Choice>>
 
-type Plan = { components: Array<{ id: SetupComponentId; available: boolean; options: Array<{ id: string; sizeBytes: number; installed?: boolean }> }> }
+type PlanComponent = { id: SetupComponentId; available: boolean; engineBytes?: number; options: Array<{ id: string; sizeBytes: number; installed?: boolean }> }
+type Plan = { components: PlanComponent[] }
 
 /** What choosing an option downloads: nothing when its files are already on this computer. */
 export function bytesToDownload(option: { sizeBytes: number; installed?: boolean }): number {
   return option.installed ? 0 : option.sizeBytes
 }
 
-/** What the person has ticked, in bytes: the models only, the engines that run them are small next to them. */
+/** What a ticked component downloads: its model, and the engine that runs it when that is not on this computer yet. */
+function componentBytes(component: PlanComponent, modelId: string): number {
+  const option = component.options.find((candidate) => candidate.id === modelId)
+  return (option ? bytesToDownload(option) : 0) + (component.engineBytes ?? 0)
+}
+
+/** What the person has ticked, in bytes: the models and the engines that run them. */
 export function totalDownloadBytes(plan: Plan, choices: Choices): number {
   return plan.components.reduce((total, component) => {
     const choice = choices[component.id]
     if (!component.available || !choice?.install) return total
-    const option = component.options.find((candidate) => candidate.id === choice.modelId)
-    return total + (option ? bytesToDownload(option) : 0)
+    return total + componentBytes(component, choice.modelId)
   }, 0)
 }
 
@@ -38,8 +44,7 @@ export function overallProgress(plan: Plan, choices: Choices, progress: Partial<
   for (const component of plan.components) {
     const choice = choices[component.id]
     if (!component.available || !choice?.install) continue
-    const option = component.options.find((candidate) => candidate.id === choice.modelId)
-    const expected = option ? bytesToDownload(option) : 0
+    const expected = componentBytes(component, choice.modelId)
     const item = progress[component.id]
     if (item?.status === 'error') continue
     totalBytes += expected

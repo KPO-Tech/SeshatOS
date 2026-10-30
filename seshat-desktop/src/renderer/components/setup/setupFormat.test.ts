@@ -39,6 +39,18 @@ describe('setup choices', () => {
     expect(totalDownloadBytes(plan, {})).toBe(0)
   })
 
+  it('counts the engine of a component that is not on this computer yet', () => {
+    const withEngines = {
+      components: [
+        { ...plan.components[0], engineBytes: 19_000_000 },
+        { ...plan.components[1], engineBytes: 0 }
+      ]
+    }
+    expect(totalDownloadBytes(withEngines, defaultChoices(withEngines))).toBe(658_000_000)
+    // An engine only counts for a component that is ticked.
+    expect(totalDownloadBytes(withEngines, { title: { install: false, modelId: 'a' }, speech: { install: true, modelId: 'base' } })).toBe(148_000_000)
+  })
+
   it('keeps a margin when it asks whether the download fits', () => {
     expect(fitsOnDisk(639_000_000, 100_000_000_000)).toBe(true)
     expect(fitsOnDisk(639_000_000, 1_000_000_000)).toBe(false)
