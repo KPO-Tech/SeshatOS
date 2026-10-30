@@ -46,6 +46,10 @@ export function renderMath(tex: string, display: boolean): string | null {
 /** A formula of an answer. One KaTeX cannot read stays as the text the model wrote, in the muted colour, and does not colour the page. */
 export const KatexMath = memo(function KatexMath({ tex, display }: { tex: string; display: boolean }) {
   const html = renderMath(tex, display)
+  if (html === null && display) {
+    // Its lines stay lines: a formula that failed is read as the text it is.
+    return <pre className="my-3 overflow-x-auto whitespace-pre-wrap rounded-md bg-[var(--surface-muted)] px-3 py-2 font-mono text-[0.9em] text-[var(--text-muted)]">{tex}</pre>
+  }
   if (html === null) {
     return <code className="rounded-[3px] bg-[var(--surface-muted)] px-1 py-px font-mono text-[0.9em] text-[var(--text-muted)]">{tex}</code>
   }
