@@ -186,6 +186,9 @@ A disk image per processor (`arm64` for Apple silicon, `x64` for Intel), built o
 with a backend sidecar cross-compiled for `darwin`. An AppImage cannot run on macOS; the disk image is its equivalent there.
 
 This build is **experimental**: it has not been run on a Mac yet, and the job is allowed to fail without stopping the release.
+Its backend is built without CGO, so it has no built-in OCR (nativedoc): the app says so where it offers to read scanned documents
+(the wizard and Config > Documents), and the optional Indra reader is the way to read them there. Building the OCR in would need the
+darwin ONNX Runtime library and a Mac to try it on.
 It is not signed or notarized (that needs an Apple developer account), so macOS asks for confirmation at the first launch
 (right-click the app, then Open) and the app does not update itself there (Squirrel.Mac only installs signed updates): the person
 downloads the new version from the website. The executable is ad-hoc signed (`identity: "-"`), which Apple silicon needs to run

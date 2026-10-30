@@ -93,8 +93,15 @@ Installers are attached to each [release](https://github.com/KPO-Tech/SeshatOS/r
 |---|---|
 | Windows (64-bit) | the `.exe` installer |
 | Linux (64-bit) | the `.AppImage` (any distribution) or the `.deb` (Debian, Ubuntu) |
+| macOS (Apple silicon or Intel) | the `.dmg` for your processor. **Experimental**: it has not been run on a Mac yet, and it has no built-in reader for scanned documents (the optional Indra reader in Config > Documents can read them) |
 
-There is no macOS build yet. Every release also carries a `SHA256SUMS.txt` to check what you downloaded. The installers are not code-signed yet, so Windows SmartScreen may warn on the first launch.
+Every release also carries a `SHA256SUMS.txt` to check what you downloaded.
+
+**The installers are not signed yet** (a certificate costs money and the project has none). The first time you open one:
+
+- **Windows**: SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
+- **macOS**: right-click the app, choose **Open**, then confirm. The app does not update itself on macOS: download the new version from the release page.
+- **Linux**: nothing to confirm; make the `.AppImage` executable first (`chmod +x`).
 
 To build SeshatOS from source instead, see below.
 
