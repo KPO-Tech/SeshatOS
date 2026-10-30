@@ -57,6 +57,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **The first-run wizard finds the models already on the computer**, downloads everything at once and shows how far all of it is.
 - **One version of the app with everything on**; a release picks what it shows.
 - **`make dev` keeps your data between starts** and builds the backend with the native OCR when there is a C compiler; `make dev-reset` forgets the dev install completely.
+- **The first-run setup connects a model.** A new step after the welcome lists the providers built into the runtime, takes the API key (or the address of a local Ollama), saves it, makes it the default and loads its models. It can be skipped, and a computer that already has a provider shows it as connected. Before, the setup ended on an app that could not answer until a provider was added in Config.
 
 ### Changed
 
