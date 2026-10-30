@@ -113,7 +113,7 @@ jobs:
           test -f seshat-desktop/resources/backend/libpdfium.so
           test -f seshat-desktop/resources/backend/.nativedoc-enabled
 
-      # What a release shows: public hides what is not ready (Knowledge, the store, accounts, SeshatCloud), see
+      # What a release shows: public hides what is not ready (accounts, SeshatCloud), see
       # seshat-desktop/src/renderer/lib/edition.ts. Everything else, the app on the main branch included, shows it all: change this
       # one value, in the three build steps, to release with more or less.
       - name: Build renderer/main
@@ -187,7 +187,7 @@ jobs:
           test -f seshat-desktop/resources/backend/onnxruntime.dll
           test -f seshat-desktop/resources/backend/.nativedoc-enabled
 
-      # What a release shows: public hides what is not ready (Knowledge, the store, accounts, SeshatCloud), see
+      # What a release shows: public hides what is not ready (accounts, SeshatCloud), see
       # seshat-desktop/src/renderer/lib/edition.ts. Everything else, the app on the main branch included, shows it all: change this
       # one value, in the three build steps, to release with more or less.
       - name: Build renderer/main
@@ -262,7 +262,7 @@ jobs:
       - name: Make backend binary executable
         run: chmod +x seshat-desktop/resources/backend/seshat-backend
 
-      # What a release shows: public hides what is not ready (Knowledge, the store, accounts, SeshatCloud), see
+      # What a release shows: public hides what is not ready (accounts, SeshatCloud), see
       # seshat-desktop/src/renderer/lib/edition.ts. Everything else, the app on the main branch included, shows it all: change this
       # one value, in the three build steps, to release with more or less.
       - name: Build renderer/main
