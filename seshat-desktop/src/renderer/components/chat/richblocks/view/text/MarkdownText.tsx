@@ -2,11 +2,13 @@ import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import { KatexMath, isMathBlockNode, mathKind } from '@renderer/lib/math'
 import { useRichLink } from '../links/richLinks'
 
 /** True when a text uses Markdown that a plain paragraph would show as stray symbols. */
 export function hasMarkdown(text: string): boolean {
-  return /\*\*|__|`|\[[^\]]+\]\([^)]+\)|^\s*(?:[-*+]|\d+\.)\s|^#{1,6}\s|\n/m.test(text)
+  return /\*\*|__|`|\$[^$\n]+\$|\[[^\]]+\]\([^)]+\)|^\s*(?:[-*+]|\d+\.)\s|^#{1,6}\s|\n/m.test(text)
 }
 
 function openLink(event: { preventDefault: () => void }, href: string | undefined) {
@@ -39,13 +41,17 @@ const components: Components = {
   h4: ({ children }) => <div className="mb-1 mt-2 font-semibold text-app-text first:mt-0">{children}</div>,
   blockquote: ({ children }) => <blockquote className="my-1.5 border-0 border-l-2 border-solid border-app-border pl-2.5 text-app-text-secondary">{children}</blockquote>,
   a: Anchor,
-  pre: ({ children }) => <pre className="my-2 overflow-x-auto rounded-md border border-solid border-app-border-subtle bg-[var(--surface-muted)] px-3 py-2 font-mono text-[12px] leading-relaxed first:mt-0 last:mb-0">{children}</pre>,
-  code: ({ className, children }) =>
-    className ? (
+  pre: ({ node, children }) =>
+    isMathBlockNode(node) ? <>{children}</> : <pre className="my-2 overflow-x-auto rounded-md border border-solid border-app-border-subtle bg-[var(--surface-muted)] px-3 py-2 font-mono text-[12px] leading-relaxed first:mt-0 last:mb-0">{children}</pre>,
+  code: ({ className, children }) => {
+    const kind = mathKind(className)
+    if (kind) return <KatexMath tex={String(children).replace(/\n$/, '')} display={kind === 'display'} />
+    return className ? (
       <code className={className}>{children}</code>
     ) : (
       <code className="rounded-[3px] bg-[var(--surface-muted)] px-1 py-px font-mono text-[0.9em]">{children}</code>
-    ),
+    )
+  },
   table: ({ children }) => (
     <div className="my-2 overflow-x-auto">
       <table className="w-full border-collapse text-[0.95em]">{children}</table>
@@ -60,7 +66,7 @@ const components: Components = {
  * else, so it is drawn, not shown as symbols. A seshat-ui fence inside it stays code: a component does not nest answers.
  */
 export function MarkdownText({ text, className = '' }: { text: string; className?: string }) {
-  const remarkPlugins = useMemo(() => [remarkGfm], [])
+  const remarkPlugins = useMemo(() => [remarkGfm, remarkMath], [])
   return (
     <div className={className}>
       <ReactMarkdown remarkPlugins={remarkPlugins} components={components}>

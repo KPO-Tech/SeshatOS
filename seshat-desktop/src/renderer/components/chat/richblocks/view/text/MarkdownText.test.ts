@@ -9,6 +9,7 @@ describe('hasMarkdown', () => {
     expect(hasMarkdown('- one\n- two')).toBe(true)
     expect(hasMarkdown('1. first')).toBe(true)
     expect(hasMarkdown('line one\nline two')).toBe(true)
+    expect(hasMarkdown(String.raw`$\alpha \approx 1{,}5434$`)).toBe(true)
   })
 
   it('sees a citation of Ask, which is a link by the time it reaches a cell', () => {
