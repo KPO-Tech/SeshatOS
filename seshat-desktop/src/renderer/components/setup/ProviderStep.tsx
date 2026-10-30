@@ -8,7 +8,9 @@ const FIELD =
 
 // The first thing the app needs to answer: a model to talk to. A cloud key, or a local server such as Ollama.
 export function ProviderStep({ provider }: { provider: Provider }) {
-  const { choices, selected, selectedId, select, apiKey, setApiKey, baseUrl, setBaseUrl, needsKey, canConnect, status, connectedName, error, connect } = provider
+  const { choices, selected, selectedId, select, apiKey, setApiKey, baseUrl, setBaseUrl, needsKey, canConnect, status, connectedName, error, unverified, connect } = provider
+
+  const busy = status === 'checking' || status === 'saving'
 
   if (status === 'connected') {
     return (
@@ -68,14 +70,27 @@ export function ProviderStep({ provider }: { provider: Provider }) {
             {needsKey ? 'The key is stored encrypted on this computer and only sent to the provider.' : selected.description || 'Runs on this computer, no key needed.'}
           </p>
           {error && <p className="m-0 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</p>}
-          <button
-            type="button"
-            disabled={!canConnect || status === 'saving'}
-            onClick={() => void connect()}
-            className="h-11 cursor-pointer self-start rounded-full border-0 bg-[var(--accent-primary)] px-7 text-[14px] font-semibold text-white transition-[filter] duration-150 hover:brightness-110 disabled:cursor-default disabled:opacity-45"
-          >
-            {status === 'saving' ? 'Connecting' : 'Connect'}
-          </button>
+          {unverified && <p className="m-0 text-[13px] leading-[1.5] text-[var(--text-secondary)]">{unverified} You can save it anyway and check it with your first message.</p>}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              disabled={!canConnect || busy}
+              onClick={() => void connect()}
+              className="h-11 cursor-pointer rounded-full border-0 bg-[var(--accent-primary)] px-7 text-[14px] font-semibold text-white transition-[filter] duration-150 hover:brightness-110 disabled:cursor-default disabled:opacity-45"
+            >
+              {status === 'checking' ? 'Checking' : status === 'saving' ? 'Connecting' : 'Connect'}
+            </button>
+            {unverified && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void connect(true)}
+                className="h-11 cursor-pointer rounded-full border border-[var(--border-soft)] bg-transparent px-6 text-[14px] text-[var(--text-secondary)] transition-colors duration-150 hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-45"
+              >
+                Save anyway
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

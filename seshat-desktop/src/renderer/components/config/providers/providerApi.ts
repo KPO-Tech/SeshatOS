@@ -40,6 +40,13 @@ export async function createProviderSetting(params: {
   return api.post<ProviderSetting>('/settings/providers', params).then(afterChange)
 }
 
+export type ProviderKeyCheck = { status: 'ok' | 'rejected' | 'unreachable' | 'unchecked'; message?: string }
+
+// Asks the provider whether it accepts a key, before anything is saved.
+export function checkProviderKey(params: { provider: string; api_key?: string; base_url?: string }) {
+  return api.post<ProviderKeyCheck>('/settings/providers/check-key', params)
+}
+
 export async function fetchProviderModels(settingId: string) {
   const result = await api.get<{ models: ProviderModel[]; count: number }>(`/settings/providers/${settingId}/models`)
   return result.models ?? []

@@ -163,6 +163,7 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 
 	// The providers a user can set up (main + the models.dev catalog): read-only, so it does not need the settings to be writable.
 	apiV1.Handle("/settings/providers/catalog", app.authMiddleware(http.HandlerFunc(app.handleProviderCatalog)))
+	apiV1.Handle("/settings/providers/check-key", app.authMiddleware(http.HandlerFunc(app.handleProviderKeyCheck)))
 	apiV1.Handle("/settings/providers", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleProviderSettings))))
 	apiV1.Handle("/settings/providers/", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleProviderSettingByID))))
 	apiV1.Handle("/settings/embedder", app.requireSettingsWritable(app.authMiddleware(http.HandlerFunc(app.handleEmbedderConfig))))
