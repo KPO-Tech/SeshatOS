@@ -28,7 +28,8 @@ function permissionModeColor(mode: UIPermissionMode): 'green' | 'orange' | 'red'
 // Browser/Terminal only render once a conversation is open; permission mode
 // is a global setting, so it's available from Home too.
 //
-// In the Ask view only the session and the browser are offered: its agent has no shell, and its permissions are not the person's to set.
+// In the Ask view only the browser is offered: the cards of the session are already beside the conversation, its agent has no shell, and its
+// permissions are not the person's to set.
 export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { conversationId: string | null; variant?: 'chat' | 'knowledge' }) {
   const permissionMode = useUIStore((s) => s.permissionMode)
   const setPermissionMode = useUIStore((s) => s.setPermissionMode)
@@ -56,7 +57,7 @@ export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { 
     <div className="flex items-center gap-0.5" ref={rootRef}>
       {conversationId && (
         <>
-          <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Session" active={computerOpen} onClick={toggleComputer} />
+          {variant === 'chat' && <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Session" active={computerOpen} onClick={toggleComputer} />}
           <IconButton icon={<Globe size={14} />} variant="ghost" size={26} title="Browser" active={browserOpen} onClick={toggleBrowser} />
           {variant === 'chat' && <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title="Terminal" active={terminalOpen} onClick={toggleTerminal} />}
         </>
