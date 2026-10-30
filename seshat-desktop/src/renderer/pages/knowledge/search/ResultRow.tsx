@@ -28,6 +28,11 @@ const MORE_PASSAGES = 12
 const MORE_SHOWN = 4
 const MANY_PAGES = 4
 
+// The deepest heading of a section path, for a chip that has no page to name the passage by: the whole path can be a sentence long.
+function lastHeading(section: string): string {
+  return sectionTrail(section).split(' › ').pop() ?? ''
+}
+
 function Chip({ children }: { children: string }) {
   return <span className="min-w-0 max-w-full truncate rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-[11.5px] text-[var(--text-secondary)]">{children}</span>
 }
@@ -130,9 +135,9 @@ export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = f
                 type="button"
                 onClick={() => onOpen(hit)}
                 title={sectionTrail(hit.section) || 'Open this passage'}
-                className="cursor-pointer whitespace-nowrap rounded-[5px] border border-app-border-subtle bg-transparent px-1.5 py-px text-[11px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                className="min-w-0 max-w-[14rem] cursor-pointer truncate whitespace-nowrap rounded-[5px] border border-app-border-subtle bg-transparent px-1.5 py-px text-[11px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
               >
-                {pagesLabel(hit.pages) || sectionTrail(hit.section) || 'passage'}
+                {pagesLabel(hit.pages) || lastHeading(hit.section) || 'passage'}
               </button>
             ))}
             {others.length > MORE_SHOWN && (

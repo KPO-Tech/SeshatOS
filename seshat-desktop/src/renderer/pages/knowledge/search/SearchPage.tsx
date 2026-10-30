@@ -226,7 +226,7 @@ export function SearchPage() {
             </div>
           </div>
 
-          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
             {state.phase === 'loading' && <p className="m-0 text-[13px] text-[var(--text-muted)]">Searching</p>}
 
             {state.phase === 'failed' && (
