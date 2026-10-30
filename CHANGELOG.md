@@ -18,6 +18,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **A formula that ends at the end of a line no longer swallows the rest of the answer.** A model writes a displayed formula as `$$` ... `\end{array}$$`, with the closing `$$` after the last line of content, and the Markdown reader only closes a formula on a line of its own: everything after it, up to the end of the message, was drawn as one failed formula, in red or as grey code. Such formulas are now closed where the model meant them to end, and a `$$` that has no partner is shown as text.
 - **Formulas are drawn in cards and tables, and while the answer is written.** A formula in a card, a callout, a step or a table cell showed its `$…$` source, and in a message the formulas appeared only once it was finished. They are now typeset as they close, and one that cannot be read stays as muted text instead of turning the paragraph red.
 - **You can scroll up while the agent writes.** The conversation followed the end of the answer so eagerly that a scroll up was taken back down before it started. Scrolling up (wheel, touch, keys or the scrollbar) now stops the follow at once, and it starts again when you come back to the end or use the arrow.
 - **An update installs with one click and no wizard.** Restarting into a downloaded update runs the installer silently and opens the app again by itself, instead of showing the installer's pages.
