@@ -102,42 +102,42 @@ export function ProjectsPage() {
   const emptyAll = projects.length === 0
 
   return (
-    <section className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-8 pb-10 pt-8">
+    <section className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pb-8 pt-5">
       <div className="mx-auto w-full max-w-[1280px]">
         <header className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-[var(--accent-primary)]" style={{ background: 'color-mix(in srgb, var(--accent-primary) 16%, transparent)' }}>
-              <Folder theme="filled" size={26} />
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[var(--accent-primary)]" style={{ background: 'color-mix(in srgb, var(--accent-primary) 16%, transparent)' }}>
+              <Folder theme="filled" size={20} />
             </span>
             <div className="min-w-0">
-              <h1 className="m-0 text-[26px] font-semibold leading-tight text-[var(--text-primary)]">Projects</h1>
-              <p className="m-0 mt-1 text-[13.5px] text-[var(--text-muted)]">Open, organize and work with your local projects. Start a session, explore files, or continue where you left off.</p>
+              <h1 className="m-0 text-[19px] font-semibold leading-tight text-[var(--text-primary)]">Projects</h1>
+              <p className="m-0 mt-0.5 text-[12px] text-[var(--text-muted)]">Open, organize and work with your local projects. Start a session, explore files, or continue where you left off.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => void handleNewProject()}
-            className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--accent-primary)] px-4 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+            className="flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-3 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90"
           >
-            <FolderPlus size={16} />
+            <FolderPlus size={14} />
             New project
           </button>
         </header>
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-2">
           <div className="relative min-w-0 flex-1">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
-              <Search size={17} />
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <Search size={15} />
             </span>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search projects by name, folder, description or tag..."
               aria-label="Search projects"
-              className="h-11 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-11 pr-4 text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
+              className="h-9 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-9 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
             />
           </div>
-          <div className="flex shrink-0 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-1" role="group" aria-label="View">
+          <div className="flex shrink-0 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-0.5" role="group" aria-label="View">
             {(['grid', 'list'] as const).map((value) => (
               <button
                 key={value}
@@ -148,9 +148,9 @@ export function ProjectsPage() {
                   setMode(value)
                   saveSetting(VIEW_KEY, value)
                 }}
-                className={`flex size-9 cursor-pointer items-center justify-center rounded-lg border-0 ${mode === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                className={`flex size-8 cursor-pointer items-center justify-center rounded-md border-0 ${mode === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
               >
-                {value === 'grid' ? <GridView size={17} /> : <ListView size={17} />}
+                {value === 'grid' ? <GridView size={15} /> : <ListView size={15} />}
               </button>
             ))}
           </div>
@@ -166,8 +166,8 @@ export function ProjectsPage() {
               }
             }))}
             trigger={({ toggle }) => (
-              <button type="button" onClick={toggle} aria-haspopup="menu" className="flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 text-[13.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
-                <Sort size={16} className="text-[var(--text-muted)]" />
+              <button type="button" onClick={toggle} aria-haspopup="menu" className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+                <Sort size={14} className="text-[var(--text-muted)]" />
                 {sortLabel}
                 <span className="text-[var(--text-muted)]">&#9662;</span>
               </button>
@@ -175,7 +175,7 @@ export function ProjectsPage() {
           />
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2.5" role="tablist" aria-label="Show">
+        <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Show">
           {PROJECT_TABS.map((item) => {
             const Icon = TAB_ICON[item.id]
             const selected = tab === item.id
@@ -186,11 +186,11 @@ export function ProjectsPage() {
                 role="tab"
                 aria-selected={selected}
                 onClick={() => setTab(item.id)}
-                className={`flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-3.5 text-[13.5px] font-medium transition-colors ${selected ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+                className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-[12.5px] font-medium transition-colors ${selected ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}
               >
-                <Icon size={15} />
+                <Icon size={14} />
                 {item.label}
-                <span className={`rounded-full px-2 py-0.5 text-[11.5px] leading-none ${selected ? 'bg-black/20 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{counts[item.id]}</span>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10.5px] leading-none ${selected ? 'bg-black/20 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{counts[item.id]}</span>
               </button>
             )
           })}
@@ -210,13 +210,13 @@ export function ProjectsPage() {
             )}
           </div>
         ) : mode === 'grid' ? (
-          <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(330px,1fr))] gap-4">
+          <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3">
             {shown.map((project) => (
               <ProjectCard key={project.id} project={project} files={files[project.rootPath]} now={now} actions={actions} />
             ))}
           </div>
         ) : (
-          <ul className="m-0 mt-5 flex list-none flex-col gap-2.5 p-0">
+          <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
             {shown.map((project) => (
               <ProjectRow key={project.id} project={project} files={files[project.rootPath]} now={now} actions={actions} />
             ))}
