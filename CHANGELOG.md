@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **The MCP servers of the list show their own logos.** Figma, Chrome, Hugging Face and the MCP mark come from the brand marks; Playwright, Context7, DBHub and Firecrawl use the logo each project publishes in its repository (Firecrawl's cut down from 100 KB to 3 KB). A server installed before keeps its vendor's logo and not the symbol it was saved with.
+
 ### Added
 
 - **A short list of MCP servers to install from the Plugins page.** Context7 (library documentation), Playwright and Chrome DevTools (browser), Sequential Thinking, DBHub (databases), Figma, Firecrawl (web scraping) and Hugging Face are offered as cards in the MCP servers section. A window shows what will run and where, what the server needs on the machine and what it asks for (a token or a connection string, kept as the server's own settings), then installs it and says at once whether it started.
