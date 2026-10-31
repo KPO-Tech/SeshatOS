@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **The Projects page has the proportions of Skills and Plugins.** The same margins, the same title and icon, search, filters and buttons, and project cards with the size and the corners of the other cards. The page now fills the width instead of stopping at a fixed width.
 - **The skills we offer show the logo of their project.** Remotion, Superpowers, Strix and the LinkedIn skills use the logo each publishes in its repository, on the card to install and on the cards and the page of their skills. A skill whose repository has no logo (data analysis, ppt-master, paperasse), or whose icon you chose yourself, keeps its icon.
 - **The MCP servers of the list show their own logos.** Figma, Chrome, Hugging Face and the MCP mark come from the brand marks; Playwright, Context7, DBHub and Firecrawl use the logo each project publishes in its repository (Firecrawl's cut down from 100 KB to 3 KB). A server installed before keeps its vendor's logo and not the symbol it was saved with.
 

@@ -18,7 +18,7 @@ export function ProjectRow({ project, files, now, actions }: Props) {
   return (
     <li className={`group flex items-center gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 transition-colors focus-within:border-[var(--accent-primary)] hover:border-[var(--accent-primary)] ${project.archived ? 'opacity-75' : ''}`}>
       <button type="button" onClick={() => actions.open(project)} aria-label={`Open ${project.name}`} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left">
-        <ProjectTile project={project} size={30} />
+        <ProjectTile project={project} size={36} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="truncate text-[13px] font-semibold text-[var(--text-primary)]" title={project.name}>
