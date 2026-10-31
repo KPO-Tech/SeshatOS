@@ -1,7 +1,7 @@
 import { Archive, Check, Edit, Delete, Folder, FolderOpen, MoreOne, Pin, Play, Time } from './icons'
 import type { ProjectSummary } from '@renderer/lib/projects'
 import { fileCountLabel, relativeTime } from '@renderer/lib/projectsView'
-import { Dropdown, type DropdownItem } from './Dropdown'
+import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { PROJECT_COLOR_VALUE, tileBackground } from './projectColors'
 import type { FileCount } from './useFileCounts'
 
@@ -42,12 +42,12 @@ export function TagList({ tags }: { tags: string[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {tags.slice(0, MAX_TAGS).map((tag) => (
-        <span key={tag} className="rounded-lg bg-[var(--surface-muted)] px-2.5 py-1 text-[12px] leading-none text-[var(--text-secondary)]">
+        <span key={tag} className="rounded-md bg-[var(--surface-muted)] px-2 py-1 text-[11px] leading-none text-[var(--text-secondary)]">
           {tag}
         </span>
       ))}
       {tags.length > MAX_TAGS && (
-        <span title={tags.slice(MAX_TAGS).join(', ')} className="rounded-lg bg-[var(--surface-muted)] px-2.5 py-1 text-[12px] leading-none text-[var(--text-muted)]">
+        <span title={tags.slice(MAX_TAGS).join(', ')} className="rounded-md bg-[var(--surface-muted)] px-2 py-1 text-[11px] leading-none text-[var(--text-muted)]">
           +{tags.length - MAX_TAGS}
         </span>
       )}
@@ -56,10 +56,10 @@ export function TagList({ tags }: { tags: string[] }) {
 }
 
 /** The coloured folder of a project. */
-export function ProjectTile({ project, size = 44 }: { project: ProjectSummary; size?: number }) {
+export function ProjectTile({ project, size = 36 }: { project: ProjectSummary; size?: number }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-xl"
+      className="flex shrink-0 items-center justify-center rounded-lg"
       style={{ width: size, height: size, background: tileBackground(project.color), color: PROJECT_COLOR_VALUE[project.color] }}
     >
       <Folder theme="filled" size={Math.round(size * 0.5)} />
@@ -71,7 +71,7 @@ export function ProjectTile({ project, size = 44 }: { project: ProjectSummary; s
 export function ActivityMark({ project }: { project: ProjectSummary }) {
   if (project.activeSessionCount === 0) return null
   return (
-    <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-[var(--accent-success)]" title="A conversation of this project is writing an answer">
+    <span className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[var(--accent-success)]" title="A conversation of this project is writing an answer">
       <span className="size-1.5 rounded-full bg-current" style={{ animation: 'pulse-opacity 1.1s ease-in-out infinite' }} />
       Working
     </span>
@@ -82,20 +82,20 @@ export function ProjectCard({ project, files, now, actions }: Props) {
   const last = relativeTime(project.lastActiveAt, now)
   return (
     <article
-      className={`group relative flex flex-col gap-3 rounded-2xl border bg-[var(--surface-panel)] p-4 transition-colors focus-within:border-[var(--accent-primary)] hover:border-[var(--accent-primary)] ${project.archived ? 'border-[var(--border-soft)] opacity-75' : 'border-[var(--border-soft)]'}`}
+      className={`@container group relative flex flex-col gap-2.5 rounded-xl border bg-[var(--surface-panel)] p-3.5 transition-colors focus-within:border-[var(--accent-primary)] hover:border-[var(--accent-primary)] ${project.archived ? 'border-[var(--border-soft)] opacity-75' : 'border-[var(--border-soft)]'}`}
     >
       <div className="flex items-start gap-3">
         <button type="button" onClick={() => actions.open(project)} aria-label={`Open ${project.name}`} className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 border-0 bg-transparent p-0 text-left">
           <ProjectTile project={project} />
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
-              <span className="truncate text-[15px] font-semibold text-[var(--text-primary)]" title={project.name}>
+              <span className="truncate text-[13.5px] font-semibold text-[var(--text-primary)]" title={project.name}>
                 {project.name}
               </span>
               {project.pinned && <Pin size={12} className="shrink-0 text-[var(--accent-primary)]" />}
               <ActivityMark project={project} />
             </span>
-            <span className="mt-0.5 block truncate font-mono text-[11.5px] text-[var(--text-muted)]" title={project.rootPath}>
+            <span className="mt-0.5 block truncate font-mono text-[10.5px] text-[var(--text-muted)]" title={project.rootPath}>
               {project.rootPath}
             </span>
           </span>
@@ -104,38 +104,38 @@ export function ProjectCard({ project, files, now, actions }: Props) {
           label={`Actions of ${project.name}`}
           items={menuItems(project, actions)}
           trigger={({ toggle }) => (
-            <button type="button" onClick={toggle} aria-label={`Actions of ${project.name}`} aria-haspopup="menu" className="flex size-7 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
-              <MoreOne size={16} />
+            <button type="button" onClick={toggle} aria-label={`Actions of ${project.name}`} aria-haspopup="menu" className="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+              <MoreOne size={15} />
             </button>
           )}
         />
       </div>
 
-      <p className="m-0 line-clamp-2 min-h-[40px] text-[13px] leading-5 text-[var(--text-secondary)]">{project.description || <span className="text-[var(--text-muted)]">No description yet.</span>}</p>
+      <p className="m-0 line-clamp-2 min-h-[34px] text-[12px] leading-[17px] text-[var(--text-secondary)]">{project.description || <span className="text-[var(--text-muted)]">No description yet.</span>}</p>
 
-      <div className="min-h-[26px]">
+      <div className="min-h-[22px]">
         <TagList tags={project.tags} />
       </div>
 
-      <div className="flex items-center gap-4 text-[12px] text-[var(--text-muted)]">
+      <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
         <span className="inline-flex items-center gap-1.5">
-          <Folder size={13} />
+          <Folder size={12} />
           {fileCountLabel(files?.count, files?.capped ?? false)}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Time size={13} />
+          <Time size={12} />
           {last ? `Last active ${last}` : 'No activity yet'}
         </span>
       </div>
 
-      <div className="mt-auto flex items-stretch gap-2.5">
-        <div className="flex min-w-0 flex-1">
+      <div className="mt-auto flex items-stretch gap-2">
+        <div className="flex min-w-0 flex-[1.35]">
           <button
             type="button"
             onClick={() => actions.startSession(project)}
-            className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-l-[10px] border border-r-0 border-[var(--border-soft)] bg-transparent px-3 py-2 text-[13px] font-medium text-[var(--text-primary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white"
+            className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-l-lg border border-r-0 border-[var(--border-soft)] bg-transparent px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white"
           >
-            <Play size={13} />
+            <Play size={12} />
             <span className="truncate">Start session</span>
           </button>
           <Dropdown
@@ -146,7 +146,7 @@ export function ProjectCard({ project, files, now, actions }: Props) {
               ...(project.lastSessionId ? [{ id: 'continue', label: 'Continue the last conversation', icon: <Check size={14} />, onSelect: () => actions.continueSession(project) }] : [])
             ]}
             trigger={({ toggle }) => (
-              <button type="button" onClick={toggle} aria-label="More ways to start a session" aria-haspopup="menu" className="flex h-full w-9 cursor-pointer items-center justify-center rounded-r-[10px] border border-l border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white">
+              <button type="button" onClick={toggle} aria-label="More ways to start a session" aria-haspopup="menu" className="flex h-full w-7 cursor-pointer items-center justify-center rounded-r-lg border border-l border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white">
                 &#9662;
               </button>
             )}
@@ -155,10 +155,12 @@ export function ProjectCard({ project, files, now, actions }: Props) {
         <button
           type="button"
           onClick={() => actions.openFolder(project)}
-          className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--border-soft)] bg-transparent px-3 py-2 text-[13px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)]"
+          title="Open folder"
+          aria-label={`Open the folder of ${project.name}`}
+          className="flex min-w-0 flex-none cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--border-soft)] bg-transparent px-2.5 py-1.5 text-[12px] font-medium @[340px]:flex-1 text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)]"
         >
           <FolderOpen size={14} />
-          <span className="truncate">Open folder</span>
+          <span className="hidden truncate @[340px]:inline">Open folder</span>
         </button>
       </div>
     </article>
