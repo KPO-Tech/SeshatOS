@@ -45,6 +45,8 @@ What it says:
 - **Embedding requests are half empty**: documents are small, so a request carries 27 passages on average where 64 fit. Batching
   across documents would divide the number of requests by about 2.3.
 
+**End to end (2026-10-31).** The same 60 files through the real pipeline (jobs, reading, chunking, storing, with an embedder that costs nothing and counts its calls) took 77 s and 85 s in two runs, against 82 s for the reading alone: reading is the time, and the rest of the pipeline (queue, chunking, storing, bookkeeping) costs a few seconds in all. 53 files were indexed and 7 scanned PDFs ended `Failed` as unreadable; trying them again costs about a second in all, because a scan has no text to read, so it is not worth changing. The measure leaves out the network: each document sends `ceil(passages / 64)` embedding requests, one after the other, so the time of a sequential run is the time of reading plus the time of those requests, and a pool of readers with one embedder in front of it hides the requests behind the reading. The latency of the user's provider therefore sets how much is gained, not whether to do it.
+
 Not measured, and to settle before the last lot: the time of the embedding calls themselves; which quota trips for the user's provider
 (per minute or per day, in requests or in tokens; the body of the 429 says); the speed of Docling, Indra and the native OCR on scans.
 
@@ -70,13 +72,11 @@ queue does, and the speed of reading. Lots, in the order they are done, each in 
    embedding provider's quota, back in 40 s"); the document that is being read is the only one shown as "Indexing", the others wait
    in a quiet grey, and "Failed" is kept for a document that cannot be read or stored. The error line of a real failure keeps its full
    text on hover. The runtime bump comes with this lot.
-4. **Several readers, one embedder (SeshatOS), after a new measure.** The runner becomes a pool of `N` workers,
+4. **Several readers, one embedder (SeshatOS).** The runner becomes a pool of `N` workers,
    `N = clamp(cores / 2, 1, 4)` (`SESHAT_INGEST_WORKERS` overrides it). The embedding step goes through a shared gate of one at a
    time. A worker that must use a serial engine (Indra, the native OCR, a Docling service set to one at a time) holds that engine's
    own gate, so those engines keep working exactly as today. A cap on the bytes being read at once (256 MB) keeps the memory in
-   check. Before it is built, the whole run is measured again from end to end with the provider the user now has, on a copy of the
-   test corpus: if the wait for the embeddings is no longer what takes the time, this is the next gain (2.66x on reading with four
-   workers). Tests: two workers never claim the same job, the gates hold, and the queue is drained.
+   check. The end-to-end measure above is the reason: reading is almost all of the time, and the gate hides the embedding requests behind it. Tests: two workers never claim the same job, the gates hold, and the queue is drained.
 5. **Dropped: fewer, fuller embedding requests.** Grouping the passages of several documents in one request only mattered if the number
    of requests tripped the quota. With a provider that does not refuse, it is complexity without a gain, and it makes the failure of
    one document harder to attribute.
