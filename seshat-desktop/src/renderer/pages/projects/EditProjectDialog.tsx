@@ -5,6 +5,8 @@ import { PROJECT_COLOR_LABEL, PROJECT_COLOR_VALUE } from './projectColors'
 
 type Props = {
   project: ProjectSummary
+  /** A description to start from (the first sentence of the README of the folder), used while the project has none. */
+  suggestedDescription?: string
   onSave: (details: { name: string; description: string; tags: string[]; color: ProjectColor }) => void
   onClose: () => void
 }
@@ -12,9 +14,10 @@ type Props = {
 const FIELD = 'w-full rounded-lg border border-app-border-subtle font-normal bg-[var(--surface-root)] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]'
 
 /** What a person says about a project: its name, a line about it, tags to find it by, and its colour. */
-export function EditProjectDialog({ project, onSave, onClose }: Props) {
+export function EditProjectDialog({ project, suggestedDescription = '', onSave, onClose }: Props) {
   const [name, setName] = useState(project.name)
-  const [description, setDescription] = useState(project.description)
+  const [description, setDescription] = useState(project.description || suggestedDescription)
+  const suggested = !project.description && suggestedDescription !== '' && description === suggestedDescription
   const [tags, setTags] = useState(project.tags.join(', '))
   const [color, setColor] = useState<ProjectColor>(project.color)
 
@@ -53,6 +56,7 @@ export function EditProjectDialog({ project, onSave, onClose }: Props) {
         <label className="mt-3 block text-[12px] font-medium text-[var(--text-secondary)]">
           Description
           <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="What this project is for" className={`${FIELD} mt-1 resize-none`} />
+          {suggested && <span className="mt-1 block text-[11px] font-normal text-[var(--text-muted)]">Taken from the README of the folder. Change it if it is not right.</span>}
         </label>
         <label className="mt-3 block text-[12px] font-medium text-[var(--text-secondary)]">
           Tags

@@ -105,14 +105,20 @@ export function notifyThemeChange(theme: ThemePreference) {
   window.dispatchEvent(new CustomEvent<{ theme: ThemePreference }>('seshat-theme-change', { detail: { theme } }))
 }
 
-/** The quick toggle of the sidebar: from a dark theme to Seshat Light, from a light one to Seshat Dark. */
-export function toggleStoredTheme(): ThemePreference {
-  const nextTheme: ThemePreference = getEffectiveTheme() === 'dark' ? 'light' : 'dark'
-  setStoredTheme(nextTheme)
-  applyTheme(nextTheme)
-  notifyThemeChange(nextTheme)
-  return nextTheme
+/** Chooses a theme: remembered, applied, and told to everything that shows the current one. */
+export function chooseTheme(theme: ThemePreference) {
+  setStoredTheme(theme)
+  applyTheme(theme)
+  notifyThemeChange(theme)
 }
+
+/** The three appearances of Seshat, which the button of the title bar offers; "auto" follows the system and is the fourth. */
+export const MAIN_THEMES: ReadonlyArray<{ id: ThemePreference; label: string }> = [
+  { id: 'light', label: 'Light' },
+  { id: 'seshat-night', label: 'Night' },
+  { id: 'dark', label: 'Dark' },
+  { id: 'auto', label: 'System' }
+]
 
 /** Keeps data-color-scheme right while the theme is "auto" and the system setting changes. Returns the unsubscribe. */
 export function followSystemScheme(): () => void {

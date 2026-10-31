@@ -1,7 +1,7 @@
 import { Archive, Check, Edit, Delete, Folder, FolderOpen, MoreOne, Pin, Play, Time } from './icons'
 import type { ProjectSummary } from '@renderer/lib/projects'
 import { fileCountLabel, relativeTime } from '@renderer/lib/projectsView'
-import { Dropdown, type DropdownItem } from './Dropdown'
+import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { PROJECT_COLOR_VALUE, tileBackground } from './projectColors'
 import type { FileCount } from './useFileCounts'
 

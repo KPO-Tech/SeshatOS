@@ -13,12 +13,15 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **The button of the title bar offers Light, Night, Dark and System.** Clicking the moon (or the sun) opens a small menu with a sample of each appearance and a tick on the one in use, instead of switching between dark and light.
+- **A new project starts from the first sentence of its README.** When a project is added, the description in the "Edit the project" dialog is the first sentence of the README of the folder (titles, badges, pictures and tables are passed over), and can be changed before saving.
 - **Adding a project asks for its details at once.** After choosing the folder, the "Edit the project" dialog opens over the list, with the name of the folder, so that the project can be given a name, a description, tags and a colour from the start. Closing it keeps the project as it was added.
 - **A redesigned Projects page.** Each project is a card with a coloured folder, its name and folder, a description, tags, the number of files and when it was last active, with "Start session" (and "Continue the last conversation") and "Open folder". A project can be pinned, archived and edited (name, description, tags, colour); tabs show All projects, Recent, Pinned, Active (a conversation is writing an answer) and Archived with their counts; the search looks in the name, folder, description and tags; the projects can be sorted and shown as a grid or a list. The number of files is counted in the background, stops at 5000+ for a very big folder, and leaves out `node_modules`, `.git` and the like.
 - **Seshat Night, a third Seshat appearance.** A blue-black dark theme with the orange of Seshat, in Settings > Appearance next to Seshat Dark and Seshat Light. Its colours were measured on the Projects design; the orange is a little darker than on the picture so that white text stays readable on buttons.
 
 ### Changed
 
+- **Seshat Light has a new palette:** a cool white, a pale blue-grey sidebar, deep navy text and very light borders, with peach tints for the accent, measured on the design the user shared.
 - **The sidebar is the same in a project as on the start page.** Skills, Plugins and Projects were hidden inside a project; they are shown everywhere, and only the list of tasks changes: a project shows its own conversations, and the start page shows none that belong to a project.
 
 ## [0.2.2] - 2026-10-31

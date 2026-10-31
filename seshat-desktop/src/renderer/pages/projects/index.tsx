@@ -4,11 +4,12 @@ import { useSessionStore } from '@renderer/stores/session'
 import { addProject, listProjects, removeProject, updateProject, type ProjectSummary } from '@renderer/lib/projects'
 import { arrangeProjects, countTabs, PROJECT_SORTS, PROJECT_TABS, type ProjectSort, type ProjectTab } from '@renderer/lib/projectsView'
 import { ConfirmDialog } from '@renderer/pages/knowledge/collections/ConfirmDialog'
-import { Dropdown } from './Dropdown'
+import { Dropdown } from '@renderer/components/ui/Dropdown'
 import { EditProjectDialog } from './EditProjectDialog'
 import { Archive, Folder, FolderPlus, GridView, ListView, Pin, Play, Search, Sort, Time } from './icons'
 import { ProjectCard, type ProjectActions } from './ProjectCard'
 import { ProjectRow } from './ProjectRow'
+import { readmeSentence } from './readmeSentence'
 import { useFileCounts } from './useFileCounts'
 
 type ViewMode = 'grid' | 'list'
@@ -47,6 +48,7 @@ export function ProjectsPage() {
   const [sort, setSort] = useState<ProjectSort>(() => readSetting<ProjectSort>(SORT_KEY, PROJECT_SORTS.map((item) => item.id), 'recent'))
   const [mode, setMode] = useState<ViewMode>(() => readSetting<ViewMode>(VIEW_KEY, ['grid', 'list'], 'grid'))
   const [editing, setEditing] = useState<ProjectSummary | null>(null)
+  const [suggestion, setSuggestion] = useState('')
   const [removing, setRemoving] = useState<ProjectSummary | null>(null)
   const [refresh, setRefresh] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -101,7 +103,10 @@ export function ProjectsPage() {
     setQuery('')
     const added = listProjects(sessions, streaming).find((item) => item.id === project.id)
     changed()
-    if (added) setEditing(added)
+    if (added) {
+      setSuggestion(added.description ? '' : await readmeSentence(added.rootPath))
+      setEditing(added)
+    }
     else navigate(`/projects/${encodeURIComponent(project.id)}`)
   }
 
@@ -234,10 +239,15 @@ export function ProjectsPage() {
       {editing && (
         <EditProjectDialog
           project={editing}
-          onClose={() => setEditing(null)}
+          suggestedDescription={suggestion}
+          onClose={() => {
+            setEditing(null)
+            setSuggestion('')
+          }}
           onSave={(details) => {
             updateProject(editing.id, editing.rootPath, details)
             setEditing(null)
+            setSuggestion('')
             changed()
           }}
         />
