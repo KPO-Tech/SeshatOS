@@ -23,7 +23,7 @@ const FORMATS: Array<{ icon: ReactNode; title: string; detail: string }> = [
 
 export function DocumentsAside() {
   return (
-    <aside className="flex w-full flex-col gap-3 xl:w-[290px] xl:shrink-0">
+    <aside className="flex w-full flex-col gap-3 @4xl:w-[290px] @4xl:shrink-0">
       <Card icon={<Info theme="outline" size={16} />} title="How it works">
         <p className="m-0 text-[12.5px] leading-[19px] text-[var(--text-secondary)]">
           SeshatOS reads a document with the readers built into the app, or with a document server you give it. The text is extracted, cut into passages and indexed, so that your agents can search it, analyze it and quote it.
