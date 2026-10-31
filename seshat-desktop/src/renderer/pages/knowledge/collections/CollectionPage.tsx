@@ -6,6 +6,8 @@ import { CollectionDialog } from './CollectionDialog'
 import { ConfirmDialog } from './ConfirmDialog'
 import { addDocument, deleteCollection, indexCollection, removeDocument, retryIndexing, updateCollection, type CollectionFile } from './collectionsApi'
 import { DocumentRow } from './DocumentRow'
+import { DocumentToolbar } from './DocumentToolbar'
+import { arrange, DEFAULT_VIEW, failedFiles, type DocumentView } from './documentOrder'
 import { openDocument } from './openDocument'
 import { fileState, plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
@@ -23,6 +25,8 @@ export function CollectionPage() {
   const [indexing, setIndexing] = useState(false)
   const [uploading, setUploading] = useState<string[]>([])
   const [dragging, setDragging] = useState(false)
+  const [view, setView] = useState<DocumentView>(DEFAULT_VIEW)
+  const [retryingAll, setRetryingAll] = useState(false)
   const [confirming, setConfirming] = useState<{ title: string; message: string; label: string; run: () => Promise<void> } | null>(null)
   const picker = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
@@ -94,6 +98,27 @@ export function CollectionPage() {
     }
   }
 
+  // Every failed document is started again, one after the other: the queue runs them in order anyway.
+  async function retryFailed() {
+    setRetryingAll(true)
+    let started = 0
+    let refused = 0
+    try {
+      for (const file of failedFiles(files, (item) => fileState(item, jobOf(item.fileId)))) {
+        try {
+          await retryIndexing(id, file.fileId, jobOf(file.fileId))
+          started += 1
+        } catch {
+          refused += 1
+        }
+      }
+      show(refused === 0 ? `${plural(started, 'document', 'documents')} started again` : `${started} started again, ${refused} could not be started`, refused === 0 ? 'ok' : 'err')
+      await reload()
+    } finally {
+      setRetryingAll(false)
+    }
+  }
+
   function askRemoveCollection() {
     if (!collection) return
     setConfirming({
@@ -137,6 +162,7 @@ export function CollectionPage() {
   const failedCount = files.filter((file) => fileState(file, jobOf(file.fileId)).tone === 'failed').length
   // Documents of a folder source are indexed on request: the ones with no indexing job yet.
   const waiting = collection?.sourceId ? files.filter((file) => file.status === 'pending' && fileState(file, jobOf(file.fileId)).tone === 'waiting').length : 0
+  const shownFiles = arrange(files, (file) => fileState(file, jobOf(file.fileId)), view)
 
   return (
     <div
@@ -231,7 +257,11 @@ export function CollectionPage() {
               </div>
             )}
 
-            <ul className="m-0 mt-6 list-none p-0">
+            {files.length > 1 && (
+              <DocumentToolbar view={view} onChange={setView} shown={shownFiles.length} total={files.length} failed={failedCount} retrying={retryingAll} onRetryFailed={() => void retryFailed()} />
+            )}
+
+            <ul className={`m-0 ${files.length > 1 ? 'mt-3' : 'mt-6'} list-none p-0`}>
               {uploading.map((name, index) => (
                 <li key={`${name}-${index}`} className="flex items-center gap-3 border-0 border-b border-solid border-[var(--border-soft)] px-1 py-2.5 text-[13.5px] text-[var(--text-muted)]">
                   <span className="size-[30px] shrink-0" />
@@ -239,7 +269,7 @@ export function CollectionPage() {
                   <span className="text-[12px] text-[var(--accent-primary)]">Uploading</span>
                 </li>
               ))}
-              {files.map((file) => (
+              {shownFiles.map((file) => (
                 <DocumentRow
                   key={file.fileId}
                   file={file}
@@ -250,6 +280,15 @@ export function CollectionPage() {
                 />
               ))}
             </ul>
+
+            {files.length > 0 && shownFiles.length === 0 && (
+              <p className="mt-6 text-center text-[13px] text-[var(--text-muted)]">
+                No document matches this filter.{' '}
+                <button type="button" onClick={() => setView(DEFAULT_VIEW)} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--accent-primary)] underline">
+                  Show all
+                </button>
+              </p>
+            )}
 
             {!loading && files.length === 0 && uploading.length === 0 && (
               <button

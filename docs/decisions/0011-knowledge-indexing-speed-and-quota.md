@@ -56,7 +56,7 @@ queue does, and the speed of reading. Lots, in the order they are done, each in 
 
 1. **Order and find documents (SeshatOS).** Documents added by hand get the priority of format that the documents of a folder
    source already have (text, then Word, then PDF, then the rest, small files first). The collection page gets a sort menu (format,
-   which is the order of processing and the default, name A to Z and Z to A, state with the failures first, size), a filter by
+   which is the order of processing and the default, name A to Z and Z to A, state with the failures first; the size is not offered, the page does not know it), a filter by
    format and by state, and a "Retry all failed" button, so that a run of failures is not retried one document at a time.
 2. **Wait on a refusal for quota (seshat-runtime).** In the embedder, a 429 (and a 503 that asks to wait) is waited out instead of
    returned: the delay of `Retry-After` or of the provider's own field when there is one, otherwise 5 s, 15 s, 45 s with a little
