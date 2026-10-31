@@ -283,7 +283,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
         } catch (err) {
           // Don't approve on the model's behalf with edits it never saw -
           // stop here rather than silently proceeding without them.
-          setActionError(`Couldn't save your edits: ${errorMessage(err)}. Not approved yet — try again.`)
+          setActionError(`Couldn't save your edits: ${errorMessage(err)}. Not approved yet. Try again.`)
           return
         }
       }
@@ -314,7 +314,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
         // so a plan never gets marked validated with no way to actually
         // notify the model of it.
         if (useSessionStore.getState().isSessionStreaming(sessionId)) {
-          setActionError("The agent is still running another turn on this session — wait for it to finish, then try again.")
+          setActionError("The agent is still running another turn on this session. Wait for it to finish, then try again.")
           return
         }
         const updated = await api.patch<PlanDocument>(`/plans/${planId}`, { status: 'validated' })
@@ -333,7 +333,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
       // behalf (see TitlebarSessionControls's toggleComputer for the explicit path).
       closeRightPanel(buildRightPanelId({ kind: 'plan', sessionId, planId }))
     } catch (err) {
-      setActionError(`Couldn't approve the plan: ${errorMessage(err)}. Nothing was sent — try again.`)
+      setActionError(`Couldn't approve the plan: ${errorMessage(err)}. Nothing was sent. Try again.`)
     } finally {
       setSending(false)
     }
@@ -358,7 +358,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
           // buildFeedback() below tells the model "I've also updated the plan
           // content directly" whenever content differs - that claim has to be
           // true before it's sent, same reasoning as handleProceed.
-          setActionError(`Couldn't save your edits: ${errorMessage(err)}. Feedback not sent — try again.`)
+          setActionError(`Couldn't save your edits: ${errorMessage(err)}. Feedback not sent. Try again.`)
           return
         }
       }
@@ -376,7 +376,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
       } else {
         // Same isSessionStreaming guard as handleProceed - see its comment.
         if (useSessionStore.getState().isSessionStreaming(sessionId)) {
-          setActionError("The agent is still running another turn on this session — wait for it to finish, then try again.")
+          setActionError("The agent is still running another turn on this session. Wait for it to finish, then try again.")
           return
         }
         const updated = await api.patch<PlanDocument>(`/plans/${planId}`, { status: 'rejected' })
@@ -392,7 +392,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
       setEditMode(false)
       closeRightPanel(buildRightPanelId({ kind: 'plan', sessionId, planId }))
     } catch (err) {
-      setActionError(`Couldn't send your feedback: ${errorMessage(err)}. The agent was not notified — try again.`)
+      setActionError(`Couldn't send your feedback: ${errorMessage(err)}. The agent was not notified. Try again.`)
     } finally {
       setSending(false)
     }

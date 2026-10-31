@@ -43,8 +43,8 @@ export function AuditLogsView() {
               <AdminTd muted>{new Date(e.created_at).toLocaleString()}</AdminTd>
               <AdminTd mono>{e.actor_user_id}</AdminTd>
               <AdminTd mono>{e.action}</AdminTd>
-              <AdminTd muted>{e.resource_type ? `${e.resource_type}${e.resource_id ? ':' + e.resource_id.slice(0, 8) : ''}` : '—'}</AdminTd>
-              <AdminTd muted mono>{e.ip_address ?? '—'}</AdminTd>
+              <AdminTd muted>{e.resource_type ? `${e.resource_type}${e.resource_id ? ':' + e.resource_id.slice(0, 8) : ''}` : '-'}</AdminTd>
+              <AdminTd muted mono>{e.ip_address ?? '-'}</AdminTd>
               <AdminTd><AdminStatusBadge tone={statusTone(e.status)}>{e.status}</AdminStatusBadge></AdminTd>
             </AdminTr>
           ))

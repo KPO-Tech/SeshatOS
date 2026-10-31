@@ -222,7 +222,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
                 <div className="size-3 shrink-0 rounded-full border-2 border-[rgba(239,124,47,0.25)] border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
                 <span>
                   <strong>{subagent.activeTool.toolName}</strong>
-                  {subagent.activeTool.message ? ` — ${subagent.activeTool.message}` : ''}
+                  {subagent.activeTool.message ? ` · ${subagent.activeTool.message}` : ''}
                 </span>
               </div>
             )}
