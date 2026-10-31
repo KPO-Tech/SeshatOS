@@ -1,10 +1,12 @@
-import { CheckOne, More } from '@icon-park/react'
+import type { ReactNode } from 'react'
+import { Chip, More, Time, Tool } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { AgentAvatar } from './AgentAvatar'
 import type { AgentConfigEntry } from './agentTypes'
 
-export const READ_ONLY_SOURCES = ['built-in', 'organization']
+const READ_ONLY_SOURCES = ['built-in', 'organization']
 
+/** Built-in and organization agents are kept as they are: they can be read here, not changed. */
 export function isReadOnly(agent: AgentConfigEntry): boolean {
   return READ_ONLY_SOURCES.includes(agent.source)
 }
@@ -26,15 +28,28 @@ function Switch({ enabled, disabled, label, onChange }: { enabled: boolean; disa
       disabled={disabled}
       title={disabled ? 'Built-in and organization agents are read-only' : undefined}
       onClick={() => onChange(!enabled)}
-      className={`flex h-5 w-9 shrink-0 items-center rounded-full border-0 p-0.5 transition-colors ${enabled ? 'justify-end bg-[var(--accent-primary)]' : 'justify-start bg-[var(--surface-muted)]'} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+      className={`flex h-5 w-9 shrink-0 items-center rounded-full border-0 p-0.5 transition-colors ${enabled ? 'justify-end bg-[var(--accent-primary)]' : 'justify-start bg-[var(--surface-muted)]'} ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
     >
       <span className="size-4 rounded-full bg-white" />
     </button>
   )
 }
 
-function Chip({ children }: { children: string }) {
-  return <span className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">{children}</span>
+function Badge({ tone, children }: { tone: 'ok' | 'muted'; children: string }) {
+  return (
+    <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold ${tone === 'ok' ? 'bg-[color-mix(in_srgb,var(--accent-success)_16%,transparent)] text-[var(--accent-success)]' : 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}>
+      {children}
+    </span>
+  )
+}
+
+function Fact({ icon, children }: { icon: ReactNode; children: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5 text-[12px] text-[var(--text-secondary)]">
+      <span className="flex shrink-0 text-[var(--text-muted)]">{icon}</span>
+      <span className="truncate">{children}</span>
+    </span>
+  )
 }
 
 type Props = {
@@ -52,26 +67,22 @@ export function AgentCard({ agent, busy, onToggle, onDelete }: Props) {
   const menu: DropdownItem[] = editable ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => onDelete(agent) }] : []
 
   return (
-    <article className={`flex min-w-0 flex-col rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 ${agent.enabled ? '' : 'opacity-75'}`}>
+    <article className="flex min-w-0 flex-col rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
       <div className="flex items-start gap-3">
-        <AgentAvatar agent={agent} size={48} />
-        <div className="min-w-0 flex-1 pt-0.5">
-          <div className="flex items-center gap-1.5">
-            <h3 className="m-0 truncate text-[14px] font-semibold text-[var(--text-primary)]">{agent.name || agent.slug}</h3>
-            {agent.source === 'built-in' && (
-              <span className="shrink-0 text-[var(--accent-primary)]" title="Official">
-                <CheckOne theme="filled" size={13} fill="currentColor" />
-              </span>
-            )}
+        <AgentAvatar agent={agent} size={44} />
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <h3 className="m-0 max-w-full truncate text-[14px] font-semibold text-[var(--text-primary)]">{agent.name || agent.slug}</h3>
+            <Badge tone={agent.enabled ? 'ok' : 'muted'}>{agent.enabled ? 'Enabled' : 'Off'}</Badge>
+            <Badge tone="muted">{sourceLabel(agent.source)}</Badge>
           </div>
-          <div className="mt-0.5 text-[11.5px] text-[var(--text-muted)]">{sourceLabel(agent.source)}</div>
         </div>
         {menu.length > 0 && (
           <Dropdown
             label="More about this agent"
             items={menu}
             trigger={({ toggle }) => (
-              <button type="button" aria-label="More about this agent" disabled={busy} onClick={toggle} className="flex size-7 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+              <button type="button" aria-label="More about this agent" disabled={busy} onClick={toggle} className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
                 <More theme="outline" size={14} />
               </button>
             )}
@@ -81,14 +92,13 @@ export function AgentCard({ agent, busy, onToggle, onDelete }: Props) {
 
       <p className="m-0 mt-3 line-clamp-3 min-h-[57px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{agent.when_to_use || agent.system_prompt || 'No usage description yet.'}</p>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        <Chip>{agent.model || 'Default model'}</Chip>
-        <Chip>{allTools ? 'All tools' : `${agent.tools?.length ?? 0} tools`}</Chip>
-        {agent.max_turns && agent.max_turns > 0 ? <Chip>{`${agent.max_turns} turns`}</Chip> : null}
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <Fact icon={<Chip theme="outline" size={13} />}>{agent.model || 'Default'}</Fact>
+        <Fact icon={<Tool theme="outline" size={13} />}>{allTools ? 'All tools' : `${agent.tools?.length ?? 0} tools`}</Fact>
+        {agent.max_turns && agent.max_turns > 0 ? <Fact icon={<Time theme="outline" size={13} />}>{`${agent.max_turns} turns`}</Fact> : null}
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-[var(--border-soft)] pt-3">
-        <span className={`text-[12px] font-medium ${agent.enabled ? 'text-[var(--accent-success)]' : 'text-[var(--text-muted)]'}`}>{agent.enabled ? 'Enabled' : 'Off'}</span>
+      <div className="mt-3 flex justify-end">
         <Switch enabled={agent.enabled} disabled={readOnly || busy} label={`Turn ${agent.name || agent.slug} ${agent.enabled ? 'off' : 'on'}`} onChange={(enabled) => onToggle(agent, enabled)} />
       </div>
     </article>
