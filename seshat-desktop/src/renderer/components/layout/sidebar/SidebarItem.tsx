@@ -11,10 +11,12 @@ type Props = {
   badge?: string
   collapsed: boolean
   active?: boolean
+  /** Under the entry above it: the project that is open, below Projects. */
+  nested?: boolean
   onClick: () => void
 }
 
-export function SidebarItem({ icon, label, shortcut, badge, collapsed, active, onClick }: Props) {
+export function SidebarItem({ icon, label, shortcut, badge, collapsed, active, nested, onClick }: Props) {
   return (
     <button
       type="button"
@@ -22,6 +24,7 @@ export function SidebarItem({ icon, label, shortcut, badge, collapsed, active, o
       className={cx(
         'flex w-full cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg border-0 bg-transparent px-2.5 py-[var(--list-item-pad-y)] text-[13px] font-semibold text-[var(--text-secondary)] transition duration-100 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]',
         collapsed && 'mx-auto w-9 justify-center px-0 py-2',
+        nested && !collapsed && 'pl-6 font-medium',
         active && 'bg-[var(--accent-subtle)] text-[var(--accent-primary)] hover:bg-[var(--accent-subtle)] hover:text-[var(--accent-primary)]'
       )}
       aria-label={collapsed ? label : undefined}

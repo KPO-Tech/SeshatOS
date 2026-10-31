@@ -73,8 +73,9 @@ export function ProjectsPage() {
 
   const actions: ProjectActions = {
     open: (project) => navigate(`/projects/${encodeURIComponent(project.id)}`),
+    // The overview of the project, with the cursor in its input: the conversation is begun there, in the folder of the project.
     startSession: (project) => {
-      navigate(`/?project=${encodeURIComponent(project.rootPath)}`)
+      navigate(`/projects/${encodeURIComponent(project.id)}?focus=1`)
       setActive(null)
     },
     continueSession: (project) => {

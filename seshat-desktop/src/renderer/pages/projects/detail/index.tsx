@@ -5,6 +5,7 @@ import { listProjects, selectRecentSessions, updateProject } from '@renderer/lib
 import { useSessionStore } from '@renderer/stores/session'
 import { EditProjectDialog } from '../EditProjectDialog'
 import { FileText, Folder, Notes, Time } from '../icons'
+import { OverviewTab } from './OverviewTab'
 import { FileTree } from './FileTree'
 import { FileViewer } from './FileViewer'
 import { InfoColumn } from './InfoColumn'
@@ -13,8 +14,9 @@ import { ProjectHeader } from './ProjectHeader'
 import { SessionsTab } from './SessionsTab'
 import { useProjectScan } from './useProjectScan'
 
-type Tab = 'files' | 'sessions' | 'notes'
+type Tab = 'overview' | 'files' | 'sessions' | 'notes'
 const TABS: ReadonlyArray<{ id: Tab; label: string; icon: typeof FileText }> = [
+  { id: 'overview', label: 'Overview', icon: Folder },
   { id: 'files', label: 'Files', icon: FileText },
   { id: 'sessions', label: 'Sessions', icon: Time },
   { id: 'notes', label: 'Notes', icon: Notes }
@@ -55,8 +57,9 @@ export function ProjectDetailPage() {
   const scan = useProjectScan(project?.rootPath ?? '', refreshKey)
 
   const rawTab = params.get('tab')
-  const tab: Tab = rawTab === 'sessions' || rawTab === 'notes' ? rawTab : 'files'
-  const goTo = (next: Tab) => setParams(next === 'files' ? {} : { tab: next }, { replace: true })
+  // A project opens on its overview: the input to begin a conversation in it, and what was asked before.
+  const tab: Tab = rawTab === 'files' || rawTab === 'sessions' || rawTab === 'notes' ? rawTab : 'overview'
+  const goTo = (next: Tab) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
 
   if (!project) {
     return (
@@ -95,9 +98,10 @@ export function ProjectDetailPage() {
     setActive(id)
     navigate(`/conversation/${id}`)
   }
+  // Begins a conversation in the project: its overview, with the cursor in the input.
   function newChat() {
     setActive(null)
-    navigate(`/?project=${encodeURIComponent(root)}`)
+    navigate(`/projects/${encodeURIComponent(projectId)}?focus=1`)
   }
 
   return (
@@ -143,6 +147,18 @@ export function ProjectDetailPage() {
 
       <div className="flex min-h-0 flex-1 gap-3 px-6 py-3">
         <main className="flex min-w-0 flex-1 gap-3">
+          {tab === 'overview' && (
+            <OverviewTab
+              project={project}
+              sessions={projectSessions}
+              streaming={streaming}
+              now={now}
+              autoFocus={params.get('focus') === '1'}
+              onOpenSession={openSession}
+              onViewAll={() => goTo('sessions')}
+              onEdit={() => setEditing(true)}
+            />
+          )}
           {tab === 'files' && (
             <>
               <div className="flex w-[270px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
