@@ -1,4 +1,6 @@
 .home-root {
+  /* How far the welcome starts from the top: more on a tall window, so that the page is not stuck to the title bar. */
+  --home-top: clamp(32px, calc((100vh - 600px) / 2 - 20px), 260px);
   position: relative;
   flex: 1;
   display: flex;
@@ -10,13 +12,13 @@
 /* The glow and the lines sit behind the page and scroll with it. */
 .home-backdrop {
   position: absolute;
-  inset: 0 0 auto 0;
+  inset: calc(var(--home-top) - 50px) 0 auto 0;
   height: 440px;
   pointer-events: none;
   z-index: 0;
   background: radial-gradient(ellipse 52% 62% at 50% 24%, color-mix(in srgb, var(--accent-primary) 22%, transparent), transparent 72%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent);
-  mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 62%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 62%, transparent);
 }
 
 :root[data-theme="light"] .home-backdrop {
@@ -31,7 +33,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 40px 32px 56px;
+  padding: var(--home-top) 32px 56px;
   max-width: 1120px;
   margin: 0 auto;
   width: 100%;

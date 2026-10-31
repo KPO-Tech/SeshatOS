@@ -22,14 +22,14 @@ function Panel({ icon, title, action, children }: { icon: ReactNode; title: stri
         </h2>
         {action}
       </div>
-      <div className="overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">{children}</div>
+      <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">{children}</div>
     </section>
   )
 }
 
 function Row({ lead, title, detail, aside, menu, onOpen }: { lead: ReactNode; title: string; detail?: string; aside?: string; menu: DropdownItem[]; onOpen: () => void }) {
   return (
-    <div className="flex items-center gap-3 border-b border-[var(--border-soft)] px-4 py-3 last:border-b-0 hover:bg-[var(--surface-hover)]">
+    <div className="flex items-center gap-3 border-b border-[var(--border-soft)] px-4 py-3 first:rounded-t-2xl last:rounded-b-2xl last:border-b-0 hover:bg-[var(--surface-hover)]">
       <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left">
         {lead}
         <span className="min-w-0 flex-1">
