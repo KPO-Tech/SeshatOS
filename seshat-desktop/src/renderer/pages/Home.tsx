@@ -19,7 +19,6 @@ import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
 import { HomeBackdrop } from './home/HomeBackdrop'
 import { HomeLists } from './home/HomeLists'
-import { ModeCards, type HomeMode } from './home/ModeCards'
 import './Home.css'
 
 type ModelChoice = {
@@ -76,7 +75,6 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
   const addSession = useSessionStore((s) => s.addSession)
   const permissionMode = useUIStore((s) => s.permissionMode)
   const [inputValue, setInputValue] = useState('')
-  const [mode, setMode] = useState<HomeMode>('chat')
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null)
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ProviderModel[]>>({})
@@ -424,10 +422,6 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
         ]
       : [])
 
-  function focusInput() {
-    window.setTimeout(() => document.querySelector<HTMLTextAreaElement>('.home-input-container textarea')?.focus(), 0)
-  }
-
   const body = (
     <>
         {variant === 'home' && (
@@ -437,20 +431,6 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
               Welcome to <span className="text-[var(--accent-primary)]">SeshatOS</span>
             </h1>
             <p className="home-subtitle">Your workspace for research, creation and automation with AI.</p>
-            <ModeCards
-              mode={mode}
-              onChat={() => {
-                setMode('chat')
-                focusInput()
-              }}
-              onProject={() => navigate('/projects')}
-              onTask={() => {
-                setMode('task')
-                setInputValue('Create a scheduled task that ')
-                focusInput()
-              }}
-              onSkills={() => navigate('/skills')}
-            />
           </>
         )}
 
