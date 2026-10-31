@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **Follow-up cards and source pills in rich answers.** A Choice with a description is drawn as a card (an optional icon, title, one line, an arrow) for a topic worth digging into; without one it stays a pill. A new SourcePills block shows the sites a web search drew from, each opening its page. The prompt asks for real addresses only and was tightened to stay inside its word budget.
 - **The button of the title bar offers Light, Night, Dark and System.** Clicking the moon (or the sun) opens a small menu with a sample of each appearance and a tick on the one in use, instead of switching between dark and light.
 - **A new project starts from the first sentence of its README.** When a project is added, the description in the "Edit the project" dialog is the first sentence of the README of the folder (titles, badges, pictures and tables are passed over), and can be changed before saving.
 - **Adding a project asks for its details at once.** After choosing the folder, the "Edit the project" dialog opens over the list, with the name of the folder, so that the project can be given a name, a description, tags and a colour from the start. Closing it keeps the project as it was added.
