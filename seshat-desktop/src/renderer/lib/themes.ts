@@ -37,7 +37,7 @@ type ThemeTokens = Record<`--${string}`, string>
 // Seshat's own two appearances. Their tokens live in tailwind.css, so they are listed here for the picker only.
 const SESHAT: ThemeSeed[] = [
   { id: 'dark', label: 'Seshat Dark', scheme: 'dark', bg: '#2f2e34', panel: '#3a3941', text: '#e7e2da', accent: '#ef7c2f' },
-  { id: 'light', label: 'Seshat Light', scheme: 'light', bg: '#f7f7f5', panel: '#ffffff', text: '#171717', accent: '#ef7c2f' }
+  { id: 'light', label: 'Seshat Light', scheme: 'light', bg: '#fbfcfd', panel: '#ffffff', text: '#0c182e', accent: '#ef7c2f' }
 ]
 
 const PRESETS: ThemeSeed[] = [
