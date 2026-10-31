@@ -41,6 +41,8 @@ const SESHAT: ThemeSeed[] = [
 ]
 
 const PRESETS: ThemeSeed[] = [
+  // Seshat's third appearance: the blue-black night of the Projects design (measured on it), with the orange of Seshat Dark, brighter.
+  { id: 'seshat-night', label: 'Seshat Night', category: 'seshat', scheme: 'dark', bg: '#14171d', panel: '#1b1f26', text: '#e8eaee', accent: '#e26d1f' },
   // Dark
   { id: 'carbon', label: 'Carbon', scheme: 'dark', bg: '#0c0c0d', panel: '#161617', text: '#e4e4e6', accent: '#d9622a' },
   { id: 'graphite', label: 'Graphite', category: 'gradient', scheme: 'dark', bg: '#1b1d24', panel: '#262933', text: '#e6e7e9', accent: '#5b86b8', wallpaper: { kind: 'gradient', angle: 140, stops: ['#3a3f55', '#23262f', '#15161b'] } },
