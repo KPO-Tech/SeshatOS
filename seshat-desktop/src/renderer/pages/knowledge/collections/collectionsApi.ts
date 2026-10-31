@@ -19,6 +19,10 @@ export type CollectionFile = {
   status: FileStatus
   chunkCount: number
   createdAt: number
+  /** Found by its words only: its embedding failed in a way that waiting does not mend. */
+  keywordsOnly: boolean
+  /** Why the embedding failed, empty unless the document is keywords only. */
+  keywordsReason: string
 }
 
 // An indexing job of one file: what tells a failure apart and lets it be tried again.
@@ -33,7 +37,7 @@ export type IndexingJob = {
 }
 
 type CorpusRow = { id: string; name: string; description?: string; chunk_count?: number; file_count?: number; updated_at?: number; source_id?: string }
-type FileRow = { file_id: string; filename: string; status: string; chunk_count?: number; created_at?: number }
+type FileRow = { file_id: string; filename: string; status: string; chunk_count?: number; created_at?: number; keywords_only?: boolean; keywords_reason?: string }
 type JobRow = { id: string; file_id: string; status: string; last_error?: string; created_at?: number; next_run_at?: string }
 
 function toCollection(row: CorpusRow): Collection {
@@ -89,7 +93,9 @@ export async function listFiles(id: string): Promise<CollectionFile[]> {
     name: row.filename,
     status: toStatus(row.status),
     chunkCount: row.chunk_count ?? 0,
-    createdAt: row.created_at ?? 0
+    createdAt: row.created_at ?? 0,
+    keywordsOnly: row.keywords_only ?? false,
+    keywordsReason: row.keywords_reason ?? ''
   }))
 }
 

@@ -45,6 +45,10 @@ type CorpusFile struct {
 	// SourcePath is the absolute path of the file on this computer, for a file that is indexed from where it is (a folder of this
 	// computer) rather than uploaded; empty for every other file.
 	SourcePath string
+	// KeywordsOnly is true for a document whose passages were stored with no vector because its embedding failed in a way that waiting
+	// does not mend: it is found by its words, and the vectors are made later by a re-embedding. KeywordsReason says why.
+	KeywordsOnly   bool
+	KeywordsReason string
 }
 
 type CreateCorpusParams struct {
@@ -95,6 +99,7 @@ type gCorpusFile struct {
 	IngestedAtUnix *int64 `gorm:"column:ingested_at_unix"`
 	CreatedAtUnix  int64  `gorm:"column:created_at_unix;autoCreateTime:unix"`
 	SourcePath     string `gorm:"column:source_path;not null;default:''"`
+	KeywordsReason string `gorm:"column:keywords_reason;not null;default:''"`
 }
 
 func (gCorpusFile) TableName() string { return "corpus_files" }
@@ -121,13 +126,15 @@ func corpusFromGorm(g gCorpus) Corpus {
 
 func corpusFileFromGorm(g gCorpusFile) CorpusFile {
 	cf := CorpusFile{
-		CorpusID:   g.CorpusID,
-		FileID:     g.FileID,
-		Filename:   g.Filename,
-		Status:     g.Status,
-		ChunkCount: g.ChunkCount,
-		CreatedAt:  time.Unix(g.CreatedAtUnix, 0).UTC(),
-		SourcePath: g.SourcePath,
+		CorpusID:       g.CorpusID,
+		FileID:         g.FileID,
+		Filename:       g.Filename,
+		Status:         g.Status,
+		ChunkCount:     g.ChunkCount,
+		CreatedAt:      time.Unix(g.CreatedAtUnix, 0).UTC(),
+		SourcePath:     g.SourcePath,
+		KeywordsOnly:   g.KeywordsReason != "",
+		KeywordsReason: g.KeywordsReason,
 	}
 	if g.IngestedAtUnix != nil {
 		t := time.Unix(*g.IngestedAtUnix, 0).UTC()
@@ -307,6 +314,23 @@ func (s *CorpusStore) UpdateFileStatus(ctx context.Context, corpusID, fileID, st
 		Model(&gCorpusFile{}).
 		Where("corpus_id = ? AND file_id = ?", corpusID, fileID).
 		Updates(updates).Error
+}
+
+// SetFileKeywordsOnly marks a document as indexed for keywords only (its passages have no vector), with the reason; an empty reason
+// clears the mark.
+func (s *CorpusStore) SetFileKeywordsOnly(ctx context.Context, corpusID, fileID, reason string) error {
+	return s.db.GormDB().WithContext(ctx).
+		Model(&gCorpusFile{}).
+		Where("corpus_id = ? AND file_id = ?", corpusID, fileID).
+		Update("keywords_reason", reason).Error
+}
+
+// ClearKeywordsOnly clears the mark of every document of a collection: its vectors were all made.
+func (s *CorpusStore) ClearKeywordsOnly(ctx context.Context, corpusID string) error {
+	return s.db.GormDB().WithContext(ctx).
+		Model(&gCorpusFile{}).
+		Where("corpus_id = ? AND keywords_reason <> ''", corpusID).
+		Update("keywords_reason", "").Error
 }
 
 // IncrementChunkCount adds delta to a corpus's total chunk count.

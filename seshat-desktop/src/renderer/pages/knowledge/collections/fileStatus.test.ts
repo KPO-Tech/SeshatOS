@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { CollectionFile, IndexingJob } from './collectionsApi'
 import { fileState, isInProgress, plural, quotaPause, timeLeft } from './fileStatus'
 
-const file = (status: CollectionFile['status']): CollectionFile => ({ fileId: 'f1', name: 'a.pdf', status, chunkCount: 0, createdAt: 0 })
+const file = (status: CollectionFile['status'], keywordsOnly = false): CollectionFile => ({
+  fileId: 'f1',
+  name: 'a.pdf',
+  status,
+  chunkCount: 0,
+  createdAt: 0,
+  keywordsOnly,
+  keywordsReason: keywordsOnly ? 'the embedding provider refused: bad key' : ''
+})
 const job = (status: string, lastError = '', nextRunAt = 0): IndexingJob => ({ id: 'j1', fileId: 'f1', status, lastError, createdAt: 0, nextRunAt })
 
 describe('fileState', () => {
@@ -31,6 +39,21 @@ describe('fileState', () => {
     expect(isInProgress(file('pending'), fileState(file('pending'), job('running')))).toBe(true)
     expect(isInProgress(file('pending'), fileState(file('pending'), undefined))).toBe(false)
     expect(isInProgress(file('ingested'), fileState(file('ingested'), undefined))).toBe(false)
+  })
+})
+
+describe('a document kept for keywords only', () => {
+  it('is indexed, with a note and the reason', () => {
+    expect(fileState(file('ingested', true), undefined)).toEqual({
+      tone: 'ready',
+      label: 'Indexed',
+      note: 'keywords only',
+      detail: 'the embedding provider refused: bad key'
+    })
+  })
+
+  it('is plainly indexed when its vectors were made', () => {
+    expect(fileState(file('ingested', false), undefined)).toEqual({ tone: 'ready', label: 'Indexed' })
   })
 })
 

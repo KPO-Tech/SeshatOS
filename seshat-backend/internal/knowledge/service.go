@@ -674,7 +674,7 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 	if err != nil {
 		return nil, 0, err
 	}
-	result, err := s.rag.Ingest(ctx, rag.IngestRequest{
+	request := rag.IngestRequest{
 		CorpusID: corpusID,
 		FileID:   fileID, // deterministic artifact key — prevents duplicate vectors on re-ingest
 		Filename: filename,
@@ -682,7 +682,17 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 		Data:     data,
 		ScopeID:  scopeID,
 		ScopeIDs: scopeIDs,
-	})
+	}
+	result, err := s.rag.Ingest(ctx, request)
+	// The reading worked and the embedding did not, for a reason that waiting does not mend: the document is kept and found by its words,
+	// and the vectors are made later (a re-embedding, once the model is changed).
+	keywordsReason := ""
+	if reason, fallBack := keywordsFallback(ctx, err); fallBack {
+		request.WithoutVectors = true
+		if result, err = s.rag.Ingest(ctx, request); err == nil {
+			keywordsReason = reason
+		}
+	}
 	leave()
 	if err != nil {
 		// A refusal for quota is not a failure of the document: it stays waiting (see finishFailedJob).
@@ -700,6 +710,8 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 	}
 
 	_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileID, db.CorpusFileStatusIngested, result.Chunks)
+	// Set on every ingest, so that a document read again with its vectors loses the mark it had.
+	_ = s.corpora.SetFileKeywordsOnly(ctx, corpusID, fileID, keywordsReason)
 
 	// Use delta so re-ingesting a file doesn't double-count its chunks in the corpus total.
 	chunkDelta := result.Chunks - oldChunkCount
@@ -911,6 +923,9 @@ func corpusFileFromDB(r db.CorpusFile) *CorpusFile {
 		IngestedAt: r.IngestedAt,
 		CreatedAt:  r.CreatedAt,
 		SourcePath: r.SourcePath,
+
+		KeywordsOnly:   r.KeywordsOnly,
+		KeywordsReason: r.KeywordsReason,
 	}
 }
 

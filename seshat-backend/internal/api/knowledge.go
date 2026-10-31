@@ -33,6 +33,9 @@ type corpusFileResponse struct {
 	ChunkCount int    `json:"chunk_count"`
 	IngestedAt *int64 `json:"ingested_at,omitempty"`
 	CreatedAt  int64  `json:"created_at"`
+	// KeywordsOnly: the document is found by its words, its embedding having failed; KeywordsReason says why.
+	KeywordsOnly   bool   `json:"keywords_only"`
+	KeywordsReason string `json:"keywords_reason,omitempty"`
 }
 
 type ingestionJobResponse struct {
@@ -77,6 +80,9 @@ func corpusFileToResponse(cf knowledge.CorpusFile) corpusFileResponse {
 		Status:     cf.Status,
 		ChunkCount: cf.ChunkCount,
 		CreatedAt:  cf.CreatedAt.Unix(),
+
+		KeywordsOnly:   cf.KeywordsOnly,
+		KeywordsReason: cf.KeywordsReason,
 	}
 	if cf.IngestedAt != nil {
 		ts := cf.IngestedAt.Unix()
