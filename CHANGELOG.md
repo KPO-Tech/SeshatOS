@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Seshat Night, a third Seshat appearance.** A blue-black dark theme with the orange of Seshat, in Settings > Appearance next to Seshat Dark and Seshat Light. Its colours were measured on the Projects design; the orange is a little darker than on the picture so that white text stays readable on buttons.
+
 ### Changed
 
 - **The sidebar is the same in a project as on the start page.** Skills, Plugins and Projects were hidden inside a project; they are shown everywhere, and only the list of tasks changes: a project shows its own conversations, and the start page shows none that belong to a project.

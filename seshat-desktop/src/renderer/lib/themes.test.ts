@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { CODE_MIN_CONTRAST, THEMES, buildTokens, codeTokens, contrastRatio, effectiveSurfaces, ensureContrast, isThemeId, mix, presetsCss, themeById } from './themes'
 
 describe('theme registry', () => {
-  it('has unique ids and the 28 appearances (Seshat two, 25 presets, plus the system one handled elsewhere)', () => {
+  it('has unique ids and the 29 appearances (Seshat two, 26 presets, plus the system one handled elsewhere)', () => {
     const ids = THEMES.map((theme) => theme.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toHaveLength(27)
-    expect(ids).toEqual(expect.arrayContaining(['dark', 'light', 'kanagawa', 'phosphor', 'violet-hour', 'after-rain']))
+    expect(ids).toHaveLength(28)
+    expect(ids).toEqual(expect.arrayContaining(['dark', 'light', 'kanagawa', 'phosphor', 'violet-hour', 'after-rain', 'seshat-night']))
   })
 
   it('knows its ids and refuses anything else', () => {
@@ -62,7 +62,7 @@ describe('code colours', () => {
 
   it('includes the code colours in every preset and in the two Seshat themes', () => {
     const css = presetsCss()
-    expect(css.match(/--code-keyword:/g)).toHaveLength(28)
+    expect(css.match(/--code-keyword:/g)).toHaveLength(29)
     expect(css).toContain('@media (prefers-color-scheme: light)')
   })
 })
@@ -80,10 +80,10 @@ describe('tokens', () => {
     expect(mix('#102030', '#102030', 0.7)).toBe('#102030')
   })
 
-  it('writes every token for the 25 presets, and only the code colours for the two Seshat themes', () => {
+  it('writes every token for the 26 presets, and only the code colours for the two Seshat themes', () => {
     const css = presetsCss()
     expect(css).toContain(':root[data-theme="kanagawa"]')
-    expect(css.match(/--surface-root:/g)).toHaveLength(25)
-    expect(css.match(/--text-primary:/g)).toHaveLength(25)
+    expect(css.match(/--surface-root:/g)).toHaveLength(26)
+    expect(css.match(/--text-primary:/g)).toHaveLength(26)
   })
 })
