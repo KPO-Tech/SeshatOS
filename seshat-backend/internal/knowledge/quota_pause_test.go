@@ -88,4 +88,3 @@ func TestARefusalForQuotaKeepsTheDocumentWaitingAndPausesTheQueue(t *testing.T) 
 	require.NoError(t, err)
 	require.False(t, processed, "the queue must wait while the provider refuses")
 }
-
