@@ -4,8 +4,9 @@ import { formatBytes } from '@renderer/lib/projectFiles'
 import type { ProjectSummary } from '@renderer/lib/projects'
 import { relativeTime } from '@renderer/lib/projectsView'
 import type { ChatSession } from '@renderer/stores/session'
-import { Copy, Folder, FolderOpen, Time } from '../icons'
+import { Copy, FolderOpen, Time } from '../icons'
 import type { Scan } from './useProjectScan'
+import { VsCodeIcon } from '../VsCodeIcon'
 
 type Props = {
   project: ProjectSummary
@@ -112,7 +113,7 @@ export function InfoColumn({ project, scan, sessions, now, onOpenFile, onOpenSes
       <Card title="Project tools">
         <div className="flex gap-2">
           <button type="button" onClick={onOpenInEditor} className="flex min-w-0 flex-[1.6] cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-transparent px-2 py-1.5 text-[12px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]">
-            <Folder size={13} />
+            <VsCodeIcon size={14} />
             <span className="truncate">Open in VS Code</span>
           </button>
           <button type="button" onClick={onOpenFolder} className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-transparent px-2 py-1.5 text-[12px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
