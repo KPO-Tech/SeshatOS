@@ -1,3 +1,4 @@
+import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { FORMATS, SORTS, STATES, type DocumentFormat, type DocumentView, type SortKey, type StateFilter } from './documentOrder'
 import { plural } from './fileStatus'
 
@@ -11,38 +12,41 @@ type Props = {
   onRetryFailed: () => void
 }
 
-const SELECT =
-  'cursor-pointer rounded-lg border border-app-border-subtle bg-transparent px-2.5 py-1.5 text-[12.5px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]'
+const BUTTON =
+  'flex cursor-pointer items-center gap-1.5 rounded-lg border border-app-border-subtle bg-transparent px-2.5 py-1.5 text-[12.5px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]'
+
+/** A choice among a few, as a button that opens a menu drawn in the colours of the app (a native list is not, in a dark appearance). */
+function Choice<T extends string>({ label, value, options, onSelect, prefix }: { label: string; value: T; options: ReadonlyArray<{ id: T; label: string }>; onSelect: (value: T) => void; prefix?: string }) {
+  const items: DropdownItem[] = options.map((option) => ({ id: option.id, label: option.label, checked: option.id === value, onSelect: () => onSelect(option.id) }))
+  const current = options.find((option) => option.id === value)?.label ?? ''
+  return (
+    <Dropdown
+      label={label}
+      align="left"
+      items={items}
+      trigger={({ toggle }) => (
+        <button type="button" onClick={toggle} aria-haspopup="menu" aria-label={label} className={BUTTON}>
+          {prefix && <span className="text-[var(--text-muted)]">{prefix}</span>}
+          <span className="text-[var(--text-primary)]">{current}</span>
+          <span className="text-[var(--text-muted)]">&#9662;</span>
+        </button>
+      )}
+    />
+  )
+}
 
 /** Sort and filter of the documents of a collection, and the one button that starts every failed document again. */
 export function DocumentToolbar({ view, onChange, shown, total, failed, retrying, onRetryFailed }: Props) {
   return (
     <div className="mt-6 flex flex-wrap items-center gap-2">
-      <label className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
-        Sort
-        <select className={SELECT} value={view.sort} onChange={(event) => onChange({ ...view, sort: event.target.value as SortKey })} aria-label="Sort the documents">
-          {SORTS.map((sort) => (
-            <option key={sort.id} value={sort.id}>
-              {sort.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <select className={SELECT} value={view.format} onChange={(event) => onChange({ ...view, format: event.target.value as DocumentFormat | 'all' })} aria-label="Filter by format">
-        <option value="all">Any format</option>
-        {FORMATS.map((format) => (
-          <option key={format.id} value={format.id}>
-            {format.label}
-          </option>
-        ))}
-      </select>
-      <select className={SELECT} value={view.state} onChange={(event) => onChange({ ...view, state: event.target.value as StateFilter })} aria-label="Filter by state">
-        {STATES.map((state) => (
-          <option key={state.id} value={state.id}>
-            {state.label}
-          </option>
-        ))}
-      </select>
+      <Choice<SortKey> label="Sort the documents" prefix="Sort" value={view.sort} options={SORTS} onSelect={(sort) => onChange({ ...view, sort })} />
+      <Choice<DocumentFormat | 'all'>
+        label="Filter by format"
+        value={view.format}
+        options={[{ id: 'all', label: 'Any format' }, ...FORMATS]}
+        onSelect={(format) => onChange({ ...view, format })}
+      />
+      <Choice<StateFilter> label="Filter by state" value={view.state} options={STATES} onSelect={(state) => onChange({ ...view, state })} />
       {shown !== total && <span className="text-[12px] text-[var(--text-muted)]">{`${shown} of ${plural(total, 'document', 'documents')}`}</span>}
       {failed > 0 && (
         <button
