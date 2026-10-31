@@ -25,6 +25,21 @@ export type RepoInfo = {
   skill_count: number
 }
 
+/** What installing a repository will put on the machine, as the backend read it before anything is installed. */
+export type InstallPlan = {
+  python?: { minimum: string; found: boolean; version?: string; files?: string[]; packages: string[] }
+  node?: { found: boolean; version?: string; packages: string[] }
+  warnings?: string[]
+}
+
+export type InstallResult = {
+  name: string
+  skill_count: number
+  plan: InstallPlan
+  /** True when the skills wait for the person to agree to the plan. */
+  needs_environment: boolean
+}
+
 export type CatalogEntry = {
   name: string
   url: string
