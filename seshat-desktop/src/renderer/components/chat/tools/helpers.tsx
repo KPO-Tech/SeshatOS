@@ -25,11 +25,21 @@ const EXT_LANGUAGE: Record<string, string> = {
   sh: 'bash', bash: 'bash', zsh: 'bash', html: 'markup', xml: 'markup',
   css: 'css', scss: 'scss', less: 'less', toml: 'toml', dockerfile: 'docker',
   graphql: 'graphql', proto: 'protobuf',
+  cxx: 'cpp', hh: 'cpp', hxx: 'cpp', ps1: 'powershell', psm1: 'powershell', psd1: 'powershell',
+  bat: 'batch', cmd: 'batch', mk: 'makefile', mak: 'makefile', cmake: 'cmake', lua: 'lua', pl: 'perl', r: 'r',
+  scala: 'scala', dart: 'dart', ini: 'ini', cfg: 'ini', diff: 'diff', patch: 'diff', tf: 'hcl', hcl: 'hcl', vue: 'markup',
+  svelte: 'markup', htm: 'markup', svg: 'markup', ex: 'elixir', exs: 'elixir', zig: 'zig', nim: 'nim', fish: 'bash', ksh: 'bash',
+}
+
+// Files that are named by what they are, with no extension to tell it.
+const NAME_LANGUAGE: Record<string, string> = {
+  makefile: 'makefile', gnumakefile: 'makefile', dockerfile: 'docker', cmakelists: 'cmake', jenkinsfile: 'groovy', rakefile: 'ruby', gemfile: 'ruby',
 }
 
 export function languageForPath(filePath: string): string | undefined {
   const base = basename(filePath)
-  if (base.toLowerCase() === 'dockerfile') return 'docker'
+  const named = NAME_LANGUAGE[base.toLowerCase().replace(/\.txt$/, '')]
+  if (named) return named
   const ext = base.includes('.') ? base.split('.').pop()!.toLowerCase() : ''
   return EXT_LANGUAGE[ext]
 }

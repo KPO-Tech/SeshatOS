@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CodeBox } from '@renderer/components/chat/tools/common'
 import { languageForPath } from '@renderer/components/chat/tools/helpers'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { parseNotebook, type Notebook } from '@renderer/lib/notebook'
-import { extensionOf, fileKindOf, parseDelimited } from '@renderer/lib/projectFiles'
+import { extensionOf, fileKindOf, parseDelimited, resolveRelativePath } from '@renderer/lib/projectFiles'
 import { Copy, FolderOpen } from '../icons'
 import { NotebookView } from './NotebookView'
 
@@ -97,6 +97,12 @@ export function FileViewer({ path, relativePath, onOpenSystem }: Props) {
     }
   }, [kind, loaded])
 
+  // The pictures a page names by a relative path are read from its folder.
+  const imageLoader = useCallback((target: string) => {
+    const read = window.seshat?.fs?.readImage
+    return read ? read(resolveRelativePath(path, target)) : Promise.reject(new Error('unavailable'))
+  }, [path])
+
   const name = path.split(/[\\/]/).pop() ?? path
   const message = (text: string) => <div className="flex h-full items-center justify-center p-8 text-center text-[13px] text-[var(--text-muted)]">{text}</div>
 
@@ -109,7 +115,7 @@ export function FileViewer({ path, relativePath, onOpenSystem }: Props) {
     const text = loaded.text.replace(/\r?\n$/, '')
     switch (kind) {
       case 'markdown':
-        return source ? <CodeBox content={text || ' '} language="markdown" lineNumbers expanded bare /> : <div className="mx-auto max-w-[860px] px-6 py-5"><MarkdownView variant="document">{loaded.text}</MarkdownView></div>
+        return source ? <CodeBox content={text || ' '} language="markdown" lineNumbers expanded bare /> : <div className="mx-auto max-w-[860px] px-6 py-5"><MarkdownView variant="document" imageLoader={imageLoader}>{loaded.text}</MarkdownView></div>
       case 'notebook':
         if (notebook instanceof Error) return message(notebook.message)
         return notebook ? <NotebookView notebook={notebook} /> : null

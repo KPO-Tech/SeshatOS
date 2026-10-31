@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extensionOf, fileKindOf, formatBytes, joinPath, parseDelimited } from './projectFiles'
+import { extensionOf, fileKindOf, formatBytes, joinPath, parseDelimited, resolveRelativePath } from './projectFiles'
 
 describe('fileKindOf', () => {
   it('sorts a file by what the viewer does with it', () => {
@@ -71,5 +71,13 @@ describe('parseDelimited', () => {
     expect(rows).toHaveLength(4)
     expect(truncated).toBe(true)
     expect(parseDelimited('a,b\n', ',', 4).truncated).toBe(false)
+  })
+})
+
+describe('resolveRelativePath', () => {
+  it('resolves a picture from the folder of the page, with either separator', () => {
+    expect(resolveRelativePath('D:\\p\\README.md', 'design/captures/logo.png')).toBe('D:\\p\\design\\captures\\logo.png')
+    expect(resolveRelativePath('/p/docs/a.md', '../img/b%20c.png?raw=1')).toBe('/p/img/b c.png')
+    expect(resolveRelativePath('/p/a.md', './x.png#top')).toBe('/p/x.png')
   })
 })

@@ -9,17 +9,17 @@ import { OverviewTab } from './OverviewTab'
 import { FileTree } from './FileTree'
 import { FileViewer } from './FileViewer'
 import { InfoColumn } from './InfoColumn'
-import { NotesTab } from './NotesTab'
 import { ProjectHeader } from './ProjectHeader'
 import { SessionsTab } from './SessionsTab'
 import { useProjectScan } from './useProjectScan'
 
 type Tab = 'overview' | 'files' | 'sessions' | 'notes'
-const TABS: ReadonlyArray<{ id: Tab; label: string; icon: typeof FileText }> = [
+const TABS: ReadonlyArray<{ id: Tab; label: string; icon: typeof FileText; soon?: boolean }> = [
   { id: 'overview', label: 'Overview', icon: Folder },
   { id: 'files', label: 'Files', icon: FileText },
   { id: 'sessions', label: 'Sessions', icon: Time },
-  { id: 'notes', label: 'Notes', icon: Notes }
+  // Greyed until the notes are thought over again: the page is kept, its tab cannot be opened.
+  { id: 'notes', label: 'Notes', icon: Notes, soon: true }
 ]
 
 function relativeToRoot(root: string, path: string): string {
@@ -58,7 +58,7 @@ export function ProjectDetailPage() {
 
   const rawTab = params.get('tab')
   // A project opens on its overview: the input to begin a conversation in it, and what was asked before.
-  const tab: Tab = rawTab === 'files' || rawTab === 'sessions' || rawTab === 'notes' ? rawTab : 'overview'
+  const tab: Tab = rawTab === 'files' || rawTab === 'sessions' ? rawTab : 'overview'
   const goTo = (next: Tab) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
 
   if (!project) {
@@ -134,8 +134,10 @@ export function ProjectDetailPage() {
               type="button"
               role="tab"
               aria-selected={selected}
+              disabled={item.soon}
+              title={item.soon ? 'Coming back soon' : undefined}
               onClick={() => goTo(item.id)}
-              className={`-mb-px flex cursor-pointer items-center gap-1.5 border-0 border-b-2 bg-transparent px-3 py-2 text-[13px] font-medium ${selected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+              className={`-mb-px flex items-center gap-1.5 border-0 border-b-2 bg-transparent px-3 py-2 text-[13px] font-medium ${item.soon ? 'cursor-not-allowed border-transparent text-[var(--text-muted)] opacity-40' : selected ? 'cursor-pointer border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'cursor-pointer border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
               <Icon size={14} />
               {item.label}
@@ -195,7 +197,6 @@ export function ProjectDetailPage() {
               }}
             />
           )}
-          {tab === 'notes' && <NotesTab projectId={project.id} now={now} />}
         </main>
 
         <aside className="no-scrollbar hidden w-[300px] shrink-0 overflow-y-auto lg:block">
