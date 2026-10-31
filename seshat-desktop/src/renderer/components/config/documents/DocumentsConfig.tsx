@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
-import { DocumentReaderCard } from '../knowledge/DocumentReaderCard'
 import { fetchDocumentsSnapshot, type DocumentsSnapshot } from '../knowledge/knowledgeApi'
 import type { SystemStatus } from '../knowledge/knowledgeTypes'
+import { DocumentsAside } from './DocumentsAside'
+import { DocumentsOverview } from './DocumentsOverview'
+import { LocalOcrPanel } from './LocalOcrPanel'
+import { useDocumentReader } from './useDocumentReader'
 
 const emptySnapshot: DocumentsSnapshot = { documentReader: null, system: null }
 
-// How SeshatOS reads documents: the reading of scanned pages on this computer (its models and the languages it reads), and a document
-// server to use instead. It is the card of the Knowledge section, shown on its own because reading a scan is not only for knowledge
-// bases: the chat and the attachments use the same reader.
+type Tab = 'overview' | 'ocr'
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'ocr', label: 'Scanned pages' }
+]
+
+/** How SeshatOS reads documents: which reader goes first and what each can do, and the reading of scanned pages on this computer. */
 export function DocumentsConfig() {
   const [snapshot, setSnapshot] = useState<DocumentsSnapshot>(emptySnapshot)
   const [loading, setLoading] = useState(true)
@@ -28,29 +35,63 @@ export function DocumentsConfig() {
     void load()
   }, [load])
 
+  if (loading) return <div className="text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+
   return (
-    <div className="grid gap-4">
-      {loading && <div className="text-[12px] font-semibold text-[var(--text-muted)]">Loading...</div>}
+    <Loaded
+      snapshot={snapshot}
+      error={error}
+      onSaved={(documentReader) => setSnapshot((current) => ({ ...current, documentReader }))}
+      onSystemChanged={(system) =>
+        setSnapshot((current) => ({
+          ...current,
+          system: current.system ? { ...current.system, ...system } : ({ mode: 'standalone', ...system } as SystemStatus)
+        }))
+      }
+    />
+  )
+}
 
-      {error && (
-        <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-          {error}
+function Loaded({ snapshot, error, onSaved, onSystemChanged }: { snapshot: DocumentsSnapshot; error: string | null; onSaved: Parameters<typeof useDocumentReader>[0]['onSaved']; onSystemChanged: (system: Partial<SystemStatus>) => void }) {
+  const [tab, setTab] = useState<Tab>('overview')
+  const reader = useDocumentReader({ config: snapshot.documentReader, system: snapshot.system, onSaved, onSystemChanged })
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-soft)]">
+        <div role="tablist" className="flex gap-1">
+          {TABS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === item.id}
+              onClick={() => setTab(item.id)}
+              className={`-mb-px cursor-pointer border-0 border-b-2 bg-transparent px-4 py-2.5 text-[13px] font-medium ${tab === item.id ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
-      )}
+        <div className="flex items-center gap-3 pb-2">
+          {reader.saveError && <span className="text-[12px] text-[var(--accent-danger)]">{reader.saveError}</span>}
+          <button
+            type="button"
+            disabled={!reader.dirty || reader.saving}
+            onClick={() => void reader.save()}
+            className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-45"
+          >
+            {reader.saving ? 'Saving...' : reader.dirty ? 'Save changes' : 'Saved'}
+          </button>
+        </div>
+      </div>
 
-      {!loading && (
-        <DocumentReaderCard
-          config={snapshot.documentReader}
-          system={snapshot.system}
-          onSaved={(documentReader) => setSnapshot((current) => ({ ...current, documentReader }))}
-          onSystemChanged={(system) =>
-            setSnapshot((current) => ({
-              ...current,
-              system: current.system ? { ...current.system, ...system } : ({ mode: 'standalone', ...system } as SystemStatus)
-            }))
-          }
-        />
-      )}
+      {error && <div className="mt-4 rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</div>}
+
+      <div className="mt-4 flex flex-col gap-4 xl:flex-row xl:items-start">
+        <div className="min-w-0 flex-1">{tab === 'overview' ? <DocumentsOverview reader={reader} /> : <LocalOcrPanel reader={reader} />}</div>
+        <DocumentsAside />
+      </div>
     </div>
   )
 }
