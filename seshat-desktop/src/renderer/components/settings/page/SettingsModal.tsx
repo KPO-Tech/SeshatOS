@@ -73,17 +73,19 @@ export function SettingsModal({ initialSection, onClose }: Props) {
           <button type="button" onClick={onClose} aria-label="Close settings" className="absolute right-3 top-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
             <Close theme="outline" size={16} />
           </button>
-          <header className="flex items-start gap-4 pr-10">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]">
-              <Icon theme="filled" size={24} fill="currentColor" />
-            </span>
-            <div className="min-w-0">
-              <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{def.label}</h1>
-              <p className="m-0 mt-1 max-w-[720px] text-[13px] leading-5 text-[var(--text-muted)]">{def.description}</p>
+          <div className="mx-auto w-full max-w-[1000px]">
+            <header className="flex items-start gap-4 pr-10">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]">
+                <Icon theme="filled" size={24} fill="currentColor" />
+              </span>
+              <div className="min-w-0">
+                <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{def.label}</h1>
+                <p className="m-0 mt-1 text-[13px] leading-5 text-[var(--text-muted)]">{def.description}</p>
+              </div>
+            </header>
+            <div className="mt-5 border-t border-[var(--border-soft)] pt-5">
+              <SettingsSectionView id={def.id} />
             </div>
-          </header>
-          <div className="mt-5 border-t border-[var(--border-soft)] pt-5">
-            <SettingsSectionView id={def.id} />
           </div>
         </section>
       </div>

@@ -113,7 +113,7 @@ function ThinkingGroupItem({
         <span className="flex-none">Thinking</span>
         {preview && (
           <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-70">
-            — {preview}
+            · {preview}
           </span>
         )}
         <span className="ml-auto inline-flex shrink-0 items-center gap-1.5">
