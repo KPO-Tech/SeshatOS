@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getCollection, isIndexingConfigured, listFiles, listJobs, type Collection, type CollectionFile, type IndexingJob } from './collectionsApi'
-import { fileState, isInProgress } from './fileStatus'
+import { fileState, isInProgress, quotaPause } from './fileStatus'
 
 const WATCH_INTERVAL_MS = 2000
 
@@ -55,5 +55,7 @@ export function useCollectionDetail(id: string) {
     return () => window.clearInterval(timer)
   }, [watching, reload])
 
-  return { collection, files, jobOf, indexingConfigured, loading, failed, reload }
+  const pause = useMemo(() => quotaPause(jobs), [jobs])
+
+  return { collection, files, jobOf, pause, indexingConfigured, loading, failed, reload }
 }

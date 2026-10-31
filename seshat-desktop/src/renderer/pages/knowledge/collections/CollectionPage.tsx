@@ -11,6 +11,7 @@ import { arrange, DEFAULT_VIEW, failedFiles, type DocumentView } from './documen
 import { openDocument } from './openDocument'
 import { fileState, plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
+import { QuotaPausedNotice } from './QuotaPausedNotice'
 import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionDetail } from './useCollectionDetail'
 
@@ -19,7 +20,7 @@ const message = (error: unknown, fallback: string) => (error instanceof Error &&
 export function CollectionPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const { collection, files, jobOf, indexingConfigured, loading, failed, reload } = useCollectionDetail(id)
+  const { collection, files, jobOf, pause, indexingConfigured, loading, failed, reload } = useCollectionDetail(id)
   const { toasts, show } = useToast()
   const [renaming, setRenaming] = useState(false)
   const [indexing, setIndexing] = useState(false)
@@ -254,6 +255,12 @@ export function CollectionPage() {
             {indexingConfigured === false && (
               <div className="mt-5">
                 <IndexingNotice />
+              </div>
+            )}
+
+            {pause && (
+              <div className="mt-5">
+                <QuotaPausedNotice message={pause.message} until={pause.until} />
               </div>
             )}
 

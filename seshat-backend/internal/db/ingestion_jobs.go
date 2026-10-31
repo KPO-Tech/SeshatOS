@@ -352,6 +352,27 @@ func (s *KnowledgeIngestionJobStore) MarkFailed(ctx context.Context, job Knowled
 		Updates(updates).Error
 }
 
+// MarkRateLimited puts a job back to pending to be run again after `wait`, without counting the attempt it just made: a provider that
+// refuses for quota has not looked at the document, so the document has not failed. The message is kept as the job's last error so
+// that the page can say why it waits.
+func (s *KnowledgeIngestionJobStore) MarkRateLimited(ctx context.Context, job KnowledgeIngestionJob, wait time.Duration, message string) error {
+	now := time.Now().UTC()
+	attempts := job.AttemptCount - 1
+	if attempts < 0 {
+		attempts = 0
+	}
+	return s.db.GormDB().WithContext(ctx).
+		Model(&gKnowledgeIngestionJob{}).
+		Where("id = ?", job.ID).
+		Updates(map[string]any{
+			"status":           IngestionJobStatusPending,
+			"attempt_count":    attempts,
+			"last_error":       message,
+			"next_run_at_unix": now.Add(wait).Unix(),
+			"updated_at_unix":  now.Unix(),
+		}).Error
+}
+
 func (s *KnowledgeIngestionJobStore) ResetForRetry(ctx context.Context, id string) (*KnowledgeIngestionJob, error) {
 	now := time.Now().UTC().Unix()
 	if err := s.db.GormDB().WithContext(ctx).

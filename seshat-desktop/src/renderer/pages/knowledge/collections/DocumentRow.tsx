@@ -7,6 +7,7 @@ import { plural, type FileState } from './fileStatus'
 const TONES: Record<FileState['tone'], string> = {
   ready: 'text-[var(--accent-success)]',
   working: 'text-[var(--accent-primary)]',
+  queued: 'text-[var(--text-muted)]',
   failed: 'text-[var(--accent-danger)]',
   waiting: 'text-[var(--text-muted)]'
 }

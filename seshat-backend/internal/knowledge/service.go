@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
@@ -30,6 +31,9 @@ type Service struct {
 	reembedDone func(ctx context.Context, key string)
 	reembedMu   sync.Mutex
 	reembed     *reembedJob
+
+	// pausedUntil is when the queue looks for jobs again after the embedding provider refused for quota (unix nanoseconds, 0 when it runs).
+	pausedUntil atomic.Int64
 }
 
 func NewService(
@@ -438,6 +442,8 @@ func (s *Service) RetryIngestionJob(ctx context.Context, principal *backendauth.
 	if err != nil {
 		return nil, bkerr.Internal("retry ingestion job: "+err.Error(), err)
 	}
+	// A person who asks to try again wants it now: the pause is lifted, and comes back at once if the provider still refuses.
+	s.pausedUntil.Store(0)
 	return ingestionJobFromDB(*reset), nil
 }
 
@@ -551,6 +557,9 @@ func (s *Service) ProcessNextIngestionJob(ctx context.Context) (bool, error) {
 	if s == nil || s.jobs == nil || s.corpora == nil || s.files == nil || s.rag == nil || s.artifacts == nil {
 		return false, nil
 	}
+	if s.quotaPausedFor() > 0 {
+		return false, nil
+	}
 	job, err := s.jobs.ClaimNextDue(ctx, defaultStaleJobTimeout)
 	if err != nil {
 		return false, bkerr.Internal("claim ingestion job: "+err.Error(), err)
@@ -583,7 +592,7 @@ func (s *Service) processIngestionJob(ctx context.Context, job db.KnowledgeInges
 
 	_, chunks, err := s.ingestFile(ctx, job.CorpusID, fileRecord, job.WorkspaceID, job.UserID)
 	if err != nil {
-		_ = s.jobs.MarkFailed(ctx, job, err, defaultIngestionRetryDelay)
+		s.finishFailedJob(ctx, job, err)
 		return
 	}
 	_ = s.jobs.MarkCompleted(ctx, job.ID, chunks)
@@ -661,7 +670,10 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 		ScopeIDs: scopeIDs,
 	})
 	if err != nil {
-		_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileID, db.CorpusFileStatusFailed, 0)
+		// A refusal for quota is not a failure of the document: it stays waiting (see finishFailedJob).
+		if !isQuotaRefusal(err) {
+			_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileID, db.CorpusFileStatusFailed, 0)
+		}
 		return nil, 0, bkerr.Internal("ingest chunks: "+err.Error(), err)
 	}
 

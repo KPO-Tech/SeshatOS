@@ -45,7 +45,7 @@ export type DocumentView = { sort: SortKey; format: DocumentFormat | 'all'; stat
 export const DEFAULT_VIEW: DocumentView = { sort: 'format', format: 'all', state: 'all' }
 
 // A failure first, so it is seen; then what is being done; then what waits; the finished ones last.
-const STATE_RANK: Record<FileState['tone'], number> = { failed: 0, working: 1, waiting: 2, ready: 3 }
+const STATE_RANK: Record<FileState['tone'], number> = { failed: 0, working: 1, queued: 2, waiting: 3, ready: 4 }
 
 const compareNames = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 
@@ -58,7 +58,7 @@ function matchesState(file: CollectionFile, state: FileState, filter: StateFilte
     case 'failed':
       return state.tone === 'failed'
     case 'working':
-      return file.status !== 'ingested' && state.tone === 'working'
+      return file.status !== 'ingested' && (state.tone === 'working' || state.tone === 'queued')
     case 'waiting':
       return file.status !== 'ingested' && state.tone === 'waiting'
   }
