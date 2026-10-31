@@ -115,6 +115,8 @@ const seshatBridge = {
       ipcRenderer.invoke('fs:list-directory', directoryPath),
     readTextFile: (filePath: string): Promise<string> =>
       ipcRenderer.invoke('fs:read-text-file', filePath),
+    countFiles: (directoryPath: string): Promise<{ count: number; capped: boolean }> =>
+      ipcRenderer.invoke('fs:count-files', directoryPath),
   },
   openExternal: (url: string) => ipcRenderer.invoke('system:open-external', url),
   selectFile: (opts?: Electron.OpenDialogOptions) => ipcRenderer.invoke('system:select-file', opts),
