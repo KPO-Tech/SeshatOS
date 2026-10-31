@@ -5,7 +5,7 @@ import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { useDialogsStore } from '@renderer/stores/dialogs'
-import { AgentsConfig } from './agents/AgentsConfig'
+import { AgentsConfig, type AgentSource } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillInstallDialog } from './SkillInstallDialog'
@@ -20,6 +20,7 @@ type Tab = 'all' | 'builtin' | 'installed' | 'available' | 'agents'
 type Sort = 'name' | 'status'
 
 const PREVIEW = 4
+const AGENT_SOURCE_LABEL: Record<AgentSource, string> = { all: 'All categories', 'built-in': 'Built-in', organization: 'Organization', custom: 'Custom' }
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3'
 
 const matches = (entry: CatalogEntry, query: string) => `${entry.name} ${entry.description}`.toLowerCase().includes(query.trim().toLowerCase())
@@ -72,6 +73,8 @@ export function SkillsPage() {
   const [enabledOnly, setEnabledOnly] = useState(false)
   const [sort, setSort] = useState<Sort>('name')
   const [category, setCategory] = useState('all')
+  const [agentSource, setAgentSource] = useState<AgentSource>('all')
+  const [agentSources, setAgentSources] = useState<AgentSource[]>([])
   const [pickingFor, setPickingFor] = useState<{ name: string; description: string } | null>(null)
   const [installing, setInstalling] = useState<string | null>(null)
   const [reviewing, setReviewing] = useState<{ name: string; plan: InstallPlan } | null>(null)
@@ -204,7 +207,7 @@ export function SkillsPage() {
   const nothing = <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{skills.length + available.length === 0 ? 'No skills yet - add a repository to get started.' : 'No skills match your filters.'}</div>
 
   function content() {
-    if (tab === 'agents') return <AgentsConfig />
+    if (tab === 'agents') return <AgentsConfig query={query} sort={sort} source={agentSource} enabledOnly={enabledOnly} onSources={setAgentSources} />
     if (loading) return <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
     if (tab === 'builtin') return builtIn.length === 0 ? nothing : <div className={`${GRID} mt-4`}>{builtIn.map(installedCard)}</div>
     if (tab === 'installed') return installed.length === 0 ? nothing : <div className={`${GRID} mt-4`}>{installed.map(installedCard)}</div>
@@ -245,13 +248,13 @@ export function SkillsPage() {
             <ApplicationOne theme="filled" size={24} fill="currentColor" />
           </span>
           <div className="min-w-0">
-            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{tab === 'agents' ? 'Agents' : 'Skills'}</h1>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Skills</h1>
             <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">
-              {tab === 'agents' ? 'Choose who the agent can be.' : 'Extend SeshatOS with specialized skills. Each skill can help with a specific task, workflow or domain.'}
+              Extend SeshatOS with specialized skills and agents. Each skill can help with a specific task, workflow or domain.
             </p>
           </div>
         </div>
-        {tab !== 'agents' && (
+        {(
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
@@ -269,7 +272,7 @@ export function SkillsPage() {
         )}
       </div>
 
-      {tab !== 'agents' && (
+      {(
         <div className="relative mt-5 shrink-0">
           <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-[var(--text-muted)]">
             <Search theme="outline" size={16} />
@@ -277,7 +280,7 @@ export function SkillsPage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search skills by name, description or tag..."
+            placeholder={tab === 'agents' ? 'Search skills, agents, or keywords...' : 'Search skills by name, description or tag...'}
             className="h-10 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
           />
         </div>
@@ -309,7 +312,7 @@ export function SkillsPage() {
             Agents
           </button>
         </div>
-        {tab !== 'agents' && (
+        {(
           <div className="flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
             <SortThree theme="outline" size={14} />
             Sort by
@@ -321,6 +324,19 @@ export function SkillsPage() {
                 { id: 'status', label: 'Status', checked: sort === 'status', onSelect: () => setSort('status') }
               ]}
             />
+            {tab === 'agents' && (
+              <>
+                <span className="mx-1 h-5 w-px bg-[var(--border-soft)]" aria-hidden="true" />
+                <Pick
+                  label="Category"
+                  value={agentSource === 'all' ? 'All categories' : AGENT_SOURCE_LABEL[agentSource]}
+                  items={[
+                    { id: 'all', label: 'All categories', checked: agentSource === 'all', onSelect: () => setAgentSource('all') },
+                    ...agentSources.map((id) => ({ id, label: AGENT_SOURCE_LABEL[id], checked: agentSource === id, onSelect: () => setAgentSource(id) }))
+                  ]}
+                />
+              </>
+            )}
           </div>
         )}
       </div>
@@ -328,7 +344,7 @@ export function SkillsPage() {
       {error && <p className="mt-4 shrink-0 text-[12.5px] font-semibold text-[var(--accent-danger)]">{error}</p>}
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pb-8">
-        <div className={tab === 'agents' ? 'mx-auto mt-4 w-full max-w-[920px]' : undefined}>{content()}</div>
+        <div>{content()}</div>
       </div>
 
       {pickingFor && (
