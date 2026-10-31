@@ -12,6 +12,18 @@ export function categoryLabel(category: string): string {
   return CATEGORY_LABELS[category] ?? category.charAt(0).toUpperCase() + category.slice(1)
 }
 
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  messaging: 'Tools to send and read messages and email.',
+  files: 'Tools to read, search and organize files and knowledge.',
+  productivity: 'Tools to manage repositories, issues, documentation and collaboration.',
+  crm: 'Tools to manage customers, deals and support.',
+  payments: 'Tools to manage customers, payments and subscriptions.'
+}
+
+export function categoryDescription(category: string): string {
+  return CATEGORY_DESCRIPTIONS[category] ?? 'Tools your agents can use.'
+}
+
 export function matchesQuery(connector: LocalConnector, query: string): boolean {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
