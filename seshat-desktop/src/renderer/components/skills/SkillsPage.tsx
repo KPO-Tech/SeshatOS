@@ -1,11 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import { ApplicationOne, Down, Plus, Right, Search, SortThree } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
-import { SkillDetailModal } from './SkillDetailModal'
 import { SkillIconPicker } from './SkillIconPicker'
 import { categoryOf, tagsFor } from './skillIcons'
 import { deleteSkill, installSkillRepo, setSkillEnabled } from './skillsApi'
@@ -63,13 +63,13 @@ export function SkillsPage() {
   const { iconOf, isChosen, choose } = useSkillIcons()
   const openConfig = useDialogsStore((state) => state.openConfig)
   const { toasts, show } = useToast()
+  const navigate = useNavigate()
 
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const [enabledOnly, setEnabledOnly] = useState(false)
   const [sort, setSort] = useState<Sort>('name')
   const [category, setCategory] = useState('all')
-  const [selectedName, setSelectedName] = useState<string | null>(null)
   const [pickingFor, setPickingFor] = useState<{ name: string; description: string } | null>(null)
   const [installing, setInstalling] = useState<string | null>(null)
 
@@ -85,9 +85,6 @@ export function SkillsPage() {
     [available, query, category]
   )
   const categories = useMemo(() => [...new Set(available.map((entry) => categoryOf(entry)))].sort(), [available])
-
-  // Derived from the live list rather than stored, so the open modal's Enable/Disable label follows the refetch after a toggle.
-  const selected = skills.find((skill) => skill.name === selectedName) ?? null
 
   async function toggle(skill: Skill) {
     try {
@@ -121,6 +118,8 @@ export function SkillsPage() {
     }
   }
 
+  const openSkill = (skill: Skill) => navigate(`/skills/${encodeURIComponent(skill.name)}`)
+
   const changeIcon = (target: { name: string; description: string }): DropdownItem => ({ id: 'icon', label: 'Change icon', onSelect: () => setPickingFor(target) })
 
   const installedCard = (skill: Skill) => (
@@ -129,11 +128,11 @@ export function SkillsPage() {
       skill={skill}
       icon={iconOf(skill)}
       tags={tagsFor(skill)}
-      onOpen={() => setSelectedName(skill.name)}
+      onOpen={() => openSkill(skill)}
       moreItems={[changeIcon(skill), ...(skill.source === 'userSettings' ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => void remove(skill) }] : [])]}
       useItems={[
         { id: 'toggle', label: skill.enabled ? 'Turn off' : 'Turn on', onSelect: () => void toggle(skill) },
-        { id: 'details', label: 'View files', onSelect: () => setSelectedName(skill.name) }
+        { id: 'details', label: 'View files', onSelect: () => openSkill(skill) }
       ]}
     />
   )
@@ -303,7 +302,6 @@ export function SkillsPage() {
         <div className={tab === 'agents' ? 'mx-auto mt-4 w-full max-w-[920px]' : undefined}>{content()}</div>
       </div>
 
-      {selected && <SkillDetailModal skill={selected} onClose={() => setSelectedName(null)} onChanged={() => void reload()} />}
       {pickingFor && (
         <SkillIconPicker skillName={pickingFor.name} current={iconOf(pickingFor)} chosen={isChosen(pickingFor.name)} onPick={(icon) => choose(pickingFor.name, icon)} onClose={() => setPickingFor(null)} />
       )}
