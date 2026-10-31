@@ -78,7 +78,7 @@ export function useConversationRuntimeActions({
     // skipped or have its failure swallowed (see PlanEditorPanel.handleProceed
     // for the same reasoning, including the streaming guard before the PATCH).
     if (store.isSessionStreaming(sessionId)) {
-      onBlocked?.('The agent is still running another turn on this session — wait for it to finish, then try again.')
+      onBlocked?.('The agent is still running another turn on this session. Wait for it to finish, then try again.')
       return
     }
     if (plan && plan.status === 'pending') {
@@ -86,7 +86,7 @@ export function useConversationRuntimeActions({
         const updated = await api.patch<PlanDocument>(`/plans/${planId}`, { status: 'validated' })
         store.upsertPlan(sessionId, updated)
       } catch (err) {
-        onBlocked?.(`Couldn't approve the plan: ${err instanceof Error ? err.message : 'unknown error'}. Nothing was sent — try again.`)
+        onBlocked?.(`Couldn't approve the plan: ${err instanceof Error ? err.message : 'unknown error'}. Nothing was sent. Try again.`)
         return
       }
     }
@@ -113,7 +113,7 @@ export function useConversationRuntimeActions({
     }
 
     if (store.isSessionStreaming(sessionId)) {
-      onBlocked?.('The agent is still running another turn on this session — wait for it to finish, then try again.')
+      onBlocked?.('The agent is still running another turn on this session. Wait for it to finish, then try again.')
       return
     }
     if (plan && plan.status === 'pending') {
@@ -121,7 +121,7 @@ export function useConversationRuntimeActions({
         const updated = await api.patch<PlanDocument>(`/plans/${planId}`, { status: 'rejected' })
         store.upsertPlan(sessionId, updated)
       } catch (err) {
-        onBlocked?.(`Couldn't reject the plan: ${err instanceof Error ? err.message : 'unknown error'}. Nothing was sent — try again.`)
+        onBlocked?.(`Couldn't reject the plan: ${err instanceof Error ? err.message : 'unknown error'}. Nothing was sent. Try again.`)
         return
       }
     }

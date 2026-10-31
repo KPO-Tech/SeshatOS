@@ -83,7 +83,7 @@ export function InvitationsView() {
               <AdminTd mono muted>{inv.role}</AdminTd>
               <AdminTd><AdminStatusBadge tone={statusTone(inv.status)}>{inv.status}</AdminStatusBadge></AdminTd>
               <AdminTd muted>{new Date(inv.created_at).toLocaleDateString()}</AdminTd>
-              <AdminTd muted>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}</AdminTd>
+              <AdminTd muted>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '-'}</AdminTd>
               <AdminTd align="right">
                 {inv.status === 'pending' && (
                   <AdminIconButton label="Revoke invitation" onClick={() => handleRevoke(inv)} disabled={revokingId === inv.id}>

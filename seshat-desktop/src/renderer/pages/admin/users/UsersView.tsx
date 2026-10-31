@@ -68,10 +68,10 @@ export function UsersView() {
               <AdminTd>
                 <div className="flex items-center gap-2">
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--text-muted)]"><User size={12} /></span>
-                  <span className="font-medium text-[var(--text-primary)]">{m.user_display_name || '—'}</span>
+                  <span className="font-medium text-[var(--text-primary)]">{m.user_display_name || '-'}</span>
                 </div>
               </AdminTd>
-              <AdminTd muted mono>{m.user_email || '—'}</AdminTd>
+              <AdminTd muted mono>{m.user_email || '-'}</AdminTd>
               <AdminTd>
                 <select
                   className={`${adminInputClass} w-auto py-1`}

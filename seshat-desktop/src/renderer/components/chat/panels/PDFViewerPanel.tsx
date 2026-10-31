@@ -282,7 +282,7 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
         <button type="button" className={toolbarBtnCx()} onClick={() => goToPage(-1)} disabled={status !== 'ready' || pageNumber <= 1} aria-label="Previous page">
           <Left size={12} />
         </button>
-        <span className="min-w-[44px] text-center text-[11px] text-app-text-secondary">{status === 'ready' ? `${pageNumber} / ${pageCount}` : '—'}</span>
+        <span className="min-w-[44px] text-center text-[11px] text-app-text-secondary">{status === 'ready' ? `${pageNumber} / ${pageCount}` : '-'}</span>
         <button type="button" className={toolbarBtnCx()} onClick={() => goToPage(1)} disabled={status !== 'ready' || pageNumber >= pageCount} aria-label="Next page">
           <Right size={12} />
         </button>
@@ -308,7 +308,7 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
         <button type="button" className={toolbarBtnCx()} onClick={() => zoomBy(1 / 1.15)} disabled={status !== 'ready'} aria-label="Zoom out">
           <Reduce size={12} />
         </button>
-        <span className="min-w-[44px] text-center text-[11px] text-app-text-secondary">{status === 'ready' ? `${scalePercent}%` : '—'}</span>
+        <span className="min-w-[44px] text-center text-[11px] text-app-text-secondary">{status === 'ready' ? `${scalePercent}%` : '-'}</span>
         <button type="button" className={toolbarBtnCx()} onClick={() => zoomBy(1.15)} disabled={status !== 'ready'} aria-label="Zoom in">
           <Add size={12} />
         </button>
