@@ -16,6 +16,10 @@ export type ChatInputProps = {
   onCorpusChange?: (id: string | null) => void
   projectPath?: string
   onProjectChange?: (path: string) => void
+  /** The folder belongs to the page the input is on (a project): it is shown, and cannot be changed or cleared here. */
+  projectLocked?: boolean
+  /** Puts the cursor in the input when it appears. */
+  autoFocus?: boolean
   attachments?: ChatAttachment[]
   onAttachFiles?: (files: FileList) => void | Promise<void>
   onRemoveAttachment?: (id: string) => void

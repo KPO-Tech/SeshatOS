@@ -48,7 +48,21 @@ function splitModelChoiceId(id: string): { providerId: string; modelId: string }
   }
 }
 
-export function Home() {
+export type NewChatSuggestion = { label: string; prompt: string; icon: ReactNode }
+
+type NewChatProps = {
+  /** A folder the conversation is held in and that cannot be changed from the input: the page of a project. */
+  fixedProjectPath?: string
+  /** "home" is the start page, centred under a greeting; "project" is the input alone, to sit inside a page. */
+  variant?: 'home' | 'project'
+  placeholder?: string
+  /** Buttons under the input that fill it with a first request. The start page has its own when none are given. */
+  suggestions?: NewChatSuggestion[]
+  autoFocus?: boolean
+}
+
+/** The start of a conversation: the input with its model, attachments and folder, which creates the conversation and opens it. */
+export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Send a message, upload files, open a folder, or create a scheduled task...', suggestions, autoFocus }: NewChatProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { loading: providersLoading } = useProviders()
@@ -68,7 +82,7 @@ export function Home() {
   const [loadingModelProviderIds, setLoadingModelProviderIds] = useState<string[]>([])
   const [isCreatingSession, setIsCreatingSession] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [projectPath, setProjectPath] = useState('')
+  const [projectPath, setProjectPath] = useState(fixedProjectPath ?? '')
   // A session has to exist for /sessions/:id/files to accept an upload, but
   // Home never sends a message until the user hits Send. So attaching a file
   // lazily creates the session early (reused by handleSend when it fires) -
@@ -109,9 +123,10 @@ export function Home() {
   const selectedModelForSend = selectedModelChoice?.model ?? selectedModel
 
   useEffect(() => {
-    const project = searchParams.get('project')
+    // On the page of a project the folder is the project's, whatever the address says.
+    const project = fixedProjectPath ?? searchParams.get('project')
     if (project) setProjectPath(project)
-  }, [searchParams])
+  }, [searchParams, fixedProjectPath])
 
   // Auto-select default (or first) provider when none is selected and providers are loaded
   useEffect(() => {
@@ -376,7 +391,7 @@ export function Home() {
         projectPath: projectPath || undefined,
       })
       setInputValue('')
-      setProjectPath('')
+      setProjectPath(fixedProjectPath ?? '')
       setAttachments([])
       setAttachmentError(null)
       setPendingSessionId(null)
@@ -390,22 +405,32 @@ export function Home() {
     }
   }
 
-  return (
-    <div className="home-root">
+  const quickActions: NewChatSuggestion[] =
+    suggestions ??
+    (variant === 'home'
+      ? [
+          { icon: <CheckCorrect size={14} />, label: 'Create a task', prompt: 'Create a task to ' },
+          { icon: <FileTextOne size={14} />, label: 'Summarize a file', prompt: 'Summarize the file at ' },
+          { icon: <Globe size={14} />, label: 'Search the web', prompt: 'Search the web for ' },
+          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' }
+        ]
+      : [])
 
-      {/* Main Content */}
-      <div className="home-center">
-        <h1 className="home-greeting">Hi, what's your plan for today?</h1>
+  const body = (
+    <>
+        {variant === 'home' && <h1 className="home-greeting">Hi, what's your plan for today?</h1>}
 
-        <div className="home-input-container">
+        <div className={variant === 'home' ? 'home-input-container' : 'w-full'}>
           <ChatInput
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSend}
-            placeholder="Send a message, upload files, open a folder, or create a scheduled task..."
+            placeholder={placeholder}
             maxHeight={200}
             projectPath={projectPath}
-            onProjectChange={setProjectPath}
+            onProjectChange={fixedProjectPath ? undefined : setProjectPath}
+            projectLocked={Boolean(fixedProjectPath)}
+            autoFocus={autoFocus}
             attachments={attachments}
             onAttachFiles={handleAttachFiles}
             onRemoveAttachment={handleRemoveAttachment}
@@ -451,13 +476,24 @@ export function Home() {
           )}
         </div>
 
-        <div className="home-quick-actions">
-          <QuickAction icon={<CheckCorrect size={14} />} label="Create a task" onClick={() => setInputValue('Create a task to ')} />
-          <QuickAction icon={<FileTextOne size={14} />} label="Summarize a file" onClick={() => setInputValue('Summarize the file at ')} />
-          <QuickAction icon={<Globe size={14} />} label="Search the web" onClick={() => setInputValue('Search the web for ')} />
-          <QuickAction icon={<LightMember size={14} />} label="Brainstorm ideas" onClick={() => setInputValue('Help me brainstorm ideas for ')} />
-        </div>
-      </div>
+        {quickActions.length > 0 && (
+          <div className={variant === 'home' ? 'home-quick-actions' : 'home-quick-actions mt-3 justify-start'}>
+            {quickActions.map((action) => (
+              <QuickAction key={action.label} icon={action.icon} label={action.label} onClick={() => setInputValue(action.prompt)} />
+            ))}
+          </div>
+        )}
+    </>
+  )
+
+  return variant === 'home' ? <div className="home-center">{body}</div> : <div className="w-full">{body}</div>
+}
+
+/** The start page: the input to begin a conversation, under a greeting. */
+export function Home() {
+  return (
+    <div className="home-root">
+      <NewChat />
     </div>
   )
 }

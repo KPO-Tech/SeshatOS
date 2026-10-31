@@ -30,6 +30,8 @@ export function ChatInput({
   onCorpusChange,
   projectPath,
   onProjectChange,
+  projectLocked = false,
+  autoFocus = false,
   attachments = [],
   onAttachFiles,
   onRemoveAttachment,
@@ -56,6 +58,9 @@ export function ChatInput({
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const selectorsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (autoFocus) textareaRef.current?.focus()
+  }, [autoFocus])
   const [openSelector, setOpenSelector] = useState<'provider' | 'model' | null>(null)
   const hasProviderMenu = !!providerOptions?.length && !!onProviderSelect
   const hasModelMenu = !!modelOptions?.length && !!onModelSelect
@@ -350,6 +355,7 @@ export function ChatInput({
             <button
               className={cx(TOOL_ICON_CSS, projectPath && '!text-[var(--accent-primary)]')}
               aria-label={projectPath ? `Project: ${projectPath}` : 'Set project folder'}
+              disabled={projectLocked}
               onClick={async () => {
                 const result = await window.seshat?.dialog?.openDirectory?.()
                 if (result && !result.canceled && result.filePaths?.length) {
@@ -362,13 +368,15 @@ export function ChatInput({
             {projectLabel && (
               <>
                 <span className="truncate text-[12px] text-app-text-secondary" title={projectPath}>{projectLabel}</span>
-                <button
-                  className="flex items-center border-0 bg-transparent p-0.5 text-app-text-muted hover:text-app-text-secondary"
-                  aria-label="Clear project folder"
-                  onMouseDown={(e) => { e.preventDefault(); onProjectChange?.('') }}
-                >
-                  <WindowCloseIcon />
-                </button>
+                {!projectLocked && (
+                  <button
+                    className="flex items-center border-0 bg-transparent p-0.5 text-app-text-muted hover:text-app-text-secondary"
+                    aria-label="Clear project folder"
+                    onMouseDown={(e) => { e.preventDefault(); onProjectChange?.('') }}
+                  >
+                    <WindowCloseIcon />
+                  </button>
+                )}
               </>
             )}
           </div>
