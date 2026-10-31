@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **The menus of the start page open, and the page starts lower.** The "..." of the recent chats and of the projects were cut off by the frame of their list; they now show their actions. The welcome starts further down on a tall window instead of sticking to the top, and the glow behind it fades at its top edge.
 - **The start page has its background.** A warm glow around the mark and slow lines of the accent colour across the page, quieter on a light theme.
 - **The Projects page has the proportions of Skills and Plugins.** The same margins, the same title and icon, search, filters and buttons, and project cards with the size and the corners of the other cards. The page now fills the width instead of stopping at a fixed width.
 - **The skills we offer show the logo of their project.** Remotion, Superpowers, Strix and the LinkedIn skills use the logo each publishes in its repository, on the card to install and on the cards and the page of their skills. A skill whose repository has no logo (data analysis, ppt-master, paperasse), or whose icon you chose yourself, keeps its icon.
