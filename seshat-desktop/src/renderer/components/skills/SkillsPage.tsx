@@ -2,12 +2,14 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { ApplicationOne, Down, Plus, Right, Scan, Search, SortThree } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
+import { copyItem, openItem } from '@renderer/components/ui/menuItems'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig, type AgentSource } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
 import { ImportSkillsDialog } from './ImportSkillsDialog'
+import { repoLogo } from './skillLogos'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillInstallDialog } from './SkillInstallDialog'
 import { categoryOf, tagsFor } from './skillIcons'
@@ -63,7 +65,7 @@ function Pick({ label, value, items }: { label: string; value: string; items: Dr
 // What the agent knows how to do (skills) and who it can be (agents): two lists of the same kind, one page.
 export function SkillsPage() {
   const { skills, loading, error, reload } = useSkills()
-  const { available, reload: reloadCatalog } = useSkillCatalog()
+  const { available, reload: reloadCatalog, sourceOf } = useSkillCatalog()
   const { iconOf, isChosen, choose } = useSkillIcons()
   const openConfig = useDialogsStore((state) => state.openConfig)
   const { toasts, show } = useToast()
@@ -157,9 +159,16 @@ export function SkillsPage() {
       key={skill.name}
       skill={skill}
       icon={iconOf(skill)}
+      logo={isChosen(skill.name) ? undefined : repoLogo(skill.collection)}
       tags={tagsFor(skill)}
       onOpen={() => openSkill(skill)}
-      moreItems={[changeIcon(skill), ...(skill.source === 'userSettings' ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => void remove(skill) }] : [])]}
+      source={sourceOf(skill.collection)}
+      moreItems={[
+        changeIcon(skill),
+        ...(sourceOf(skill.collection) ? [openItem('source', 'Open the source', sourceOf(skill.collection) ?? '')] : []),
+        copyItem('copy', 'Copy the name', skill.name, (message) => show(message)),
+        ...(skill.source === 'userSettings' ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => void remove(skill) }] : [])
+      ]}
       useItems={[
         { id: 'toggle', label: skill.enabled ? 'Turn off' : 'Turn on', onSelect: () => void toggle(skill) },
         { id: 'details', label: 'View files', onSelect: () => openSkill(skill) }
@@ -173,13 +182,19 @@ export function SkillsPage() {
       name={entry.name}
       description={entry.description}
       icon={iconOf(entry)}
+      logo={isChosen(entry.name) ? undefined : repoLogo(entry.name)}
       url={entry.url}
       category={entry.category}
       skillCount={entry.skill_count}
       needs={entry.needs ?? []}
       onViewSource={() => openInAppBrowser(entry.url)}
       busy={installing === entry.name}
-      moreItems={[changeIcon(entry)]}
+      moreItems={[
+        { id: 'install', label: 'Install', onSelect: () => void install(entry) },
+        openItem('source', 'Open the source', entry.url),
+        changeIcon(entry),
+        copyItem('copy', 'Copy the repository address', entry.url, (message) => show(message))
+      ]}
       onInstall={() => void install(entry)}
     />
   )

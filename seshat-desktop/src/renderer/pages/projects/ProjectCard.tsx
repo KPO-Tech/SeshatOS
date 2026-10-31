@@ -56,10 +56,10 @@ export function TagList({ tags }: { tags: string[] }) {
 }
 
 /** The coloured folder of a project. */
-export function ProjectTile({ project, size = 36 }: { project: ProjectSummary; size?: number }) {
+export function ProjectTile({ project, size = 44 }: { project: ProjectSummary; size?: number }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-lg"
+      className="flex shrink-0 items-center justify-center rounded-xl"
       style={{ width: size, height: size, background: tileBackground(project.color), color: PROJECT_COLOR_VALUE[project.color] }}
     >
       <Folder theme="filled" size={Math.round(size * 0.5)} />
@@ -82,20 +82,20 @@ export function ProjectCard({ project, files, now, actions }: Props) {
   const last = relativeTime(project.lastActiveAt, now)
   return (
     <article
-      className={`@container group relative flex flex-col gap-2.5 rounded-xl border bg-[var(--surface-panel)] p-3.5 transition-colors focus-within:border-[var(--accent-primary)] hover:border-[var(--accent-primary)] ${project.archived ? 'border-[var(--border-soft)] opacity-75' : 'border-[var(--border-soft)]'}`}
+      className={`@container group relative flex flex-col gap-3 rounded-2xl border bg-[var(--surface-panel)] p-4 transition-colors focus-within:border-[var(--accent-primary)] hover:border-[var(--accent-primary)] ${project.archived ? 'border-[var(--border-soft)] opacity-75' : 'border-[var(--border-soft)]'}`}
     >
       <div className="flex items-start gap-3">
         <button type="button" onClick={() => actions.open(project)} aria-label={`Open ${project.name}`} className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 border-0 bg-transparent p-0 text-left">
           <ProjectTile project={project} />
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
-              <span className="truncate text-[13.5px] font-semibold text-[var(--text-primary)]" title={project.name}>
+              <span className="truncate text-[14px] font-semibold text-[var(--text-primary)]" title={project.name}>
                 {project.name}
               </span>
               {project.pinned && <Pin size={12} className="shrink-0 text-[var(--accent-primary)]" />}
               <ActivityMark project={project} />
             </span>
-            <span className="mt-0.5 block truncate font-mono text-[10.5px] text-[var(--text-muted)]" title={project.rootPath}>
+            <span className="mt-0.5 block truncate font-mono text-[11px] text-[var(--text-muted)]" title={project.rootPath}>
               {project.rootPath}
             </span>
           </span>
@@ -111,13 +111,13 @@ export function ProjectCard({ project, files, now, actions }: Props) {
         />
       </div>
 
-      <p className="m-0 line-clamp-2 min-h-[34px] text-[12px] leading-[17px] text-[var(--text-secondary)]">{project.description || <span className="text-[var(--text-muted)]">No description yet.</span>}</p>
+      <p className="m-0 line-clamp-2 min-h-[38px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{project.description || <span className="text-[var(--text-muted)]">No description yet.</span>}</p>
 
       <div className="min-h-[22px]">
         <TagList tags={project.tags} />
       </div>
 
-      <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+      <div className="flex items-center gap-3 text-[11.5px] text-[var(--text-muted)]">
         <span className="inline-flex items-center gap-1.5">
           <Folder size={12} />
           {fileCountLabel(files?.count, files?.capped ?? false)}
@@ -133,9 +133,9 @@ export function ProjectCard({ project, files, now, actions }: Props) {
           <button
             type="button"
             onClick={() => actions.startSession(project)}
-            className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-l-lg border border-r-0 border-[var(--border-soft)] bg-transparent px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white"
+            className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-l-xl border border-r-0 border-[var(--border-soft)] bg-transparent px-2.5 py-2 text-[13px] font-medium text-[var(--text-primary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white"
           >
-            <Play size={12} />
+            <Play size={13} />
             <span className="truncate">Start session</span>
           </button>
           <Dropdown
@@ -146,7 +146,7 @@ export function ProjectCard({ project, files, now, actions }: Props) {
               ...(project.lastSessionId ? [{ id: 'continue', label: 'Continue the last conversation', icon: <Check size={14} />, onSelect: () => actions.continueSession(project) }] : [])
             ]}
             trigger={({ toggle }) => (
-              <button type="button" onClick={toggle} aria-label="More ways to start a session" aria-haspopup="menu" className="flex h-full w-7 cursor-pointer items-center justify-center rounded-r-lg border border-l border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white">
+              <button type="button" onClick={toggle} aria-label="More ways to start a session" aria-haspopup="menu" className="flex h-full w-8 cursor-pointer items-center justify-center rounded-r-xl border border-l border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] transition-colors group-hover:border-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white group-focus-within:border-[var(--accent-primary)] group-focus-within:bg-[var(--accent-primary)] group-focus-within:text-white">
                 &#9662;
               </button>
             )}
@@ -157,9 +157,9 @@ export function ProjectCard({ project, files, now, actions }: Props) {
           onClick={() => actions.openFolder(project)}
           title="Open folder"
           aria-label={`Open the folder of ${project.name}`}
-          className="flex min-w-0 flex-none cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--border-soft)] bg-transparent px-2.5 py-1.5 text-[12px] font-medium @[340px]:flex-1 text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)]"
+          className="flex min-w-0 flex-none cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-transparent px-3 py-2 text-[13px] font-medium @[340px]:flex-1 text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)]"
         >
-          <FolderOpen size={14} />
+          <FolderOpen size={15} />
           <span className="hidden truncate @[340px]:inline">Open folder</span>
         </button>
       </div>

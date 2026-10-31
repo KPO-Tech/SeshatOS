@@ -11,13 +11,15 @@ function hexLuminance(hex: string): number {
 
 type Props = {
   brand?: string
+  /** The address of a logo file, for a vendor simple-icons has no mark for. */
+  src?: string
   title: string
   size?: number
 }
 
 // A vendor mark on a neutral tile. Near-black marks (Notion, GitHub) would
 // vanish in the dark theme, so they take the text color instead of their own.
-export function BrandIcon({ brand, title, size = 40 }: Props) {
+export function BrandIcon({ brand, src, title, size = 40 }: Props) {
   const icon = brand ? BRAND_ICONS[brand] : undefined
   const glyph = Math.round(size * 0.55)
 
@@ -27,7 +29,9 @@ export function BrandIcon({ brand, title, size = 40 }: Props) {
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      {icon ? (
+      {src ? (
+        <img src={src} alt="" width={glyph} height={glyph} className="object-contain" />
+      ) : icon ? (
         <svg viewBox="0 0 24 24" width={glyph} height={glyph} fill={hexLuminance(icon.hex) < 0.2 ? 'currentColor' : `#${icon.hex}`}>
           <path d={icon.path} />
         </svg>

@@ -1,6 +1,7 @@
 import { CheckOne, Down, Download, LinkOne, More, Play } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
-import { SkillIconTile } from './SkillIconTile'
+import { SourceLink } from '@renderer/components/ui/SourceLink'
+import { SkillMark } from './SkillIconTile'
 import type { SkillIconId } from './skillIcons'
 import type { Skill } from './skillsTypes'
 
@@ -29,6 +30,10 @@ function MenuButton({ label, toggle, children }: { label: string; toggle: () => 
 type Props = {
   skill: Skill
   icon: SkillIconId
+  /** The logo of the repository the skill comes from, when it has one. */
+  logo?: string
+  /** The address of the repository the skill comes from, when it is known. */
+  source?: string
   tags: string[]
   /** The menu behind the dots: what changes the skill's look or removes it. */
   moreItems: DropdownItem[]
@@ -38,11 +43,11 @@ type Props = {
 }
 
 /** An installed skill: what it is, what it is about, and the button to open it. */
-export function SkillCard({ skill, icon, tags, moreItems, useItems, onOpen }: Props) {
+export function SkillCard({ skill, icon, logo, source, tags, moreItems, useItems, onOpen }: Props) {
   return (
     <div className={CARD}>
       <div className="flex items-start gap-3">
-        <SkillIconTile icon={icon} size={44} />
+        <SkillMark icon={icon} logo={logo} title={skill.display_name || skill.name} size={44} />
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="flex items-center gap-1.5">
             <span className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{skill.display_name || skill.name}</span>
@@ -61,6 +66,7 @@ export function SkillCard({ skill, icon, tags, moreItems, useItems, onOpen }: Pr
       </div>
       <p className="m-0 mt-3 line-clamp-2 min-h-[38px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{skill.description}</p>
       <TagRow tags={tags} />
+      {source && <SourceLink url={source} className="mt-2" />}
       <div className="mt-3 flex">
         <button type="button" onClick={onOpen} className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-l-xl border border-[var(--border-soft)] bg-transparent text-[13px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]">
           <Play theme="outline" size={13} />
@@ -80,6 +86,7 @@ type AvailableProps = {
   name: string
   description: string
   icon: SkillIconId
+  logo?: string
   /** The address of the repository: its owner is shown, and the page can be opened. */
   url: string
   category?: string
@@ -91,23 +98,18 @@ type AvailableProps = {
   onViewSource: () => void
 }
 
-function ownerOf(url: string): string {
-  const parts = url.replace(/^https?:\/\//, '').split('/')
-  return parts[1] ? `${parts[1]} on ${parts[0].replace(/^www\./, '')}` : parts[0]
-}
-
 /**
  * A skill that can be installed, and is not yet. It is drawn apart from the installed ones: a tinted head, who publishes it and how many
  * skills it holds, what it needs on the machine, and a filled Install button.
  */
-export function AvailableSkillCard({ name, description, icon, url, category, skillCount, needs, busy, moreItems, onInstall, onViewSource }: AvailableProps) {
+export function AvailableSkillCard({ name, description, icon, logo, url, category, skillCount, needs, busy, moreItems, onInstall, onViewSource }: AvailableProps) {
   return (
     <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-dashed border-[var(--border-strong)] bg-[color-mix(in_srgb,var(--accent-primary)_4%,var(--surface-panel))]">
       <div className="flex items-start gap-3 bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)] px-4 pb-3 pt-4">
-        <SkillIconTile icon={icon} size={52} />
+        <SkillMark icon={icon} logo={logo} title={name} size={52} />
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="truncate text-[14.5px] font-semibold text-[var(--text-primary)]">{name}</div>
-          <div className="mt-0.5 truncate text-[11.5px] text-[var(--text-muted)]">{ownerOf(url)}</div>
+          <SourceLink url={url} className="mt-0.5" />
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {category && <span className="rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--accent-primary)]">{category}</span>}
             {skillCount ? <span className="text-[11px] text-[var(--text-muted)]">{skillCount} {skillCount === 1 ? 'skill' : 'skills'}</span> : null}

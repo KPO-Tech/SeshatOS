@@ -1,4 +1,7 @@
 .home-root {
+  /* How far the welcome starts from the top: more on a tall window, so that the page is not stuck to the title bar. */
+  --home-top: clamp(32px, calc((100vh - 600px) / 2 - 20px), 260px);
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -6,31 +9,56 @@
   overflow-y: auto;
 }
 
+/* The glow and the lines sit behind the page and scroll with it. */
+.home-backdrop {
+  position: absolute;
+  inset: calc(var(--home-top) - 50px) 0 auto 0;
+  height: 440px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 52% 62% at 50% 24%, color-mix(in srgb, var(--accent-primary) 22%, transparent), transparent 72%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 62%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 62%, transparent);
+}
+
+:root[data-theme="light"] .home-backdrop {
+  opacity: 0.55;
+}
+
 .home-center {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 28px 18px 60px;
-  max-width: 900px;
+  justify-content: flex-start;
+  padding: var(--home-top) 32px 56px;
+  max-width: 1120px;
   margin: 0 auto;
   width: 100%;
 }
 
 .home-greeting {
-  font-family: serif;
-  font-size: var(--font-size-2xl);
-  font-weight: 500;
+  font-size: 34px;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: var(--space-7);
-  letter-spacing: -0.01em;
+  margin: 14px 0 0;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.home-subtitle {
+  margin: 8px 0 28px;
+  font-size: var(--font-size-md, 15px);
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .home-input-container {
   width: 100%;
-  max-width: 760px;
-  margin-bottom: var(--space-8);
+  margin-top: var(--space-7);
+  margin-bottom: var(--space-6);
 }
 
 .home-input-status {
