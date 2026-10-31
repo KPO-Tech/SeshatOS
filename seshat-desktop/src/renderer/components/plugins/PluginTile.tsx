@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Download, More, SettingTwo } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
+import { SourceLink } from '@renderer/components/ui/SourceLink'
 import { BrandIcon } from './catalog/BrandIcon'
 
 export type PluginState = 'installed' | 'available' | 'attention'
@@ -17,6 +18,8 @@ type Props = {
   /** The word of the badge when it is not connected ("Not installed", "Off"). */
   offLabel?: string
   menu: DropdownItem[]
+  /** Where the plugin comes from, as a link to read its code or its page. */
+  source?: string
   layout: 'grid' | 'list'
   onOpen: () => void
 }
@@ -81,7 +84,7 @@ function Menu({ items }: { items: DropdownItem[] }) {
 }
 
 /** A plugin, as a card or as a row: what it is, whether it is connected, and the one thing to do with it. */
-export function PluginTile({ title, description, brand, icon, state, tags, offLabel = 'Not installed', menu, layout, onOpen }: Props) {
+export function PluginTile({ title, description, brand, icon, state, tags, offLabel = 'Not installed', menu, source, layout, onOpen }: Props) {
   const tile = icon ?? <BrandIcon brand={brand} title={title} size={layout === 'grid' ? 52 : 40} />
   const badge = <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold ${BADGE[state]}`}>{stateLabel(state, offLabel)}</span>
 
@@ -119,6 +122,7 @@ export function PluginTile({ title, description, brand, icon, state, tags, offLa
       <div className="mt-3">
         <Tags tags={tags} />
       </div>
+      {source && <SourceLink url={source} className="mt-2" />}
       <div className="mt-3 flex gap-2">
         <Action state={state} onOpen={onOpen} />
         <Menu items={menu} />

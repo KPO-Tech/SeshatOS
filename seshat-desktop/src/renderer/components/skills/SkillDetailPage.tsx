@@ -4,6 +4,8 @@ import { CheckOne, Left, More } from '@icon-park/react'
 import { CodeBox } from '@renderer/components/chat/tools/common'
 import { languageForPath } from '@renderer/components/chat/tools/helpers'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
+import { copyItem, openItem } from '@renderer/components/ui/menuItems'
+import { SourceLink } from '@renderer/components/ui/SourceLink'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { SkillFileTree } from './SkillFileTree'
@@ -16,6 +18,7 @@ import { deleteSkill, setSkillEnabled } from './skillsApi'
 import type { Skill, TreeNode } from './skillsTypes'
 import { MAIN_FILE, useSkillFiles } from './useSkillFiles'
 import { useSkillIcons } from './useSkillIcons'
+import { useSkillCatalog } from './useSkillCatalog'
 import { useSkills } from './useSkills'
 
 const SOURCE_LABEL: Record<string, string> = { bundled: 'Built-in', userSettings: 'Yours', managed: 'Managed', plugin: 'Plugin', mcp: 'MCP' }
@@ -49,6 +52,7 @@ export function SkillDetailPage() {
   const { name = '' } = useParams()
   const navigate = useNavigate()
   const { skills, loading, reload } = useSkills()
+  const { sourceOf } = useSkillCatalog()
   const { iconOf, isChosen, choose } = useSkillIcons()
   const { toasts, show } = useToast()
   const [picking, setPicking] = useState(false)
@@ -88,7 +92,7 @@ export function SkillDetailPage() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <Body skill={skill} icon={iconOf(skill)} logo={isChosen(skill.name) ? undefined : repoLogo(skill.collection)} onToggle={() => void toggle(skill)} onRemove={() => void remove(skill)} onChangeIcon={() => setPicking(true)} onBack={() => navigate('/skills')} />
+      <Body skill={skill} icon={iconOf(skill)} logo={isChosen(skill.name) ? undefined : repoLogo(skill.collection)} repoUrl={sourceOf(skill.collection)} onNotice={(message) => show(message)} onToggle={() => void toggle(skill)} onRemove={() => void remove(skill)} onChangeIcon={() => setPicking(true)} onBack={() => navigate('/skills')} />
       {picking && <SkillIconPicker skillName={skill.name} current={iconOf(skill)} chosen={isChosen(skill.name)} onPick={(icon) => choose(skill.name, icon)} onClose={() => setPicking(false)} />}
       <ToastStack toasts={toasts} />
     </div>
@@ -99,13 +103,15 @@ type BodyProps = {
   skill: Skill
   icon: SkillIconId
   logo?: string
+  repoUrl?: string
+  onNotice: (message: string) => void
   onToggle: () => void
   onRemove: () => void
   onChangeIcon: () => void
   onBack: () => void
 }
 
-function Body({ skill, icon, logo, onToggle, onRemove, onChangeIcon, onBack }: BodyProps) {
+function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChangeIcon, onBack }: BodyProps) {
   const { tree, selected, setSelected, content, loading } = useSkillFiles(skill.name)
   const [source, setSource] = useState(false)
   const tags = useMemo(() => tagsFor(skill, 6), [skill])
@@ -119,6 +125,8 @@ function Body({ skill, icon, logo, onToggle, onRemove, onChangeIcon, onBack }: B
 
   const menu: DropdownItem[] = [
     { id: 'icon', label: 'Change icon', onSelect: onChangeIcon },
+    ...(repoUrl ? [openItem('source', 'Open the source', repoUrl)] : []),
+    copyItem('copy', 'Copy the name', skill.name, onNotice),
     ...(owned ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: onRemove }] : [])
   ]
 
@@ -146,6 +154,7 @@ function Body({ skill, icon, logo, onToggle, onRemove, onChangeIcon, onBack }: B
                 {SOURCE_LABEL[skill.source] ?? skill.source}
                 {skill.collection && skill.collection !== skill.source ? ` · ${skill.collection}` : ''}
               </div>
+              {repoUrl && <SourceLink url={repoUrl} className="mt-1" />}
               {skill.description && <p className="m-0 mt-1.5 max-w-[760px] text-[13px] leading-5 text-[var(--text-secondary)]">{skill.description}</p>}
             </div>
           </div>

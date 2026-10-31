@@ -17,6 +17,10 @@ describe('the MCP catalog', () => {
     }
   })
 
+  it('names where each server comes from', () => {
+    for (const item of MCP_CATALOG) expect(item.source, item.name).toMatch(/^https:\/\//)
+  })
+
   it('offers the ones that are not installed yet', () => {
     const left = availableMcp([{ name: 'Playwright' }, { name: 'mine' }]).map((item) => item.name)
     expect(left).not.toContain('playwright')
