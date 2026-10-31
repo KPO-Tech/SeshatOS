@@ -2,6 +2,7 @@ import type { IpcMain } from 'electron'
 import { readdir, readFile, stat } from 'fs/promises'
 import { assertTrustedSender } from './trusted-sender'
 import { assertLocalFilePath } from './validation'
+import { countFiles, type FileCount } from './fileCount'
 
 // Backs the Files panel's tree - real filesystem browsing of a project
 // folder, same trust level as project:path-exists/project:has-context-file
@@ -28,6 +29,12 @@ export function registerFilesystemHandlers(ipcMain: IpcMain) {
         if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
         return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
       })
+  })
+
+  // The number on a project's card: bounded (see countFiles), so a folder as big as a disk answers at once.
+  ipcMain.handle('fs:count-files', async (event, directoryPath: string): Promise<FileCount> => {
+    assertTrustedSender(event)
+    return countFiles(assertLocalFilePath(directoryPath, 'Directory'))
   })
 
   ipcMain.handle('fs:read-text-file', async (event, filePath: string): Promise<string> => {

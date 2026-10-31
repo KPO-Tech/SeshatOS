@@ -1,48 +1,95 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Edit, Folder, FolderPlus, Search, Delete } from '@icon-park/react'
 import { useSessionStore } from '@renderer/stores/session'
-import { addProject, listProjects, removeProject, renameProject, type ProjectSummary } from '@renderer/lib/projects'
+import { addProject, listProjects, removeProject, updateProject, type ProjectSummary } from '@renderer/lib/projects'
+import { arrangeProjects, countTabs, PROJECT_SORTS, PROJECT_TABS, type ProjectSort, type ProjectTab } from '@renderer/lib/projectsView'
+import { ConfirmDialog } from '@renderer/pages/knowledge/collections/ConfirmDialog'
+import { Dropdown } from './Dropdown'
+import { EditProjectDialog } from './EditProjectDialog'
+import { Archive, Folder, FolderPlus, GridView, ListView, Pin, Play, Search, Sort, Time } from './icons'
+import { ProjectCard, type ProjectActions } from './ProjectCard'
+import { ProjectRow } from './ProjectRow'
+import { useFileCounts } from './useFileCounts'
 
-function fmtActivity(iso: string | null): string {
-  if (!iso) return 'No activity yet'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return 'No activity yet'
-  const diffMs = Date.now() - d.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return 'Active now'
-  if (diffMin < 60) return `Active ${diffMin}m ago`
-  const diffHour = Math.floor(diffMin / 60)
-  if (diffHour < 24) return `Active ${diffHour}h ago`
-  const diffDay = Math.floor(diffHour / 24)
-  if (diffDay < 7) return `Active ${diffDay}d ago`
-  return `Active ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+type ViewMode = 'grid' | 'list'
+
+const VIEW_KEY = 'seshat.projects.view'
+const SORT_KEY = 'seshat.projects.sort'
+
+function readSetting<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  try {
+    const value = localStorage.getItem(key)
+    return allowed.includes(value as T) ? (value as T) : fallback
+  } catch {
+    return fallback
+  }
 }
 
-// Local folders the user works with - see lib/projects.ts for what a
-// "project" actually is here (no backend entity, just a labeled path).
-// Deliberately small: no embedded
-// terminal, no per-project settings - find a project, see what's in it,
-// jump into a conversation.
+function saveSetting(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // the choice is kept for this visit only
+  }
+}
+
+const TAB_ICON: Record<ProjectTab, typeof Folder> = { all: Folder, recent: Time, pinned: Pin, active: Play, archived: Archive }
+
+// Local folders the user works with - see lib/projects.ts for what a "project" actually is here (no backend entity: a folder, with what the
+// person says about it). The page finds one, shows what is in it and what it is doing, and starts a conversation in it.
 export function ProjectsPage() {
   const navigate = useNavigate()
-  const sessions = useSessionStore((s) => s.sessions)
+  const sessions = useSessionStore((state) => state.sessions)
+  const streaming = useSessionStore((state) => state.isStreamingBySession)
+  const setActive = useSessionStore((state) => state.setActive)
   const [query, setQuery] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [refreshNonce, setRefreshNonce] = useState(0)
+  const [tab, setTab] = useState<ProjectTab>('all')
+  const [sort, setSort] = useState<ProjectSort>(() => readSetting<ProjectSort>(SORT_KEY, PROJECT_SORTS.map((item) => item.id), 'recent'))
+  const [mode, setMode] = useState<ViewMode>(() => readSetting<ViewMode>(VIEW_KEY, ['grid', 'list'], 'grid'))
+  const [editing, setEditing] = useState<ProjectSummary | null>(null)
+  const [removing, setRemoving] = useState<ProjectSummary | null>(null)
+  const [refresh, setRefresh] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
+
+  // "2 hours ago" stays true while the page is open.
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const projects = useMemo(
-    () => listProjects(sessions),
-    [sessions, refreshNonce], // eslint-disable-line react-hooks/exhaustive-deps
+    () => listProjects(sessions, streaming),
+    [sessions, streaming, refresh] // eslint-disable-line react-hooks/exhaustive-deps
   )
+  const files = useFileCounts(useMemo(() => projects.map((project) => project.rootPath), [projects]))
+  const counts = useMemo(() => countTabs(projects, now), [projects, now])
+  const shown = useMemo(() => arrangeProjects(projects, { tab, query, sort }, now), [projects, tab, query, sort, now])
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return projects
-    return projects.filter((p) => p.name.toLowerCase().includes(q) || p.rootPath.toLowerCase().includes(q))
-  }, [projects, query])
+  const changed = () => setRefresh((n) => n + 1)
+
+  const actions: ProjectActions = {
+    open: (project) => navigate(`/projects/${encodeURIComponent(project.id)}`),
+    startSession: (project) => {
+      navigate(`/?project=${encodeURIComponent(project.rootPath)}`)
+      setActive(null)
+    },
+    continueSession: (project) => {
+      if (!project.lastSessionId) return
+      setActive(project.lastSessionId)
+      navigate(`/conversation/${project.lastSessionId}`)
+    },
+    openFolder: (project) => void window.seshat?.openPath?.(project.rootPath),
+    edit: setEditing,
+    togglePinned: (project) => {
+      updateProject(project.id, project.rootPath, { pinned: !project.pinned })
+      changed()
+    },
+    toggleArchived: (project) => {
+      updateProject(project.id, project.rootPath, { archived: !project.archived, pinned: false })
+      changed()
+    },
+    remove: setRemoving
+  }
 
   async function handleNewProject() {
     const result = await window.seshat?.dialog?.openDirectory?.()
@@ -51,125 +98,155 @@ export function ProjectsPage() {
     navigate(`/projects/${encodeURIComponent(project.id)}`)
   }
 
-  function startRename(project: ProjectSummary) {
-    setEditingId(project.id)
-    setEditingName(project.name)
-  }
-
-  function commitRename(project: ProjectSummary) {
-    const nextName = editingName.trim()
-    setEditingId(null)
-    if (!nextName || nextName === project.name) return
-    renameProject(project.id, nextName, project.rootPath)
-    setRefreshNonce((n) => n + 1)
-  }
-
-  function handleRemove(id: string) {
-    setDeletingId(null)
-    removeProject(id)
-    setRefreshNonce((n) => n + 1)
-  }
+  const sortLabel = PROJECT_SORTS.find((item) => item.id === sort)?.label ?? 'Sort by'
+  const emptyAll = projects.length === 0
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-4">
-      <div className="flex shrink-0 items-center justify-between">
-        <h1 className="text-[18px] font-semibold text-[var(--text-primary)]">Projects</h1>
-        <button
-          type="button"
-          onClick={() => void handleNewProject()}
-          className="flex h-7 items-center gap-1.5 rounded-lg border border-[var(--border-soft)] px-3 text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-        >
-          <FolderPlus size={13} />
-          New project
-        </button>
-      </div>
+    <section className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-8 pb-10 pt-8">
+      <div className="mx-auto w-full max-w-[1280px]">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-[var(--accent-primary)]" style={{ background: 'color-mix(in srgb, var(--accent-primary) 16%, transparent)' }}>
+              <Folder theme="filled" size={26} />
+            </span>
+            <div className="min-w-0">
+              <h1 className="m-0 text-[26px] font-semibold leading-tight text-[var(--text-primary)]">Projects</h1>
+              <p className="m-0 mt-1 text-[13.5px] text-[var(--text-muted)]">Open, organize and work with your local projects. Start a session, explore files, or continue where you left off.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleNewProject()}
+            className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--accent-primary)] px-4 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+          >
+            <FolderPlus size={16} />
+            New project
+          </button>
+        </header>
 
-      <div className="relative mt-3 shrink-0">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"><Search size={16} /></span>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search projects"
-          className="h-9 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-9 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
-        />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-1 pb-16 text-center">
-          <Folder size={22} className="mb-1 text-[var(--text-muted)]" />
-          <h2 className="text-[14px] font-semibold text-[var(--text-primary)]">{projects.length === 0 ? 'No projects yet' : 'No matches'}</h2>
-          <p className="max-w-[320px] text-[12px] leading-[1.6] text-[var(--text-muted)]">
-            {projects.length === 0
-              ? 'Add a folder, or pick one from the composer next time you start a chat.'
-              : 'Try a different search term.'}
-          </p>
-        </div>
-      ) : (
-        <div className="no-scrollbar mt-4 min-h-0 flex-1 overflow-y-auto pb-8">
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-2.5">
-            {filtered.map((project) => (
-              <div key={project.id} className="group relative rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] transition-colors hover:bg-[var(--surface-muted)]">
-                {deletingId === project.id ? (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-xl bg-[var(--surface-panel)] p-3 text-center">
-                    <span className="text-[12px] text-[var(--text-primary)]">Remove this project?</span>
-                    <div className="flex items-center gap-1.5">
-                      <button type="button" onClick={() => setDeletingId(null)} className="cursor-pointer rounded-md border border-[var(--border-soft)] bg-transparent px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-                        Cancel
-                      </button>
-                      <button type="button" onClick={() => handleRemove(project.id)} className="cursor-pointer rounded-md border border-[var(--accent-danger)]/30 bg-[var(--accent-danger)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-danger)]">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="absolute right-2 top-2 z-10 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button type="button" aria-label="Rename" onClick={() => startRename(project)} className="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
-                      <Edit size={12} />
-                    </button>
-                    <button type="button" aria-label="Remove" onClick={() => setDeletingId(project.id)} className="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-danger)]">
-                      <Delete size={12} />
-                    </button>
-                  </div>
-                )}
-
-                {/* A real <button> can't contain the rename <input> (nested
-                    interactive elements are invalid HTML), so this is a div
-                    with button semantics instead - same pattern used for
-                    ToolLineItem/ThinkingBlock's rows. */}
-                <div
-                  className="flex flex-col items-start p-3 text-left"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate(`/projects/${encodeURIComponent(project.id)}`)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/projects/${encodeURIComponent(project.id)}`) } }}
-                >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--text-secondary)]"><Folder size={16} /></span>
-                  {editingId === project.id ? (
-                    <input
-                      className="mt-2.5 w-full rounded-md border border-[var(--accent-primary)] bg-[var(--surface-root)] px-2 py-1 text-[13px] font-semibold text-[var(--text-primary)] outline-none"
-                      value={editingName}
-                      autoFocus
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onBlur={() => commitRename(project)}
-                      onKeyDown={(e) => {
-                        e.stopPropagation()
-                        if (e.key === 'Enter') { e.preventDefault(); commitRename(project) }
-                        else if (e.key === 'Escape') setEditingId(null)
-                      }}
-                    />
-                  ) : (
-                    <span className="mt-2.5 w-full truncate text-[13px] font-semibold text-[var(--text-primary)]">{project.name}</span>
-                  )}
-                  <span className="w-full truncate font-mono text-[10.5px] text-[var(--text-muted)]">{project.rootPath}</span>
-                  <span className="mt-2.5 text-[11px] text-[var(--text-muted)]">
-                    {project.sessionCount} session{project.sessionCount === 1 ? '' : 's'} - {fmtActivity(project.lastActiveAt)}
-                  </span>
-                </div>
-              </div>
+        <div className="mt-6 flex items-center gap-3">
+          <div className="relative min-w-0 flex-1">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <Search size={17} />
+            </span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search projects by name, folder, description or tag..."
+              aria-label="Search projects"
+              className="h-11 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-11 pr-4 text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
+            />
+          </div>
+          <div className="flex shrink-0 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-1" role="group" aria-label="View">
+            {(['grid', 'list'] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={mode === value}
+                aria-label={value === 'grid' ? 'Grid view' : 'List view'}
+                onClick={() => {
+                  setMode(value)
+                  saveSetting(VIEW_KEY, value)
+                }}
+                className={`flex size-9 cursor-pointer items-center justify-center rounded-lg border-0 ${mode === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+              >
+                {value === 'grid' ? <GridView size={17} /> : <ListView size={17} />}
+              </button>
             ))}
           </div>
+          <Dropdown
+            label="Sort projects"
+            items={PROJECT_SORTS.map((item) => ({
+              id: item.id,
+              label: item.label,
+              checked: item.id === sort,
+              onSelect: () => {
+                setSort(item.id)
+                saveSetting(SORT_KEY, item.id)
+              }
+            }))}
+            trigger={({ toggle }) => (
+              <button type="button" onClick={toggle} aria-haspopup="menu" className="flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 text-[13.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+                <Sort size={16} className="text-[var(--text-muted)]" />
+                {sortLabel}
+                <span className="text-[var(--text-muted)]">&#9662;</span>
+              </button>
+            )}
+          />
         </div>
+
+        <div className="mt-4 flex flex-wrap gap-2.5" role="tablist" aria-label="Show">
+          {PROJECT_TABS.map((item) => {
+            const Icon = TAB_ICON[item.id]
+            const selected = tab === item.id
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setTab(item.id)}
+                className={`flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-3.5 text-[13.5px] font-medium transition-colors ${selected ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+              >
+                <Icon size={15} />
+                {item.label}
+                <span className={`rounded-full px-2 py-0.5 text-[11.5px] leading-none ${selected ? 'bg-black/20 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{counts[item.id]}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {shown.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1.5 py-24 text-center">
+            <Folder size={24} className="mb-1 text-[var(--text-muted)]" />
+            <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{emptyAll ? 'No projects yet' : 'No projects here'}</h2>
+            <p className="m-0 max-w-[360px] text-[13px] leading-[1.6] text-[var(--text-muted)]">
+              {emptyAll ? 'Add a folder, or pick one from the composer next time you start a chat.' : query ? 'Try a different search.' : 'Nothing in this tab yet.'}
+            </p>
+            {emptyAll && (
+              <button type="button" onClick={() => void handleNewProject()} className="mt-3 cursor-pointer rounded-xl border-0 bg-[var(--accent-primary)] px-4 py-2 text-[13.5px] font-semibold text-white hover:opacity-90">
+                New project
+              </button>
+            )}
+          </div>
+        ) : mode === 'grid' ? (
+          <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(330px,1fr))] gap-4">
+            {shown.map((project) => (
+              <ProjectCard key={project.id} project={project} files={files[project.rootPath]} now={now} actions={actions} />
+            ))}
+          </div>
+        ) : (
+          <ul className="m-0 mt-5 flex list-none flex-col gap-2.5 p-0">
+            {shown.map((project) => (
+              <ProjectRow key={project.id} project={project} files={files[project.rootPath]} now={now} actions={actions} />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {editing && (
+        <EditProjectDialog
+          project={editing}
+          onClose={() => setEditing(null)}
+          onSave={(details) => {
+            updateProject(editing.id, editing.rootPath, details)
+            setEditing(null)
+            changed()
+          }}
+        />
+      )}
+      {removing && (
+        <ConfirmDialog
+          title="Remove the project"
+          message={`${removing.name} is taken off this list. The folder and its files are not touched.`}
+          confirmLabel="Remove"
+          onClose={() => setRemoving(null)}
+          onConfirm={() => {
+            removeProject(removing.id)
+            setRemoving(null)
+            changed()
+          }}
+        />
       )}
     </section>
   )

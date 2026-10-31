@@ -11,6 +11,7 @@ interface Window {
     fs: {
       listDirectory: (directoryPath: string) => Promise<Array<{ name: string; isDirectory: boolean }>>
       readTextFile: (filePath: string) => Promise<string>
+      countFiles: (directoryPath: string) => Promise<{ count: number; capped: boolean }>
     }
     openExternal: (url: string) => Promise<void>
     selectFile: (opts?: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>

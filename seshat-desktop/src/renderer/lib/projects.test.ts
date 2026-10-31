@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { ChatSession } from '@renderer/stores/session'
 import {
   addProject,
+  defaultProjectColor,
   listProjects,
   normalizeProjectPath,
   projectIdForPath,
@@ -9,6 +10,7 @@ import {
   renameProject,
   resolveProjectContextPath,
   selectRecentSessions,
+  updateProject,
 } from './projects'
 
 // This suite runs under vitest's plain 'node' environment (see
@@ -103,8 +105,61 @@ describe('listProjects', () => {
   it('an added project with no sessions yet still shows up, with 0 sessions', () => {
     addProject('C:\\empty\\project')
     expect(listProjects([])).toEqual([
-      { id: projectIdForPath('C:\\empty\\project'), name: 'project', rootPath: 'C:\\empty\\project', sessionCount: 0, lastActiveAt: null },
+      {
+        id: projectIdForPath('C:\\empty\\project'),
+        name: 'project',
+        rootPath: 'C:\\empty\\project',
+        sessionCount: 0,
+        lastActiveAt: null,
+        description: '',
+        tags: [],
+        color: defaultProjectColor('C:\\empty\\project'),
+        pinned: false,
+        archived: false,
+        activeSessionCount: 0,
+        lastSessionId: null,
+      },
     ])
+  })
+
+  it('counts the conversations that are writing an answer, and names the last one active', () => {
+    const sessions = [
+      { id: 'old', projectPath: 'C:\\work\\app', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-02T00:00:00Z' },
+      { id: 'new', projectPath: 'C:\\work\\app', createdAt: '2026-01-03T00:00:00Z', updatedAt: '2026-01-04T00:00:00Z' },
+    ] as ChatSession[]
+    const [project] = listProjects(sessions, { old: true, new: false })
+    expect(project.activeSessionCount).toBe(1)
+    expect(project.lastSessionId).toBe('new')
+  })
+})
+
+describe('what a person says about a project', () => {
+  it('keeps the description, tags, colour, pin and archive, and trims and de-duplicates the tags', () => {
+    updateProject(projectIdForPath('C:\\work\\app'), 'C:\\work\\app', { description: '  Market analyses ', tags: ['data', ' data ', 'rag', ''], color: 'blue', pinned: true })
+    const [project] = listProjects([])
+    expect(project).toMatchObject({ description: 'Market analyses', tags: ['data', 'rag'], color: 'blue', pinned: true, archived: false })
+    updateProject(project.id, project.rootPath, { archived: true, pinned: false })
+    expect(listProjects([])[0]).toMatchObject({ archived: true, pinned: false, color: 'blue', description: 'Market analyses' })
+  })
+
+  it('promotes a project that only its conversations implied, and keeps the folder it names', () => {
+    const sessions = [{ id: 's', projectPath: 'C:\\work\\app', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' }] as ChatSession[]
+    updateProject(projectIdForPath('C:\\work\\app'), 'C:\\work\\app', { pinned: true })
+    const projects = listProjects(sessions)
+    expect(projects).toHaveLength(1)
+    expect(projects[0]).toMatchObject({ pinned: true, sessionCount: 1, rootPath: 'C:\\work\\app' })
+  })
+
+  it('reads a colour or tags it does not know as if they were not there', () => {
+    localStorage.setItem('seshat.projects.v1', JSON.stringify([{ rootPath: 'C:\\x', color: 'chartreuse', tags: ['ok', 3, null] }]))
+    const [project] = listProjects([])
+    expect(project.tags).toEqual(['ok'])
+    expect(project.color).toBe(defaultProjectColor('C:\\x'))
+  })
+
+  it('gives the same colour to the same folder every time, never grey', () => {
+    expect(defaultProjectColor('D:\\Docs\\Immobilier')).toBe(defaultProjectColor('d:\\docs\\immobilier\\'))
+    for (const name of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) expect(defaultProjectColor(`D:\\${name}`)).not.toBe('gray')
   })
 })
 
