@@ -70,6 +70,20 @@ describe('environmentRows', () => {
     ])
   })
 
+  it('names the git branch under the folder, and says when files are not committed', () => {
+    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: true, branch: 'dev' } }).map((row) => [row.label, row.value])).toEqual([
+      ['Runs on', 'This computer'],
+      ['Folder', 'D:/proj'],
+      ['Branch', 'dev']
+    ])
+    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: true, branch: 'dev', dirty: true } }).find((row) => row.label === 'Branch')?.value).toBe('dev, with changes')
+  })
+
+  it('shows the short commit of a detached head and no row outside a repository', () => {
+    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: true, branch: 'a1b2c3d', detached: true } }).find((row) => row.label === 'Branch')?.value).toBe('a1b2c3d (detached)')
+    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: false } }).some((row) => row.label === 'Branch')).toBe(false)
+  })
+
   it('names Docker and a confined state without a warning', () => {
     const rows = environmentRows({ docker: true, confinement: { label: 'Docker', confined: true } })
     expect(rows[0]).toEqual({ label: 'Runs on', value: 'A Docker container' })

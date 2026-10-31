@@ -10,6 +10,7 @@ import { collectChangedFiles } from '@renderer/lib/changedFiles'
 import { collectPullUrls } from '@renderer/lib/pullRequests'
 import { ChangesList } from './changes/ChangesList'
 import { usePullRequests } from './changes/usePullRequests'
+import { useGitState } from './useGitState'
 import { api, ApiError } from '@renderer/api/client'
 import { compactionNote, connectorRows, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { formatDuration } from '@renderer/lib/turnTiming'
@@ -91,7 +92,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     }
   }
 
-  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
+  const git = useGitState(session?.workspacePath)
+  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, git, confinement })
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0
