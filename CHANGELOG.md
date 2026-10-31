@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Settings has one look, starting with General.** A shared header (icon, title, one line, a state badge), cards that each answer one question, rows with the control on the right, and tabs where a page has several parts. General, Appearance, Shortcuts and Account use it; the descriptions under the titles are one short line, and the buttons that did nothing (Local data, Change email, sign-in methods, Delete account) are gone.
+
 ### Fixed
 
 - **Settings has its title bar again.** A bar across the top of the window with its name and the close button, above the list of pages and the page.

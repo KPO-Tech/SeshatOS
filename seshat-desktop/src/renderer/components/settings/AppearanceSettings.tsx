@@ -13,7 +13,7 @@ import {
 import { duplicateTheme, exportTheme, importTheme } from '@renderer/lib/customThemes'
 import { applyTheme, getStoredTheme, updateCustomThemes, type ThemePreference } from '@renderer/lib/theme'
 import { allThemes, themeById, type ThemeSeed } from '@renderer/lib/themes'
-import { Panel } from './SettingsPrimitives'
+import { ActionButton, SettingRow, SettingsCard, SettingsPage, SettingsTabs, type SettingsTab } from './kit'
 import { Segmented, SystemCard, ThemeCard, ThemeGroup, ThemePreview } from './ThemeCards'
 import { ThemeEditor } from './ThemeEditor'
 
@@ -23,12 +23,18 @@ type Props = {
 }
 
 type Filter = 'all' | 'dark' | 'light'
+type Tab = 'theme' | 'interface'
+const TABS: Array<SettingsTab<Tab>> = [
+  { id: 'theme', label: 'Theme' },
+  { id: 'interface', label: 'Interface' }
+]
 
 function customThemes(): ThemeSeed[] {
   return allThemes().filter((seed) => seed.category === 'custom')
 }
 
 export function AppearanceSettings({ theme, onThemeChange }: Props) {
+  const [tab, setTab] = useState<Tab>('theme')
   const [filter, setFilter] = useState<Filter>('all')
   const [custom, setCustom] = useState<ThemeSeed[]>(() => {
     getStoredTheme() // makes sure the themes the person made are loaded
@@ -109,44 +115,40 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
   const mine = custom.filter(visible)
 
   return (
-    <Panel title="Appearance">
-      <div className="space-y-8">
-        <CurrentTheme theme={theme} selected={selected} />
+    <SettingsPage id="appearance" tabs={<SettingsTabs tabs={TABS} value={tab} onChange={setTab} />}>
+      {tab === 'theme' ? (
+        <>
+          <CurrentTheme theme={theme} selected={selected} />
 
-        <section>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Select a preset</h2>
-            <Segmented
-              label="Show"
-              value={filter}
-              options={[
-                { value: 'all', label: 'All' },
-                { value: 'dark', label: 'Dark' },
-                { value: 'light', label: 'Light' }
-              ]}
-              onChange={setFilter}
-            />
-          </div>
-          <div className="mt-4 grid gap-6">
-            <ThemeGroup title="Seshat">
-              <SystemCard selected={theme === 'auto'} onSelect={select('auto')} />
-              {allThemes().filter((seed) => seed.category === 'seshat').map(card)}
-            </ThemeGroup>
-            {mine.length > 0 && <ThemeGroup title="My themes">{mine.map(card)}</ThemeGroup>}
-            {dark.length > 0 && <ThemeGroup title="Dark">{dark.map(card)}</ThemeGroup>}
-            {light.length > 0 && <ThemeGroup title="Light">{light.map(card)}</ThemeGroup>}
-            {gradients.length > 0 && <ThemeGroup title="Gradients">{gradients.map(card)}</ThemeGroup>}
-          </div>
-        </section>
+          <SettingsCard
+            title="Presets"
+            padded
+            action={
+              <Segmented
+                label="Show"
+                value={filter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'dark', label: 'Dark' },
+                  { value: 'light', label: 'Light' }
+                ]}
+                onChange={setFilter}
+              />
+            }
+          >
+            <div className="grid gap-6">
+              <ThemeGroup title="Seshat">
+                <SystemCard selected={theme === 'auto'} onSelect={select('auto')} />
+                {allThemes().filter((seed) => seed.category === 'seshat').map(card)}
+              </ThemeGroup>
+              {mine.length > 0 && <ThemeGroup title="My themes">{mine.map(card)}</ThemeGroup>}
+              {dark.length > 0 && <ThemeGroup title="Dark">{dark.map(card)}</ThemeGroup>}
+              {light.length > 0 && <ThemeGroup title="Light">{light.map(card)}</ThemeGroup>}
+              {gradients.length > 0 && <ThemeGroup title="Gradients">{gradients.map(card)}</ThemeGroup>}
+            </div>
+          </SettingsCard>
 
-        <section>
-          <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Customize</h2>
-            <button type="button" onClick={duplicate} className="rounded-md border border-[var(--border-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">
-              Duplicate
-            </button>
-          </div>
-          <div className="mt-3">
+          <SettingsCard title="Customize" padded action={<ActionButton onClick={duplicate}>Duplicate</ActionButton>}>
             {selected?.category === 'custom' ? (
               <ThemeEditor
                 theme={selected}
@@ -154,38 +156,31 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
                 onDelete={() => remove(selected)}
               />
             ) : (
-              <p className="m-0 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-                Presets cannot be changed. Duplicate the current theme to make your own: pick its colours, add a wallpaper, rename it.
-              </p>
+              <p className="m-0 text-[12px] text-[var(--text-muted)]">Presets cannot be changed. Duplicate one to make your own.</p>
             )}
-          </div>
-        </section>
+          </SettingsCard>
 
-        <section>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Import and export</h2>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(event) => { void onImport(event.target.files?.[0]); event.target.value = '' }} />
-            <ActionButton onClick={() => importRef.current?.click()}>Import theme</ActionButton>
-            <ActionButton disabled={!selected} onClick={() => selected && download(selected)}>Export theme</ActionButton>
-            <ActionButton disabled={!selected} onClick={() => selected && void copyJson(selected)}>Copy JSON</ActionButton>
-          </div>
-          {notice && <p className={`mt-2 text-[12px] ${notice.tone === 'ok' ? 'text-[var(--accent-success)]' : 'text-[var(--accent-danger)]'}`}>{notice.text}</p>}
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">A theme file holds its name, three colours and a gradient. A picture wallpaper stays on this machine.</p>
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Interface size</h2>
-            <button
-              type="button"
-              disabled={isDefault}
-              onClick={() => update(DEFAULT_APPEARANCE)}
-              className="rounded-md px-2.5 py-1 text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
-            >
+          <SettingsCard title="Import and export">
+            <SettingRow title="Theme file">
+              <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(event) => { void onImport(event.target.files?.[0]); event.target.value = '' }} />
+              <ActionButton onClick={() => importRef.current?.click()}>Import</ActionButton>
+              <ActionButton disabled={!selected} onClick={() => selected && download(selected)}>Export</ActionButton>
+              <ActionButton disabled={!selected} onClick={() => selected && void copyJson(selected)}>Copy JSON</ActionButton>
+            </SettingRow>
+            {notice && <p className={`m-0 px-4 py-2.5 text-[12px] ${notice.tone === 'ok' ? 'text-[var(--accent-success)]' : 'text-[var(--accent-danger)]'}`}>{notice.text}</p>}
+          </SettingsCard>
+        </>
+      ) : (
+        <SettingsCard
+          title="Interface"
+          action={
+            <ActionButton disabled={isDefault} onClick={() => update(DEFAULT_APPEARANCE)}>
               Reset
-            </button>
-          </div>
-          <div className="mt-3 max-w-[520px]">
+            </ActionButton>
+          }
+        >
+          <div className="px-4 py-3">
+            <div className="mb-2 text-[13px] font-semibold text-[var(--text-primary)]">Interface size</div>
             <input
               type="range"
               min={0}
@@ -201,17 +196,13 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
                 <span key={zoom} className={zoom === prefs.zoom ? 'text-[var(--text-primary)]' : undefined}>{zoom}%</span>
               ))}
             </div>
-            <div className="mt-1 flex justify-between text-[11px] text-[var(--text-muted)]"><span>Smaller</span><span>Larger</span></div>
           </div>
-
-          <div className="mt-6 grid gap-5">
-            <Choice title="Chat text size" description="The size of the text of messages." value={prefs.textSize} options={TEXT_SIZES.map((o) => ({ value: o.value, label: o.label }))} onChange={(textSize) => update({ textSize })} />
-            <Choice title="Spacing" description="Room between messages and between list items." value={prefs.spacing} options={SPACINGS.map((o) => ({ value: o.value, label: o.label }))} onChange={(spacing) => update({ spacing })} />
-            <Choice title="Conversation width" description="How wide messages and the composer can grow." value={prefs.contentWidth} options={CONTENT_WIDTHS.map((o) => ({ value: o.value, label: o.label }))} onChange={(contentWidth) => update({ contentWidth })} />
-          </div>
-        </section>
-      </div>
-    </Panel>
+          <Choice title="Chat text size" value={prefs.textSize} options={TEXT_SIZES.map((o) => ({ value: o.value, label: o.label }))} onChange={(textSize) => update({ textSize })} />
+          <Choice title="Spacing" value={prefs.spacing} options={SPACINGS.map((o) => ({ value: o.value, label: o.label }))} onChange={(spacing) => update({ spacing })} />
+          <Choice title="Conversation width" value={prefs.contentWidth} options={CONTENT_WIDTHS.map((o) => ({ value: o.value, label: o.label }))} onChange={(contentWidth) => update({ contentWidth })} />
+        </SettingsCard>
+      )}
+    </SettingsPage>
   )
 }
 
@@ -223,14 +214,14 @@ function CurrentTheme({ theme, selected }: { theme: ThemePreference; selected: T
     <span key={label} title={`${label} ${color}`} className="size-5 rounded border border-[var(--border-strong)]" style={{ background: color }} />
   )
   return (
-    <div className="flex flex-wrap items-center gap-6 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-5">
+    <div className="flex flex-wrap items-center gap-6 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
       <div className="w-[280px] max-w-full shrink-0">
         <ThemePreview seed={seed} height={130} />
       </div>
       <div>
         <div className="text-[26px] font-semibold leading-tight text-[var(--text-primary)]">{name}</div>
         <div className="mt-1 text-[12px] text-[var(--text-muted)]">
-          {theme === 'auto' ? 'Follows your system: Seshat Dark or Seshat Light.' : seed.category === 'custom' ? 'Your theme' : seed.wallpaper ? 'Gradient' : seed.scheme === 'dark' ? 'Dark' : 'Light'}
+          {theme === 'auto' ? 'Follows your system' : seed.category === 'custom' ? 'Your theme' : seed.wallpaper ? 'Gradient' : seed.scheme === 'dark' ? 'Dark' : 'Light'}
         </div>
         <div className="mt-3 flex gap-1.5">
           {swatch(seed.bg, 'Surface')}
@@ -242,39 +233,20 @@ function CurrentTheme({ theme, selected }: { theme: ThemePreference; selected: T
   )
 }
 
-function ActionButton({ children, onClick, disabled }: { children: string; onClick: () => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-md border border-[var(--border-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
-    >
-      {children}
-    </button>
-  )
-}
-
 function Choice<T extends string>({
   title,
-  description,
   value,
   options,
   onChange
 }: {
   title: string
-  description: string
   value: T
   options: Array<{ value: T; label: string }>
   onChange: (value: T) => void
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="min-w-0">
-        <div className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</div>
-        <div className="text-[12px] text-[var(--text-muted)]">{description}</div>
-      </div>
+    <SettingRow title={title}>
       <Segmented label={title} value={value} options={options} onChange={onChange} />
-    </div>
+    </SettingRow>
   )
 }

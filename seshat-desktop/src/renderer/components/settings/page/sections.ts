@@ -38,31 +38,31 @@ export type SettingsSectionDef = {
 
 export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
   { id: 'general', label: 'General', group: 'General', icon: SettingTwo, description: 'Language and notifications.' },
-  { id: 'appearance', label: 'Appearance', group: 'General', icon: Contrast, description: 'The theme, its colours and the look of the app.' },
-  { id: 'shortcuts', label: 'Shortcuts', group: 'General', icon: Keyboard, description: 'The keys to move around the app quickly.' },
+  { id: 'appearance', label: 'Appearance', group: 'General', icon: Contrast, description: 'Theme, colors and size.' },
+  { id: 'shortcuts', label: 'Shortcuts', group: 'General', icon: Keyboard, description: 'Keys to move around quickly.' },
   { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
 
-  { id: 'providers', label: 'Providers', group: 'AI runtime', icon: Cube, description: 'Manage your AI providers, API keys and model settings. Connect several providers to give your agents access to the best models.' },
-  { id: 'models', label: 'Models', group: 'AI runtime', icon: Chip, description: 'Choose defaults, model catalogs, aliases, and fallback behavior.' },
-  { id: 'titles', label: 'Titles', group: 'AI runtime', icon: Magic, description: 'Name new sessions with a small local model that runs alongside the answer.' },
-  { id: 'web-search', label: 'Web search', group: 'AI runtime', icon: Search, description: 'Search providers, domain policies, and web retrieval settings.' },
+  { id: 'providers', label: 'Providers', group: 'AI runtime', icon: Cube, description: 'The AI providers your agents use.' },
+  { id: 'models', label: 'Models', group: 'AI runtime', icon: Chip, description: 'Defaults, catalogs and fallbacks.' },
+  { id: 'titles', label: 'Titles', group: 'AI runtime', icon: Magic, description: 'Name new sessions with a small local model.' },
+  { id: 'web-search', label: 'Web search', group: 'AI runtime', icon: Search, description: 'Search providers and web rules.' },
 
-  { id: 'documents', label: 'Documents', group: 'Capabilities', icon: FileText, description: 'Read and understand documents (PDFs, Office files, images, scans) and make them available to your agents.' },
-  { id: 'search', label: 'Search', group: 'Capabilities', icon: MindMapping, description: 'The embedding and reranking models that Knowledge searches your documents with.' },
-  { id: 'image', label: 'Images', group: 'Capabilities', icon: Pic, description: 'The provider, model, size and quality the agent uses to create images.' },
-  { id: 'audio', label: 'Audio', group: 'Capabilities', icon: Music, description: 'Dictation and transcription (on this computer first), and the voice of speech synthesis.' },
+  { id: 'documents', label: 'Documents', group: 'Capabilities', icon: FileText, description: 'How documents are read for your agents.' },
+  { id: 'search', label: 'Search', group: 'Capabilities', icon: MindMapping, description: 'Embedding and reranking for Knowledge.' },
+  { id: 'image', label: 'Images', group: 'Capabilities', icon: Pic, description: 'How the agent creates images.' },
+  { id: 'audio', label: 'Audio', group: 'Capabilities', icon: Music, description: 'Dictation, transcription and voice.' },
 
-  { id: 'mcp', label: 'MCP servers', group: 'Workspace', icon: Plug, description: 'MCP servers exposed to agents and tools.' },
-  { id: 'environment', label: 'Environment', group: 'Workspace', icon: Terminal, description: 'Encrypted API keys, env vars, and backend restart flow.' },
-  { id: 'storage', label: 'Storage', group: 'Workspace', icon: DataServer, description: 'Local filesystem, object storage, and cache locations.' },
-  { id: 'skills', label: 'Skill repositories', group: 'Workspace', icon: Robot, description: 'Skill repositories downloaded to this machine and the groups they provide.' },
-  { id: 'answers', label: 'Answers', group: 'Workspace', icon: Brain, description: 'How the agent presents its answers: drawn components, and more preferences later.' },
+  { id: 'mcp', label: 'MCP servers', group: 'Workspace', icon: Plug, description: 'MCP servers for agents and tools.' },
+  { id: 'environment', label: 'Environment', group: 'Workspace', icon: Terminal, description: 'API keys and environment variables.' },
+  { id: 'storage', label: 'Storage', group: 'Workspace', icon: DataServer, description: 'Where files and caches live.' },
+  { id: 'skills', label: 'Skill repositories', group: 'Workspace', icon: Robot, description: 'Skill repositories on this machine.' },
+  { id: 'answers', label: 'Answers', group: 'Workspace', icon: Brain, description: 'How the agent presents answers.' },
 
-  { id: 'memories', label: 'Memories', group: 'Data & privacy', icon: Brain, description: 'What the agent remembers about you and your work.' },
-  { id: 'data-controls', label: 'Data controls', group: 'Data & privacy', icon: Shield, description: 'What is kept on this device, and how to remove it.' },
+  { id: 'memories', label: 'Memories', group: 'Data & privacy', icon: Brain, description: 'What the agent remembers.' },
+  { id: 'data-controls', label: 'Data controls', group: 'Data & privacy', icon: Shield, description: 'What is kept on this device.' },
 
-  { id: 'about', label: 'About', group: 'About', icon: Info, description: 'The version of SeshatOS and where it comes from.' },
-  { id: 'cloud', label: 'SeshatCloud', group: 'About', icon: CloudStorage, description: 'Pair this desktop with the SeshatCloud of your organization: policies and minimum app version.' }
+  { id: 'about', label: 'About', group: 'About', icon: Info, description: 'Version and origin of SeshatOS.' },
+  { id: 'cloud', label: 'SeshatCloud', group: 'About', icon: CloudStorage, description: 'Pair with your organization SeshatCloud.' }
 ]
 
 /** The sections an edition shows: the ones it hides (see lib/edition.ts) are left out. */
