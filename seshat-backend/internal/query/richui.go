@@ -45,7 +45,7 @@ For figures or illustrations, draw them in the answer with these components; wri
 	richUIChartShapes = `- numbers to compare or follow: BarChart, LineChart (a learning curve is one), AreaChart, PieChart; the spread of values: Histogram; a confusion or a correlation matrix: Heatmap; points and a fitted line: ScatterChart, or a Plot with Points;
 - a function, its derivative, its integral or the area under it: a Plot of Curves, where op derivative or integral draws them for you, Shade for an area (the legend gives its value) and Dot for a root or an extremum;
 `
-	richUIInteractionShape = `- the next steps the reader may want: Choices at the end of the answer, one Choice per follow-up (two to four, each a short phrase; add a description for a topic worth digging into); an action the reader can trigger: Button; a file you read or changed: FileRef; a passage taken from a source: Citation; the sources used: SourceList; the sites a web search drew from: SourcePills, with real addresses only.
+	richUIInteractionShape = `- the next steps the reader may want: Choices at the end of the answer, one Choice per follow-up (two to four, each a short phrase; add a description and icon to explore a topic); an action the reader can trigger: Button; a file you read or changed: FileRef; a passage taken from a source: Citation; the sources used: SourceList; the sites a web search drew from: SourcePills, with real addresses only.
 `
 	// What the Knowledge agent may use of the same: its sources are drawn by the app from the references it cites.
 	richUIKnowledgeInteractionShape = `- the next questions the reader may want: Choices at the end of the answer, one Choice per follow-up (two to four, each a short phrase); an action the reader can trigger: Button.

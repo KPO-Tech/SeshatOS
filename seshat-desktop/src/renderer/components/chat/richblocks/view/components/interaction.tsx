@@ -49,6 +49,7 @@ function Choices({ props }: ComponentProps) {
           }
           if (asCards) {
             const description = typeof option.props.description === 'string' ? option.props.description : undefined
+            const icon = typeof option.props.icon === 'string' ? option.props.icon : undefined
             return (
               <button
                 key={index}
@@ -60,6 +61,7 @@ function Choices({ props }: ComponentProps) {
                   chosen ? 'border-[rgba(239,124,47,0.4)] bg-[rgba(239,124,47,0.08)]' : 'border-app-border-subtle bg-app-surface hover:enabled:bg-[var(--surface-hover)]'
                 }`}
               >
+                {icon && <RichIcon name={icon} size={20} className="text-app-text-secondary" />}
                 <span className="min-w-0 flex-1">
                   <span className="block text-[14px] font-medium text-app-text">{String(option.props.label)}</span>
                   {description && <span className="mt-0.5 block text-[12.5px] leading-[1.45] text-app-text-muted">{description}</span>}

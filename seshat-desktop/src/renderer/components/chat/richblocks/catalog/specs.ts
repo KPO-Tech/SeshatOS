@@ -148,7 +148,7 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
   { name: 'Choices', group: 'Interaction', description: 'Suggested follow-ups under the answer. At most one per answer.',
     args: [req('options', list(node('Choice'))), opt('title', str)] },
   { name: 'Choice', group: 'Interaction', description: 'One follow-up of Choices; a description makes it a card.',
-    args: [req('label', str), req('action', action), opt('description', str)] }
+    args: [req('label', str), req('action', action), opt('description', str), opt('icon', icon)] }
 ]
 
 // What a table cell may hold besides text and numbers.

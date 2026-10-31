@@ -274,7 +274,7 @@
     {
       "name": "Choice",
       "group": "Interaction",
-      "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url), description?: text)",
+      "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url), description?: text, icon?: icon)",
       "description": "One follow-up of Choices; a description makes it a card."
     }
   ],

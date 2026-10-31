@@ -63,7 +63,7 @@ describe('the interaction components, as the model writes them', () => {
   it('reads a Choice with a description, drawn as a card', () => {
     const lines = [
       'root = Choices([a, b])',
-      'a = Choice("Small local models", @Ask("Tell me more about small local models"), "Architecture, memory and speed")',
+      'a = Choice("Small local models", @Ask("Tell me more about small local models"), "Architecture, memory and speed", "chip")',
       'b = Choice("Agents compared", @Ask("Compare the agents"), "Cost per task")'
     ]
     const result = full(lines.join('\n'))
@@ -71,6 +71,7 @@ describe('the interaction components, as the model writes them', () => {
     const options = result.root?.props.options as Array<{ props: Record<string, unknown> }>
     const first = options[0]
     expect(first.props.description).toBe('Architecture, memory and speed')
+    expect(first.props.icon).toBe('chip')
   })
 
   it('reads source pills, with the name of the site when the model gives one', () => {
