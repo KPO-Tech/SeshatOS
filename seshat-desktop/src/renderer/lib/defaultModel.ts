@@ -8,12 +8,6 @@ export function modelOfProvider<M extends ModelLike>(provider: Pick<ProviderLike
   return (provider.model_id ? models.find((model) => model.model_id === provider.model_id) : undefined) ?? models.find((model) => model.is_default) ?? models[0] ?? null
 }
 
-/** The same pick over a flat list of choices (a provider id and a model each), as the chat composers hold them. */
-export function pickDefaultChoice<P extends ProviderLike, C extends { providerId: string; model: ModelLike }>(providers: P[], choices: C[]): C | null {
-  const picked = pickDefaultModel(providers, (provider) => choices.filter((choice) => choice.providerId === provider.id).map((choice) => choice.model))
-  return picked ? choices.find((choice) => choice.providerId === picked.provider.id && choice.model === picked.model) ?? null : null
-}
-
 /**
  * The default model, but only once it is certain: while a provider that comes before the pick has not given its models yet (null), the
  * answer is null, because that provider could still be the one that gives it. Without this, the first catalog to arrive decided, and
