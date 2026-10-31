@@ -1,12 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { ApplicationOne, Down, Plus, Right, Search, SortThree } from '@icon-park/react'
+import { ApplicationOne, Down, Plus, Right, Scan, Search, SortThree } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig, type AgentSource } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
+import { ImportSkillsDialog } from './ImportSkillsDialog'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillInstallDialog } from './SkillInstallDialog'
 import { categoryOf, tagsFor } from './skillIcons'
@@ -77,6 +78,7 @@ export function SkillsPage() {
   const [agentSources, setAgentSources] = useState<AgentSource[]>([])
   const [pickingFor, setPickingFor] = useState<{ name: string; description: string } | null>(null)
   const [installing, setInstalling] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
   const [reviewing, setReviewing] = useState<{ name: string; plan: InstallPlan } | null>(null)
 
   const local = useMemo(() => {
@@ -264,6 +266,10 @@ export function SkillsPage() {
             >
               My skills
             </button>
+            <button type="button" onClick={() => setImporting(true)} title="Use the skills of Claude Code, Codex or a folder" className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+              <Scan theme="outline" size={15} />
+              Scan
+            </button>
             <button type="button" onClick={() => openConfig('skills')} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
               <Plus theme="outline" size={15} />
               Add skills
@@ -347,6 +353,7 @@ export function SkillsPage() {
         <div>{content()}</div>
       </div>
 
+      {importing && <ImportSkillsDialog onClose={() => setImporting(false)} onChanged={() => void reload()} />}
       {pickingFor && (
         <SkillIconPicker skillName={pickingFor.name} current={iconOf(pickingFor)} chosen={isChosen(pickingFor.name)} onPick={(icon) => choose(pickingFor.name, icon)} onClose={() => setPickingFor(null)} />
       )}
