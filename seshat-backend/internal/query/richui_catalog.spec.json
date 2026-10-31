@@ -244,8 +244,14 @@
     {
       "name": "Source",
       "group": "Sources",
-      "signature": "Source(title: text, url?: text, path?: text, note?: text)",
+      "signature": "Source(title: text, url?: text, path?: text, note?: text, site?: text)",
       "description": "One source of SourceList."
+    },
+    {
+      "name": "SourcePills",
+      "group": "Sources",
+      "signature": "SourcePills(sources: [Source])",
+      "description": "Pills for the sites a web search drew from."
     },
     {
       "name": "Link",
@@ -268,8 +274,8 @@
     {
       "name": "Choice",
       "group": "Interaction",
-      "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url))",
-      "description": "One follow-up of Choices."
+      "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url), description?: text)",
+      "description": "One follow-up of Choices; a description makes it a card."
     }
   ],
   "icons": {

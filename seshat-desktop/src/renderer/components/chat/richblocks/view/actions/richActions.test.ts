@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { parseUi } from '../../lang/parseUi'
 import type { UiAction } from '../../lang/types'
+import { siteName } from '../components/interaction'
 import { actionState, actionTarget, readAction, runAction } from './richActions'
 
 const ask: UiAction = { kind: 'action', name: 'Ask', args: ['Explain the second row'] }
@@ -58,6 +59,25 @@ describe('the interaction components, as the model writes them', () => {
     expect(result.errors).toEqual([])
     expect(full('root = Citation("Rule 4", "handbook.pdf", "Keep it short", 12)').errors).toEqual([])
   })
+
+  it('reads a Choice with a description, drawn as a card', () => {
+    const lines = [
+      'root = Choices([a, b])',
+      'a = Choice("Small local models", @Ask("Tell me more about small local models"), "Architecture, memory and speed")',
+      'b = Choice("Agents compared", @Ask("Compare the agents"), "Cost per task")'
+    ]
+    const result = full(lines.join('\n'))
+    expect(result.errors).toEqual([])
+    const options = result.root?.props.options as Array<{ props: Record<string, unknown> }>
+    const first = options[0]
+    expect(first.props.description).toBe('Architecture, memory and speed')
+  })
+
+  it('reads source pills, with the name of the site when the model gives one', () => {
+    const result = full('root = SourcePills([Source("Anthropic files an S-1", "https://www.reuters.com/a", null, null, "Reuters"), Source("Release notes", "https://example.com/notes")])')
+    expect(result.errors).toEqual([])
+    expect(result.root?.props.sources).toHaveLength(2)
+  })
 })
 
 describe('actionTarget', () => {
@@ -74,5 +94,13 @@ describe('actionTarget', () => {
 
   it('cuts a very long target', () => {
     expect(actionTarget({ kind: 'action', name: 'Ask', args: ['x'.repeat(500)] })?.length).toBeLessThan(230)
+  })
+})
+
+describe('siteName', () => {
+  it('prefers the site the answer names, then the host of the address, then the title', () => {
+    expect(siteName({ site: 'Reuters', url: 'https://www.reuters.com/a', title: 'x' })).toBe('Reuters')
+    expect(siteName({ url: 'https://www.reuters.com/a', title: 'x' })).toBe('reuters.com')
+    expect(siteName({ url: 'not an address', title: 'The release notes' })).toBe('The release notes')
   })
 })

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { isNode } from '../../lang/parseUi'
 import type { UiAction } from '../../lang/types'
 import { actionState, actionTarget, readAction, runAction, useRichActionBridge } from '../actions/richActions'
+import { RichIcon } from '../icons/RichIcon'
 import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 
@@ -32,24 +33,50 @@ function Choices({ props }: ComponentProps) {
   const bridge = useRichActionBridge()
   const [picked, setPicked] = useState<number | null>(null)
   const options = (Array.isArray(props.options) ? props.options : []).filter(isNode)
+  // A choice with a description is a topic to dig into: the list is drawn as cards, one per line.
+  const asCards = options.some((option) => typeof option.props.description === 'string')
   return (
     <div className="my-3">
       {typeof props.title === 'string' && <div className="mb-1.5 text-xs text-app-text-muted">{props.title}</div>}
-      <div className="flex flex-wrap gap-2">
+      <div className={asCards ? 'flex flex-col gap-2' : 'flex flex-wrap gap-2'}>
         {options.map((option, index) => {
           const action = readAction(option.props.action)
           const { enabled, why } = actionState(action, bridge)
           const chosen = picked === index
+          const choose = () => {
+            setPicked(index)
+            runAction(action, bridge)
+          }
+          if (asCards) {
+            const description = typeof option.props.description === 'string' ? option.props.description : undefined
+            return (
+              <button
+                key={index}
+                type="button"
+                disabled={!enabled}
+                title={why ?? actionTarget(action)}
+                onClick={choose}
+                className={`group flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                  chosen ? 'border-[rgba(239,124,47,0.4)] bg-[rgba(239,124,47,0.08)]' : 'border-app-border-subtle bg-app-surface hover:enabled:bg-[var(--surface-hover)]'
+                }`}
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-medium text-app-text">{String(option.props.label)}</span>
+                  {description && <span className="mt-0.5 block text-[12.5px] leading-[1.45] text-app-text-muted">{description}</span>}
+                </span>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-app-text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                  <path d="m6 3.5 4.5 4.5L6 12.5" />
+                </svg>
+              </button>
+            )
+          }
           return (
             <button
               key={index}
               type="button"
               disabled={!enabled}
               title={why ?? actionTarget(action)}
-              onClick={() => {
-                setPicked(index)
-                runAction(action, bridge)
-              }}
+              onClick={choose}
               className={`cursor-pointer rounded-full border px-3 py-1.5 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                 chosen
                   ? 'border-[rgba(239,124,47,0.4)] bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]'
@@ -159,6 +186,47 @@ function SourceList({ props }: ComponentProps) {
   )
 }
 
+/** The name a pill shows for a page: the site the answer names, else the host of its address. */
+export function siteName(source: { site?: unknown; url?: unknown; title?: unknown }): string {
+  if (typeof source.site === 'string' && source.site.trim()) return source.site.trim()
+  if (typeof source.url === 'string') {
+    try {
+      const { hostname } = new URL(source.url)
+      if (hostname) return hostname.replace(/^www\./, '')
+    } catch {
+      // A text that is not an address falls through to the title.
+    }
+  }
+  return String(source.title ?? '')
+}
+
+function SourcePills({ props }: ComponentProps) {
+  const bridge = useRichActionBridge()
+  const sources = (Array.isArray(props.sources) ? props.sources : []).filter(isNode)
+  return (
+    <div className="my-2 flex flex-wrap gap-1.5">
+      {sources.map((source, index) => {
+        const url = typeof source.props.url === 'string' && /^https?:\/\//i.test(source.props.url) ? source.props.url : undefined
+        const action: UiAction | null = url ? { kind: 'action', name: 'OpenUrl', args: [url] } : null
+        const title = typeof source.props.title === 'string' ? source.props.title : undefined
+        return (
+          <button
+            key={index}
+            type="button"
+            disabled={!action}
+            title={title ? `${title}${url ? ` (${url})` : ''}` : url}
+            onClick={() => runAction(action, bridge)}
+            className="inline-flex max-w-[220px] cursor-pointer items-center gap-1.5 rounded-full border border-app-border-subtle bg-app-surface px-2.5 py-0.5 text-[12px] text-app-text-secondary transition-colors hover:enabled:bg-[var(--surface-hover)] hover:enabled:text-app-text disabled:cursor-default"
+          >
+            <RichIcon name="globe" size={12} />
+            <span className="truncate">{siteName(source.props)}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 // A Source is read by its SourceList, which draws it: on its own it draws nothing.
 function ReadBySourceList() {
   return null
@@ -172,5 +240,6 @@ export const interactionComponents: Record<string, ComponentType<ComponentProps>
   Link,
   Citation,
   SourceList,
+  SourcePills,
   Source: ReadBySourceList
 }
