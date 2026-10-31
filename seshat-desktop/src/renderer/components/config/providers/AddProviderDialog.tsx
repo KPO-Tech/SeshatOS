@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createProviderSetting } from './providerApi'
 import { ProviderSelect } from './ProviderSelect'
 import type { ProviderChoice, ProviderForm, ProviderSetting } from './providerTypes'
-import { initialProviderForm, isCodexProvider } from './providerUtils'
+import { initialProviderForm, isCodexProvider, plainText } from './providerUtils'
 
 type Props = {
   choices: ProviderChoice[]
@@ -14,7 +14,7 @@ type Props = {
 
 function providerHint(entry?: ProviderChoice) {
   if (!entry) return 'Pick a provider to set up.'
-  if (entry.main) return entry.description || 'Built into the Seshat runtime.'
+  if (entry.main) return plainText(entry.description || 'Built into the Seshat runtime.')
   const untested = `Generic provider from the public models.dev catalog (${entry.model_count} models), not tested with a real key by Seshat.`
   return entry.unverified ? `${untested} Its address comes from a downloaded catalog and was not reviewed.` : untested
 }

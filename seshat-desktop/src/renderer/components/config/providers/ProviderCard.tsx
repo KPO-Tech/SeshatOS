@@ -4,7 +4,7 @@ import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { ProviderLogo } from './ProviderLogo'
 import { ProviderOAuthControls } from './ProviderOAuthControls'
 import type { ProviderModel, ProviderRowModel, ProviderSetting } from './providerTypes'
-import { formatModelMeta, getProviderConnection, isCodexProvider } from './providerUtils'
+import { formatModelMeta, getProviderConnection, isCodexProvider, plainText } from './providerUtils'
 
 export type TestResult = { state: 'testing' } | { state: 'ok'; models: number } | { state: 'failed'; message: string }
 
@@ -37,15 +37,15 @@ function Pill({ tone, children }: { tone: 'ok' | 'muted' | 'danger' | 'accent'; 
 
 function ModelChips({ models }: { models: ProviderModel[] }) {
   if (models.length === 0) return null
-  const shown = models.slice(0, 4)
+  const shown = models.slice(0, 2)
   return (
-    <div className="mt-2.5 flex flex-wrap gap-1.5">
+    <div className="mt-2.5 flex flex-nowrap gap-1.5 overflow-hidden" title={models.map((model) => model.display_name || model.model_id).join(', ')}>
       {shown.map((model) => (
-        <span key={model.id || model.model_id} className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11.5px] text-[var(--text-secondary)]">
+        <span key={model.id || model.model_id} className="max-w-[104px] shrink-0 truncate rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11.5px] text-[var(--text-secondary)]">
           {model.display_name || model.model_id}
         </span>
       ))}
-      {models.length > shown.length && <span className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11.5px] text-[var(--text-muted)]">+{models.length - shown.length}</span>}
+      {models.length > shown.length && <span className="shrink-0 rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11.5px] text-[var(--text-muted)]">+{models.length - shown.length}</span>}
     </div>
   )
 }
@@ -87,20 +87,20 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
   return (
     <article className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
       <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
-        <div className="flex min-w-[280px] flex-1 items-start gap-3.5">
+        <div className="flex min-w-[240px] flex-1 items-start gap-3.5">
           <ProviderLogo provider={row.provider} name={row.name} size={52} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{row.name}</h3>
               {setting ? <Pill tone={setting.is_default ? 'accent' : 'ok'}>{setting.is_default ? 'Default' : 'Active'}</Pill> : <Pill tone="muted">Not configured</Pill>}
             </div>
-            <p className="m-0 mt-1 line-clamp-2 text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{row.description || setting?.base_url || row.provider}</p>
+            <p className="m-0 mt-1 line-clamp-2 text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{plainText(row.description || setting?.base_url || row.provider)}</p>
             <ModelChips models={models} />
           </div>
         </div>
 
         {setting ? (
-          <div className="flex min-w-[330px] flex-1 flex-col gap-2.5">
+          <div className="flex w-full flex-col gap-2.5 @2xl:w-[330px] @2xl:shrink-0">
             <div className="flex items-center gap-2">
               {editing ? (
                 <>
@@ -126,7 +126,7 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
                   <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3">
                     <span className="shrink-0 text-[11px] text-[var(--text-muted)]">{codex ? 'Sign-in' : local ? 'Address' : 'API key'}</span>
                     <span className="truncate font-mono text-[12px] text-[var(--text-secondary)]">
-                      {codex ? setting.oauth_account_email || 'ChatGPT account' : local ? setting.base_url || 'http://localhost:11434' : setting.has_api_key ? '••••••••••••••••' : 'Not configured'}
+                      {codex ? setting.oauth_account_email || 'ChatGPT account' : local ? setting.base_url || 'http://localhost:11434' : setting.has_api_key ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : 'Not configured'}
                     </span>
                   </div>
                   {connection && <Pill tone={connection.tone === 'success' ? 'ok' : 'muted'}>{connection.label}</Pill>}

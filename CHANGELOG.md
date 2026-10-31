@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **The provider cards of Settings are lighter.** Two models and a count (the others in a tooltip) on one line instead of rows of chips, a layout that gives the key, the test and the default model their own width, descriptions of the catalog without long dashes, and a side column that stays in view while you scroll.
 - **The menus of the start page open, and the page starts lower.** The "..." of the recent chats and of the projects were cut off by the frame of their list; they now show their actions. The welcome starts further down on a tall window instead of sticking to the top, and the glow behind it fades at its top edge.
 - **The start page has its background.** A warm glow around the mark and slow lines of the accent colour across the page, quieter on a light theme.
 - **The Projects page has the proportions of Skills and Plugins.** The same margins, the same title and icon, search, filters and buttons, and project cards with the size and the corners of the other cards. The page now fills the width instead of stopping at a fixed width.
