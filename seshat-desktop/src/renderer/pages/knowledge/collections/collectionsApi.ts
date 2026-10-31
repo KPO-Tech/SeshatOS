@@ -28,11 +28,13 @@ export type IndexingJob = {
   status: string
   lastError: string
   createdAt: number
+  /** When the job may run again (ms since the epoch), 0 when it is not held back. */
+  nextRunAt: number
 }
 
 type CorpusRow = { id: string; name: string; description?: string; chunk_count?: number; file_count?: number; updated_at?: number; source_id?: string }
 type FileRow = { file_id: string; filename: string; status: string; chunk_count?: number; created_at?: number }
-type JobRow = { id: string; file_id: string; status: string; last_error?: string; created_at?: number }
+type JobRow = { id: string; file_id: string; status: string; last_error?: string; created_at?: number; next_run_at?: string }
 
 function toCollection(row: CorpusRow): Collection {
   return {
@@ -93,7 +95,14 @@ export async function listFiles(id: string): Promise<CollectionFile[]> {
 
 export async function listJobs(id: string): Promise<IndexingJob[]> {
   const data = await api.get<{ jobs?: JobRow[] }>(`/corpora/${encodeURIComponent(id)}/ingest/jobs`)
-  return (data.jobs ?? []).map((row) => ({ id: row.id, fileId: row.file_id, status: row.status, lastError: row.last_error ?? '', createdAt: row.created_at ?? 0 }))
+  return (data.jobs ?? []).map((row) => ({
+    id: row.id,
+    fileId: row.file_id,
+    status: row.status,
+    lastError: row.last_error ?? '',
+    createdAt: row.created_at ?? 0,
+    nextRunAt: row.next_run_at ? Date.parse(row.next_run_at) || 0 : 0
+  }))
 }
 
 /** Stores the file, then puts it in the collection; the backend queues its indexing when an embedding model is set. */

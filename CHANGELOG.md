@@ -19,6 +19,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 - **Documents added by hand are indexed in the same order as those of a folder:** text first, then Word, then PDF, then the rest, small files before big ones.
 
+### Fixed
+
+- **A provider that refuses for quota no longer fails every document.** The embedder waits out the refusal (seshat-runtime v1.12.7), and a document it refused goes back to waiting without using an attempt. The whole queue pauses instead of starting the next document only to see it refused too, and goes on by itself; the collection page says "Indexing is paused" with the time left, and no document is marked as failed for a quota. A daily quota pauses for an hour and says so. Documents that wait show in a quiet grey, only the one being indexed stands out.
+
 ## [0.2.1] - 2026-10-31
 
 ### Highlights

@@ -179,7 +179,7 @@ func (s *Service) processLocalJob(ctx context.Context, job db.KnowledgeIngestion
 	}
 	_, chunks, err := s.ingestText(ctx, job.CorpusID, job.FileID, cf.Filename, result.Text, nil, scopeID, nil)
 	if err != nil {
-		_ = s.jobs.MarkFailed(ctx, job, err, defaultIngestionRetryDelay)
+		s.finishFailedJob(ctx, job, err)
 		return
 	}
 	_ = s.jobs.MarkCompleted(ctx, job.ID, chunks)
