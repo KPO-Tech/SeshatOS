@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **Settings has its title bar again.** A bar across the top of the window with its name and the close button, above the list of pages and the page.
 - **The provider cards of Settings are lighter.** Two models and a count (the others in a tooltip) on one line instead of rows of chips, a layout that gives the key, the test and the default model their own width, descriptions of the catalog without long dashes, and a side column that stays in view while you scroll.
 - **The long dashes are gone from what the app says.** The messages of the plan (the agent still running, nothing sent...) are two plain sentences, the previews after a name and the size of a file are set off by a dot, and an empty value is a hyphen. In Settings, the page is centred in its window and the line under the title stays on one line.
 - **The menus of the start page open, and the page starts lower.** The "..." of the recent chats and of the projects were cut off by the frame of their list; they now show their actions. The welcome starts further down on a tall window instead of sticking to the top, and the glow behind it fades at its top edge.
