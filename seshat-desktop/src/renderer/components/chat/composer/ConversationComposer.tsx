@@ -1,6 +1,6 @@
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ChatInput } from './ChatInput'
-import { ContextGauge } from './ContextGauge'
+import { ComposerStatusRow } from './ComposerStatusRow'
 import type { ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
@@ -143,7 +143,7 @@ export function ConversationComposer({
           executionMode={executionMode}
           onExecutionModeChange={onExecutionModeChange}
         />
-        {sessionId && <ContextGauge sessionId={sessionId} />}
+        {sessionId && <ComposerStatusRow sessionId={sessionId} projectPath={projectPath} />}
       </div>
     </div>
   )
