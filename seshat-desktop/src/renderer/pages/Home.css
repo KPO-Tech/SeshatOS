@@ -11,26 +11,33 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 28px 18px 60px;
-  max-width: 900px;
+  justify-content: flex-start;
+  padding: 40px 32px 56px;
+  max-width: 1120px;
   margin: 0 auto;
   width: 100%;
 }
 
 .home-greeting {
-  font-family: serif;
-  font-size: var(--font-size-2xl);
-  font-weight: 500;
+  font-size: 34px;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: var(--space-7);
-  letter-spacing: -0.01em;
+  margin: 14px 0 0;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.home-subtitle {
+  margin: 8px 0 28px;
+  font-size: var(--font-size-md, 15px);
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .home-input-container {
   width: 100%;
-  max-width: 760px;
-  margin-bottom: var(--space-8);
+  margin-top: var(--space-7);
+  margin-bottom: var(--space-6);
 }
 
 .home-input-status {
