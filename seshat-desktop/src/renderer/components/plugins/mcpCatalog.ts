@@ -24,6 +24,9 @@ export type McpCatalogEntry = {
   tags: string[]
   /** What must be on the machine for it to start ("Node.js"). */
   needs: string[]
+  /** The repository the server is published from: where to read its code. */
+  source: string
+  /** Its documentation, when that is not the repository. */
   docs: string
   server_type: 'stdio' | 'http'
   command?: string
@@ -40,6 +43,7 @@ export type McpCatalogEntry = {
 export const MCP_CATALOG: McpCatalogEntry[] = [
   {
     name: 'context7',
+    source: 'https://github.com/upstash/context7',
     title: 'Context7',
     description: 'Up-to-date documentation and code examples for the libraries and frameworks you use, fetched when the agent needs them.',
     category: 'Development',
@@ -54,6 +58,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'playwright',
+    source: 'https://github.com/microsoft/playwright-mcp',
     title: 'Playwright',
     description: 'Drives a real browser: open pages, click, fill forms, take screenshots and test a web app, from the page structure rather than pictures.',
     category: 'Browser',
@@ -68,6 +73,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'chrome-devtools',
+    source: 'https://github.com/ChromeDevTools/chrome-devtools-mcp',
     title: 'Chrome DevTools',
     description: "Lets the agent debug and measure a web page in Chrome: network, console, performance traces and what the page really does.",
     category: 'Browser',
@@ -82,6 +88,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'sequential-thinking',
+    source: 'https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking',
     title: 'Sequential Thinking',
     description: 'A tool to think a hard problem through in steps, revise earlier steps and try another path before answering.',
     category: 'Reasoning',
@@ -96,6 +103,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'dbhub',
+    source: 'https://github.com/bytebase/dbhub',
     title: 'DBHub',
     description: 'Reads the schema and runs queries on your database: PostgreSQL, MySQL, MariaDB, SQL Server or SQLite, through one connection string.',
     category: 'Data',
@@ -110,6 +118,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'figma',
+    source: 'https://github.com/GLips/Figma-Context-MCP',
     title: 'Figma',
     description: 'Gives the agent the layout and styles of a Figma file or frame, so that it can build the interface from the design.',
     category: 'Design',
@@ -124,6 +133,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'firecrawl',
+    source: 'https://github.com/firecrawl/firecrawl-mcp-server',
     title: 'Firecrawl',
     description: 'Scrapes and crawls websites into clean text, including pages that need JavaScript, and extracts structured data from them.',
     category: 'Web',
@@ -138,6 +148,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     name: 'huggingface',
+    source: 'https://github.com/huggingface/hf-mcp-server',
     title: 'Hugging Face',
     description: 'Searches models, datasets, Spaces and papers on the Hugging Face Hub, and reads their documentation.',
     category: 'AI',

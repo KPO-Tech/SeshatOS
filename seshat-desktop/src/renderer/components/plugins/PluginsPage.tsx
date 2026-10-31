@@ -3,16 +3,18 @@ import { useNavigate } from 'react-router'
 import { Application, Down, ListView, Plus, Right, Search, SortThree, Plug } from '@icon-park/react'
 import { MCPServerIcon } from '@renderer/components/config/mcp/MCPIcons'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
+import { copyItem, openItem } from '@renderer/components/ui/menuItems'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { tagsFor } from '@renderer/components/skills/skillIcons'
-import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { edition } from '@renderer/lib/edition'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { disconnectLocalConnector, type LocalConnector } from './api/localConnectorsApi'
 import { categoryDescription, groupConnectors, matchesQuery } from './connectorGroups'
 import { PluginTile, type PluginState } from './PluginTile'
 import { McpInstallDialog } from './McpInstallDialog'
-import { availableMcp, MCP_CATALOG, type McpCatalogEntry } from './mcpCatalog'
+import { availableMcp, commandLine, MCP_CATALOG, type McpCatalogEntry } from './mcpCatalog'
+import { deleteMCPServer, reloadMCPServers, updateMCPServer } from '@renderer/components/config/mcp/mcpApi'
+import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { BrandIcon } from './catalog/BrandIcon'
 import { mcpLogo } from './catalog/mcpLogos'
 import { PluginDetailModal } from './PluginDetailModal'
@@ -74,12 +76,29 @@ export function PluginsPage() {
     }
   }
 
+  async function changeServer(server: MCPServer, action: () => Promise<unknown>) {
+    try {
+      await action()
+      await reloadMCPServers()
+      await state.reload()
+    } catch (err) {
+      show(err instanceof Error ? err.message : `Could not change ${server.display_name || server.name}.`, 'err')
+    }
+  }
+
+  function removeServer(server: MCPServer) {
+    if (!window.confirm(`Remove ${server.display_name || server.name}? Its tools leave your agents.`)) return
+    void changeServer(server, () => deleteMCPServer(server.id))
+  }
+
   function connectorItem(connector: LocalConnector): Item {
     const connected = connector.status !== 'disconnected'
     const pluginState: PluginState = connector.status === 'error' ? 'attention' : connected ? 'installed' : 'available'
     const menu: DropdownItem[] = [
       { id: 'details', label: connected ? 'Configure' : 'Install', onSelect: () => setOpenId(connector.kind) },
-      ...(connector.docs_url ? [{ id: 'docs', label: 'Open the documentation', onSelect: () => openInAppBrowser(connector.docs_url ?? '') }] : []),
+      ...(connector.credential_url ? [openItem('key', `Get a ${connector.credential_label || 'key'}`, connector.credential_url)] : []),
+      ...(connector.docs_url ? [openItem('docs', 'Open the documentation', connector.docs_url)] : []),
+      copyItem('copy', 'Copy the name', connector.kind, (message) => show(message)),
       ...(connected ? [{ id: 'disconnect', label: 'Disconnect', danger: true, onSelect: () => void disconnect(connector) }] : [])
     ]
     const tags = tagsFor({ name: connector.kind, display_name: connector.label, description: connector.description }, 5)
@@ -89,7 +108,7 @@ export function PluginsPage() {
       description: connector.description,
       state: pluginState,
       tags,
-      render: (shape) => <PluginTile key={connector.kind} title={connector.label} description={connector.description} brand={connector.kind} state={pluginState} tags={tags} menu={menu} layout={shape} onOpen={() => setOpenId(connector.kind)} />
+      render: (shape) => <PluginTile key={connector.kind} title={connector.label} description={connector.description} brand={connector.kind} state={pluginState} tags={tags} menu={menu} source={connector.docs_url} layout={shape} onOpen={() => setOpenId(connector.kind)} />
     }
   }
 
@@ -121,7 +140,14 @@ export function PluginsPage() {
           state={pluginState}
           offLabel="Off"
           tags={[server.server_type]}
-          menu={[{ id: 'configure', label: 'Configure', onSelect: () => openConfig('mcp') }]}
+          menu={[
+            { id: 'configure', label: 'Configure', onSelect: () => openConfig('mcp') },
+            { id: 'toggle', label: server.enabled ? 'Turn off' : 'Turn on', onSelect: () => void changeServer(server, () => updateMCPServer(server.id, { ...server, enabled: !server.enabled })) },
+            ...(known ? [openItem('source', 'Open the source', known.source)] : []),
+            copyItem('copy', server.server_type === 'stdio' ? 'Copy the command' : 'Copy the address', server.url || [server.command, ...(server.args ?? [])].filter(Boolean).join(' '), (message) => show(message)),
+            { id: 'remove', label: 'Remove', danger: true, onSelect: () => removeServer(server) }
+          ]}
+          source={known?.source}
           layout={shape}
           onOpen={() => openConfig('mcp')}
         />
@@ -147,7 +173,13 @@ export function PluginsPage() {
         icon={<BrandIcon brand={entry.brand} src={mcpLogo(entry.brand)} title={entry.title} size={shape === 'grid' ? 52 : 40} />}
         state="available"
         tags={entry.tags}
-        menu={[{ id: 'docs', label: 'Read about it', onSelect: () => openInAppBrowser(entry.docs) }]}
+        menu={[
+          { id: 'install', label: 'Install', onSelect: () => setInstallingMcp(entry) },
+          openItem('source', 'Open the source', entry.source),
+          ...(entry.docs !== entry.source ? [openItem('docs', 'Read the documentation', entry.docs)] : []),
+          copyItem('copy', entry.server_type === 'stdio' ? 'Copy the command' : 'Copy the address', commandLine(entry), (message) => show(message))
+        ]}
+        source={entry.source}
         layout={shape}
         onOpen={() => setInstallingMcp(entry)}
       />
