@@ -1,7 +1,7 @@
 import { FolderOpen, MoreOne, Pin, Play } from './icons'
 import type { ProjectSummary } from '@renderer/lib/projects'
 import { fileCountLabel, relativeTime } from '@renderer/lib/projectsView'
-import { Dropdown } from './Dropdown'
+import { Dropdown } from '@renderer/components/ui/Dropdown'
 import { ActivityMark, menuItems, ProjectTile, TagList, type ProjectActions } from './ProjectCard'
 import type { FileCount } from './useFileCounts'
 
