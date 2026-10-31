@@ -3,9 +3,11 @@ package knowledge
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag/embedder"
 )
 
@@ -16,14 +18,12 @@ const QuotaPausedPrefix = "Paused:"
 const (
 	// What the queue waits when the provider refuses for quota and did not say for how long.
 	defaultQuotaPause = time.Minute
-	// A daily quota does not come back in a minute; the queue looks again after this, and the person can change the provider before.
-	dailyQuotaPause = time.Hour
-	minQuotaPause   = 5 * time.Second
+	minQuotaPause     = 5 * time.Second
 )
 
-// finishFailedJob records why a job did not complete. A refusal for quota is not a failure of the document: the job goes back to waiting
-// without using an attempt, and the whole queue pauses, so that the next document is not started only to be refused too. Anything else
-// is a failure, retried as before and then left failed.
+// finishFailedJob records why a job did not complete. A refusal for quota that a wait mends is not a failure of the document: the job
+// goes back to waiting without using an attempt, and the whole queue pauses, so that the next document is not started only to be refused
+// too. Anything else is a failure, retried as before and then left failed.
 func (s *Service) finishFailedJob(ctx context.Context, job db.KnowledgeIngestionJob, err error) {
 	var limited *embedder.RateLimitedError
 	if !errors.As(err, &limited) {
@@ -37,9 +37,6 @@ func (s *Service) finishFailedJob(ctx context.Context, job db.KnowledgeIngestion
 
 // quotaPause is how long the queue waits for a refusal for quota, and what the page says about it.
 func quotaPause(limited *embedder.RateLimitedError) (time.Duration, string) {
-	if limited.Daily {
-		return dailyQuotaPause, QuotaPausedPrefix + " the daily quota of the embedding provider is used up. Indexing goes on by itself; change the provider in Settings to go on now."
-	}
 	wait := limited.RetryAfter
 	if wait <= 0 {
 		wait = defaultQuotaPause
@@ -56,8 +53,39 @@ func (s *Service) quotaPausedFor() time.Duration {
 	return max(0, time.Until(time.Unix(0, until)))
 }
 
-// isQuotaRefusal reports whether an error is a refusal for quota, so that a file is not marked as failed because of it.
+// isQuotaRefusal reports whether an error is a refusal for quota that a wait mends, so that a file is not marked as failed because of it.
 func isQuotaRefusal(err error) bool {
 	var limited *embedder.RateLimitedError
-	return errors.As(err, &limited)
+	return errors.As(err, &limited) && !limited.Daily
+}
+
+// keywordsFallback decides what to do with a document whose ingestion failed: when the embedder is what failed, and waiting does not mend
+// it (a wrong key, a model that is gone, a daily quota, a provider that is down), the document is kept for keywords only, and the reason
+// is returned for the page to show. A refusal for quota that a wait mends is a pause (see finishFailedJob), a cancelled run is not a
+// failure of the embedding, and a failure of reading, chunking or storing is a failure of the document.
+func keywordsFallback(ctx context.Context, err error) (reason string, fallBack bool) {
+	if err == nil || ctx.Err() != nil {
+		return "", false
+	}
+	var embedding *rag.EmbeddingError
+	if !errors.As(err, &embedding) {
+		return "", false
+	}
+	if isQuotaRefusal(err) {
+		return "", false
+	}
+	var limited *embedder.RateLimitedError
+	if errors.As(err, &limited) && limited.Daily {
+		return "the daily quota of the embedding provider is used up", true
+	}
+	return "the embedding provider refused: " + oneLine(err.Error(), 200), true
+}
+
+// oneLine shortens a provider's message to a line of at most n characters.
+func oneLine(text string, n int) string {
+	text = strings.Join(strings.Fields(text), " ")
+	if len(text) > n {
+		return text[:n] + "..."
+	}
+	return text
 }

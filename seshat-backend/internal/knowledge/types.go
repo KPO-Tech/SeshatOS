@@ -25,6 +25,10 @@ type CorpusFile struct {
 	CreatedAt  time.Time  `json:"created_at"`
 	// SourcePath is where the file is on this computer, for a file indexed from a folder; empty for an uploaded one. Never sent to a client.
 	SourcePath string `json:"-"`
+	// KeywordsOnly: the passages have no vector because the embedding failed in a way that waiting does not mend; the document is found
+	// by its words. KeywordsReason says why. A re-embedding makes the vectors and clears both.
+	KeywordsOnly   bool   `json:"keywords_only"`
+	KeywordsReason string `json:"keywords_reason,omitempty"`
 }
 
 // DownloadedFile carries a corpus file's raw bytes and the metadata needed

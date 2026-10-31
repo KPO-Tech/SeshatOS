@@ -67,7 +67,7 @@ queue does, and the speed of reading. Lots, in the order they are done, each in 
    with the raw body. Unit tests against a fake server (a refusal then success, a persistent refusal, `Retry-After`, a cancelled
    context). Released as the next runtime patch.
 3. **A refusal for quota is not a failed document, and the queue pauses (SeshatOS).** An error of kind "rate limited" puts the job
-   back to `Pending` and does not use one of its attempts. The runner then pauses the whole queue instead of starting the next
+   back to `Pending` and does not use one of its attempts. A daily quota is not a pause: it is lot 6. The runner then pauses the whole queue for the others instead of starting the next
    document only to see it refused too, and resumes by itself when the wait is over. The collection page says so ("Paused: the
    embedding provider's quota, back in 40 s"); the document that is being read is the only one shown as "Indexing", the others wait
    in a quiet grey, and "Failed" is kept for a document that cannot be read or stored. The error line of a real failure keeps its full
@@ -88,6 +88,8 @@ queue does, and the speed of reading. Lots, in the order they are done, each in 
    - the page: the "keywords only" mark, the pinned notice with the count of documents concerned, and a "Index again with the model" button;
    - the way back: the re-embedding that already exists (`knowledge/reembed.go`, which makes the vectors that are missing) is run for these documents when the model is changed or the button is pressed, and clears the mark;
    - search: a corpus where some passages have vectors and some do not is searched by both ways and the results are merged, which the hybrid search already allows; the page says so, because the quality of the answers differs between the two kinds of document.
+
+Lot 6 is built (2026-10-31). Two decisions came with it: a refusal for a daily quota goes to the keywords-only way and not to a pause of an hour, since waiting does not mend it; and the reason of the fallback is kept in one column of `corpus_files` (`keywords_reason`, empty when the document has its vectors) from which the page reads the mark and the notice. A failure that is not the embedder's (a scan with no text, a file that cannot be read) is still a `Failed` document.
 
 Also to look at, separately: the slowest PDFs (11.7 s for 1.9 MB and 77 passages). A profile of the PDF reader (page loop, image
 detection) comes before any change.

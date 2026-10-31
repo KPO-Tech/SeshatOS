@@ -1985,13 +1985,85 @@ func TestKnowledgeSearchAcrossCorpora(t *testing.T) {
 	}
 }
 
-func TestCorpusIngestionJobRetry(t *testing.T) {
+// A document whose embedding fails is not a failed document: the reading worked, so it is kept for keywords only, and indexing it
+// again once the provider works gives it its vectors.
+func TestCorpusIngestionKeepsADocumentForKeywordsWhenTheEmbeddingFails(t *testing.T) {
 	embedder := &stubEmbedder{
 		dim:               8,
 		failuresRemaining: 3,
 		failureMessage:    "temporary embedder failure",
 	}
 	app, _ := newKnowledgeTestAppWithEmbedder(t, embedder)
+	router := CreateRouter(defaultAPIConfig, app)
+	token := loginAs(t, router, "admin@knowledge.test", "adminpass")
+
+	body, _ := json.Marshal(map[string]string{"name": "Keywords Corpus"})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/corpora", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	var corpus map[string]any
+	json.NewDecoder(rec.Body).Decode(&corpus)
+	corpusID := corpus["id"].(string)
+
+	fileID := uploadTestFile(t, router, token, "retry me please", "retry.txt")
+
+	ingestBody, _ := json.Marshal(map[string]string{"file_id": fileID})
+	enqueue := func() string {
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/corpora/"+corpusID+"/ingest", bytes.NewReader(ingestBody))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		if rec.Code != http.StatusAccepted {
+			t.Fatalf("enqueue ingest: got %d, body=%s", rec.Code, rec.Body.String())
+		}
+		var resp map[string]any
+		json.NewDecoder(rec.Body).Decode(&resp)
+		return resp["id"].(string)
+	}
+	fileState := func() map[string]any {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/corpora/"+corpusID+"/files", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		var resp struct {
+			Files []map[string]any `json:"files"`
+		}
+		json.NewDecoder(rec.Body).Decode(&resp)
+		if len(resp.Files) != 1 {
+			t.Fatalf("expected 1 file, got %d: %s", len(resp.Files), rec.Body.String())
+		}
+		return resp.Files[0]
+	}
+
+	jobID := enqueue()
+	done := waitForIngestionJobStatus(t, router, token, corpusID, jobID, "completed")
+	if int(done["chunk_count"].(float64)) == 0 {
+		t.Fatal("the document must be indexed for keywords, with its passages")
+	}
+	file := fileState()
+	if file["status"] != "ingested" || file["keywords_only"] != true {
+		t.Fatalf("expected an ingested document kept for keywords only, got %v", file)
+	}
+	if reason, _ := file["keywords_reason"].(string); reason == "" {
+		t.Fatal("expected the reason of the failure to be kept for the page")
+	}
+
+	// The provider works again: indexing the document again gives it its vectors, and the mark goes.
+	embedder.SetFailuresRemaining(0)
+	again := enqueue()
+	waitForIngestionJobStatus(t, router, token, corpusID, again, "completed")
+	file = fileState()
+	if file["keywords_only"] != false {
+		t.Fatalf("expected the mark to be cleared once the vectors were made, got %v", file)
+	}
+}
+
+// A document that cannot be read is a failed document: it can be retried, and the retry starts its attempts again.
+func TestCorpusIngestionJobRetry(t *testing.T) {
+	app, _ := newKnowledgeTestAppWithEmbedder(t, &stubEmbedder{dim: 8})
 	router := CreateRouter(defaultAPIConfig, app)
 	token := loginAs(t, router, "admin@knowledge.test", "adminpass")
 
@@ -2005,7 +2077,8 @@ func TestCorpusIngestionJobRetry(t *testing.T) {
 	json.NewDecoder(rec.Body).Decode(&corpus)
 	corpusID := corpus["id"].(string)
 
-	fileID := uploadTestFile(t, router, token, "retry me please", "retry.txt")
+	// Not a PDF at all: there is no text to read in it.
+	fileID := uploadTestFile(t, router, token, "this is not a pdf", "scan.pdf")
 
 	ingestBody, _ := json.Marshal(map[string]string{"file_id": fileID})
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/corpora/"+corpusID+"/ingest", bytes.NewReader(ingestBody))
@@ -2038,7 +2111,6 @@ func TestCorpusIngestionJobRetry(t *testing.T) {
 		t.Fatalf("expected 1 ingestion job, got %v", jobsResp["count"])
 	}
 
-	embedder.SetFailuresRemaining(0)
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/corpora/"+corpusID+"/ingest/jobs/"+jobID+"/retry", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec = httptest.NewRecorder()
@@ -2046,12 +2118,10 @@ func TestCorpusIngestionJobRetry(t *testing.T) {
 	if rec.Code != http.StatusAccepted {
 		t.Fatalf("retry ingest: got %d, body=%s", rec.Code, rec.Body.String())
 	}
-	retried := waitForIngestionJobStatus(t, router, token, corpusID, jobID, "completed")
-	if int(retried["attempt_count"].(float64)) != 1 {
-		t.Fatalf("expected attempt_count to restart at 1 after retry, got %v", retried["attempt_count"])
-	}
-	if int(retried["chunk_count"].(float64)) == 0 {
-		t.Fatal("expected retried job to produce chunks")
+	var reset map[string]any
+	json.NewDecoder(rec.Body).Decode(&reset)
+	if reset["status"] != "pending" || int(reset["attempt_count"].(float64)) != 0 {
+		t.Fatalf("expected the retried job to start again from nothing, got status=%v attempts=%v", reset["status"], reset["attempt_count"])
 	}
 }
 

@@ -3,7 +3,7 @@ import type { CollectionFile } from './collectionsApi'
 import { arrange, DEFAULT_VIEW, failedFiles, formatOf } from './documentOrder'
 import type { FileState } from './fileStatus'
 
-const file = (name: string, status: CollectionFile['status'] = 'pending'): CollectionFile => ({ fileId: name, name, status, chunkCount: 0, createdAt: 0 })
+const file = (name: string, status: CollectionFile['status'] = 'pending'): CollectionFile => ({ fileId: name, name, status, chunkCount: 0, createdAt: 0, keywordsOnly: false, keywordsReason: '' })
 const TONES: Record<string, FileState> = {
   'a.pdf': { tone: 'failed', label: 'Failed' },
   'b.docx': { tone: 'ready', label: 'Indexed' },

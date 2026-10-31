@@ -1,7 +1,8 @@
-import { useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Delete, Edit, Left, Upload } from '@icon-park/react'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
+import { getReembedStatus, startReembed } from '@renderer/components/config/knowledge/knowledgeApi'
 import { CollectionDialog } from './CollectionDialog'
 import { ConfirmDialog } from './ConfirmDialog'
 import { addDocument, deleteCollection, indexCollection, removeDocument, retryIndexing, updateCollection, type CollectionFile } from './collectionsApi'
@@ -11,6 +12,7 @@ import { arrange, DEFAULT_VIEW, failedFiles, type DocumentView } from './documen
 import { openDocument } from './openDocument'
 import { fileState, plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
+import { KeywordsOnlyNotice } from './KeywordsOnlyNotice'
 import { QuotaPausedNotice } from './QuotaPausedNotice'
 import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionDetail } from './useCollectionDetail'
@@ -31,6 +33,14 @@ export function CollectionPage() {
   const [confirming, setConfirming] = useState<{ title: string; message: string; label: string; run: () => Promise<void> } | null>(null)
   const picker = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
+  const [reembedding, setReembedding] = useState(false)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   // Back to the source the collection is in.
   const back = () => navigate(sourcePath(collection?.sourceId || DEFAULT_SOURCE_ID))
@@ -99,6 +109,27 @@ export function CollectionPage() {
     }
   }
 
+  // The vectors of the documents kept for keywords only are made with the model now in use: the re-embedding of Knowledge, watched here.
+  async function indexAgain() {
+    setReembedding(true)
+    try {
+      let status = await startReembed()
+      while (mounted.current && status.state === 'running') {
+        await new Promise((resolve) => window.setTimeout(resolve, 2000))
+        status = await getReembedStatus()
+        await reload()
+      }
+      if (!mounted.current) return
+      await reload()
+      if (status.state === 'done') show('The documents are indexed with their meaning now', 'ok')
+      else show(status.error || 'The documents could not be indexed again', 'err')
+    } catch (error) {
+      if (mounted.current) show(message(error, 'The documents could not be indexed again'), 'err')
+    } finally {
+      if (mounted.current) setReembedding(false)
+    }
+  }
+
   // Every failed document is started again, one after the other: the queue runs them in order anyway.
   async function retryFailed() {
     setRetryingAll(true)
@@ -164,6 +195,7 @@ export function CollectionPage() {
   // Documents of a folder source are indexed on request: the ones with no indexing job yet.
   const waiting = collection?.sourceId ? files.filter((file) => file.status === 'pending' && fileState(file, jobOf(file.fileId)).tone === 'waiting').length : 0
   const shownFiles = arrange(files, (file) => fileState(file, jobOf(file.fileId)), view)
+  const keywordsOnly = files.filter((file) => file.keywordsOnly)
 
   return (
     <div
@@ -255,6 +287,12 @@ export function CollectionPage() {
             {indexingConfigured === false && (
               <div className="mt-5">
                 <IndexingNotice />
+              </div>
+            )}
+
+            {keywordsOnly.length > 0 && (
+              <div className="mt-5">
+                <KeywordsOnlyNotice count={keywordsOnly.length} reason={keywordsOnly[0].keywordsReason} busy={reembedding} onIndexAgain={() => void indexAgain()} />
               </div>
             )}
 
