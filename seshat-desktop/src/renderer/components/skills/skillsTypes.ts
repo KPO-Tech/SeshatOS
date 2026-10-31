@@ -30,6 +30,11 @@ export type CatalogEntry = {
   url: string
   description: string
   installed: boolean
+  /** What the skills are for, as the catalog says it ('Presentations', 'Security'). */
+  category?: string
+  skill_count?: number
+  /** What the skills use besides the agent ('Python 3.10+', 'Docker'). */
+  needs?: string[]
   source?: 'organization'
 }
 

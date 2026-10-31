@@ -20,6 +20,12 @@ type FeaturedSkillRepo struct {
 	Name        string `json:"name"`
 	URL         string `json:"url"`
 	Description string `json:"description"`
+	// Category is a short label for the kind of work the skills do ("Presentations", "Security").
+	Category string `json:"category,omitempty"`
+	// SkillCount is how many skills the repository holds, as checked when the entry was written.
+	SkillCount int `json:"skill_count,omitempty"`
+	// Needs lists what the skills use beyond the agent itself ("Python 3.10+", "Docker"), so that the person knows before installing.
+	Needs []string `json:"needs,omitempty"`
 }
 
 // DefaultSeshatSkillsRepo is the official Seshat skills collection. Left empty
@@ -85,26 +91,41 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 		Name:        "gstack",
 		URL:         "https://github.com/garrytan/gstack",
 		Description: "50+ production-ready skills by Garry Tan (YC CEO). Includes review, planning, investigation, documentation, spec writing, retro, and more.",
+		Category:    "Engineering",
+		SkillCount:  71,
+		Needs:       []string{"Bun", "Git"},
 	},
 	{
 		Name:        "paperasse",
 		URL:         "https://github.com/romainsimon/paperasse",
 		Description: "A collection of document and administrative workflow skills.",
+		Category:    "Administration (FR)",
+		SkillCount:  6,
+		Needs:       []string{"Node.js"},
 	},
 	{
 		Name:        "ppt-master",
 		URL:         "https://github.com/hugohe3/ppt-master",
 		Description: "Advanced AI-driven PowerPoint generation (PDF/DOCX/URL → PPTX). Requires Python: pip install -r skills/ppt-master/requirements.txt",
+		Category:    "Presentations",
+		SkillCount:  1,
+		Needs:       []string{"Python 3.10+"},
 	},
 	{
 		Name:        "linkedin-skills",
 		URL:         "https://github.com/sergebulaev/linkedin-skills",
 		Description: "Skills for LinkedIn profile optimization, job search automation, and professional networking.",
+		Category:    "Social media",
+		SkillCount:  12,
+		Needs:       []string{"Python 3.10+"},
 	},
 	{
 		Name:        "strix",
 		URL:         "https://github.com/usestrix/strix",
 		Description: "Autonomous AI pentesting agents — reconnaissance, exploitation, and validated proof-of-concept findings. Requires Docker running; the skill installs the strix CLI itself on first use.",
+		Category:    "Security",
+		SkillCount:  9,
+		Needs:       []string{"Docker"},
 	},
 }
 
@@ -191,10 +212,13 @@ func (a *App) handleSkillReposList(w http.ResponseWriter, r *http.Request) {
 		SkillCount int    `json:"skill_count"`
 	}
 	type catalogEntry struct {
-		Name        string `json:"name"`
-		URL         string `json:"url"`
-		Description string `json:"description"`
-		Installed   bool   `json:"installed"`
+		Name        string   `json:"name"`
+		URL         string   `json:"url"`
+		Description string   `json:"description"`
+		Installed   bool     `json:"installed"`
+		Category    string   `json:"category,omitempty"`
+		SkillCount  int      `json:"skill_count,omitempty"`
+		Needs       []string `json:"needs,omitempty"`
 		// Source is "organization" for entries pulled from a connected
 		// seshat-server's registry, omitted for the built-in/operator-configured
 		// featured repos — see internal/cloudskillregistry.
@@ -224,6 +248,9 @@ func (a *App) handleSkillReposList(w http.ResponseWriter, r *http.Request) {
 			URL:         fr.URL,
 			Description: fr.Description,
 			Installed:   isInstalled,
+			Category:    fr.Category,
+			SkillCount:  fr.SkillCount,
+			Needs:       fr.Needs,
 		})
 		seen[fr.Name] = true
 	}
