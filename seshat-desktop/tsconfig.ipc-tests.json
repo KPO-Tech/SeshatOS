@@ -20,6 +20,10 @@
     "src/main/ipc/shell.ts",
     "src/main/ipc/shell.test.ts",
     "src/main/ipc/fileCount.ts",
-    "src/main/ipc/fileCount.test.ts"
+    "src/main/ipc/fileCount.test.ts",
+    "src/main/ipc/projectScan.ts",
+    "src/main/ipc/projectScan.test.ts",
+    "src/main/ipc/editor.ts",
+    "src/main/ipc/editor.test.ts"
   ]
 }
