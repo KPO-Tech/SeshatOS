@@ -19,8 +19,8 @@ export type McpCatalogEntry = {
   title: string
   description: string
   category: string
-  /** A symbol for the tile: these servers have no brand mark of their own here. */
-  icon: string
+  /** The mark of the vendor: a key of the brand marks, or the name of a logo file (see catalog/mcpLogos.ts). */
+  brand: string
   tags: string[]
   /** What must be on the machine for it to start ("Node.js"). */
   needs: string[]
@@ -43,7 +43,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Context7',
     description: 'Up-to-date documentation and code examples for the libraries and frameworks you use, fetched when the agent needs them.',
     category: 'Development',
-    icon: '\u{1F4DA}',
+    brand: 'context7',
     tags: ['documentation', 'libraries', 'code'],
     needs: ['Node.js'],
     docs: 'https://github.com/upstash/context7',
@@ -57,7 +57,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Playwright',
     description: 'Drives a real browser: open pages, click, fill forms, take screenshots and test a web app, from the page structure rather than pictures.',
     category: 'Browser',
-    icon: '\u{1F3AD}',
+    brand: 'playwright',
     tags: ['browser', 'testing', 'automation'],
     needs: ['Node.js'],
     docs: 'https://github.com/microsoft/playwright-mcp',
@@ -71,7 +71,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Chrome DevTools',
     description: "Lets the agent debug and measure a web page in Chrome: network, console, performance traces and what the page really does.",
     category: 'Browser',
-    icon: '\u{1F527}',
+    brand: 'googlechrome',
     tags: ['debugging', 'performance', 'web'],
     needs: ['Node.js', 'Chrome'],
     docs: 'https://github.com/ChromeDevTools/chrome-devtools-mcp',
@@ -85,7 +85,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Sequential Thinking',
     description: 'A tool to think a hard problem through in steps, revise earlier steps and try another path before answering.',
     category: 'Reasoning',
-    icon: '\u{1F9E0}',
+    brand: 'mcp',
     tags: ['reasoning', 'planning'],
     needs: ['Node.js'],
     docs: 'https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking',
@@ -99,7 +99,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'DBHub',
     description: 'Reads the schema and runs queries on your database: PostgreSQL, MySQL, MariaDB, SQL Server or SQLite, through one connection string.',
     category: 'Data',
-    icon: '\u{1F5C4}️',
+    brand: 'dbhub',
     tags: ['database', 'sql', 'query'],
     needs: ['Node.js'],
     docs: 'https://github.com/bytebase/dbhub',
@@ -113,7 +113,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Figma',
     description: 'Gives the agent the layout and styles of a Figma file or frame, so that it can build the interface from the design.',
     category: 'Design',
-    icon: '\u{1F3A8}',
+    brand: 'figma',
     tags: ['design', 'figma', 'interface'],
     needs: ['Node.js'],
     docs: 'https://github.com/GLips/Figma-Context-MCP',
@@ -127,7 +127,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Firecrawl',
     description: 'Scrapes and crawls websites into clean text, including pages that need JavaScript, and extracts structured data from them.',
     category: 'Web',
-    icon: '\u{1F525}',
+    brand: 'firecrawl',
     tags: ['scraping', 'crawl', 'web'],
     needs: ['Node.js'],
     docs: 'https://github.com/firecrawl/firecrawl-mcp-server',
@@ -141,7 +141,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     title: 'Hugging Face',
     description: 'Searches models, datasets, Spaces and papers on the Hugging Face Hub, and reads their documentation.',
     category: 'AI',
-    icon: '\u{1F917}',
+    brand: 'huggingface',
     tags: ['models', 'datasets', 'papers'],
     needs: [],
     docs: 'https://huggingface.co/docs/hub/mcp',
@@ -195,7 +195,7 @@ export function buildServer(entry: McpCatalogEntry, values: Record<string, strin
     url: stdio ? '' : entry.url,
     headers: stdio ? {} : headers,
     timeout_secs: 60,
-    icon: entry.icon,
+    icon: '',
     enabled: true
   }
 }

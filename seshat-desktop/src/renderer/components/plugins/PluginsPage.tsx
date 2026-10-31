@@ -12,7 +12,9 @@ import { disconnectLocalConnector, type LocalConnector } from './api/localConnec
 import { categoryDescription, groupConnectors, matchesQuery } from './connectorGroups'
 import { PluginTile, type PluginState } from './PluginTile'
 import { McpInstallDialog } from './McpInstallDialog'
-import { availableMcp, type McpCatalogEntry } from './mcpCatalog'
+import { availableMcp, MCP_CATALOG, type McpCatalogEntry } from './mcpCatalog'
+import { BrandIcon } from './catalog/BrandIcon'
+import { mcpLogo } from './catalog/mcpLogos'
 import { PluginDetailModal } from './PluginDetailModal'
 import { useLocalConnectors } from './useLocalConnectors'
 
@@ -102,6 +104,8 @@ export function PluginsPage() {
     const title = server.display_name || server.name
     const description = server.url || [server.command, ...(server.args ?? [])].filter(Boolean).join(' ') || 'MCP server'
     const pluginState: PluginState = server.enabled ? 'installed' : 'available'
+    // A server that came from the list keeps the mark of its vendor, whatever symbol it was saved with.
+    const known = MCP_CATALOG.find((entry) => entry.name.toLowerCase() === server.name.toLowerCase())
     return {
       id: `mcp:${server.id}`,
       title,
@@ -113,7 +117,7 @@ export function PluginsPage() {
           key={server.id}
           title={title}
           description={description}
-          icon={<MCPServerIcon icon={server.icon} type={server.server_type} size={shape === 'grid' ? 52 : 40} />}
+          icon={known ? <BrandIcon brand={known.brand} src={mcpLogo(known.brand)} title={known.title} size={shape === 'grid' ? 52 : 40} /> : <MCPServerIcon icon={server.icon} type={server.server_type} size={shape === 'grid' ? 52 : 40} />}
           state={pluginState}
           offLabel="Off"
           tags={[server.server_type]}
@@ -140,11 +144,7 @@ export function PluginsPage() {
         key={`mcp-catalog:${entry.name}`}
         title={entry.title}
         description={entry.description}
-        icon={
-          <span className="flex shrink-0 items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-[var(--surface-muted)] text-[22px]" style={{ width: shape === 'grid' ? 52 : 40, height: shape === 'grid' ? 52 : 40 }} aria-hidden="true">
-            {entry.icon}
-          </span>
-        }
+        icon={<BrandIcon brand={entry.brand} src={mcpLogo(entry.brand)} title={entry.title} size={shape === 'grid' ? 52 : 40} />}
         state="available"
         tags={entry.tags}
         menu={[{ id: 'docs', label: 'Read about it', onSelect: () => openInAppBrowser(entry.docs) }]}

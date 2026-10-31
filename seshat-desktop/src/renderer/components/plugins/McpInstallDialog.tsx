@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { createMCPServer, reloadMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { BrandIcon } from './catalog/BrandIcon'
+import { mcpLogo } from './catalog/mcpLogos'
 import { buildServer, commandLine, missingInputs, type McpCatalogEntry } from './mcpCatalog'
 
 type Props = {
@@ -54,9 +56,7 @@ export function McpInstallDialog({ entry, onInstalled, onClose }: Props) {
     <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-[rgba(0,0,0,0.45)] px-6" onMouseDown={(event) => event.target === event.currentTarget && !busy && onClose()}>
       <div role="dialog" aria-modal="true" aria-label={`Install ${entry.title}`} className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
         <div className="flex items-start gap-3">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border-soft)] bg-[var(--surface-muted)] text-[24px]" aria-hidden="true">
-            {entry.icon}
-          </span>
+          <BrandIcon brand={entry.brand} src={mcpLogo(entry.brand)} title={entry.title} size={48} />
           <div className="min-w-0">
             <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">Install {entry.title}</h2>
             <p className="m-0 mt-1 text-[12.5px] leading-5 text-[var(--text-muted)]">{entry.description}</p>
