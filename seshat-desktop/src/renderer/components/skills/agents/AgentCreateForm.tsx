@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { CustomSelect, Field, SoftButton, TextInput, ToggleSwitch } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { useMemo, useState, type ReactNode } from 'react'
+import { Left } from '@icon-park/react'
+import { CustomSelect, Field, TextInput } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { AgentAvatar } from './AgentAvatar'
 import type { AgentConfigEntry, AgentCreatePayload } from './agentTypes'
 
@@ -31,6 +32,63 @@ const starterPrompts = [
   }
 ]
 
+const AREA =
+  'min-w-0 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]'
+const INPUT = 'bg-[var(--surface-root)]'
+
+function Card({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-5">
+      <h3 className="m-0 text-[14px] font-semibold text-[var(--text-primary)]">{title}</h3>
+      {hint && <p className="m-0 mt-0.5 text-[12px] text-[var(--text-muted)]">{hint}</p>}
+      <div className="mt-4 grid gap-3">{children}</div>
+    </section>
+  )
+}
+
+function Switch({ enabled, label, onChange }: { enabled: boolean; label: string; onChange: (enabled: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
+      onClick={() => onChange(!enabled)}
+      className={`flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-0 p-0.5 transition-colors ${enabled ? 'justify-end bg-[var(--accent-primary)]' : 'justify-start bg-[var(--surface-muted)]'}`}
+    >
+      <span className="size-4 rounded-full bg-white" />
+    </button>
+  )
+}
+
+function Pills({ value, options, onChange }: { value: string; options: Array<{ id: string; label: string }>; onChange: (id: string) => void }) {
+  return (
+    <div className="flex gap-1.5" role="group">
+      {options.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          aria-pressed={value === option.id}
+          onClick={() => onChange(option.id)}
+          className={`h-8 cursor-pointer rounded-full border px-3.5 text-[12.5px] font-medium ${value === option.id ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Fact({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 text-[12.5px]">
+      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className={`truncate font-medium ${ok ? 'text-[var(--accent-success)]' : 'text-[var(--text-primary)]'}`}>{value}</span>
+    </div>
+  )
+}
+
+/** The form that makes an agent of the person's own: who it is, how it is told to behave, and what it may use. */
 export function AgentCreateForm({ saving, onCancel, onSubmit }: {
   saving: boolean
   onCancel: () => void
@@ -69,6 +127,7 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
     enabled,
     source: 'user'
   }
+  const canCreate = !saving && Boolean(name.trim()) && Boolean(computedSlug) && Boolean(prompt.trim())
 
   function submit() {
     onSubmit({
@@ -89,39 +148,39 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_18px_55px_rgba(0,0,0,0.18)]">
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--border-soft)] px-5 py-4">
-        <div>
-          <h2 className="text-[18px] font-semibold text-[var(--text-primary)]">Create agent</h2>
-          <p className="mt-1 text-[12px] text-[var(--text-muted)]">Compose a local profile with its identity, prompt, tools, and runtime defaults.</p>
-        </div>
-        <SoftButton onClick={onCancel}>Back to agents</SoftButton>
-      </div>
+    <div>
+      <button type="button" onClick={onCancel} className="mb-3 flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+        <Left theme="outline" size={13} />
+        Agents
+      </button>
+      <h2 className="m-0 text-[18px] font-semibold text-[var(--text-primary)]">New agent</h2>
+      <p className="m-0 mt-0.5 text-[12.5px] text-[var(--text-muted)]">Give it an identity, tell it how to behave, and choose what it may use.</p>
 
-      <div className="grid grid-cols-[280px_1fr] gap-0">
-        <aside className="border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] p-5">
-          <div className="flex flex-col items-center text-center">
-            <AgentAvatar agent={previewAgent} size={86} />
-            <h3 className="mt-4 max-w-full truncate text-[18px] font-semibold text-[var(--text-primary)]">{previewAgent.name}</h3>
-            <div className="mt-1 max-w-full truncate font-mono text-[12px] text-[var(--text-muted)]">/{previewAgent.slug}</div>
+      <div className="mt-4 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-4">
+        <aside className="sticky top-0 flex flex-col gap-3">
+          <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-5">
+            <div className="flex flex-col items-center text-center">
+              <AgentAvatar agent={previewAgent} size={72} />
+              <h3 className="m-0 mt-3 max-w-full truncate text-[16px] font-semibold text-[var(--text-primary)]">{previewAgent.name}</h3>
+              <div className="mt-0.5 max-w-full truncate font-mono text-[11.5px] text-[var(--text-muted)]">/{previewAgent.slug}</div>
+            </div>
+            <div className="mt-4 divide-y divide-[var(--border-soft)] border-t border-[var(--border-soft)] pt-2">
+              <Fact label="Status" value={enabled ? 'Enabled' : 'Off'} ok={enabled} />
+              <Fact label="Tools" value={toolsMode === 'all' ? 'All tools' : `${previewAgent.tools?.length ?? 0} selected`} />
+              <Fact label="MCP servers" value={previewAgent.mcp_servers?.length ? String(previewAgent.mcp_servers.length) : 'Default'} />
+              <Fact label="Turns" value={String(maxTurns)} />
+            </div>
           </div>
 
-          <div className="mt-5 grid gap-2">
-            <PreviewLine label="Status" value={enabled ? 'Enabled' : 'Disabled'} tone={enabled ? 'ok' : 'muted'} />
-            <PreviewLine label="Tools" value={toolsMode === 'all' ? 'All tools' : `${previewAgent.tools?.length ?? 0} selected`} />
-            <PreviewLine label="MCP servers" value={previewAgent.mcp_servers?.length ? String(previewAgent.mcp_servers.length) : 'Default'} />
-            <PreviewLine label="Turns" value={String(maxTurns)} />
-          </div>
-
-          <div className="mt-5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-muted)] p-3">
-            <div className="text-[12px] font-semibold text-[var(--text-primary)]">Prompt starters</div>
-            <div className="mt-2 grid gap-1.5">
+          <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
+            <h3 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">Start from</h3>
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {starterPrompts.map((starter) => (
                 <button
                   key={starter.label}
                   type="button"
                   onClick={() => setPrompt(starter.prompt)}
-                  className="rounded-md px-2 py-1.5 text-left text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-panel)] hover:text-[var(--text-primary)]"
+                  className="h-8 cursor-pointer rounded-full border border-[var(--border-soft)] bg-transparent px-3.5 text-[12.5px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                 >
                   {starter.label}
                 </button>
@@ -130,147 +189,102 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
           </div>
         </aside>
 
-        <main className="grid gap-5 p-5">
-          <section>
-            <SectionTitle title="Identity" />
-            <div className="mt-3 grid grid-cols-2 gap-3">
+        <main className="grid gap-4">
+          <Card title="Identity">
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Display name">
-                <TextInput value={name} onChange={(event) => setName(event.target.value)} placeholder="Research companion" />
+                <TextInput className={INPUT} value={name} onChange={(event) => setName(event.target.value)} placeholder="Research companion" />
               </Field>
               <Field label="Slug">
                 <TextInput
+                  className={`${INPUT} font-mono`}
                   value={slug}
                   onChange={(event) => setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   placeholder={computedSlug || 'research-companion'}
-                  className="font-mono"
                 />
               </Field>
             </div>
-            <div className="mt-3">
-              <Field label="When to use">
-                <textarea
-                  value={whenToUse}
-                  onChange={(event) => setWhenToUse(event.target.value)}
-                  rows={3}
-                  className="min-w-0 resize-none rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
-                  placeholder="Use this agent for source-backed research, synthesis, and careful comparison."
-                />
+            <Field label="When to use">
+              <textarea
+                value={whenToUse}
+                onChange={(event) => setWhenToUse(event.target.value)}
+                rows={3}
+                className={`${AREA} resize-none`}
+                placeholder="Use this agent for source-backed research, synthesis, and careful comparison."
+              />
+            </Field>
+          </Card>
+
+          <Card title="Instructions" hint="What the agent is told every time it starts.">
+            <Field label="System prompt">
+              <textarea
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                rows={10}
+                className={`${AREA} resize-y font-mono text-[12px] leading-5`}
+                placeholder={'You are a careful agent specialized in...\n\nYour role is to...\n\nConstraints:\n- Be precise\n- Ask only when blocked\n- Keep actions reversible'}
+              />
+            </Field>
+          </Card>
+
+          <Card title="Capabilities">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Model override">
+                <TextInput className={`${INPUT} font-mono`} value={model} onChange={(event) => setModel(event.target.value)} placeholder="provider:model, optional" />
+              </Field>
+              <Field label="Max turns">
+                <TextInput className={INPUT} type="number" min={1} max={500} value={maxTurns} onChange={(event) => setMaxTurns(Number.parseInt(event.target.value, 10) || 50)} />
+              </Field>
+              <Field label="Permission mode">
+                <CustomSelect value={permissionMode} options={permissionOptions} onChange={setPermissionMode} />
+              </Field>
+              <Field label="Isolation">
+                <CustomSelect value={isolation} options={isolationOptions} onChange={setIsolation} />
               </Field>
             </div>
-          </section>
 
-          <section>
-            <SectionTitle title="Instructions" />
-            <div className="mt-3">
-              <Field label="System prompt">
-                <textarea
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                  rows={10}
-                  className="min-w-0 resize-y rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 font-mono text-[12px] leading-5 text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
-                  placeholder={'You are a careful agent specialized in...\n\nYour role is to...\n\nConstraints:\n- Be precise\n- Ask only when blocked\n- Keep actions reversible'}
-                />
-              </Field>
-            </div>
-          </section>
-
-          <section>
-            <SectionTitle title="Capabilities" />
-            <div className="mt-3 grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Model override">
-                  <TextInput value={model} onChange={(event) => setModel(event.target.value)} placeholder="provider:model, optional" className="font-mono" />
-                </Field>
-                <Field label="Max turns">
-                  <TextInput type="number" min={1} max={500} value={maxTurns} onChange={(event) => setMaxTurns(Number.parseInt(event.target.value, 10) || 50)} />
-                </Field>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Permission mode">
-                  <CustomSelect value={permissionMode} options={permissionOptions} onChange={setPermissionMode} />
-                </Field>
-                <Field label="Isolation">
-                  <CustomSelect value={isolation} options={isolationOptions} onChange={setIsolation} />
-                </Field>
-              </div>
-
-              <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-muted)] p-3">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-[13px] font-semibold text-[var(--text-primary)]">Tools</div>
-                    <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">Choose every tool or restrict the agent to a comma-separated list.</div>
-                  </div>
-                  <div className="flex rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] p-1">
-                    <ModeButton active={toolsMode === 'all'} onClick={() => setToolsMode('all')}>All</ModeButton>
-                    <ModeButton active={toolsMode === 'custom'} onClick={() => setToolsMode('custom')}>Custom</ModeButton>
-                  </div>
-                </div>
-                {toolsMode === 'custom' && (
-                  <TextInput value={toolsCustom} onChange={(event) => setToolsCustom(event.target.value)} placeholder="web_search, read_file, terminal" className="mt-3 font-mono" />
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Disallowed tools">
-                  <TextInput value={disallowedTools} onChange={(event) => setDisallowedTools(event.target.value)} placeholder="delete_file, shell" className="font-mono" />
-                </Field>
-                <Field label="MCP servers">
-                  <TextInput value={mcpServers} onChange={(event) => setMcpServers(event.target.value)} placeholder="filesystem, github" className="font-mono" />
-                </Field>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2.5">
+            <div className="rounded-xl border border-[var(--border-soft)] p-3">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">Enabled</div>
-                  <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">Available immediately in agent pickers after creation.</div>
+                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">Tools</div>
+                  <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">Every tool, or only a list you give.</div>
                 </div>
-                <ToggleSwitch enabled={enabled} onChange={setEnabled} />
+                <Pills value={toolsMode} options={[{ id: 'all', label: 'All' }, { id: 'custom', label: 'Custom' }]} onChange={(id) => setToolsMode(id as 'all' | 'custom')} />
               </div>
+              {toolsMode === 'custom' && <TextInput className={`${INPUT} mt-3 w-full font-mono`} value={toolsCustom} onChange={(event) => setToolsCustom(event.target.value)} placeholder="web_search, read_file, terminal" />}
             </div>
-          </section>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Disallowed tools">
+                <TextInput className={`${INPUT} font-mono`} value={disallowedTools} onChange={(event) => setDisallowedTools(event.target.value)} placeholder="delete_file, shell" />
+              </Field>
+              <Field label="MCP servers">
+                <TextInput className={`${INPUT} font-mono`} value={mcpServers} onChange={(event) => setMcpServers(event.target.value)} placeholder="filesystem, github" />
+              </Field>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-[var(--border-soft)] px-3 py-2.5">
+              <div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">Enabled</div>
+                <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">Available in the agent pickers as soon as it is created.</div>
+              </div>
+              <Switch enabled={enabled} label="Enabled" onChange={setEnabled} />
+            </div>
+          </Card>
+
+          <div className="flex items-center justify-between gap-4 pb-2">
+            <span className="text-[12px] text-[var(--text-muted)]">The slug cannot be changed after creation.</span>
+            <div className="flex gap-2">
+              <button type="button" disabled={saving} onClick={onCancel} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
+                Cancel
+              </button>
+              <button type="button" disabled={!canCreate} onClick={submit} className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-5 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-50">
+                {saving ? 'Creating...' : 'Create agent'}
+              </button>
+            </div>
+          </div>
         </main>
       </div>
-
-      <div className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-[var(--border-soft)] bg-[var(--surface-panel)] px-5 py-3">
-        <div className="text-[12px] text-[var(--text-muted)]">
-          Slug is permanent after creation. Name and instructions can be edited later.
-        </div>
-        <div className="flex gap-2">
-          <SoftButton onClick={onCancel} disabled={saving}>Cancel</SoftButton>
-          <SoftButton tone="primary" disabled={saving || !name.trim() || !computedSlug || !prompt.trim()} onClick={submit}>
-            {saving ? 'Creating...' : 'Create agent'}
-          </SoftButton>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function SectionTitle({ title }: { title: string }) {
-  return <h3 className="text-[14px] font-semibold text-[var(--text-primary)]">{title}</h3>
-}
-
-function ModeButton({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'h-7 rounded px-3 text-[12px] font-semibold transition-colors',
-        active ? 'bg-[var(--surface-muted)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-      ].join(' ')}
-    >
-      {children}
-    </button>
-  )
-}
-
-function PreviewLine({ label, value, tone = 'muted' }: { label: string; value: string; tone?: 'ok' | 'muted' }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2">
-      <span className="text-[11px] font-semibold text-[var(--text-muted)]">{label}</span>
-      <span className={['truncate text-[12px] font-semibold', tone === 'ok' ? 'text-[var(--accent-success)]' : 'text-[var(--text-primary)]'].join(' ')}>{value}</span>
     </div>
   )
 }

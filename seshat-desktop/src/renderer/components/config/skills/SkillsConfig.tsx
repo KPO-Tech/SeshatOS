@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchSkillRepos, installSkillRepo, uninstallSkillRepo } from '@renderer/components/skills/skillsApi'
-import type { CatalogEntry, RepoInfo } from '@renderer/components/skills/skillsTypes'
+import { fetchSkillRepos, installSkillRepo, prepareSkillEnvironment, uninstallSkillRepo } from '@renderer/components/skills/skillsApi'
+import type { CatalogEntry, InstallPlan, RepoInfo } from '@renderer/components/skills/skillsTypes'
 import { ConfigCard, Field, SoftButton, StatusPill, TextInput } from '../knowledge/KnowledgePrimitives'
 import { ProviderEmptyState } from '../providers/ProviderEmptyState'
-import { ExternalSkillSources } from './ExternalSkillSources'
+import { SkillInstallDialog } from '@renderer/components/skills/SkillInstallDialog'
 import { SkillRow as Row } from './SkillRow'
 
 export function SkillsConfig() {
@@ -12,6 +12,7 @@ export function SkillsConfig() {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
+  const [reviewing, setReviewing] = useState<{ name: string; plan: InstallPlan } | null>(null)
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
   const load = useCallback(async () => {
@@ -37,8 +38,13 @@ export function SkillsConfig() {
     setBusy(key)
     setMessage(null)
     try {
-      await installSkillRepo(repoUrl)
+      const result = await installSkillRepo(repoUrl)
       setUrl('')
+      if (result.needs_environment) {
+        // The skills wait for the person to agree to what they need: the window shows it before anything is installed.
+        setReviewing({ name: result.name, plan: result.plan })
+        return
+      }
       setMessage({ tone: 'ok', text: 'Repository installed.' })
       await load()
     } catch (err) {
@@ -79,6 +85,23 @@ export function SkillsConfig() {
     setBusy(null)
   }
 
+  async function finishInstall(name: string) {
+    await prepareSkillEnvironment(name)
+    setReviewing(null)
+    setMessage({ tone: 'ok', text: 'Repository installed.' })
+    await load()
+  }
+
+  async function cancelInstall(name: string) {
+    setReviewing(null)
+    try {
+      await uninstallSkillRepo(name)
+    } catch {
+      // The repository stays marked as unfinished, and is replaced the next time it is installed.
+    }
+    await load()
+  }
+
   if (loading) return <ProviderEmptyState label="Loading skills..." />
 
   return (
@@ -91,8 +114,6 @@ export function SkillsConfig() {
           {message.text}
         </div>
       )}
-
-      <ExternalSkillSources />
 
       <ConfigCard title="Add skills" description="Download a Git repository of skills to use with your agents. Skills are stored locally on this machine.">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
@@ -139,6 +160,7 @@ export function SkillsConfig() {
           </div>
         )}
       </ConfigCard>
+      {reviewing && <SkillInstallDialog name={reviewing.name} plan={reviewing.plan} onConfirm={() => finishInstall(reviewing.name)} onCancel={() => void cancelInstall(reviewing.name)} />}
     </div>
   )
 }

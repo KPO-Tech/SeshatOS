@@ -118,47 +118,70 @@ export function AgentsConfig({ query, sort, source, enabledOnly, onSources }: Pr
 
   if (creating) {
     return (
-      <div className="mx-auto mt-4 w-full max-w-[920px] space-y-5">
+      <div className="mt-4 w-full space-y-4">
         {message && <Banner message={message} />}
         <AgentCreateForm saving={Boolean(busySlug)} onCancel={() => setCreating(false)} onSubmit={(payload) => void handleCreate(payload)} />
       </div>
     )
   }
 
-  return (
-    <section className="mt-6">
-      {message && <Banner message={message} />}
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
-            Agent profiles
-            <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] leading-none text-[var(--text-muted)]">{visible.length}</span>
-          </h2>
-          <p className="m-0 mt-1 text-[12.5px] text-[var(--text-muted)]">Manage your specialized AI agents and their configurations.</p>
-        </div>
-        <button type="button" onClick={() => setCreating(true)} className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
-          <Plus theme="outline" size={15} />
-          New agent
-        </button>
-      </div>
+  const own = visible.filter((agent) => !isReadOnly(agent))
+  const platform = visible.filter((agent) => isReadOnly(agent))
+  const filtering = query.trim() !== '' || source !== 'all' || enabledOnly
+  const grid = (items: AgentConfigEntry[]) => (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3">
+      {items.map((agent) => (
+        <AgentCard
+          key={`${agent.source}-${agent.slug}`}
+          agent={agent}
+          busy={busySlug === agent.slug}
+          onToggle={(item, enabled) => void toggleAgent(item, enabled)}
+          onDelete={(item) => void handleDelete(item)}
+        />
+      ))}
+    </div>
+  )
 
+  return (
+    <div>
+      {message && <div className="mt-4"><Banner message={message} /></div>}
       {loading ? (
-        <ProviderEmptyState label="Loading agents..." />
-      ) : visible.length === 0 ? (
-        <ProviderEmptyState label={agents.length === 0 ? 'No agents yet.' : 'No agents match your filters.'} />
+        <div className="mt-6"><ProviderEmptyState label="Loading agents..." /></div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3">
-          {visible.map((agent) => (
-            <AgentCard
-              key={`${agent.source}-${agent.slug}`}
-              agent={agent}
-              busy={busySlug === agent.slug}
-              onToggle={(item, enabled) => void toggleAgent(item, enabled)}
-              onDelete={(item) => void handleDelete(item)}
-            />
-          ))}
-        </div>
+        <>
+          {(own.length > 0 || !filtering) && (
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
+                  Your agents
+                  <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] leading-none text-[var(--text-muted)]">{own.length}</span>
+                </h2>
+                <button type="button" onClick={() => setCreating(true)} className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
+                  <Plus theme="outline" size={15} />
+                  New agent
+                </button>
+              </div>
+              {own.length > 0 ? (
+                grid(own)
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--border-strong)] px-5 py-6 text-center text-[12.5px] text-[var(--text-muted)]">
+                  You have not made an agent yet. Create one with its own instructions, tools and limits.
+                </div>
+              )}
+            </section>
+          )}
+          {platform.length > 0 && (
+            <section className="mt-6">
+              <h2 className="m-0 mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
+                Platform agents
+                <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] leading-none text-[var(--text-muted)]">{platform.length}</span>
+              </h2>
+              {grid(platform)}
+            </section>
+          )}
+          {own.length === 0 && platform.length === 0 && filtering && <div className="mt-6"><ProviderEmptyState label="No agents match your filters." /></div>}
+        </>
       )}
-    </section>
+    </div>
   )
 }
