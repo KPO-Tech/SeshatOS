@@ -202,7 +202,7 @@ type App struct {
 	Agents      *agents.Service
 	Pulls       *pulls.Service
 
-	KnowledgeGDrive        *gdrive.Connector
+	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
 	ConnectorAccounts       *db.ConnectorAccountStore
 	LocalConnectors         *localconnectors.Service
