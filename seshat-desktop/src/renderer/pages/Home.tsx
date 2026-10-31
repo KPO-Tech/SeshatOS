@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { CheckCorrect, FileTextOne, Globe, LightMember } from '@icon-park/react'
+import { ChartHistogram, Code, FileTextOne, Globe, LightMember } from '@icon-park/react'
+import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
@@ -16,6 +17,8 @@ import { modelAlias } from '@renderer/lib/modelAlias'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
+import { HomeLists } from './home/HomeLists'
+import { ModeCards, type HomeMode } from './home/ModeCards'
 import './Home.css'
 
 type ModelChoice = {
@@ -59,10 +62,12 @@ type NewChatProps = {
   /** Buttons under the input that fill it with a first request. The start page has its own when none are given. */
   suggestions?: NewChatSuggestion[]
   autoFocus?: boolean
+  /** What is shown under the buttons of the start page. */
+  below?: ReactNode
 }
 
 /** The start of a conversation: the input with its model, attachments and folder, which creates the conversation and opens it. */
-export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Send a message, upload files, open a folder, or create a scheduled task...', suggestions, autoFocus }: NewChatProps) {
+export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Send a message, upload files, open a folder, or create a scheduled task...', suggestions, autoFocus, below }: NewChatProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { loading: providersLoading } = useProviders()
@@ -70,6 +75,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
   const addSession = useSessionStore((s) => s.addSession)
   const permissionMode = useUIStore((s) => s.permissionMode)
   const [inputValue, setInputValue] = useState('')
+  const [mode, setMode] = useState<HomeMode>('chat')
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null)
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ProviderModel[]>>({})
@@ -409,16 +415,43 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
     suggestions ??
     (variant === 'home'
       ? [
-          { icon: <CheckCorrect size={14} />, label: 'Create a task', prompt: 'Create a task to ' },
           { icon: <FileTextOne size={14} />, label: 'Summarize a file', prompt: 'Summarize the file at ' },
+          { icon: <ChartHistogram size={14} />, label: 'Analyze data', prompt: 'Analyze the data in ' },
           { icon: <Globe size={14} />, label: 'Search the web', prompt: 'Search the web for ' },
-          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' }
+          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' },
+          { icon: <Code size={14} />, label: 'Write code', prompt: 'Write code that ' }
         ]
       : [])
 
+  function focusInput() {
+    window.setTimeout(() => document.querySelector<HTMLTextAreaElement>('.home-input-container textarea')?.focus(), 0)
+  }
+
   const body = (
     <>
-        {variant === 'home' && <h1 className="home-greeting">Hi, what's your plan for today?</h1>}
+        {variant === 'home' && (
+          <>
+            <SeshatLogo size={56} />
+            <h1 className="home-greeting">
+              Welcome to <span className="text-[var(--accent-primary)]">SeshatOS</span>
+            </h1>
+            <p className="home-subtitle">Your workspace for research, creation and automation with AI.</p>
+            <ModeCards
+              mode={mode}
+              onChat={() => {
+                setMode('chat')
+                focusInput()
+              }}
+              onProject={() => navigate('/projects')}
+              onTask={() => {
+                setMode('task')
+                setInputValue('Create a scheduled task that ')
+                focusInput()
+              }}
+              onSkills={() => navigate('/skills')}
+            />
+          </>
+        )}
 
         <div className={variant === 'home' ? 'home-input-container' : 'w-full'}>
           <ChatInput
@@ -483,6 +516,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
             ))}
           </div>
         )}
+        {variant === 'home' && below}
     </>
   )
 
@@ -493,7 +527,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
 export function Home() {
   return (
     <div className="home-root">
-      <NewChat />
+      <NewChat below={<HomeLists />} />
     </div>
   )
 }
