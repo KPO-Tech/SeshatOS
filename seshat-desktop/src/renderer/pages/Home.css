@@ -1,4 +1,5 @@
 .home-root {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -6,7 +7,25 @@
   overflow-y: auto;
 }
 
+/* The glow and the lines sit behind the page and scroll with it. */
+.home-backdrop {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 440px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 52% 62% at 50% 24%, color-mix(in srgb, var(--accent-primary) 22%, transparent), transparent 72%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  mask-image: linear-gradient(to bottom, #000 62%, transparent);
+}
+
+:root[data-theme="light"] .home-backdrop {
+  opacity: 0.55;
+}
+
 .home-center {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;

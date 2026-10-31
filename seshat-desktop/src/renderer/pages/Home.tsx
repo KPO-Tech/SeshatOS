@@ -17,6 +17,7 @@ import { modelAlias } from '@renderer/lib/modelAlias'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
+import { HomeBackdrop } from './home/HomeBackdrop'
 import { HomeLists } from './home/HomeLists'
 import { ModeCards, type HomeMode } from './home/ModeCards'
 import './Home.css'
@@ -527,6 +528,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
 export function Home() {
   return (
     <div className="home-root">
+      <HomeBackdrop />
       <NewChat below={<HomeLists />} />
     </div>
   )
