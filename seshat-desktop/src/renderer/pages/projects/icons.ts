@@ -1,3 +1,31 @@
-// The icons of the Projects page, under the names the page uses. icon-park has no Archive (its Inbox is the box that stands for it), and
+// The icons of the Projects pages, under the names the pages use. icon-park has no Archive (its Inbox is the box that stands for it), and
 // its "Folder" is not drawn as a folder: FolderClose is.
-export { Check, Delete, Down, Edit, FolderClose as Folder, FolderOpen, FolderPlus, Inbox as Archive, ListView, MoreOne, Pin, Play, Search, Sort, Time, ApplicationTwo as GridView } from '@icon-park/react'
+export {
+  ApplicationTwo as GridView,
+  BookOpen,
+  Check,
+  Close,
+  Copy,
+  Delete,
+  Down,
+  Edit,
+  FileText,
+  FolderClose as Folder,
+  FolderClose,
+  FolderOpen,
+  FolderPlus,
+  Inbox as Archive,
+  Left,
+  ListView,
+  MoreOne,
+  Notes,
+  Pin,
+  Play,
+  Plus,
+  Refresh,
+  Right,
+  Search,
+  Sort,
+  Star,
+  Time
+} from '@icon-park/react'

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { useSessionStore } from '@renderer/stores/session'
 import { addProject, listProjects, removeProject, updateProject, type ProjectSummary } from '@renderer/lib/projects'
 import { arrangeProjects, countTabs, PROJECT_SORTS, PROJECT_TABS, type ProjectSort, type ProjectTab } from '@renderer/lib/projectsView'
@@ -40,6 +41,7 @@ const TAB_ICON: Record<ProjectTab, typeof Folder> = { all: Folder, recent: Time,
 // person says about it). The page finds one, shows what is in it and what it is doing, and starts a conversation in it.
 export function ProjectsPage() {
   const navigate = useNavigate()
+  const { toasts, show } = useToast()
   const sessions = useSessionStore((state) => state.sessions)
   const streaming = useSessionStore((state) => state.isStreamingBySession)
   const setActive = useSessionStore((state) => state.setActive)
@@ -80,7 +82,7 @@ export function ProjectsPage() {
       setActive(project.lastSessionId)
       navigate(`/conversation/${project.lastSessionId}`)
     },
-    openFolder: (project) => void window.seshat?.openPath?.(project.rootPath),
+    openFolder: (project) => void window.seshat?.openLocalPath?.(project.rootPath).catch(() => show('The folder could not be opened.', 'err')),
     edit: setEditing,
     togglePinned: (project) => {
       updateProject(project.id, project.rootPath, { pinned: !project.pinned })
@@ -265,6 +267,7 @@ export function ProjectsPage() {
           }}
         />
       )}
+      <ToastStack toasts={toasts} />
     </section>
   )
 }
