@@ -8,6 +8,7 @@ import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig, type AgentSource } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
 import { ImportSkillsDialog } from './ImportSkillsDialog'
+import { repoLogo } from './skillLogos'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillInstallDialog } from './SkillInstallDialog'
 import { categoryOf, tagsFor } from './skillIcons'
@@ -157,6 +158,7 @@ export function SkillsPage() {
       key={skill.name}
       skill={skill}
       icon={iconOf(skill)}
+      logo={isChosen(skill.name) ? undefined : repoLogo(skill.collection)}
       tags={tagsFor(skill)}
       onOpen={() => openSkill(skill)}
       moreItems={[changeIcon(skill), ...(skill.source === 'userSettings' ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => void remove(skill) }] : [])]}
@@ -173,6 +175,7 @@ export function SkillsPage() {
       name={entry.name}
       description={entry.description}
       icon={iconOf(entry)}
+      logo={isChosen(entry.name) ? undefined : repoLogo(entry.name)}
       url={entry.url}
       category={entry.category}
       skillCount={entry.skill_count}

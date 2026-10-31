@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { BrandIcon } from '@renderer/components/plugins/catalog/BrandIcon'
 import {
   Analysis, Book, BranchOne, Bug, Calendar, ChartHistogram, CloudStorage, Code, DatabaseNetwork, Edit, FilePdf, Folder, Globe, Key, Lightning, Magic,
   Mail, Microscope, Music, Pic, Robot, Rocket, SettingTwo, Shield, Star, Table, Terminal, Tool, Translate, Wallet
@@ -53,4 +54,9 @@ export function SkillIconTile({ icon, size = 44 }: { icon: SkillIconId; size?: n
       <Glyph theme="filled" size={Math.round(size * 0.52)} fill={color} />
     </span>
   )
+}
+
+/** The mark of a skill: the logo of the repository it comes from when it has one and the person chose no icon, else its icon. */
+export function SkillMark({ icon, logo, title, size = 44 }: { icon: SkillIconId; logo?: string; title: string; size?: number }) {
+  return logo ? <BrandIcon src={logo} title={title} size={size} /> : <SkillIconTile icon={icon} size={size} />
 }
