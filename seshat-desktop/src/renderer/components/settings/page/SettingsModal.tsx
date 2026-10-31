@@ -38,7 +38,6 @@ export function SettingsModal({ initialSection, onClose }: Props) {
               <SettingTwo theme="filled" size={14} fill="currentColor" />
             </span>
             <span className="text-[14px] font-semibold text-[var(--text-primary)]">Settings</span>
-            <span className="truncate text-[11.5px] text-[var(--text-muted)]">{edition.accounts ? 'This account' : 'This device'}</span>
           </div>
           <button type="button" onClick={onClose} aria-label="Close settings" className="flex size-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
             <Close theme="outline" size={16} />
