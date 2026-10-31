@@ -8,6 +8,8 @@ import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
 import { collectPullUrls } from '@renderer/lib/pullRequests'
+import { gitFolder } from '@renderer/lib/gitFolder'
+import { useGitState } from '@renderer/hooks/useGitState'
 import { ChangesList } from './changes/ChangesList'
 import { usePullRequests } from './changes/usePullRequests'
 import { api, ApiError } from '@renderer/api/client'
@@ -69,8 +71,9 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }, [])
 
   const { usage: context, windowTokens } = useContextUsage(sessionId)
+  const folder = gitFolder(session)
   const pullUrls = useMemo(() => collectPullUrls(messages), [messages])
-  const { result: pullResult, refresh: refreshPulls } = usePullRequests(session?.workspacePath, pullUrls)
+  const { result: pullResult, refresh: refreshPulls } = usePullRequests(folder, pullUrls)
 
   // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
   // compaction rewrites the conversation that turn is using (the server refuses it too).
@@ -91,7 +94,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     }
   }
 
-  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
+  const git = useGitState(folder)
+  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, git, confinement })
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0

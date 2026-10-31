@@ -83,10 +83,19 @@ export function formatTokens(n: number): string {
 
 type EnvironmentRow = { label: string; value: string; tone?: 'warn' }
 
-/** The rows of the environment card: where commands run, the folder they run in, and whether anything confines them. */
+export type GitState = { repo: boolean; branch?: string; detached?: boolean; dirty?: boolean }
+
+/** The branch row: its name, or the short commit when the head is detached, and a mark when files are not committed. */
+function branchValue(git: GitState): string {
+  const name = git.detached ? `${git.branch} (detached)` : git.branch ?? ''
+  return git.dirty ? `${name}, with changes` : name
+}
+
+/** The rows of the environment card: where commands run, the folder they run in, its git branch, and whether anything confines them. */
 export function environmentRows(input: {
   docker: boolean
   workspacePath?: string
+  git?: GitState | null
   confinement?: { label: string; confined: boolean } | null
 }): EnvironmentRow[] {
   const rows: EnvironmentRow[] = []
@@ -94,6 +103,7 @@ export function environmentRows(input: {
     rows.push({ label: 'Runs on', value: input.docker ? 'A Docker container' : 'This computer' })
   }
   if (input.workspacePath) rows.push({ label: 'Folder', value: input.workspacePath })
+  if (input.git?.repo && input.git.branch) rows.push({ label: 'Branch', value: branchValue(input.git) })
   if (input.confinement) {
     rows.push({ label: 'Commands', value: input.confinement.label, ...(input.confinement.confined ? {} : { tone: 'warn' as const }) })
   }
