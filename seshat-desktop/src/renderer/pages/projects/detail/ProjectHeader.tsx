@@ -1,7 +1,8 @@
 import { Dropdown } from '@renderer/components/ui/Dropdown'
 import type { ProjectSummary } from '@renderer/lib/projects'
-import { Archive, Copy, Edit, Folder, FolderOpen, Left, MoreOne, Plus, Star } from '../icons'
+import { Archive, Copy, Edit, FolderOpen, Left, MoreOne, Plus, Star } from '../icons'
 import { ActivityMark, ProjectTile } from '../ProjectCard'
+import { VsCodeIcon } from '../VsCodeIcon'
 
 type Props = {
   project: ProjectSummary
@@ -55,7 +56,7 @@ export function ProjectHeader({ project, onBack, onTogglePinned, onOpenInEditor,
         <div className="flex shrink-0 items-center gap-2">
           <div className="flex">
             <button type="button" onClick={onOpenInEditor} className="flex h-9 cursor-pointer items-center gap-2 rounded-l-lg border border-r-0 border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[12.5px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]">
-              <Folder size={14} />
+              <VsCodeIcon size={15} />
               Open in VS Code
             </button>
             <Dropdown
