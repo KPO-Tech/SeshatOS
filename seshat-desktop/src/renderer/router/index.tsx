@@ -20,6 +20,7 @@ function ConversationRoute() {
 // needed at all. The built app gets a small chunk per page instead of one large file.
 const plugins = () => import('@renderer/components/plugins/PluginsPage').then((m) => ({ Component: m.PluginsPage }))
 const skills = () => import('@renderer/components/skills/SkillsPage').then((m) => ({ Component: m.SkillsPage }))
+const skillDetail = () => import('@renderer/components/skills/SkillDetailPage').then((m) => ({ Component: m.SkillDetailPage }))
 const projects = () => import('@renderer/pages/projects').then((m) => ({ Component: m.ProjectsPage }))
 const projectDetail = () => import('@renderer/pages/projects/detail').then((m) => ({ Component: m.ProjectDetailPage }))
 const store = () => import('@renderer/pages/store').then((m) => ({ Component: m.StorePage }))
@@ -36,6 +37,7 @@ export const router = createHashRouter([
       { index: true, element: <Home /> },
       { path: 'conversation/:id', element: <ConversationRoute /> },
       { path: 'skills', lazy: skills },
+      { path: 'skills/:name', lazy: skillDetail },
       { path: 'plugins', lazy: plugins },
       ...(edition.store ? [{ path: 'store', lazy: store }] : []),
       ...(edition.knowledgeApp ? [{ path: 'knowledge/*', lazy: knowledge }] : []),
