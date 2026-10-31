@@ -95,7 +95,14 @@ export function ProjectsPage() {
     const result = await window.seshat?.dialog?.openDirectory?.()
     if (!result || result.canceled || !result.filePaths?.length) return
     const project = addProject(result.filePaths[0])
-    navigate(`/projects/${encodeURIComponent(project.id)}`)
+    // A project is worth a name, a line about it and tags, and the person has just chosen it: ask for them now, over the list where the new
+    // card is. Closing the dialog keeps the project with the name of its folder.
+    setTab('all')
+    setQuery('')
+    const added = listProjects(sessions, streaming).find((item) => item.id === project.id)
+    changed()
+    if (added) setEditing(added)
+    else navigate(`/projects/${encodeURIComponent(project.id)}`)
   }
 
   const sortLabel = PROJECT_SORTS.find((item) => item.id === sort)?.label ?? 'Sort by'
