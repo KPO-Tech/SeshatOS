@@ -101,13 +101,11 @@ export function Sidebar() {
         <div className={cx('flex flex-col gap-px px-2 pb-1 pt-3.5', collapsed && 'items-center')}>
           <SidebarItem icon={<Plus theme="outline" size={16} />} label="New Chat" collapsed={collapsed} active={pathname === '/' && !activeId} onClick={startNewChat} />
           <SidebarItem icon={<Search theme="outline" size={16} />} label="Search" shortcut="Ctrl K" collapsed={collapsed} onClick={() => setSearchOpen(true)} />
-          {!projectContextPath && (
-            <>
-              <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
-              <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
-              <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
-            </>
-          )}
+          {/* The same entries everywhere: what a project changes is the list of tasks below, not the way around the app. */}
+          <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
+          <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
+          <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
+
         </div>
         )}
 

@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Changed
+
+- **The sidebar is the same in a project as on the start page.** Skills, Plugins and Projects were hidden inside a project; they are shown everywhere, and only the list of tasks changes: a project shows its own conversations, and the start page shows none that belong to a project.
+
 ## [0.2.2] - 2026-10-31
 
 ### Highlights
