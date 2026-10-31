@@ -34,6 +34,13 @@ type Service struct {
 
 	// pausedUntil is when the queue looks for jobs again after the embedding provider refused for quota (unix nanoseconds, 0 when it runs).
 	pausedUntil atomic.Int64
+
+	// Several workers of the runner read documents at once (see ingest_limits.go): claiming a job is one at a time, so are the reads through
+	// an external reader and the step that chunks and embeds, and the bytes being read are bounded.
+	claimMu        sync.Mutex
+	externalReads  gate
+	embedStep      gate
+	bytesBeingRead byteBudget
 }
 
 func NewService(
@@ -560,7 +567,9 @@ func (s *Service) ProcessNextIngestionJob(ctx context.Context) (bool, error) {
 	if s.quotaPausedFor() > 0 {
 		return false, nil
 	}
+	s.claimMu.Lock()
 	job, err := s.jobs.ClaimNextDue(ctx, defaultStaleJobTimeout)
+	s.claimMu.Unlock()
 	if err != nil {
 		return false, bkerr.Internal("claim ingestion job: "+err.Error(), err)
 	}
@@ -660,6 +669,11 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 		oldChunkCount = existing.ChunkCount
 	}
 
+	// Chunking, embedding and storing go one document at a time, so that the provider sees one request at a time however many are read.
+	leave, err := s.embedStep.enter(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
 	result, err := s.rag.Ingest(ctx, rag.IngestRequest{
 		CorpusID: corpusID,
 		FileID:   fileID, // deterministic artifact key — prevents duplicate vectors on re-ingest
@@ -669,6 +683,7 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 		ScopeID:  scopeID,
 		ScopeIDs: scopeIDs,
 	})
+	leave()
 	if err != nil {
 		// A refusal for quota is not a failure of the document: it stays waiting (see finishFailedJob).
 		if !isQuotaRefusal(err) {
@@ -853,6 +868,17 @@ func (s *Service) readDocumentResult(ctx context.Context, input documentreading.
 	processor := s.documentProcessor
 	if processor == nil {
 		processor = documentreading.NewProcessor(s.resolveDocumentConverter)
+	}
+	// Several documents are read at once, within a budget of bytes; through an external reader they are read one at a time.
+	size := int64(len(input.Data))
+	s.bytesBeingRead.acquire(size)
+	defer s.bytesBeingRead.release(size)
+	if s.resolveDocumentConverter != nil && usesExternalReader(s.resolveDocumentConverter(ctx)) {
+		leave, err := s.externalReads.enter(ctx)
+		if err != nil {
+			return documentreading.ReadResult{}, false, err
+		}
+		defer leave()
 	}
 	result, ok, err := processor.ReadBytes(ctx, input)
 	if err == nil && ok {

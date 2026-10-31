@@ -77,9 +77,17 @@ queue does, and the speed of reading. Lots, in the order they are done, each in 
    time. A worker that must use a serial engine (Indra, the native OCR, a Docling service set to one at a time) holds that engine's
    own gate, so those engines keep working exactly as today. A cap on the bytes being read at once (256 MB) keeps the memory in
    check. The end-to-end measure above is the reason: reading is almost all of the time, and the gate hides the embedding requests behind it. Tests: two workers never claim the same job, the gates hold, and the queue is drained.
+   Built 2026-10-31 and measured on the same 60 files through the real runner: 1 worker 76.4 s, 2 workers 50.3 s (1.52x), 4 workers 33.7 s (2.27x), 6 workers 30.3 s (2.52x), with the same 53 documents indexed and the same passages stored each time, and never more than one embedding request at once. The step that chunks and embeds stays one at a time, which is why the gain is a little under that of reading alone (2.66x with four).
 5. **Dropped: fewer, fuller embedding requests.** Grouping the passages of several documents in one request only mattered if the number
    of requests tripped the quota. With a provider that does not refuse, it is complexity without a gain, and it makes the failure of
    one document harder to attribute.
+
+6. **Search by keywords while the embedding does not work (seshat-runtime, then SeshatOS), proposed by the user.** A failed embedding does not mean that the reading failed, and until now it ended the document as `Failed`. When the embedding of a document fails for a reason that waiting does not mend (a wrong key, a model that is gone, a daily quota, a refusal that outlasts the wait of lot 2), the document is kept and indexed for keywords only, as the runtime already does when no embedder is set: the passages are stored without vectors and found by BM25. The collection page shows it next to the state, "Indexed, keywords only" against "Indexed" for a document with its vectors, and a notice pinned at the top of the page says that the embedding failed, why, and that a model with more quota will index them again. A refusal that waiting mends (lot 3) stays a pause and not this. What it takes:
+   - the runtime: an ingest option that stores the passages without vectors (`IngestRequest.WithoutVectors`), so that the host does not have to call the embedder at all for that document;
+   - SeshatOS: on an embedding error that is not a pause, ingest again with that option and mark the corpus file as keywords only (a new column on `corpus_files`, the only schema change of the plan);
+   - the page: the "keywords only" mark, the pinned notice with the count of documents concerned, and a "Index again with the model" button;
+   - the way back: the re-embedding that already exists (`knowledge/reembed.go`, which makes the vectors that are missing) is run for these documents when the model is changed or the button is pressed, and clears the mark;
+   - search: a corpus where some passages have vectors and some do not is searched by both ways and the results are merged, which the hybrid search already allows; the page says so, because the quality of the answers differs between the two kinds of document.
 
 Also to look at, separately: the slowest PDFs (11.7 s for 1.9 MB and 77 passages). A profile of the PDF reader (page loop, image
 detection) comes before any change.
