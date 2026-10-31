@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **Several documents are read at once while indexing.** Half of the cores read (one to four, `SESHAT_INGEST_WORKERS` sets it), while the step that chunks and embeds stays one document at a time, so the embedding provider still sees one request at a time. On the 60 test documents the whole run took 76.4 s with one reader and 33.7 s with four, with the same documents indexed. Readings through an external reader (Docling) stay one at a time, and the files being read at once are held to 256 MB.
 - **Sort, filter and retry-all in a collection.** The documents of a collection can be sorted by format (the order they are indexed in, the default), by name or by state with the failures first, and filtered by format and by state. A "Retry failed documents" button starts every failed document again at once.
 
 ### Changed
