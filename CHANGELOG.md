@@ -11,6 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-31
+
+### Highlights
+
+- **Indexing a folder no longer ends in a wall of "Failed".** A provider that refuses for quota pauses the queue instead of failing every document, and a document whose embedding fails is kept and found by its words, with a notice that says so.
+- **Indexing is faster:** several documents are read at once, and a collection can be sorted, filtered and its failed documents retried together.
+- **A new chat names its default model at once.**
+
 ### Added
 
 - **A document whose embedding fails is kept and found by its words.** The reading of a document and its embedding are different steps: when the embedding fails in a way that waiting does not mend (a wrong key, a model that is gone, a daily quota, a provider that is down), the document is no longer marked as failed. It is indexed for keywords only, shown as "Indexed" with a "keywords only" note, and a notice pinned at the top of the collection says that the embedding failed and offers "Index again" once a model with more quota is chosen, which makes the vectors and clears the mark. A refusal for quota that a wait mends is still a pause of the queue, and a document that cannot be read (a scan with no text) is still Failed. Needs seshat-runtime v1.12.8.
