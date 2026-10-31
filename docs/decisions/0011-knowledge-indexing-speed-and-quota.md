@@ -50,37 +50,45 @@ Not measured, and to settle before the last lot: the time of the embedding calls
 
 ## Decision (proposed)
 
-Five lots, each in its own PR and each useful alone. The first two fix the failures and come first.
+The first cause turned out to be the user's plan with the provider: after a change of provider the same collections indexed without a
+failure. The queue itself works. What stays is making a refusal for quota harmless for anyone on a limited plan, showing what the
+queue does, and the speed of reading. Lots, in the order they are done, each in its own PR and each useful alone:
 
-1. **Wait on a refusal for quota (seshat-runtime).** In the embedder, a 429 (and a 503 that asks to wait) is waited out instead of
+1. **Order and find documents (SeshatOS).** Documents added by hand get the priority of format that the documents of a folder
+   source already have (text, then Word, then PDF, then the rest, small files first). The collection page gets a sort menu (format,
+   which is the order of processing and the default, name A to Z and Z to A, state with the failures first, size), a filter by
+   format and by state, and a "Retry all failed" button, so that a run of failures is not retried one document at a time.
+2. **Wait on a refusal for quota (seshat-runtime).** In the embedder, a 429 (and a 503 that asks to wait) is waited out instead of
    returned: the delay of `Retry-After` or of the provider's own field when there is one, otherwise 5 s, 15 s, 45 s with a little
    jitter, for three minutes at most, and always stoppable through the context. A refusal that says the quota is per day, or that
    keeps coming back after the three minutes, fails with a message that names it (wait for tomorrow or change the provider), not
    with the raw body. Unit tests against a fake server (a refusal then success, a persistent refusal, `Retry-After`, a cancelled
    context). Released as the next runtime patch.
-2. **A job that waits is not a job that failed (SeshatOS).** An error of kind "rate limited" puts the job back to `Pending` with a delay
-   of a minute and does not use one of its attempts; the file shows "Waiting for the embedding provider" instead of "Failed". The
-   error line of a real failure keeps its full text on hover. The runtime bump comes with this lot.
-3. **Several readers, one embedder (SeshatOS).** The runner becomes a pool of `N` workers, `N = clamp(cores / 2, 1, 4)`
-   (`SESHAT_INGEST_WORKERS` overrides it). The embedding step goes through a shared gate of one at a time, so reading goes faster
-   without multiplying the requests the provider sees. A worker that must use a serial engine (Indra, the native OCR, a Docling
-   service set to one at a time) holds that engine's own gate, so those engines keep working exactly as today. A cap on the bytes
-   being read at once (256 MB) keeps the memory in check. Tests: two workers never claim the same job, a failed job is left to its
-   own worker, the gates hold, and the whole queue is drained.
-4. **Say what is happening (SeshatOS desktop).** The collection page shows the count of documents read, waiting and failed, and the
-   reason a document waits (quota), so that a long run is not read as a freeze.
-5. **Fewer, fuller embedding requests (seshat-runtime, optional).** Group the passages of several documents in one request up to the
-   batch size, and give each document its own result. Only if the measure of lot 1 and 2 shows the number of requests, not the
-   tokens, is what trips the quota: it makes the failure of one document harder to attribute.
+3. **A refusal for quota is not a failed document, and the queue pauses (SeshatOS).** An error of kind "rate limited" puts the job
+   back to `Pending` and does not use one of its attempts. The runner then pauses the whole queue instead of starting the next
+   document only to see it refused too, and resumes by itself when the wait is over. The collection page says so ("Paused: the
+   embedding provider's quota, back in 40 s"); the document that is being read is the only one shown as "Indexing", the others wait
+   in a quiet grey, and "Failed" is kept for a document that cannot be read or stored. The error line of a real failure keeps its full
+   text on hover. The runtime bump comes with this lot.
+4. **Several readers, one embedder (SeshatOS), after a new measure.** The runner becomes a pool of `N` workers,
+   `N = clamp(cores / 2, 1, 4)` (`SESHAT_INGEST_WORKERS` overrides it). The embedding step goes through a shared gate of one at a
+   time. A worker that must use a serial engine (Indra, the native OCR, a Docling service set to one at a time) holds that engine's
+   own gate, so those engines keep working exactly as today. A cap on the bytes being read at once (256 MB) keeps the memory in
+   check. Before it is built, the whole run is measured again from end to end with the provider the user now has, on a copy of the
+   test corpus: if the wait for the embeddings is no longer what takes the time, this is the next gain (2.66x on reading with four
+   workers). Tests: two workers never claim the same job, the gates hold, and the queue is drained.
+5. **Dropped: fewer, fuller embedding requests.** Grouping the passages of several documents in one request only mattered if the number
+   of requests tripped the quota. With a provider that does not refuse, it is complexity without a gain, and it makes the failure of
+   one document harder to attribute.
 
 Also to look at, separately: the slowest PDFs (11.7 s for 1.9 MB and 77 passages). A profile of the PDF reader (page loop, image
 detection) comes before any change.
 
 ## How it is checked
 
-- Lots 1 and 2: the tests above, then a real run on a copy of the test corpus with the user's provider, counting the refusals and
+- Lots 2 and 3: the tests above, then a real run on a copy of the test corpus with the user's provider, counting the refusals and
   the documents that end `Failed`. The success criterion is zero `Failed` from a quota on the whole corpus, however long it takes.
-- Lot 3: the same 60 files through the runner with 1, 2, 4 workers, comparing the total time with the measure above (2.66x expected
+- Lot 4: the same 60 files through the runner with 1, 2, 4 workers, comparing the total time with the measure above (2.66x expected
   with four), and a run of the whole corpus to compare the chunks stored with those of a sequential run (they must be identical).
 - Nothing is run on the user's own collections: the measures use the copy of the test corpus.
 
