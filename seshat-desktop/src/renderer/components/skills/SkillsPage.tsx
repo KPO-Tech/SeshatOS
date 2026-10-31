@@ -304,7 +304,7 @@ export function SkillsPage() {
       {error && <p className="mt-4 shrink-0 text-[12.5px] font-semibold text-[var(--accent-danger)]">{error}</p>}
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pb-8">
-        <div className={tab === 'agents' ? 'mx-auto mt-4 w-full max-w-[920px]' : undefined}>{content()}</div>
+        <div>{content()}</div>
       </div>
 
       {pickingFor && (
