@@ -86,3 +86,23 @@ export function parseDelimited(text: string, delimiter: string, maxRows = 500): 
   }
   return { rows, truncated: false }
 }
+
+/** The path a picture named by a Markdown page points to, from the folder of that page ("./a.png", "../b.png", "dir/c%20d.png"). */
+export function resolveRelativePath(pageFile: string, target: string): string {
+  const separator = pageFile.includes('\\') ? '\\' : '/'
+  const parts = pageFile.split(/[\\/]/)
+  parts.pop()
+  let clean = target.split(/[?#]/)[0]
+  try {
+    clean = decodeURIComponent(clean)
+  } catch {
+    // A name that holds a lone % is kept as it is written.
+  }
+  for (const part of clean.split(/[\\/]/)) {
+    if (part === '' || part === '.') continue
+    if (part === '..') {
+      if (parts.length > 1) parts.pop()
+    } else parts.push(part)
+  }
+  return parts.join(separator)
+}
