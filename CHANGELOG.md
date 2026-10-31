@@ -24,6 +24,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Seshat Light has a new palette:** a cool white, a pale blue-grey sidebar, deep navy text and very light borders, with peach tints for the accent, measured on the design the user shared.
 - **The sidebar is the same in a project as on the start page.** Skills, Plugins and Projects were hidden inside a project; they are shown everywhere, and only the list of tasks changes: a project shows its own conversations, and the start page shows none that belong to a project.
 
+### Fixed
+
+- **The sort and filter menus of a collection are readable in a dark appearance.** They were the system's own lists, which drew pale text on white; they are now menus in the colours of the app, and the other system lists of the app take the colours of the appearance too.
+
 ## [0.2.2] - 2026-10-31
 
 ### Highlights
