@@ -11,6 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Sort, filter and retry-all in a collection.** The documents of a collection can be sorted by format (the order they are indexed in, the default), by name or by state with the failures first, and filtered by format and by state. A "Retry failed documents" button starts every failed document again at once.
+
+### Changed
+
+- **Documents added by hand are indexed in the same order as those of a folder:** text first, then Word, then PDF, then the rest, small files before big ones.
+
 ## [0.2.1] - 2026-10-31
 
 ### Highlights
