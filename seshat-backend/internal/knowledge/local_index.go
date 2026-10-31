@@ -18,10 +18,10 @@ import (
 // like any other, and the collection keeps only the text's chunks, never a copy of the file. The jobs are the ones of every other file,
 // so waiting, retrying and the state of each file are shown the same way.
 
-// localCost orders the jobs so that what is cheap to read goes first: plain text, then Word, then PDF, then presentations and
+// ingestCost orders the jobs so that what is cheap to read goes first: plain text, then Word, then PDF, then presentations and
 // spreadsheets, and inside a kind the small files before the big ones. A scan cannot be told from a digital PDF without reading it, but
 // it is usually the bigger of the two, so the size order puts most of them last. Lower runs first.
-func localCost(name string, size int64) int {
+func ingestCost(name string, size int64) int {
 	class := 3
 	switch strings.ToLower(filepath.Ext(name)) {
 	case ".txt", ".md", ".markdown", ".csv", ".tsv", ".json", ".html", ".htm":
@@ -91,7 +91,7 @@ func (s *Service) EnqueueLocalFile(ctx context.Context, principal *backendauth.P
 		WorkspaceID: corpus.WorkspaceID,
 		Filename:    cf.Filename,
 		MaxAttempts: defaultIngestionMaxAttempts,
-		Priority:    localCost(cf.SourcePath, size),
+		Priority:    ingestCost(cf.SourcePath, size),
 	})
 	if err != nil {
 		return nil, bkerr.Internal("create ingestion job: "+err.Error(), err)
@@ -179,7 +179,7 @@ func (s *Service) processLocalJob(ctx context.Context, job db.KnowledgeIngestion
 	}
 	_, chunks, err := s.ingestText(ctx, job.CorpusID, job.FileID, cf.Filename, result.Text, nil, scopeID, nil)
 	if err != nil {
-		_ = s.jobs.MarkFailed(ctx, job, err, defaultIngestionRetryDelay)
+		s.finishFailedJob(ctx, job, err)
 		return
 	}
 	_ = s.jobs.MarkCompleted(ctx, job.ID, chunks)

@@ -423,6 +423,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
 			},
 		},
+		{
+			ID:    "20261031_061_corpus_file_keywords_reason",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gCorpusFile{})
+			},
+		},
 	}
 }
 

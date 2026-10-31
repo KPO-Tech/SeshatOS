@@ -164,6 +164,12 @@ func (s *Service) runReembed(ctx context.Context, job *reembedJob, namespaces []
 			st.State, st.Error = "failed", failure.Error()
 		}
 	})
+	if failure == nil {
+		// Every passage of these collections has its vector now: the documents kept for keywords only are whole again.
+		for _, namespace := range namespaces {
+			_ = s.corpora.ClearKeywordsOnly(context.Background(), namespace)
+		}
+	}
 	if failure == nil && s.reembedDone != nil {
 		s.reembedDone(context.Background(), key)
 	}

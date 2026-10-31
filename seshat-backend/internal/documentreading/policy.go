@@ -201,3 +201,9 @@ func usableMarkdown(markdown string) bool {
 }
 
 var _ documentreader.Converter = (*PolicyConverter)(nil)
+
+// UsesExternalReader reports whether an external document reader (Docling, a document intelligence server) is set: a host that reads
+// several documents at once keeps those reads one at a time, since such a service does its own scheduling and is heavy on memory.
+func (c *PolicyConverter) UsesExternalReader() bool {
+	return c != nil && c.External != nil
+}

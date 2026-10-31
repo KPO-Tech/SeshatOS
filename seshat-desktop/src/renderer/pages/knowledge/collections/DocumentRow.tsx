@@ -7,6 +7,7 @@ import { plural, type FileState } from './fileStatus'
 const TONES: Record<FileState['tone'], string> = {
   ready: 'text-[var(--accent-success)]',
   working: 'text-[var(--accent-primary)]',
+  queued: 'text-[var(--text-muted)]',
   failed: 'text-[var(--accent-danger)]',
   waiting: 'text-[var(--text-muted)]'
 }
@@ -33,6 +34,11 @@ export function DocumentRow({ file, state, onOpen, onRetry, onRemove }: Props) {
           <span className={`inline-flex items-center gap-1.5 ${TONES[state.tone]}`} title={state.detail}>
             {state.tone === 'working' && <span className="size-1.5 rounded-full bg-current" style={{ animation: 'pulse-opacity 1.1s ease-in-out infinite' }} />}
             {state.label}
+            {state.note && (
+              <span className="rounded-[4px] border border-app-border-subtle px-1.5 py-px text-[11px] font-normal leading-[15px] text-[var(--text-muted)]" title={state.detail}>
+                {state.note}
+              </span>
+            )}
           </span>
           {file.status === 'ingested' && <span>{plural(file.chunkCount, 'passage', 'passages')}</span>}
           {state.detail && state.tone === 'failed' && <span className="min-w-0 truncate">{state.detail}</span>}

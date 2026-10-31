@@ -11,6 +11,29 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-31
+
+### Highlights
+
+- **Indexing a folder no longer ends in a wall of "Failed".** A provider that refuses for quota pauses the queue instead of failing every document, and a document whose embedding fails is kept and found by its words, with a notice that says so.
+- **Indexing is faster:** several documents are read at once, and a collection can be sorted, filtered and its failed documents retried together.
+- **A new chat names its default model at once.**
+
+### Added
+
+- **A document whose embedding fails is kept and found by its words.** The reading of a document and its embedding are different steps: when the embedding fails in a way that waiting does not mend (a wrong key, a model that is gone, a daily quota, a provider that is down), the document is no longer marked as failed. It is indexed for keywords only, shown as "Indexed" with a "keywords only" note, and a notice pinned at the top of the collection says that the embedding failed and offers "Index again" once a model with more quota is chosen, which makes the vectors and clears the mark. A refusal for quota that a wait mends is still a pause of the queue, and a document that cannot be read (a scan with no text) is still Failed. Needs seshat-runtime v1.12.8.
+- **Several documents are read at once while indexing.** Half of the cores read (one to four, `SESHAT_INGEST_WORKERS` sets it), while the step that chunks and embeds stays one document at a time, so the embedding provider still sees one request at a time. On the 60 test documents the whole run took 76.4 s with one reader and 33.7 s with four, with the same documents indexed. Readings through an external reader (Docling) stay one at a time, and the files being read at once are held to 256 MB.
+- **Sort, filter and retry-all in a collection.** The documents of a collection can be sorted by format (the order they are indexed in, the default), by name or by state with the failures first, and filtered by format and by state. A "Retry failed documents" button starts every failed document again at once.
+
+### Changed
+
+- **Documents added by hand are indexed in the same order as those of a folder:** text first, then Word, then PDF, then the rest, small files before big ones.
+
+### Fixed
+
+- **A new chat names its default model at once.** The start page waited until every provider had given its list of models before choosing the default, so one slow or unreachable provider (a local server that is off) left the button on "Model", with nothing chosen. It now chooses as soon as the providers that could give the default have answered, as a conversation does, and names the model chosen for the default provider in the meantime.
+- **A provider that refuses for quota no longer fails every document.** The embedder waits out the refusal (seshat-runtime v1.12.7), and a document it refused goes back to waiting without using an attempt. The whole queue pauses instead of starting the next document only to see it refused too, and goes on by itself; the collection page says "Indexing is paused" with the time left, and no document is marked as failed for a quota. A daily quota pauses for an hour and says so. Documents that wait show in a quiet grey, only the one being indexed stands out.
+
 ## [0.2.1] - 2026-10-31
 
 ### Highlights

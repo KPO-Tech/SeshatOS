@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
@@ -30,6 +31,16 @@ type Service struct {
 	reembedDone func(ctx context.Context, key string)
 	reembedMu   sync.Mutex
 	reembed     *reembedJob
+
+	// pausedUntil is when the queue looks for jobs again after the embedding provider refused for quota (unix nanoseconds, 0 when it runs).
+	pausedUntil atomic.Int64
+
+	// Several workers of the runner read documents at once (see ingest_limits.go): claiming a job is one at a time, so are the reads through
+	// an external reader and the step that chunks and embeds, and the bytes being read are bounded.
+	claimMu        sync.Mutex
+	externalReads  gate
+	embedStep      gate
+	bytesBeingRead byteBudget
 }
 
 func NewService(
@@ -233,6 +244,7 @@ func (s *Service) AttachFile(ctx context.Context, principal *backendauth.Princip
 				WorkspaceID: record.WorkspaceID,
 				Filename:    fileRecord.Filename,
 				MaxAttempts: defaultIngestionMaxAttempts,
+				Priority:    ingestCost(fileRecord.Filename, fileRecord.Size),
 			})
 		}
 	}
@@ -368,6 +380,7 @@ func (s *Service) EnqueueIngest(ctx context.Context, principal *backendauth.Prin
 		WorkspaceID: corpus.WorkspaceID,
 		Filename:    fileRecord.Filename,
 		MaxAttempts: defaultIngestionMaxAttempts,
+		Priority:    ingestCost(fileRecord.Filename, fileRecord.Size),
 	})
 	if err != nil {
 		return nil, bkerr.Internal("create ingestion job: "+err.Error(), err)
@@ -436,6 +449,8 @@ func (s *Service) RetryIngestionJob(ctx context.Context, principal *backendauth.
 	if err != nil {
 		return nil, bkerr.Internal("retry ingestion job: "+err.Error(), err)
 	}
+	// A person who asks to try again wants it now: the pause is lifted, and comes back at once if the provider still refuses.
+	s.pausedUntil.Store(0)
 	return ingestionJobFromDB(*reset), nil
 }
 
@@ -549,7 +564,12 @@ func (s *Service) ProcessNextIngestionJob(ctx context.Context) (bool, error) {
 	if s == nil || s.jobs == nil || s.corpora == nil || s.files == nil || s.rag == nil || s.artifacts == nil {
 		return false, nil
 	}
+	if s.quotaPausedFor() > 0 {
+		return false, nil
+	}
+	s.claimMu.Lock()
 	job, err := s.jobs.ClaimNextDue(ctx, defaultStaleJobTimeout)
+	s.claimMu.Unlock()
 	if err != nil {
 		return false, bkerr.Internal("claim ingestion job: "+err.Error(), err)
 	}
@@ -581,7 +601,7 @@ func (s *Service) processIngestionJob(ctx context.Context, job db.KnowledgeInges
 
 	_, chunks, err := s.ingestFile(ctx, job.CorpusID, fileRecord, job.WorkspaceID, job.UserID)
 	if err != nil {
-		_ = s.jobs.MarkFailed(ctx, job, err, defaultIngestionRetryDelay)
+		s.finishFailedJob(ctx, job, err)
 		return
 	}
 	_ = s.jobs.MarkCompleted(ctx, job.ID, chunks)
@@ -649,7 +669,12 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 		oldChunkCount = existing.ChunkCount
 	}
 
-	result, err := s.rag.Ingest(ctx, rag.IngestRequest{
+	// Chunking, embedding and storing go one document at a time, so that the provider sees one request at a time however many are read.
+	leave, err := s.embedStep.enter(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	request := rag.IngestRequest{
 		CorpusID: corpusID,
 		FileID:   fileID, // deterministic artifact key — prevents duplicate vectors on re-ingest
 		Filename: filename,
@@ -657,9 +682,23 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 		Data:     data,
 		ScopeID:  scopeID,
 		ScopeIDs: scopeIDs,
-	})
+	}
+	result, err := s.rag.Ingest(ctx, request)
+	// The reading worked and the embedding did not, for a reason that waiting does not mend: the document is kept and found by its words,
+	// and the vectors are made later (a re-embedding, once the model is changed).
+	keywordsReason := ""
+	if reason, fallBack := keywordsFallback(ctx, err); fallBack {
+		request.WithoutVectors = true
+		if result, err = s.rag.Ingest(ctx, request); err == nil {
+			keywordsReason = reason
+		}
+	}
+	leave()
 	if err != nil {
-		_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileID, db.CorpusFileStatusFailed, 0)
+		// A refusal for quota is not a failure of the document: it stays waiting (see finishFailedJob).
+		if !isQuotaRefusal(err) {
+			_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileID, db.CorpusFileStatusFailed, 0)
+		}
 		return nil, 0, bkerr.Internal("ingest chunks: "+err.Error(), err)
 	}
 
@@ -671,6 +710,8 @@ func (s *Service) ingestText(ctx context.Context, corpusID, fileID, filename, te
 	}
 
 	_ = s.corpora.UpdateFileStatus(ctx, corpusID, fileID, db.CorpusFileStatusIngested, result.Chunks)
+	// Set on every ingest, so that a document read again with its vectors loses the mark it had.
+	_ = s.corpora.SetFileKeywordsOnly(ctx, corpusID, fileID, keywordsReason)
 
 	// Use delta so re-ingesting a file doesn't double-count its chunks in the corpus total.
 	chunkDelta := result.Chunks - oldChunkCount
@@ -840,6 +881,17 @@ func (s *Service) readDocumentResult(ctx context.Context, input documentreading.
 	if processor == nil {
 		processor = documentreading.NewProcessor(s.resolveDocumentConverter)
 	}
+	// Several documents are read at once, within a budget of bytes; through an external reader they are read one at a time.
+	size := int64(len(input.Data))
+	s.bytesBeingRead.acquire(size)
+	defer s.bytesBeingRead.release(size)
+	if s.resolveDocumentConverter != nil && usesExternalReader(s.resolveDocumentConverter(ctx)) {
+		leave, err := s.externalReads.enter(ctx)
+		if err != nil {
+			return documentreading.ReadResult{}, false, err
+		}
+		defer leave()
+	}
 	result, ok, err := processor.ReadBytes(ctx, input)
 	if err == nil && ok {
 		return result, true, nil
@@ -871,6 +923,9 @@ func corpusFileFromDB(r db.CorpusFile) *CorpusFile {
 		IngestedAt: r.IngestedAt,
 		CreatedAt:  r.CreatedAt,
 		SourcePath: r.SourcePath,
+
+		KeywordsOnly:   r.KeywordsOnly,
+		KeywordsReason: r.KeywordsReason,
 	}
 }
 

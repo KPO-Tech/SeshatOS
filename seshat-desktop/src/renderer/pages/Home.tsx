@@ -15,7 +15,7 @@ import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
 import { modelAlias } from '@renderer/lib/modelAlias'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
-import { pickDefaultChoice } from '@renderer/lib/defaultModel'
+import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
 import './Home.css'
 
 type ModelChoice = {
@@ -83,6 +83,8 @@ export function Home() {
   const selectedModels = selectedProviderId ? (modelsByProvider[selectedProviderId] ?? []) : []
   const selectedModel = selectedModels.find((model) => model.model_id === selectedModelId) ?? null
   const hasConfiguredProviders = chatProviders.length > 0
+  // The provider a new conversation starts with, and so the model the button names while the catalogs are still on their way.
+  const startingProvider = chatProviders.find((provider) => provider.is_default) ?? chatProviders[0]
 
   const allModelChoices = useMemo<ModelChoice[]>(() => {
     return chatProviders.flatMap((provider) => (modelsByProvider[provider.id] ?? []).map((model) => ({
@@ -154,21 +156,18 @@ export function Home() {
     }
   }, [chatProviders, modelsByProvider])
 
-  // Auto-select the default (or first) model across every usable provider,
-  // matching the in-conversation composer. Waits until every provider's
-  // model catalog has finished loading (loadingModelProviderIds empty) -
-  // otherwise allModelChoices only reflects whichever provider's fetch
-  // happened to resolve first, and this could lock onto a non-default model
-  // from that provider before the real default (possibly in a slower
-  // provider's catalog) has even arrived.
+  // Auto-select the default model, as the in-conversation composer does: as soon as every provider that could give it has answered, and
+  // not when all of them have. Waiting for all meant that one slow or unreachable provider (a local server that is off, say) left the
+  // button on "Model" with nothing chosen for as long as its request lasted, though the default was known from the first answer.
   useEffect(() => {
-    if (allModelChoices.length === 0) return
-    if (selectedModelChoice) return
-    if (loadingModelProviderIds.length > 0) return
-    const def = pickDefaultChoice(chatProviders, allModelChoices) ?? allModelChoices[0]
+    if (selectedModelChoice || allModelChoices.length === 0) return
+    const def =
+      pickDefaultChoiceWhenSettled(chatProviders, allModelChoices, (provider) => modelsByProvider[provider.id] !== undefined) ??
+      (chatProviders.every((provider) => modelsByProvider[provider.id] !== undefined) ? allModelChoices[0] : null)
+    if (!def) return
     setSelectedProviderId(def.providerId)
     setSelectedModelId(def.model.model_id)
-  }, [allModelChoices, chatProviders, selectedModelChoice, loadingModelProviderIds])
+  }, [allModelChoices, chatProviders, modelsByProvider, selectedModelChoice])
 
   useEffect(() => {
     if (!selectedModelId || allModelChoices.length === 0) return
@@ -194,19 +193,22 @@ export function Home() {
       setErrorMessage('Configure a provider in Settings before starting a chat.')
       return null
     }
-    if (!selectedProviderForSend) {
+    // Before the catalogs have arrived, the model chosen for the default provider is the one the label names, and the one that is sent.
+    const sendProvider = selectedProviderForSend ?? startingProvider
+    const sendModelId = selectedModelForSend?.model_id ?? (sendProvider === startingProvider ? startingProvider?.model_id : undefined)
+    if (!sendProvider) {
       setErrorMessage('Select a provider for this conversation.')
       return null
     }
-    if (!selectedModelForSend) {
+    if (!sendModelId) {
       setErrorMessage('Select a model for this conversation.')
       return null
     }
 
     setErrorMessage(null)
     const response = await api.post<{ session_id: string }>('/sessions', {
-      provider_setting_id: selectedProviderForSend.id,
-      model_id: selectedModelForSend.model_id,
+      provider_setting_id: sendProvider.id,
+      model_id: sendModelId,
       permission_mode: permissionMode,
     })
     setPendingSessionId(response.session_id)
@@ -414,6 +416,7 @@ export function Home() {
               selectedModelChoice?.model.model_id ||
               selectedModel?.display_name ||
               selectedModel?.model_id ||
+              (!selectedProviderId || selectedProviderId === startingProvider?.id ? startingProvider?.model_id : undefined) ||
               'Model'
             )}
             modelIcon={
