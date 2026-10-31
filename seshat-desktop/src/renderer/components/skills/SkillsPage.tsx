@@ -8,9 +8,10 @@ import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
 import { SkillIconPicker } from './SkillIconPicker'
+import { SkillInstallDialog } from './SkillInstallDialog'
 import { categoryOf, tagsFor } from './skillIcons'
-import { deleteSkill, installSkillRepo, setSkillEnabled } from './skillsApi'
-import type { CatalogEntry, Skill } from './skillsTypes'
+import { deleteSkill, installSkillRepo, prepareSkillEnvironment, setSkillEnabled, uninstallSkillRepo } from './skillsApi'
+import type { CatalogEntry, InstallPlan, Skill } from './skillsTypes'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkillIcons } from './useSkillIcons'
 import { filterSkills, useSkills } from './useSkills'
@@ -73,6 +74,7 @@ export function SkillsPage() {
   const [category, setCategory] = useState('all')
   const [pickingFor, setPickingFor] = useState<{ name: string; description: string } | null>(null)
   const [installing, setInstalling] = useState<string | null>(null)
+  const [reviewing, setReviewing] = useState<{ name: string; plan: InstallPlan } | null>(null)
 
   const local = useMemo(() => {
     const listed = filterSkills(skills, { query, collection: 'all', enabledOnly })
@@ -109,7 +111,12 @@ export function SkillsPage() {
   async function install(entry: CatalogEntry) {
     setInstalling(entry.name)
     try {
-      await installSkillRepo(entry.url)
+      const result = await installSkillRepo(entry.url)
+      if (result.needs_environment) {
+        // What the skills need is shown first, and nothing is installed until the person agrees.
+        setReviewing({ name: result.name, plan: result.plan })
+        return
+      }
       await Promise.all([reload(), reloadCatalog()])
       show(`${entry.name} installed.`)
     } catch (err) {
@@ -120,6 +127,23 @@ export function SkillsPage() {
   }
 
   const openSkill = (skill: Skill) => navigate(`/skills/${encodeURIComponent(skill.name)}`)
+
+  async function finishInstall(name: string) {
+    await prepareSkillEnvironment(name)
+    setReviewing(null)
+    await Promise.all([reload(), reloadCatalog()])
+    show(`${name} installed.`)
+  }
+
+  async function cancelInstall(name: string) {
+    setReviewing(null)
+    try {
+      await uninstallSkillRepo(name)
+    } catch {
+      // The repository stays marked as unfinished, and is replaced the next time it is installed.
+    }
+    await reloadCatalog()
+  }
 
   const changeIcon = (target: { name: string; description: string }): DropdownItem => ({ id: 'icon', label: 'Change icon', onSelect: () => setPickingFor(target) })
 
@@ -310,6 +334,7 @@ export function SkillsPage() {
       {pickingFor && (
         <SkillIconPicker skillName={pickingFor.name} current={iconOf(pickingFor)} chosen={isChosen(pickingFor.name)} onPick={(icon) => choose(pickingFor.name, icon)} onClose={() => setPickingFor(null)} />
       )}
+      {reviewing && <SkillInstallDialog name={reviewing.name} plan={reviewing.plan} onConfirm={() => finishInstall(reviewing.name)} onCancel={() => void cancelInstall(reviewing.name)} />}
       <ToastStack toasts={toasts} />
     </section>
   )

@@ -1,5 +1,5 @@
 import { api } from '@renderer/api/client'
-import type { CatalogEntry, RepoInfo, ScanResult, Skill, SkillSources, SkillSourcesChoice, TreeNode } from './skillsTypes'
+import type { CatalogEntry, InstallResult, RepoInfo, ScanResult, Skill, SkillSources, SkillSourcesChoice, TreeNode } from './skillsTypes'
 
 export async function fetchSkills() {
   const result = await api.get<{ skills: Skill[] }>('/skills')
@@ -36,8 +36,14 @@ export async function fetchSkillRepos() {
   return { installed: result.installed ?? [], catalog: result.catalog ?? [] }
 }
 
+/** Clones the repository and reads what its skills need. Nothing is installed yet when a plan comes back (see prepareSkillEnvironment). */
 export function installSkillRepo(url: string) {
-  return api.post('/skills/repos', { url })
+  return api.post<InstallResult>('/skills/repos', { url })
+}
+
+/** Makes the private environment of a repository (its Python, its Node packages), once the person has agreed to the plan. */
+export function prepareSkillEnvironment(name: string) {
+  return api.post(`/skills/repos/${encodeURIComponent(name)}/environment`, {})
 }
 
 export function uninstallSkillRepo(name: string) {
