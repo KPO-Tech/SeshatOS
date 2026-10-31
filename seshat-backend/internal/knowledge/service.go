@@ -233,6 +233,7 @@ func (s *Service) AttachFile(ctx context.Context, principal *backendauth.Princip
 				WorkspaceID: record.WorkspaceID,
 				Filename:    fileRecord.Filename,
 				MaxAttempts: defaultIngestionMaxAttempts,
+				Priority:    ingestCost(fileRecord.Filename, fileRecord.Size),
 			})
 		}
 	}
@@ -368,6 +369,7 @@ func (s *Service) EnqueueIngest(ctx context.Context, principal *backendauth.Prin
 		WorkspaceID: corpus.WorkspaceID,
 		Filename:    fileRecord.Filename,
 		MaxAttempts: defaultIngestionMaxAttempts,
+		Priority:    ingestCost(fileRecord.Filename, fileRecord.Size),
 	})
 	if err != nil {
 		return nil, bkerr.Internal("create ingestion job: "+err.Error(), err)
