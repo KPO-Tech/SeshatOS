@@ -1,35 +1,16 @@
 import { create } from 'zustand'
-import type { ConfigSection } from '@renderer/components/config/ConfigModal'
-import type { SettingsSection } from '@renderer/components/settings/SettingsModal'
+import type { SettingsSectionId } from '@renderer/components/settings/page/sections'
 
-// Settings and Config are centered modals, opened from anywhere (sidebar menu,
-// Skills page, Plugins page...) without navigating away from the current view.
+// Settings is a page (see components/settings/page). Anything can ask for one of its sections without knowing the route: it says which,
+// and the host in the shell takes the person there and remembers where they came from.
 type DialogsState = {
-  settingsSection: SettingsSection | null
-  configSection: ConfigSection | null
-  openSettings: (section?: SettingsSection) => void
-  openConfig: (section?: ConfigSection) => void
-  closeTopmost: () => boolean
-  closeAll: () => void
+  target: SettingsSectionId | null
+  openSettings: (section?: SettingsSectionId) => void
+  openConfig: (section?: SettingsSectionId) => void
 }
 
-export const useDialogsStore = create<DialogsState>()((set, get) => ({
-  settingsSection: null,
-  configSection: null,
-  openSettings: (section = 'general') => set({ settingsSection: section }),
-  openConfig: (section = 'providers') => set({ configSection: section }),
-  // Returns whether something was closed, so Escape can fall through to other handlers.
-  closeTopmost: () => {
-    const { settingsSection, configSection } = get()
-    if (settingsSection) {
-      set({ settingsSection: null })
-      return true
-    }
-    if (configSection) {
-      set({ configSection: null })
-      return true
-    }
-    return false
-  },
-  closeAll: () => set({ settingsSection: null, configSection: null })
+export const useDialogsStore = create<DialogsState>()((set) => ({
+  target: null,
+  openSettings: (section = 'general') => set({ target: section }),
+  openConfig: (section = 'providers') => set({ target: section })
 }))
