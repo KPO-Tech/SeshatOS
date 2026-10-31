@@ -1,4 +1,4 @@
-import { CheckOne, Down, Download, More, Play } from '@icon-park/react'
+import { CheckOne, Down, Download, LinkOne, More, Play } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { SkillIconTile } from './SkillIconTile'
 import type { SkillIconId } from './skillIcons'
@@ -80,30 +80,63 @@ type AvailableProps = {
   name: string
   description: string
   icon: SkillIconId
-  tags: string[]
+  /** The address of the repository: its owner is shown, and the page can be opened. */
+  url: string
+  category?: string
+  skillCount?: number
+  needs: string[]
   busy: boolean
   moreItems: DropdownItem[]
   onInstall: () => void
+  onViewSource: () => void
 }
 
-/** A skill that can be installed, and is not yet. */
-export function AvailableSkillCard({ name, description, icon, tags, busy, moreItems, onInstall }: AvailableProps) {
+function ownerOf(url: string): string {
+  const parts = url.replace(/^https?:\/\//, '').split('/')
+  return parts[1] ? `${parts[1]} on ${parts[0].replace(/^www\./, '')}` : parts[0]
+}
+
+/**
+ * A skill that can be installed, and is not yet. It is drawn apart from the installed ones: a tinted head, who publishes it and how many
+ * skills it holds, what it needs on the machine, and a filled Install button.
+ */
+export function AvailableSkillCard({ name, description, icon, url, category, skillCount, needs, busy, moreItems, onInstall, onViewSource }: AvailableProps) {
   return (
-    <div className={CARD}>
-      <div className="flex items-start gap-3">
-        <SkillIconTile icon={icon} size={44} />
+    <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-dashed border-[var(--border-strong)] bg-[color-mix(in_srgb,var(--accent-primary)_4%,var(--surface-panel))]">
+      <div className="flex items-start gap-3 bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)] px-4 pb-3 pt-4">
+        <SkillIconTile icon={icon} size={52} />
         <div className="min-w-0 flex-1 pt-0.5">
-          <div className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{name}</div>
-          <div className="mt-0.5 text-[11.5px] text-[var(--text-muted)]">Not installed</div>
+          <div className="truncate text-[14.5px] font-semibold text-[var(--text-primary)]">{name}</div>
+          <div className="mt-0.5 truncate text-[11.5px] text-[var(--text-muted)]">{ownerOf(url)}</div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {category && <span className="rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--accent-primary)]">{category}</span>}
+            {skillCount ? <span className="text-[11px] text-[var(--text-muted)]">{skillCount} {skillCount === 1 ? 'skill' : 'skills'}</span> : null}
+          </div>
         </div>
         <Dropdown label="More about this skill" items={moreItems} trigger={({ toggle }) => <MenuButton label="More about this skill" toggle={toggle}><More theme="outline" size={14} /></MenuButton>} />
       </div>
-      <p className="m-0 mt-3 line-clamp-2 min-h-[38px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{description}</p>
-      <TagRow tags={tags} />
-      <button type="button" disabled={busy} onClick={onInstall} className="mt-3 flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-transparent text-[13px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
-        <Download theme="outline" size={14} />
-        {busy ? 'Installing...' : 'Install'}
-      </button>
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
+        <p className="m-0 line-clamp-3 min-h-[57px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{description}</p>
+        {needs.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+            Needs
+            {needs.map((need) => (
+              <span key={need} className="rounded-md border border-[var(--border-soft)] px-1.5 py-0.5 text-[var(--text-secondary)]">
+                {need}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-auto flex gap-2 pt-3">
+          <button type="button" disabled={busy} onClick={onInstall} className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[var(--accent-primary)] text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-60">
+            <Download theme="outline" size={14} />
+            {busy ? 'Installing...' : 'Install'}
+          </button>
+          <button type="button" onClick={onViewSource} aria-label="View the source" title="View the source" className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
+            <LinkOne theme="outline" size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

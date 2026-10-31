@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { ApplicationOne, Down, Plus, Right, Search, SortThree } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
+import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
@@ -81,10 +82,10 @@ export function SkillsPage() {
   const builtIn = useMemo(() => local.filter((skill) => skill.source === 'bundled'), [local])
   const installed = useMemo(() => local.filter((skill) => skill.source !== 'bundled'), [local])
   const offered = useMemo(
-    () => available.filter((entry) => matches(entry, query) && (category === 'all' || categoryOf(entry) === category)).sort((a, b) => a.name.localeCompare(b.name)),
+    () => available.filter((entry) => matches(entry, query) && (category === 'all' || (entry.category ?? categoryOf(entry)) === category)).sort((a, b) => a.name.localeCompare(b.name)),
     [available, query, category]
   )
-  const categories = useMemo(() => [...new Set(available.map((entry) => categoryOf(entry)))].sort(), [available])
+  const categories = useMemo(() => [...new Set(available.map((entry) => entry.category ?? categoryOf(entry)))].sort(), [available])
 
   async function toggle(skill: Skill) {
     try {
@@ -143,7 +144,11 @@ export function SkillsPage() {
       name={entry.name}
       description={entry.description}
       icon={iconOf(entry)}
-      tags={tagsFor(entry)}
+      url={entry.url}
+      category={entry.category}
+      skillCount={entry.skill_count}
+      needs={entry.needs ?? []}
+      onViewSource={() => openInAppBrowser(entry.url)}
       busy={installing === entry.name}
       moreItems={[changeIcon(entry)]}
       onInstall={() => void install(entry)}
