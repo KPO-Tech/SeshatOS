@@ -88,7 +88,7 @@ function Loaded({ snapshot, error, onSaved, onSystemChanged }: { snapshot: Docum
 
       {error && <div className="mt-4 rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</div>}
 
-      <div className="mt-4 flex flex-col gap-4 xl:flex-row xl:items-start">
+      <div className="mt-4 flex flex-col gap-4 @4xl:flex-row @4xl:items-start">
         <div className="min-w-0 flex-1">{tab === 'overview' ? <DocumentsOverview reader={reader} /> : <LocalOcrPanel reader={reader} />}</div>
         <DocumentsAside />
       </div>

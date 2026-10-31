@@ -8,7 +8,6 @@ import { useSessionStore } from '@renderer/stores/session'
 import { SIDEBAR_DEFAULT_WIDTH, useUIStore } from '@renderer/stores/ui'
 import { RecentSessions } from './RecentSessions'
 import { SidebarFooterMenu } from './SidebarFooterMenu'
-import { SettingsNav } from '@renderer/components/settings/page/SettingsNav'
 import { KnowledgeNav } from '@renderer/pages/knowledge/components/KnowledgeNav'
 import { SidebarItem } from './SidebarItem'
 import { listProjects, normalizeProjectPath, resolveProjectContextPath, selectRecentSessions } from '@renderer/lib/projects'
@@ -95,8 +94,6 @@ export function Sidebar() {
   const item = (path: string) => pathname === path || pathname.startsWith(`${path}/`)
   // A platform opened from the Store brings its own navigation in place of the main one; the Store entry and the menu below stay.
   const inKnowledge = edition.knowledgeApp && item('/knowledge')
-  // Settings does the same: its pages are listed where the main navigation was.
-  const inSettings = item('/settings')
 
   return (
     <>
@@ -104,9 +101,7 @@ export function Sidebar() {
         className="absolute inset-y-0 left-0 z-[40] flex flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--surface-sidebar)] transition-[width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] [html[data-sidebar-resizing]_&]:transition-none"
         style={{ width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)' }}
       >
-        {inSettings ? (
-          <SettingsNav collapsed={collapsed} />
-        ) : inKnowledge ? (
+        {inKnowledge ? (
           <KnowledgeNav collapsed={collapsed} />
         ) : (
         <div className={cx('flex flex-col gap-px px-2 pb-1 pt-3.5', collapsed && 'items-center')}>
@@ -131,7 +126,7 @@ export function Sidebar() {
         )}
 
         <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 py-2">
-          {!collapsed && !inKnowledge && !inSettings && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onOpenHistory={() => setHistoryOpen(true)} />}
+          {!collapsed && !inKnowledge && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onOpenHistory={() => setHistoryOpen(true)} />}
         </div>
 
         {edition.store && (

@@ -27,7 +27,7 @@ function Step({ done, children }: { done: boolean; children: string }) {
 export function ProvidersAside({ settings, onAdd }: { settings: ProviderSetting[]; onAdd: () => void }) {
   const connected = settings.filter((setting) => setting.has_api_key || setting.provider === 'ollama' || setting.auth_kind === 'oauth')
   return (
-    <aside className="flex w-full flex-col gap-3 xl:w-[280px] xl:shrink-0">
+    <aside className="flex w-full flex-col gap-3 @4xl:w-[280px] @4xl:shrink-0">
       <Card icon={<Info theme="outline" size={16} />} title="About providers">
         <p className="m-0 text-[12.5px] leading-[19px] text-[var(--text-secondary)]">
           A provider gives your agents access to models. Connect one or several, choose a default, and every chat and every agent can use it. Keys are saved encrypted on this device.

@@ -18,7 +18,6 @@ function ConversationRoute() {
 // Only the home and the conversation open at start. The other pages load when they are first visited: in dev every imported module is a
 // request to the dev server (about 250 at start, on a machine with a slow disk many seconds), and a page the edition hides is never
 // needed at all. The built app gets a small chunk per page instead of one large file.
-const settingsPage = () => import('@renderer/components/settings/page/SettingsPage').then((m) => ({ Component: m.SettingsPage }))
 const plugins = () => import('@renderer/components/plugins/PluginsPage').then((m) => ({ Component: m.PluginsPage }))
 const skills = () => import('@renderer/components/skills/SkillsPage').then((m) => ({ Component: m.SkillsPage }))
 const skillDetail = () => import('@renderer/components/skills/SkillDetailPage').then((m) => ({ Component: m.SkillDetailPage }))
@@ -37,7 +36,6 @@ export const router = createHashRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'conversation/:id', element: <ConversationRoute /> },
-      { path: 'settings/:section?', lazy: settingsPage },
       { path: 'skills', lazy: skills },
       { path: 'skills/:name', lazy: skillDetail },
       { path: 'plugins', lazy: plugins },
