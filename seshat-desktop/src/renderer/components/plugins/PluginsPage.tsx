@@ -11,6 +11,8 @@ import { useDialogsStore } from '@renderer/stores/dialogs'
 import { disconnectLocalConnector, type LocalConnector } from './api/localConnectorsApi'
 import { categoryDescription, groupConnectors, matchesQuery } from './connectorGroups'
 import { PluginTile, type PluginState } from './PluginTile'
+import { McpInstallDialog } from './McpInstallDialog'
+import { availableMcp, type McpCatalogEntry } from './mcpCatalog'
 import { PluginDetailModal } from './PluginDetailModal'
 import { useLocalConnectors } from './useLocalConnectors'
 
@@ -56,6 +58,7 @@ export function PluginsPage() {
   const [sort, setSort] = useState<Sort>('name')
   const [layout, setLayout] = useState<Layout>('grid')
   const [openId, setOpenId] = useState<string | null>(null)
+  const [installingMcp, setInstallingMcp] = useState<McpCatalogEntry | null>(null)
 
   const openConnector = state.connectors.find((connector) => connector.kind === openId) ?? null
 
@@ -122,15 +125,45 @@ export function PluginsPage() {
     }
   })
 
+  const offeredMcp = useMemo(
+    () => availableMcp(state.mcpServers).filter((entry) => !needle || `${entry.title} ${entry.description} ${entry.category}`.toLowerCase().includes(needle)),
+    [state.mcpServers, needle]
+  )
+  const catalogItems: Item[] = offeredMcp.map((entry) => ({
+    id: `mcp-catalog:${entry.name}`,
+    title: entry.title,
+    description: entry.description,
+    state: 'available',
+    tags: entry.tags,
+    render: (shape) => (
+      <PluginTile
+        key={`mcp-catalog:${entry.name}`}
+        title={entry.title}
+        description={entry.description}
+        icon={
+          <span className="flex shrink-0 items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-[var(--surface-muted)] text-[22px]" style={{ width: shape === 'grid' ? 52 : 40, height: shape === 'grid' ? 52 : 40 }} aria-hidden="true">
+            {entry.icon}
+          </span>
+        }
+        state="available"
+        tags={entry.tags}
+        menu={[{ id: 'docs', label: 'Read about it', onSelect: () => openInAppBrowser(entry.docs) }]}
+        layout={shape}
+        onOpen={() => setInstallingMcp(entry)}
+      />
+    )
+  }))
+  const allMcpItems = [...mcpItems, ...catalogItems]
+
   const pills = [
-    { id: 'all', label: 'All', count: state.connectors.length + state.mcpServers.length },
+    { id: 'all', label: 'All', count: state.connectors.length + state.mcpServers.length + availableMcp(state.mcpServers).length },
     ...allGroups.map((group) => ({ id: group.id, label: group.label, count: group.connectors.length })),
-    { id: MCP, label: 'MCP servers', count: state.mcpServers.length }
+    { id: MCP, label: 'MCP servers', count: state.mcpServers.length + availableMcp(state.mcpServers).length }
   ]
 
   const visibleGroups = groups.filter((group) => filter === 'all' || filter === group.id)
   const showMcp = filter === 'all' || filter === MCP
-  const nothing = !state.loading && visibleGroups.length === 0 && (!showMcp || (mcpItems.length === 0 && needle !== ''))
+  const nothing = !state.loading && visibleGroups.length === 0 && (!showMcp || (allMcpItems.length === 0 && needle !== ''))
   const frame = (items: Item[]) => (
     <div className={layout === 'grid' ? 'grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-3' : 'grid gap-2'}>{sorted(items).map((item) => item.render(layout))}</div>
   )
@@ -253,8 +286,8 @@ export function PluginsPage() {
               )
             })}
             {showMcp && (
-              <Section title="MCP servers" count={mcpItems.length} description="Extra tools your agents can call via the Model Context Protocol (MCP).">
-                {mcpItems.length === 0 ? (
+              <Section title="MCP servers" count={allMcpItems.length} description="Extra tools your agents can call via the Model Context Protocol (MCP).">
+                {allMcpItems.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-[var(--border-strong)] px-5 py-8 text-center">
                     <span className="text-[var(--text-muted)]">
                       <Plug theme="outline" size={22} />
@@ -267,7 +300,7 @@ export function PluginsPage() {
                     </button>
                   </div>
                 ) : (
-                  frame(mcpItems)
+                  frame(allMcpItems)
                 )}
               </Section>
             )}
@@ -275,6 +308,16 @@ export function PluginsPage() {
         )}
       </div>
 
+      {installingMcp && (
+        <McpInstallDialog
+          entry={installingMcp}
+          onInstalled={(started) => {
+            void state.reload()
+            show(started ? `${installingMcp.title} installed.` : `${installingMcp.title} installed, but it did not start.`, started ? 'ok' : 'err')
+          }}
+          onClose={() => setInstallingMcp(null)}
+        />
+      )}
       {openConnector && <PluginDetailModal connector={openConnector} onChanged={() => void state.reload()} onClose={() => setOpenId(null)} />}
       <ToastStack toasts={toasts} />
     </section>
