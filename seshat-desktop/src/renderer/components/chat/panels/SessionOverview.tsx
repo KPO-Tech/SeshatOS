@@ -7,6 +7,9 @@ import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
+import { collectPullUrls } from '@renderer/lib/pullRequests'
+import { ChangesList } from './changes/ChangesList'
+import { usePullRequests } from './changes/usePullRequests'
 import { api, ApiError } from '@renderer/api/client'
 import { compactionNote, connectorRows, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { formatDuration } from '@renderer/lib/turnTiming'
@@ -66,6 +69,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }, [])
 
   const { usage: context, windowTokens } = useContextUsage(sessionId)
+  const pullUrls = useMemo(() => collectPullUrls(messages), [messages])
+  const { result: pullResult, refresh: refreshPulls } = usePullRequests(session?.workspacePath, pullUrls)
 
   // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
   // compaction rewrites the conversation that turn is using (the server refuses it too).
@@ -155,6 +160,15 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
             </span>
           )}
         </div>
+      </OverviewCard>
+    )
+  }
+
+  if (pullResult && pullResult.pulls.length > 0) {
+    cards.push(
+      <OverviewCard key="changes" title="Changes">
+        <ChangesList pulls={pullResult.pulls} onRefresh={() => { void refreshPulls() }} />
+        {pullResult.note && <div className="mt-1.5 text-[11px] text-[var(--text-muted)]">{pullResult.note}</div>}
       </OverviewCard>
     )
   }
