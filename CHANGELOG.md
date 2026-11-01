@@ -11,6 +11,11 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **Skills download again on Windows when SeshatOS is opened from the Start menu or the desktop.** The app gave its engine a search path that held only its own folder, so git, Node.js and Python were not found and installing a skill said that git was missing. The engine now keeps the search path of the computer.
+- **The installed app shows its icon in the taskbar.** The window now tells Windows which icon goes with its application id, instead of a blank page left by the icon cache.
+
 ## [0.3.1] - 2026-11-01
 
 ### Highlights
