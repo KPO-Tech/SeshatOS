@@ -17,6 +17,17 @@ import (
 // installLimit bounds one installation: a large scientific stack can take a while on a slow line.
 const installLimit = 25 * time.Minute
 
+// Progress is told where an installation is. A nil Progress is allowed: the installation then says nothing.
+type Progress interface {
+	// Step says which part starts, and which one it is out of how many.
+	Step(index, count int, name string)
+	// Detail says what is being done now: a line printed by pip, uv or npm.
+	Detail(line string)
+}
+
+// stepCount is how many parts an installation has: getting the tools, creating the environment, installing the packages, recording the result.
+const stepCount = 4
+
 // WriteInstall records, beside the cloned repository, what the person chose and the environment made for it (the runtime reads it).
 func WriteInstall(repoRoot string, install skillsloader.RepoInstall) error {
 	data, err := json.MarshalIndent(install, "", "  ")
@@ -30,12 +41,26 @@ func WriteInstall(repoRoot string, install skillsloader.RepoInstall) error {
 	return os.Rename(part, filepath.Join(repoRoot, skillsloader.RepoInstallFile))
 }
 
-// Environment makes the Python environment and the Node packages the plan names, in envDir (outside the repository, so that the folders of
-// the skills stay small to read), then records them as ready. Nothing of the repository is run: only the packages are installed, and the
-// install scripts of Node packages are left out. The Python and the Node parts are made at the same time, and the first to fail stops the other.
+// Environment makes the environment of a repository without reporting where it is; see EnvironmentWith.
 func Environment(ctx context.Context, repoRoot, envDir string, spec Spec, plan Plan) error {
+	return EnvironmentWith(ctx, repoRoot, envDir, spec, plan, nil)
+}
+
+// EnvironmentWith makes the Python environment and the Node packages the plan names, in envDir (outside the repository, so that the folders
+// of the skills stay small to read), then records them as ready. Nothing of the repository is run: only the packages are installed, and the
+// install scripts of Node packages are left out. The Python and the Node packages are installed at the same time, and the first to fail
+// stops the other. What the programs print is passed on to progress as it is printed.
+func EnvironmentWith(ctx context.Context, repoRoot, envDir string, spec Spec, plan Plan, progress Progress) error {
 	ctx, cancel := context.WithTimeout(ctx, installLimit)
 	defer cancel()
+	if progress != nil {
+		ctx = withLines(ctx, progress.Detail)
+	}
+	step := func(index int, name string) {
+		if progress != nil {
+			progress.Step(index, stepCount, name)
+		}
+	}
 	if !plan.Ready() {
 		return fmt.Errorf("a tool this repository needs is missing: %s", strings.Join(plan.Warnings, " "))
 	}
@@ -44,6 +69,24 @@ func Environment(ctx context.Context, repoRoot, envDir string, spec Spec, plan P
 		return fmt.Errorf("create environment folder: %w", err)
 	}
 
+	var pyEnv *pythonEnv
+	if plan.Python != nil {
+		step(1, "Getting the tools")
+		base, err := findPython(plan.Python.Minimum)
+		if err != nil {
+			return err
+		}
+		pyEnv = &pythonEnv{base: base, venv: filepath.Join(envDir, "python")}
+		if uv, ok := ensureUV(ctx, progress); ok {
+			pyEnv.uv = uv
+		}
+		step(2, "Creating the environment")
+		if err := pyEnv.create(ctx); err != nil {
+			return err
+		}
+	}
+
+	step(3, "Installing the packages")
 	var (
 		wg    sync.WaitGroup
 		once  sync.Once
@@ -55,16 +98,15 @@ func Environment(ctx context.Context, repoRoot, envDir string, spec Spec, plan P
 			cancel()
 		})
 	}
-	if plan.Python != nil {
+	if pyEnv != nil {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			python, err := makePython(ctx, repoRoot, envDir, spec, plan)
-			if err != nil {
+			if err := pyEnv.install(ctx, repoRoot, requirementArgs(repoRoot, plan.Python.Files, spec.PythonPackages)); err != nil {
 				fail(err)
 				return
 			}
-			install.Python = python
+			install.Python = venvPython(pyEnv.venv)
 		}()
 	}
 	if plan.Node != nil {
@@ -83,6 +125,8 @@ func Environment(ctx context.Context, repoRoot, envDir string, spec Spec, plan P
 	if first != nil {
 		return first
 	}
+
+	step(4, "Finishing")
 	install.Pending = false
 	return WriteInstall(repoRoot, install)
 }
@@ -112,9 +156,17 @@ func requirementArgs(repoRoot string, files, packages []string) []string {
 	return append(args, packages...)
 }
 
-// venvWorks reports whether an environment left by an earlier attempt can still run, so that a second attempt keeps what was installed.
-func venvWorks(ctx context.Context, venv string) bool {
-	python := venvPython(venv)
+// pythonEnv is the Python environment of one repository. uv, when there is one, makes it and fills it from the shared cache; pip does it
+// otherwise, and takes over when uv cannot make the environment.
+type pythonEnv struct {
+	base interpreter
+	venv string
+	uv   string
+}
+
+// works reports whether an environment left by an earlier attempt can still run, so that a second attempt keeps what was installed.
+func (e *pythonEnv) works(ctx context.Context) bool {
+	python := venvPython(e.venv)
 	if _, err := os.Stat(python); err != nil {
 		return false
 	}
@@ -124,59 +176,39 @@ func venvWorks(ctx context.Context, venv string) bool {
 	return err == nil
 }
 
-func makePython(ctx context.Context, repoRoot, envDir string, spec Spec, plan Plan) (string, error) {
-	base, err := findPython(plan.Python.Minimum)
-	if err != nil {
-		return "", err
+func (e *pythonEnv) create(ctx context.Context) error {
+	if e.works(ctx) {
+		return nil
 	}
-	venv := filepath.Join(envDir, "python")
-	args := requirementArgs(repoRoot, plan.Python.Files, spec.PythonPackages)
-	if uv, ok := findUV(); ok && base.executable != "" {
-		python, err := makePythonWithUV(ctx, uv, base, repoRoot, venv, args)
-		if err == nil {
-			return python, nil
+	_ = os.RemoveAll(e.venv)
+	if e.uv != "" && e.base.executable != "" {
+		// pip is put in the environment, as skills may call it.
+		if _, err := runCommand(ctx, "", uvEnv(), e.uv, "venv", "--seed", "--python", e.base.executable, e.venv); err == nil {
+			return nil
 		}
 		// Only a uv that could not make the environment gives way to pip; a package that cannot be installed fails the same way with pip.
-		if _, unusable := err.(uvUnusable); !unusable {
-			return "", err
-		}
-		_ = os.RemoveAll(venv)
+		_ = os.RemoveAll(e.venv)
+		e.uv = ""
 	}
-	return makePythonWithPip(ctx, base, repoRoot, venv, args)
+	if out, err := runCommand(ctx, "", nil, e.base.command[0], append(e.base.command[1:], "-m", "venv", e.venv)...); err != nil {
+		return failure("creating the Python environment", out, err)
+	}
+	return nil
 }
 
-// uvUnusable says that uv could not make the environment itself, which is not the fault of the packages.
-type uvUnusable struct{ error }
-
-// makePythonWithUV makes the environment with uv: the packages come from its shared cache, linked instead of unpacked again, so a second
-// repository that needs numpy or pandas costs almost nothing. pip is put in the environment, as skills may call it.
-func makePythonWithUV(ctx context.Context, uv string, base interpreter, repoRoot, venv string, args []string) (string, error) {
-	if !venvWorks(ctx, venv) {
-		_ = os.RemoveAll(venv)
-		if out, err := runCommand(ctx, "", nil, uv, "venv", "--seed", "--python", base.executable, venv); err != nil {
-			return "", uvUnusable{failure("creating the Python environment with uv", out, err)}
+func (e *pythonEnv) install(ctx context.Context, repoRoot string, args []string) error {
+	python := venvPython(e.venv)
+	if e.uv != "" {
+		if out, err := runCommand(ctx, repoRoot, uvEnv(), e.uv, append([]string{"pip", "install", "--python", python}, args...)...); err != nil {
+			return failure("installing the Python packages", out, err)
 		}
+		return nil
 	}
-	python := venvPython(venv)
-	if out, err := runCommand(ctx, repoRoot, nil, uv, append([]string{"pip", "install", "--python", python}, args...)...); err != nil {
-		return "", failure("installing the Python packages", out, err)
-	}
-	return python, nil
-}
-
-func makePythonWithPip(ctx context.Context, base interpreter, repoRoot, venv string, args []string) (string, error) {
-	if !venvWorks(ctx, venv) {
-		_ = os.RemoveAll(venv)
-		if out, err := runCommand(ctx, "", nil, base.command[0], append(base.command[1:], "-m", "venv", venv)...); err != nil {
-			return "", failure("creating the Python environment", out, err)
-		}
-	}
-	python := venvPython(venv)
 	pip := []string{"-m", "pip", "install", "--disable-pip-version-check", "--no-input", "--prefer-binary"}
 	if out, err := runCommand(ctx, repoRoot, nil, python, append(pip, args...)...); err != nil {
-		return "", failure("installing the Python packages", out, err)
+		return failure("installing the Python packages", out, err)
 	}
-	return python, nil
+	return nil
 }
 
 func makeNode(ctx context.Context, envDir string, packages []string, repoRoot string, include []string) (string, error) {

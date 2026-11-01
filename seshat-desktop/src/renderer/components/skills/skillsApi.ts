@@ -1,4 +1,5 @@
 import { api } from '@renderer/api/client'
+import { waitForTask, type TaskInfo } from '@renderer/lib/tasks'
 import type { CatalogEntry, InstallResult, RepoInfo, ScanResult, Skill, SkillSources, SkillSourcesChoice, TreeNode } from './skillsTypes'
 
 export async function fetchSkills() {
@@ -41,9 +42,15 @@ export function installSkillRepo(url: string) {
   return api.post<InstallResult>('/skills/repos', { url })
 }
 
-/** Makes the private environment of a repository (its Python, its Node packages), once the person has agreed to the plan. */
-export function prepareSkillEnvironment(name: string) {
-  return api.post(`/skills/repos/${encodeURIComponent(name)}/environment`, {})
+/** Starts, in the backend, the private environment of a repository (its Python, its Node packages), once the person has agreed to the plan. */
+export function startSkillEnvironment(name: string) {
+  return api.post<{ name: string; task: TaskInfo }>(`/skills/repos/${encodeURIComponent(name)}/environment`, {})
+}
+
+/** Makes the environment and waits until it is made: it rejects with the reason when it could not be. */
+export async function prepareSkillEnvironment(name: string, onUpdate?: (task: TaskInfo) => void) {
+  const started = await startSkillEnvironment(name)
+  return waitForTask(started.task.id, onUpdate)
 }
 
 export function uninstallSkillRepo(name: string) {

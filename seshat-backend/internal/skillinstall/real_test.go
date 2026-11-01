@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -40,4 +42,26 @@ func TestRealEnvironment(t *testing.T) {
 		}
 		t.Logf("%s: %s", name, time.Since(started).Round(100*time.Millisecond))
 	}
+}
+
+// TestRealUVDownload fetches the pinned uv from its release page and checks that it matches the pinned checksum and runs. Like the test
+// above it needs the network, so it runs only when asked.
+func TestRealUVDownload(t *testing.T) {
+	if os.Getenv("SESHAT_REAL_INSTALL") == "" {
+		t.Skip("set SESHAT_REAL_INSTALL=1 to download uv")
+	}
+	asset, ok := uvAssets[runtime.GOOS+"/"+runtime.GOARCH]
+	if !ok {
+		t.Skip("no build of uv is pinned for this machine")
+	}
+	dest := filepath.Join(t.TempDir(), uvExecutableName())
+	started := time.Now()
+	if err := downloadUV(context.Background(), asset, dest); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runCommand(context.Background(), "", nil, dest, "--version")
+	if err != nil || !strings.Contains(out, uvVersion) {
+		t.Fatalf("the downloaded uv runs and is the pinned version, got %q (%v)", out, err)
+	}
+	t.Logf("downloaded and checked in %s: %s", time.Since(started).Round(100*time.Millisecond), strings.TrimSpace(out))
 }

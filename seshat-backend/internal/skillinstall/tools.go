@@ -1,7 +1,6 @@
 package skillinstall
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -21,7 +20,8 @@ type interpreter struct {
 	executable string
 }
 
-// runCommand runs a program and returns what it printed; a variable so that a test can stand in for the machine.
+// runCommand runs a program and returns what it printed, handing each line to the sink of the context as it comes; a variable so that a test
+// can stand in for the machine.
 var runCommand = func(ctx context.Context, dir string, env []string, name string, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
@@ -29,8 +29,8 @@ var runCommand = func(ctx context.Context, dir string, env []string, name string
 		cmd.Env = env
 	}
 	hideWindow(cmd)
-	var out bytes.Buffer
-	cmd.Stdout, cmd.Stderr = &out, &out
+	out := &lineWriter{sink: linesOf(ctx)}
+	cmd.Stdout, cmd.Stderr = out, out
 	err := cmd.Run()
 	return out.String(), err
 }
@@ -100,6 +100,7 @@ var findUV = func() (string, bool) {
 		}
 		candidates = append(candidates, filepath.Join(home, ".local", "bin", name), filepath.Join(home, ".cargo", "bin", name))
 	}
+	candidates = append(candidates, uvManagedPath())
 	for _, candidate := range candidates {
 		if info, err := os.Stat(candidate); err != nil || info.IsDir() {
 			continue

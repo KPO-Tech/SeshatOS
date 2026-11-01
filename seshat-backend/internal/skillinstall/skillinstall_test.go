@@ -32,7 +32,7 @@ func pretendMachine(t *testing.T, uv string, fail func(line string) error) *reco
 	}
 	t.Setenv(EnvPython, exe)
 	rec := &recorder{}
-	oldRun, oldUV := runCommand, findUV
+	oldRun, oldUV, oldEnsure := runCommand, findUV, ensureUV
 	runCommand = func(_ context.Context, _ string, _ []string, name string, args ...string) (string, error) {
 		call := append([]string{name}, args...)
 		rec.add(call)
@@ -45,7 +45,8 @@ func pretendMachine(t *testing.T, uv string, fail func(line string) error) *reco
 		return "", nil
 	}
 	findUV = func() (string, bool) { return uv, uv != "" }
-	t.Cleanup(func() { runCommand, findUV = oldRun, oldUV })
+	ensureUV = func(context.Context, Progress) (string, bool) { return findUV() }
+	t.Cleanup(func() { runCommand, findUV, ensureUV = oldRun, oldUV, oldEnsure })
 	return rec
 }
 
