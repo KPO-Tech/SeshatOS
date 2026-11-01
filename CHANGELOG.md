@@ -11,6 +11,16 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-01
+
+### Highlights
+
+- **A new first launch and a fuller start page.** The app opens maximized on a page to pick the look (Dark, Light or Midnight, and an accent colour), then the setup goes straight to the local models, and the start page shows five ways to begin with the input docked at the bottom.
+- **Work that goes on in the background.** Skills download and install as tasks you can follow in the sidebar, with the bell of the title bar keeping what finished or failed and a What's new card after each update.
+- **One look for Settings, Knowledge and Projects.** Every page of Settings shares the same header and cards, and Collections, Sources and Search of Knowledge look alike.
+
+The full list of changes follows.
+
 ### Added
 
 - **A What's new card opens once after each update.** A window a little smaller than Settings walks through the changes of the release one at a time, each with a small drawing of the feature in the colours of your theme and accent (the look chosen at first launch, the background tasks, the bell, the start page, Settings, Projects), with Back, Next and dots, and Escape to leave. It does not open on a first install, nor twice for the same version, and "What's new" in the menu at the bottom of the sidebar opens it again whenever you want.

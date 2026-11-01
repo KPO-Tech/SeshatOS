@@ -1,6 +1,6 @@
 {
   "name": "seshat-desktop",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
