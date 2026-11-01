@@ -38,7 +38,6 @@ export function HomeStage({ onPick }: { onPick: (prompt: string) => void }) {
           <p className="m-0 mt-2.5 max-w-[520px] text-[15px] leading-[1.55] text-[var(--text-secondary)]">Research, create, analyze and automate with AI, all in one workspace.</p>
         </div>
         <div className="relative hidden shrink-0 items-center justify-center min-[900px]:flex" aria-hidden="true">
-          <div className="absolute size-[190px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent-primary)_22%,transparent),transparent_70%)]" />
           <SeshatLogo size={104} />
         </div>
       </header>
