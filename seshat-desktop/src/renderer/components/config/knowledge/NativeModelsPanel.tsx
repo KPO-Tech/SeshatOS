@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { LayoutOne, Page, Scan, Table, TextRecognition } from '@icon-park/react'
-import { SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
+import { ActionButton, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
 import type { NativeDocModelStatus } from './knowledgeTypes'
 
 type ModelInfo = { title: string; role: string; icon: ReactNode }
@@ -30,24 +30,39 @@ function size(bytes: number): string {
   return `${bytes} B`
 }
 
-// One row for each model the local reader uses on a scanned page, with whether it is on this computer.
+// One row for each model the local reader uses on a scanned page, folded under a summary of how many are on this computer.
 export function NativeModelsPanel({ statuses, folder }: { statuses: NativeDocModelStatus[]; folder: string | null }) {
+  const [open, setOpen] = useState(false)
   if (statuses.length === 0) return null
+  const installed = statuses.filter((model) => model.installed).length
   return (
-    <SettingsCard title="Models" icon={<Scan theme="outline" size={16} />}>
-      {orderedModels(statuses).map((model) => {
-        const info = MODELS[model.file] ?? { title: model.file, role: '', icon: <Page size={16} /> }
-        return (
-          <SettingRow key={model.file} title={info.title} icon={info.icon}>
-            {model.installed && <span className="text-[12px] text-[var(--text-faint)]">{size(model.size_bytes)}</span>}
-            <StatusBadge tone={model.installed ? 'ok' : 'muted'}>{model.installed ? 'Installed' : model.required ? 'Missing' : 'Not installed'}</StatusBadge>
-          </SettingRow>
-        )
-      })}
-      {folder && (
+    <SettingsCard
+      title="Models"
+      icon={<Scan theme="outline" size={16} />}
+      badge={<StatusBadge tone={installed === statuses.length ? 'ok' : 'muted'}>{`${installed} of ${statuses.length} installed`}</StatusBadge>}
+      action={
+        <ActionButton type="button" onClick={() => setOpen((current) => !current)}>
+          {open ? 'Hide' : 'Show'}
+        </ActionButton>
+      }
+    >
+      {open &&
+        orderedModels(statuses).map((model) => {
+          const info = MODELS[model.file] ?? { title: model.file, role: '', icon: <Page size={16} /> }
+          return (
+            <SettingRow key={model.file} title={info.title} icon={info.icon}>
+              {model.installed && <span className="text-[12px] text-[var(--text-faint)]">{size(model.size_bytes)}</span>}
+              <StatusBadge tone={model.installed ? 'ok' : 'muted'}>{model.installed ? 'Installed' : model.required ? 'Missing' : 'Not installed'}</StatusBadge>
+            </SettingRow>
+          )
+        })}
+      {open && folder && (
         <div className="truncate px-4 py-2 text-[11px] text-[var(--text-faint)]" title={folder}>
           {folder}
         </div>
+      )}
+      {!open && (
+        <div className="px-4 py-3 text-[12px] text-[var(--text-muted)]">Layout, text detection, recognition and tables.</div>
       )}
     </SettingsCard>
   )

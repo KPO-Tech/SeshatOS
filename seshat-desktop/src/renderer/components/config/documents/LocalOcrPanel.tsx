@@ -3,7 +3,7 @@ import { IndraPanel } from '../knowledge/IndraPanel'
 import { NativeModelsPanel } from '../knowledge/NativeModelsPanel'
 import { packOptions } from '../knowledge/ocrPacks'
 import type { NativeDocDownloadState } from '../knowledge/knowledgeTypes'
-import { ActionButton, SelectField, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
+import { ActionButton, ProgressRow, SelectField, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
 import type { DocumentReaderState } from './useDocumentReader'
 
 function percent(download: NativeDocDownloadState): number {
@@ -21,42 +21,46 @@ const glyph = (Icon: typeof Power) => <Icon theme="outline" size={16} />
 export function LocalOcrPanel({ reader }: { reader: DocumentReaderState }) {
   const native = reader.native
   const download = native.download
+  const needsModels = native.canDownload && !native.ready
+  const label = native.ready ? 'Ready' : !native.compiled ? 'Not in this version' : needsModels ? 'Needs models' : 'Not started'
 
   return (
     <>
-      <SettingsCard title="Scanned pages" badge={<StatusBadge tone={native.ready ? 'ok' : 'muted'}>{native.ready ? 'Ready' : 'Not started'}</StatusBadge>}>
-        {native.packs.length > 1 && (
-          <SettingRow title="Languages" icon={glyph(Translate)}>
-            <div className="w-[240px]">
-              <SelectField value={native.selectedPack ?? ''} options={packOptions(native.packs)} onChange={native.selectPack} disabled={native.downloading} />
-            </div>
-          </SettingRow>
-        )}
-        <SettingRow title="Models" icon={glyph(Download)}>
-          <ActionButton type="button" onClick={() => void native.startDownload()} disabled={!native.canDownload}>
-            {native.buttonLabel}
-          </ActionButton>
-        </SettingRow>
-        <SettingRow title="Reader" icon={glyph(Power)}>
-          {native.initError && <span className="max-w-[260px] truncate text-[12px] text-[var(--accent-danger)]">{native.initError}</span>}
-          <ActionButton type="button" tone={native.ready ? 'success' : 'primary'} onClick={() => void native.initialize()} disabled={!native.canInitialize || native.initializing}>
-            {native.initializing ? 'Starting...' : native.ready ? 'Ready' : 'Start'}
-          </ActionButton>
-        </SettingRow>
-        {download?.status === 'running' && (
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between gap-3 text-[12px] text-[var(--text-muted)]">
-              <span className="truncate">{download.current_file || 'Downloading models'}</span>
-              <span>{percent(download)}%</span>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">
-              <div className="h-full rounded-full bg-[var(--accent-primary)] transition-[width]" style={{ width: `${percent(download)}%` }} />
-            </div>
-          </div>
+      <SettingsCard title="Built-in reader" badge={<StatusBadge tone={native.ready ? 'ok' : 'muted'}>{label}</StatusBadge>}>
+        {!native.compiled ? (
+          <SettingRow title="Not in this version" hint="Indra, below, can read scanned pages." />
+        ) : (
+          <>
+            {native.packs.length > 1 && (
+              <SettingRow title="Languages" icon={glyph(Translate)}>
+                <div className="w-[240px]">
+                  <SelectField value={native.selectedPack ?? ''} options={packOptions(native.packs)} onChange={native.selectPack} disabled={native.downloading} />
+                </div>
+              </SettingRow>
+            )}
+            <SettingRow
+              title={native.ready ? 'Reading scanned pages' : needsModels ? 'Download the models' : 'Start the reader'}
+              icon={glyph(native.ready ? Power : needsModels ? Download : Power)}
+              hint={native.initError ?? undefined}
+            >
+              {native.ready ? (
+                <StatusBadge tone="ok">Ready</StatusBadge>
+              ) : needsModels ? (
+                <ActionButton type="button" tone="primary" onClick={() => void native.startDownload()} disabled={!native.canDownload}>
+                  {native.buttonLabel}
+                </ActionButton>
+              ) : (
+                <ActionButton type="button" tone="primary" onClick={() => void native.initialize()} disabled={!native.canInitialize || native.initializing}>
+                  {native.initializing ? 'Starting...' : 'Start'}
+                </ActionButton>
+              )}
+            </SettingRow>
+            {download?.status === 'running' && <ProgressRow label={download.current_file || 'Downloading models'} percent={percent(download)} />}
+          </>
         )}
       </SettingsCard>
 
-      <NativeModelsPanel statuses={native.models} folder={native.modelDir} />
+      {native.compiled && <NativeModelsPanel statuses={native.models} folder={native.modelDir} />}
 
       <IndraPanel />
     </>
