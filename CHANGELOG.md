@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **The start page is lighter.** The greeting, the input and your recent chats and projects: the line under the greeting, the five suggestion buttons and the long list of what the input can do are gone. The input is larger and the page is centred on one column. The skills list (/) and the knowledge bases list (@) open on the side that has room, show four rows and scroll after that.
 - **Settings drops its side columns.** The help cards next to Documents (How it works, Supported formats) and Providers (About, Recommended setup, Add a provider) are gone, and the cards use the full width.
 - **Settings has one look, starting with General.** A shared header (icon, title, one line, a state badge), cards that each answer one question, rows with the control on the right, and tabs where a page has several parts. General, Appearance, Shortcuts and Account use it; the descriptions under the titles are one short line, and the buttons that did nothing (Local data, Change email, sign-in methods, Delete account) are gone.
 
