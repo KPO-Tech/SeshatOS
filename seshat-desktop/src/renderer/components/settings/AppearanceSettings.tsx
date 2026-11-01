@@ -10,6 +10,8 @@ import {
   setStoredAppearance,
   type AppearancePrefs
 } from '@renderer/lib/appearance'
+import { AccentSwatches } from '@renderer/components/onboarding/AccentSwatches'
+import { ACCENTS, chooseAccent, getStoredAccent } from '@renderer/lib/accent'
 import { duplicateTheme, exportTheme, importTheme } from '@renderer/lib/customThemes'
 import { applyTheme, getStoredTheme, updateCustomThemes, type ThemePreference } from '@renderer/lib/theme'
 import { allThemes, themeById, type ThemeSeed } from '@renderer/lib/themes'
@@ -41,6 +43,7 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
     return customThemes()
   })
   const [prefs, setPrefs] = useState<AppearancePrefs>(() => getStoredAppearance())
+  const [accent, setAccent] = useState<string | null>(() => getStoredAccent())
   const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
 
@@ -119,6 +122,31 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
       {tab === 'theme' ? (
         <>
           <CurrentTheme theme={theme} selected={selected} />
+
+          <SettingsCard
+            title="Accent color"
+            padded
+            action={
+              accent ? (
+                <ActionButton
+                  onClick={() => {
+                    chooseAccent(null)
+                    setAccent(null)
+                  }}
+                >
+                  Use the theme's own
+                </ActionButton>
+              ) : undefined
+            }
+          >
+            <AccentSwatches
+              current={accent ?? selected?.accent ?? ACCENTS[0].hex}
+              onPick={(hex) => {
+                chooseAccent(hex)
+                setAccent(hex)
+              }}
+            />
+          </SettingsCard>
 
           <SettingsCard
             title="Presets"
