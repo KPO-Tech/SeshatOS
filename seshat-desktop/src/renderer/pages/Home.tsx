@@ -418,25 +418,15 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
         ]
       : [])
 
-  const body = (
-    <>
-        {variant === 'home' && (
-          <>
-            <SeshatLogo size={56} />
-            <h1 className="home-greeting">
-              What are we <span className="text-[var(--accent-primary)]">working on</span>?
-            </h1>
-          </>
-        )}
-
-        <div className={variant === 'home' ? 'home-input-container' : 'w-full'}>
+  const composer = (
+        <div className={variant === 'home' ? 'home-dock-input' : 'w-full'}>
           <ChatInput
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSend}
             placeholder={placeholder}
             maxHeight={240}
-            size={variant === 'home' ? 'large' : 'default'}
+            size="default"
             projectPath={projectPath}
             onProjectChange={fixedProjectPath ? undefined : setProjectPath}
             projectLocked={Boolean(fixedProjectPath)}
@@ -462,7 +452,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
             modelOptions={allModelChoices.length > 0 ? modelSelectorOptions(allModelChoices) : undefined}
             selectedModelId={selectedModelChoiceId}
             onModelSelect={handleModelSelect}
-            modelMenuPlacement="down"
+            modelMenuPlacement={variant === 'home' ? 'up' : 'down'}
             modelDisabled={
               isCreatingSession ||
               (loadingModelProviderIds.length > 0 && allModelChoices.length === 0)
@@ -486,17 +476,43 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
           )}
         </div>
 
-        {quickActions.length > 0 && (
+  )
+
+  const quickStarts = quickActions.length > 0 && (
           <div className={variant === 'home' ? 'home-quick-actions' : 'home-quick-actions mt-3 justify-start'}>
             {quickActions.map((action) => (
               <QuickAction key={action.label} icon={action.icon} label={action.label} onClick={() => setInputValue(action.prompt)} />
             ))}
           </div>
-        )}
-    </>
   )
 
-  return variant === 'home' ? <div className="home-center">{body}</div> : <div className="w-full">{body}</div>
+  // The start page is laid out as a conversation is: the input is docked at the bottom, where it stays when the first message turns the page into
+  // a conversation, and the room above it is a stage for what the page offers (for now the greeting and the quick starts).
+  if (variant === 'home') {
+    return (
+      <>
+        <div className="home-stage">
+          <div className="home-stage-inner">
+            <SeshatLogo size={56} />
+            <h1 className="home-greeting">
+              What are we <span className="text-[var(--accent-primary)]">working on</span>?
+            </h1>
+            <div className="home-stage-starts">{quickStarts}</div>
+          </div>
+        </div>
+        <div className="home-dock">
+          <div className="home-dock-inner">{composer}</div>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      {composer}
+      {quickStarts}
+    </div>
+  )
 }
 
 /** The start page: the input to begin a conversation, under a greeting. */
