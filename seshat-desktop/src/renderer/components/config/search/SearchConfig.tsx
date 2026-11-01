@@ -3,6 +3,7 @@ import { useProviders } from '@renderer/hooks/useProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import { api } from '@renderer/api/client'
 import type { EmbedderConfig, RerankerConfig } from '../knowledge/knowledgeTypes'
+import { Notice, SettingsPage } from '../../settings/kit'
 import { EmbedderCard } from './EmbedderCard'
 import { RerankerCard } from './RerankerCard'
 
@@ -34,15 +35,14 @@ export function SearchConfig() {
   }, [load])
 
   return (
-    <div className="grid gap-4">
-      {loading && <div className="text-[12px] font-semibold text-[var(--text-muted)]">Loading...</div>}
-      {error && <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">{error}</div>}
+    <SettingsPage id="search">
+      {error && <Notice tone="error">{error}</Notice>}
       {!loading && !error && (
         <>
           <EmbedderCard config={embedder} providers={providers} onSaved={setEmbedder} />
           <RerankerCard config={reranker} providers={providers} onSaved={setReranker} />
         </>
       )}
-    </div>
+    </SettingsPage>
   )
 }

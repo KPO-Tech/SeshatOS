@@ -5,7 +5,7 @@ import { FreeModelNote, isFreeModel } from './FreeModelNote'
 import { ModelCombobox } from './ModelCombobox'
 import { ProviderKeyField } from './ProviderKeyField'
 import { RerankerModels } from './RerankerModels'
-import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { ActionButton, Notice, SelectField, SettingRow, SettingsCard, StatusBadge, TextField, Toggle, type SelectOption } from '../../settings/kit'
 import { api } from '@renderer/api/client'
 import { addRerankerSetup, detectRerankerModel, listRerankerModels, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { RerankerConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
@@ -157,70 +157,65 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
     }
   }
 
-  const readyProvider = (id: string) => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[id] ?? []).includes(item.provider.toLowerCase()))
   const presetOptions: SelectOption[] = RERANKER_PRESETS.map((item) => ({
     value: item.id,
     label: item.label,
-    description: item.id === 'tei' ? 'Local reranking server' : item.id === 'custom' ? 'Bring your own endpoint' : readyProvider(item.id) ? `Uses your ${readyProvider(item.id)?.name} provider` : item.id === 'openrouter' ? 'Cohere, Voyage, Qwen and more, one key' : item.model,
     icon: <RerankerIcon name={item.id} />
   }))
 
   return (
-    <ConfigCard
-      title="Reranker"
-      description="Optional second pass to reorder retrieved chunks before they reach the agent."
-      status={<StatusPill tone={config?.is_configured ? 'ok' : 'muted'}>{config?.is_configured ? 'Ready' : 'Optional'}</StatusPill>}
-      action={<ToggleSwitch enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
-    >
-      <div className="grid gap-4">
-        <RerankerModels version={`${config?.base_url}|${config?.model}|${config?.enabled}`} onChanged={() => void api.get<RerankerConfig>('/settings/reranker').then(onSaved)} />
-        <div className="grid gap-3 md:grid-cols-[250px_minmax(0,1fr)]">
-          <Field label="Endpoint">
-            <CustomSelect value={preset} options={presetOptions} onChange={choosePreset} />
-          </Field>
-          <Field label="Base URL">
-            <TextInput value={form.base_url} onChange={(event) => update('base_url', event.target.value)} placeholder="http://localhost:8083/rerank" />
-          </Field>
-        </div>
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
-          <Field label="Model">
+    <>
+      {testing === 'ok' && <Notice tone="ok">{`Connected in ${latency ?? 0} ms`}</Notice>}
+      {testing === 'error' && <Notice tone="error">{testError ?? 'Connection failed.'}</Notice>}
+      <RerankerModels version={`${config?.base_url}|${config?.model}|${config?.enabled}`} onChanged={() => void api.get<RerankerConfig>('/settings/reranker').then(onSaved)} />
+      <SettingsCard
+        title="Reranker"
+        badge={<StatusBadge tone={config?.is_configured ? 'ok' : 'muted'}>{config?.is_configured ? 'Ready' : 'Optional'}</StatusBadge>}
+        action={<Toggle label="Use a reranker" enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
+      >
+        <SettingRow title="Service">
+          <div className="w-[230px]">
+            <SelectField value={preset} options={presetOptions} onChange={choosePreset} />
+          </div>
+        </SettingRow>
+        <SettingRow title="Address">
+          <TextField label="Base URL" value={form.base_url} onChange={(value) => update('base_url', value)} placeholder="http://localhost:8083/rerank" mono width={300} />
+        </SettingRow>
+        <SettingRow title="Model">
+          <div className="w-[300px]">
             <ModelCombobox value={form.model} options={models} onChange={(model) => update('model', model)} placeholder="BAAI/bge-reranker-v2-m3" />
-          </Field>
-          <ProviderKeyField
-            ownProvider={ownProvider}
-            missingProviderName={MISSING_NAMES[preset]}
-            useOwnKey={useOwnKey}
-            onUseOwnKey={(use) => {
-              setUseOwnKey(use)
-              setDirty(true)
-              setTesting('idle')
-            }}
-            apiKey={form.api_key}
-            onApiKey={(key) => update('api_key', key)}
-            hasStoredKey={Boolean(config?.has_api_key)}
-            emptyPlaceholder="Optional"
-          />
-        </div>
-
+          </div>
+        </SettingRow>
+        <ProviderKeyField
+          ownProvider={ownProvider}
+          missingProviderName={MISSING_NAMES[preset]}
+          useOwnKey={useOwnKey}
+          onUseOwnKey={(use) => {
+            setUseOwnKey(use)
+            setDirty(true)
+            setTesting('idle')
+          }}
+          apiKey={form.api_key}
+          onApiKey={(key) => update('api_key', key)}
+          hasStoredKey={Boolean(config?.has_api_key)}
+          emptyPlaceholder="Optional"
+        />
         {isFreeModel(form.model) && <FreeModelNote what="rerank" />}
-
-        <ResultMessage state={testing} error={testError} latency={latency} />
-
-        <div className="flex flex-wrap items-center gap-2">
+        <SettingRow title=" ">
           {preset === 'tei' && (
-            <SoftButton type="button" onClick={() => void detectModel()} disabled={detecting || !form.base_url}>
+            <ActionButton type="button" onClick={() => void detectModel()} disabled={detecting || !form.base_url}>
               {detecting ? 'Detecting...' : 'Detect model'}
-            </SoftButton>
+            </ActionButton>
           )}
-          <SoftButton type="button" onClick={() => void test()} disabled={!form.base_url || testing === 'running'}>
+          <ActionButton type="button" onClick={() => void test()} disabled={!form.base_url || testing === 'running'}>
             {testing === 'running' ? 'Testing...' : 'Test'}
-          </SoftButton>
-          <SoftButton type="button" tone={dirty ? 'primary' : 'success'} onClick={() => void save()} disabled={!dirty || saving} className="ml-auto">
+          </ActionButton>
+          <ActionButton type="button" tone={dirty ? 'primary' : 'default'} onClick={() => void save()} disabled={!dirty || saving}>
             {saving ? 'Saving...' : dirty ? (form.enabled ? 'Save and use' : 'Save changes') : 'Saved'}
-          </SoftButton>
-        </div>
-      </div>
-    </ConfigCard>
+          </ActionButton>
+        </SettingRow>
+      </SettingsCard>
+    </>
   )
 }
 

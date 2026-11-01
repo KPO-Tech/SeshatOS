@@ -6,7 +6,7 @@ import { ProviderKeyField } from './ProviderKeyField'
 import { ReembedPanel } from './ReembedPanel'
 import { api } from '@renderer/api/client'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
-import { ConfigCard, CustomSelect, Field, ResultMessage, SoftButton, StatusPill, TextInput, ToggleSwitch, type SelectOption } from '@renderer/components/config/knowledge/KnowledgePrimitives'
+import { ActionButton, Notice, SelectField, SettingRow, SettingsCard, StatusBadge, TextField, Toggle, type SelectOption } from '../../settings/kit'
 import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { EmbedderConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
 
@@ -160,91 +160,70 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
   const refreshConfig = useCallback(() => void api.get<EmbedderConfig>('/settings/embedder').then(onSaved).catch(() => undefined), [onSaved])
   const changesModel = Boolean(config?.is_configured && config.model && (form.model !== config.model || form.provider !== config.provider))
   const suggestions = detectedModels.length > 0 ? detectedModels : MODEL_HINTS[form.provider] ?? []
-  const readyProvider = (id: string) => providers.find((item) => item.has_api_key && (PROVIDER_KINDS[id] ?? []).includes(item.provider.toLowerCase()))
-  const ready = (id: string, fallback: string) => (readyProvider(id) ? `Uses your ${readyProvider(id)?.name} provider` : fallback)
   const providerOptions: SelectOption[] = [
-    { value: 'tei', label: 'TEI local', description: 'Local embeddings server', icon: <ProviderIcon provider="tei" size={24} /> },
-    { value: 'ollama', label: 'Ollama local', description: 'Local Ollama models', icon: <ProviderIcon provider="ollama" size={24} /> },
-    { value: 'openai', label: 'OpenAI', description: ready('openai', 'OpenAI embeddings API'), icon: <ProviderIcon provider="openai" size={24} /> },
-    { value: 'mistral', label: 'Mistral', description: ready('mistral', 'Mistral embeddings API'), icon: <ProviderIcon provider="mistral" size={24} /> },
-    { value: 'gemini', label: 'Google Gemini', description: ready('gemini', 'Gemini OpenAI-compatible endpoint'), icon: <ProviderIcon provider="gemini" size={24} /> },
-    { value: 'voyage', label: 'Voyage AI', description: 'Retrieval embeddings, with a key from Voyage', icon: <ProviderIcon provider="voyage" size={24} /> },
-    { value: 'jina', label: 'Jina AI', description: 'Multilingual embeddings, with a key from Jina', icon: <ProviderIcon provider="jina" size={24} /> },
-    { value: 'openrouter', label: 'OpenRouter', description: ready('openrouter', 'Dozens of embedding models, one key'), icon: <ProviderIcon provider="openrouter" size={24} /> }
+    { value: 'tei', label: 'TEI local', icon: <ProviderIcon provider="tei" size={24} /> },
+    { value: 'ollama', label: 'Ollama local', icon: <ProviderIcon provider="ollama" size={24} /> },
+    { value: 'openai', label: 'OpenAI', icon: <ProviderIcon provider="openai" size={24} /> },
+    { value: 'mistral', label: 'Mistral', icon: <ProviderIcon provider="mistral" size={24} /> },
+    { value: 'gemini', label: 'Google Gemini', icon: <ProviderIcon provider="gemini" size={24} /> },
+    { value: 'voyage', label: 'Voyage AI', icon: <ProviderIcon provider="voyage" size={24} /> },
+    { value: 'jina', label: 'Jina AI', icon: <ProviderIcon provider="jina" size={24} /> },
+    { value: 'openrouter', label: 'OpenRouter', icon: <ProviderIcon provider="openrouter" size={24} /> }
   ]
 
   return (
-    <ConfigCard
-      title="Embeddings"
-      description="Configure the vector model used when files are ingested and searched."
-      status={<StatusPill tone={config?.is_configured ? 'ok' : 'warn'}>{config?.is_configured ? 'Ready' : 'Review'}</StatusPill>}
-      action={<ToggleSwitch enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
-    >
-      <div className="grid gap-4">
-        <div className="grid gap-3 md:grid-cols-[250px_minmax(0,1fr)]">
-          <Field label="Provider">
-            <CustomSelect value={form.provider} options={providerOptions} onChange={chooseProvider} />
-          </Field>
-          <Field label="Base URL">
-            <TextInput value={form.base_url} onChange={(event) => update('base_url', event.target.value)} placeholder="http://localhost:8082/v1" />
-          </Field>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
-          <Field label="Model">
-            <ModelCombobox value={form.model} options={suggestions} onChange={(model) => update('model', model)} placeholder="text-embedding-3-small" />
-          </Field>
-          <ProviderKeyField
-            ownProvider={ownProvider}
-            missingProviderName={MISSING_NAMES[form.provider]}
-            useOwnKey={useOwnKey}
-            onUseOwnKey={(use) => {
-              setUseOwnKey(use)
-              setDirty(true)
-              setTesting('idle')
-            }}
-            apiKey={form.api_key}
-            onApiKey={(key) => update('api_key', key)}
-            hasStoredKey={Boolean(config?.has_api_key)}
-            emptyPlaceholder="Optional local"
-          />
-        </div>
-
-        {changesModel && (
-          <div className="flex gap-3 rounded-lg border border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/8 px-3.5 py-3">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px shrink-0" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 8v5M12 16.5v.01" />
-            </svg>
-            <div className="min-w-0">
-              <div className="text-[12.5px] font-semibold text-[var(--text-primary)]">Documents already indexed use {config?.model}</div>
-              <p className="m-0 mt-0.5 text-[12px] leading-[18px] text-[var(--text-muted)]">
-                Once saved, their vectors will not match this model: the search by meaning is wrong until you make them again (a button appears after saving). The search by words keeps working.
-              </p>
-            </div>
+    <>
+      {testing === 'ok' && <Notice tone="ok">{`Connected in ${latency ?? 0} ms`}</Notice>}
+      {testing === 'error' && <Notice tone="error">{testError ?? 'Connection failed.'}</Notice>}
+      <SettingsCard
+        title="Embeddings"
+        badge={<StatusBadge tone={config?.is_configured ? 'ok' : 'warn'}>{config?.is_configured ? 'Ready' : 'Review'}</StatusBadge>}
+        action={<Toggle label="Use embeddings" enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
+      >
+        <SettingRow title="Provider">
+          <div className="w-[230px]">
+            <SelectField value={form.provider} options={providerOptions} onChange={chooseProvider} />
           </div>
-        )}
-
+        </SettingRow>
+        <SettingRow title="Address">
+          <TextField label="Base URL" value={form.base_url} onChange={(value) => update('base_url', value)} placeholder="http://localhost:8082/v1" mono width={300} />
+        </SettingRow>
+        <SettingRow title="Model">
+          <div className="w-[300px]">
+            <ModelCombobox value={form.model} options={suggestions} onChange={(model) => update('model', model)} placeholder="text-embedding-3-small" />
+          </div>
+        </SettingRow>
+        <ProviderKeyField
+          ownProvider={ownProvider}
+          missingProviderName={MISSING_NAMES[form.provider]}
+          useOwnKey={useOwnKey}
+          onUseOwnKey={(use) => {
+            setUseOwnKey(use)
+            setDirty(true)
+            setTesting('idle')
+          }}
+          apiKey={form.api_key}
+          onApiKey={(key) => update('api_key', key)}
+          hasStoredKey={Boolean(config?.has_api_key)}
+          emptyPlaceholder="Optional"
+        />
+        {changesModel && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-primary)]">Indexed documents use {config?.model}. After saving, make their vectors again.</div>}
         {isFreeModel(form.model) && <FreeModelNote what="embedding" />}
-
         <ReembedPanel config={config} unsaved={dirty} onDone={refreshConfig} />
-
-        <ResultMessage state={testing} error={testError} latency={latency} />
-
-        <div className="flex flex-wrap items-center gap-2">
+        <SettingRow title=" ">
           {(form.provider === 'tei' || form.provider === 'ollama') && (
-            <SoftButton type="button" onClick={() => void detectModels()} disabled={detecting || !form.base_url}>
+            <ActionButton type="button" onClick={() => void detectModels()} disabled={detecting || !form.base_url}>
               {detecting ? 'Detecting...' : 'Detect models'}
-            </SoftButton>
+            </ActionButton>
           )}
-          <SoftButton type="button" onClick={() => void test()} disabled={!form.base_url || !form.model || testing === 'running'}>
+          <ActionButton type="button" onClick={() => void test()} disabled={!form.base_url || !form.model || testing === 'running'}>
             {testing === 'running' ? 'Testing...' : 'Test'}
-          </SoftButton>
-          <SoftButton type="button" tone={dirty ? 'primary' : 'success'} onClick={() => void save()} disabled={!dirty || saving} className="ml-auto">
+          </ActionButton>
+          <ActionButton type="button" tone={dirty ? 'primary' : 'default'} onClick={() => void save()} disabled={!dirty || saving}>
             {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
-          </SoftButton>
-        </div>
-      </div>
-    </ConfigCard>
+          </ActionButton>
+        </SettingRow>
+      </SettingsCard>
+    </>
   )
 }
