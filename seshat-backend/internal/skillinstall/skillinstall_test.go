@@ -2,9 +2,11 @@ package skillinstall
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	skillsloader "github.com/KPO-Tech/seshat-runtime/pkg/skills"
@@ -20,26 +22,71 @@ func write(t *testing.T, path, text string) {
 	}
 }
 
-// pretendPython lets the tests run on a machine with no Python: the test binary stands for it, and the commands it would run are recorded.
-func pretendPython(t *testing.T) *[][]string {
+// pretendMachine lets the tests run on a machine with no Python, no uv and no Node: the test binary stands for the interpreter, and the
+// commands that would run are recorded. fail may refuse some of them; uv is the program found as uv, or "" for a machine that has none.
+func pretendMachine(t *testing.T, uv string, fail func(line string) error) *recorder {
 	t.Helper()
 	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv(EnvPython, exe)
-	var calls [][]string
-	old := runCommand
+	rec := &recorder{}
+	oldRun, oldUV := runCommand, findUV
 	runCommand = func(_ context.Context, _ string, _ []string, name string, args ...string) (string, error) {
-		calls = append(calls, append([]string{name}, args...))
-		if len(args) > 0 && args[0] == "-c" {
-			return "3 12 1", nil
+		call := append([]string{name}, args...)
+		rec.add(call)
+		if len(args) > 0 && args[0] == "-c" && strings.Contains(args[1], "sys.version_info") {
+			return "3 12 1"+"\n"+"/pretend/python", nil
+		}
+		if fail != nil {
+			return "", fail(strings.Join(call, " "))
 		}
 		return "", nil
 	}
-	t.Cleanup(func() { runCommand = old })
-	return &calls
+	findUV = func() (string, bool) { return uv, uv != "" }
+	t.Cleanup(func() { runCommand, findUV = oldRun, oldUV })
+	return rec
 }
+
+// recorder keeps the commands of a test; the Python and the Node parts run at the same time, so it is locked.
+type recorder struct {
+	mu    sync.Mutex
+	calls [][]string
+}
+
+func (r *recorder) add(call []string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.calls = append(r.calls, call)
+}
+
+// lines gives each command as one line.
+func (r *recorder) lines() []string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := make([]string, len(r.calls))
+	for i, call := range r.calls {
+		out[i] = strings.Join(call, " ")
+	}
+	return out
+}
+
+// ran reports whether a command containing all the parts was run.
+func (r *recorder) ran(parts ...string) bool {
+	for _, line := range r.lines() {
+		all := true
+		for _, part := range parts {
+			all = all && strings.Contains(line, part)
+		}
+		if all {
+			return true
+		}
+	}
+	return false
+}
+
+func pretendPython(t *testing.T) *recorder { return pretendMachine(t, "", nil) }
 
 func TestDetectReadsTheRequirementsOfTheChosenSkillsOnly(t *testing.T) {
 	pretendPython(t)
@@ -98,13 +145,18 @@ func TestDetectListsNodePackages(t *testing.T) {
 	}
 }
 
-func TestEnvironmentMakesTheEnvironmentAndRecordsIt(t *testing.T) {
-	calls := pretendPython(t)
-	root := t.TempDir()
-	envDir := filepath.Join(t.TempDir(), "env")
+func skillRepo(t *testing.T) (root, envDir string, spec Spec) {
+	t.Helper()
+	root = t.TempDir()
+	envDir = filepath.Join(t.TempDir(), "env")
 	write(t, filepath.Join(root, "skills", "a", "SKILL.md"), "---\nname: a\n---\n")
 	write(t, filepath.Join(root, "skills", "a", "requirements.txt"), "requests\n")
-	spec := Spec{Include: []string{"a"}, PythonPackages: []string{"polars"}}
+	return root, envDir, Spec{Include: []string{"a"}, PythonPackages: []string{"polars"}}
+}
+
+func TestEnvironmentMakesTheEnvironmentAndRecordsIt(t *testing.T) {
+	rec := pretendPython(t)
+	root, envDir, spec := skillRepo(t)
 
 	if err := Environment(context.Background(), root, envDir, spec, Detect(root, spec)); err != nil {
 		t.Fatal(err)
@@ -113,15 +165,112 @@ func TestEnvironmentMakesTheEnvironmentAndRecordsIt(t *testing.T) {
 	if !ok || install.Pending || install.Python == "" || len(install.Include) != 1 {
 		t.Fatalf("the install file records the environment, got %+v (ok=%v)", install, ok)
 	}
-	var venv, pipFile, pipPackages bool
-	for _, call := range *calls {
-		line := strings.Join(call, " ")
-		venv = venv || strings.Contains(line, "-m venv")
-		pipFile = pipFile || (strings.Contains(line, "pip install") && strings.Contains(line, "-r"))
-		pipPackages = pipPackages || (strings.Contains(line, "pip install") && strings.HasSuffix(line, "polars"))
+	if !rec.ran("-m venv") {
+		t.Fatalf("the environment is made with venv: %v", rec.lines())
 	}
-	if !venv || !pipFile || !pipPackages {
-		t.Fatalf("venv=%v pip file=%v pip packages=%v in %v", venv, pipFile, pipPackages, *calls)
+	if !rec.ran("pip install", "-r", "requirements.txt", "polars") {
+		t.Fatalf("the files and the packages are installed in one run: %v", rec.lines())
+	}
+}
+
+func TestEnvironmentUsesUVWhenThereIsOne(t *testing.T) {
+	rec := pretendMachine(t, "uvbin", nil)
+	root, envDir, spec := skillRepo(t)
+
+	if err := Environment(context.Background(), root, envDir, spec, Detect(root, spec)); err != nil {
+		t.Fatal(err)
+	}
+	if !rec.ran("uvbin venv --seed --python /pretend/python") {
+		t.Fatalf("uv makes the environment, from the interpreter that was found: %v", rec.lines())
+	}
+	if !rec.ran("uvbin pip install --python", "-r", "requirements.txt", "polars") {
+		t.Fatalf("uv installs the files and the packages in one run: %v", rec.lines())
+	}
+	if rec.ran("-m venv") || rec.ran("-m pip") {
+		t.Fatalf("pip is not used when uv works: %v", rec.lines())
+	}
+}
+
+func TestEnvironmentFallsBackToPipWhenUVCannotMakeTheEnvironment(t *testing.T) {
+	rec := pretendMachine(t, "uvbin", func(line string) error {
+		if strings.HasPrefix(line, "uvbin venv") {
+			return errors.New("uv is broken")
+		}
+		return nil
+	})
+	root, envDir, spec := skillRepo(t)
+
+	if err := Environment(context.Background(), root, envDir, spec, Detect(root, spec)); err != nil {
+		t.Fatal(err)
+	}
+	if !rec.ran("-m venv") || !rec.ran("-m pip install") {
+		t.Fatalf("pip takes over: %v", rec.lines())
+	}
+}
+
+func TestEnvironmentDoesNotRetryWithPipWhenAPackageCannotBeInstalled(t *testing.T) {
+	rec := pretendMachine(t, "uvbin", func(line string) error {
+		if strings.HasPrefix(line, "uvbin pip install") {
+			return errors.New("no matching distribution")
+		}
+		return nil
+	})
+	root, envDir, spec := skillRepo(t)
+
+	err := Environment(context.Background(), root, envDir, spec, Detect(root, spec))
+	if err == nil || !strings.Contains(err.Error(), "installing the Python packages failed") {
+		t.Fatalf("the failure of the packages is reported, got %v", err)
+	}
+	if rec.ran("-m pip install") {
+		t.Fatalf("pip would fail the same way and cost the time again: %v", rec.lines())
+	}
+	if install, ok := skillsloader.LoadRepoInstall(root); ok && !install.Pending {
+		t.Fatalf("a failed installation is not recorded as ready: %+v", install)
+	}
+}
+
+func TestEnvironmentKeepsAnEnvironmentThatStillWorks(t *testing.T) {
+	rec := pretendPython(t)
+	root, envDir, spec := skillRepo(t)
+	write(t, venvPython(filepath.Join(envDir, "python")), "")
+
+	if err := Environment(context.Background(), root, envDir, spec, Detect(root, spec)); err != nil {
+		t.Fatal(err)
+	}
+	if rec.ran("-m venv") {
+		t.Fatalf("a second attempt keeps what the first one installed: %v", rec.lines())
+	}
+	if !rec.ran("pip install") {
+		t.Fatalf("the packages are installed again, which pip makes cheap: %v", rec.lines())
+	}
+}
+
+func TestEnvironmentMakesPythonAndNodeAndStopsOnTheFirstFailure(t *testing.T) {
+	rec := pretendPython(t)
+	root, envDir, spec := skillRepo(t)
+	write(t, filepath.Join(root, "package.json"), `{"dependencies":{"marked":"^15.0.0"}}`)
+	plan := Detect(root, spec)
+	plan.Node = &NodePlan{Found: true, Packages: []string{"marked"}}
+
+	if err := Environment(context.Background(), root, envDir, spec, plan); err != nil {
+		t.Fatal(err)
+	}
+	install, _ := skillsloader.LoadRepoInstall(root)
+	if install.Python == "" || install.NodeModules == "" {
+		t.Fatalf("both parts are recorded: %+v", install)
+	}
+	if !rec.ran("npm install --ignore-scripts") {
+		t.Fatalf("the Node packages are installed: %v", rec.lines())
+	}
+
+	pretendMachine(t, "", func(line string) error {
+		if strings.HasPrefix(line, "npm install") {
+			return errors.New("registry unreachable")
+		}
+		return nil
+	})
+	if err := Environment(context.Background(), root, filepath.Join(t.TempDir(), "env2"), spec, plan); err == nil || !strings.Contains(err.Error(), "installing the Node packages failed") {
+		t.Fatalf("the failure of one part is the one reported, got %v", err)
 	}
 }
 
