@@ -184,7 +184,7 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
           pdfDocument = await loadPDFDocument({ range: transport, worker: pdfWorker }, 'PDF range render')
         }
         if (cancelled) {
-          void pdfDocument.destroy()
+          void pdfDocument.loadingTask.destroy()
           pdfWorker.destroy()
           return
         }
@@ -213,7 +213,7 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
       cancelled = true
       pdfViewerRef.current = null
       pdfModesRef.current = null
-      void pdfDocument?.destroy().finally(() => pdfWorker?.destroy())
+      void pdfDocument?.loadingTask.destroy().finally(() => pdfWorker?.destroy())
       if (!pdfDocument) pdfWorker?.destroy()
     }
     // Re-open from scratch if the viewed file changes; loadPdfViewerModule/
