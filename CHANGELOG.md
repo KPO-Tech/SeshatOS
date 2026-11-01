@@ -15,6 +15,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 - **The three ways to set up the local models are lighter.** Download recommended, Customize my install and Skip for now are one line each, with the radio on the right, instead of tall cards with a paragraph and a badge: the overview below them has the room.
 
+### Fixed
+
+- **The taskbar shows the icon of SeshatOS again when the app is run from the sources.** Since the notifications, the app gave Windows an application id that only the installer's shortcuts carry, and Windows drew a blank page in place of the icon of the window. The id is now set only for the installed app.
+
 ## [0.3.0] - 2026-11-01
 
 ### Highlights
