@@ -76,3 +76,42 @@ export function ChoiceCards<T extends string>({ label, value, options, onChange 
     </div>
   )
 }
+
+type TextFieldProps = { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: 'text' | 'password'; mono?: boolean; width?: number }
+
+/** A single-line input sized for the right side of a row. */
+export function TextField({ label, value, onChange, placeholder, type = 'text', mono = false, width = 260 }: TextFieldProps) {
+  return (
+    <input
+      type={type}
+      value={value}
+      aria-label={label}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      style={{ width }}
+      className={`h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[12.5px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)] ${mono ? 'font-mono' : ''}`}
+    />
+  )
+}
+
+/** A result or an error shown above the cards. */
+export function Notice({ tone, children }: { tone: 'ok' | 'error'; children: ReactNode }) {
+  return (
+    <div className={`rounded-xl border bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold ${tone === 'ok' ? 'border-[var(--accent-success)]/35 text-[var(--accent-success)]' : 'border-[var(--accent-danger)]/40 text-[var(--accent-danger)]'}`}>{children}</div>
+  )
+}
+
+/** A thin bar for a download or an install, with its label and percent. */
+export function ProgressRow({ label, percent }: { label: string; percent: number }) {
+  return (
+    <div className="px-4 py-3">
+      <div className="flex items-center justify-between gap-3 text-[12px] text-[var(--text-muted)]">
+        <span className="truncate">{label}</span>
+        <span>{Math.round(percent)}%</span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">
+        <div className="h-full rounded-full bg-[var(--accent-primary)] transition-[width]" style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
+      </div>
+    </div>
+  )
+}

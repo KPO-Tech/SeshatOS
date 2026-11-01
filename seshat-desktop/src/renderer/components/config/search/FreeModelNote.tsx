@@ -7,9 +7,8 @@ export function isFreeModel(model: string): boolean {
 
 export function FreeModelNote({ what }: { what: 'embedding' | 'rerank' }) {
   return (
-    <p className="m-0 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[12px] leading-[18px] text-[var(--text-muted)]">
-      <span className="font-semibold text-[var(--text-secondary)]">Free models are limited to 50 requests a day</span> (1,000 with credits on the account).{' '}
-      {what === 'embedding' ? 'That is enough to try one, not to index a collection: choose a model that is not free for that. They cost cents.' : 'Each search uses one, so the limit is soon reached: choose a model that is not free for daily use.'}
-    </p>
+    <div className="px-4 py-3 text-[12px] text-[var(--text-muted)]">
+      Free models are limited to 50 requests a day. {what === 'embedding' ? 'Fine to try, not to index a collection.' : 'Each search uses one: pick a paid model for daily use.'}
+    </div>
   )
 }
