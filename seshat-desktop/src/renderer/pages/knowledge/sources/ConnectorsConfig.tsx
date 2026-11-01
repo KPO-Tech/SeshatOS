@@ -13,9 +13,12 @@ import {
   startConnectorOAuth,
   syncConnectorAccount
 } from './connectorsApi'
+import { FolderPlanModal } from './FolderPlanModal'
 import { StaticConnectorForm } from './StaticConnectorForm'
-import { useNavigate } from 'react-router'
+import { YourFolders } from './YourFolders'
 import { AddSourceDialog } from '../collections/AddSourceDialog'
+import { type KnowledgeSource } from '../collections/sourcesApi'
+import { useCollectionList } from '../collections/useCollectionList'
 import { useDeviceMode } from '../useCanManage'
 import type { ConnectAccountPayload, ConnectorAccount, ConnectorDefinition, ConnectorKind, Corpus } from './connectorTypes'
 
@@ -29,8 +32,9 @@ export function ConnectorsConfig() {
   const [filter, setFilter] = useState<'all' | 'Knowledge' | 'Actions'>('all')
   const [openKind, setOpenKind] = useState<string | null>(null)
   const [folderOpen, setFolderOpen] = useState(false)
-  const navigate = useNavigate()
   const mode = useDeviceMode()
+  const folders = useCollectionList()
+  const [analysing, setAnalysing] = useState<KnowledgeSource | null>(null)
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
   async function load() {
@@ -142,6 +146,8 @@ export function ConnectorsConfig() {
     .map((group) => ({ group, items: matching.filter((item) => item.category === group) }))
     .filter((entry) => entry.items.length > 0 || (entry.group === 'Knowledge' && showFolder))
   const opened = connectorCatalog.find((item) => item.kind === openKind) ?? null
+  // The folders already added, shown above what can be added; only on this computer, and only for what the search keeps.
+  const myFolders = mode === 'standalone' && (filter === 'all' || filter === 'Knowledge') ? folders.sources.filter((source) => !needle || `${source.name} ${source.root}`.toLowerCase().includes(needle)) : []
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-4">
@@ -194,10 +200,23 @@ export function ConnectorsConfig() {
 
       {loading ? (
         <div className="flex flex-1 items-center justify-center text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
-      ) : groups.length === 0 ? (
+      ) : groups.length === 0 && myFolders.length === 0 ? (
         <div className="flex flex-1 items-center justify-center pb-16 text-[13px] font-semibold text-[var(--text-muted)]">No sources match your search.</div>
       ) : (
         <div className="no-scrollbar mt-5 min-h-0 flex-1 space-y-7 overflow-y-auto pb-8">
+          {myFolders.length > 0 && (
+            <div>
+              <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                Your folders <span className="font-normal text-[var(--text-muted)]">{myFolders.length}</span>
+              </h2>
+              <YourFolders
+                sources={myFolders}
+                onAnalyse={setAnalysing}
+                onChanged={folders.reload}
+                onError={(text) => setMessage({ tone: 'error', text })}
+              />
+            </div>
+          )}
           {groups.map(({ group, items }) => (
             <div key={group}>
               <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{group}</h2>
@@ -235,12 +254,15 @@ export function ConnectorsConfig() {
       {folderOpen && (
         <AddSourceDialog
           onClose={() => setFolderOpen(false)}
-          onAdded={() => {
+          onAdded={async (source) => {
             setFolderOpen(false)
-            navigate('/knowledge/collections')
+            await folders.reload()
+            setAnalysing(source)
           }}
         />
       )}
+
+      {analysing && <FolderPlanModal source={analysing} onClose={() => setAnalysing(null)} onCreated={() => void folders.reload()} />}
 
       {opened && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-8 py-8 backdrop-blur-sm" onMouseDown={() => setOpenKind(null)}>

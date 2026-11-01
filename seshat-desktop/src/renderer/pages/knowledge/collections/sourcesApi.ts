@@ -37,9 +37,10 @@ export async function removeSource(id: string): Promise<void> {
   await api.delete(`/knowledge/sources/${encodeURIComponent(id)}`)
 }
 
-/** The id the default source goes by in the address of its page: the collections made in the app have no source id. */
+/** The id the default source goes by in the address of its collections: the collections made in the app have no source id. */
 export const DEFAULT_SOURCE_ID = 'seshat'
 
+/** The collections of one source: the list of Collections, filtered by it. */
 export function sourcePath(sourceId: string): string {
-  return `/knowledge/collections/source/${encodeURIComponent(sourceId)}`
+  return `/knowledge/collections?source=${encodeURIComponent(sourceId)}`
 }

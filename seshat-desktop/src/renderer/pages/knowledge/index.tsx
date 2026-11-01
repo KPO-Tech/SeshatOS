@@ -1,13 +1,19 @@
 import type { ReactNode } from 'react'
-import { Navigate, Route, Routes } from 'react-router'
+import { Navigate, Route, Routes, useParams } from 'react-router'
 import { AskPage } from './ask/AskPage'
 import { CollectionPage } from './collections/CollectionPage'
 import { CollectionsPage } from './collections/CollectionsPage'
-import { SourcePage } from './collections/SourcePage'
+import { sourcePath } from './collections/sourcesApi'
 import { SearchPage } from './search/SearchPage'
 import { SourcesPage } from './sources/SourcesPage'
 import { useCanManageKnowledge } from './useCanManage'
 import './knowledge.css'
+
+// The page of a source is the list of collections filtered by it: the old address still leads there.
+function SourceRedirect() {
+  const { sourceId = '' } = useParams()
+  return <Navigate to={sourcePath(sourceId)} replace />
+}
 
 // The Knowledge platform, opened from the Store. Its navigation lives in the sidebar (see components/KnowledgeNav.tsx), so this is
 // only the page.
@@ -23,7 +29,7 @@ export function KnowledgePage() {
         <Route index element={<AskPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="collections" element={<CollectionsPage />} />
-        <Route path="collections/source/:sourceId" element={<SourcePage />} />
+        <Route path="collections/source/:sourceId" element={<SourceRedirect />} />
         <Route path="collections/:id" element={<CollectionPage />} />
         <Route path="sources" element={manage(<SourcesPage />)} />
         <Route path="*" element={<Navigate to="/knowledge" replace />} />
