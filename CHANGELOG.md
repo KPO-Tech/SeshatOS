@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **Settings has a Skills page.** It replaces Skill repositories: a card to add a repository by its Git URL and a card of what is installed, with the count of skills. The Featured repositories list is gone: the Skills page already offers them.
 - **Audio settings are redone.** Three tabs (Dictation, Voice, Provider), cards with the control on the right, one Save button with the unsaved state next to it, and the explanations that only repeated the labels are gone.
 - **The input of the start page is wider.** It now spans the row of examples under it.
 - **The start page is plain.** A message, the input and five examples under it. The orange glow, the lists of recent chats and projects (already in the sidebar) are gone, and the input is a little smaller.

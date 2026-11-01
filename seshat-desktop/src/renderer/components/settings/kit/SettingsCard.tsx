@@ -45,7 +45,7 @@ export function SettingRow({ title, hint, icon, children }: RowProps) {
         {icon && <span className="flex shrink-0 text-[var(--text-secondary)]">{icon}</span>}
         <div className="min-w-0">
           <div className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</div>
-          {hint && <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">{hint}</div>}
+          {hint && <div className="mt-0.5 break-words text-[12px] text-[var(--text-muted)]">{hint}</div>}
         </div>
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
