@@ -15,16 +15,10 @@ type PlanComponent = {
   options: Array<{ id: string; label: string; sizeBytes: number; description: string; recommended: boolean; installed?: boolean }>
 }
 
-const MODES: Array<{ id: SetupMode; title: string; hint: string; icon: ReactNode; badge?: string }> = [
-  {
-    id: 'recommended',
-    title: 'Download the recommended set',
-    hint: 'A light set that runs well on most computers: smart titles, voice dictation and scanned documents.',
-    icon: <Download theme="outline" size={26} />,
-    badge: 'Recommended'
-  },
-  { id: 'custom', title: 'Customize my install', hint: 'Choose what to download, and which model for each.', icon: <SettingTwo theme="outline" size={26} /> },
-  { id: 'skip', title: 'Skip for now', hint: 'Nothing is downloaded. You can add any of it later in Config.', icon: <DoubleRight theme="outline" size={26} /> }
+const MODES: Array<{ id: SetupMode; title: string; icon: ReactNode }> = [
+  { id: 'recommended', title: 'Download recommended', icon: <Download theme="outline" size={22} /> },
+  { id: 'custom', title: 'Customize my install', icon: <SettingTwo theme="outline" size={22} /> },
+  { id: 'skip', title: 'Skip for now', icon: <DoubleRight theme="outline" size={22} /> }
 ]
 
 function ModeCard({ mode, selected, onPick }: { mode: (typeof MODES)[number]; selected: boolean; onPick: () => void }) {
@@ -34,20 +28,15 @@ function ModeCard({ mode, selected, onPick }: { mode: (typeof MODES)[number]; se
       role="radio"
       aria-checked={selected}
       onClick={onPick}
-      className={`relative flex cursor-pointer items-start gap-3.5 rounded-2xl border-2 p-4 text-left transition-colors ${
+      className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition-colors ${
         selected ? 'border-[var(--accent-primary)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)]' : 'border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--surface-panel)_70%,transparent)] hover:border-[var(--border-strong)]'
       }`}
     >
-      <span className="mt-0.5 shrink-0 text-[var(--accent-primary)]">{mode.icon}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block pr-6 text-[15.5px] font-semibold text-[var(--text-primary)]">{mode.title}</span>
-        <span className="mt-1 block text-[13px] leading-[1.5] text-[var(--text-secondary)]">{mode.hint}</span>
-        {mode.badge && <span className="mt-2 inline-block rounded-full bg-[var(--accent-primary)] px-2.5 py-0.5 text-[11px] font-semibold text-white">{mode.badge}</span>}
+      <span className="shrink-0 text-[var(--accent-primary)]">{mode.icon}</span>
+      <span className="min-w-0 flex-1 truncate whitespace-nowrap text-[15px] font-semibold text-[var(--text-primary)]" title={mode.title}>
+        {mode.title}
       </span>
-      <span
-        className={`absolute right-3.5 top-3.5 flex size-5 items-center justify-center rounded-full border-2 ${selected ? 'border-[var(--accent-primary)]' : 'border-[var(--border-strong)]'}`}
-        aria-hidden="true"
-      >
+      <span className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? 'border-[var(--accent-primary)]' : 'border-[var(--border-strong)]'}`} aria-hidden="true">
         {selected && <span className="size-2.5 rounded-full bg-[var(--accent-primary)]" />}
       </span>
     </button>
