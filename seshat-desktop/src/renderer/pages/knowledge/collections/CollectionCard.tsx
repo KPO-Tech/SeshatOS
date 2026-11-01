@@ -1,27 +1,48 @@
-import { FolderOpen } from '@icon-park/react'
+import type { ReactNode } from 'react'
+import { FolderOpen, Play } from '@icon-park/react'
 import type { Collection } from './collectionsApi'
 import { plural } from './fileStatus'
 
 const formatDay = (seconds: number) => (seconds ? new Date(seconds * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '')
 
+/** The frame of a card of Collections: the same as a card of Skills, so the two pages read alike. */
+export function KnowledgeCard({ icon, title, subtitle, description, footer, onOpen }: { icon: ReactNode; title: string; subtitle: string; description: string; footer?: ReactNode; onOpen: () => void }) {
+  return (
+    <div className="flex min-w-0 flex-col rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--accent-primary)]">{icon}</span>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{title}</div>
+          <div className="mt-0.5 truncate text-[11.5px] text-[var(--text-muted)]">{subtitle}</div>
+        </div>
+      </div>
+      <p className="m-0 mt-3 line-clamp-2 min-h-[38px] break-words text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{description}</p>
+      {footer && <div className="mt-3 flex min-h-[26px] flex-wrap gap-1.5 overflow-hidden">{footer}</div>}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="mt-3 flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-transparent text-[13px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]"
+      >
+        <Play theme="outline" size={13} />
+        Open
+      </button>
+    </div>
+  )
+}
+
+export function Tag({ children }: { children: ReactNode }) {
+  return <span className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">{children}</span>
+}
+
 export function CollectionCard({ collection, onOpen }: { collection: Collection; onOpen: () => void }) {
   const documents = collection.fileCount === null ? null : plural(collection.fileCount, 'document', 'documents')
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group flex cursor-pointer flex-col items-start gap-3 rounded-2xl border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] p-4 text-left transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-soft))] hover:shadow-[0_10px_26px_rgba(31,27,23,0.08)]"
-    >
-      <span className="flex size-9 items-center justify-center rounded-[10px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-        <FolderOpen size={18} />
-      </span>
-      <span className="min-w-0 max-w-full">
-        <span className="block truncate text-[14.5px] font-medium text-[var(--text-primary)]">{collection.name}</span>
-        <span className="mt-1 line-clamp-2 min-h-[38px] text-[12.5px] leading-[19px] text-[var(--text-muted)]">{collection.description || 'No description'}</span>
-      </span>
-      <span className="text-[12px] text-[var(--text-muted)]">
-        {[documents, collection.updatedAt ? `Updated ${formatDay(collection.updatedAt)}` : null].filter(Boolean).join('   ')}
-      </span>
-    </button>
+    <KnowledgeCard
+      icon={<FolderOpen theme="outline" size={20} />}
+      title={collection.name}
+      subtitle={[documents, collection.updatedAt ? `Updated ${formatDay(collection.updatedAt)}` : null].filter(Boolean).join(' · ') || 'Collection'}
+      description={collection.description || 'No description'}
+      onOpen={onOpen}
+    />
   )
 }
