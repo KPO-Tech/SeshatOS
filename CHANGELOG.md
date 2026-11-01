@@ -13,7 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
-- **The Collections page of Knowledge is clearer.** An icon and a count of sources, collections and documents under the title, and source cards with their location on one line and their own counts. The Seshat card counted no collection, though some were made in the app: it counts them now.
+- **The Collections page of Knowledge is laid out like Skills and Plugins.** A header with its icon, a search bar, a filter by source with counts, a sort, then the sources and the collections as compact cards, with a button to create a collection. The Seshat source counted no collection, though some were made in the app: it counts them now.
 - **Settings has a Skills page.** It replaces Skill repositories: a card to add a repository by its Git URL and a card of what is installed, with the count of skills. The Featured repositories list is gone: the Skills page already offers them.
 - **Audio settings are redone.** Three tabs (Dictation, Voice, Provider), cards with the control on the right, one Save button with the unsaved state next to it, and the explanations that only repeated the labels are gone.
 - **The input of the start page is wider.** It now spans the row of examples under it.

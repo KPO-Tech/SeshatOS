@@ -1,26 +1,29 @@
-import { FolderOpen } from '@icon-park/react'
+import { FolderOpen, Right } from '@icon-park/react'
 import type { Collection } from './collectionsApi'
 import { plural } from './fileStatus'
 
 const formatDay = (seconds: number) => (seconds ? new Date(seconds * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '')
 
-export function CollectionCard({ collection, onOpen }: { collection: Collection; onOpen: () => void }) {
+/** A collection as a compact card: its name, how many documents it holds and where it comes from. */
+export function CollectionCard({ collection, source, onOpen }: { collection: Collection; source?: string; onOpen: () => void }) {
   const documents = collection.fileCount === null ? null : plural(collection.fileCount, 'document', 'documents')
+  const meta = [documents, source, collection.updatedAt ? formatDay(collection.updatedAt) : null].filter(Boolean).join(' · ')
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="group flex cursor-pointer flex-col items-start gap-3 rounded-2xl border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] p-4 text-left transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-soft))] hover:shadow-[0_10px_26px_rgba(31,27,23,0.08)]"
+      title={collection.description || undefined}
+      className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3 text-left transition-colors hover:bg-[var(--surface-muted)]"
     >
-      <span className="flex size-9 items-center justify-center rounded-[10px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-        <FolderOpen size={18} />
+      <span className="flex size-[34px] shrink-0 items-center justify-center rounded-lg bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
+        <FolderOpen size={17} />
       </span>
-      <span className="min-w-0 max-w-full">
-        <span className="block truncate text-[14.5px] font-medium text-[var(--text-primary)]">{collection.name}</span>
-        <span className="mt-1 line-clamp-2 min-h-[38px] text-[12.5px] leading-[19px] text-[var(--text-muted)]">{collection.description || 'No description'}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-semibold text-[var(--text-primary)]">{collection.name}</span>
+        <span className="mt-0.5 block truncate text-[11.5px] leading-[16px] text-[var(--text-muted)]">{meta}</span>
       </span>
-      <span className="text-[12px] text-[var(--text-muted)]">
-        {[documents, collection.updatedAt ? `Updated ${formatDay(collection.updatedAt)}` : null].filter(Boolean).join('   ')}
+      <span className="shrink-0 text-[var(--text-muted)] opacity-0 transition-opacity group-hover:opacity-100">
+        <Right size={14} />
       </span>
     </button>
   )

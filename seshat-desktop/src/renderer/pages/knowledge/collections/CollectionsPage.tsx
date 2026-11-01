@@ -1,117 +1,199 @@
-import { useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { FolderOpen, Plus, Right } from '@icon-park/react'
+import { Down, FolderOpen, Plus, Search, SortThree } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
+import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { useDeviceMode } from '../useCanManage'
 import { AddSourceDialog } from './AddSourceDialog'
-import { plural } from './fileStatus'
+import { CollectionCard } from './CollectionCard'
+import { CollectionDialog } from './CollectionDialog'
+import { createCollection } from './collectionsApi'
+import { SourceCard } from './SourceCard'
 import { SourceIcon } from './SourceIcon'
 import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
 
-function Pill({ children }: { children: React.ReactNode }) {
-  return <span className="inline-flex h-6 items-center rounded-full bg-[var(--surface-muted)] px-2.5 text-[11.5px] font-medium text-[var(--text-secondary)]">{children}</span>
+type Sort = 'name' | 'recent'
+
+const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3'
+const DEFAULT_NAME = 'Seshat'
+
+function Count({ value, active }: { value: number; active?: boolean }) {
+  return <span className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none ${active ? 'bg-white/25 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{value}</span>
 }
 
-type SourceCardProps = { icon: React.ReactNode; title: string; detail: string; collections: number; documents: number; onOpen: () => void }
-
-function SourceCard({ icon, title, detail, collections, documents, onOpen }: SourceCardProps) {
+function Section({ title, count, children }: { title: string; count: number; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group flex cursor-pointer flex-col items-stretch gap-4 rounded-2xl border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] p-4 text-left transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-soft))] hover:shadow-[0_10px_26px_rgba(31,27,23,0.08)]"
-    >
-      <span className="flex items-start justify-between">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--accent-primary)]">{icon}</span>
-        <span className="text-[var(--text-muted)] opacity-0 transition-opacity group-hover:opacity-100">
-          <Right size={16} />
-        </span>
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-[15px] font-semibold text-[var(--text-primary)]">{title}</span>
-        <span className="mt-0.5 block truncate text-[12.5px] text-[var(--text-muted)]" title={detail}>
-          {detail}
-        </span>
-      </span>
-      <span className="flex flex-wrap gap-1.5">
-        <Pill>{plural(collections, 'collection', 'collections')}</Pill>
-        {documents > 0 && <Pill>{plural(documents, 'document', 'documents')}</Pill>}
-      </span>
-    </button>
+    <section className="mt-6 first:mt-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
+          {title}
+          <Count value={count} />
+        </h2>
+      </div>
+      {children}
+    </section>
   )
 }
 
-// The root of Collections: the places collections come from. The collections themselves are inside each source.
+function Pick({ label, value, items }: { label: string; value: string; items: DropdownItem[] }) {
+  return (
+    <Dropdown
+      label={label}
+      items={items}
+      trigger={({ toggle }) => (
+        <button type="button" onClick={toggle} className="flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+          {value}
+          <Down theme="outline" size={12} />
+        </button>
+      )}
+    />
+  )
+}
+
+// Everything Knowledge can answer from: the sources the collections come from, and the collections themselves, searchable and sorted.
 export function CollectionsPage() {
   const navigate = useNavigate()
   const { collections, sources, loading, failed, reload } = useCollectionList()
   const deviceMode = useDeviceMode()
   const [addingSource, setAddingSource] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [query, setQuery] = useState('')
+  const [scope, setScope] = useState<string>('all')
+  const [sort, setSort] = useState<Sort>('name')
   // Folder sources are kept on this computer: a device connected to an organization takes its collections from the organization's server.
   const canAddSource = deviceMode === 'standalone'
 
   // The collections made in the app have no source id: it is the default source, as on the page of a source.
-  const inSource = (sourceId: string) => collections.filter((c) => c.sourceId === (sourceId === DEFAULT_SOURCE_ID ? '' : sourceId))
-  const documentsIn = (sourceId: string) => inSource(sourceId).reduce((total, c) => total + (c.fileCount ?? 0), 0)
-  const totalDocuments = collections.reduce((total, c) => total + (c.fileCount ?? 0), 0)
+  const idOf = (sourceId: string) => (sourceId === DEFAULT_SOURCE_ID ? '' : sourceId)
+  const inSource = (sourceId: string) => collections.filter((c) => c.sourceId === idOf(sourceId))
+  const sourceName = (sourceId: string) => (sourceId === '' ? DEFAULT_NAME : (sources.find((s) => s.id === sourceId)?.name ?? ''))
+
+  const tabs = [
+    { id: 'all', label: 'All', count: collections.length },
+    { id: DEFAULT_SOURCE_ID, label: DEFAULT_NAME, count: inSource(DEFAULT_SOURCE_ID).length },
+    ...sources.map((s) => ({ id: s.id, label: s.name, count: inSource(s.id).length }))
+  ]
+
+  const shown = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    const list = collections.filter((c) => (scope === 'all' || c.sourceId === idOf(scope)) && (!needle || `${c.name} ${c.description}`.toLowerCase().includes(needle)))
+    return [...list].sort(sort === 'recent' ? (a, b) => b.updatedAt - a.updatedAt || a.name.localeCompare(b.name) : (a, b) => a.name.localeCompare(b.name))
+  }, [collections, query, scope, sort])
+
+  const open = (id: string) => navigate(`/knowledge/collections/${encodeURIComponent(id)}`)
+
+  async function create(name: string, description: string) {
+    const created = await createCollection(name, description)
+    setCreating(false)
+    await reload()
+    open(created.id)
+  }
+
+  const ready = !loading && !failed
 
   return (
-    <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pb-12 pt-10">
-      <div className="mx-auto w-full max-w-[880px]" style={{ animation: 'slide-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-              <FolderOpen theme="filled" size={24} fill="currentColor" />
-            </span>
-            <div className="min-w-0">
-              <h1 className="m-0 text-[30px] font-normal leading-[1.15] tracking-[-0.01em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
-                Collections
-              </h1>
-              {!loading && !failed && (
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  <Pill>{plural(sources.length + 1, 'source', 'sources')}</Pill>
-                  <Pill>{plural(collections.length, 'collection', 'collections')}</Pill>
-                  {totalDocuments > 0 && <Pill>{plural(totalDocuments, 'document', 'documents')}</Pill>}
-                </div>
-              )}
-            </div>
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-5">
+      <div className="flex shrink-0 items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]">
+            <FolderOpen theme="filled" size={24} fill="currentColor" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Collections</h1>
+            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">The documents Seshat answers from.</p>
           </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={() => setCreating(true)} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+            <Plus theme="outline" size={15} />
+            New collection
+          </button>
           {canAddSource && (
-            <button
-              type="button"
-              onClick={() => setAddingSource(true)}
-              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
-            >
-              <Plus size={14} />
+            <button type="button" onClick={() => setAddingSource(true)} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
+              <Plus theme="outline" size={15} />
               Add source
             </button>
           )}
         </div>
+      </div>
 
-        {failed && (
-          <p className="mb-0 mt-8 text-[13px] text-[var(--accent-danger)]" role="alert">
-            The collections could not be read.
-          </p>
+      <div className="relative mt-5 shrink-0">
+        <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-[var(--text-muted)]">
+          <Search theme="outline" size={16} />
+        </span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search collections by name or description..."
+          className="h-10 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
+        />
+      </div>
+
+      <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div role="tablist" className="flex flex-wrap items-center gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={scope === tab.id}
+              onClick={() => setScope(tab.id)}
+              className={`flex h-9 cursor-pointer items-center gap-2 rounded-full border px-4 text-[13px] font-medium ${scope === tab.id ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
+            >
+              {tab.label}
+              <Count value={tab.count} active={scope === tab.id} />
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
+          <SortThree theme="outline" size={14} />
+          Sort by
+          <Pick
+            label="Sort by"
+            value={sort === 'name' ? 'Name' : 'Recently updated'}
+            items={[
+              { id: 'name', label: 'Name', checked: sort === 'name', onSelect: () => setSort('name') },
+              { id: 'recent', label: 'Recently updated', checked: sort === 'recent', onSelect: () => setSort('recent') }
+            ]}
+          />
+        </div>
+      </div>
+
+      {failed && (
+        <p className="mb-0 mt-4 shrink-0 text-[12.5px] font-semibold text-[var(--accent-danger)]" role="alert">
+          The collections could not be read.
+        </p>
+      )}
+
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pb-8">
+        {ready && scope === 'all' && !query.trim() && (
+          <Section title="Sources" count={sources.length + 1}>
+            <div className={GRID}>
+              <SourceCard icon={<SeshatLogo size={18} />} title={DEFAULT_NAME} detail="Made in the app" collections={inSource(DEFAULT_SOURCE_ID).length} onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))} />
+              {sources.map((source) => (
+                <SourceCard key={source.id} icon={<SourceIcon icon={source.icon} size={17} />} title={source.name} detail={source.root} collections={inSource(source.id).length} onOpen={() => navigate(sourcePath(source.id))} />
+              ))}
+            </div>
+          </Section>
         )}
 
-        {!loading && !failed && (
-          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <SourceCard
-              icon={<SeshatLogo size={20} />}
-              title="Seshat"
-              detail="Made in the app"
-              collections={inSource(DEFAULT_SOURCE_ID).length}
-              documents={documentsIn(DEFAULT_SOURCE_ID)}
-              onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
-            />
-            {sources.map((source) => (
-              <SourceCard key={source.id} icon={<SourceIcon icon={source.icon} />} title={source.name} detail={source.root} collections={inSource(source.id).length} documents={documentsIn(source.id)} onOpen={() => navigate(sourcePath(source.id))} />
-            ))}
-          </div>
+        {ready && (
+          <Section title="Collections" count={shown.length}>
+            {shown.length === 0 ? (
+              <p className="m-0 py-6 text-[13px] text-[var(--text-muted)]">{collections.length === 0 ? 'No collection yet. Create one, or add a source to import some.' : 'No collection matches.'}</p>
+            ) : (
+              <div className={GRID}>
+                {shown.map((collection) => (
+                  <CollectionCard key={collection.id} collection={collection} source={scope === 'all' ? sourceName(collection.sourceId) : undefined} onOpen={() => open(collection.id)} />
+                ))}
+              </div>
+            )}
+          </Section>
         )}
       </div>
 
+      {creating && <CollectionDialog title="New collection" submitLabel="Create" onSubmit={create} onClose={() => setCreating(false)} />}
       {addingSource && (
         <AddSourceDialog
           onClose={() => setAddingSource(false)}
@@ -121,6 +203,6 @@ export function CollectionsPage() {
           }}
         />
       )}
-    </div>
+    </section>
   )
 }
