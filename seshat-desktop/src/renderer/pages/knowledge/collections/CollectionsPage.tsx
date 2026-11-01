@@ -1,65 +1,30 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { Down, FolderOpen, Plus, Right, Search, SortThree } from '@icon-park/react'
+import { FolderOpen, Plus, Search } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
-import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { useDeviceMode } from '../useCanManage'
-import { CollectionCard } from './CollectionCard'
+import { CollectionCard, KnowledgeCard } from './CollectionCard'
 import { AddSourceDialog } from './AddSourceDialog'
-import { SourceIconPicker } from './SourceIcon'
-import { DEFAULT_SOURCE_ID, sourcePath, updateSource } from './sourcesApi'
+import { plural } from './fileStatus'
+import { SourceIcon } from './SourceIcon'
+import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
-
-type Sort = 'name' | 'recent'
 
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3'
 
-function Count({ value, active }: { value: number; active?: boolean }) {
-  return <span className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none ${active ? 'bg-white/25 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{value}</span>
-}
-
-function SourceGroup({ icon, name, detail, count, onOpen, children }: { icon: ReactNode; name: string; detail: string; count: number; onOpen: () => void; children: ReactNode }) {
+function Section({ title, count, children }: { title: string; count: number; children: ReactNode }) {
   return (
     <section className="mt-6 first:mt-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {icon}
-          <div className="min-w-0">
-            <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
-              <span className="truncate">{name}</span>
-              <Count value={count} />
-            </h2>
-            <p className="m-0 mt-0.5 truncate text-[12px] text-[var(--text-muted)]" title={detail}>
-              {detail}
-            </p>
-          </div>
-        </div>
-        <button type="button" onClick={onOpen} className="flex shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] font-medium text-[var(--accent-primary)] hover:underline">
-          Open source
-          <Right theme="outline" size={13} />
-        </button>
-      </div>
+      <h2 className="m-0 mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
+        {title}
+        <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] leading-none text-[var(--text-muted)]">{count}</span>
+      </h2>
       {children}
     </section>
   )
 }
 
-function Pick({ label, value, items }: { label: string; value: string; items: DropdownItem[] }) {
-  return (
-    <Dropdown
-      label={label}
-      items={items}
-      trigger={({ toggle }) => (
-        <button type="button" onClick={toggle} className="flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
-          {value}
-          <Down theme="outline" size={12} />
-        </button>
-      )}
-    />
-  )
-}
-
-// The root of Collections: the sources the collections come from, and the collections themselves, laid out like the Skills page.
+// The root of Collections: the places collections come from, as cards. The collections themselves are inside each source, one click away.
 export function CollectionsPage() {
   const navigate = useNavigate()
   const { collections, sources, loading, failed, reload } = useCollectionList()
@@ -67,48 +32,20 @@ export function CollectionsPage() {
   const [addingSource, setAddingSource] = useState(false)
   // Folder sources are kept on this computer: a device connected to an organization takes its collections from the organization's server.
   const canAddSource = deviceMode === 'standalone'
-
   const [query, setQuery] = useState('')
-  const [scope, setScope] = useState('all')
-  const [sort, setSort] = useState<Sort>('name')
 
   // The collections made in the app have no source id: it is the default source, as on the page of a source.
-  const idOf = (sourceId: string) => (sourceId === DEFAULT_SOURCE_ID ? '' : sourceId)
-  const countIn = (sourceId: string) => collections.filter((c) => c.sourceId === idOf(sourceId)).length
+  const countIn = (sourceId: string) => collections.filter((c) => c.sourceId === (sourceId === DEFAULT_SOURCE_ID ? '' : sourceId)).length
 
   const needle = query.trim().toLowerCase()
-  const order = (list: typeof collections) => [...list].sort((a, b) => (sort === 'recent' ? b.updatedAt - a.updatedAt || a.name.localeCompare(b.name) : a.name.localeCompare(b.name)))
-  // Each source with its own collections. A search keeps the collections that match, or all of them when the source itself matches.
-  const groups = useMemo(() => {
-    const all = [
-      { id: DEFAULT_SOURCE_ID, name: 'Seshat', detail: 'The collections made and filled in the app.', icon: null as string | null },
-      ...sources.map((source) => ({ id: source.id, name: source.name, detail: source.root, icon: source.icon as string | null }))
-    ]
-    return all
-      .filter((group) => scope === 'all' || scope === group.id)
-      .map((group) => {
-        const own = collections.filter((c) => c.sourceId === (group.id === DEFAULT_SOURCE_ID ? '' : group.id))
-        const sourceMatches = !needle || `${group.name} ${group.detail}`.toLowerCase().includes(needle)
-        const shown = order(sourceMatches ? own : own.filter((c) => `${c.name} ${c.description}`.toLowerCase().includes(needle)))
-        return { ...group, total: own.length, shown, visible: sourceMatches || shown.length > 0 }
-      })
-      .filter((group) => group.visible)
-  }, [collections, sources, scope, needle, sort])
-
-  async function changeIcon(sourceId: string, icon: string) {
-    try {
-      await updateSource(sourceId, { icon })
-      await reload()
-    } catch {
-      // The icon stays as it was; the page of the source says why when it fails there.
-    }
-  }
-
-  const pills: Array<{ id: string; label: string; count: number }> = [
-    { id: 'all', label: 'All', count: collections.length },
-    { id: DEFAULT_SOURCE_ID, label: 'Seshat', count: countIn(DEFAULT_SOURCE_ID) },
-    ...sources.map((source) => ({ id: source.id, label: source.name, count: countIn(source.id) }))
-  ]
+  const showDefault = !needle || 'seshat'.includes(needle)
+  const shownSources = sources.filter((s) => !needle || `${s.name} ${s.root}`.toLowerCase().includes(needle))
+  const sourceCount = (showDefault ? 1 : 0) + shownSources.length
+  // A search also lists the collections that match, since a source is not the only way to find one.
+  const matching = useMemo(
+    () => (needle ? collections.filter((c) => `${c.name} ${c.description}`.toLowerCase().includes(needle)).sort((a, b) => a.name.localeCompare(b.name)) : []),
+    [collections, needle]
+  )
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-5">
@@ -119,7 +56,7 @@ export function CollectionsPage() {
           </span>
           <div className="min-w-0">
             <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Collections</h1>
-            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">The documents your agents can search, grouped by the source they come from.</p>
+            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">Choose a source to see its collections.</p>
           </div>
         </div>
         {canAddSource && (
@@ -142,36 +79,6 @@ export function CollectionsPage() {
         />
       </div>
 
-      <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-2">
-        <div role="tablist" className="flex flex-wrap items-center gap-2">
-          {pills.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={scope === item.id}
-              onClick={() => setScope(item.id)}
-              className={`flex h-9 cursor-pointer items-center gap-2 rounded-full border px-4 text-[13px] font-medium ${scope === item.id ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
-            >
-              {item.label}
-              <Count value={item.count} active={scope === item.id} />
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
-          <SortThree theme="outline" size={14} />
-          Sort by
-          <Pick
-            label="Sort by"
-            value={sort === 'name' ? 'Name' : 'Recently updated'}
-            items={[
-              { id: 'name', label: 'Name', checked: sort === 'name', onSelect: () => setSort('name') },
-              { id: 'recent', label: 'Recently updated', checked: sort === 'recent', onSelect: () => setSort('recent') }
-            ]}
-          />
-        </div>
-      </div>
-
       {failed && (
         <p className="mt-4 shrink-0 text-[12.5px] font-semibold text-[var(--accent-danger)]" role="alert">
           The collections could not be read.
@@ -183,37 +90,46 @@ export function CollectionsPage() {
           <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
         ) : failed ? null : (
           <>
-            {groups.length === 0 ? (
-              <p className="m-0 py-6 text-[13px] text-[var(--text-muted)]">{collections.length === 0 && sources.length === 0 ? 'No collection yet. Open a source to make one.' : 'Nothing matches.'}</p>
-            ) : (
-              groups.map((group) => (
-                <SourceGroup
-                  key={group.id}
-                  name={group.name}
-                  detail={group.detail}
-                  count={group.total}
-                  onOpen={() => navigate(sourcePath(group.id))}
-                  icon={
-                    group.id === DEFAULT_SOURCE_ID ? (
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
-                        <SeshatLogo size={22} />
-                      </span>
-                    ) : (
-                      <SourceIconPicker value={group.icon ?? ''} onChange={(icon) => void changeIcon(group.id, icon)} />
-                    )
-                  }
-                >
-                  {group.shown.length === 0 ? (
-                    <p className="m-0 text-[13px] text-[var(--text-muted)]">No collection in this source yet.</p>
-                  ) : (
-                    <div className={GRID}>
-                      {group.shown.map((collection) => (
-                        <CollectionCard key={collection.id} collection={collection} onOpen={() => navigate(`/knowledge/collections/${encodeURIComponent(collection.id)}`)} />
-                      ))}
-                    </div>
+            <Section title="Sources" count={sourceCount}>
+              {sourceCount === 0 ? (
+                <p className="m-0 py-2 text-[13px] text-[var(--text-muted)]">No source matches.</p>
+              ) : (
+                <div className={GRID}>
+                  {showDefault && (
+                    <KnowledgeCard
+                      icon={<SeshatLogo size={22} />}
+                      title="Seshat"
+                      subtitle={plural(countIn(DEFAULT_SOURCE_ID), 'collection', 'collections')}
+                      description="The collections made and filled in the app."
+                      onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
+                    />
                   )}
-                </SourceGroup>
-              ))
+                  {shownSources.map((source) => (
+                    <KnowledgeCard
+                      key={source.id}
+                      icon={<SourceIcon icon={source.icon} size={20} />}
+                      title={source.name}
+                      subtitle={plural(countIn(source.id), 'collection', 'collections')}
+                      description={source.root}
+                      onOpen={() => navigate(sourcePath(source.id))}
+                    />
+                  ))}
+                </div>
+              )}
+            </Section>
+
+            {needle !== '' && (
+              <Section title="Collections" count={matching.length}>
+                {matching.length === 0 ? (
+                  <p className="m-0 py-2 text-[13px] text-[var(--text-muted)]">No collection matches.</p>
+                ) : (
+                  <div className={GRID}>
+                    {matching.map((collection) => (
+                      <CollectionCard key={collection.id} collection={collection} onOpen={() => navigate(`/knowledge/collections/${encodeURIComponent(collection.id)}`)} />
+                    ))}
+                  </div>
+                )}
+              </Section>
             )}
           </>
         )}
