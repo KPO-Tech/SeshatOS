@@ -80,6 +80,11 @@ export function SkillInstallDialog({ name, plan, onConfirm, onCancel }: Props) {
               <p className="m-0 mt-1.5 text-[11.5px] text-[var(--text-muted)]">Install scripts of the packages are not run.</p>
             </Block>
           )}
+          {plan.notes?.map((note) => (
+            <p key={note} className="m-0 rounded-lg border border-[var(--border-soft)] px-3 py-2 text-[12px] leading-5 text-[var(--text-secondary)]">
+              {note}
+            </p>
+          ))}
           {plan.warnings?.map((warning) => (
             <p key={warning} className="m-0 rounded-lg border border-[var(--accent-warning,var(--border-strong))] px-3 py-2 text-[12px] leading-5 text-[var(--text-secondary)]">
               {warning}

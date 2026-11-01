@@ -15,6 +15,8 @@ import (
 type Plan struct {
 	Python *PythonPlan `json:"python,omitempty"`
 	Node   *NodePlan   `json:"node,omitempty"`
+	// Notes are what will be downloaded besides the packages, said before the person agrees.
+	Notes []string `json:"notes,omitempty"`
 	// Warnings are things to know before agreeing (a licence, a tool that is needed and not installed here).
 	Warnings []string `json:"warnings,omitempty"`
 }
@@ -210,6 +212,9 @@ func Detect(repoRoot string, spec Spec) Plan {
 			plan.Warnings = append(plan.Warnings, "Python "+minimum+" or newer was not found on this machine: install it, then try again.")
 		}
 		plan.Python = python
+		if _, found := findUV(); !found && uvCanBeDownloaded() {
+			plan.Notes = append(plan.Notes, "uv, a fast installer of Python packages (about 16 MB), will be downloaded from its official releases and checked before it is used.")
+		}
 		for _, name := range packages {
 			if note, ok := licenceNotes[strings.ToLower(name)]; ok {
 				plan.Warnings = append(plan.Warnings, note)

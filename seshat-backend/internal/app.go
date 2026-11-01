@@ -31,10 +31,12 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/tasks"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
 	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
 	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
 )
 
@@ -201,6 +203,7 @@ type App struct {
 	Skills      *skills.Service
 	Agents      *agents.Service
 	Pulls       *pulls.Service
+	Tasks       *tasks.Manager
 
 	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
@@ -326,6 +329,7 @@ func NewApp(deps Dependencies) *App {
 		Skills:      skillsService,
 		Agents:      agentsService,
 		Pulls:       pulls.NewService(pulls.ChainCredential(connectorToken)),
+		Tasks:       tasks.NewManager(runtimepath.Join("", "tasks"), 2),
 
 		KnowledgeGDrive:         deps.KnowledgeGDrive,
 		KnowledgeGDriveAccounts: deps.KnowledgeGDriveAccounts,

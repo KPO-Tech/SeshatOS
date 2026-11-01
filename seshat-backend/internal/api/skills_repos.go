@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/skillregistry"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skillinstall"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/tasks"
 	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 	skillsloader "github.com/KPO-Tech/seshat-runtime/pkg/skills"
 	"github.com/KPO-Tech/seshat-runtime/pkg/skills/skillrepos"
@@ -284,6 +286,10 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 
 	// Check it's not already installed. An installation the person left unfinished (they did not agree to the plan) is started again.
 	target := filepath.Join(reposDir, repo.Name)
+	if a.skillInstallRunning(repo.Name) {
+		writeBackendError(w, bkerr.Conflict(fmt.Sprintf("repo %q is being installed", repo.Name), nil))
+		return
+	}
 	if pending, _ := skillsloader.LoadRepoInstall(target); pending.Pending {
 		_ = os.RemoveAll(target)
 		_ = os.RemoveAll(skillEnvironmentDir(repo.Name))
@@ -378,11 +384,25 @@ func (a *App) handleSkillRepoEnvironment(w http.ResponseWriter, r *http.Request,
 	recorded, _ := skillsloader.LoadRepoInstall(target)
 	spec := skillSpec(a.featuredByName(name), recorded.Include)
 	plan := skillinstall.Detect(target, spec)
-	if err := skillinstall.Environment(r.Context(), target, skillEnvironmentDir(name), spec, plan); err != nil {
-		writeBackendError(w, bkerr.Internal(err.Error(), err))
-		return
+	// The installation goes on in the background, with a context of its own: the request ends at once, and leaving the page or losing the
+	// connection does not stop it. The task says where it is, and can be cancelled.
+	task, _ := a.taskManager().Start(skillInstallTask, name, "Installing "+name, func(ctx context.Context, report *tasks.Reporter) error {
+		return skillinstall.EnvironmentWith(ctx, target, skillEnvironmentDir(name), spec, plan, report)
+	})
+	writeJSON(w, http.StatusAccepted, map[string]any{"name": name, "task": task})
+}
+
+// skillInstallTask is the kind of the task that makes the environment of a skill repository.
+const skillInstallTask = "skill.install"
+
+// skillInstallRunning reports whether the environment of a repository is being made.
+func (a *App) skillInstallRunning(name string) bool {
+	for _, task := range a.taskManager().List() {
+		if task.Kind == skillInstallTask && task.Subject == name && task.Status.Active() {
+			return true
+		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"name": name, "ready": true})
+	return false
 }
 
 // handleSkillRepoByNameDispatch routes DELETE /api/v1/skills/repos/{name}.
@@ -418,6 +438,10 @@ func (a *App) handleSkillRepoUninstall(w http.ResponseWriter, r *http.Request, n
 
 	if _, err := os.Stat(target); os.IsNotExist(err) {
 		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
+		return
+	}
+	if a.skillInstallRunning(name) {
+		writeBackendError(w, bkerr.Conflict(fmt.Sprintf("%q is being installed: cancel the installation first", name), nil))
 		return
 	}
 
