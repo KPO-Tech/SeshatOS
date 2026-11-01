@@ -40,7 +40,7 @@ export function SearchBar({ value, busy, autoFocus, placeholder = 'Search your d
     <form
       onSubmit={submit}
       role="search"
-      className="flex h-11 w-full items-center gap-2.5 rounded-[14px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] pl-3.5 pr-1.5 transition-[border-color,box-shadow] duration-[160ms] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_16%,transparent)]"
+      className="flex h-11 w-full items-center gap-2.5 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-3.5 pr-1.5 transition-[border-color,box-shadow] duration-[160ms] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_16%,transparent)]"
     >
       <Search size={17} className="shrink-0 text-app-text-muted" />
       <input

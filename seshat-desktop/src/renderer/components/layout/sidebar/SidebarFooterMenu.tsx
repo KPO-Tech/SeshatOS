@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Down, Logout, Magic, SettingTwo, Shield } from '@icon-park/react'
+import { Down, Gift, Logout, Magic, SettingTwo, Shield } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 import { edition } from '@renderer/lib/edition'
+import { OPEN_WHATS_NEW_EVENT } from '@renderer/lib/whatsNew'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -76,6 +77,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
           >
             <MenuButton icon={<SettingTwo theme="outline" size={14} />} label="Settings" onClick={() => pick(() => go('settings'))} />
             <MenuSwitch icon={<Magic theme="outline" size={14} />} label="Generative UI" hint="Tables, figures and steps drawn in answers. From the next message." on={generativeOn} disabled={busy || !prefs} onClick={toggleGenerativeUi} />
+            <MenuButton icon={<Gift theme="outline" size={14} />} label="What's new" onClick={() => pick(() => window.dispatchEvent(new Event(OPEN_WHATS_NEW_EVENT)))} />
             {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label="Admin" disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
             {edition.accounts && (
               <>
