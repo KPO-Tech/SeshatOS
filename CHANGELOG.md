@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **Every page of Settings has the same look.** Documents, Search, Web search, Images, Providers, Models, Titles, Storage, Environment, MCP servers, Memories, Data controls, Cloud, Answers and About now use the shared header, cards and rows. The explanations that only repeated the labels are gone, and the web search providers are a grid of cards.
 - **The Collections page of Knowledge has a search bar and a filter.** The search finds sources and collections, the filter picks a source, and the collections of a search or of a source are listed under the sources. The Seshat source counted no collection, though some were made in the app: it counts them now.
 - **Settings has a Skills page.** It replaces Skill repositories: a card to add a repository by its Git URL and a card of what is installed, with the count of skills. The Featured repositories list is gone: the Skills page already offers them.
 - **Audio settings are redone.** Three tabs (Dictation, Voice, Provider), cards with the control on the right, one Save button with the unsaved state next to it, and the explanations that only repeated the labels are gone.
