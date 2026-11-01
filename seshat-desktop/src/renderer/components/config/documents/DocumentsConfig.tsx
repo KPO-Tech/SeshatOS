@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ActionButton, SettingsPage, SettingsTabs, StatusBadge, type SettingsTab } from '../../settings/kit'
 import { fetchDocumentsSnapshot, type DocumentsSnapshot } from '../knowledge/knowledgeApi'
 import type { SystemStatus } from '../knowledge/knowledgeTypes'
 import { DocumentsOverview } from './DocumentsOverview'
@@ -8,7 +9,7 @@ import { useDocumentReader } from './useDocumentReader'
 const emptySnapshot: DocumentsSnapshot = { documentReader: null, system: null }
 
 type Tab = 'overview' | 'ocr'
-const TABS: Array<{ id: Tab; label: string }> = [
+const TABS: Array<SettingsTab<Tab>> = [
   { id: 'overview', label: 'Overview' },
   { id: 'ocr', label: 'Scanned pages' }
 ]
@@ -34,7 +35,7 @@ export function DocumentsConfig() {
     void load()
   }, [load])
 
-  if (loading) return <div className="text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+  if (loading) return <SettingsPage id="documents">{null}</SettingsPage>
 
   return (
     <Loaded
@@ -54,40 +55,24 @@ export function DocumentsConfig() {
 function Loaded({ snapshot, error, onSaved, onSystemChanged }: { snapshot: DocumentsSnapshot; error: string | null; onSaved: Parameters<typeof useDocumentReader>[0]['onSaved']; onSystemChanged: (system: Partial<SystemStatus>) => void }) {
   const [tab, setTab] = useState<Tab>('overview')
   const reader = useDocumentReader({ config: snapshot.documentReader, system: snapshot.system, onSaved, onSystemChanged })
+  const message = error || reader.saveError
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-soft)]">
-        <div role="tablist" className="flex gap-1">
-          {TABS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === item.id}
-              onClick={() => setTab(item.id)}
-              className={`-mb-px cursor-pointer border-0 border-b-2 bg-transparent px-4 py-2.5 text-[13px] font-medium ${tab === item.id ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-3 pb-2">
-          {reader.saveError && <span className="text-[12px] text-[var(--accent-danger)]">{reader.saveError}</span>}
-          <button
-            type="button"
-            disabled={!reader.dirty || reader.saving}
-            onClick={() => void reader.save()}
-            className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-45"
-          >
+    <SettingsPage
+      id="documents"
+      badge={reader.form.enabled ? <StatusBadge tone="ok">On</StatusBadge> : <StatusBadge tone="muted">Off</StatusBadge>}
+      tabs={<SettingsTabs tabs={TABS} value={tab} onChange={setTab} />}
+      actions={
+        <>
+          {reader.dirty && <span className="text-[12px] text-[var(--text-muted)]">Unsaved changes</span>}
+          <ActionButton type="button" tone={reader.dirty ? 'primary' : 'default'} disabled={!reader.dirty || reader.saving} onClick={() => void reader.save()}>
             {reader.saving ? 'Saving...' : reader.dirty ? 'Save changes' : 'Saved'}
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="mt-4 rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</div>}
-
-      <div className="mt-4 min-w-0">{tab === 'overview' ? <DocumentsOverview reader={reader} /> : <LocalOcrPanel reader={reader} />}</div>
-    </div>
+          </ActionButton>
+        </>
+      }
+    >
+      {message && <div className="rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{message}</div>}
+      {tab === 'overview' ? <DocumentsOverview reader={reader} /> : <LocalOcrPanel reader={reader} />}
+    </SettingsPage>
   )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { SoftButton, StatusPill, ToggleSwitch } from './KnowledgePrimitives'
+import { ActionButton, SettingRow, SettingsCard, StatusBadge, Toggle } from '../../settings/kit'
 import { fetchIndraStatus, installIndra, removeIndra, setIndraEnabled } from './knowledgeApi'
 import { INDRA_LICENSE_POINTS, indraPhase, indraPill, indraSizeText, indraStepText } from './indraView'
 import type { IndraStatusResult } from './knowledgeTypes'
@@ -53,115 +53,79 @@ export function IndraPanel() {
     }
   }
 
+  const action = (phase === 'on' || phase === 'off') && <Toggle label="Indra OCR" enabled={phase === 'on'} onChange={(enabled) => void act(() => setIndraEnabled(enabled))} />
+
   return (
-    <div className="overflow-hidden rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)]">
-      <div className="flex items-start justify-between gap-3 border-b border-[var(--border-soft)] px-3 py-2">
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold text-[var(--text-primary)]">Indra OCR (optional)</div>
-          <div className="mt-0.5 text-[11px] leading-[15px] text-[var(--text-muted)]">
-            A fast reader of scanned pages from Datalab, for many alphabets. It runs on this computer only. When it is on it reads a scanned page first, and the built-in OCR reads what it leaves empty.
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <StatusPill tone={pill.tone}>{pill.label}</StatusPill>
-          {(phase === 'on' || phase === 'off') && <ToggleSwitch enabled={phase === 'on'} onChange={(enabled) => void act(() => setIndraEnabled(enabled))} />}
-        </div>
-      </div>
+    <SettingsCard title="Indra OCR" badge={<StatusBadge tone={pill.tone === 'ok' ? 'ok' : pill.tone === 'warn' ? 'warn' : 'muted'}>{pill.label}</StatusBadge>} action={action || undefined}>
+      {phase === 'no-python' && (
+        <SettingRow title="Python 3.10 or newer is needed">
+          <ActionButton type="button" onClick={() => void refresh()}>
+            Check again
+          </ActionButton>
+        </SettingRow>
+      )}
 
-      <div className="grid gap-3 px-3 py-3">
-        {phase === 'no-python' && (
-          <>
-            <p className="m-0 text-[12px] leading-[17px] text-[var(--text-muted)]">
-              Indra is a Python program, and Python 3.10 or newer was not found on this computer. Install Python, then check again.
-            </p>
-            <div>
-              <SoftButton type="button" onClick={() => void refresh()}>
-                Check again
-              </SoftButton>
-            </div>
-          </>
-        )}
-
-        {canAsk && (
-          <>
-            {phase === 'relicense' && (
-              <p className="m-0 text-[12px] font-semibold leading-[17px] text-[var(--accent-primary)]">
-                The licence changed since you accepted it. Read it and accept it again to keep using Indra.
-              </p>
-            )}
-            <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2.5">
-              <div className="text-[12px] font-semibold text-[var(--text-primary)]">Before you install: the licence of the weights</div>
-              <ul className="m-0 mt-1.5 list-disc pl-4 text-[11.5px] leading-[17px] text-[var(--text-muted)]">
-                {INDRA_LICENSE_POINTS.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-              <a href={indra.license_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[11.5px] font-semibold text-[var(--accent-primary)] hover:underline">
-                Read the full licence
-              </a>
-            </div>
-            <label className="flex cursor-pointer items-start gap-2 text-[12px] leading-[17px] text-[var(--text-primary)]">
-              <input type="checkbox" className="mt-[3px]" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
-              <span>I have read the licence, and I (or my organization) may use the weights under it.</span>
-            </label>
-            <div className="flex items-center gap-3">
-              <SoftButton type="button" tone="primary" disabled={!accepted || busy} onClick={() => void act(() => installIndra(indra.license_version))}>
-                {phase === 'relicense' ? 'Accept and keep using' : 'Install Indra OCR'}
-              </SoftButton>
-              <span className="text-[11px] text-[var(--text-faint)]">{indraSizeText(indra)}</span>
-            </div>
-          </>
-        )}
-
-        {phase === 'failed' && install.error && (
-          <p className="m-0 break-words text-[11px] font-semibold leading-[16px] text-[var(--accent-primary)]">The installation failed: {install.error}</p>
-        )}
-
-        {phase === 'installing' && (
-          <div>
-            <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-[var(--text-muted)]">
-              <span className="truncate">{indraStepText(install)}</span>
-              <span>This can take a few minutes</span>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">
-              <div
-                className="h-full rounded-full bg-[var(--accent-primary)] transition-[width]"
-                style={{ width: `${Math.round((((install.step_index ?? 1) - 0.5) / (install.step_count || 4)) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {(phase === 'on' || phase === 'off') && (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-[11.5px] leading-[16px] text-[var(--text-muted)]">
-              Version {indra.version}. {phase === 'on' ? 'Reading scanned pages first.' : 'Installed, not reading.'}
-            </span>
-            <a href={indra.license_url} target="_blank" rel="noreferrer" className="text-[11.5px] font-semibold text-[var(--accent-primary)] hover:underline">
-              Licence
+      {canAsk && (
+        <>
+          {phase === 'relicense' && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-primary)]">The licence changed. Accept it again to keep using Indra.</div>}
+          <div className="px-4 py-3">
+            <ul className="m-0 list-disc pl-4 text-[12px] leading-[18px] text-[var(--text-muted)]">
+              {INDRA_LICENSE_POINTS.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+            <a href={indra.license_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[12px] font-semibold text-[var(--accent-primary)] hover:underline">
+              Read the licence
             </a>
-            <span className="ml-auto">
-              {confirmRemove ? (
-                <span className="flex items-center gap-2">
-                  <span className="text-[11px] text-[var(--text-muted)]">Delete it and its model?</span>
-                  <SoftButton type="button" tone="danger" disabled={busy} onClick={() => void act(removeIndra).then(() => setConfirmRemove(false))}>
-                    Remove
-                  </SoftButton>
-                  <SoftButton type="button" disabled={busy} onClick={() => setConfirmRemove(false)}>
-                    Keep
-                  </SoftButton>
-                </span>
-              ) : (
-                <SoftButton type="button" disabled={busy} onClick={() => setConfirmRemove(true)}>
-                  Remove
-                </SoftButton>
-              )}
-            </span>
           </div>
-        )}
+          <SettingRow title="I accept the licence of the weights">
+            <input type="checkbox" aria-label="I accept the licence of the weights" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
+          </SettingRow>
+          <SettingRow title={indraSizeText(indra)}>
+            <ActionButton type="button" tone="primary" disabled={!accepted || busy} onClick={() => void act(() => installIndra(indra.license_version))}>
+              {phase === 'relicense' ? 'Accept' : 'Install'}
+            </ActionButton>
+          </SettingRow>
+        </>
+      )}
 
-        {error && <p className="m-0 text-[11px] font-semibold text-[var(--accent-primary)]">{error}</p>}
-      </div>
-    </div>
+      {phase === 'failed' && install.error && <div className="break-words px-4 py-3 text-[12px] font-semibold text-[var(--accent-danger)]">Installation failed: {install.error}</div>}
+
+      {phase === 'installing' && (
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between gap-3 text-[12px] text-[var(--text-muted)]">
+            <span className="truncate">{indraStepText(install)}</span>
+            <span>A few minutes</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">
+            <div className="h-full rounded-full bg-[var(--accent-primary)] transition-[width]" style={{ width: `${Math.round((((install.step_index ?? 1) - 0.5) / (install.step_count || 4)) * 100)}%` }} />
+          </div>
+        </div>
+      )}
+
+      {(phase === 'on' || phase === 'off') && (
+        <SettingRow title={`Version ${indra.version}`}>
+          <a href={indra.license_url} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[var(--accent-primary)] hover:underline">
+            Licence
+          </a>
+          {confirmRemove ? (
+            <>
+              <ActionButton type="button" tone="danger" disabled={busy} onClick={() => void act(removeIndra).then(() => setConfirmRemove(false))}>
+                Delete
+              </ActionButton>
+              <ActionButton type="button" disabled={busy} onClick={() => setConfirmRemove(false)}>
+                Keep
+              </ActionButton>
+            </>
+          ) : (
+            <ActionButton type="button" disabled={busy} onClick={() => setConfirmRemove(true)}>
+              Remove
+            </ActionButton>
+          )}
+        </SettingRow>
+      )}
+
+      {error && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-danger)]">{error}</div>}
+    </SettingsCard>
   )
 }
