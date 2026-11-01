@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Message, Sort } from '@icon-park/react'
+import { Message, Search as SearchIcon, Sort } from '@icon-park/react'
 import { flattenRightPanels, useUIStore } from '@renderer/stores/ui'
 import { useCollections } from '../chat/useCollections'
 import { openDocument, passageTarget } from '../collections/openDocument'
 import { ChoiceSelect } from '../components/ChoiceSelect'
-import { FilterPanel } from './FilterPanel'
+import { PageHeader } from '../components/PageHeader'
+import { Pills } from '../components/Pills'
 import { queryTerms } from './highlight'
 import { looksLikeQuestion } from './question'
 import { fetchDocuments } from './libraryApi'
 import { ResultRow, type View } from './ResultRow'
 import { MAX_PASSAGES } from './searchApi'
 import { SearchBar } from './SearchBar'
-import { facetsOf, filterDocs, groupDocs, KIND_ORDER, NO_FILTERS, sortDocs, withListing, type Doc, type Facets, type Filters, type Hit, type SortKey } from './searchModel'
+import { facetsOf, filterDocs, groupDocs, KIND_LABEL, KIND_ORDER, NO_FILTERS, sortDocs, withListing, type Doc, type Facets, type Filters, type Hit, type SortKey } from './searchModel'
 import { useLibrary } from './useLibrary'
 import { useLibraryTotals } from './useLibraryTotals'
 import { useSearch } from './useSearch'
+
+const ALL = '__all__'
 
 export function SearchPage() {
   const navigate = useNavigate()
@@ -140,8 +143,13 @@ export function SearchPage() {
       ]
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-4 pt-4">
-      <section className="shrink-0">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pb-4 pt-5">
+      <PageHeader
+        icon={<SearchIcon theme="filled" size={24} fill="currentColor" />}
+        title="Search"
+        text={`Find the documents and the passages that answer you, ${scopeName ? `in ${scopeName}.` : 'across all your collections.'}`}
+      />
+      <section className="mt-5 shrink-0">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <SearchBar
@@ -158,15 +166,13 @@ export function SearchPage() {
               type="button"
               onClick={ask}
               title="Answer this question from your documents, with its sources"
-              className="flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-[14px] border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-3.5 text-[13px] font-semibold text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)]"
+              className="flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-3.5 text-[13px] font-semibold text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)]"
             >
               <Message size={15} />
               Ask Seshat
             </button>
           )}
         </div>
-
-        {!searching && <p className="m-0 mt-2 px-1 text-[12.5px] text-[var(--text-muted)]">Find the documents and the passages that answer you, {scopeName ? `in ${scopeName}.` : 'across all your collections.'}</p>}
 
         {collectionsFailed && (
           <p className="mb-0 mt-2 text-[12.5px] text-[var(--accent-danger)]" role="alert">
@@ -175,20 +181,21 @@ export function SearchPage() {
         )}
       </section>
 
-      <div className="flex min-h-0 flex-1 gap-3">
-        {openFileId === null && (done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
-          <FilterPanel
-            title={done ? 'Refine results' : 'Browse'}
-            facets={{ collections: facets.collections, kinds }}
-            filters={filters}
-            total={collectionsTotal}
-            kindsTotal={kindsTotal}
-            onToggleCollection={toggleCollection}
-            onAllCollections={() => setFilters({ ...filters, collectionIds: new Set() })}
-            onKind={(kind) => setFilters({ ...filters, kind })}
+      {openFileId === null && (done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
+        <div className="mt-4 shrink-0">
+          <Pills
+            label="Collections"
+            value={filters.collectionIds.size === 0 ? new Set([ALL]) : filters.collectionIds}
+            onChange={(id) => (id === ALL ? setFilters({ ...filters, collectionIds: new Set() }) : toggleCollection(id))}
+            items={[
+              { id: ALL, label: 'All collections', count: collectionsTotal },
+              ...facets.collections.map((collection) => ({ id: collection.id, label: collection.name, count: collection.count }))
+            ]}
           />
-        )}
+        </div>
+      )}
 
+      <div className="mt-4 flex min-h-0 flex-1 gap-3">
         <section className="@container flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="mb-2.5 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <h2 className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-[var(--text-primary)]">
@@ -208,6 +215,14 @@ export function SearchPage() {
                     Ask<span className="hidden @2xl:inline"> a question about this</span>
                   </span>
                 </button>
+              )}
+              {kinds.length > 0 && (
+                <ChoiceSelect
+                  label="Type"
+                  choices={[['', `All types (${kindsTotal})`], ...kinds.map(({ kind, count }) => [kind, `${KIND_LABEL[kind]} (${count})`] as const)]}
+                  value={filters.kind ?? ''}
+                  onChange={(value) => setFilters({ ...filters, kind: value === '' ? null : (value as NonNullable<Filters['kind']>) })}
+                />
               )}
               <ChoiceSelect label="Sort" icon={<Sort size={12} />} choices={sortOptions} value={sortKey} onChange={setSort} />
               <div className="flex overflow-hidden rounded-[9px] border border-app-border-subtle" role="group" aria-label="View">

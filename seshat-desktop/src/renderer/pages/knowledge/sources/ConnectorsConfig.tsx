@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Plug } from '@icon-park/react'
 import { PluginCard } from '@renderer/components/plugins/PluginCard'
+import { PageHeader, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../components/PageHeader'
+import { ListSearch, Pills } from '../components/Pills'
 import { ConnectorIcon } from './ConnectorIcons'
 import { ConnectorCard } from './ConnectorCard'
 import { connectorCatalog } from './connectorCatalog'
@@ -150,48 +153,46 @@ export function ConnectorsConfig() {
   const myFolders = mode === 'standalone' && (filter === 'all' || filter === 'Knowledge') ? folders.sources.filter((source) => !needle || `${source.name} ${source.root}`.toLowerCase().includes(needle)) : []
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-4">
-      <div className="flex shrink-0 items-center justify-between">
-        <h1 className="text-[18px] font-semibold text-[var(--text-primary)]">Sources</h1>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={loading}
-          className="flex h-7 items-center rounded-lg border border-[var(--border-soft)] px-3 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-50"
-        >
-          {loading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
-      <p className="mt-1 shrink-0 text-[12px] text-[var(--text-muted)]">Connect the places your documents live, and synchronize them into a collection.</p>
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-5">
+      <PageHeader
+        icon={<Plug theme="filled" size={24} fill="currentColor" />}
+        title="Sources"
+        text="The places your documents live, and the actions your agents can take, connected to a collection."
+        actions={
+          <>
+            <button type="button" onClick={() => void load()} disabled={loading} className={SECONDARY_BUTTON}>
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
+            {mode === 'standalone' && (
+              <button type="button" onClick={() => setFolderOpen(true)} className={PRIMARY_BUTTON}>
+                <span aria-hidden="true">+</span>
+                Add a folder
+              </button>
+            )}
+          </>
+        }
+      />
 
-      <div className="relative mt-3 shrink-0">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
-        </span>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search sources"
-          className="h-9 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-9 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
+      <div className="mt-5 shrink-0">
+        <ListSearch value={query} onChange={setQuery} placeholder="Search sources..." />
+      </div>
+
+      <div className="mt-4 shrink-0">
+        <Pills
+          label="Kind of source"
+          value={filter}
+          onChange={(id) => setFilter(id as typeof filter)}
+          items={[
+            { id: 'all', label: 'All', count: connectorCatalog.length + (mode === 'standalone' ? 1 : 0) },
+            { id: 'Knowledge', label: 'Knowledge', count: connectorCatalog.filter((item) => item.category === 'Knowledge').length + (mode === 'standalone' ? 1 : 0) },
+            { id: 'Actions', label: 'Actions', count: connectorCatalog.filter((item) => item.category === 'Actions').length }
+          ]}
         />
-      </div>
-
-      <div className="no-scrollbar mt-3 flex shrink-0 gap-1.5 overflow-x-auto">
-        {(['all', 'Knowledge', 'Actions'] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setFilter(item)}
-            className={['h-7 shrink-0 rounded-full px-3 text-[12px] font-semibold transition-colors', filter === item ? 'bg-[var(--surface-muted)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'].join(' ')}
-          >
-            {item === 'all' ? 'All' : item}
-          </button>
-        ))}
       </div>
 
       {message && (
         <div className={[
-          'mt-3 shrink-0 rounded-lg border bg-[var(--surface-panel)] px-4 py-2.5 text-[12.5px] font-semibold',
+          'mt-4 shrink-0 rounded-lg border bg-[var(--surface-panel)] px-4 py-2.5 text-[12.5px] font-semibold',
           message.tone === 'ok' ? 'border-[var(--accent-success)]/35 text-[var(--accent-success)]' : 'border-[var(--accent-danger)]/40 text-[var(--accent-danger)]'
         ].join(' ')}>
           {message.text}
@@ -203,10 +204,10 @@ export function ConnectorsConfig() {
       ) : groups.length === 0 && myFolders.length === 0 ? (
         <div className="flex flex-1 items-center justify-center pb-16 text-[13px] font-semibold text-[var(--text-muted)]">No sources match your search.</div>
       ) : (
-        <div className="no-scrollbar mt-5 min-h-0 flex-1 space-y-7 overflow-y-auto pb-8">
+        <div className="no-scrollbar mt-5 min-h-0 flex-1 space-y-8 overflow-y-auto pb-8">
           {myFolders.length > 0 && (
             <div>
-              <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">
+              <h2 className="m-0 text-[14.5px] font-semibold text-[var(--text-primary)]">
                 Your folders <span className="font-normal text-[var(--text-muted)]">{myFolders.length}</span>
               </h2>
               <YourFolders
@@ -219,8 +220,8 @@ export function ConnectorsConfig() {
           )}
           {groups.map(({ group, items }) => (
             <div key={group}>
-              <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{group}</h2>
-              <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-2.5">
+              <h2 className="m-0 text-[14.5px] font-semibold text-[var(--text-primary)]">{group}</h2>
+              <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-3">
                 {group === 'Knowledge' && showFolder && (
                   <PluginCard
                     title="Local folder"
