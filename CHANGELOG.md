@@ -38,6 +38,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Fixed
 
+- **A skill repository is downloaded safely.** The download goes to a staging folder outside the one the skills are read from and is moved into place only when it is whole, so a download cut short (the app closed, the machine asleep) no longer leaves a half repository listed as installed. An address that ends in `..` or in a dot name is refused: it used to name the folder of all the repositories, which a failed download would then have removed. An address starting with a dash is no longer taken by git for an option.
 - **Settings has its title bar again.** A bar across the top of the window with its name and the close button, above the list of pages and the page.
 - **The provider cards of Settings are lighter.** Two models and a count (the others in a tooltip) on one line instead of rows of chips, a layout that gives the key, the test and the default model their own width, descriptions of the catalog without long dashes, and a side column that stays in view while you scroll.
 - **The long dashes are gone from what the app says.** The messages of the plan (the agent still running, nothing sent...) are two plain sentences, the previews after a name and the size of a file are set off by a dot, and an empty value is a hyphen. In Settings, the page is centred in its window and the line under the title stays on one line.

@@ -78,3 +78,51 @@ func TestCloneThatIsCancelledLeavesNothing(t *testing.T) {
 		t.Fatal("a cancelled download left a folder behind")
 	}
 }
+
+func TestCloneIntoMovesTheRepositoryOnlyWhenItIsWhole(t *testing.T) {
+	source := gitRepoWithASkill(t)
+	root := t.TempDir()
+	staging := filepath.Join(root, "skill-clones", "repo")
+	dest := filepath.Join(root, "skills", "repos", "repo")
+	if err := CloneInto(context.Background(), source, staging, dest, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dest, "SKILL.md")); err != nil {
+		t.Fatalf("the repository is not in place: %v", err)
+	}
+	if _, err := os.Stat(staging); !os.IsNotExist(err) {
+		t.Fatal("the staging folder was left behind")
+	}
+}
+
+func TestCloneIntoThatFailsLeavesNothingInPlaceNorInStaging(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	root := t.TempDir()
+	staging := filepath.Join(root, "skill-clones", "repo")
+	dest := filepath.Join(root, "skills", "repos", "repo")
+	// A half download of an earlier attempt is replaced, not trusted.
+	if err := os.MkdirAll(filepath.Join(staging, ".git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := CloneInto(context.Background(), filepath.Join(root, "nothing-here"), staging, dest, nil); err == nil {
+		t.Fatal("a download that failed reported success")
+	}
+	for _, path := range []string{staging, dest} {
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatalf("%s was left behind", path)
+		}
+	}
+}
+
+func TestAnAddressStartingWithADashIsNotTakenForAnOption(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	dest := filepath.Join(t.TempDir(), "repo")
+	err := Clone(context.Background(), "--upload-pack=touch /tmp/pwned", dest, nil)
+	if err == nil || !strings.Contains(err.Error(), "could not download") {
+		t.Fatalf("expected a plain download error, got %v", err)
+	}
+}

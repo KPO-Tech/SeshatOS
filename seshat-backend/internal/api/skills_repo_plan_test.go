@@ -59,3 +59,16 @@ func TestSkillRepoPlanIsAskedAfterTheDownloadEnds(t *testing.T) {
 		t.Fatalf("a repository that is not there is not found, got %d", rec.Code)
 	}
 }
+
+func TestARepositoryNameIsAFolderOfItsOwn(t *testing.T) {
+	for _, name := range []string{"paperasse", "ppt-master", "skills.v2"} {
+		if !validSkillRepoName(name) {
+			t.Errorf("%q should be accepted", name)
+		}
+	}
+	for _, name := range []string{"", ".", "..", ".hidden", "a/b", `a\b`} {
+		if validSkillRepoName(name) {
+			t.Errorf("%q should be refused", name)
+		}
+	}
+}
