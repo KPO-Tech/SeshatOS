@@ -11,6 +11,13 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-02
+
+### Highlights
+
+- **Skills install on every Windows computer.** Installing a skill no longer says that git is missing when SeshatOS is opened from the Start menu, and a computer without git downloads skills from GitHub all the same.
+- **The installed app shows its icon in the taskbar** instead of a blank page.
+
 ### Added
 
 - **Skills install on a computer without git.** When git is not there, a skill repository on GitHub is downloaded as an archive of its latest version instead of being cloned, and installs the same way. A repository on another host still needs git, and the message says so. Repositories downloaded this way are not updated by themselves.
