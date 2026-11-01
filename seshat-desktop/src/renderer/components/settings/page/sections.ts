@@ -55,7 +55,7 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
   { id: 'mcp', label: 'MCP servers', group: 'Workspace', icon: Plug, description: 'MCP servers for agents and tools.' },
   { id: 'environment', label: 'Environment', group: 'Workspace', icon: Terminal, description: 'API keys and environment variables.' },
   { id: 'storage', label: 'Storage', group: 'Workspace', icon: DataServer, description: 'Where files and caches live.' },
-  { id: 'skills', label: 'Skill repositories', group: 'Workspace', icon: Robot, description: 'Skill repositories on this machine.' },
+  { id: 'skills', label: 'Skills', group: 'Workspace', icon: Robot, description: 'Skills your agents can use.' },
   { id: 'answers', label: 'Answers', group: 'Workspace', icon: Brain, description: 'How the agent presents answers.' },
 
   { id: 'memories', label: 'Memories', group: 'Data & privacy', icon: Brain, description: 'What the agent remembers.' },

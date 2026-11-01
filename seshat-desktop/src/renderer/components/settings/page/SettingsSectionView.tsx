@@ -25,7 +25,7 @@ import type { SettingsSectionId } from './sections'
 import { useSettingsState } from './useSettingsState'
 
 /** Pages that draw their own header with the kit; the others are framed here until they are moved over. */
-const KIT_PAGES: ReadonlySet<SettingsSectionId> = new Set(['general', 'appearance', 'shortcuts', 'account', 'audio'])
+const KIT_PAGES: ReadonlySet<SettingsSectionId> = new Set(['general', 'appearance', 'shortcuts', 'account', 'audio', 'skills'])
 
 /** The content of one page of Settings. */
 export function SettingsSectionView({ id }: { id: SettingsSectionId }) {
