@@ -428,7 +428,8 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
             onChange={setInputValue}
             onSend={handleSend}
             placeholder={placeholder}
-            maxHeight={200}
+            maxHeight={260}
+            size={variant === 'home' ? 'large' : 'default'}
             projectPath={projectPath}
             onProjectChange={fixedProjectPath ? undefined : setProjectPath}
             projectLocked={Boolean(fixedProjectPath)}

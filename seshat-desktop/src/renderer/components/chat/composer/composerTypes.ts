@@ -9,6 +9,8 @@ export type ChatInputProps = {
   onStop?: () => void
   placeholder?: string
   maxHeight?: number
+  /** "large" is for the start page, where the input is the page: taller, with bigger text. */
+  size?: 'default' | 'large'
   isStreaming?: boolean
   statusText?: string
   showInlineStatus?: boolean
