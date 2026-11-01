@@ -50,3 +50,25 @@ export function finishedMessage(task: TaskInfo): { title: string; body: string; 
   const reason = (task.error || 'It did not finish.').split('\n')[0]
   return { title: `Installing ${task.subject} failed`, body: reason, route, failed: true }
 }
+
+const GIT_PHASES: Record<string, string> = {
+  'Enumerating objects': 'EO',
+  'Counting objects': 'CO',
+  'Compressing objects': 'CMP',
+  'Receiving objects': 'RO',
+  'Resolving deltas': 'RD',
+  'Updating files': 'UF',
+  'Checking out files': 'UF'
+}
+
+const GIT_LINE = /^(Enumerating objects|Counting objects|Compressing objects|Receiving objects|Resolving deltas|Updating files|Checking out files):\s*(\d+%)(?:[^|]*?\|\s*([\d.]+ \S+\/s))?/
+
+/**
+ * The line a program printed, shortened for a narrow place: git's progress ("Receiving objects: 65% (1807/2780), 104 MiB | 2.1 MiB/s")
+ * becomes "RO 65% · 2.1 MiB/s". Anything else is returned as it is, and the caller cuts it to its width.
+ */
+export function shortDetail(line: string): string {
+  const match = GIT_LINE.exec(line.trim())
+  if (!match) return line
+  return [`${GIT_PHASES[match[1]]} ${match[2]}`, match[3]].filter(Boolean).join(' · ')
+}
