@@ -4,7 +4,7 @@ import type { InstallPlan } from './skillsTypes'
 type Props = {
   name: string
   plan: InstallPlan
-  /** Makes the environment; rejects with the reason it could not be made. */
+  /** Starts the installation, which then goes on in the background; rejects with the reason it could not be started. */
   onConfirm: () => Promise<void>
   /** The person leaves without installing: the repository that was read is removed. */
   onCancel: () => void
@@ -94,7 +94,7 @@ export function SkillInstallDialog({ name, plan, onConfirm, onCancel }: Props) {
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="text-[11.5px] text-[var(--text-muted)]">{busy ? 'Installing. This can take a few minutes...' : ''}</span>
+          <span className="text-[11.5px] text-[var(--text-muted)]">{busy ? 'Starting...' : 'It goes on in the background: you can leave this page.'}</span>
           <div className="flex gap-2">
             <button type="button" disabled={busy} onClick={onCancel} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
               Cancel

@@ -8,6 +8,7 @@ import { useSessionStore } from '@renderer/stores/session'
 import { SIDEBAR_DEFAULT_WIDTH, useUIStore } from '@renderer/stores/ui'
 import { RecentSessions } from './RecentSessions'
 import { SidebarFooterMenu } from './SidebarFooterMenu'
+import { TaskProgress } from './TaskProgress'
 import { KnowledgeNav } from '@renderer/pages/knowledge/components/KnowledgeNav'
 import { SidebarItem } from './SidebarItem'
 import { listProjects, normalizeProjectPath, resolveProjectContextPath, selectRecentSessions } from '@renderer/lib/projects'
@@ -135,6 +136,7 @@ export function Sidebar() {
           </div>
         )}
 
+        <TaskProgress collapsed={collapsed} />
         <SidebarFooterMenu collapsed={collapsed} />
 
         {!collapsed && (

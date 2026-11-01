@@ -1,10 +1,14 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { ApplicationOne, Down, Plus, Right, Scan, Search, SortThree } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { copyItem, openItem } from '@renderer/components/ui/menuItems'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
+import { TASK_FINISHED_EVENT } from '@renderer/hooks/useTaskSync'
 import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { finishedMessage } from '@renderer/lib/taskView'
+import { cancelTask, isTaskActive, type TaskInfo } from '@renderer/lib/tasks'
+import { nudgeTasks, useTasksStore } from '@renderer/stores/tasks'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { AgentsConfig, type AgentSource } from './agents/AgentsConfig'
 import { AvailableSkillCard, SkillCard } from './SkillCard'
@@ -13,7 +17,7 @@ import { repoLogo } from './skillLogos'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillInstallDialog } from './SkillInstallDialog'
 import { categoryOf, tagsFor } from './skillIcons'
-import { deleteSkill, installSkillRepo, prepareSkillEnvironment, setSkillEnabled, uninstallSkillRepo } from './skillsApi'
+import { deleteSkill, installSkillRepo, setSkillEnabled, startSkillEnvironment, uninstallSkillRepo } from './skillsApi'
 import type { CatalogEntry, InstallPlan, Skill } from './skillsTypes'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkillIcons } from './useSkillIcons'
@@ -135,11 +139,37 @@ export function SkillsPage() {
 
   const openSkill = (skill: Skill) => navigate(`/skills/${encodeURIComponent(skill.name)}`)
 
+  // The installations that are going on, by repository: they continue when the page is left, so what is shown comes from the tasks.
+  const tasks = useTasksStore((state) => state.tasks)
+  const installTasks = useMemo(() => new Map(tasks.filter((task) => task.kind === 'skill.install' && isTaskActive(task)).map((task) => [task.subject, task])), [tasks])
+
+  // When one ends, the lists are read again and the page says how it went.
+  useEffect(() => {
+    function onFinished(event: Event) {
+      const task = (event as CustomEvent<TaskInfo>).detail
+      if (task.kind !== 'skill.install') return
+      void Promise.all([reload(), reloadCatalog()])
+      const message = finishedMessage(task)
+      show(message.failed ? `${message.title}: ${message.body}` : message.title, message.failed ? 'err' : undefined)
+    }
+    window.addEventListener(TASK_FINISHED_EVENT, onFinished)
+    return () => window.removeEventListener(TASK_FINISHED_EVENT, onFinished)
+  }, [reload, reloadCatalog, show])
+
   async function finishInstall(name: string) {
-    await prepareSkillEnvironment(name)
+    await startSkillEnvironment(name)
     setReviewing(null)
-    await Promise.all([reload(), reloadCatalog()])
-    show(`${name} installed.`)
+    nudgeTasks()
+    show(`${name} is installing in the background.`)
+  }
+
+  async function stopInstall(task: TaskInfo) {
+    try {
+      await cancelTask(task.id)
+    } catch (err) {
+      show(err instanceof Error ? err.message : 'Could not cancel this installation.', 'err')
+    }
+    nudgeTasks()
   }
 
   async function cancelInstall(name: string) {
@@ -189,6 +219,8 @@ export function SkillsPage() {
       needs={entry.needs ?? []}
       onViewSource={() => openInAppBrowser(entry.url)}
       busy={installing === entry.name}
+      installTask={installTasks.get(entry.name)}
+      onCancelInstall={installTasks.get(entry.name) ? () => void stopInstall(installTasks.get(entry.name) as TaskInfo) : undefined}
       moreItems={[
         { id: 'install', label: 'Install', onSelect: () => void install(entry) },
         openItem('source', 'Open the source', entry.url),

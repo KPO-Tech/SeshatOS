@@ -1,7 +1,9 @@
-import { CheckOne, Down, Download, LinkOne, More, Play } from '@icon-park/react'
+import { CheckOne, Down, Download, LinkOne, Loading, More, Play } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { SourceLink } from '@renderer/components/ui/SourceLink'
 import { SkillMark } from './SkillIconTile'
+import { progressOf, stepLabel } from '@renderer/lib/taskView'
+import type { TaskInfo } from '@renderer/lib/tasks'
 import type { SkillIconId } from './skillIcons'
 import type { Skill } from './skillsTypes'
 
@@ -93,6 +95,9 @@ type AvailableProps = {
   skillCount?: number
   needs: string[]
   busy: boolean
+  /** The installation of this repository, when one is going on in the background. */
+  installTask?: TaskInfo
+  onCancelInstall?: () => void
   moreItems: DropdownItem[]
   onInstall: () => void
   onViewSource: () => void
@@ -102,7 +107,7 @@ type AvailableProps = {
  * A skill that can be installed, and is not yet. It is drawn apart from the installed ones: a tinted head, who publishes it and how many
  * skills it holds, what it needs on the machine, and a filled Install button.
  */
-export function AvailableSkillCard({ name, description, icon, logo, url, category, skillCount, needs, busy, moreItems, onInstall, onViewSource }: AvailableProps) {
+export function AvailableSkillCard({ name, description, icon, logo, url, category, skillCount, needs, busy, installTask, onCancelInstall, moreItems, onInstall, onViewSource }: AvailableProps) {
   return (
     <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-dashed border-[var(--border-strong)] bg-[color-mix(in_srgb,var(--accent-primary)_4%,var(--surface-panel))]">
       <div className="flex items-start gap-3 bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)] px-4 pb-3 pt-4">
@@ -129,6 +134,24 @@ export function AvailableSkillCard({ name, description, icon, logo, url, categor
             ))}
           </div>
         )}
+        {installTask ? (
+          <div className="mt-auto grid gap-1.5 pt-3" aria-live="polite">
+            <div className="flex items-center justify-between gap-2 text-[12px] text-[var(--text-secondary)]">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Loading theme="outline" size={13} className="shrink-0 animate-spin text-[var(--accent-primary)]" />
+                <span className="truncate">{stepLabel(installTask)}</span>
+              </span>
+              {onCancelInstall && (
+                <button type="button" onClick={onCancelInstall} className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-[11.5px] text-[var(--text-muted)] hover:text-[var(--accent-danger)]">
+                  Cancel
+                </button>
+              )}
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressOf(installTask) * 100)}>
+              <div className="h-full rounded-full bg-[var(--accent-primary)] transition-[width] duration-500" style={{ width: `${Math.round(progressOf(installTask) * 100)}%` }} />
+            </div>
+          </div>
+        ) : (
         <div className="mt-auto flex gap-2 pt-3">
           <button type="button" disabled={busy} onClick={onInstall} className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[var(--accent-primary)] text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-60">
             <Download theme="outline" size={14} />
@@ -138,6 +161,7 @@ export function AvailableSkillCard({ name, description, icon, logo, url, categor
             <LinkOne theme="outline" size={14} />
           </button>
         </div>
+        )}
       </div>
     </div>
   )

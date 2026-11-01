@@ -129,6 +129,13 @@ interface Window {
       onData: (id: string, listener: (event: ShellDataEvent) => void) => () => void
       onExit: (id: string, listener: (event: ShellExitEvent) => void) => () => void
     }
+    background?: {
+      setBusy: (count: number) => Promise<void>
+    }
+    notify?: {
+      show: (notice: { title: string; body?: string; route?: string }) => Promise<void>
+      onOpen: (listener: (route: string) => void) => () => void
+    }
     updates?: {
       checkNow: () => Promise<{ ok: boolean; error?: string }>
       quitAndInstall: () => Promise<void>

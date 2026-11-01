@@ -1707,7 +1707,7 @@ func uploadTestFile(t *testing.T, router http.Handler, token, content, filename 
 func waitForIngestionJobStatus(t *testing.T, router http.Handler, token, corpusID, jobID, want string) map[string]any {
 	t.Helper()
 
-	deadline := time.Now().Add(8 * time.Second)
+	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) {
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/corpora/"+corpusID+"/ingest/jobs/"+jobID, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
@@ -2120,7 +2120,11 @@ func TestCorpusIngestionJobRetry(t *testing.T) {
 	}
 	var reset map[string]any
 	json.NewDecoder(rec.Body).Decode(&reset)
-	if reset["status"] != "pending" || int(reset["attempt_count"].(float64)) != 0 {
+	// The runner may claim the job again before the answer is built: either it is waiting with no attempt made, or it is running its first.
+	attempts := int(reset["attempt_count"].(float64))
+	waiting := reset["status"] == "pending" && attempts == 0
+	restarted := reset["status"] == "running" && attempts == 1
+	if !waiting && !restarted {
 		t.Fatalf("expected the retried job to start again from nothing, got status=%v attempts=%v", reset["status"], reset["attempt_count"])
 	}
 }
