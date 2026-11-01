@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **The Windows uninstaller asks whether to delete your data.** Removing SeshatOS now ends with one question that lists what is on the computer: your conversations, memories, settings, skills and downloaded models (`.config\seshat`), the cache of the updates (`seshat-desktop-updater`) and the command-line Seshat (`Programs\seshat`), each only if it is there. Yes deletes them so that nothing is left behind; No, the default, keeps them for a later install. Nothing is asked, nor deleted, when the uninstaller runs silently or as the first step of an update.
+
 ### Changed
 
 - **The three ways to set up the local models are lighter.** Download recommended, Customize my install and Skip for now are one line each, with the radio on the right, instead of tall cards with a paragraph and a badge: the overview below them has the room.
@@ -31,7 +35,6 @@ The full list of changes follows.
 
 ### Added
 
-- **The Windows uninstaller asks whether to delete your data.** Removing SeshatOS now ends with one question that lists what is on the computer: your conversations, memories, settings, skills and downloaded models (`.config\seshat`), the cache of the updates (`seshat-desktop-updater`) and the command-line Seshat (`Programs\seshat`), each only if it is there. Yes deletes them so that nothing is left behind; No, the default, keeps them for a later install. Nothing is asked, nor deleted, when the uninstaller runs silently or as the first step of an update.
 - **A What's new card opens once after each update.** A window a little smaller than Settings walks through the changes of the release one at a time, each with a small drawing of the feature in the colours of your theme and accent (the look chosen at first launch, the background tasks, the bell, the start page, Settings, Projects), with Back, Next and dots, and Escape to leave. It does not open on a first install, nor twice for the same version, and "What's new" in the menu at the bottom of the sidebar opens it again whenever you want.
 - **The Sources and Search pages of Knowledge look like Collections.** Both open with the same head (an icon on a tinted tile, the title, one line and the buttons of the page), the same wide search field and pills. Sources has Refresh and Add a folder at the top and pills for All, Knowledge and Actions with their counts; Search lists its collections as pills above the results (several can be picked), moves the document type next to the sort, and gives the results the whole width instead of two filter cards on the left.
 - **The app opens maximized.** The window fills the screen on every launch instead of opening at 1280 x 820; restoring it with the title bar button still brings back the smaller size.
