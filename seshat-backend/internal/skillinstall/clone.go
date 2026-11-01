@@ -15,10 +15,23 @@ import (
 const cloneLimit = 30 * time.Minute
 
 // Clone downloads the latest state of a repository (no history) into dest, saying where it is as git reports it ("Receiving objects: 45%").
+// On a computer without git, a GitHub repository is downloaded as the zip of its default branch instead (see archive.go).
 // A download that fails or is cancelled leaves nothing behind, so that the next attempt does not find a repository that is half there.
 func Clone(ctx context.Context, url, dest string, progress Progress) error {
 	ctx, cancel := context.WithTimeout(ctx, cloneLimit)
 	defer cancel()
+	if !gitAvailable() {
+		zipURL, ok := archiveURL(url)
+		if !ok {
+			return errors.New("git is not installed on this computer: without it, only repositories on GitHub can be downloaded")
+		}
+		err := downloadArchive(ctx, url, zipURL, dest, progress)
+		if err == nil {
+			return nil
+		}
+		_ = os.RemoveAll(dest)
+		return downloadFailure(ctx, err.Error())
+	}
 	if progress != nil {
 		ctx = withLines(ctx, progress.Detail)
 	}
@@ -29,15 +42,21 @@ func Clone(ctx context.Context, url, dest string, progress Progress) error {
 		return nil
 	}
 	_ = os.RemoveAll(dest)
+	if errors.Is(err, exec.ErrNotFound) && ctx.Err() == nil {
+		return errors.New("git is not installed on this computer: it is needed to download skills")
+	}
+	return downloadFailure(ctx, lastMessage(out, err))
+}
+
+// downloadFailure says why a download stopped: the time limit, a cancel, or what the download itself reported.
+func downloadFailure(ctx context.Context, message string) error {
 	switch {
 	case ctx.Err() != nil && errors.Is(ctx.Err(), context.DeadlineExceeded):
 		return fmt.Errorf("the download took more than %d minutes and was stopped", int(cloneLimit.Minutes()))
 	case ctx.Err() != nil:
 		return ctx.Err()
-	case errors.Is(err, exec.ErrNotFound):
-		return errors.New("git is not installed on this computer: it is needed to download skills")
 	}
-	return fmt.Errorf("could not download the repository: %s", lastMessage(out, err))
+	return fmt.Errorf("could not download the repository: %s", message)
 }
 
 // lastMessage is the line of git's output that says what went wrong: the last "fatal:" or "error:", else the last line.

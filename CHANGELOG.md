@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Skills install on a computer without git.** When git is not there, a skill repository on GitHub is downloaded as an archive of its latest version instead of being cloned, and installs the same way. A repository on another host still needs git, and the message says so. Repositories downloaded this way are not updated by themselves.
+
 ### Fixed
 
 - **Skills download again on Windows when SeshatOS is opened from the Start menu or the desktop.** The app gave its engine a search path that held only its own folder, so git, Node.js and Python were not found and installing a skill said that git was missing. The engine now keeps the search path of the computer.
