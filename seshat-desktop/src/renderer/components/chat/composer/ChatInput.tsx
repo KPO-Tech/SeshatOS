@@ -265,7 +265,7 @@ export function ChatInput({
   useEffect(() => { setSlashIdx(0) }, [slashQuery])
 
   return (
-    <div ref={composerRef} className={cx("relative border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] shadow-[0_14px_34px_rgba(31,27,23,0.09)] transition-[border-color,box-shadow] duration-[180ms] ease-in-out focus-within:border-[color-mix(in_srgb,var(--accent-primary)_42%,var(--border-soft))] focus-within:shadow-[0_18px_42px_rgba(31,27,23,0.12),0_0_0_2px_color-mix(in_srgb,var(--accent-primary)_14%,transparent)]", size === 'large' ? 'rounded-[22px] px-5 pb-3.5 pt-4' : 'rounded-[18px] px-3.5 pb-2.5 pt-3')}>
+    <div ref={composerRef} className={cx("relative border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] shadow-[0_14px_34px_rgba(31,27,23,0.09)] transition-[border-color,box-shadow] duration-[180ms] ease-in-out focus-within:border-[color-mix(in_srgb,var(--accent-primary)_42%,var(--border-soft))] focus-within:shadow-[0_18px_42px_rgba(31,27,23,0.12),0_0_0_2px_color-mix(in_srgb,var(--accent-primary)_14%,transparent)]", size === 'large' ? 'rounded-[20px] px-4 pb-3 pt-3.5' : 'rounded-[18px] px-3.5 pb-2.5 pt-3')}>
       {showSlash && filtered.length > 0 && (
         <div
           className={cx(
@@ -338,14 +338,14 @@ export function ChatInput({
 
       <textarea
         ref={textareaRef}
-        className={cx('w-full resize-none border-0 bg-transparent text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted', size === 'large' ? 'min-h-[84px] text-[15px] leading-[1.6]' : 'min-h-5 text-[13px] leading-[1.55]')}
+        className={cx('w-full resize-none border-0 bg-transparent text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted', size === 'large' ? 'min-h-[56px] text-[14px] leading-[1.6]' : 'min-h-5 text-[13px] leading-[1.55]')}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        rows={size === 'large' ? 3 : 1}
+        rows={size === 'large' ? 2 : 1}
       />
 
       <div className="mt-2.5 flex items-center justify-between gap-2.5" ref={selectorsRef}>
