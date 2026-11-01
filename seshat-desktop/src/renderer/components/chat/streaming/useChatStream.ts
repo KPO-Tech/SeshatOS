@@ -1,3 +1,4 @@
+import { announceAgentDone, announceAgentFailed } from '@renderer/lib/agentNotice'
 import { useCallback, useRef } from 'react'
 import { api } from '@renderer/api/client'
 import { useAuthStore } from '@renderer/stores/auth'
@@ -186,6 +187,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
                 store.clearStreaming(sessionId)
                 committed = true
                 onTurnSuccessRef.current()
+                announceAgentDone(sessionId)
                 flushSync()
               },
               (runtimeEvent) => {
@@ -229,6 +231,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
                 store.clearStreaming(sessionId)
                 committed = true
                 onTurnSuccessRef.current()
+                announceAgentDone(sessionId)
                 flushSync()
               },
               (runtimeEvent) => {
@@ -341,6 +344,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
       store.updateMessage(sessionId, assistantMessageId, (message) => ({ ...message, content }))
       store.updateMessage(sessionId, userMessageId, (message) => ({ ...message, status: 'error' }))
       store.clearStreaming(sessionId)
+      announceAgentFailed(sessionId, errMsg)
     } finally {
       if (watchdogTimer !== null) clearTimeout(watchdogTimer)
       if (syncRafRef.current !== null) {

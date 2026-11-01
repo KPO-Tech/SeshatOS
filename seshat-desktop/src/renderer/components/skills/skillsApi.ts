@@ -1,5 +1,6 @@
 import { api } from '@renderer/api/client'
-import type { CatalogEntry, RepoInfo, ScanResult, Skill, SkillSources, SkillSourcesChoice, TreeNode } from './skillsTypes'
+import type { TaskInfo } from '@renderer/lib/tasks'
+import type { CatalogEntry, InstallResult, RepoInfo, ScanResult, Skill, SkillSources, SkillSourcesChoice, TreeNode } from './skillsTypes'
 
 export async function fetchSkills() {
   const result = await api.get<{ skills: Skill[] }>('/skills')
@@ -36,9 +37,28 @@ export async function fetchSkillRepos() {
   return { installed: result.installed ?? [], catalog: result.catalog ?? [] }
 }
 
+/**
+ * Starts the download of a repository, in the background: the answer is the task that follows it. When it ends, what its skills need is read
+ * with fetchSkillPlan, and nothing is installed until the person agrees to it.
+ */
 export function installSkillRepo(url: string) {
-  return api.post('/skills/repos', { url })
+  return api.post<{ name: string; task: TaskInfo }>('/skills/repos', { url })
 }
+
+/** What the skills of a downloaded repository need, and whether the person has to agree to it before they can be used. */
+export function fetchSkillPlan(name: string) {
+  return api.get<InstallResult>(`/skills/repos/${encodeURIComponent(name)}/plan`)
+}
+
+/**
+ * Starts, in the backend, the private environment of a repository (its Python, its Node packages), once the person has agreed to the plan.
+ * It answers at once: the installation goes on in the background and its task says where it is.
+ */
+export function startSkillEnvironment(name: string) {
+  return api.post<{ name: string; task: TaskInfo }>(`/skills/repos/${encodeURIComponent(name)}/environment`, {})
+}
+
+
 
 export function uninstallSkillRepo(name: string) {
   return api.delete(`/skills/repos/${encodeURIComponent(name)}`)

@@ -15,6 +15,8 @@ type Props = {
   onHome?: () => void
   onBack?: () => void
   onForward?: () => void
+  // No background and no line under it, for screens that draw behind the title bar.
+  bare?: boolean
 }
 
 const dragStyle = { WebkitAppRegion: 'drag' } as CSSProperties & { WebkitAppRegion: string }
@@ -25,12 +27,12 @@ const systemButtonClass = 'flex h-[34px] w-[42px] cursor-pointer items-center ju
 
 // The app runs frameless, so every screen needs its own drag region and
 // minimize / maximize / close.
-export function Titlebar({ left, afterNav, center = 'SeshatOS', right, onHome, onBack, onForward }: Props) {
+export function Titlebar({ left, afterNav, center = 'SeshatOS', right, onHome, onBack, onForward, bare = false }: Props) {
   const hasNavigation = Boolean(onHome || onBack || onForward)
 
   return (
     <div
-      className="relative z-[50] flex h-[34px] shrink-0 items-center justify-between border-b border-[var(--border-soft)] bg-[var(--surface-root)] px-2"
+      className={`relative z-[50] flex h-[34px] shrink-0 items-center justify-between px-2 ${bare ? 'bg-transparent' : 'border-b border-[var(--border-soft)] bg-[var(--surface-root)]'}`}
       style={dragStyle}
     >
       <div className="flex items-center gap-1" style={noDragStyle}>

@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ProviderEmptyState } from '../providers/ProviderEmptyState'
-import { SoftButton } from '../knowledge/KnowledgePrimitives'
+import { useEffect, useState } from 'react'
+import { ActionButton, Notice, SettingRow, SettingsCard, SettingsPage, StatusBadge } from '../../settings/kit'
 import { createMCPServer, deleteMCPServer, fetchMCPServers, fetchMCPTools, importMCPJson, reloadMCPServers, updateMCPServer } from './mcpApi'
 import { MCPOrgCatalog } from './MCPOrgCatalog'
 import { MCPServerCard } from './MCPServerCard'
@@ -35,15 +34,8 @@ export function MCPConfig() {
     void load()
   }, [])
 
-  const metrics = useMemo(() => {
-    // Only the tools of the servers listed below: the runtime's own generic MCP tools are not part of any of them.
-    const toolCount = servers.reduce((sum, server) => sum + (tools[server.name]?.length ?? 0), 0)
-    return [
-      { label: 'Servers', value: String(servers.length) },
-      { label: 'Enabled', value: String(servers.filter((server) => server.enabled).length) },
-      { label: 'Tools', value: String(toolCount) }
-    ]
-  }, [servers, tools])
+  const toolCount = servers.reduce((sum, server) => sum + (tools[server.name]?.length ?? 0), 0)
+  const enabledCount = servers.filter((server) => server.enabled).length
 
   async function save(payload: Partial<MCPServer>) {
     const id = payload.id
@@ -122,25 +114,24 @@ export function MCPConfig() {
   const statusByName = new Map(statuses.map((status) => [status.name, status]))
 
   return (
-    <div className="space-y-5">
-      {error && <div className="rounded-lg border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</div>}
-
-      <section className="grid grid-cols-3 gap-2">
-        {metrics.map((metric) => <Metric key={metric.label} {...metric} />)}
-      </section>
-
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-3">
-        <div>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Runtime control</h2>
-          <p className="mt-1 text-[12px] text-[var(--text-muted)]">{pendingReload ? 'Changes are saved. Reload to apply them to agent tools.' : 'MCP runtime is in sync with the latest applied configuration.'}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <SoftButton onClick={() => void load()} disabled={loading}>Refresh</SoftButton>
-          <SoftButton onClick={() => void importLocalJson()} disabled={busyId === 'import'}>Import mcp.json</SoftButton>
-          <SoftButton tone="primary" onClick={() => void reload()} disabled={busyId === 'reload'}>{busyId === 'reload' ? 'Reloading...' : 'Apply and reload'}</SoftButton>
-          <SoftButton tone="success" onClick={() => setEditing('new')}>Add server</SoftButton>
-        </div>
-      </section>
+    <SettingsPage
+      id="mcp"
+      badge={<StatusBadge tone={enabledCount > 0 ? 'ok' : 'muted'}>{`${enabledCount} on · ${toolCount} tools`}</StatusBadge>}
+      actions={
+        <>
+          <ActionButton type="button" onClick={() => void importLocalJson()} disabled={busyId === 'import'}>
+            Import mcp.json
+          </ActionButton>
+          <ActionButton type="button" tone={pendingReload ? 'primary' : 'default'} onClick={() => void reload()} disabled={busyId === 'reload'}>
+            {busyId === 'reload' ? 'Reloading...' : pendingReload ? 'Apply changes' : 'Reload'}
+          </ActionButton>
+          <ActionButton type="button" tone="primary" onClick={() => setEditing('new')}>
+            Add server
+          </ActionButton>
+        </>
+      }
+    >
+      {error && <Notice tone="error">{error}</Notice>}
 
       {editing && (
         <MCPServerForm
@@ -151,38 +142,28 @@ export function MCPConfig() {
         />
       )}
 
-      <section>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Configured servers</h2>
-        <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
-          {loading ? (
-            <ProviderEmptyState label="Loading MCP servers..." />
-          ) : servers.length === 0 ? (
-            <ProviderEmptyState label="No MCP server configured yet. Add one or import your local mcp.json." />
-          ) : servers.map((server) => (
-            <MCPServerCard
-              key={server.id}
-              server={server}
-              status={statusByName.get(server.name)}
-              tools={tools[server.name]}
-              busy={busyId === server.id}
-              onToggle={(enabled) => void toggle(server, enabled)}
-              onEdit={() => setEditing(server)}
-              onDelete={() => void remove(server)}
-            />
-          ))}
-        </div>
-      </section>
+      <SettingsCard title="Servers">
+        {!loading && servers.length === 0 && <SettingRow title="No server yet" hint="Add one or import your mcp.json." />}
+        {servers.map((server) => (
+          <MCPServerCard
+            key={server.id}
+            server={server}
+            status={statusByName.get(server.name)}
+            tools={tools[server.name]}
+            busy={busyId === server.id}
+            onToggle={(enabled) => void toggle(server, enabled)}
+            onEdit={() => setEditing(server)}
+            onDelete={() => void remove(server)}
+          />
+        ))}
+      </SettingsCard>
 
-      <MCPOrgCatalog onChanged={() => { setPendingReload(false); void load() }} />
-    </div>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2.5">
-      <div className="text-[11px] font-semibold text-[var(--text-muted)]">{label}</div>
-      <div className="mt-1 text-[20px] font-semibold text-[var(--text-primary)]">{value}</div>
-    </div>
+      <MCPOrgCatalog
+        onChanged={() => {
+          setPendingReload(false)
+          void load()
+        }}
+      />
+    </SettingsPage>
   )
 }

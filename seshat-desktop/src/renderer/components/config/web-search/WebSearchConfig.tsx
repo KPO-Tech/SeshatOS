@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ProviderEmptyState } from '../providers/ProviderEmptyState'
+import { ActionButton, Notice, SettingRow, SettingsCard, SettingsPage, StatusBadge, TextField, Toggle } from '../../settings/kit'
 import { DomainCatalog } from './DomainCatalog'
-import { GlobalWebSearchSettings } from './GlobalWebSearchSettings'
 import { SearchProviderCard } from './SearchProviderCard'
 import {
   fetchDomainCatalog,
@@ -19,10 +18,8 @@ export function WebSearchConfig() {
   const [form, setForm] = useState<WebSearchForm>({ enabled: true, allow_env_fallback: true, max_queries_per_day: 0 })
   const [activeDomains, setActiveDomains] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
-  const [savingGlobal, setSavingGlobal] = useState(false)
-  const [savingDomains, setSavingDomains] = useState(false)
-  const [globalSaved, setGlobalSaved] = useState(false)
-  const [domainsSaved, setDomainsSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const catalogDomains = useMemo(() => allCatalogDomains(catalog), [catalog])
@@ -57,12 +54,12 @@ export function WebSearchConfig() {
 
   function updateForm<K extends keyof WebSearchForm>(key: K, value: WebSearchForm[K]) {
     setForm((current) => ({ ...current, [key]: value }))
-    setGlobalSaved(false)
+    setDirty(true)
   }
 
-  async function saveGlobal() {
-    if (!settings || savingGlobal) return
-    setSavingGlobal(true)
+  async function save() {
+    if (!settings || saving) return
+    setSaving(true)
     setError(null)
     try {
       const updated = await updateWebSearchSettings({
@@ -74,33 +71,11 @@ export function WebSearchConfig() {
         provider_setting_ids: settings.provider_setting_ids ?? []
       })
       setSettings(updated)
-      setGlobalSaved(true)
+      setDirty(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save web search settings.')
     } finally {
-      setSavingGlobal(false)
-    }
-  }
-
-  async function saveDomains() {
-    if (!settings || savingDomains) return
-    setSavingDomains(true)
-    setError(null)
-    try {
-      const updated = await updateWebSearchSettings({
-        enabled: form.enabled,
-        allow_env_fallback: form.allow_env_fallback,
-        max_queries_per_day: form.max_queries_per_day,
-        allowed_domains: domainsToAllowedList(activeDomains, catalogDomains),
-        blocked_domains: settings.blocked_domains ?? [],
-        provider_setting_ids: settings.provider_setting_ids ?? []
-      })
-      setSettings(updated)
-      setDomainsSaved(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save domain policy.')
-    } finally {
-      setSavingDomains(false)
+      setSaving(false)
     }
   }
 
@@ -111,7 +86,7 @@ export function WebSearchConfig() {
       else next.add(domain)
       return next
     })
-    setDomainsSaved(false)
+    setDirty(true)
   }
 
   function toggleCategory(domains: string[]) {
@@ -124,7 +99,7 @@ export function WebSearchConfig() {
       })
       return next
     })
-    setDomainsSaved(false)
+    setDirty(true)
   }
 
   function updateProvider(updated: SearchProviderConfig) {
@@ -132,80 +107,56 @@ export function WebSearchConfig() {
   }
 
   return (
-    <div className="space-y-5">
-      {error && (
-        <div className="rounded-lg border border-[var(--accent-danger)] bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">
-          {error}
-        </div>
-      )}
-
-      <section className="grid grid-cols-3 gap-2">
-        <Metric label="Providers" value={String(searchProviders.length)} />
-        <Metric label="Ready" value={String(readyProviders.length)} />
-        <Metric label="Active domains" value={String(activeDomains.size)} />
-      </section>
-
-      {loading ? (
-        <ProviderEmptyState label="Loading web search configuration..." />
-      ) : (
+    <SettingsPage
+      id="web-search"
+      badge={<StatusBadge tone={form.enabled && readyProviders.length > 0 ? 'ok' : 'muted'}>{!form.enabled ? 'Off' : `${readyProviders.length} ready`}</StatusBadge>}
+      actions={
         <>
-          <GlobalWebSearchSettings form={form} saving={savingGlobal} saved={globalSaved} onChange={updateForm} onSave={saveGlobal} />
+          {dirty && <span className="text-[12px] text-[var(--text-muted)]">Unsaved changes</span>}
+          <ActionButton type="button" tone={dirty ? 'primary' : 'default'} disabled={!dirty || saving} onClick={() => void save()}>
+            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+          </ActionButton>
+        </>
+      }
+    >
+      {error && <Notice tone="error">{error}</Notice>}
 
-          <section>
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Search providers</h2>
-              <button type="button" onClick={() => void load()} disabled={loading} className="rounded-md border border-[var(--border-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-50">
-                Refresh
-              </button>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {searchProviders.length === 0 ? (
-                <ProviderEmptyState label="No search providers available." />
-              ) : (
-                searchProviders.map((provider) => (
-                  <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
-                ))
-              )}
-            </div>
-          </section>
+      {!loading && (
+        <>
+          <SettingsCard>
+            <SettingRow title="Search the web">
+              <Toggle label="Search the web" enabled={form.enabled} onChange={(enabled) => updateForm('enabled', enabled)} />
+            </SettingRow>
+            <SettingRow title="Use keys from the environment" hint="When no key is saved here.">
+              <Toggle label="Use keys from the environment" enabled={form.allow_env_fallback} onChange={(enabled) => updateForm('allow_env_fallback', enabled)} />
+            </SettingRow>
+            <SettingRow title="Queries per day" hint="0 is unlimited.">
+              <TextField label="Queries per day" value={String(form.max_queries_per_day)} onChange={(value) => updateForm('max_queries_per_day', Math.max(0, Number.parseInt(value, 10) || 0))} width={100} />
+            </SettingRow>
+          </SettingsCard>
+
+          <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
+            {searchProviders.map((provider) => (
+              <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
+            ))}
+          </div>
 
           {researchProviders.length > 0 && (
-            <section>
-              <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Research sources</h2>
-              <p className="mt-1 text-[12px] text-[var(--text-muted)]">
-                Keys for the tools an agent uses to read reviews and opinions for market studies and product comparisons. A tool is offered to the agent only once its key is saved. App Store reviews need no key.
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
+            <>
+              <h2 className="m-0 mt-2 text-[13px] font-semibold text-[var(--text-secondary)]">Research sources</h2>
+              <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
                 {researchProviders.map((provider) => (
                   <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
                 ))}
               </div>
-            </section>
+            </>
           )}
 
           {catalog.length > 0 && (
-            <DomainCatalog
-              categories={catalog}
-              activeDomains={activeDomains}
-              saving={savingDomains}
-              saved={domainsSaved}
-              orgBlockedCount={settings?.org_blocked_domains?.length ?? 0}
-              onToggle={toggleDomain}
-              onToggleCategory={toggleCategory}
-              onSave={saveDomains}
-            />
+            <DomainCatalog categories={catalog} activeDomains={activeDomains} orgBlockedCount={settings?.org_blocked_domains?.length ?? 0} onToggle={toggleDomain} onToggleCategory={toggleCategory} />
           )}
         </>
       )}
-    </div>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2.5">
-      <div className="text-[11px] font-semibold text-[var(--text-muted)]">{label}</div>
-      <div className="mt-1 text-[20px] font-semibold text-[var(--text-primary)]">{value}</div>
-    </div>
+    </SettingsPage>
   )
 }

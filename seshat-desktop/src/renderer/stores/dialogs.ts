@@ -1,35 +1,18 @@
 import { create } from 'zustand'
-import type { ConfigSection } from '@renderer/components/config/ConfigModal'
-import type { SettingsSection } from '@renderer/components/settings/SettingsModal'
+import type { SettingsSectionId } from '@renderer/components/settings/page/sections'
 
-// Settings and Config are centered modals, opened from anywhere (sidebar menu,
-// Skills page, Plugins page...) without navigating away from the current view.
+// Settings is one window over the app, opened from anywhere (the sidebar menu, the Skills page, the Plugins page...) without leaving the
+// current view. Whoever opens it says which page it starts on.
 type DialogsState = {
-  settingsSection: SettingsSection | null
-  configSection: ConfigSection | null
-  openSettings: (section?: SettingsSection) => void
-  openConfig: (section?: ConfigSection) => void
-  closeTopmost: () => boolean
-  closeAll: () => void
+  section: SettingsSectionId | null
+  openSettings: (section?: SettingsSectionId) => void
+  openConfig: (section?: SettingsSectionId) => void
+  close: () => void
 }
 
-export const useDialogsStore = create<DialogsState>()((set, get) => ({
-  settingsSection: null,
-  configSection: null,
-  openSettings: (section = 'general') => set({ settingsSection: section }),
-  openConfig: (section = 'providers') => set({ configSection: section }),
-  // Returns whether something was closed, so Escape can fall through to other handlers.
-  closeTopmost: () => {
-    const { settingsSection, configSection } = get()
-    if (settingsSection) {
-      set({ settingsSection: null })
-      return true
-    }
-    if (configSection) {
-      set({ configSection: null })
-      return true
-    }
-    return false
-  },
-  closeAll: () => set({ settingsSection: null, configSection: null })
+export const useDialogsStore = create<DialogsState>()((set) => ({
+  section: null,
+  openSettings: (section = 'general') => set({ section }),
+  openConfig: (section = 'providers') => set({ section }),
+  close: () => set({ section: null })
 }))

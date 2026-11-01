@@ -56,7 +56,7 @@ export function ListDirectoryToolView({ tool, result }: ToolViewProps) {
           {parsed.entries.map((entry, i) => (
             <div key={i} className={FILE_ITEM_CSS}>
               {entry.is_directory ? `${entry.name}/` : entry.name}
-              {!entry.is_directory && <span className="opacity-[0.55]"> — {fmtSize(entry.size_bytes)}</span>}
+              {!entry.is_directory && <span className="opacity-[0.55]"> · {fmtSize(entry.size_bytes)}</span>}
             </div>
           ))}
         </div>

@@ -37,10 +37,12 @@ type ThemeTokens = Record<`--${string}`, string>
 // Seshat's own two appearances. Their tokens live in tailwind.css, so they are listed here for the picker only.
 const SESHAT: ThemeSeed[] = [
   { id: 'dark', label: 'Seshat Dark', scheme: 'dark', bg: '#2f2e34', panel: '#3a3941', text: '#e7e2da', accent: '#ef7c2f' },
-  { id: 'light', label: 'Seshat Light', scheme: 'light', bg: '#f7f7f5', panel: '#ffffff', text: '#171717', accent: '#ef7c2f' }
+  { id: 'light', label: 'Seshat Light', scheme: 'light', bg: '#fbfcfd', panel: '#ffffff', text: '#0c182e', accent: '#ef7c2f' }
 ]
 
 const PRESETS: ThemeSeed[] = [
+  // Seshat's third appearance: the blue-black night of the Projects design (measured on it), with the orange of Seshat Dark, brighter.
+  { id: 'seshat-night', label: 'Seshat Night', category: 'seshat', scheme: 'dark', bg: '#14171d', panel: '#1b1f26', text: '#e8eaee', accent: '#e26d1f' },
   // Dark
   { id: 'carbon', label: 'Carbon', scheme: 'dark', bg: '#0c0c0d', panel: '#161617', text: '#e4e4e6', accent: '#d9622a' },
   { id: 'graphite', label: 'Graphite', category: 'gradient', scheme: 'dark', bg: '#1b1d24', panel: '#262933', text: '#e6e7e9', accent: '#5b86b8', wallpaper: { kind: 'gradient', angle: 140, stops: ['#3a3f55', '#23262f', '#15161b'] } },

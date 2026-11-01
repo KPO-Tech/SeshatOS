@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { LayoutOne, Page, Scan, Table, TextRecognition } from '@icon-park/react'
-import { StatusPill } from './KnowledgePrimitives'
+import { ActionButton, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
 import type { NativeDocModelStatus } from './knowledgeTypes'
 
 type ModelInfo = { title: string; role: string; icon: ReactNode }
@@ -30,47 +30,40 @@ function size(bytes: number): string {
   return `${bytes} B`
 }
 
-// One row for each model the local reader uses on a scanned page, with what it does and whether it is on this computer.
+// One row for each model the local reader uses on a scanned page, folded under a summary of how many are on this computer.
 export function NativeModelsPanel({ statuses, folder }: { statuses: NativeDocModelStatus[]; folder: string | null }) {
+  const [open, setOpen] = useState(false)
   if (statuses.length === 0) return null
+  const installed = statuses.filter((model) => model.installed).length
   return (
-    <div className="overflow-hidden rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)]">
-      <div className="border-b border-[var(--border-soft)] px-3 py-2">
-        <div className="text-[12px] font-semibold text-[var(--text-primary)]">Models for scanned pages</div>
-        <div className="mt-0.5 text-[11px] text-[var(--text-muted)]">They work one after the other on each page. PDFs that already hold their text do not need them.</div>
-      </div>
-      <ul className="m-0 list-none p-0">
-        {orderedModels(statuses).map((model) => {
+    <SettingsCard
+      title="Models"
+      icon={<Scan theme="outline" size={16} />}
+      badge={<StatusBadge tone={installed === statuses.length ? 'ok' : 'muted'}>{`${installed} of ${statuses.length} installed`}</StatusBadge>}
+      action={
+        <ActionButton type="button" onClick={() => setOpen((current) => !current)}>
+          {open ? 'Hide' : 'Show'}
+        </ActionButton>
+      }
+    >
+      {open &&
+        orderedModels(statuses).map((model) => {
           const info = MODELS[model.file] ?? { title: model.file, role: '', icon: <Page size={16} /> }
           return (
-            <li key={model.file} className="flex items-center gap-3 border-b border-[var(--border-soft)] px-3 py-2.5 last:border-b-0">
-              <span
-                className={[
-                  'flex size-8 shrink-0 items-center justify-center rounded-md',
-                  model.installed ? 'bg-[var(--accent-success)]/10 text-[var(--accent-success)]' : 'bg-[var(--border-soft)] text-[var(--text-muted)]'
-                ].join(' ')}
-              >
-                {info.icon}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12px] font-semibold text-[var(--text-primary)]">{info.title}</span>
-                <span className="block text-[11px] leading-[15px] text-[var(--text-muted)]">{info.role}</span>
-              </span>
-              <span className="flex shrink-0 items-center gap-2">
-                {model.installed && <span className="text-[11px] text-[var(--text-faint)]">{size(model.size_bytes)}</span>}
-                <StatusPill tone={model.installed ? 'ok' : model.required ? 'warn' : 'muted'}>
-                  {model.installed ? 'Installed' : model.required ? 'Missing' : 'Not installed'}
-                </StatusPill>
-              </span>
-            </li>
+            <SettingRow key={model.file} title={info.title} icon={info.icon}>
+              {model.installed && <span className="text-[12px] text-[var(--text-faint)]">{size(model.size_bytes)}</span>}
+              <StatusBadge tone={model.installed ? 'ok' : 'muted'}>{model.installed ? 'Installed' : model.required ? 'Missing' : 'Not installed'}</StatusBadge>
+            </SettingRow>
           )
         })}
-      </ul>
-      {folder && (
-        <div className="truncate border-t border-[var(--border-soft)] px-3 py-1.5 text-[10.5px] text-[var(--text-faint)]" title={folder}>
+      {open && folder && (
+        <div className="truncate px-4 py-2 text-[11px] text-[var(--text-faint)]" title={folder}>
           {folder}
         </div>
       )}
-    </div>
+      {!open && (
+        <div className="px-4 py-3 text-[12px] text-[var(--text-muted)]">Layout, text detection, recognition and tables.</div>
+      )}
+    </SettingsCard>
   )
 }

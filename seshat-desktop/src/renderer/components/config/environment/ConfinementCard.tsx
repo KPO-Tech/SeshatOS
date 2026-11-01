@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ConfigCard, StatusPill } from '../knowledge/KnowledgePrimitives'
+import { ActionButton, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
 import { confinementView } from './confinementView'
 
 /**
@@ -16,28 +16,21 @@ export function ConfinementCard({ docker }: { docker: boolean }) {
     setStatus(await (window.seshat?.sandbox?.srtStatus({ refresh: again }) ?? Promise.resolve(null)).catch(() => null))
   }, [])
 
-  useEffect(() => { void refresh() }, [refresh])
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
 
   const view = confinementView(status, docker)
   return (
-    <ConfigCard
-      title="Command confinement"
-      description="What limits the agent's shell commands to your project folder and a short list of network hosts."
-      status={<StatusPill tone={view.confined ? 'ok' : 'warn'}>{view.label}</StatusPill>}
-    >
-      <div className="grid gap-2 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-        <div>{view.text}</div>
-        {status?.detail && !view.confined && <div className="font-mono text-[11px]">{status.detail}</div>}
+    <SettingsCard title="Command confinement" badge={<StatusBadge tone={view.confined ? 'ok' : 'warn'}>{view.label}</StatusBadge>}>
+      <SettingRow title={view.text}>
         {!view.confined && !docker && (
-          <button
-            type="button"
-            onClick={() => void refresh(true)}
-            className="justify-self-start rounded-md border border-[var(--border-soft)] px-2.5 py-1 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
-          >
+          <ActionButton type="button" onClick={() => void refresh(true)}>
             Check again
-          </button>
+          </ActionButton>
         )}
-      </div>
-    </ConfigCard>
+      </SettingRow>
+      {status?.detail && !view.confined && <div className="px-4 py-3 font-mono text-[11px] text-[var(--text-muted)]">{status.detail}</div>}
+    </SettingsCard>
   )
 }

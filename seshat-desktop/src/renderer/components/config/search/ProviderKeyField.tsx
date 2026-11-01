@@ -1,5 +1,5 @@
 import type { ProviderSetting } from '@renderer/api/types'
-import { Field, TextInput } from '../knowledge/KnowledgePrimitives'
+import { ActionButton, SettingRow, TextField } from '../../settings/kit'
 
 type Props = {
   // The provider of Config > Providers whose key this service can use, when the person has set it up.
@@ -19,27 +19,21 @@ type Props = {
 export function ProviderKeyField({ ownProvider, missingProviderName, useOwnKey, onUseOwnKey, apiKey, onApiKey, hasStoredKey, emptyPlaceholder }: Props) {
   if (ownProvider && useOwnKey) {
     return (
-      <Field label="API key">
-        <div className="flex h-10 items-center justify-between gap-2 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[12.5px] text-[var(--text-secondary)]">
-          <span className="min-w-0 truncate">
-            <span className="text-[var(--accent-success)]">&#10003;</span> Key of {ownProvider.name}
-          </span>
-          <button type="button" onClick={() => onUseOwnKey(false)} className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-[11.5px] text-[var(--accent-primary)] hover:underline">
-            Use another
-          </button>
-        </div>
-      </Field>
+      <SettingRow title="API key" hint={`Uses the key of ${ownProvider.name}`}>
+        <ActionButton type="button" onClick={() => onUseOwnKey(false)}>
+          Use another
+        </ActionButton>
+      </SettingRow>
     )
   }
   return (
-    <Field label="API key">
-      <TextInput type="password" value={apiKey} onChange={(event) => onApiKey(event.target.value)} placeholder={hasStoredKey ? 'Keep current key' : emptyPlaceholder} autoComplete="new-password" />
+    <SettingRow title="API key" hint={!ownProvider && missingProviderName ? `Add ${missingProviderName} in Providers to reuse its key.` : undefined}>
+      <TextField label="API key" type="password" value={apiKey} onChange={onApiKey} placeholder={hasStoredKey ? 'Keep current key' : emptyPlaceholder} width={220} />
       {ownProvider && (
-        <button type="button" onClick={() => onUseOwnKey(true)} className="w-fit cursor-pointer border-0 bg-transparent p-0 text-[11.5px] text-[var(--accent-primary)] hover:underline">
-          Use the key of {ownProvider.name}
-        </button>
+        <ActionButton type="button" onClick={() => onUseOwnKey(true)}>
+          {`Use ${ownProvider.name}`}
+        </ActionButton>
       )}
-      {!ownProvider && missingProviderName && <span className="text-[11.5px] text-[var(--text-muted)]">Add {missingProviderName} in Providers to use its key here.</span>}
-    </Field>
+    </SettingRow>
   )
 }

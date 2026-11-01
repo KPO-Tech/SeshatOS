@@ -8,9 +8,14 @@ interface Window {
     readFileDataURL: (p: string) => Promise<string>
     hasProjectContextFile: (projectPath: string) => Promise<boolean>
     projectPathExists: (projectPath: string) => Promise<boolean>
+    openInEditor: (directoryPath: string) => Promise<boolean>
     fs: {
       listDirectory: (directoryPath: string) => Promise<Array<{ name: string; isDirectory: boolean }>>
       readTextFile: (filePath: string) => Promise<string>
+      countFiles: (directoryPath: string) => Promise<{ count: number; capped: boolean }>
+      scanProject: (directoryPath: string) => Promise<{ count: number; capped: boolean; bytes: number; recent: Array<{ path: string; name: string; modifiedMs: number }>; createdMs: number }>
+      searchFiles: (directoryPath: string, query: string) => Promise<Array<{ path: string; relativePath: string; name: string; isDirectory: boolean }>>
+      readImage: (filePath: string) => Promise<string>
     }
     openExternal: (url: string) => Promise<void>
     selectFile: (opts?: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>
@@ -123,6 +128,13 @@ interface Window {
       stop: (id: string) => Promise<void>
       onData: (id: string, listener: (event: ShellDataEvent) => void) => () => void
       onExit: (id: string, listener: (event: ShellExitEvent) => void) => () => void
+    }
+    background?: {
+      setBusy: (count: number) => Promise<void>
+    }
+    notify?: {
+      show: (notice: { title: string; body?: string; route?: string }) => Promise<void>
+      onOpen: (listener: (route: string) => void) => () => void
     }
     updates?: {
       checkNow: () => Promise<{ ok: boolean; error?: string }>

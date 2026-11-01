@@ -47,3 +47,7 @@ export type LocalSTTConfig = {
   language?: string
   updated_at?: number
 }
+
+export type WhisperModel = { id: string; label: string; approxSizeBytes: number; description: string }
+export type WhisperState = { supported: boolean; running: boolean; port?: number; activeModelId: string; downloadedModelIds: string[] }
+export type WhisperProgress = { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }

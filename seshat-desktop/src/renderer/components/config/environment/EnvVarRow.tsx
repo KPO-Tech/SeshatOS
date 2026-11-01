@@ -1,16 +1,8 @@
 import { useState } from 'react'
-import { SoftButton, StatusPill, TextInput } from '../knowledge/KnowledgePrimitives'
+import { ActionButton, SettingRow, StatusBadge, TextField } from '../../settings/kit'
 import type { EnvVarDef } from './environmentTypes'
 
-export function EnvVarRow({
-  def,
-  configured,
-  onChanged
-}: {
-  def: EnvVarDef
-  configured: boolean
-  onChanged: () => Promise<void>
-}) {
+export function EnvVarRow({ def, configured, onChanged }: { def: EnvVarDef; configured: boolean; onChanged: () => Promise<void> }) {
   const [editing, setEditing] = useState(!configured)
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -41,34 +33,39 @@ export function EnvVarRow({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2.5">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <code className="text-[12px] font-semibold text-[var(--text-primary)]">{def.key}</code>
-          {configured && <StatusPill tone="ok">Configured</StatusPill>}
-        </div>
-        <p className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-          {def.description}
+    <SettingRow title={def.label || def.key} hint={def.key}>
+      {configured && !editing ? (
+        <>
+          <StatusBadge tone="ok">Set</StatusBadge>
+          <ActionButton onClick={() => setEditing(true)}>Change</ActionButton>
+          <ActionButton tone="danger" onClick={() => void remove()} disabled={saving}>
+            Remove
+          </ActionButton>
+        </>
+      ) : (
+        <>
           {def.helpUrl && (
-            <button type="button" onClick={() => void window.seshat?.openExternal(def.helpUrl!)} className="ml-1 font-semibold text-[var(--accent-primary)] hover:underline">
+            <button type="button" onClick={() => void window.seshat?.openExternal(def.helpUrl!)} className="cursor-pointer border-0 bg-transparent text-[12px] font-semibold text-[var(--accent-primary)] hover:underline">
               Get one
             </button>
           )}
-        </p>
-      </div>
-
-      {configured && !editing ? (
-        <div className="flex shrink-0 items-center gap-2">
-          <SoftButton onClick={() => setEditing(true)}>Change</SoftButton>
-          <SoftButton tone="danger" onClick={() => void remove()} disabled={saving}>Remove</SoftButton>
-        </div>
-      ) : (
-        <div className="flex min-w-[330px] shrink-0 items-center gap-2">
-          <TextInput type="password" value={value} onChange={(event) => setValue(event.target.value)} placeholder={def.label} className="flex-1" />
-          <SoftButton tone="primary" onClick={() => void save()} disabled={saving || !value.trim()}>{saving ? 'Saving...' : 'Save'}</SoftButton>
-          {configured && <SoftButton onClick={() => { setEditing(false); setValue('') }} disabled={saving}>Cancel</SoftButton>}
-        </div>
+          <TextField label={def.label || def.key} type="password" value={value} onChange={setValue} placeholder="Value" width={220} />
+          <ActionButton tone="primary" onClick={() => void save()} disabled={saving || !value.trim()}>
+            {saving ? 'Saving...' : 'Save'}
+          </ActionButton>
+          {configured && (
+            <ActionButton
+              onClick={() => {
+                setEditing(false)
+                setValue('')
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </ActionButton>
+          )}
+        </>
       )}
-    </div>
+    </SettingRow>
   )
 }

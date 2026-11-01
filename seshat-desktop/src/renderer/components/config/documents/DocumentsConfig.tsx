@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
-import { DocumentReaderCard } from '../knowledge/DocumentReaderCard'
+import { ActionButton, SettingsPage, SettingsTabs, StatusBadge, type SettingsTab } from '../../settings/kit'
 import { fetchDocumentsSnapshot, type DocumentsSnapshot } from '../knowledge/knowledgeApi'
 import type { SystemStatus } from '../knowledge/knowledgeTypes'
+import { DocumentsOverview } from './DocumentsOverview'
+import { LocalOcrPanel } from './LocalOcrPanel'
+import { useDocumentReader } from './useDocumentReader'
 
 const emptySnapshot: DocumentsSnapshot = { documentReader: null, system: null }
 
-// How SeshatOS reads documents: the reading of scanned pages on this computer (its models and the languages it reads), and a document
-// server to use instead. It is the card of the Knowledge section, shown on its own because reading a scan is not only for knowledge
-// bases: the chat and the attachments use the same reader.
+type Tab = 'overview' | 'ocr'
+const TABS: Array<SettingsTab<Tab>> = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'ocr', label: 'Scanned pages' }
+]
+
+/** How SeshatOS reads documents: which reader goes first and what each can do, and the reading of scanned pages on this computer. */
 export function DocumentsConfig() {
   const [snapshot, setSnapshot] = useState<DocumentsSnapshot>(emptySnapshot)
   const [loading, setLoading] = useState(true)
@@ -28,29 +35,44 @@ export function DocumentsConfig() {
     void load()
   }, [load])
 
+  if (loading) return <SettingsPage id="documents">{null}</SettingsPage>
+
   return (
-    <div className="grid gap-4">
-      {loading && <div className="text-[12px] font-semibold text-[var(--text-muted)]">Loading...</div>}
+    <Loaded
+      snapshot={snapshot}
+      error={error}
+      onSaved={(documentReader) => setSnapshot((current) => ({ ...current, documentReader }))}
+      onSystemChanged={(system) =>
+        setSnapshot((current) => ({
+          ...current,
+          system: current.system ? { ...current.system, ...system } : ({ mode: 'standalone', ...system } as SystemStatus)
+        }))
+      }
+    />
+  )
+}
 
-      {error && (
-        <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-          {error}
-        </div>
-      )}
+function Loaded({ snapshot, error, onSaved, onSystemChanged }: { snapshot: DocumentsSnapshot; error: string | null; onSaved: Parameters<typeof useDocumentReader>[0]['onSaved']; onSystemChanged: (system: Partial<SystemStatus>) => void }) {
+  const [tab, setTab] = useState<Tab>('overview')
+  const reader = useDocumentReader({ config: snapshot.documentReader, system: snapshot.system, onSaved, onSystemChanged })
+  const message = error || reader.saveError
 
-      {!loading && (
-        <DocumentReaderCard
-          config={snapshot.documentReader}
-          system={snapshot.system}
-          onSaved={(documentReader) => setSnapshot((current) => ({ ...current, documentReader }))}
-          onSystemChanged={(system) =>
-            setSnapshot((current) => ({
-              ...current,
-              system: current.system ? { ...current.system, ...system } : ({ mode: 'standalone', ...system } as SystemStatus)
-            }))
-          }
-        />
-      )}
-    </div>
+  return (
+    <SettingsPage
+      id="documents"
+      badge={reader.form.enabled ? <StatusBadge tone="ok">On</StatusBadge> : <StatusBadge tone="muted">Off</StatusBadge>}
+      tabs={<SettingsTabs tabs={TABS} value={tab} onChange={setTab} />}
+      actions={
+        <>
+          {reader.dirty && <span className="text-[12px] text-[var(--text-muted)]">Unsaved changes</span>}
+          <ActionButton type="button" tone={reader.dirty ? 'primary' : 'default'} disabled={!reader.dirty || reader.saving} onClick={() => void reader.save()}>
+            {reader.saving ? 'Saving...' : reader.dirty ? 'Save changes' : 'Saved'}
+          </ActionButton>
+        </>
+      }
+    >
+      {message && <div className="rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{message}</div>}
+      {tab === 'overview' ? <DocumentsOverview reader={reader} /> : <LocalOcrPanel reader={reader} />}
+    </SettingsPage>
   )
 }

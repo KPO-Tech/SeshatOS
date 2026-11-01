@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { ApplicationOne, Browser, Plus, Puzzle, Search, Workbench } from '@icon-park/react'
+import { ApplicationOne, Browser, FolderClose, Plus, Puzzle, Search, Workbench } from '@icon-park/react'
 import { SearchModal } from '@renderer/components/layout/SearchModal'
 import { SessionHistoryModal } from '@renderer/components/layout/SessionHistoryModal'
 import { edition } from '@renderer/lib/edition'
@@ -8,9 +8,10 @@ import { useSessionStore } from '@renderer/stores/session'
 import { SIDEBAR_DEFAULT_WIDTH, useUIStore } from '@renderer/stores/ui'
 import { RecentSessions } from './RecentSessions'
 import { SidebarFooterMenu } from './SidebarFooterMenu'
+import { TaskProgress } from './TaskProgress'
 import { KnowledgeNav } from '@renderer/pages/knowledge/components/KnowledgeNav'
 import { SidebarItem } from './SidebarItem'
-import { resolveProjectContextPath, selectRecentSessions } from '@renderer/lib/projects'
+import { listProjects, normalizeProjectPath, resolveProjectContextPath, selectRecentSessions } from '@renderer/lib/projects'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -38,6 +39,12 @@ export function Sidebar() {
     ),
     [pathname, search, sessions]
   )
+  // The project that is open (its page, or one of its conversations): shown under Projects, to go back to its overview.
+  const currentProject = useMemo(() => {
+    if (!projectContextPath) return undefined
+    const wanted = normalizeProjectPath(projectContextPath).toLowerCase()
+    return listProjects(sessions).find((project) => project.rootPath.toLowerCase() === wanted)
+  }, [projectContextPath, sessions])
   const recentSessions = useMemo(() => selectRecentSessions(sessions, projectContextPath), [sessions, projectContextPath])
   const scopedSessions = useMemo(() => selectRecentSessions(sessions, projectContextPath, Number.MAX_SAFE_INTEGER), [sessions, projectContextPath])
 
@@ -101,19 +108,29 @@ export function Sidebar() {
         <div className={cx('flex flex-col gap-px px-2 pb-1 pt-3.5', collapsed && 'items-center')}>
           <SidebarItem icon={<Plus theme="outline" size={16} />} label="New Chat" collapsed={collapsed} active={pathname === '/' && !activeId} onClick={startNewChat} />
           <SidebarItem icon={<Search theme="outline" size={16} />} label="Search" shortcut="Ctrl K" collapsed={collapsed} onClick={() => setSearchOpen(true)} />
-          {!projectContextPath && (
-            <>
-              <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
-              <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
-              <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={item('/projects')} onClick={() => navigate('/projects')} />
-            </>
+          {/* The same entries everywhere: what a project changes is the list of tasks below, not the way around the app. */}
+          <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
+          <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
+          <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={pathname === '/projects'} onClick={() => navigate('/projects')} />
+          {currentProject && (
+            <SidebarItem
+              nested
+              icon={<FolderClose theme="outline" size={14} />}
+              label={currentProject.name}
+              collapsed={collapsed}
+              active={pathname === `/projects/${encodeURIComponent(currentProject.id)}`}
+              onClick={() => navigate(`/projects/${encodeURIComponent(currentProject.id)}`)}
+            />
           )}
+
         </div>
         )}
 
         <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 py-2">
           {!collapsed && !inKnowledge && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onOpenHistory={() => setHistoryOpen(true)} />}
         </div>
+
+        <TaskProgress collapsed={collapsed} />
 
         {edition.store && (
           <div className={cx('mt-1 flex flex-col px-2', collapsed && 'items-center')}>

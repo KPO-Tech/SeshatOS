@@ -25,11 +25,33 @@ export type RepoInfo = {
   skill_count: number
 }
 
+/** What installing a repository will put on the machine, as the backend read it before anything is installed. */
+export type InstallPlan = {
+  python?: { minimum: string; found: boolean; version?: string; files?: string[]; packages: string[] }
+  node?: { found: boolean; version?: string; packages: string[] }
+  /** What will be downloaded besides the packages (the installer uv), said before the person agrees. */
+  notes?: string[]
+  warnings?: string[]
+}
+
+export type InstallResult = {
+  name: string
+  skill_count: number
+  plan: InstallPlan
+  /** True when the skills wait for the person to agree to the plan. */
+  needs_environment: boolean
+}
+
 export type CatalogEntry = {
   name: string
   url: string
   description: string
   installed: boolean
+  /** What the skills are for, as the catalog says it ('Presentations', 'Security'). */
+  category?: string
+  skill_count?: number
+  /** What the skills use besides the agent ('Python 3.10+', 'Docker'). */
+  needs?: string[]
   source?: 'organization'
 }
 

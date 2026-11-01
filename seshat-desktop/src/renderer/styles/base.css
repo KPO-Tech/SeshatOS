@@ -185,3 +185,10 @@
   margin-left: 1px;
 }
 
+
+/* The list of a native <select> is drawn by the system, in white, unless it is told its colours: in a dark appearance the text of the
+   options (the colour of the select) was then pale on white. */
+select option {
+  background-color: var(--surface-panel);
+  color: var(--text-primary);
+}

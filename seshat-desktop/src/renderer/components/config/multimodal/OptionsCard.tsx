@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { ConfigCard, CustomSelect, Field, SoftButton, TextInput } from '../knowledge/KnowledgePrimitives'
+import { ActionButton, Notice, SelectField, SettingRow, SettingsCard } from '../../settings/kit'
 import type { CapabilityOptionValues } from './capabilityOptions'
 
 export type OptionDefinition = {
@@ -14,27 +14,15 @@ export type OptionDefinition = {
 
 const DEFAULT_CHOICE = '__default__'
 
-function Suggestions({ id, values }: { id: string; values: readonly string[] }) {
-  return (
-    <datalist id={id}>
-      {values.map((value) => (
-        <option key={value} value={value} />
-      ))}
-    </datalist>
-  )
-}
-
 // A card of named choices of a capability (a model, a voice, a format) saved together. An empty field keeps the provider default.
 export function OptionsCard({
   title,
-  description,
   options,
   saved,
   loading,
   onSave
 }: {
   title: string
-  description: string
   options: readonly OptionDefinition[]
   /** Everything saved for the capability: a card saves its own names without touching another card's. */
   saved: CapabilityOptionValues
@@ -74,44 +62,50 @@ export function OptionsCard({
   }
 
   return (
-    <ConfigCard title={title} description={description}>
-      <div className="grid gap-4">
+    <>
+      {error && <Notice tone="error">{error}</Notice>}
+      <SettingsCard
+        title={title}
+        action={
+          <ActionButton type="button" tone={dirty ? 'primary' : 'default'} onClick={() => void submit()} disabled={!dirty || saving}>
+            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+          </ActionButton>
+        }
+      >
         {options.map((option) => (
-          <Field key={option.name} label={option.label}>
+          <SettingRow key={option.name} title={option.label} hint={option.hint}>
             {option.choices ? (
-              <CustomSelect
-                value={form[option.name] || DEFAULT_CHOICE}
-                options={[{ value: DEFAULT_CHOICE, label: 'Provider default' }, ...option.choices]}
-                onChange={(value) => update(option.name, value === DEFAULT_CHOICE ? '' : value)}
-              />
+              <div className="w-[210px]">
+                <SelectField
+                  value={form[option.name] || DEFAULT_CHOICE}
+                  options={[{ value: DEFAULT_CHOICE, label: 'Provider default' }, ...option.choices]}
+                  onChange={(value) => update(option.name, value === DEFAULT_CHOICE ? '' : value)}
+                />
+              </div>
             ) : (
               <>
-                <TextInput
+                <input
                   value={form[option.name] ?? ''}
+                  aria-label={option.label}
                   onChange={(event) => update(option.name, event.target.value)}
                   placeholder={option.placeholder}
                   list={option.suggestions ? `${listId}-${option.name}` : undefined}
                   disabled={loading}
+                  style={{ width: 240 }}
+                  className="h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[12.5px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
                 />
-                {option.suggestions && <Suggestions id={`${listId}-${option.name}`} values={option.suggestions} />}
+                {option.suggestions && (
+                  <datalist id={`${listId}-${option.name}`}>
+                    {option.suggestions.map((value) => (
+                      <option key={value} value={value} />
+                    ))}
+                  </datalist>
+                )}
               </>
             )}
-            <div className="mt-1 text-[12px] leading-4 text-[var(--text-muted)]">{option.hint}</div>
-          </Field>
+          </SettingRow>
         ))}
-
-        {error && (
-          <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-            {error}
-          </div>
-        )}
-
-        <div className="flex items-center justify-end">
-          <SoftButton type="button" tone={dirty ? 'primary' : 'success'} onClick={() => void submit()} disabled={!dirty || saving}>
-            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
-          </SoftButton>
-        </div>
-      </div>
-    </ConfigCard>
+      </SettingsCard>
+    </>
   )
 }

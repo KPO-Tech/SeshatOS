@@ -7,6 +7,11 @@ import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
+import { collectPullUrls } from '@renderer/lib/pullRequests'
+import { gitFolder } from '@renderer/lib/gitFolder'
+import { useGitState } from '@renderer/hooks/useGitState'
+import { ChangesList } from './changes/ChangesList'
+import { usePullRequests } from './changes/usePullRequests'
 import { api, ApiError } from '@renderer/api/client'
 import { compactionNote, connectorRows, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { formatDuration } from '@renderer/lib/turnTiming'
@@ -66,6 +71,9 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }, [])
 
   const { usage: context, windowTokens } = useContextUsage(sessionId)
+  const folder = gitFolder(session)
+  const pullUrls = useMemo(() => collectPullUrls(messages), [messages])
+  const { result: pullResult, refresh: refreshPulls } = usePullRequests(folder, pullUrls)
 
   // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
   // compaction rewrites the conversation that turn is using (the server refuses it too).
@@ -86,7 +94,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     }
   }
 
-  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, confinement })
+  const git = useGitState(folder)
+  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, git, confinement })
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0
@@ -155,6 +164,15 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
             </span>
           )}
         </div>
+      </OverviewCard>
+    )
+  }
+
+  if (pullResult && pullResult.pulls.length > 0) {
+    cards.push(
+      <OverviewCard key="changes" title="Changes">
+        <ChangesList pulls={pullResult.pulls} onRefresh={() => { void refreshPulls() }} />
+        {pullResult.note && <div className="mt-1.5 text-[11px] text-[var(--text-muted)]">{pullResult.note}</div>}
       </OverviewCard>
     )
   }

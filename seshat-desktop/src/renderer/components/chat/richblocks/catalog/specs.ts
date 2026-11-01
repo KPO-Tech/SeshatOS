@@ -137,7 +137,9 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
   { name: 'SourceList', group: 'Sources', description: 'The sources an answer relies on.',
     args: [req('sources', list(node('Source')))] },
   { name: 'Source', group: 'Sources', description: 'One source of SourceList.',
-    args: [req('title', str), opt('url', str), opt('path', str), opt('note', str)] },
+    args: [req('title', str), opt('url', str), opt('path', str), opt('note', str), opt('site', str)] },
+  { name: 'SourcePills', group: 'Sources', description: 'Pills for the sites a web search drew from.',
+    args: [req('sources', list(node('Source')))] },
   { name: 'Link', group: 'Sources', description: 'A link to a web page.',
     args: [req('label', str), req('url', str)] },
 
@@ -145,8 +147,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     args: [req('label', str), req('action', action), opt('variant', enumOf('primary', 'secondary'))] },
   { name: 'Choices', group: 'Interaction', description: 'Suggested follow-ups under the answer. At most one per answer.',
     args: [req('options', list(node('Choice'))), opt('title', str)] },
-  { name: 'Choice', group: 'Interaction', description: 'One follow-up of Choices.',
-    args: [req('label', str), req('action', action)] }
+  { name: 'Choice', group: 'Interaction', description: 'One follow-up of Choices; a description makes it a card.',
+    args: [req('label', str), req('action', action), opt('description', str), opt('icon', icon)] }
 ]
 
 // What a table cell may hold besides text and numbers.

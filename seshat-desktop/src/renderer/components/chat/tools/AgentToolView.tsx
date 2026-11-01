@@ -169,7 +169,7 @@ function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
         {task && <div className="line-clamp-2 text-[12px] leading-[1.45] text-app-text">{task}</div>}
         {activeTool && (
           <div className="truncate rounded-[5px] border border-app-border-subtle bg-[rgba(255,255,255,0.04)] px-1.5 py-[3px] text-[10px] text-app-text-muted">
-            {activeTool.toolName}{activeTool.message ? ` — ${activeTool.message}` : ''}
+            {activeTool.toolName}{activeTool.message ? ` · ${activeTool.message}` : ''}
           </div>
         )}
       </div>

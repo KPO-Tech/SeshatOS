@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/skillregistry"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skillinstall"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/tasks"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 	skillsloader "github.com/KPO-Tech/seshat-runtime/pkg/skills"
 	"github.com/KPO-Tech/seshat-runtime/pkg/skills/skillrepos"
 )
@@ -20,6 +24,18 @@ type FeaturedSkillRepo struct {
 	Name        string `json:"name"`
 	URL         string `json:"url"`
 	Description string `json:"description"`
+	// Category is a short label for the kind of work the skills do ("Presentations", "Security").
+	Category string `json:"category,omitempty"`
+	// Skills are the skills chosen from the repository, by folder name; empty means every skill it holds.
+	Skills []string `json:"skills,omitempty"`
+	// SkillCount is how many skills the repository holds when the entry does not choose, as checked when it was written.
+	SkillCount int `json:"skill_count,omitempty"`
+	// Needs lists what the skills use beyond the agent itself ("Python 3.10+", "Docker"), so that the person knows before installing.
+	Needs []string `json:"needs,omitempty"`
+	// PythonMinimum is the oldest Python the skills accept, "3.10" when empty.
+	PythonMinimum string `json:"-"`
+	// PythonPackages are packages the skills use and the repository does not list in a requirements file.
+	PythonPackages []string `json:"-"`
 }
 
 // DefaultSeshatSkillsRepo is the official Seshat skills collection. Left empty
@@ -77,37 +93,6 @@ func ParseSkillRepoHosts(raw string) []string {
 	return hosts
 }
 
-// DefaultFeaturedRepos are always included in the catalog unless the operator
-// sets SESHAT_FEATURED_SKILL_REPOS to override them entirely.
-var DefaultFeaturedRepos = []FeaturedSkillRepo{
-	// seshat-skills temporarily pulled from the catalog — see DefaultSeshatSkillsRepo.
-	{
-		Name:        "gstack",
-		URL:         "https://github.com/garrytan/gstack",
-		Description: "50+ production-ready skills by Garry Tan (YC CEO). Includes review, planning, investigation, documentation, spec writing, retro, and more.",
-	},
-	{
-		Name:        "paperasse",
-		URL:         "https://github.com/romainsimon/paperasse",
-		Description: "A collection of document and administrative workflow skills.",
-	},
-	{
-		Name:        "ppt-master",
-		URL:         "https://github.com/hugohe3/ppt-master",
-		Description: "Advanced AI-driven PowerPoint generation (PDF/DOCX/URL → PPTX). Requires Python: pip install -r skills/ppt-master/requirements.txt",
-	},
-	{
-		Name:        "linkedin-skills",
-		URL:         "https://github.com/sergebulaev/linkedin-skills",
-		Description: "Skills for LinkedIn profile optimization, job search automation, and professional networking.",
-	},
-	{
-		Name:        "strix",
-		URL:         "https://github.com/usestrix/strix",
-		Description: "Autonomous AI pentesting agents — reconnaissance, exploitation, and validated proof-of-concept findings. Requires Docker running; the skill installs the strix CLI itself on first use.",
-	},
-}
-
 // countSkillsInRepo counts skills found in repoRoot. It handles two layouts:
 //   - multi-skill repos: each subdirectory containing a skill.md is one skill
 //   - single-skill repos: a skill.md directly at the repo root counts as one skill
@@ -153,9 +138,14 @@ func installedRepoNames() map[string]struct{} {
 	}
 	names := make(map[string]struct{}, len(entries))
 	for _, e := range entries {
-		if e.IsDir() {
-			names[e.Name()] = struct{}{}
+		if !e.IsDir() {
+			continue
 		}
+		// A repository whose installation was not finished is not installed: its skills are not offered yet.
+		if install, ok := skillsloader.LoadRepoInstall(filepath.Join(reposDir, e.Name())); ok && install.Pending {
+			continue
+		}
+		names[e.Name()] = struct{}{}
 	}
 	return names
 }
@@ -191,10 +181,13 @@ func (a *App) handleSkillReposList(w http.ResponseWriter, r *http.Request) {
 		SkillCount int    `json:"skill_count"`
 	}
 	type catalogEntry struct {
-		Name        string `json:"name"`
-		URL         string `json:"url"`
-		Description string `json:"description"`
-		Installed   bool   `json:"installed"`
+		Name        string   `json:"name"`
+		URL         string   `json:"url"`
+		Description string   `json:"description"`
+		Installed   bool     `json:"installed"`
+		Category    string   `json:"category,omitempty"`
+		SkillCount  int      `json:"skill_count,omitempty"`
+		Needs       []string `json:"needs,omitempty"`
 		// Source is "organization" for entries pulled from a connected
 		// seshat-server's registry, omitted for the built-in/operator-configured
 		// featured repos — see internal/cloudskillregistry.
@@ -224,6 +217,9 @@ func (a *App) handleSkillReposList(w http.ResponseWriter, r *http.Request) {
 			URL:         fr.URL,
 			Description: fr.Description,
 			Installed:   isInstalled,
+			Category:    fr.Category,
+			SkillCount:  featuredSkillCount(fr),
+			Needs:       fr.Needs,
 		})
 		seen[fr.Name] = true
 	}
@@ -282,38 +278,184 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo := skillrepos.RepoFromURL(url)
+	featured := a.featuredByURL(url)
+	if featured != nil {
+		repo.Name = featured.Name
+	}
+	if !validSkillRepoName(repo.Name) {
+		writeBackendError(w, bkerr.InvalidInput("the address does not name a repository", nil))
+		return
+	}
 	reposDir := skillsloader.GetSkillReposPath()
 
-	// Check it's not already installed.
+	// Check it's not already installed. An installation the person left unfinished (they did not agree to the plan) is started again.
 	target := filepath.Join(reposDir, repo.Name)
+	if a.skillInstallRunning(repo.Name) {
+		writeBackendError(w, bkerr.Conflict(fmt.Sprintf("repo %q is being installed", repo.Name), nil))
+		return
+	}
+	if pending, _ := skillsloader.LoadRepoInstall(target); pending.Pending {
+		_ = os.RemoveAll(target)
+		_ = os.RemoveAll(skillEnvironmentDir(repo.Name))
+	}
 	if _, err := os.Stat(filepath.Join(target, ".git")); err == nil {
 		writeBackendError(w, bkerr.Conflict(fmt.Sprintf("repo %q is already installed", repo.Name), nil))
 		return
 	}
 
-	cloned := skillrepos.EnsureCloned(r.Context(), reposDir, []skillrepos.Repo{repo})
-	if len(cloned) == 0 {
-		writeBackendError(w, bkerr.Internal("failed to clone repository — check the URL and try again", nil))
+	// The download goes on in the background, with a context of its own: a large repository takes minutes, and the request must not wait for
+	// it. When it ends, what the skills need is read and the plan is ready to be shown (see handleSkillRepoPlan); nothing of the repository is
+	// run, and its skills stay out of the agent's reach until the person has agreed to the installation (see handleSkillRepoEnvironment).
+	task, _ := a.taskManager().Start(skillCloneTask, repo.Name, "Downloading "+repo.Name, func(ctx context.Context, report *tasks.Reporter) error {
+		report.Step(1, 2, "Downloading the skills")
+		if err := skillinstall.CloneInto(ctx, repo.URL, skillCloneStaging(repo.Name), target, report); err != nil {
+			return err
+		}
+		report.Step(2, 2, "Reading what they need")
+		spec := skillSpec(featured, nil)
+		plan := skillinstall.Detect(target, spec)
+		if len(spec.Include) > 0 || !plan.Empty() {
+			if err := skillinstall.WriteInstall(target, skillsloader.RepoInstall{Include: spec.Include, Pending: !plan.Empty()}); err != nil {
+				_ = os.RemoveAll(target)
+				return fmt.Errorf("could not record the installation: %w", err)
+			}
+		}
+		return nil
+	})
+	writeJSON(w, http.StatusAccepted, map[string]any{"name": repo.Name, "task": task})
+}
+
+// GET /api/v1/skills/repos/{name}/plan
+// What the skills of a downloaded repository need, for the person to agree to. needs_environment is false when nothing has to be installed.
+func (a *App) handleSkillRepoPlan(w http.ResponseWriter, r *http.Request, name string) {
+	target := filepath.Join(skillsloader.GetSkillReposPath(), name)
+	if _, err := os.Stat(filepath.Join(target, ".git")); err != nil {
+		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
 		return
 	}
-
-	writeJSON(w, http.StatusCreated, map[string]any{
-		"name":        repo.Name,
-		"skill_count": countSkillsInRepo(target),
+	recorded, _ := skillsloader.LoadRepoInstall(target)
+	spec := skillSpec(a.featuredByName(name), recorded.Include)
+	plan := skillinstall.Detect(target, spec)
+	count := countSkillsInRepo(target)
+	if len(spec.Include) > 0 {
+		count = len(spec.Include)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"name":              name,
+		"skill_count":       count,
+		"plan":              plan,
+		"needs_environment": recorded.Pending && !plan.Empty(),
 	})
+}
+
+// featuredByURL finds the catalog entry of a repository address, ignoring a trailing ".git", a trailing slash and the case.
+func (a *App) featuredByURL(raw string) *FeaturedSkillRepo {
+	clean := func(u string) string {
+		return strings.ToLower(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSpace(u), "/"), ".git"))
+	}
+	for i := range a.featuredRepos {
+		if clean(a.featuredRepos[i].URL) == clean(raw) {
+			return &a.featuredRepos[i]
+		}
+	}
+	return nil
+}
+
+func (a *App) featuredByName(name string) *FeaturedSkillRepo {
+	for i := range a.featuredRepos {
+		if a.featuredRepos[i].Name == name {
+			return &a.featuredRepos[i]
+		}
+	}
+	return nil
+}
+
+func featuredSkillCount(fr FeaturedSkillRepo) int {
+	if len(fr.Skills) > 0 {
+		return len(fr.Skills)
+	}
+	return fr.SkillCount
+}
+
+// skillSpec is what the catalog asks of a repository: the skills chosen and the packages the repository does not list itself. A repository
+// that is not in the catalog keeps the skills recorded when it was installed, or all of them.
+func skillSpec(featured *FeaturedSkillRepo, recorded []string) skillinstall.Spec {
+	if featured == nil {
+		return skillinstall.Spec{Include: recorded}
+	}
+	return skillinstall.Spec{Include: featured.Skills, PythonMinimum: featured.PythonMinimum, PythonPackages: featured.PythonPackages}
+}
+
+// skillCloneStaging is where a repository is downloaded before it is moved among the others: outside the folder the skills are read from.
+func skillCloneStaging(name string) string {
+	return runtimepath.Join("", "skill-clones", name)
+}
+
+// validSkillRepoName reports whether a name taken from an address can be a folder of its own: not empty, not "." or "..", no separator.
+// Without it an address ending in ".." would make the repository the folder of all the others.
+func validSkillRepoName(name string) bool {
+	return name != "" && name != "." && name != ".." && !strings.ContainsAny(name, `/\`) && !strings.HasPrefix(name, ".")
+}
+
+// skillEnvironmentDir is where the environment of a repository lives: outside the repository, so that reading its skills never walks it.
+func skillEnvironmentDir(name string) string {
+	return runtimepath.Join("", "skill-envs", name)
+}
+
+// POST /api/v1/skills/repos/{name}/environment
+// Makes the environment shown in the plan returned by the installation, once the person has agreed to it.
+func (a *App) handleSkillRepoEnvironment(w http.ResponseWriter, r *http.Request, name string) {
+	reposDir := skillsloader.GetSkillReposPath()
+	target := filepath.Join(reposDir, name)
+	if _, err := os.Stat(filepath.Join(target, ".git")); err != nil {
+		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
+		return
+	}
+	recorded, _ := skillsloader.LoadRepoInstall(target)
+	spec := skillSpec(a.featuredByName(name), recorded.Include)
+	plan := skillinstall.Detect(target, spec)
+	// The installation goes on in the background, with a context of its own: the request ends at once, and leaving the page or losing the
+	// connection does not stop it. The task says where it is, and can be cancelled.
+	task, _ := a.taskManager().Start(skillInstallTask, name, "Installing "+name, func(ctx context.Context, report *tasks.Reporter) error {
+		return skillinstall.EnvironmentWith(ctx, target, skillEnvironmentDir(name), spec, plan, report)
+	})
+	writeJSON(w, http.StatusAccepted, map[string]any{"name": name, "task": task})
+}
+
+const (
+	// skillInstallTask is the kind of the task that makes the environment of a skill repository.
+	skillInstallTask = "skill.install"
+	// skillCloneTask is the kind of the task that downloads a skill repository.
+	skillCloneTask = "skill.clone"
+)
+
+// skillInstallRunning reports whether a repository is being downloaded or its environment is being made.
+func (a *App) skillInstallRunning(name string) bool {
+	for _, task := range a.taskManager().List() {
+		if (task.Kind == skillInstallTask || task.Kind == skillCloneTask) && task.Subject == name && task.Status.Active() {
+			return true
+		}
+	}
+	return false
 }
 
 // handleSkillRepoByNameDispatch routes DELETE /api/v1/skills/repos/{name}.
 func (a *App) handleSkillRepoByNameDispatch(w http.ResponseWriter, r *http.Request) {
 	// Strip leading "/skills/repos/" prefix.
-	trimmed := strings.TrimPrefix(r.URL.Path, "/skills/repos/")
-	name := filepath.Base(strings.Trim(trimmed, "/"))
+	trimmed := strings.Trim(strings.TrimPrefix(r.URL.Path, "/skills/repos/"), "/")
+	environment := strings.HasSuffix(trimmed, "/environment")
+	plan := strings.HasSuffix(trimmed, "/plan")
+	name := filepath.Base(strings.TrimSuffix(strings.TrimSuffix(trimmed, "/environment"), "/plan"))
 	if name == "" || name == "." || name == ".." {
 		writeBackendError(w, bkerr.InvalidInput("invalid repo name", nil))
 		return
 	}
-	switch r.Method {
-	case http.MethodDelete:
+	switch {
+	case environment && r.Method == http.MethodPost:
+		a.handleSkillRepoEnvironment(w, r, name)
+	case plan && r.Method == http.MethodGet:
+		a.handleSkillRepoPlan(w, r, name)
+	case !environment && !plan && r.Method == http.MethodDelete:
 		a.handleSkillRepoUninstall(w, r, name)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -335,11 +477,17 @@ func (a *App) handleSkillRepoUninstall(w http.ResponseWriter, r *http.Request, n
 		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
 		return
 	}
+	if a.skillInstallRunning(name) {
+		writeBackendError(w, bkerr.Conflict(fmt.Sprintf("%q is being installed: cancel the installation first", name), nil))
+		return
+	}
 
 	if err := os.RemoveAll(target); err != nil {
 		writeBackendError(w, bkerr.Internal("failed to remove repository", err))
 		return
 	}
+	// The environment made for it goes with it.
+	_ = os.RemoveAll(skillEnvironmentDir(name))
 
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -9,6 +9,8 @@ export type ChatInputProps = {
   onStop?: () => void
   placeholder?: string
   maxHeight?: number
+  /** "large" is for the start page, where the input is the page: taller, with bigger text. */
+  size?: 'default' | 'large'
   isStreaming?: boolean
   statusText?: string
   showInlineStatus?: boolean
@@ -16,6 +18,10 @@ export type ChatInputProps = {
   onCorpusChange?: (id: string | null) => void
   projectPath?: string
   onProjectChange?: (path: string) => void
+  /** The folder belongs to the page the input is on (a project): it is shown, and cannot be changed or cleared here. */
+  projectLocked?: boolean
+  /** Puts the cursor in the input when it appears. */
+  autoFocus?: boolean
   attachments?: ChatAttachment[]
   onAttachFiles?: (files: FileList) => void | Promise<void>
   onRemoveAttachment?: (id: string) => void

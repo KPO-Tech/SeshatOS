@@ -12,6 +12,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/tasks"
 	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
 	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
@@ -46,6 +47,8 @@ type App struct {
 	documentReaderDiag   *documentReaderDiagnostic
 	nativeDocDownloadMu  sync.Mutex
 	nativeDocDownload    *nativeDocDownloadState
+	tasksOnce            sync.Once
+	tasks                *tasks.Manager
 	indraInstallMu       sync.Mutex
 	indraInstall         *indraInstallState
 	rerankerStore        *db.RerankerConfigStore

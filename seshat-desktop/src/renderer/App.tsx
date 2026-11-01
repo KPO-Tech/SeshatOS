@@ -4,6 +4,8 @@ import { useAuth } from '@renderer/hooks/useAuth'
 import { useInactivityTimeout } from '@renderer/hooks/useInactivityTimeout'
 import { useSessionValidation } from '@renderer/hooks/useSessionValidation'
 import { edition } from '@renderer/lib/edition'
+import { hasSeenIntro, markIntroSeen } from '@renderer/lib/intro'
+import { AppearanceIntro } from '@renderer/components/onboarding/AppearanceIntro'
 import { SetupWizard } from '@renderer/components/setup/SetupWizard'
 import { useSetup } from '@renderer/components/setup/useSetup'
 import { Welcome } from '@renderer/pages/Welcome'
@@ -59,7 +61,9 @@ function useLocalSession(enabled: boolean) {
 
 export function App() {
   const { isAuthenticated, restoring, restoreSession } = useAuth()
-  const local = useLocalSession(!edition.accounts && !restoring && !isAuthenticated)
+  // A new install opens on the choice of the appearance, before the sign-in screen (see AppearanceIntro).
+  const [introDone, setIntroDone] = useState(() => hasSeenIntro())
+  const local = useLocalSession(!edition.accounts && !restoring && !isAuthenticated && introDone)
   const setup = useSetup()
 
   useInactivityTimeout()
@@ -69,9 +73,27 @@ export function App() {
     void restoreSession()
   }, [])
 
+  // Someone who is already signed in has been past it: signing out later does not bring it back.
+  useEffect(() => {
+    if (isAuthenticated && !introDone) {
+      markIntroSeen()
+      setIntroDone(true)
+    }
+  }, [isAuthenticated, introDone])
+
   if (restoring) return <Splash>Starting SeshatOS</Splash>
 
   if (!isAuthenticated) {
+    if (!introDone) {
+      return (
+        <AppearanceIntro
+          onContinue={() => {
+            markIntroSeen()
+            setIntroDone(true)
+          }}
+        />
+      )
+    }
     if (edition.accounts) return <Welcome />
     if (!local.failed) return <Splash>Starting SeshatOS</Splash>
     return (

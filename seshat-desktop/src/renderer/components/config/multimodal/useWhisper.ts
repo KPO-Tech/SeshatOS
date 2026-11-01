@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { WhisperModel, WhisperProgress, WhisperState } from './WhisperModels'
+import type { WhisperModel, WhisperProgress, WhisperState } from './multimodalTypes'
 
 export type WhisperSettings = { threads: number | null; automaticThreads: number; cores: number }
 

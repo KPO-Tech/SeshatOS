@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ConfigCard, CustomSelect, Field, StatusPill, type SelectOption } from '../knowledge/KnowledgePrimitives'
+import { Notice, SelectField, SettingRow, SettingsCard, StatusBadge, type SelectOption } from '../../settings/kit'
 import { linkCapability } from './multimodalApi'
-import { CapabilityIcon, SourceIcon } from './MultimodalIcons'
+import { SourceIcon } from './MultimodalIcons'
 import type { CapabilityName, CapabilityStatus } from './multimodalTypes'
 
 type Props = {
   capability: Extract<CapabilityName, 'image' | 'audio'>
   title: string
-  description: string
   configured?: boolean
   status: CapabilityStatus | null
   onChanged: () => Promise<void>
@@ -15,7 +14,8 @@ type Props = {
 
 const NO_PROVIDER = '__none__'
 
-export function CapabilitySourceCard({ capability, title, description, configured, status, onChanged }: Props) {
+/** Which provider a capability goes through. It reuses the key saved in Providers. */
+export function CapabilitySourceCard({ capability, title, configured, status, onChanged }: Props) {
   const [source, setSource] = useState(NO_PROVIDER)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,23 +24,13 @@ export function CapabilitySourceCard({ capability, title, description, configure
     setSource(status?.linked_provider_id || NO_PROVIDER)
   }, [status?.linked_provider_id])
 
-  const options: SelectOption[] = useMemo(() => {
-    const providerOptions = (status?.candidates ?? []).map((candidate) => ({
-      value: candidate.id,
-      label: candidate.name,
-      description: providerDescription(candidate.provider, capability),
-      icon: <SourceIcon provider={candidate.provider} />
-    }))
-    return [
-      {
-        value: NO_PROVIDER,
-        label: 'Select provider',
-        description: capability === 'image' ? 'OpenAI, Gemini or OpenRouter provider' : 'OpenAI provider',
-        icon: <SourceIcon provider="custom" />
-      },
-      ...providerOptions
-    ]
-  }, [capability, status?.candidates])
+  const options: SelectOption[] = useMemo(
+    () => [
+      { value: NO_PROVIDER, label: 'None', icon: <SourceIcon provider="custom" /> },
+      ...(status?.candidates ?? []).map((candidate) => ({ value: candidate.id, label: candidate.name, icon: <SourceIcon provider={candidate.provider} /> }))
+    ],
+    [status?.candidates]
+  )
 
   async function handleSourceChange(value: string) {
     if (value === NO_PROVIDER) return
@@ -59,56 +49,21 @@ export function CapabilitySourceCard({ capability, title, description, configure
 
   const linked = source !== NO_PROVIDER
   const hasProviders = (status?.candidates.length ?? 0) > 0
-  const badgeTone = configured || linked ? 'ok' : hasProviders ? 'warn' : 'muted'
 
   return (
-    <ConfigCard
-      title={title}
-      description={description}
-      status={<StatusPill tone={badgeTone}>{configured || linked ? 'Provider linked' : hasProviders ? 'Choose provider' : 'No provider'}</StatusPill>}
-      action={<CapabilityIcon name={capability} />}
-    >
-      <div className="grid gap-4">
+    <>
+      {error && <Notice tone="error">{error}</Notice>}
+      <SettingsCard title={title} badge={<StatusBadge tone={configured || linked ? 'ok' : 'muted'}>{configured || linked ? 'Linked' : 'Not linked'}</StatusBadge>}>
         {hasProviders ? (
-          <Field label="Provider">
-            <CustomSelect value={source} options={options} onChange={(value) => void handleSourceChange(value)} />
-          </Field>
-        ) : (
-          <div className="rounded-md border border-dashed border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-3">
-            <div className="text-[13px] font-semibold text-[var(--text-primary)]">No compatible provider configured</div>
-            <div className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-              Add {capability === 'image' ? 'OpenAI, Gemini or OpenRouter' : 'OpenAI'} in Providers, then select it here for this capability.
+          <SettingRow title="Provider" hint={saving ? 'Saving...' : undefined}>
+            <div className="w-[240px]">
+              <SelectField value={source} options={options} onChange={(value) => void handleSourceChange(value)} />
             </div>
-          </div>
+          </SettingRow>
+        ) : (
+          <SettingRow title="No provider yet" hint={`Add ${capability === 'image' ? 'OpenAI, Gemini or OpenRouter' : 'OpenAI'} in Providers.`} />
         )}
-
-        <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2.5">
-          <div className="text-[13px] font-semibold text-[var(--text-primary)]">
-            {linked ? status?.linked_name || 'Linked provider' : 'Provider not selected'}
-          </div>
-          <div className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-            {linked
-              ? 'SeshatOS reuses the API key already saved in Providers.'
-              : 'This capability should be attached to a provider before agents rely on it.'}
-          </div>
-        </div>
-
-        {error && (
-          <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-            {error}
-          </div>
-        )}
-
-        {saving && <div className="text-[12px] text-[var(--text-muted)]">Saving...</div>}
-      </div>
-    </ConfigCard>
+      </SettingsCard>
+    </>
   )
-}
-
-function providerDescription(provider: string, capability: CapabilityName) {
-  if (capability === 'audio') return 'Audio-capable provider'
-  if (provider === 'openai') return 'Images API'
-  if (provider === 'gemini') return 'Gemini image generation'
-  if (provider === 'openrouter') return 'Image models of OpenRouter'
-  return 'Configured provider'
 }

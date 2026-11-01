@@ -1,8 +1,10 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { normalizeMathDelimiters, sealOpenFences } from '@renderer/lib/markdownText'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { KatexMath, isMathBlockNode, mathKind } from '@renderer/lib/math'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
@@ -271,6 +273,40 @@ function RemoteImageChip({ src, alt, sessionId }: { src: string; alt?: string; s
   )
 }
 
+/** A picture of the page's own folder (a relative path): the page asks for it to be read, since no file address is drawn as it is. */
+function LocalImage({ src, alt, width, height, load }: { src: string; alt?: string; width?: number | string; height?: number | string; load: (src: string) => Promise<string> }) {
+  const [url, setUrl] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    let current = true
+    setUrl(null)
+    setFailed(false)
+    load(src).then((value) => current && setUrl(value)).catch(() => current && setFailed(true))
+    return () => {
+      current = false
+    }
+  }, [src, load])
+  if (failed) return <span className="text-[var(--text-muted)]">{alt ?? ''}</span>
+  if (!url) return <span className="inline-block min-h-4 min-w-4" aria-hidden="true" />
+  return <img src={url} alt={alt ?? ''} width={width} height={height} className="inline-block max-w-full rounded-md" />
+}
+
+// What a page may hold of HTML, as on GitHub: the layout tags and their usual attributes, no script, style, frame or event handler, and
+// the classes kept for the code and formulas the markdown itself draws.
+const DOCUMENT_SCHEMA = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [['className', /^(language-|math-)/]]
+  }
+}
+const DOCUMENT_REHYPE_PLUGINS = [rehypeRaw, [rehypeSanitize, DOCUMENT_SCHEMA]] as NonNullable<ComponentProps<typeof ReactMarkdown>['rehypePlugins']>
+
+/** The `align` attribute that HTML pages put on a paragraph or a heading, as a style. */
+function alignStyle(align: unknown): CSSProperties | undefined {
+  return align === 'center' || align === 'right' || align === 'left' ? { textAlign: align } : undefined
+}
+
 type Props = {
   children: string
   className?: string
@@ -282,6 +318,8 @@ type Props = {
   sources?: WebSource[]
   /** Draws a link of its own, such as a citation chip, in place of the plain link: return null to leave the link as it is. */
   renderLink?: (href: string | undefined) => ReactNode
+  /** Reads a picture the page names by a relative path (the page of a file in a folder): without it, only data URLs are drawn. */
+  imageLoader?: (src: string) => Promise<string>
 }
 
 const VARIANT_CLASS: Record<NonNullable<Props['variant']>, string> = {
@@ -298,7 +336,7 @@ type CodeProps = {
 
 const REMARK_PLUGINS = [remarkGfm, remarkMath]
 
-export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources, renderLink }: Props) {
+export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources, renderLink, imageLoader }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
   // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
   const sourcesKey = sources?.map((source) => source.url).join('|') ?? ''
@@ -349,10 +387,10 @@ export function MarkdownView({ children, className, streaming = false, sessionId
             )
           },
           // The pages a paragraph or item cites by its links come as one small chip at its end.
-          p({ node, children }: { node?: unknown; children?: ReactNode }) {
+          p({ node, children, align }: { node?: unknown; children?: ReactNode; align?: string }) {
             const cited = citedPages(node as MarkdownNode | undefined, consulted)
             return (
-              <p className="mb-4 last:mb-0">
+              <p className="mb-4 last:mb-0" style={alignStyle(align)}>
                 {children}
                 {cited.length > 0 && <WebCitation sources={cited} sessionId={sessionId} />}
               </p>
@@ -394,25 +432,27 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </li>
             )
           },
-          h1({ children }) {
-            return <h1 className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
+          h1({ children, align }: { children?: ReactNode; align?: string }) {
+            return <h1 style={alignStyle(align)} className="mb-4 mt-8 text-[1.55em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h1>
           },
-          h2({ children }) {
-            return <h2 className="mb-3 mt-7 text-[1.3em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h2>
+          h2({ children, align }: { children?: ReactNode; align?: string }) {
+            return <h2 style={alignStyle(align)} className="mb-3 mt-7 text-[1.3em] leading-tight font-semibold text-[var(--text-primary)]">{children}</h2>
           },
-          h3({ children }) {
-            return <h3 className="mb-2 mt-6 text-[1.12em] leading-snug font-semibold text-[var(--text-primary)]">{children}</h3>
+          h3({ children, align }: { children?: ReactNode; align?: string }) {
+            return <h3 style={alignStyle(align)} className="mb-2 mt-6 text-[1.12em] leading-snug font-semibold text-[var(--text-primary)]">{children}</h3>
           },
           blockquote({ children }) {
             return <blockquote className="my-4 border-l-4 border-[var(--accent-primary)] pl-3 text-[var(--text-secondary)]">{children}</blockquote>
           },
           // See RemoteImageChip: no <img> reaches the DOM except a data URL.
-          img({ src, alt }: any) {
+          img({ src, alt, width, height }: any) {
             const url = typeof src === 'string' ? src : ''
             if (isRenderableImageSrc(url)) {
               return <img src={url} alt={alt ?? ''} className="my-3 max-w-full rounded-md border border-app-border-subtle" />
             }
             if (!url) return <span className="text-app-text-muted">{alt ?? ''}</span>
+            // A picture of the folder is read by the page, and drawn as written (its width, no frame): a logo or a screenshot.
+            if (imageLoader && !isRemoteImageSrc(url) && !/^[a-z][a-z0-9+.-]*:/i.test(url)) return <LocalImage src={url} alt={alt} width={width} height={height} load={imageLoader} />
             return <RemoteImageChip src={url} alt={alt} sessionId={sessionId} />
           },
           // Plain markdown links otherwise render as a bare <a href> with no
@@ -440,7 +480,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
               </a>
             )
           }
-        }), [streaming, sessionId, consulted, renderLink])
+        }), [streaming, sessionId, consulted, renderLink, imageLoader])
 
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
@@ -448,6 +488,7 @@ export function MarkdownView({ children, className, streaming = false, sessionId
         // The formulas are drawn while the answer streams: remark-math finds the closed ones, and KatexMath keeps what it typeset by
         // formula, so a token only costs the formula it completes. Prism still waits for the message to be complete (see `code`).
         remarkPlugins={REMARK_PLUGINS}
+        rehypePlugins={variant === 'document' ? DOCUMENT_REHYPE_PLUGINS : undefined}
         components={markdownComponents}
       >
         {content}

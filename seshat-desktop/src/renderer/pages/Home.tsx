@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { CheckCorrect, FileTextOne, Globe, LightMember } from '@icon-park/react'
+import { ChartHistogram, Code, FileTextOne, Globe, LightMember } from '@icon-park/react'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
@@ -16,6 +16,7 @@ import { modelAlias } from '@renderer/lib/modelAlias'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
+import { HomeStage } from './HomeStage'
 import './Home.css'
 
 type ModelChoice = {
@@ -48,7 +49,21 @@ function splitModelChoiceId(id: string): { providerId: string; modelId: string }
   }
 }
 
-export function Home() {
+export type NewChatSuggestion = { label: string; prompt: string; icon: ReactNode }
+
+type NewChatProps = {
+  /** A folder the conversation is held in and that cannot be changed from the input: the page of a project. */
+  fixedProjectPath?: string
+  /** "home" is the start page, centred under a greeting; "project" is the input alone, to sit inside a page. */
+  variant?: 'home' | 'project'
+  placeholder?: string
+  /** Buttons under the input that fill it with a first request. */
+  suggestions?: NewChatSuggestion[]
+  autoFocus?: boolean
+  }
+
+/** The start of a conversation: the input with its model, attachments and folder, which creates the conversation and opens it. */
+export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask anything...', suggestions, autoFocus }: NewChatProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { loading: providersLoading } = useProviders()
@@ -68,7 +83,7 @@ export function Home() {
   const [loadingModelProviderIds, setLoadingModelProviderIds] = useState<string[]>([])
   const [isCreatingSession, setIsCreatingSession] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [projectPath, setProjectPath] = useState('')
+  const [projectPath, setProjectPath] = useState(fixedProjectPath ?? '')
   // A session has to exist for /sessions/:id/files to accept an upload, but
   // Home never sends a message until the user hits Send. So attaching a file
   // lazily creates the session early (reused by handleSend when it fires) -
@@ -109,9 +124,10 @@ export function Home() {
   const selectedModelForSend = selectedModelChoice?.model ?? selectedModel
 
   useEffect(() => {
-    const project = searchParams.get('project')
+    // On the page of a project the folder is the project's, whatever the address says.
+    const project = fixedProjectPath ?? searchParams.get('project')
     if (project) setProjectPath(project)
-  }, [searchParams])
+  }, [searchParams, fixedProjectPath])
 
   // Auto-select default (or first) provider when none is selected and providers are loaded
   useEffect(() => {
@@ -376,7 +392,7 @@ export function Home() {
         projectPath: projectPath || undefined,
       })
       setInputValue('')
-      setProjectPath('')
+      setProjectPath(fixedProjectPath ?? '')
       setAttachments([])
       setAttachmentError(null)
       setPendingSessionId(null)
@@ -390,22 +406,31 @@ export function Home() {
     }
   }
 
-  return (
-    <div className="home-root">
+  const quickActions: NewChatSuggestion[] =
+    suggestions ??
+    (variant === 'home'
+      ? [
+          { icon: <FileTextOne size={14} />, label: 'Summarize a file', prompt: 'Summarize the file at ' },
+          { icon: <ChartHistogram size={14} />, label: 'Analyze data', prompt: 'Analyze the data in ' },
+          { icon: <Globe size={14} />, label: 'Search the web', prompt: 'Search the web for ' },
+          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' },
+          { icon: <Code size={14} />, label: 'Write code', prompt: 'Write code that ' }
+        ]
+      : [])
 
-      {/* Main Content */}
-      <div className="home-center">
-        <h1 className="home-greeting">Hi, what's your plan for today?</h1>
-
-        <div className="home-input-container">
+  const composer = (
+        <div className={variant === 'home' ? 'home-dock-input' : 'w-full'}>
           <ChatInput
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSend}
-            placeholder="Send a message, upload files, open a folder, or create a scheduled task..."
-            maxHeight={200}
+            placeholder={placeholder}
+            maxHeight={240}
+            size="default"
             projectPath={projectPath}
-            onProjectChange={setProjectPath}
+            onProjectChange={fixedProjectPath ? undefined : setProjectPath}
+            projectLocked={Boolean(fixedProjectPath)}
+            autoFocus={autoFocus}
             attachments={attachments}
             onAttachFiles={handleAttachFiles}
             onRemoveAttachment={handleRemoveAttachment}
@@ -427,7 +452,7 @@ export function Home() {
             modelOptions={allModelChoices.length > 0 ? modelSelectorOptions(allModelChoices) : undefined}
             selectedModelId={selectedModelChoiceId}
             onModelSelect={handleModelSelect}
-            modelMenuPlacement="down"
+            modelMenuPlacement={variant === 'home' ? 'up' : 'down'}
             modelDisabled={
               isCreatingSession ||
               (loadingModelProviderIds.length > 0 && allModelChoices.length === 0)
@@ -451,13 +476,52 @@ export function Home() {
           )}
         </div>
 
-        <div className="home-quick-actions">
-          <QuickAction icon={<CheckCorrect size={14} />} label="Create a task" onClick={() => setInputValue('Create a task to ')} />
-          <QuickAction icon={<FileTextOne size={14} />} label="Summarize a file" onClick={() => setInputValue('Summarize the file at ')} />
-          <QuickAction icon={<Globe size={14} />} label="Search the web" onClick={() => setInputValue('Search the web for ')} />
-          <QuickAction icon={<LightMember size={14} />} label="Brainstorm ideas" onClick={() => setInputValue('Help me brainstorm ideas for ')} />
+  )
+
+  const quickStarts = quickActions.length > 0 && (
+          <div className={variant === 'home' ? 'home-quick-actions' : 'home-quick-actions mt-3 justify-start'}>
+            {quickActions.map((action) => (
+              <QuickAction key={action.label} icon={action.icon} label={action.label} onClick={() => setInputValue(action.prompt)} />
+            ))}
+          </div>
+  )
+
+  // The start page is laid out as a conversation is: the input is docked at the bottom, where it stays when the first message turns the page into
+  // a conversation, and the room above it is a stage for what the page offers (for now the greeting and the quick starts).
+  if (variant === 'home') {
+    return (
+      <>
+        <div className="home-stage">
+          <div className="home-stage-inner">
+            <HomeStage
+              onPick={(prompt) => {
+                setInputValue(prompt)
+                // The input is what the person fills in next.
+                window.setTimeout(() => document.querySelector<HTMLTextAreaElement>('.home-dock textarea')?.focus(), 0)
+              }}
+            />
+          </div>
         </div>
-      </div>
+        <div className="home-dock">
+          <div className="home-dock-inner">{composer}</div>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      {composer}
+      {quickStarts}
+    </div>
+  )
+}
+
+/** The start page: the input to begin a conversation, under a greeting. */
+export function Home() {
+  return (
+    <div className="home-root">
+      <NewChat />
     </div>
   )
 }

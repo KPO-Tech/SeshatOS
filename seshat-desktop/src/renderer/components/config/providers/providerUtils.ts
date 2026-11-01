@@ -110,3 +110,8 @@ function formatNumber(value: number) {
 function providerLabel(provider: string) {
   return provider.split(/[-_]/).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
 }
+
+/** A text of a catalog as it is shown: a long dash, which the app does not use, becomes a colon. */
+export function plainText(text: string): string {
+  return text.replace(/\s*\u2014\s*/g, ': ')
+}

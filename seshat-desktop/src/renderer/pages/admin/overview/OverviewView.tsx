@@ -16,9 +16,9 @@ export function OverviewView() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="mb-4 text-[17px] font-semibold text-[var(--text-primary)]">Overview</div>
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={<User size={16} />} label="Members" value={loadingMembers ? '—' : memberships.length} />
-        <StatCard icon={<Peoples size={16} />} label="Teams" value={loadingTeams ? '—' : teams.length} />
-        <StatCard icon={<SendEmail size={16} />} label="Pending invitations" value={loadingInvitations ? '—' : invitations.length} />
+        <StatCard icon={<User size={16} />} label="Members" value={loadingMembers ? '-' : memberships.length} />
+        <StatCard icon={<Peoples size={16} />} label="Teams" value={loadingTeams ? '-' : teams.length} />
+        <StatCard icon={<SendEmail size={16} />} label="Pending invitations" value={loadingInvitations ? '-' : invitations.length} />
       </div>
     </div>
   )

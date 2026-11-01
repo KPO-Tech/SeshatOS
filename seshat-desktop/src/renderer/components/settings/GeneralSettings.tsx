@@ -1,58 +1,54 @@
-import { ChevronDownIcon, Panel, Row, SectionDivider, ToggleRow } from './SettingsPrimitives'
+import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution } from '@icon-park/react'
+import { useNotificationPrefs } from '@renderer/hooks/useNotificationPrefs'
+import { SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
 
 type Props = {
   language: string
-  notifications: boolean
-  soundAlert: boolean
-  productUpdates: boolean
   onLanguageChange: (language: string) => void
-  onNotificationsChange: (enabled: boolean) => void
-  onSoundAlertChange: (enabled: boolean) => void
-  onProductUpdatesChange: (enabled: boolean) => void
 }
 
-export function GeneralSettings({
-  language,
-  notifications,
-  soundAlert,
-  productUpdates,
-  onLanguageChange,
-  onNotificationsChange,
-  onSoundAlertChange,
-  onProductUpdatesChange
-}: Props) {
+const LANGUAGES = [
+  { value: 'English', label: 'English' },
+  { value: 'Francais', label: 'Francais' }
+]
+
+const icon = (Glyph: typeof Remind) => <Glyph theme="outline" size={18} />
+
+export function GeneralSettings({ language, onLanguageChange }: Props) {
+  const { prefs, change } = useNotificationPrefs()
   return (
-    <Panel title="General">
-      <div className="space-y-6">
-        <section>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Language</h2>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => onLanguageChange(language === 'English' ? 'Francais' : 'English')}
-              className="flex h-9 w-[240px] items-center justify-between rounded-md bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
-            >
-              {language}
-              <ChevronDownIcon />
-            </button>
+    <SettingsPage id="general">
+      <SettingsCard title="Language">
+        <SettingRow title="Interface language" icon={icon(Translate)}>
+          <div className="w-[200px]">
+            <SelectField value={language} options={LANGUAGES} onChange={onLanguageChange} compact />
           </div>
-        </section>
+        </SettingRow>
+      </SettingsCard>
 
-        <SectionDivider />
+      <SettingsCard title="Notifications">
+        <SettingRow title="Desktop notifications" hint="Shown only when SeshatOS is not the window in front." icon={icon(Remind)}>
+          <Toggle label="Desktop notifications" enabled={prefs.desktop} onChange={(value) => change('desktop', value)} />
+        </SettingRow>
+        <SettingRow title="Sound" icon={icon(VolumeNotice)}>
+          <Toggle label="Sound" enabled={prefs.sound} onChange={(value) => change('sound', value)} />
+        </SettingRow>
+      </SettingsCard>
 
-        <section>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Communication preferences</h2>
-          <div className="mt-4 grid gap-4">
-            <ToggleRow title="Desktop notifications" description="Get notified when a task progresses or finishes." enabled={notifications} onChange={onNotificationsChange} />
-            <ToggleRow title="Sound alert" description="Play a short sound when a background task completes." enabled={soundAlert} onChange={onSoundAlertChange} />
-            <ToggleRow title="Product updates" description="Receive release notes and workspace improvements." enabled={productUpdates} onChange={onProductUpdatesChange} />
-          </div>
-        </section>
-
-        <SectionDivider />
-
-        <Row title="Local data" description="Manage cached sessions, logs, and local workspace files." action="Manage" />
-      </div>
-    </Panel>
+      <SettingsCard title="What to be told about">
+        <SettingRow title="Tasks" icon={icon(CheckCorrect as typeof Remind)}>
+          <Toggle label="Tasks" enabled={prefs.tasks} onChange={(value) => change('tasks', value)} />
+        </SettingRow>
+        <SettingRow title="Agent replies" icon={icon(Remind)} hint="When the agent finishes in a conversation you are not looking at.">
+          <Toggle label="Agent replies" enabled={prefs.agents} onChange={(value) => change('agents', value)} />
+        </SettingRow>
+        <SettingRow title="Errors" icon={icon(Caution as typeof Remind)}>
+          <Toggle label="Errors" enabled={prefs.errors} onChange={(value) => change('errors', value)} />
+        </SettingRow>
+        <SettingRow title="App updates" icon={icon(Up as typeof Remind)}>
+          <Toggle label="App updates" enabled={prefs.updates} onChange={(value) => change('updates', value)} />
+        </SettingRow>
+      </SettingsCard>
+    </SettingsPage>
   )
 }

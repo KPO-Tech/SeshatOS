@@ -110,11 +110,19 @@ const seshatBridge = {
     ipcRenderer.invoke('project:has-context-file', projectPath),
   projectPathExists: (projectPath: string): Promise<boolean> =>
     ipcRenderer.invoke('project:path-exists', projectPath),
+  openInEditor: (directoryPath: string): Promise<boolean> => ipcRenderer.invoke('project:open-in-editor', directoryPath),
   fs: {
     listDirectory: (directoryPath: string): Promise<Array<{ name: string; isDirectory: boolean }>> =>
       ipcRenderer.invoke('fs:list-directory', directoryPath),
     readTextFile: (filePath: string): Promise<string> =>
       ipcRenderer.invoke('fs:read-text-file', filePath),
+    countFiles: (directoryPath: string): Promise<{ count: number; capped: boolean }> =>
+      ipcRenderer.invoke('fs:count-files', directoryPath),
+    scanProject: (directoryPath: string): Promise<{ count: number; capped: boolean; bytes: number; recent: Array<{ path: string; name: string; modifiedMs: number }>; createdMs: number }> =>
+      ipcRenderer.invoke('fs:scan-project', directoryPath),
+    searchFiles: (directoryPath: string, query: string): Promise<Array<{ path: string; relativePath: string; name: string; isDirectory: boolean }>> =>
+      ipcRenderer.invoke('fs:search-files', directoryPath, query),
+    readImage: (filePath: string): Promise<string> => ipcRenderer.invoke('fs:read-image', filePath),
   },
   openExternal: (url: string) => ipcRenderer.invoke('system:open-external', url),
   selectFile: (opts?: Electron.OpenDialogOptions) => ipcRenderer.invoke('system:select-file', opts),
@@ -285,6 +293,18 @@ const seshatBridge = {
       }
       ipcRenderer.on('shell:exit', handler)
       return () => ipcRenderer.removeListener('shell:exit', handler)
+    },
+  },
+  // Work in progress in the backend keeps the app alive when its window is closed, and a task that ends can tell the person with a system notification.
+  background: {
+    setBusy: (count: number): Promise<void> => ipcRenderer.invoke('background:set-busy', count),
+  },
+  notify: {
+    show: (notice: { title: string; body?: string; route?: string }): Promise<void> => ipcRenderer.invoke('notify:show', notice),
+    onOpen: (listener: (route: string) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, route: string) => listener(route)
+      ipcRenderer.on('notify:open', handler)
+      return () => ipcRenderer.removeListener('notify:open', handler)
     },
   },
   updates: {

@@ -27,6 +27,7 @@ import { applyContentSecurityPolicy } from './content-security-policy'
 import { createBrowserPanel } from './browser-panel'
 import { createBrowserBridgeServer } from './browser-bridge'
 import { registerShellHandlers, stopAllShellSessions } from './ipc/shell'
+import { createBackground } from './background'
 
 /** How long after the window has loaded the local title model starts. */
 const LLAMA_START_DELAY_MS = 10_000
@@ -50,6 +51,8 @@ function resolveWindowIcon(): string {
   const file = process.platform === 'win32' ? 'icon.ico' : 'icon.png'
   return app.isPackaged ? join(process.resourcesPath, file) : join(__dirname, '../../build', file)
 }
+
+const background = createBackground({ getWindow: () => mainWindow, iconPath: resolveWindowIcon })
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -80,13 +83,21 @@ function createWindow() {
   win.removeMenu()
   // The window is shown once the renderer has painted. If the first load fails the paint never comes, so a timer shows the window
   // anyway and the load is retried (see renderer-load-retry.ts).
+  // The window opens maximized, on every launch: the app is made for a large window, and 1280 x 820 above is only the size it goes back to.
+  const showMaximized = () => {
+    if (win.isDestroyed()) return
+    if (!win.isMaximized()) win.maximize()
+    win.show()
+  }
   const showFallback = setTimeout(() => {
-    if (!win.isDestroyed() && !win.isVisible()) win.show()
+    if (!win.isVisible()) showMaximized()
   }, SHOW_FALLBACK_MS)
   win.on('ready-to-show', () => {
     clearTimeout(showFallback)
-    win.show()
+    showMaximized()
   })
+  // Closing the window while a task runs hides it instead, and an icon near the clock brings it back (see background.ts).
+  win.on('close', (event) => background.onWindowClose(event, win))
   win.on('closed', () => {
     if (mainWindow === win) mainWindow = null
   })
@@ -194,6 +205,8 @@ const browserBridge = createBrowserBridgeServer({
 })
 
 app.whenReady().then(async () => {
+  // Without it Windows does not name the app on its notifications; it is the appId of the installer.
+  if (process.platform === 'win32') app.setAppUserModelId('com.seshat.os')
   Menu.setApplicationMenu(null)
   applyContentSecurityPolicy()
   registerSystemHandlers(ipcMain)
@@ -208,6 +221,7 @@ app.whenReady().then(async () => {
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
   registerShellHandlers(ipcMain)
+  background.register(ipcMain)
 
   // Packaged Electron apps deny every permission request by default when no
   // handler is registered. The voice-input control needs the renderer's
@@ -266,6 +280,8 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
+
+app.on('before-quit', () => background.markQuitting())
 
 app.on('will-quit', () => {
   browserBridge.stop()

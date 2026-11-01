@@ -27,13 +27,16 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/metrics"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/plans"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/pulls"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skills"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/tasks"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/websearch"
 	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
 	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
+	"github.com/KPO-Tech/seshat-runtime/pkg/runtimepath"
 	"github.com/KPO-Tech/seshat-runtime/pkg/storage"
 )
 
@@ -199,6 +202,8 @@ type App struct {
 	Preferences *preferences.Service
 	Skills      *skills.Service
 	Agents      *agents.Service
+	Pulls       *pulls.Service
+	Tasks       *tasks.Manager
 
 	KnowledgeGDrive         *gdrive.Connector
 	KnowledgeGDriveAccounts *db.ConnectorAccountStore
@@ -287,6 +292,10 @@ func NewApp(deps Dependencies) *App {
 	if deps.LocalConnectors != nil {
 		deps.LocalConnectors.SetRuntime(localConnectorRuntime{mcpService})
 	}
+	var connectorToken func(ctx context.Context) (string, bool)
+	if deps.LocalConnectors != nil {
+		connectorToken = func(ctx context.Context) (string, bool) { return deps.LocalConnectors.Secret(ctx, "github") }
+	}
 	return &App{
 		Auth: auth.NewService(authProvider, deps.Identity, deps.APIKeyStore, deps.AuthConfig, deps.DesktopPolicies),
 		Query: query.NewService(query.ServiceConfig{
@@ -319,6 +328,8 @@ func NewApp(deps Dependencies) *App {
 		Preferences: preferencesService,
 		Skills:      skillsService,
 		Agents:      agentsService,
+		Pulls:       pulls.NewService(pulls.ChainCredential(connectorToken)),
+		Tasks:       tasks.NewManager(runtimepath.Join("", "tasks"), 2),
 
 		KnowledgeGDrive:         deps.KnowledgeGDrive,
 		KnowledgeGDriveAccounts: deps.KnowledgeGDriveAccounts,

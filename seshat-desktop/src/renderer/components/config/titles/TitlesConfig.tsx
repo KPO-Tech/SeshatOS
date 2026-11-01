@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ConfigCard, Field, SoftButton, StatusPill, TextInput, ToggleSwitch } from '../knowledge/KnowledgePrimitives'
+import { ActionButton, Notice, ProgressRow, SettingRow, SettingsCard, SettingsPage, StatusBadge, TextField, Toggle, type Tone } from '../../settings/kit'
 import { fetchLocalTitleConfig, formatBytes, type LocalTitleConfig } from './titlesApi'
 
 type Progress = { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }
@@ -18,6 +18,7 @@ export function TitlesConfig() {
   const [error, setError] = useState<string | null>(null)
   const [customRepo, setCustomRepo] = useState('')
   const [customFile, setCustomFile] = useState('')
+  const [showCustom, setShowCustom] = useState(false)
 
   const refresh = useCallback(async () => {
     if (!llama) return
@@ -56,134 +57,99 @@ export function TitlesConfig() {
 
   if (!llama) {
     return (
-      <ConfigCard title="Local title model" description="Names new sessions with a small model that runs on this computer." status={<StatusPill tone="muted">Desktop only</StatusPill>}>
-        <div className="text-[12px] text-[var(--text-muted)]">The local title model is managed by the desktop app.</div>
-      </ConfigCard>
+      <SettingsPage id="titles" badge={<StatusBadge tone="muted">Desktop only</StatusBadge>}>
+        {null}
+      </SettingsPage>
     )
   }
 
   const serving = Boolean(status?.running && backend?.enabled)
-  const pill = !status
-    ? <StatusPill tone="muted">Loading</StatusPill>
+  const state: { tone: Tone; label: string } = !status
+    ? { tone: 'muted', label: 'Loading' }
     : !status.supported
-      ? <StatusPill tone="muted">Not available on this system</StatusPill>
+      ? { tone: 'muted', label: 'Not available' }
       : serving
-        ? <StatusPill tone="ok">Running</StatusPill>
+        ? { tone: 'ok', label: 'Running' }
         : status.enabled
-          ? <StatusPill tone="warn">{busy || !status.provisioned ? 'Installing' : 'Starting'}</StatusPill>
-          : <StatusPill tone="muted">Off</StatusPill>
+          ? { tone: 'warn', label: busy || !status.provisioned ? 'Installing' : 'Starting' }
+          : { tone: 'muted', label: 'Off' }
+  const percent = progress && progress.totalBytes > 0 ? Math.min(100, (progress.receivedBytes / progress.totalBytes) * 100) : 5
 
   return (
-    <div className="grid gap-4">
-      <ConfigCard
-        title="Local title model"
-        description="Names new sessions in parallel with the answer, using a small model on this computer. Only models that answer directly are accepted: reasoning models never return a title."
-        status={pill}
-      >
-        <div className="grid gap-4">
-          <div className="flex items-center justify-between gap-5 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2.5">
-            <div>
-              <div className="text-[13px] font-semibold text-[var(--text-primary)]">Generate titles locally</div>
-              <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">
-                When off, or while installing, titles come from your chat model instead.
-              </div>
-            </div>
-            <ToggleSwitch
-              enabled={Boolean(status?.enabled)}
-              onChange={(enabled) => void run(() => (enabled ? llama.enable() : llama.disable()))}
-            />
-          </div>
+    <SettingsPage id="titles" badge={<StatusBadge tone={state.tone}>{state.label}</StatusBadge>}>
+      {error && <Notice tone="error">{error}</Notice>}
 
-          {progress && (
-            <div className="grid gap-1.5">
-              <div className="text-[12px] text-[var(--text-muted)]">
-                {progress.phase === 'binary' ? 'Downloading llama.cpp' : 'Downloading the title model'}
-                {progress.totalBytes > 0 ? ` (${Math.min(100, Math.round((progress.receivedBytes / progress.totalBytes) * 100))}%)` : ''}
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
-                <div
-                  className="h-full bg-[var(--accent-primary)] transition-all"
-                  style={{ width: `${progress.totalBytes > 0 ? Math.min(100, (progress.receivedBytes / progress.totalBytes) * 100) : 5}%` }}
-                />
-              </div>
-            </div>
-          )}
+      <SettingsCard>
+        <SettingRow title="Name chats on this computer" hint="Off: titles come from your chat model.">
+          <Toggle label="Name chats on this computer" enabled={Boolean(status?.enabled)} onChange={(enabled) => void run(() => (enabled ? llama.enable() : llama.disable()))} />
+        </SettingRow>
+        {progress && <ProgressRow label={progress.phase === 'binary' ? 'Downloading llama.cpp' : 'Downloading the title model'} percent={percent} />}
+        {status && !status.provisioned && status.supported && !busy && (
+          <SettingRow title="Runtime and model">
+            <ActionButton type="button" tone="primary" onClick={() => void run(() => llama.provision())}>
+              Install now
+            </ActionButton>
+          </SettingRow>
+        )}
+      </SettingsCard>
 
-          {error && (
-            <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-              {error}
-            </div>
-          )}
-
-          {status && !status.provisioned && status.supported && !busy && (
-            <div className="flex items-center justify-between gap-4 rounded-md border border-dashed border-[var(--border-soft)] px-3 py-2.5">
-              <div className="text-[12px] text-[var(--text-muted)]">The runtime and default model install automatically on first launch.</div>
-              <SoftButton type="button" tone="primary" onClick={() => void run(() => llama.provision())}>Install now</SoftButton>
-            </div>
-          )}
-        </div>
-      </ConfigCard>
-
-      <ConfigCard title="Model" description="Smaller is faster. Models are downloaded from Hugging Face the first time you use them.">
-        <div className="grid gap-2">
-          {status?.models.map((model) => {
-            const downloaded = status.downloadedModelIds.includes(model.id)
-            const active = status.activeModelId === model.id
-            return (
-              <div key={model.id} className="flex items-center justify-between gap-4 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2.5">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-[13px] font-semibold text-[var(--text-primary)]">
-                    <span className="truncate">{model.label}</span>
-                    {active && <StatusPill tone="ok">Active</StatusPill>}
-                  </div>
-                  <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">
-                    {[model.description, formatBytes(model.approxSizeBytes)].filter(Boolean).join(' - ')}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {!active && (
-                    <SoftButton type="button" tone="primary" disabled={busy || !status.supported} onClick={() => void run(() => llama.activateModel(model.id))}>
-                      {downloaded ? 'Use' : 'Download and use'}
-                    </SoftButton>
-                  )}
-                  {downloaded && !active && (
-                    <SoftButton type="button" tone="danger" disabled={busy} onClick={() => void run(() => llama.deleteModel(model.id))}>Delete</SoftButton>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </ConfigCard>
-
-      <ConfigCard title="Custom model" description="Any instruct GGUF from Hugging Face. Reasoning and thinking models are refused.">
-        <div className="grid gap-3">
-          <Field label="Repository">
-            <TextInput value={customRepo} onChange={(event) => setCustomRepo(event.target.value)} placeholder="owner/model-GGUF" />
-          </Field>
-          <Field label="File">
-            <TextInput value={customFile} onChange={(event) => setCustomFile(event.target.value)} placeholder="model-q4_k_m.gguf" />
-          </Field>
-          <div className="flex justify-end">
-            <SoftButton
-              type="button"
-              tone="primary"
-              disabled={busy || !customRepo.trim() || !customFile.trim() || !status?.supported}
-              onClick={() => void run(async () => {
-                const repo = customRepo.trim()
-                const file = customFile.trim()
-                await llama.addCustomModel(repo, file)
-                const next = await llama.activateModel(`custom:${repo}/${file}`)
-                setCustomRepo('')
-                setCustomFile('')
-                return next
-              })}
-            >
-              Add and use
-            </SoftButton>
-          </div>
-        </div>
-      </ConfigCard>
-    </div>
+      <SettingsCard title="Model">
+        {status?.models.map((model) => {
+          const downloaded = status.downloadedModelIds.includes(model.id)
+          const active = status.activeModelId === model.id
+          return (
+            <SettingRow key={model.id} title={model.label} hint={model.description}>
+              <span className="text-[12px] text-[var(--text-faint)]">{formatBytes(model.approxSizeBytes)}</span>
+              {active ? (
+                <StatusBadge tone="ok">In use</StatusBadge>
+              ) : (
+                <ActionButton type="button" tone={downloaded ? 'primary' : 'default'} disabled={busy || !status.supported} onClick={() => void run(() => llama.activateModel(model.id))}>
+                  {downloaded ? 'Use' : 'Download'}
+                </ActionButton>
+              )}
+              {downloaded && !active && (
+                <ActionButton type="button" tone="danger" disabled={busy} onClick={() => void run(() => llama.deleteModel(model.id))}>
+                  Delete
+                </ActionButton>
+              )}
+            </SettingRow>
+          )
+        })}
+        <SettingRow title="Your own model" hint="Any instruct GGUF from Hugging Face. Reasoning models are refused.">
+          <ActionButton type="button" onClick={() => setShowCustom((current) => !current)}>
+            {showCustom ? 'Close' : 'Add'}
+          </ActionButton>
+        </SettingRow>
+        {showCustom && (
+          <>
+            <SettingRow title="Repository">
+              <TextField label="Repository" value={customRepo} onChange={setCustomRepo} placeholder="owner/model-GGUF" />
+            </SettingRow>
+            <SettingRow title="File">
+              <TextField label="File" value={customFile} onChange={setCustomFile} placeholder="model-q4_k_m.gguf" />
+              <ActionButton
+                type="button"
+                tone="primary"
+                disabled={busy || !customRepo.trim() || !customFile.trim() || !status?.supported}
+                onClick={() =>
+                  void run(async () => {
+                    const repo = customRepo.trim()
+                    const file = customFile.trim()
+                    await llama.addCustomModel(repo, file)
+                    const next = await llama.activateModel(`custom:${repo}/${file}`)
+                    setCustomRepo('')
+                    setCustomFile('')
+                    setShowCustom(false)
+                    return next
+                  })
+                }
+              >
+                Add and use
+              </ActionButton>
+            </SettingRow>
+          </>
+        )}
+      </SettingsCard>
+    </SettingsPage>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
 import type { UserPreferences } from '@renderer/api/types'
-import { Panel, ToggleRow } from './SettingsPrimitives'
+import { ActionButton, Chip, Notice, SelectField, SettingRow, SettingsCard, SettingsPage, StatusBadge, Toggle } from './kit'
 
 type UserMemory = {
   id: string
@@ -116,119 +116,69 @@ export function MemoriesSettings() {
     }
   }
 
-  return (
-    <Panel title="Memories">
-      <div className="max-w-[860px] space-y-5">
-        <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-          <ToggleRow
-            title="Learn from my conversations"
-            description="Seshat reads your conversations to remember preferences, procedures that worked and pitfalls, and recalls them in later chats. Off by default; the memories you add yourself below are always used."
-            enabled={autoMemory}
-            onChange={(enabled) => void handleAutoMemory(enabled)}
-          />
-        </section>
+  const typeOptions = memoryTypes.filter((type) => type !== 'all').map((type) => ({ value: type, label: memoryTypeLabel(type) }))
+  const filterOptions = memoryTypes.map((type) => ({ value: type, label: `${memoryTypeLabel(type)} (${type === 'all' ? memories.length : memories.filter((memory) => memory.type === type).length})` }))
 
-        <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-          <div className="grid grid-cols-[160px_1fr] gap-3">
-            <label className="grid gap-1.5">
-              <span className="text-[12px] font-semibold text-[var(--text-muted)]">Type</span>
-              <select
-                value={form.type}
-                onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}
-                className="h-9 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[13px] font-semibold text-[var(--text-primary)] outline-none"
-              >
-                {memoryTypes.filter((type) => type !== 'all').map((type) => (
-                  <option key={type} value={type}>{memoryTypeLabel(type)}</option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-1.5">
-              <span className="text-[12px] font-semibold text-[var(--text-muted)]">Memory</span>
+  return (
+    <SettingsPage id="memories" badge={<StatusBadge tone={autoMemory ? 'ok' : 'muted'}>{autoMemory ? 'Learning' : 'Manual only'}</StatusBadge>}>
+      {error && <Notice tone="error">{error}</Notice>}
+
+      <SettingsCard>
+        <SettingRow title="Learn from my conversations" hint="Off by default. What you add below is always used.">
+          <Toggle label="Learn from my conversations" enabled={autoMemory} onChange={(enabled) => void handleAutoMemory(enabled)} />
+        </SettingRow>
+      </SettingsCard>
+
+      <SettingsCard title="Add a memory" padded>
+        <div className="grid gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-[150px] shrink-0">
+              <SelectField value={form.type} options={typeOptions} onChange={(value) => setForm((current) => ({ ...current, type: value }))} />
+            </div>
+            <div className="min-w-0 flex-1">
               <input
                 value={form.key}
+                aria-label="Memory"
                 onChange={(event) => setForm((current) => ({ ...current, key: event.target.value }))}
-                placeholder="e.g. Prefers concise implementation summaries"
-                className="h-9 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 text-[13px] text-[var(--text-primary)] outline-none"
+                onKeyDown={(event) => event.key === 'Enter' && void handleCreate()}
+                placeholder="Prefers concise summaries"
+                className="h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
               />
-            </label>
-          </div>
-          <div className="mt-3 flex items-end gap-3">
-            <label className="grid min-w-0 flex-1 gap-1.5">
-              <span className="text-[12px] font-semibold text-[var(--text-muted)]">Details</span>
-              <textarea
-                value={form.value}
-                onChange={(event) => setForm((current) => ({ ...current, value: event.target.value }))}
-                rows={3}
-                placeholder="Optional detail Seshat can reuse later."
-                className="resize-none rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[13px] leading-[var(--leading-copy)] text-[var(--text-primary)] outline-none"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => void handleCreate()}
-              disabled={!canSave || saving}
-              className="h-9 rounded-md bg-[var(--text-primary)] px-4 text-[13px] font-semibold text-[var(--surface-root)] disabled:cursor-not-allowed disabled:opacity-45"
-            >
+            </div>
+            <ActionButton type="button" tone="primary" onClick={() => void handleCreate()} disabled={!canSave || saving}>
               {saving ? 'Saving...' : 'Add'}
-            </button>
+            </ActionButton>
           </div>
-        </section>
-
-        {error && (
-          <div className="rounded-md border border-[var(--accent-danger)] px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">
-            {error}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          {memoryTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => setFilter(type)}
-              className={[
-                'h-8 rounded-full border px-3 text-[12px] font-semibold transition-colors',
-                filter === type
-                  ? 'border-[var(--text-primary)] text-[var(--text-primary)]'
-                  : 'border-[var(--border-soft)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]'
-              ].join(' ')}
-            >
-              {memoryTypeLabel(type)} ({type === 'all' ? memories.length : memories.filter((memory) => memory.type === type).length})
-            </button>
-          ))}
+          <input
+            value={form.value}
+            aria-label="Details"
+            onChange={(event) => setForm((current) => ({ ...current, value: event.target.value }))}
+            placeholder="Details (optional)"
+            className="h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
+          />
         </div>
+      </SettingsCard>
 
-        <section className="overflow-hidden rounded-lg border border-[var(--border-soft)]">
-          {loading ? (
-            <div className="px-4 py-8 text-center text-[13px] text-[var(--text-muted)]">Loading memories...</div>
-          ) : shown.length === 0 ? (
-            <div className="px-4 py-8 text-center text-[13px] text-[var(--text-muted)]">No memories yet.</div>
-          ) : (
-            shown.map((memory) => (
-              <div key={memory.id} className="flex items-start justify-between gap-4 border-b border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-3 last:border-b-0">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] font-semibold text-[var(--text-secondary)]">
-                      {memoryTypeLabel(memory.type)}
-                    </span>
-                    <span className="text-[11px] text-[var(--text-muted)]">{formatMemoryDate(memory.updated_at || memory.created_at)}</span>
-                  </div>
-                  <div className="mt-2 text-[13px] font-semibold text-[var(--text-primary)]">{memory.key}</div>
-                  {memory.value && <div className="mt-1 line-clamp-2 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">{memory.value}</div>}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void handleDelete(memory.id)}
-                  className="rounded-md border border-[var(--border-soft)] px-2.5 py-1 text-[12px] font-semibold text-[var(--text-secondary)] hover:border-[var(--accent-danger)] hover:text-[var(--accent-danger)]"
-                >
-                  {deletingId === memory.id ? '...' : 'Delete'}
-                </button>
-              </div>
-            ))
-          )}
-        </section>
-      </div>
-    </Panel>
+      <SettingsCard
+        title="Your memories"
+        action={
+          <div className="w-[170px]">
+            <SelectField value={filter} options={filterOptions} onChange={setFilter} />
+          </div>
+        }
+      >
+        {!loading && shown.length === 0 && <SettingRow title="No memories yet" hint="What you add above is used in every chat." />}
+        {shown.map((memory) => (
+          <SettingRow key={memory.id} title={memory.key} hint={memory.value || undefined}>
+            <Chip>{memoryTypeLabel(memory.type)}</Chip>
+            <span className="text-[11.5px] text-[var(--text-muted)]">{formatMemoryDate(memory.updated_at || memory.created_at)}</span>
+            <ActionButton type="button" tone="danger" onClick={() => void handleDelete(memory.id)} disabled={deletingId === memory.id}>
+              {deletingId === memory.id ? '...' : 'Delete'}
+            </ActionButton>
+          </SettingRow>
+        ))}
+      </SettingsCard>
+    </SettingsPage>
   )
 }
 

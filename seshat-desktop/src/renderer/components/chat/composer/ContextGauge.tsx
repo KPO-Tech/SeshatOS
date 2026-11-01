@@ -2,8 +2,8 @@ import { formatTokens } from '@renderer/lib/sessionOverview'
 import { useContextUsage } from '@renderer/hooks/useContextUsage'
 
 /**
- * A thin gauge under the composer: how full the context is, always in view, so a long conversation does not surprise anyone.
- * Nothing is drawn until the first figure exists.
+ * A thin gauge in the line under the composer: how full the context is, always in view, so a long conversation does not
+ * surprise anyone. Nothing is drawn until the first figure exists.
  */
 export function ContextGauge({ sessionId }: { sessionId: string }) {
   const { usage } = useContextUsage(sessionId)
@@ -14,7 +14,7 @@ export function ContextGauge({ sessionId }: { sessionId: string }) {
     + (usage.compactAtPercent !== null ? `. Compacted by itself at ${usage.compactAtPercent}%.` : '')
 
   return (
-    <div className="mt-1.5 flex items-center justify-end gap-2 px-2" title={title} role="status" aria-label={title}>
+    <div className="ml-auto flex items-center gap-2" title={title} role="status" aria-label={title}>
       <span className="text-[11px] tabular-nums text-[var(--text-muted)]">{usage.percent}% of context</span>
       <div className="relative h-1 w-24 overflow-hidden rounded-full bg-[var(--surface-muted)]">
         <div
