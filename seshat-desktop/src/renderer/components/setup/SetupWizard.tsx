@@ -1,25 +1,22 @@
-import { useState, type ReactNode } from 'react'
-import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
-import { ComponentCard } from './ComponentCard'
+import { useState } from 'react'
 import { InstallProgress } from './InstallProgress'
+import { ModelsChoice, type SetupMode } from './ModelsChoice'
 import { ProviderStep } from './ProviderStep'
 import { SetupRecap } from './SetupRecap'
-import { StepBar, type SetupStep } from './StepBar'
-import { fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes, type SetupComponentId } from './setupFormat'
+import { SetupShell } from './SetupShell'
+import { defaultChoices, fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes, type SetupComponentId } from './setupFormat'
 import { useProviderStep } from './useProviderStep'
 import type { useSetup } from './useSetup'
 
-type Step = SetupStep
+type Step = 'provider' | 'choose' | 'installing' | 'done'
 type Setup = ReturnType<typeof useSetup>
-
-const ENTER = { animation: 'fade-in 320ms ease both' } as const
 
 function PrimaryButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
       {...props}
-      className="h-11 min-w-[150px] cursor-pointer rounded-full border-0 bg-[var(--accent-primary)] px-7 text-[14.5px] font-semibold text-white shadow-[0_8px_24px_-8px_var(--accent-primary)] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98] disabled:cursor-default disabled:opacity-45 disabled:shadow-none"
+      className="h-12 min-w-[150px] cursor-pointer rounded-2xl border-0 bg-[var(--accent-primary)] px-7 text-[14.5px] font-semibold text-white shadow-[0_8px_24px_-8px_var(--accent-primary)] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98] disabled:cursor-default disabled:opacity-45 disabled:shadow-none"
     >
       {children}
     </button>
@@ -31,66 +28,17 @@ function QuietButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
     <button
       type="button"
       {...props}
-      className="h-11 cursor-pointer rounded-full border border-[var(--border-soft)] bg-transparent px-6 text-[14px] text-[var(--text-secondary)] transition-colors duration-150 hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-45"
+      className="h-12 cursor-pointer rounded-2xl border border-[var(--border-soft)] bg-transparent px-6 text-[14px] text-[var(--text-secondary)] transition-colors duration-150 hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-45"
     >
       {children}
     </button>
   )
 }
 
-function Heading({ title, children }: { title: string; children?: ReactNode }) {
-  return (
-    <header className="text-center">
-      <h1 className="m-0 text-[34px] leading-[1.15] font-normal text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
-        {title}
-      </h1>
-      {children && <p className="mx-auto mt-3 max-w-[480px] text-[15px] leading-[1.6] text-[var(--text-muted)]">{children}</p>}
-    </header>
-  )
-}
-
-const TITLE_ICON = (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 5.5h12M4 10h8M4 14.5h5" />
-    <path d="m13.5 13.5 3 3M16.5 13.5l-3 3" />
-  </svg>
-)
-
-const VOICE_ICON = (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="7.5" y="2.5" width="5" height="9" rx="2.5" />
-    <path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" />
-  </svg>
-)
-
-const SCAN_ICON = (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5.5 2.5h6l3.5 3.5v11a1 1 0 0 1-1 1h-8.5a1 1 0 0 1-1-1v-13.5a1 1 0 0 1 1-1Z" />
-    <path d="M11.5 2.5V6H15M7 10h6M7 13h4" />
-  </svg>
-)
-
-const COMPONENT_CARDS = {
-  title: {
-    title: 'Smart titles',
-    tagline: 'Names your conversations for you, with a small model that runs beside the answer.',
-    icon: TITLE_ICON
-  },
-  speech: {
-    title: 'Voice dictation',
-    tagline: 'Turns your voice into text on this computer, in about a hundred languages.',
-    icon: VOICE_ICON
-  },
-  ocr: {
-    title: 'Scanned documents',
-    tagline: 'Reads scanned PDFs and photos of documents on this computer, so you can search them and ask questions about them.',
-    icon: SCAN_ICON
-  }
-} as const
-
 export function SetupWizard({ setup }: { setup: Setup }) {
   const { plan, choices, setChoices, progress, running } = setup
-  const [step, setStep] = useState<Step>('welcome')
+  const [step, setStep] = useState<Step>('provider')
+  const [mode, setMode] = useState<SetupMode>('recommended')
   const provider = useProviderStep()
   if (!plan) return null
 
@@ -100,6 +48,11 @@ export function SetupWizard({ setup }: { setup: Setup }) {
   const fits = fitsOnDisk(total, plan.freeDiskBytes)
   const anyAvailable = plan.components.some((component) => component.available)
   const hadError = Object.values(progress).some((item) => item?.status === 'error')
+
+  function pickMode(next: SetupMode) {
+    setMode(next)
+    if (next === 'recommended' && plan) setChoices(defaultChoices(plan))
+  }
 
   async function install() {
     setStep('installing')
@@ -114,146 +67,103 @@ export function SetupWizard({ setup }: { setup: Setup }) {
 
   async function retry() {
     const failed = (Object.keys(progress) as SetupComponentId[]).filter((id) => progress[id]?.status === 'error' && choices[id])
-    await setup.run(Object.fromEntries(failed.map((id) => [id, choices[id]])), { keepProgress: true })
+    await setup.run(Object.fromEntries(failed.map((id) => [id, choices[id]])), {
+      keepProgress: true
+    })
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--surface-root)] px-6 py-10 text-[var(--text-primary)]">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(60% 50% at 50% -5%, color-mix(in srgb, var(--accent-primary) 20%, transparent), transparent 70%), radial-gradient(40% 35% at 100% 100%, color-mix(in srgb, var(--accent-primary) 9%, transparent), transparent 70%)'
-        }}
-      />
-
-      <div className="absolute inset-x-0 top-7 z-10 flex justify-center px-6">
-        <StepBar current={step} />
-      </div>
-
-      <div className="relative z-10 flex w-full max-w-[680px] flex-col items-center gap-8" key={step} style={ENTER}>
-        {step === 'welcome' && (
-          <>
-            <SeshatLogo size={104} />
-            <Heading title="Welcome to SeshatOS">Your AI workspace, running on your computer. A few quick choices and you are in.</Heading>
-            <ul className="m-0 grid w-full max-w-[460px] list-none gap-3.5 p-0 text-[14.5px] leading-[1.5] text-[var(--text-secondary)]">
-              {[
-                ['Private by design', 'Your files and conversations stay on this computer.'],
-                ['Your choice of model', 'Use any cloud provider, or run models locally.'],
-                ['An agent that does the work', 'It reads, writes, searches and runs, with your permission.']
-              ].map(([title, text]) => (
-                <li key={title} className="flex gap-3">
-                  <span className="mt-[7px] size-2 shrink-0 rounded-full bg-[var(--accent-primary)]" />
-                  <span>
-                    <strong className="font-semibold text-[var(--text-primary)]">{title}.</strong> {text}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-col items-center gap-3">
-              <PrimaryButton onClick={() => setStep('provider')}>Get started</PrimaryButton>
-              <button
-                type="button"
-                onClick={() => void skip()}
-                disabled={running}
-                className="cursor-pointer border-0 bg-transparent text-[13px] text-[var(--text-muted)] underline-offset-4 hover:text-[var(--text-secondary)] hover:underline"
-              >
-                Skip the setup
-              </button>
-            </div>
-          </>
-        )}
-
-        {step === 'provider' && (
-          <>
-            <Heading title="Connect a model">SeshatOS answers through a model. Use a cloud provider with your own key, or a local one such as Ollama. You can add more later in Config.</Heading>
+    <>
+      {step === 'provider' && (
+        <SetupShell
+          pageKey="provider"
+          title="Connect a model"
+          subtitle="SeshatOS answers through a model. Use a cloud provider with your own key, or a local one such as Ollama. You can add more later in Config."
+        >
+          <div className="w-full max-w-[680px]">
             <ProviderStep provider={provider} />
-            <div className="flex gap-3">
-              <QuietButton onClick={() => setStep('welcome')}>Back</QuietButton>
-              {provider.status === 'connected' ? (
-                <PrimaryButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Continue</PrimaryButton>
-              ) : (
-                <QuietButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Skip for now</QuietButton>
-              )}
-            </div>
-          </>
-        )}
-
-        {step === 'choose' && (
-          <>
-            <Heading title="Make it yours">Choose what to download now. Each one runs on your computer, costs nothing, and can be changed later in Config.</Heading>
-            <div className="grid w-full gap-4">
-              {plan.components.map((component) => (
-                <ComponentCard
-                  key={component.id}
-                  title={COMPONENT_CARDS[component.id].title}
-                  tagline={COMPONENT_CARDS[component.id].tagline}
-                  icon={COMPONENT_CARDS[component.id].icon}
-                  available={component.available}
-                  unavailableReason={component.unavailableReason}
-                  note={component.note}
-                  options={component.options}
-                  choice={choices[component.id]}
-                  onChange={(choice) => setChoices((current) => ({ ...current, [component.id]: choice }))}
-                />
-              ))}
-            </div>
-            <div className="flex w-full flex-col items-center gap-4">
-              <p className={['m-0 text-[13px]', fits ? 'text-[var(--text-muted)]' : 'font-semibold text-[var(--accent-danger)]'].join(' ')}>
-                {total > 0 ? `Download: ${formatBytes(total)}` : 'Nothing to download'}
-                {plan.freeDiskBytes !== null && ` · Free space: ${formatBytes(plan.freeDiskBytes)}`}
-                {!fits && ' · Not enough space for this choice'}
-              </p>
-              <div className="flex gap-3">
-                <QuietButton onClick={() => setStep('provider')}>Back</QuietButton>
-                <PrimaryButton disabled={!fits} onClick={() => void install()}>
-                  {total > 0 ? `Install · ${formatBytes(total)}` : 'Continue'}
-                </PrimaryButton>
-              </div>
-            </div>
-          </>
-        )}
-
-        {step === 'installing' && (
-          <>
-            <Heading title="Setting things up">
-              {chosenCount > 1 ? 'Everything downloads at the same time, so it takes as long as the biggest one.' : 'This takes a few minutes, depending on your connection.'} You can
-              leave this window open.
-            </Heading>
-            <div className="w-full">
-              <InstallProgress progress={progress} overall={overall} />
-            </div>
-          </>
-        )}
-
-        {step === 'done' && (
-          <>
-            <SeshatLogo size={88} />
-            <Heading title={hadError ? 'Almost there' : "You're all set"}>
-              {hadError
-                ? 'Something could not be downloaded. You can try again now, or later in Config. SeshatOS works without it.'
-                : 'Everything you chose is ready. You can change any of it later in Config.'}
-            </Heading>
-            {Object.keys(progress).length > 0 && (
-              <div className="w-full">
-                <InstallProgress progress={progress} />
-              </div>
+          </div>
+          <div className="flex gap-3">
+            <QuietButton onClick={() => void skip()} disabled={running}>
+              Skip the setup
+            </QuietButton>
+            {provider.status === 'connected' ? (
+              <PrimaryButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Continue</PrimaryButton>
+            ) : (
+              <QuietButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Skip for now</QuietButton>
             )}
-            <SetupRecap modelConnected={provider.status === 'connected'} />
-            <div className="flex gap-3">
-              {hadError && (
-                <QuietButton disabled={running} onClick={() => void retry()}>
-                  {running ? 'Trying again' : 'Try again'}
-                </QuietButton>
-              )}
-              <PrimaryButton disabled={running} onClick={() => void setup.finish()}>
-                Open SeshatOS
+          </div>
+        </SetupShell>
+      )}
+
+      {step === 'choose' && (
+        <SetupShell
+          pageKey="choose"
+          wide
+          footer={
+            <div className="flex w-full items-center justify-between">
+              <QuietButton onClick={() => setStep('provider')}>Back</QuietButton>
+              <PrimaryButton disabled={mode !== 'skip' && !fits} onClick={() => void (mode === 'skip' ? skip() : install())}>
+                {mode === 'skip' ? 'Continue' : total > 0 ? `Download and continue (${formatBytes(total)})` : 'Continue'}
               </PrimaryButton>
             </div>
-          </>
-        )}
+          }
+          title="Set up your local models"
+          subtitle="Download what SeshatOS needs to read documents, name conversations and listen to you. It all runs on your computer."
+        >
+          <ModelsChoice
+            components={plan.components}
+            choices={choices}
+            mode={mode}
+            onMode={pickMode}
+            onChange={(id, choice) => setChoices((current) => ({ ...current, [id]: choice }))}
+            totalBytes={total}
+            freeBytes={plan.freeDiskBytes}
+            fits={fits}
+          />
+        </SetupShell>
+      )}
 
-      </div>
-    </main>
+      {step === 'installing' && (
+        <SetupShell
+          pageKey="installing"
+          title="Setting things up"
+          subtitle={`${chosenCount > 1 ? 'Everything downloads at the same time, so it takes as long as the biggest one.' : 'This takes a few minutes, depending on your connection.'} You can leave this window open.`}
+        >
+          <div className="w-full">
+            <InstallProgress progress={progress} overall={overall} />
+          </div>
+        </SetupShell>
+      )}
+
+      {step === 'done' && (
+        <SetupShell
+          pageKey="done"
+          title={hadError ? 'Almost there' : "You're all set"}
+          subtitle={
+            hadError
+              ? 'Something could not be downloaded. You can try again now, or later in Config. SeshatOS works without it.'
+              : 'Everything you chose is ready. You can change any of it later in Config.'
+          }
+        >
+          {Object.keys(progress).length > 0 && (
+            <div className="w-full">
+              <InstallProgress progress={progress} />
+            </div>
+          )}
+          <SetupRecap modelConnected={provider.status === 'connected'} />
+          <div className="flex gap-3">
+            {hadError && (
+              <QuietButton disabled={running} onClick={() => void retry()}>
+                {running ? 'Trying again' : 'Try again'}
+              </QuietButton>
+            )}
+            <PrimaryButton disabled={running} onClick={() => void setup.finish()}>
+              Open SeshatOS
+            </PrimaryButton>
+          </div>
+        </SetupShell>
+      )}
+    </>
   )
 }
