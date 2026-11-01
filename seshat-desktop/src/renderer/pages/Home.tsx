@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { ChartHistogram, Code, FileTextOne, Globe, LightMember } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
@@ -16,8 +17,6 @@ import { modelAlias } from '@renderer/lib/modelAlias'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
-import { HomeBackdrop } from './home/HomeBackdrop'
-import { HomeLists } from './home/HomeLists'
 import './Home.css'
 
 type ModelChoice = {
@@ -61,12 +60,10 @@ type NewChatProps = {
   /** Buttons under the input that fill it with a first request. */
   suggestions?: NewChatSuggestion[]
   autoFocus?: boolean
-  /** What is shown under the buttons of the start page. */
-  below?: ReactNode
-}
+  }
 
 /** The start of a conversation: the input with its model, attachments and folder, which creates the conversation and opens it. */
-export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask anything...', suggestions, autoFocus, below }: NewChatProps) {
+export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask anything...', suggestions, autoFocus }: NewChatProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { loading: providersLoading } = useProviders()
@@ -409,7 +406,17 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
     }
   }
 
-  const quickActions = suggestions ?? []
+  const quickActions: NewChatSuggestion[] =
+    suggestions ??
+    (variant === 'home'
+      ? [
+          { icon: <FileTextOne size={14} />, label: 'Summarize a file', prompt: 'Summarize the file at ' },
+          { icon: <ChartHistogram size={14} />, label: 'Analyze data', prompt: 'Analyze the data in ' },
+          { icon: <Globe size={14} />, label: 'Search the web', prompt: 'Search the web for ' },
+          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' },
+          { icon: <Code size={14} />, label: 'Write code', prompt: 'Write code that ' }
+        ]
+      : [])
 
   const body = (
     <>
@@ -417,7 +424,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
           <>
             <SeshatLogo size={56} />
             <h1 className="home-greeting">
-              Welcome to <span className="text-[var(--accent-primary)]">SeshatOS</span>
+              What are we <span className="text-[var(--accent-primary)]">working on</span>?
             </h1>
           </>
         )}
@@ -428,7 +435,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
             onChange={setInputValue}
             onSend={handleSend}
             placeholder={placeholder}
-            maxHeight={260}
+            maxHeight={240}
             size={variant === 'home' ? 'large' : 'default'}
             projectPath={projectPath}
             onProjectChange={fixedProjectPath ? undefined : setProjectPath}
@@ -486,7 +493,6 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
             ))}
           </div>
         )}
-        {variant === 'home' && below}
     </>
   )
 
@@ -497,8 +503,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
 export function Home() {
   return (
     <div className="home-root">
-      <HomeBackdrop />
-      <NewChat below={<HomeLists />} />
+      <NewChat />
     </div>
   )
 }
