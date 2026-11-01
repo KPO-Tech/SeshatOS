@@ -18,6 +18,7 @@ export function TitlesConfig() {
   const [error, setError] = useState<string | null>(null)
   const [customRepo, setCustomRepo] = useState('')
   const [customFile, setCustomFile] = useState('')
+  const [showCustom, setShowCustom] = useState(false)
 
   const refresh = useCallback(async () => {
     if (!llama) return
@@ -97,10 +98,12 @@ export function TitlesConfig() {
           const downloaded = status.downloadedModelIds.includes(model.id)
           const active = status.activeModelId === model.id
           return (
-            <SettingRow key={model.id} title={model.label} hint={[model.description, formatBytes(model.approxSizeBytes)].filter(Boolean).join(' - ')}>
-              {active && <StatusBadge tone="ok">Active</StatusBadge>}
-              {!active && (
-                <ActionButton type="button" tone="primary" disabled={busy || !status.supported} onClick={() => void run(() => llama.activateModel(model.id))}>
+            <SettingRow key={model.id} title={model.label} hint={model.description}>
+              <span className="text-[12px] text-[var(--text-faint)]">{formatBytes(model.approxSizeBytes)}</span>
+              {active ? (
+                <StatusBadge tone="ok">In use</StatusBadge>
+              ) : (
+                <ActionButton type="button" tone={downloaded ? 'primary' : 'default'} disabled={busy || !status.supported} onClick={() => void run(() => llama.activateModel(model.id))}>
                   {downloaded ? 'Use' : 'Download'}
                 </ActionButton>
               )}
@@ -112,33 +115,40 @@ export function TitlesConfig() {
             </SettingRow>
           )
         })}
-      </SettingsCard>
-
-      <SettingsCard title="Custom model">
-        <SettingRow title="Repository">
-          <TextField label="Repository" value={customRepo} onChange={setCustomRepo} placeholder="owner/model-GGUF" />
-        </SettingRow>
-        <SettingRow title="File">
-          <TextField label="File" value={customFile} onChange={setCustomFile} placeholder="model-q4_k_m.gguf" />
-          <ActionButton
-            type="button"
-            tone="primary"
-            disabled={busy || !customRepo.trim() || !customFile.trim() || !status?.supported}
-            onClick={() =>
-              void run(async () => {
-                const repo = customRepo.trim()
-                const file = customFile.trim()
-                await llama.addCustomModel(repo, file)
-                const next = await llama.activateModel(`custom:${repo}/${file}`)
-                setCustomRepo('')
-                setCustomFile('')
-                return next
-              })
-            }
-          >
-            Add
+        <SettingRow title="Your own model" hint="Any instruct GGUF from Hugging Face. Reasoning models are refused.">
+          <ActionButton type="button" onClick={() => setShowCustom((current) => !current)}>
+            {showCustom ? 'Close' : 'Add'}
           </ActionButton>
         </SettingRow>
+        {showCustom && (
+          <>
+            <SettingRow title="Repository">
+              <TextField label="Repository" value={customRepo} onChange={setCustomRepo} placeholder="owner/model-GGUF" />
+            </SettingRow>
+            <SettingRow title="File">
+              <TextField label="File" value={customFile} onChange={setCustomFile} placeholder="model-q4_k_m.gguf" />
+              <ActionButton
+                type="button"
+                tone="primary"
+                disabled={busy || !customRepo.trim() || !customFile.trim() || !status?.supported}
+                onClick={() =>
+                  void run(async () => {
+                    const repo = customRepo.trim()
+                    const file = customFile.trim()
+                    await llama.addCustomModel(repo, file)
+                    const next = await llama.activateModel(`custom:${repo}/${file}`)
+                    setCustomRepo('')
+                    setCustomFile('')
+                    setShowCustom(false)
+                    return next
+                  })
+                }
+              >
+                Add and use
+              </ActionButton>
+            </SettingRow>
+          </>
+        )}
       </SettingsCard>
     </SettingsPage>
   )

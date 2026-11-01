@@ -28,14 +28,14 @@ export function IndraPanel() {
     void refresh()
   }, [refresh])
 
-  const installing = result?.install.status === 'running'
+  const installing = result?.install?.status === 'running'
   useEffect(() => {
     if (!installing) return
     const timer = window.setInterval(() => void refresh(), POLL_MS)
     return () => window.clearInterval(timer)
   }, [installing, refresh])
 
-  if (!result) return null
+  if (!result?.indra || !result.install) return null
   const { indra, install } = result
   const phase = indraPhase(indra, install)
   const pill = indraPill(phase)

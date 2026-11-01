@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
 import type { UserPreferences } from '@renderer/api/types'
-import { ActionButton, Chip, Notice, SelectField, SettingRow, SettingsCard, SettingsPage, StatusBadge, TextField, Toggle } from './kit'
+import { ActionButton, Chip, Notice, SelectField, SettingRow, SettingsCard, SettingsPage, StatusBadge, Toggle } from './kit'
 
 type UserMemory = {
   id: string
@@ -129,21 +129,34 @@ export function MemoriesSettings() {
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="Add a memory">
-        <SettingRow title="Type">
-          <div className="w-[190px]">
-            <SelectField value={form.type} options={typeOptions} onChange={(value) => setForm((current) => ({ ...current, type: value }))} />
+      <SettingsCard title="Add a memory" padded>
+        <div className="grid gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-[150px] shrink-0">
+              <SelectField value={form.type} options={typeOptions} onChange={(value) => setForm((current) => ({ ...current, type: value }))} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <input
+                value={form.key}
+                aria-label="Memory"
+                onChange={(event) => setForm((current) => ({ ...current, key: event.target.value }))}
+                onKeyDown={(event) => event.key === 'Enter' && void handleCreate()}
+                placeholder="Prefers concise summaries"
+                className="h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
+              />
+            </div>
+            <ActionButton type="button" tone="primary" onClick={() => void handleCreate()} disabled={!canSave || saving}>
+              {saving ? 'Saving...' : 'Add'}
+            </ActionButton>
           </div>
-        </SettingRow>
-        <SettingRow title="Memory">
-          <TextField label="Memory" value={form.key} onChange={(value) => setForm((current) => ({ ...current, key: value }))} placeholder="Prefers concise summaries" width={340} />
-        </SettingRow>
-        <SettingRow title="Details">
-          <TextField label="Details" value={form.value} onChange={(value) => setForm((current) => ({ ...current, value }))} placeholder="Optional" width={260} />
-          <ActionButton type="button" tone="primary" onClick={() => void handleCreate()} disabled={!canSave || saving}>
-            {saving ? 'Saving...' : 'Add'}
-          </ActionButton>
-        </SettingRow>
+          <input
+            value={form.value}
+            aria-label="Details"
+            onChange={(event) => setForm((current) => ({ ...current, value: event.target.value }))}
+            placeholder="Details (optional)"
+            className="h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
+          />
+        </div>
       </SettingsCard>
 
       <SettingsCard
@@ -154,7 +167,7 @@ export function MemoriesSettings() {
           </div>
         }
       >
-        {!loading && shown.length === 0 && <SettingRow title="No memories yet" />}
+        {!loading && shown.length === 0 && <SettingRow title="No memories yet" hint="What you add above is used in every chat." />}
         {shown.map((memory) => (
           <SettingRow key={memory.id} title={memory.key} hint={memory.value || undefined}>
             <Chip>{memoryTypeLabel(memory.type)}</Chip>

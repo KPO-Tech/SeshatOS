@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
+import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ActionButton, SettingRow, SettingsCard, SettingsPage, StatusBadge } from './kit'
 
 type UpdateState = { kind: 'idle' } | { kind: 'checking' } | { kind: 'current' } | { kind: 'ready'; version: string } | { kind: 'failed'; message: string }
@@ -62,28 +63,18 @@ export function AboutSettings() {
             : undefined
 
   return (
-    <SettingsPage id="about" badge={<StatusBadge tone="muted">{`v${version}`}</StatusBadge>}>
-      <SettingsCard title="SeshatOS Desktop">
-        <SettingRow title="Version">
-          <span className="text-[12.5px] text-[var(--text-secondary)]">{version}</span>
-        </SettingRow>
-        <SettingRow title="Backend">
-          <StatusBadge tone={reachable ? 'ok' : 'muted'}>{reachable === null ? 'Checking...' : reachable ? 'Connected' : 'Not detected'}</StatusBadge>
-        </SettingRow>
-        <SettingRow title="Mode">
-          <span className="text-[12.5px] text-[var(--text-secondary)]">{status?.mode || 'Local workspace'}</span>
-        </SettingRow>
-        {status?.version && (
-          <SettingRow title="Backend version">
-            <span className="text-[12.5px] text-[var(--text-secondary)]">{status.version}</span>
-          </SettingRow>
-        )}
-      </SettingsCard>
-
-      {window.seshat?.updates && (
-        <SettingsCard>
-          <SettingRow title="Updates" hint={updateLine}>
-            {update.kind === 'ready' ? (
+    <SettingsPage id="about">
+      <SettingsCard padded>
+        <div className="flex items-center justify-between gap-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <SeshatLogo size={52} />
+            <div className="min-w-0">
+              <div className="text-[16px] font-semibold text-[var(--text-primary)]">SeshatOS Desktop</div>
+              <div className="mt-0.5 text-[12.5px] text-[var(--text-muted)]">{updateLine ?? `Version ${version}`}</div>
+            </div>
+          </div>
+          {window.seshat?.updates &&
+            (update.kind === 'ready' ? (
               <ActionButton type="button" tone="primary" onClick={() => void window.seshat?.updates?.quitAndInstall()}>
                 Restart and install
               </ActionButton>
@@ -91,10 +82,23 @@ export function AboutSettings() {
               <ActionButton type="button" disabled={update.kind === 'checking'} onClick={() => void checkForUpdate()}>
                 Check for updates
               </ActionButton>
-            )}
+            ))}
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title="System">
+        <SettingRow title="Backend">
+          <StatusBadge tone={reachable ? 'ok' : 'muted'}>{reachable === null ? 'Checking...' : reachable ? 'Connected' : 'Not detected'}</StatusBadge>
+        </SettingRow>
+        <SettingRow title="Mode">
+          <span className="text-[12.5px] text-[var(--text-secondary)]">{status?.mode === 'connected' ? 'Connected to SeshatCloud' : 'Local workspace'}</span>
+        </SettingRow>
+        {status?.version && (
+          <SettingRow title="Backend version">
+            <span className="text-[12.5px] text-[var(--text-secondary)]">{status.version}</span>
           </SettingRow>
-        </SettingsCard>
-      )}
+        )}
+      </SettingsCard>
     </SettingsPage>
   )
 }
