@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { ChartHistogram, Code, FileTextOne, Globe, LightMember } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
@@ -59,7 +58,7 @@ type NewChatProps = {
   /** "home" is the start page, centred under a greeting; "project" is the input alone, to sit inside a page. */
   variant?: 'home' | 'project'
   placeholder?: string
-  /** Buttons under the input that fill it with a first request. The start page has its own when none are given. */
+  /** Buttons under the input that fill it with a first request. */
   suggestions?: NewChatSuggestion[]
   autoFocus?: boolean
   /** What is shown under the buttons of the start page. */
@@ -67,7 +66,7 @@ type NewChatProps = {
 }
 
 /** The start of a conversation: the input with its model, attachments and folder, which creates the conversation and opens it. */
-export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Send a message, upload files, open a folder, or create a scheduled task...', suggestions, autoFocus, below }: NewChatProps) {
+export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask anything...', suggestions, autoFocus, below }: NewChatProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { loading: providersLoading } = useProviders()
@@ -410,17 +409,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
     }
   }
 
-  const quickActions: NewChatSuggestion[] =
-    suggestions ??
-    (variant === 'home'
-      ? [
-          { icon: <FileTextOne size={14} />, label: 'Summarize a file', prompt: 'Summarize the file at ' },
-          { icon: <ChartHistogram size={14} />, label: 'Analyze data', prompt: 'Analyze the data in ' },
-          { icon: <Globe size={14} />, label: 'Search the web', prompt: 'Search the web for ' },
-          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' },
-          { icon: <Code size={14} />, label: 'Write code', prompt: 'Write code that ' }
-        ]
-      : [])
+  const quickActions = suggestions ?? []
 
   const body = (
     <>
@@ -430,7 +419,6 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Sen
             <h1 className="home-greeting">
               Welcome to <span className="text-[var(--accent-primary)]">SeshatOS</span>
             </h1>
-            <p className="home-subtitle">Your workspace for research, creation and automation with AI.</p>
           </>
         )}
 
