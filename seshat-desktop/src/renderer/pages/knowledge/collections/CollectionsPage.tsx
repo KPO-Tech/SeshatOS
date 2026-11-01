@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus } from '@icon-park/react'
+import { Down, Plus, Search } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
+import { Dropdown } from '@renderer/components/ui/Dropdown'
 import { useDeviceMode } from '../useCanManage'
+import { CollectionCard } from './CollectionCard'
 import { AddSourceDialog } from './AddSourceDialog'
 import { plural } from './fileStatus'
 import { SourceIcon } from './SourceIcon'
@@ -35,7 +37,26 @@ export function CollectionsPage() {
   // Folder sources are kept on this computer: a device connected to an organization takes its collections from the organization's server.
   const canAddSource = deviceMode === 'standalone'
 
-  const countIn = (sourceId: string) => collections.filter((c) => c.sourceId === sourceId).length
+  const [query, setQuery] = useState('')
+  const [scope, setScope] = useState('all')
+
+  // The collections made in the app have no source id: it is the default source, as on the page of a source.
+  const idOf = (sourceId: string) => (sourceId === DEFAULT_SOURCE_ID ? '' : sourceId)
+  const countIn = (sourceId: string) => collections.filter((c) => c.sourceId === idOf(sourceId)).length
+
+  const needle = query.trim().toLowerCase()
+  const scopeName = scope === 'all' ? 'All sources' : scope === DEFAULT_SOURCE_ID ? 'Seshat' : (sources.find((s) => s.id === scope)?.name ?? 'All sources')
+  const showDefault = (scope === 'all' || scope === DEFAULT_SOURCE_ID) && (!needle || 'seshat'.includes(needle))
+  const shownSources = sources.filter((s) => (scope === 'all' || scope === s.id) && (!needle || `${s.name} ${s.root}`.toLowerCase().includes(needle)))
+  // Collections are listed under the sources once a search or a source is chosen: until then, a source is the way in.
+  const filtering = needle !== '' || scope !== 'all'
+  const matching = useMemo(
+    () =>
+      collections
+        .filter((c) => (scope === 'all' || c.sourceId === idOf(scope)) && (!needle || `${c.name} ${c.description}`.toLowerCase().includes(needle)))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [collections, scope, needle]
+  )
 
   return (
     <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pb-12 pt-10">
@@ -56,6 +77,34 @@ export function CollectionsPage() {
           )}
         </div>
 
+        <div className="mt-6 flex items-center gap-2.5">
+          <div className="relative min-w-0 flex-1">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-[var(--text-muted)]">
+              <Search theme="outline" size={16} />
+            </span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search sources and collections..."
+              className="h-10 w-full rounded-xl border border-app-border-subtle bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
+            />
+          </div>
+          <Dropdown
+            label="Source"
+            items={[
+              { id: 'all', label: 'All sources', checked: scope === 'all', onSelect: () => setScope('all') },
+              { id: DEFAULT_SOURCE_ID, label: 'Seshat', checked: scope === DEFAULT_SOURCE_ID, onSelect: () => setScope(DEFAULT_SOURCE_ID) },
+              ...sources.map((source) => ({ id: source.id, label: source.name, checked: scope === source.id, onSelect: () => setScope(source.id) }))
+            ]}
+            trigger={({ toggle }) => (
+              <button type="button" onClick={toggle} className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-app-border-subtle bg-[var(--surface-panel)] px-3.5 text-[13px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+                {scopeName}
+                <Down theme="outline" size={12} />
+              </button>
+            )}
+          />
+        </div>
+
         {failed && (
           <p className="mb-0 mt-8 text-[13px] text-[var(--accent-danger)]" role="alert">
             The collections could not be read.
@@ -63,18 +112,39 @@ export function CollectionsPage() {
         )}
 
         {!loading && !failed && (
-          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <SourceCard
-              icon={<SeshatLogo size={20} />}
-              title="Seshat"
-              detail="The collections made and filled in the app."
-              count={countIn(DEFAULT_SOURCE_ID)}
-              onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
-            />
-            {sources.map((source) => (
-              <SourceCard key={source.id} icon={<SourceIcon icon={source.icon} />} title={source.name} detail={source.root} count={countIn(source.id)} onOpen={() => navigate(sourcePath(source.id))} />
-            ))}
-          </div>
+          <>
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {showDefault && (
+                <SourceCard
+                  icon={<SeshatLogo size={20} />}
+                  title="Seshat"
+                  detail="The collections made and filled in the app."
+                  count={countIn(DEFAULT_SOURCE_ID)}
+                  onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
+                />
+              )}
+              {shownSources.map((source) => (
+                <SourceCard key={source.id} icon={<SourceIcon icon={source.icon} />} title={source.name} detail={source.root} count={countIn(source.id)} onOpen={() => navigate(sourcePath(source.id))} />
+              ))}
+            </div>
+
+            {filtering && (
+              <>
+                <h2 className="mb-0 mt-8 text-[13px] font-semibold text-[var(--text-primary)]">
+                  Collections <span className="font-normal text-[var(--text-muted)]">{matching.length}</span>
+                </h2>
+                {matching.length === 0 ? (
+                  <p className="mb-0 mt-3 text-[13px] text-[var(--text-muted)]">No collection matches.</p>
+                ) : (
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {matching.map((collection) => (
+                      <CollectionCard key={collection.id} collection={collection} onOpen={() => navigate(`/knowledge/collections/${encodeURIComponent(collection.id)}`)} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
       </div>
 
