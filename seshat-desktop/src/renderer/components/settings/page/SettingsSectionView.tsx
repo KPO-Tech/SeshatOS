@@ -37,13 +37,7 @@ function SectionContent({ id }: { id: SettingsSectionId }) {
       return (
         <GeneralSettings
           language={state.language}
-          notifications={state.notifications}
-          soundAlert={state.soundAlert}
-          productUpdates={state.productUpdates}
           onLanguageChange={state.updateLanguage}
-          onNotificationsChange={state.setNotifications}
-          onSoundAlertChange={state.setSoundAlert}
-          onProductUpdatesChange={state.setProductUpdates}
         />
       )
     case 'appearance':

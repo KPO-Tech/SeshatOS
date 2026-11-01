@@ -15,7 +15,9 @@ import { ThemeToggleButton } from './ThemeToggleButton'
 import { Titlebar } from './Titlebar'
 import { useAskSessionStore } from '@renderer/stores/askSession'
 import { TitlebarSessionControls } from './TitlebarSessionControls'
+import { NotificationBell } from './NotificationBell'
 import { UpdateBanner } from './UpdateBanner'
+import { useUpdateNotice } from '@renderer/hooks/useUpdateNotice'
 
 export function Shell() {
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
@@ -36,6 +38,7 @@ export function Shell() {
 
   useSessionsSync()
   useTaskSync()
+  useUpdateNotice()
 
   // The documents opened from Knowledge are closed when its page changes (a conversation closes its own).
   useEffect(() => {
@@ -101,11 +104,14 @@ export function Shell() {
       <SkillReviewHost />
       <Titlebar
         right={
-          isChatHome || isConversation ? (
-            <TitlebarSessionControls conversationId={conversationId} />
-          ) : isKnowledge && askSessionId ? (
-            <TitlebarSessionControls conversationId={askSessionId} variant="knowledge" />
-          ) : undefined
+          <>
+            {isChatHome || isConversation ? (
+              <TitlebarSessionControls conversationId={conversationId} />
+            ) : isKnowledge && askSessionId ? (
+              <TitlebarSessionControls conversationId={askSessionId} variant="knowledge" />
+            ) : undefined}
+            <NotificationBell />
+          </>
         }
         onHome={() => navigate('/')}
         onBack={() => navigate(-1)}

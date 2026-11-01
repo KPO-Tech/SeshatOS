@@ -1,15 +1,10 @@
-import { Mail, Remind, Translate, VolumeNotice } from '@icon-park/react'
+import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution } from '@icon-park/react'
+import { useNotificationPrefs } from '@renderer/hooks/useNotificationPrefs'
 import { SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
 
 type Props = {
   language: string
-  notifications: boolean
-  soundAlert: boolean
-  productUpdates: boolean
   onLanguageChange: (language: string) => void
-  onNotificationsChange: (enabled: boolean) => void
-  onSoundAlertChange: (enabled: boolean) => void
-  onProductUpdatesChange: (enabled: boolean) => void
 }
 
 const LANGUAGES = [
@@ -19,16 +14,8 @@ const LANGUAGES = [
 
 const icon = (Glyph: typeof Remind) => <Glyph theme="outline" size={18} />
 
-export function GeneralSettings({
-  language,
-  notifications,
-  soundAlert,
-  productUpdates,
-  onLanguageChange,
-  onNotificationsChange,
-  onSoundAlertChange,
-  onProductUpdatesChange
-}: Props) {
+export function GeneralSettings({ language, onLanguageChange }: Props) {
+  const { prefs, change } = useNotificationPrefs()
   return (
     <SettingsPage id="general">
       <SettingsCard title="Language">
@@ -40,14 +27,26 @@ export function GeneralSettings({
       </SettingsCard>
 
       <SettingsCard title="Notifications">
-        <SettingRow title="Desktop notifications" icon={icon(Remind)}>
-          <Toggle label="Desktop notifications" enabled={notifications} onChange={onNotificationsChange} />
+        <SettingRow title="Desktop notifications" hint="Shown only when SeshatOS is not the window in front." icon={icon(Remind)}>
+          <Toggle label="Desktop notifications" enabled={prefs.desktop} onChange={(value) => change('desktop', value)} />
         </SettingRow>
-        <SettingRow title="Sound alert" icon={icon(VolumeNotice)}>
-          <Toggle label="Sound alert" enabled={soundAlert} onChange={onSoundAlertChange} />
+        <SettingRow title="Sound" icon={icon(VolumeNotice)}>
+          <Toggle label="Sound" enabled={prefs.sound} onChange={(value) => change('sound', value)} />
         </SettingRow>
-        <SettingRow title="Product updates" icon={icon(Mail)}>
-          <Toggle label="Product updates" enabled={productUpdates} onChange={onProductUpdatesChange} />
+      </SettingsCard>
+
+      <SettingsCard title="What to be told about">
+        <SettingRow title="Tasks" icon={icon(CheckCorrect as typeof Remind)}>
+          <Toggle label="Tasks" enabled={prefs.tasks} onChange={(value) => change('tasks', value)} />
+        </SettingRow>
+        <SettingRow title="Agent replies" icon={icon(Remind)} hint="When the agent finishes in a conversation you are not looking at.">
+          <Toggle label="Agent replies" enabled={prefs.agents} onChange={(value) => change('agents', value)} />
+        </SettingRow>
+        <SettingRow title="Errors" icon={icon(Caution as typeof Remind)}>
+          <Toggle label="Errors" enabled={prefs.errors} onChange={(value) => change('errors', value)} />
+        </SettingRow>
+        <SettingRow title="App updates" icon={icon(Up as typeof Remind)}>
+          <Toggle label="App updates" enabled={prefs.updates} onChange={(value) => change('updates', value)} />
         </SettingRow>
       </SettingsCard>
     </SettingsPage>

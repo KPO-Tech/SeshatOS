@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { TASK_FINISHED_EVENT } from '@renderer/hooks/useTaskSync'
 import type { TaskInfo } from '@renderer/lib/tasks'
+import { notify } from '@renderer/stores/notifications'
 import { nudgeTasks } from '@renderer/stores/tasks'
 import { SkillInstallDialog } from './SkillInstallDialog'
 import { fetchSkillPlan, startSkillEnvironment, uninstallSkillRepo } from './skillsApi'
@@ -23,6 +24,8 @@ export function SkillReviewHost() {
       try {
         const result = await fetchSkillPlan(task.subject)
         if (result.needs_environment) setReviewing({ name: result.name, plan: result.plan })
+        // Nothing to agree to: the repository is ready as it is downloaded, and the bell says so.
+        else notify('task', { title: `${result.name} is ready`, body: 'The installation is done.', route: '/skills' })
       } catch {
         // The repository was removed in the meantime: there is nothing to review.
       }
