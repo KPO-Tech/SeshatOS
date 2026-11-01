@@ -135,16 +135,20 @@ export function WebSearchConfig() {
             </SettingRow>
           </SettingsCard>
 
-          {searchProviders.map((provider) => (
-            <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
-          ))}
+          <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
+            {searchProviders.map((provider) => (
+              <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
+            ))}
+          </div>
 
           {researchProviders.length > 0 && (
             <>
               <h2 className="m-0 mt-2 text-[13px] font-semibold text-[var(--text-secondary)]">Research sources</h2>
-              {researchProviders.map((provider) => (
-                <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
-              ))}
+              <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
+                {researchProviders.map((provider) => (
+                  <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />
+                ))}
+              </div>
             </>
           )}
 

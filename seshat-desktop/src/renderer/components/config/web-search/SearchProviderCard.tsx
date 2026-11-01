@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ActionButton, SettingRow, SettingsCard, StatusBadge, TextField, Toggle } from '../../settings/kit'
+import { ActionButton, StatusBadge, Toggle } from '../../settings/kit'
 import { testSearchProvider, updateSearchProvider } from './webSearchApi'
 import type { ProviderTestState, SearchProviderConfig } from './webSearchTypes'
 import { providerStatus } from './webSearchUtils'
@@ -88,11 +88,17 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
   const hasActions = !isResearch || dirty
 
   return (
-    <SettingsCard
-      title={provider.label}
-      icon={<WebSearchProviderIcon provider={provider.provider} label={provider.label} size={24} />}
-      badge={<StatusBadge tone={status.tone === 'success' ? 'ok' : status.tone}>{status.label}</StatusBadge>}
-      action={
+    <section className="flex min-w-0 flex-col rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <WebSearchProviderIcon provider={provider.provider} label={provider.label} size={32} />
+          <div className="min-w-0">
+            <h2 className="m-0 truncate text-[14px] font-semibold text-[var(--text-primary)]">{provider.label}</h2>
+            <div className="mt-1">
+              <StatusBadge tone={status.tone === 'success' ? 'ok' : status.tone}>{status.label}</StatusBadge>
+            </div>
+          </div>
+        </div>
         <Toggle
           label={`Enable ${provider.label}`}
           enabled={enabled}
@@ -101,84 +107,112 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
             markDirty()
           }}
         />
-      }
-    >
-      {provider.requires_api_key && (
-        <SettingRow title={credentialLabel}>
-          <TextField
-            label={credentialLabel}
-            type="password"
-            value={isSearxng ? authPassword : apiKey}
-            onChange={(value) => {
-              if (isSearxng) {
-                setAuthPassword(value)
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {provider.requires_api_key && (
+          <Field label={credentialLabel}>
+            <Input
+              label={credentialLabel}
+              type="password"
+              value={isSearxng ? authPassword : apiKey}
+              onChange={(value) => {
+                if (isSearxng) {
+                  setAuthPassword(value)
+                  setAuthChanged(true)
+                } else {
+                  setApiKey(value)
+                  setApiKeyChanged(true)
+                }
+                markDirty()
+              }}
+              placeholder={provider.has_api_key ? 'Saved' : 'Required'}
+            />
+          </Field>
+        )}
+        {isReddit && (
+          <Field label="Client ID">
+            <Input
+              label="Client ID"
+              value={authUsername}
+              onChange={(value) => {
+                setAuthUsername(value)
+                setClientIdChanged(true)
+                markDirty()
+              }}
+              placeholder="Reddit app client id"
+            />
+          </Field>
+        )}
+        {isSearxng && (
+          <Field label="Username">
+            <Input
+              label="Username"
+              value={authUsername}
+              onChange={(value) => {
+                setAuthUsername(value)
                 setAuthChanged(true)
-              } else {
-                setApiKey(value)
-                setApiKeyChanged(true)
-              }
-              markDirty()
-            }}
-            placeholder={provider.has_api_key ? 'Saved' : 'Required'}
-          />
-        </SettingRow>
+                markDirty()
+              }}
+              placeholder="Optional"
+            />
+          </Field>
+        )}
+        {provider.requires_base_url && (
+          <Field label="Base URL">
+            <Input
+              label="Base URL"
+              value={baseUrl}
+              onChange={(value) => {
+                setBaseUrl(value)
+                markDirty()
+              }}
+              placeholder={provider.default_base_url || 'https://...'}
+              mono
+            />
+          </Field>
+        )}
+      </div>
+
+      {(hasActions || message) && (
+        <div className="mt-4 flex min-h-9 items-center justify-between gap-3">
+          <span className={`min-w-0 truncate text-[12px] ${testing === 'error' || (dirty && message) ? 'text-[var(--accent-danger)]' : 'text-[var(--text-muted)]'}`}>{message}</span>
+          <div className="flex shrink-0 items-center gap-2">
+            {!isResearch && (
+              <ActionButton type="button" onClick={() => void handleTest()} disabled={testing === 'running' || saving}>
+                {testing === 'running' ? 'Testing...' : 'Test'}
+              </ActionButton>
+            )}
+            {dirty && (
+              <ActionButton type="button" tone="primary" onClick={() => void handleSave()} disabled={saving}>
+                {saving ? 'Saving...' : 'Save'}
+              </ActionButton>
+            )}
+          </div>
+        </div>
       )}
-      {isReddit && (
-        <SettingRow title="Client ID">
-          <TextField
-            label="Client ID"
-            value={authUsername}
-            onChange={(value) => {
-              setAuthUsername(value)
-              setClientIdChanged(true)
-              markDirty()
-            }}
-            placeholder="Reddit app client id"
-          />
-        </SettingRow>
-      )}
-      {isSearxng && (
-        <SettingRow title="Username">
-          <TextField
-            label="Username"
-            value={authUsername}
-            onChange={(value) => {
-              setAuthUsername(value)
-              setAuthChanged(true)
-              markDirty()
-            }}
-            placeholder="Optional"
-          />
-        </SettingRow>
-      )}
-      {provider.requires_base_url && (
-        <SettingRow title="Base URL">
-          <TextField
-            label="Base URL"
-            value={baseUrl}
-            onChange={(value) => {
-              setBaseUrl(value)
-              markDirty()
-            }}
-            placeholder={provider.default_base_url || 'https://...'}
-            mono
-          />
-        </SettingRow>
-      )}
-      {hasActions && (
-        <SettingRow title={message || ' '}>
-          {!isResearch && (
-            <ActionButton type="button" onClick={() => void handleTest()} disabled={testing === 'running' || saving}>
-              {testing === 'running' ? 'Testing...' : 'Test'}
-            </ActionButton>
-          )}
-          {dirty && (
-            <ActionButton type="button" tone="primary" onClick={() => void handleSave()} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
-            </ActionButton>
-          )}
-        </SettingRow>
-      )}
-    </SettingsCard>
+    </section>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="grid min-w-0 gap-1.5">
+      <span className="text-[12px] font-semibold text-[var(--text-muted)]">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function Input({ label, value, onChange, placeholder, type = 'text', mono = false }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: 'text' | 'password'; mono?: boolean }) {
+  return (
+    <input
+      type={type}
+      value={value}
+      aria-label={label}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      className={`h-9 w-full min-w-0 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[12.5px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)] ${mono ? 'font-mono' : ''}`}
+    />
   )
 }
