@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { finishedMessage } from '@renderer/lib/taskView'
 import { isTaskActive, type TaskInfo } from '@renderer/lib/tasks'
+import { notify } from '@renderer/stores/notifications'
 import { useTasksStore } from '@renderer/stores/tasks'
 
 /** How often the backend is asked while a task runs, and while nothing does (to see a task that something else started). */
@@ -13,11 +14,10 @@ export const TASK_FINISHED_EVENT = 'seshat-task-finished'
 function announce(task: TaskInfo) {
   // The pages that show what the task made (the list of skills) read it again.
   window.dispatchEvent(new CustomEvent<TaskInfo>(TASK_FINISHED_EVENT, { detail: task }))
-  // The sidebar says how it went; when the person is elsewhere (another window, or the app hidden in the tray) the system says it too.
-  if (!document.hasFocus()) {
-    const { title, body, route } = finishedMessage(task)
-    void window.seshat?.notify?.show({ title, body, route })
-  }
+  // The sidebar says how it went. The bell keeps it, and when the person is elsewhere (another window, or the app hidden in the tray) the
+  // system says it too, as their choices in Settings > General allow.
+  const { title, body, route, failed } = finishedMessage(task)
+  notify(failed ? 'error' : 'task', { title, body, route })
 }
 
 /**
