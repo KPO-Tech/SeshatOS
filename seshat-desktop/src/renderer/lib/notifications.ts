@@ -1,6 +1,6 @@
 // What the app tells the person about, kept on this computer: the choices (Settings > General) and the history shown by the bell.
 
-export type NotificationKind = 'task' | 'error' | 'update'
+export type NotificationKind = 'task' | 'error' | 'update' | 'agent'
 
 export type NotificationPrefs = {
   /** The system notification, shown when the window is not the one in front. */
@@ -10,9 +10,11 @@ export type NotificationPrefs = {
   tasks: boolean
   errors: boolean
   updates: boolean
+  /** The agent finished its work, or stopped with an error, in a conversation the person is not looking at. */
+  agents: boolean
 }
 
-export const DEFAULT_PREFS: NotificationPrefs = { desktop: true, sound: false, tasks: true, errors: true, updates: true }
+export const DEFAULT_PREFS: NotificationPrefs = { desktop: true, sound: true, tasks: true, errors: true, updates: true, agents: true }
 
 export type AppNotification = {
   id: string
@@ -30,11 +32,14 @@ export const LOG_KEY = 'seshat.notify.log'
 /** How many notifications the bell keeps. */
 export const LOG_LIMIT = 50
 
-const KIND_PREF: Record<NotificationKind, keyof NotificationPrefs> = { task: 'tasks', error: 'errors', update: 'updates' }
+const KIND_PREF: Record<NotificationKind, keyof NotificationPrefs> = { task: 'tasks', error: 'errors', update: 'updates', agent: 'agents' }
 
-/** What to do with a notification, given the choices and whether the window is in front. */
-export function decide(kind: NotificationKind, prefs: NotificationPrefs, windowFocused: boolean): { record: boolean; desktop: boolean; sound: boolean } {
-  const record = prefs[KIND_PREF[kind]]
+/**
+ * What to do with a notification, given the choices, whether the window is in front, and whether the person is already looking at what it
+ * is about (the conversation the agent finished in): they are told of nothing they can see.
+ */
+export function decide(kind: NotificationKind, prefs: NotificationPrefs, windowFocused: boolean, viewing = false): { record: boolean; desktop: boolean; sound: boolean } {
+  const record = prefs[KIND_PREF[kind]] && !(windowFocused && viewing)
   return { record, desktop: record && prefs.desktop && !windowFocused, sound: record && prefs.sound }
 }
 
@@ -74,7 +79,7 @@ export function setPrefs(next: NotificationPrefs) {
   window.dispatchEvent(new Event(PREFS_EVENT))
 }
 
-const KINDS: NotificationKind[] = ['task', 'error', 'update']
+const KINDS: NotificationKind[] = ['task', 'error', 'update', 'agent']
 
 export function getLog(): AppNotification[] {
   const stored = read<unknown[]>(LOG_KEY)

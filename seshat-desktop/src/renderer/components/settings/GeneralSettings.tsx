@@ -39,6 +39,9 @@ export function GeneralSettings({ language, onLanguageChange }: Props) {
         <SettingRow title="Tasks" icon={icon(CheckCorrect as typeof Remind)}>
           <Toggle label="Tasks" enabled={prefs.tasks} onChange={(value) => change('tasks', value)} />
         </SettingRow>
+        <SettingRow title="Agent replies" icon={icon(Remind)} hint="When the agent finishes in a conversation you are not looking at.">
+          <Toggle label="Agent replies" enabled={prefs.agents} onChange={(value) => change('agents', value)} />
+        </SettingRow>
         <SettingRow title="Errors" icon={icon(Caution as typeof Remind)}>
           <Toggle label="Errors" enabled={prefs.errors} onChange={(value) => change('errors', value)} />
         </SettingRow>

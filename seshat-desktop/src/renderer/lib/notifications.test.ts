@@ -18,30 +18,40 @@ const note = (id: string, extra: Partial<AppNotification> = {}): AppNotification
 
 describe('decide', () => {
   it('shows the system notification only when the window is not in front', () => {
-    expect(decide('task', DEFAULT_PREFS, false)).toEqual({ record: true, desktop: true, sound: false })
-    expect(decide('task', DEFAULT_PREFS, true)).toEqual({ record: true, desktop: false, sound: false })
+    expect(decide('task', DEFAULT_PREFS, false)).toEqual({ record: true, desktop: true, sound: true })
+    expect(decide('task', DEFAULT_PREFS, true)).toEqual({ record: true, desktop: false, sound: true })
   })
 
   it('tells nothing of a kind that is turned off', () => {
-    expect(decide('error', { ...DEFAULT_PREFS, errors: false, sound: true }, false)).toEqual({ record: false, desktop: false, sound: false })
+    expect(decide('error', { ...DEFAULT_PREFS, errors: false }, false)).toEqual({ record: false, desktop: false, sound: false })
     expect(decide('update', { ...DEFAULT_PREFS, updates: false }, false).record).toBe(false)
   })
 
   it('keeps the bell and the chime when the system notifications are off', () => {
-    expect(decide('task', { ...DEFAULT_PREFS, desktop: false, sound: true }, false)).toEqual({ record: true, desktop: false, sound: true })
+    expect(decide('task', { ...DEFAULT_PREFS, desktop: false }, false)).toEqual({ record: true, desktop: false, sound: true })
+  })
+
+  it('says nothing of what the person is looking at, and everything when they are in another application', () => {
+    // The agent finished in the conversation that is open and in front: they see it.
+    expect(decide('agent', DEFAULT_PREFS, true, true)).toEqual({ record: false, desktop: false, sound: false })
+    // Same conversation, but another application is in front: the chime and the system notification.
+    expect(decide('agent', DEFAULT_PREFS, false, true)).toEqual({ record: true, desktop: true, sound: true })
+    // SeshatOS is in front, on another conversation or page: the bell and the chime, not the system.
+    expect(decide('agent', DEFAULT_PREFS, true, false)).toEqual({ record: true, desktop: false, sound: true })
+    expect(decide('agent', { ...DEFAULT_PREFS, agents: false }, false, false).record).toBe(false)
   })
 })
 
 describe('the choices', () => {
   it('start from the defaults and keep what was set', () => {
     expect(getPrefs()).toEqual(DEFAULT_PREFS)
-    setPrefs({ ...DEFAULT_PREFS, sound: true, tasks: false })
-    expect(getPrefs()).toMatchObject({ sound: true, tasks: false, desktop: true })
+    setPrefs({ ...DEFAULT_PREFS, sound: false, tasks: false })
+    expect(getPrefs()).toMatchObject({ sound: false, tasks: false, desktop: true })
   })
 
   it('ignore what is not a yes or a no', () => {
-    store.set(PREFS_KEY, JSON.stringify({ desktop: 'yes', sound: true }))
-    expect(getPrefs()).toMatchObject({ desktop: true, sound: true })
+    store.set(PREFS_KEY, JSON.stringify({ desktop: 'yes', sound: false }))
+    expect(getPrefs()).toMatchObject({ desktop: true, sound: false })
     store.set(PREFS_KEY, '{broken')
     expect(getPrefs()).toEqual(DEFAULT_PREFS)
   })

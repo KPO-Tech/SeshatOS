@@ -35,8 +35,8 @@ export const selectUnread = (state: NotificationsState) => state.items.filter((i
  * Tells the person about something, as their choices say: it goes to the bell, the system shows it when the window is not in front, and a
  * chime plays. A kind they turned off is not told at all.
  */
-export function notify(kind: NotificationKind, notice: { title: string; body?: string; route?: string }) {
-  const action = decide(kind, getPrefs(), document.hasFocus())
+export function notify(kind: NotificationKind, notice: { title: string; body?: string; route?: string }, options: { viewing?: boolean } = {}) {
+  const action = decide(kind, getPrefs(), document.hasFocus(), options.viewing)
   if (!action.record) return
   useNotificationsStore.getState().add({ kind, ...notice })
   if (action.desktop) void window.seshat?.notify?.show(notice)
