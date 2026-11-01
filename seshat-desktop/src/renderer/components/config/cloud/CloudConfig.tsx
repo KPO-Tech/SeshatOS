@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ConfigCard, Field, SoftButton, StatusPill, TextInput } from '../knowledge/KnowledgePrimitives'
-import { ProviderEmptyState } from '../providers/ProviderEmptyState'
+import { ActionButton, Chip, Notice, SettingRow, SettingsCard, SettingsPage, StatusBadge, TextField } from '../../settings/kit'
 import { connectCloudDevice, disconnectCloudDevice, fetchCloudStatus, registerCloudDevice } from './cloudApi'
 import type { CloudStatus } from './cloudTypes'
 
@@ -71,59 +70,56 @@ export function CloudConfig() {
     }
   }
 
+  const connected = Boolean(status?.connected)
+
   return (
-    <div className="space-y-5">
-      {message && (
-        <div className={[
-          'rounded-lg border bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold',
-          message.tone === 'ok' ? 'border-[var(--accent-success)]/35 text-[var(--accent-success)]' : 'border-[var(--accent-danger)]/40 text-[var(--accent-danger)]'
-        ].join(' ')}>
-          {message.text}
-        </div>
+    <SettingsPage id="cloud" badge={loading ? undefined : <StatusBadge tone={connected ? 'ok' : 'muted'}>{connected ? 'Connected' : 'Not connected'}</StatusBadge>}>
+      {message && <Notice tone={message.tone}>{message.text}</Notice>}
+
+      {!loading && status?.connected && (
+        <>
+          <SettingsCard title={status.device_name || 'This device'}>
+            <SettingRow title="Server">
+              <span className="text-[12.5px] text-[var(--text-secondary)]">{status.server_url || 'SeshatCloud'}</span>
+            </SettingRow>
+            <SettingRow title="Device">
+              <span className="font-mono text-[12px] text-[var(--text-secondary)]">{status.device_id || 'Unknown'}</span>
+            </SettingRow>
+            <SettingRow title="Connected since">
+              <span className="text-[12.5px] text-[var(--text-secondary)]">{formatDate(status.connected_at)}</span>
+            </SettingRow>
+            <SettingRow title="Policies">
+              <span className="text-[12.5px] text-[var(--text-secondary)]">{Object.keys(status.policies ?? {}).length}</span>
+            </SettingRow>
+            <SettingRow title="Disconnect this device">
+              <ActionButton type="button" tone="danger" disabled={busy === 'disconnect'} onClick={() => void disconnectDevice()}>
+                {busy === 'disconnect' ? 'Disconnecting...' : 'Disconnect'}
+              </ActionButton>
+            </SettingRow>
+          </SettingsCard>
+          {status.rules && <OrganizationRules rules={status.rules} />}
+        </>
       )}
 
-      {loading ? (
-        <ProviderEmptyState label="Loading the SeshatCloud connection..." />
-      ) : status?.connected ? (
-        <ConfigCard
-          title={status.device_name || 'This device'}
-          description={status.server_url || 'Connected to SeshatCloud.'}
-          status={<StatusPill tone="ok">Connected</StatusPill>}
-          action={<SoftButton tone="danger" disabled={busy === 'disconnect'} onClick={() => void disconnectDevice()}>{busy === 'disconnect' ? 'Disconnecting...' : 'Disconnect'}</SoftButton>}
-        >
-          <div className="grid grid-cols-3 gap-2">
-            <Info label="Device ID" value={status.device_id || 'Unknown'} />
-            <Info label="Connected since" value={formatDate(status.connected_at)} />
-            <Info label="Policy bundle" value={String(Object.keys(status.policies ?? {}).length)} />
-          </div>
-          {status.rules && <OrganizationRules rules={status.rules} />}
-        </ConfigCard>
-      ) : (
-        <ConfigCard
-          title="Connect to SeshatCloud"
-          description="Pair this desktop with your organization's SeshatCloud so its policies and minimum app version apply here."
-          status={<StatusPill tone="muted">Not connected</StatusPill>}
-          action={<SoftButton onClick={() => void registerDevice()} disabled={busy === 'register'}>{busy === 'register' ? 'Registering...' : 'Register device'}</SoftButton>}
-        >
-          <div className="grid gap-4">
-            <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-              Use one-click registration when this desktop is already signed in to an organization server. Otherwise paste a manual device token below.
-            </div>
-            <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3">
-              <Field label="Server URL">
-                <TextInput value={serverUrl} onChange={(event) => setServerUrl(event.target.value)} placeholder="https://server.example.com" />
-              </Field>
-              <Field label="Device token">
-                <TextInput type="password" value={deviceToken} onChange={(event) => setDeviceToken(event.target.value)} placeholder="Paste token" />
-              </Field>
-              <SoftButton tone="primary" disabled={busy === 'connect' || !serverUrl.trim() || !deviceToken.trim()} onClick={() => void connectDevice()}>
-                {busy === 'connect' ? 'Connecting...' : 'Connect'}
-              </SoftButton>
-            </div>
-          </div>
-        </ConfigCard>
+      {!loading && !status?.connected && (
+        <SettingsCard title="Connect to SeshatCloud">
+          <SettingRow title="Sign in on this computer" hint="When it is already signed in to your organization.">
+            <ActionButton type="button" onClick={() => void registerDevice()} disabled={busy === 'register'}>
+              {busy === 'register' ? 'Registering...' : 'Register device'}
+            </ActionButton>
+          </SettingRow>
+          <SettingRow title="Server">
+            <TextField label="Server URL" value={serverUrl} onChange={setServerUrl} placeholder="https://server.example.com" mono />
+          </SettingRow>
+          <SettingRow title="Device token">
+            <TextField label="Device token" type="password" value={deviceToken} onChange={setDeviceToken} placeholder="Paste token" />
+            <ActionButton type="button" tone="primary" disabled={busy === 'connect' || !serverUrl.trim() || !deviceToken.trim()} onClick={() => void connectDevice()}>
+              {busy === 'connect' ? 'Connecting...' : 'Connect'}
+            </ActionButton>
+          </SettingRow>
+        </SettingsCard>
       )}
-    </div>
+    </SettingsPage>
   )
 }
 
@@ -131,37 +127,20 @@ export function CloudConfig() {
 // are kept while this desktop is offline and removed when it disconnects.
 function OrganizationRules({ rules }: { rules: NonNullable<CloudStatus['rules']> }) {
   return (
-    <div className="mt-3 grid gap-2 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-3">
-      <div className="text-[12px] font-semibold text-[var(--text-primary)]">Organization rules for agents</div>
-      <div className="text-[11px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-        Set by your administrator. They apply to every agent on this desktop and take precedence over your own settings.
-      </div>
-      {rules.instructions.trim() && (
-        <div>
-          <div className="text-[11px] font-semibold text-[var(--text-muted)]">Instructions</div>
-          <div className="mt-1 whitespace-pre-wrap text-[13px] text-[var(--text-primary)]">{rules.instructions}</div>
-        </div>
-      )}
-      {rules.forbidden_tools.length > 0 && (
-        <div>
-          <div className="text-[11px] font-semibold text-[var(--text-muted)]">Forbidden tools</div>
-          <div className="mt-1 flex flex-wrap gap-1.5">
+    <SettingsCard title="Organization rules" padded>
+      <div className="grid gap-3">
+        {rules.instructions.trim() && <div className="whitespace-pre-wrap text-[13px] text-[var(--text-primary)]">{rules.instructions}</div>}
+        {rules.forbidden_tools.length > 0 && (
+          <div className="flex flex-wrap gap-2">
             {rules.forbidden_tools.map((tool) => (
-              <code key={tool} className="rounded bg-[var(--surface-panel)] px-1.5 py-0.5 text-[12px] text-[var(--text-primary)]">{tool}</code>
+              <Chip key={tool} tone="warn">
+                {tool}
+              </Chip>
             ))}
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 rounded-md border border-[var(--border-soft)] bg-[var(--surface-muted)] px-3 py-2">
-      <div className="text-[11px] font-semibold text-[var(--text-muted)]">{label}</div>
-      <div className="mt-1 truncate text-[13px] font-semibold text-[var(--text-primary)]">{value}</div>
-    </div>
+        )}
+      </div>
+    </SettingsCard>
   )
 }
 

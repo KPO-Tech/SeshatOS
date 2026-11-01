@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '@renderer/api/client'
-import { AboutLine, Panel, Row, SectionDivider } from './SettingsPrimitives'
+import { ActionButton, SettingRow, SettingsCard, SettingsPage, StatusBadge } from './kit'
 
 type UpdateState = { kind: 'idle' } | { kind: 'checking' } | { kind: 'current' } | { kind: 'ready'; version: string } | { kind: 'failed'; message: string }
 
@@ -52,69 +52,49 @@ export function AboutSettings() {
 
   const updateLine =
     update.kind === 'ready'
-      ? `SeshatOS ${update.version} is downloaded. Restart to install it; the app opens again by itself.`
+      ? `SeshatOS ${update.version} is ready to install.`
       : update.kind === 'checking'
         ? 'Checking...'
         : update.kind === 'current'
-          ? 'This is the latest version.'
+          ? 'You have the latest version.'
           : update.kind === 'failed'
             ? update.message
-            : 'A new version is downloaded in the background when there is one.'
+            : undefined
 
   return (
-    <Panel title="About">
-      <div className="max-w-[820px] space-y-5">
-        <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-          <div className="flex items-start justify-between gap-5">
-            <div>
-              <h2 className="text-[18px] font-semibold text-[var(--text-primary)]">SeshatOS Desktop</h2>
-              <p className="mt-1 max-w-[560px] text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
-                A local desktop workspace for agents, tools, memories, connectors, and knowledge.
-              </p>
-            </div>
-            <span className="rounded-md bg-[var(--surface-muted)] px-3 py-1.5 text-[12px] font-semibold text-[var(--text-secondary)]">
-              v{version}
-            </span>
-          </div>
-        </section>
-
-        <section className="grid gap-3">
-          <AboutLine title="Desktop shell" value="Electron + React + Tailwind CSS" />
-          <AboutLine title="Backend runtime" value={reachable === null ? 'Checking...' : reachable ? 'Connected' : 'Not detected'} tone={reachable === false ? 'muted' : 'success'} />
-          <AboutLine title="Runtime mode" value={status?.mode || 'Local workspace'} />
-          <AboutLine title="Backend version" value={status?.version || 'Reported by backend when available'} muted={!status?.version} />
-          <AboutLine title="Session storage" value={status?.storage || 'Secure local storage when available'} />
-          <AboutLine title="Visual identity" value="SeshatOS palette, responsive dark/light themes, logo option 4" />
-        </section>
-
-        <SectionDivider />
-
-        {window.seshat?.updates && (
-          <section className="grid gap-3">
-            <Row title="Updates" description={updateLine}>
-              {update.kind === 'ready' ? (
-                <button type="button" onClick={() => void window.seshat?.updates?.quitAndInstall()} className="cursor-pointer rounded-md border-0 bg-[var(--accent-primary)] px-3 py-1.5 text-[12px] font-semibold text-white">
-                  Restart and install
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={update.kind === 'checking'}
-                  onClick={() => void checkForUpdate()}
-                  className="cursor-pointer rounded-md border border-[var(--border-soft)] bg-transparent px-3 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] disabled:cursor-default disabled:opacity-60"
-                >
-                  Check for updates
-                </button>
-              )}
-            </Row>
-          </section>
+    <SettingsPage id="about" badge={<StatusBadge tone="muted">{`v${version}`}</StatusBadge>}>
+      <SettingsCard title="SeshatOS Desktop">
+        <SettingRow title="Version">
+          <span className="text-[12.5px] text-[var(--text-secondary)]">{version}</span>
+        </SettingRow>
+        <SettingRow title="Backend">
+          <StatusBadge tone={reachable ? 'ok' : 'muted'}>{reachable === null ? 'Checking...' : reachable ? 'Connected' : 'Not detected'}</StatusBadge>
+        </SettingRow>
+        <SettingRow title="Mode">
+          <span className="text-[12.5px] text-[var(--text-secondary)]">{status?.mode || 'Local workspace'}</span>
+        </SettingRow>
+        {status?.version && (
+          <SettingRow title="Backend version">
+            <span className="text-[12.5px] text-[var(--text-secondary)]">{status.version}</span>
+          </SettingRow>
         )}
+      </SettingsCard>
 
-        <section className="grid gap-3">
-          <Row title="Desktop scope" description="The frontend is being rebuilt cleanly in seshat-desktop while reusing the existing local backend APIs." />
-          <Row title="Configuration" description="Providers, web search, knowledge, agents, MCP, and connectors live in Config instead of General settings." />
-        </section>
-      </div>
-    </Panel>
+      {window.seshat?.updates && (
+        <SettingsCard>
+          <SettingRow title="Updates" hint={updateLine}>
+            {update.kind === 'ready' ? (
+              <ActionButton type="button" tone="primary" onClick={() => void window.seshat?.updates?.quitAndInstall()}>
+                Restart and install
+              </ActionButton>
+            ) : (
+              <ActionButton type="button" disabled={update.kind === 'checking'} onClick={() => void checkForUpdate()}>
+                Check for updates
+              </ActionButton>
+            )}
+          </SettingRow>
+        </SettingsCard>
+      )}
+    </SettingsPage>
   )
 }

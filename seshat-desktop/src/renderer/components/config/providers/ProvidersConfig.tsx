@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, Refresh } from '@icon-park/react'
+import { ActionButton, Notice, SettingsPage, StatusBadge } from '../../settings/kit'
 import { ProviderEmptyState } from './ProviderEmptyState'
 import { AddProviderDialog } from './AddProviderDialog'
 import { ProviderCard, type TestResult } from './ProviderCard'
@@ -87,26 +88,29 @@ export function ProvidersConfig() {
     await Promise.all(settings.map((setting) => test(setting)))
   }
 
+  const active = settings.filter((setting) => setting.has_api_key || setting.connection_status === 'connected').length
+
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">Configured providers</p>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => void load()} disabled={loading} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
+    <SettingsPage
+      id="providers"
+      badge={<StatusBadge tone={active > 0 ? 'ok' : 'muted'}>{`${active} connected`}</StatusBadge>}
+      actions={
+        <>
+          <ActionButton type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh">
             <Refresh theme="outline" size={14} />
             Refresh
-          </button>
-          <button type="button" onClick={() => void testAll()} disabled={settings.length === 0} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
+          </ActionButton>
+          <ActionButton type="button" onClick={() => void testAll()} disabled={settings.length === 0}>
             Test all
-          </button>
-          <button type="button" onClick={() => setAdding({})} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
-            <Plus theme="outline" size={15} />
+          </ActionButton>
+          <ActionButton type="button" tone="primary" onClick={() => setAdding({})}>
+            <Plus theme="outline" size={14} />
             Add provider
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="mb-3 rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</div>}
+          </ActionButton>
+        </>
+      }
+    >
+      {error && <Notice tone="error">{error}</Notice>}
 
       <div className="grid min-w-0 gap-3">
           {loading && rows.length === 0 ? (
@@ -170,6 +174,6 @@ export function ProvidersConfig() {
           onClose={() => setAdding(null)}
         />
       )}
-    </div>
+    </SettingsPage>
   )
 }

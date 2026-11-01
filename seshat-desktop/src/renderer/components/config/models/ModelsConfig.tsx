@@ -1,3 +1,4 @@
+import { Notice, SettingsPage, StatusBadge } from '../../settings/kit'
 import { useEffect, useMemo, useState } from 'react'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { pickDefaultModel } from '@renderer/lib/defaultModel'
@@ -109,12 +110,8 @@ export function ModelsConfig() {
     .filter((group) => !searching || group.shown.length > 0)
 
   return (
-    <div className="space-y-5">
-      {error && (
-        <div className="rounded-lg border border-[var(--accent-danger)] bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">
-          {error}
-        </div>
-      )}
+    <SettingsPage id="models" badge={<StatusBadge tone={current ? 'ok' : 'muted'}>{`${modelCount} models`}</StatusBadge>}>
+      {error && <Notice tone="error">{error}</Notice>}
 
       <section className="flex items-center gap-3 rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_7%,var(--surface-panel))] px-4 py-3">
         {current ? <ProviderIcon provider={current.provider.provider} size={34} className="shrink-0" /> : null}
@@ -184,6 +181,6 @@ export function ModelsConfig() {
           )}
         </div>
       </section>
-    </div>
+    </SettingsPage>
   )
 }
