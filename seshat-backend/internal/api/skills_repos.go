@@ -299,35 +299,48 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cloned := skillrepos.EnsureCloned(r.Context(), reposDir, []skillrepos.Repo{repo})
-	if len(cloned) == 0 {
-		// A clone that stopped halfway leaves a folder with a .git in it, which would make the next attempt answer "already installed".
-		_ = os.RemoveAll(target)
-		writeBackendError(w, bkerr.Internal("failed to clone repository — check the URL and try again", nil))
+	// The download goes on in the background, with a context of its own: a large repository takes minutes, and the request must not wait for
+	// it. When it ends, what the skills need is read and the plan is ready to be shown (see handleSkillRepoPlan); nothing of the repository is
+	// run, and its skills stay out of the agent's reach until the person has agreed to the installation (see handleSkillRepoEnvironment).
+	task, _ := a.taskManager().Start(skillCloneTask, repo.Name, "Downloading "+repo.Name, func(ctx context.Context, report *tasks.Reporter) error {
+		report.Step(1, 2, "Downloading the skills")
+		if err := skillinstall.Clone(ctx, repo.URL, target, report); err != nil {
+			return err
+		}
+		report.Step(2, 2, "Reading what they need")
+		spec := skillSpec(featured, nil)
+		plan := skillinstall.Detect(target, spec)
+		if len(spec.Include) > 0 || !plan.Empty() {
+			if err := skillinstall.WriteInstall(target, skillsloader.RepoInstall{Include: spec.Include, Pending: !plan.Empty()}); err != nil {
+				_ = os.RemoveAll(target)
+				return fmt.Errorf("could not record the installation: %w", err)
+			}
+		}
+		return nil
+	})
+	writeJSON(w, http.StatusAccepted, map[string]any{"name": repo.Name, "task": task})
+}
+
+// GET /api/v1/skills/repos/{name}/plan
+// What the skills of a downloaded repository need, for the person to agree to. needs_environment is false when nothing has to be installed.
+func (a *App) handleSkillRepoPlan(w http.ResponseWriter, r *http.Request, name string) {
+	target := filepath.Join(skillsloader.GetSkillReposPath(), name)
+	if _, err := os.Stat(filepath.Join(target, ".git")); err != nil {
+		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
 		return
 	}
-
-	// Nothing of the repository is run here. What its skills need is read and shown, and the skills stay out of the agent's reach until the
-	// person has agreed to the installation of that (see handleSkillRepoEnvironment).
-	spec := skillSpec(featured, nil)
+	recorded, _ := skillsloader.LoadRepoInstall(target)
+	spec := skillSpec(a.featuredByName(name), recorded.Include)
 	plan := skillinstall.Detect(target, spec)
-	if len(spec.Include) > 0 || !plan.Empty() {
-		if err := skillinstall.WriteInstall(target, skillsloader.RepoInstall{Include: spec.Include, Pending: !plan.Empty()}); err != nil {
-			_ = os.RemoveAll(target)
-			writeBackendError(w, bkerr.Internal("could not record the installation", err))
-			return
-		}
-	}
-
 	count := countSkillsInRepo(target)
 	if len(spec.Include) > 0 {
 		count = len(spec.Include)
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{
-		"name":              repo.Name,
+	writeJSON(w, http.StatusOK, map[string]any{
+		"name":              name,
 		"skill_count":       count,
 		"plan":              plan,
-		"needs_environment": !plan.Empty(),
+		"needs_environment": recorded.Pending && !plan.Empty(),
 	})
 }
 
@@ -394,13 +407,17 @@ func (a *App) handleSkillRepoEnvironment(w http.ResponseWriter, r *http.Request,
 	writeJSON(w, http.StatusAccepted, map[string]any{"name": name, "task": task})
 }
 
-// skillInstallTask is the kind of the task that makes the environment of a skill repository.
-const skillInstallTask = "skill.install"
+const (
+	// skillInstallTask is the kind of the task that makes the environment of a skill repository.
+	skillInstallTask = "skill.install"
+	// skillCloneTask is the kind of the task that downloads a skill repository.
+	skillCloneTask = "skill.clone"
+)
 
-// skillInstallRunning reports whether the environment of a repository is being made.
+// skillInstallRunning reports whether a repository is being downloaded or its environment is being made.
 func (a *App) skillInstallRunning(name string) bool {
 	for _, task := range a.taskManager().List() {
-		if task.Kind == skillInstallTask && task.Subject == name && task.Status.Active() {
+		if (task.Kind == skillInstallTask || task.Kind == skillCloneTask) && task.Subject == name && task.Status.Active() {
 			return true
 		}
 	}
@@ -412,7 +429,8 @@ func (a *App) handleSkillRepoByNameDispatch(w http.ResponseWriter, r *http.Reque
 	// Strip leading "/skills/repos/" prefix.
 	trimmed := strings.Trim(strings.TrimPrefix(r.URL.Path, "/skills/repos/"), "/")
 	environment := strings.HasSuffix(trimmed, "/environment")
-	name := filepath.Base(strings.TrimSuffix(trimmed, "/environment"))
+	plan := strings.HasSuffix(trimmed, "/plan")
+	name := filepath.Base(strings.TrimSuffix(strings.TrimSuffix(trimmed, "/environment"), "/plan"))
 	if name == "" || name == "." || name == ".." {
 		writeBackendError(w, bkerr.InvalidInput("invalid repo name", nil))
 		return
@@ -420,7 +438,9 @@ func (a *App) handleSkillRepoByNameDispatch(w http.ResponseWriter, r *http.Reque
 	switch {
 	case environment && r.Method == http.MethodPost:
 		a.handleSkillRepoEnvironment(w, r, name)
-	case !environment && r.Method == http.MethodDelete:
+	case plan && r.Method == http.MethodGet:
+		a.handleSkillRepoPlan(w, r, name)
+	case !environment && !plan && r.Method == http.MethodDelete:
 		a.handleSkillRepoUninstall(w, r, name)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

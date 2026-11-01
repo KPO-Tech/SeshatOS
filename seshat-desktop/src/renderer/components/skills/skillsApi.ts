@@ -37,9 +37,17 @@ export async function fetchSkillRepos() {
   return { installed: result.installed ?? [], catalog: result.catalog ?? [] }
 }
 
-/** Clones the repository and reads what its skills need. Nothing is installed yet when a plan comes back (see prepareSkillEnvironment). */
+/**
+ * Starts the download of a repository, in the background: the answer is the task that follows it. When it ends, what its skills need is read
+ * with fetchSkillPlan, and nothing is installed until the person agrees to it.
+ */
 export function installSkillRepo(url: string) {
-  return api.post<InstallResult>('/skills/repos', { url })
+  return api.post<{ name: string; task: TaskInfo }>('/skills/repos', { url })
+}
+
+/** What the skills of a downloaded repository need, and whether the person has to agree to it before they can be used. */
+export function fetchSkillPlan(name: string) {
+  return api.get<InstallResult>(`/skills/repos/${encodeURIComponent(name)}/plan`)
 }
 
 /**

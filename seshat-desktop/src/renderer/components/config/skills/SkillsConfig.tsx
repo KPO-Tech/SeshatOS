@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchSkillRepos, installSkillRepo, startSkillEnvironment, uninstallSkillRepo } from '@renderer/components/skills/skillsApi'
+import { fetchSkillRepos, installSkillRepo, uninstallSkillRepo } from '@renderer/components/skills/skillsApi'
 import { TASK_FINISHED_EVENT } from '@renderer/hooks/useTaskSync'
 import { nudgeTasks } from '@renderer/stores/tasks'
-import type { InstallPlan, RepoInfo } from '@renderer/components/skills/skillsTypes'
+import { SKILLS_CHANGED_EVENT } from '@renderer/components/skills/SkillReviewHost'
+import type { RepoInfo } from '@renderer/components/skills/skillsTypes'
 import { Add, FolderOpen } from '@icon-park/react'
 import { ActionButton, Chip, SettingRow, SettingsCard, SettingsPage, StatusBadge } from '../../settings/kit'
 import { TextInput } from '../knowledge/KnowledgePrimitives'
-import { SkillInstallDialog } from '@renderer/components/skills/SkillInstallDialog'
 
 export function SkillsConfig() {
   const [installed, setInstalled] = useState<RepoInfo[]>([])
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
-  const [reviewing, setReviewing] = useState<{ name: string; plan: InstallPlan } | null>(null)
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
 
   const load = useCallback(async () => {
@@ -36,7 +35,11 @@ export function SkillsConfig() {
   useEffect(() => {
     const onFinished = () => void load()
     window.addEventListener(TASK_FINISHED_EVENT, onFinished)
-    return () => window.removeEventListener(TASK_FINISHED_EVENT, onFinished)
+    window.addEventListener(SKILLS_CHANGED_EVENT, onFinished)
+    return () => {
+      window.removeEventListener(TASK_FINISHED_EVENT, onFinished)
+      window.removeEventListener(SKILLS_CHANGED_EVENT, onFinished)
+    }
   }, [load])
 
   async function install(repoUrl: string) {
@@ -45,13 +48,9 @@ export function SkillsConfig() {
     try {
       const result = await installSkillRepo(repoUrl)
       setUrl('')
-      if (result.needs_environment) {
-        // The skills wait for the person to agree to what they need: the window shows it before anything is installed.
-        setReviewing({ name: result.name, plan: result.plan })
-        return
-      }
-      setMessage({ tone: 'ok', text: 'Repository installed.' })
-      await load()
+      nudgeTasks()
+      // The download goes on in the background; the window of what the skills need opens when it ends.
+      setMessage({ tone: 'ok', text: `${result.name} is downloading in the background.` })
     } catch (err) {
       setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Could not install this repository.' })
     } finally {
@@ -88,24 +87,6 @@ export function SkillsConfig() {
     await load()
     setMessage(failed > 0 ? { tone: 'error', text: `${failed} repositories could not be removed.` } : { tone: 'ok', text: 'All repositories removed.' })
     setBusy(null)
-  }
-
-  async function finishInstall(name: string) {
-    await startSkillEnvironment(name)
-    setReviewing(null)
-    nudgeTasks()
-    setMessage({ tone: 'ok', text: `${name} is installing in the background.` })
-    await load()
-  }
-
-  async function cancelInstall(name: string) {
-    setReviewing(null)
-    try {
-      await uninstallSkillRepo(name)
-    } catch {
-      // The repository stays marked as unfinished, and is replaced the next time it is installed.
-    }
-    await load()
   }
 
   if (loading) return <SettingsPage id="skills"><p className="m-0 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</p></SettingsPage>
@@ -148,7 +129,6 @@ export function SkillsConfig() {
           ))
         )}
       </SettingsCard>
-      {reviewing && <SkillInstallDialog name={reviewing.name} plan={reviewing.plan} onConfirm={() => finishInstall(reviewing.name)} onCancel={() => void cancelInstall(reviewing.name)} />}
     </SettingsPage>
   )
 }

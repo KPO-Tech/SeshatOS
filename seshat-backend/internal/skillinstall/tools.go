@@ -29,6 +29,7 @@ var runCommand = func(ctx context.Context, dir string, env []string, name string
 		cmd.Env = env
 	}
 	hideWindow(cmd)
+	stopWithChildren(cmd)
 	out := &lineWriter{sink: linesOf(ctx)}
 	cmd.Stdout, cmd.Stderr = out, out
 	err := cmd.Run()

@@ -60,4 +60,11 @@ describe('finishedMessage', () => {
     expect(finishedMessage(task({ status: 'failed', error: 'pip said no\nmore' }))).toMatchObject({ title: 'Installing paperasse failed', body: 'pip said no', failed: true })
     expect(finishedMessage(task({ status: 'cancelled' })).failed).toBe(false)
   })
+  it('speaks of the download, not of the installation, for a repository being downloaded', () => {
+    expect(finishedMessage(task({ kind: 'skill.clone', status: 'succeeded' }))).toMatchObject({ title: 'paperasse is downloaded', route: '/skills', failed: false })
+    expect(finishedMessage(task({ kind: 'skill.clone', status: 'failed', error: 'could not download the repository: fatal: not found' }))).toMatchObject({
+      title: 'Downloading paperasse failed',
+      failed: true
+    })
+  })
 })
