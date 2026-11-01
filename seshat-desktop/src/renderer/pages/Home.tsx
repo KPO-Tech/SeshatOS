@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { ChartHistogram, Code, FileTextOne, Globe, LightMember } from '@icon-park/react'
-import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
@@ -17,6 +16,7 @@ import { modelAlias } from '@renderer/lib/modelAlias'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
+import { HomeStage } from './HomeStage'
 import './Home.css'
 
 type ModelChoice = {
@@ -493,11 +493,13 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
       <>
         <div className="home-stage">
           <div className="home-stage-inner">
-            <SeshatLogo size={56} />
-            <h1 className="home-greeting">
-              What are we <span className="text-[var(--accent-primary)]">working on</span>?
-            </h1>
-            <div className="home-stage-starts">{quickStarts}</div>
+            <HomeStage
+              onPick={(prompt) => {
+                setInputValue(prompt)
+                // The input is what the person fills in next.
+                window.setTimeout(() => document.querySelector<HTMLTextAreaElement>('.home-dock textarea')?.focus(), 0)
+              }}
+            />
           </div>
         </div>
         <div className="home-dock">
