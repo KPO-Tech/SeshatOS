@@ -301,6 +301,8 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 
 	cloned := skillrepos.EnsureCloned(r.Context(), reposDir, []skillrepos.Repo{repo})
 	if len(cloned) == 0 {
+		// A clone that stopped halfway leaves a folder with a .git in it, which would make the next attempt answer "already installed".
+		_ = os.RemoveAll(target)
 		writeBackendError(w, bkerr.Internal("failed to clone repository — check the URL and try again", nil))
 		return
 	}

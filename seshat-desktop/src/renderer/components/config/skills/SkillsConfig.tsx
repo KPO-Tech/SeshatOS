@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchSkillRepos, installSkillRepo, prepareSkillEnvironment, uninstallSkillRepo } from '@renderer/components/skills/skillsApi'
+import { fetchSkillRepos, installSkillRepo, startSkillEnvironment, uninstallSkillRepo } from '@renderer/components/skills/skillsApi'
+import { TASK_FINISHED_EVENT } from '@renderer/hooks/useTaskSync'
+import { nudgeTasks } from '@renderer/stores/tasks'
 import type { InstallPlan, RepoInfo } from '@renderer/components/skills/skillsTypes'
 import { Add, FolderOpen } from '@icon-park/react'
 import { ActionButton, Chip, SettingRow, SettingsCard, SettingsPage, StatusBadge } from '../../settings/kit'
@@ -28,6 +30,13 @@ export function SkillsConfig() {
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  // An installation that ends in the background changes the list.
+  useEffect(() => {
+    const onFinished = () => void load()
+    window.addEventListener(TASK_FINISHED_EVENT, onFinished)
+    return () => window.removeEventListener(TASK_FINISHED_EVENT, onFinished)
   }, [load])
 
   async function install(repoUrl: string) {
@@ -82,9 +91,10 @@ export function SkillsConfig() {
   }
 
   async function finishInstall(name: string) {
-    await prepareSkillEnvironment(name)
+    await startSkillEnvironment(name)
     setReviewing(null)
-    setMessage({ tone: 'ok', text: 'Repository installed.' })
+    nudgeTasks()
+    setMessage({ tone: 'ok', text: `${name} is installing in the background.` })
     await load()
   }
 

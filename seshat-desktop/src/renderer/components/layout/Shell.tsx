@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router'
 import { InternalExpansion } from '@icon-park/react'
 import { loadConnectorLabels } from '@renderer/components/chat/tools/connectorNames'
 import { useSessionsSync } from '@renderer/hooks/useSessionsSync'
+import { useTaskSync } from '@renderer/hooks/useTaskSync'
 import { useUIStore } from '@renderer/stores/ui'
 import { DialogHost } from './DialogHost'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -33,6 +34,7 @@ export function Shell() {
   const previousConversationIdRef = useRef<string | null>(conversationId)
 
   useSessionsSync()
+  useTaskSync()
 
   // The documents opened from Knowledge are closed when its page changes (a conversation closes its own).
   useEffect(() => {

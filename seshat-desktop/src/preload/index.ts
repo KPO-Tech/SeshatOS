@@ -295,6 +295,18 @@ const seshatBridge = {
       return () => ipcRenderer.removeListener('shell:exit', handler)
     },
   },
+  // Work in progress in the backend keeps the app alive when its window is closed, and a task that ends can tell the person with a system notification.
+  background: {
+    setBusy: (count: number): Promise<void> => ipcRenderer.invoke('background:set-busy', count),
+  },
+  notify: {
+    show: (notice: { title: string; body?: string; route?: string }): Promise<void> => ipcRenderer.invoke('notify:show', notice),
+    onOpen: (listener: (route: string) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, route: string) => listener(route)
+      ipcRenderer.on('notify:open', handler)
+      return () => ipcRenderer.removeListener('notify:open', handler)
+    },
+  },
   updates: {
     checkNow: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('updates:check-now'),
     quitAndInstall: () => ipcRenderer.invoke('updates:quit-and-install'),
