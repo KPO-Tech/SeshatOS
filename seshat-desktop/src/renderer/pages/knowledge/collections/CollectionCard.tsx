@@ -30,9 +30,6 @@ export function KnowledgeCard({ icon, title, subtitle, description, footer, onOp
   )
 }
 
-export function Tag({ children }: { children: ReactNode }) {
-  return <span className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">{children}</span>
-}
 
 export function CollectionCard({ collection, onOpen }: { collection: Collection; onOpen: () => void }) {
   const documents = collection.fileCount === null ? null : plural(collection.fileCount, 'document', 'documents')

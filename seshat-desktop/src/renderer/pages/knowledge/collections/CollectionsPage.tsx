@@ -1,14 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { Down, FolderOpen, Plus, Search, SortThree } from '@icon-park/react'
+import { Down, FolderOpen, Plus, Right, Search, SortThree } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { useDeviceMode } from '../useCanManage'
-import { CollectionCard, KnowledgeCard, Tag } from './CollectionCard'
+import { CollectionCard } from './CollectionCard'
 import { AddSourceDialog } from './AddSourceDialog'
-import { plural } from './fileStatus'
-import { SourceIcon } from './SourceIcon'
-import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
+import { SourceIconPicker } from './SourceIcon'
+import { DEFAULT_SOURCE_ID, sourcePath, updateSource } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
 
 type Sort = 'name' | 'recent'
@@ -19,13 +18,27 @@ function Count({ value, active }: { value: number; active?: boolean }) {
   return <span className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none ${active ? 'bg-white/25 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{value}</span>
 }
 
-function Section({ title, count, children }: { title: string; count: number; children: ReactNode }) {
+function SourceGroup({ icon, name, detail, count, onOpen, children }: { icon: ReactNode; name: string; detail: string; count: number; onOpen: () => void; children: ReactNode }) {
   return (
     <section className="mt-6 first:mt-4">
-      <h2 className="m-0 mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
-        {title}
-        <Count value={count} />
-      </h2>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          {icon}
+          <div className="min-w-0">
+            <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
+              <span className="truncate">{name}</span>
+              <Count value={count} />
+            </h2>
+            <p className="m-0 mt-0.5 truncate text-[12px] text-[var(--text-muted)]" title={detail}>
+              {detail}
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={onOpen} className="flex shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] font-medium text-[var(--accent-primary)] hover:underline">
+          Open source
+          <Right theme="outline" size={13} />
+        </button>
+      </div>
       {children}
     </section>
   )
@@ -64,16 +77,32 @@ export function CollectionsPage() {
   const countIn = (sourceId: string) => collections.filter((c) => c.sourceId === idOf(sourceId)).length
 
   const needle = query.trim().toLowerCase()
-  const showDefault = (scope === 'all' || scope === DEFAULT_SOURCE_ID) && (!needle || 'seshat'.includes(needle))
-  const shownSources = sources.filter((s) => (scope === 'all' || scope === s.id) && (!needle || `${s.name} ${s.root}`.toLowerCase().includes(needle)))
-  const sourceCount = (showDefault ? 1 : 0) + shownSources.length
-  const matching = useMemo(
-    () =>
-      collections
-        .filter((c) => (scope === 'all' || c.sourceId === idOf(scope)) && (!needle || `${c.name} ${c.description}`.toLowerCase().includes(needle)))
-        .sort((a, b) => (sort === 'recent' ? b.updatedAt - a.updatedAt || a.name.localeCompare(b.name) : a.name.localeCompare(b.name))),
-    [collections, scope, needle, sort]
-  )
+  const order = (list: typeof collections) => [...list].sort((a, b) => (sort === 'recent' ? b.updatedAt - a.updatedAt || a.name.localeCompare(b.name) : a.name.localeCompare(b.name)))
+  // Each source with its own collections. A search keeps the collections that match, or all of them when the source itself matches.
+  const groups = useMemo(() => {
+    const all = [
+      { id: DEFAULT_SOURCE_ID, name: 'Seshat', detail: 'The collections made and filled in the app.', icon: null as string | null },
+      ...sources.map((source) => ({ id: source.id, name: source.name, detail: source.root, icon: source.icon as string | null }))
+    ]
+    return all
+      .filter((group) => scope === 'all' || scope === group.id)
+      .map((group) => {
+        const own = collections.filter((c) => c.sourceId === (group.id === DEFAULT_SOURCE_ID ? '' : group.id))
+        const sourceMatches = !needle || `${group.name} ${group.detail}`.toLowerCase().includes(needle)
+        const shown = order(sourceMatches ? own : own.filter((c) => `${c.name} ${c.description}`.toLowerCase().includes(needle)))
+        return { ...group, total: own.length, shown, visible: sourceMatches || shown.length > 0 }
+      })
+      .filter((group) => group.visible)
+  }, [collections, sources, scope, needle, sort])
+
+  async function changeIcon(sourceId: string, icon: string) {
+    try {
+      await updateSource(sourceId, { icon })
+      await reload()
+    } catch {
+      // The icon stays as it was; the page of the source says why when it fails there.
+    }
+  }
 
   const pills: Array<{ id: string; label: string; count: number }> = [
     { id: 'all', label: 'All', count: collections.length },
@@ -154,44 +183,38 @@ export function CollectionsPage() {
           <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
         ) : failed ? null : (
           <>
-            {sourceCount > 0 && (
-              <Section title="Sources" count={sourceCount}>
-                <div className={GRID}>
-                  {showDefault && (
-                    <KnowledgeCard
-                      icon={<SeshatLogo size={22} />}
-                      title="Seshat"
-                      subtitle={plural(countIn(DEFAULT_SOURCE_ID), 'collection', 'collections')}
-                      description="The collections made and filled in the app."
-                      footer={<Tag>On this computer</Tag>}
-                      onOpen={() => navigate(sourcePath(DEFAULT_SOURCE_ID))}
-                    />
+            {groups.length === 0 ? (
+              <p className="m-0 py-6 text-[13px] text-[var(--text-muted)]">{collections.length === 0 && sources.length === 0 ? 'No collection yet. Open a source to make one.' : 'Nothing matches.'}</p>
+            ) : (
+              groups.map((group) => (
+                <SourceGroup
+                  key={group.id}
+                  name={group.name}
+                  detail={group.detail}
+                  count={group.total}
+                  onOpen={() => navigate(sourcePath(group.id))}
+                  icon={
+                    group.id === DEFAULT_SOURCE_ID ? (
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
+                        <SeshatLogo size={22} />
+                      </span>
+                    ) : (
+                      <SourceIconPicker value={group.icon ?? ''} onChange={(icon) => void changeIcon(group.id, icon)} />
+                    )
+                  }
+                >
+                  {group.shown.length === 0 ? (
+                    <p className="m-0 text-[13px] text-[var(--text-muted)]">No collection in this source yet.</p>
+                  ) : (
+                    <div className={GRID}>
+                      {group.shown.map((collection) => (
+                        <CollectionCard key={collection.id} collection={collection} onOpen={() => navigate(`/knowledge/collections/${encodeURIComponent(collection.id)}`)} />
+                      ))}
+                    </div>
                   )}
-                  {shownSources.map((source) => (
-                    <KnowledgeCard
-                      key={source.id}
-                      icon={<SourceIcon icon={source.icon} />}
-                      title={source.name}
-                      subtitle={plural(countIn(source.id), 'collection', 'collections')}
-                      description={source.root}
-                      footer={<Tag>Folder</Tag>}
-                      onOpen={() => navigate(sourcePath(source.id))}
-                    />
-                  ))}
-                </div>
-              </Section>
+                </SourceGroup>
+              ))
             )}
-            <Section title="Collections" count={matching.length}>
-              {matching.length === 0 ? (
-                <p className="m-0 py-6 text-[13px] text-[var(--text-muted)]">{collections.length === 0 ? 'No collection yet. Open a source to make one.' : 'No collection matches.'}</p>
-              ) : (
-                <div className={GRID}>
-                  {matching.map((collection) => (
-                    <CollectionCard key={collection.id} collection={collection} onOpen={() => navigate(`/knowledge/collections/${encodeURIComponent(collection.id)}`)} />
-                  ))}
-                </div>
-              )}
-            </Section>
           </>
         )}
       </div>

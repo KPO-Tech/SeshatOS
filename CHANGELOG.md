@@ -13,7 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
-- **The Collections page looks like the Skills page.** The same header, a search bar, a pill for each source with its count, a sort, and cards for the sources and for the collections with an Open button.
+- **The Collections page looks like the Skills page.** The same header, a search bar, a pill for each source with its count and a sort. The collections are listed under their source, whose icon can be changed from the page, with a link to open the source.
 - **Memories, About, Scanned pages and Titles are tidier.** Memories adds an item on one line, About opens with the logo, the version and the update button, Scanned pages shows one step at a time (languages, models, start) with the models folded away, and Titles lists the models with their size and puts your own model behind an Add button.
 - **Every page of Settings has the same look.** Documents, Search, Web search, Images, Providers, Models, Titles, Storage, Environment, MCP servers, Memories, Data controls, Cloud, Answers and About now use the shared header, cards and rows. The explanations that only repeated the labels are gone, and the web search providers are a grid of cards.
 - **The Collections page of Knowledge has a search bar and a filter.** The search finds sources and collections, the filter picks a source, and the collections of a search or of a source are listed under the sources. The Seshat source counted no collection, though some were made in the app: it counts them now.
