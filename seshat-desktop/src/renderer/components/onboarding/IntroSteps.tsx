@@ -1,4 +1,4 @@
-const STEPS = ['Appearance', 'Get started', 'Connect']
+const STEPS = ['Appearance', 'Get started', 'Models']
 
 /** Where the person is in the first screens: the ones passed are filled, the current one is named in orange, the others wait. */
 export function IntroSteps({ current }: { current: number }) {
