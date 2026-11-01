@@ -14,7 +14,6 @@ type Props = {
 export function SettingsModal({ initialSection, onClose }: Props) {
   const [active, setActive] = useState<SettingsSectionId>(findSection(initialSection, edition).id)
   const def = findSection(active, edition)
-  const Icon = def.icon
   const groups = groupSections(visibleSections(edition))
 
   // A window over the app freezes the browser view that sits behind it.
@@ -75,18 +74,7 @@ export function SettingsModal({ initialSection, onClose }: Props) {
 
           <section className="no-scrollbar @container min-w-0 flex-1 overflow-y-auto px-8 pb-10 pt-6">
             <div className="mx-auto w-full max-w-[1000px]">
-              <header className="flex items-start gap-4">
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]">
-                  <Icon theme="filled" size={24} fill="currentColor" />
-                </span>
-                <div className="min-w-0">
-                  <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{def.label}</h1>
-                  <p className="m-0 mt-1 text-[13px] leading-5 text-[var(--text-muted)]">{def.description}</p>
-                </div>
-              </header>
-              <div className="mt-5 border-t border-[var(--border-soft)] pt-5">
-                <SettingsSectionView id={def.id} />
-              </div>
+              <SettingsSectionView id={def.id} />
             </div>
           </section>
         </div>

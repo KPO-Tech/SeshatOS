@@ -1,4 +1,5 @@
-import { ChevronDownIcon, Panel, Row, SectionDivider, ToggleRow } from './SettingsPrimitives'
+import { Mail, Remind, Translate, VolumeNotice } from '@icon-park/react'
+import { SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
 
 type Props = {
   language: string
@@ -11,6 +12,13 @@ type Props = {
   onProductUpdatesChange: (enabled: boolean) => void
 }
 
+const LANGUAGES = [
+  { value: 'English', label: 'English' },
+  { value: 'Francais', label: 'Francais' }
+]
+
+const icon = (Glyph: typeof Remind) => <Glyph theme="outline" size={18} />
+
 export function GeneralSettings({
   language,
   notifications,
@@ -22,37 +30,26 @@ export function GeneralSettings({
   onProductUpdatesChange
 }: Props) {
   return (
-    <Panel title="General">
-      <div className="space-y-6">
-        <section>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Language</h2>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => onLanguageChange(language === 'English' ? 'Francais' : 'English')}
-              className="flex h-9 w-[240px] items-center justify-between rounded-md bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
-            >
-              {language}
-              <ChevronDownIcon />
-            </button>
+    <SettingsPage id="general">
+      <SettingsCard title="Language">
+        <SettingRow title="Interface language" icon={icon(Translate)}>
+          <div className="w-[200px]">
+            <SelectField value={language} options={LANGUAGES} onChange={onLanguageChange} compact />
           </div>
-        </section>
+        </SettingRow>
+      </SettingsCard>
 
-        <SectionDivider />
-
-        <section>
-          <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Communication preferences</h2>
-          <div className="mt-4 grid gap-4">
-            <ToggleRow title="Desktop notifications" description="Get notified when a task progresses or finishes." enabled={notifications} onChange={onNotificationsChange} />
-            <ToggleRow title="Sound alert" description="Play a short sound when a background task completes." enabled={soundAlert} onChange={onSoundAlertChange} />
-            <ToggleRow title="Product updates" description="Receive release notes and workspace improvements." enabled={productUpdates} onChange={onProductUpdatesChange} />
-          </div>
-        </section>
-
-        <SectionDivider />
-
-        <Row title="Local data" description="Manage cached sessions, logs, and local workspace files." action="Manage" />
-      </div>
-    </Panel>
+      <SettingsCard title="Notifications">
+        <SettingRow title="Desktop notifications" icon={icon(Remind)}>
+          <Toggle label="Desktop notifications" enabled={notifications} onChange={onNotificationsChange} />
+        </SettingRow>
+        <SettingRow title="Sound alert" icon={icon(VolumeNotice)}>
+          <Toggle label="Sound alert" enabled={soundAlert} onChange={onSoundAlertChange} />
+        </SettingRow>
+        <SettingRow title="Product updates" icon={icon(Mail)}>
+          <Toggle label="Product updates" enabled={productUpdates} onChange={onProductUpdatesChange} />
+        </SettingRow>
+      </SettingsCard>
+    </SettingsPage>
   )
 }
