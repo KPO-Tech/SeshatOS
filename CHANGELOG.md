@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Skills install on a computer without git.** When git is not there, a skill repository on GitHub is downloaded as an archive of its latest version instead of being cloned, and installs the same way. A repository on another host still needs git, and the message says so. Repositories downloaded this way are not updated by themselves.
+
 ## [0.3.1] - 2026-11-01
 
 ### Highlights

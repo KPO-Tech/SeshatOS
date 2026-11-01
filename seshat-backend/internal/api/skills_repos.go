@@ -198,8 +198,11 @@ func (a *App) handleSkillReposList(w http.ResponseWriter, r *http.Request) {
 	installed := make([]installedEntry, 0)
 	for name := range installedNames {
 		repoRoot := filepath.Join(reposDir, name)
-		// Try to read the remote URL from git config for display purposes.
+		// Try to read the remote URL from git config for display purposes, or from the record of a download made without git.
 		url := readGitRemoteURL(repoRoot)
+		if url == "" {
+			url = skillinstall.DownloadedFrom(repoRoot)
+		}
 		installed = append(installed, installedEntry{
 			Name:       name,
 			URL:        url,
@@ -298,7 +301,7 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 		_ = os.RemoveAll(target)
 		_ = os.RemoveAll(skillEnvironmentDir(repo.Name))
 	}
-	if _, err := os.Stat(filepath.Join(target, ".git")); err == nil {
+	if skillinstall.IsDownloaded(target) {
 		writeBackendError(w, bkerr.Conflict(fmt.Sprintf("repo %q is already installed", repo.Name), nil))
 		return
 	}
@@ -329,8 +332,8 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 // What the skills of a downloaded repository need, for the person to agree to. needs_environment is false when nothing has to be installed.
 func (a *App) handleSkillRepoPlan(w http.ResponseWriter, r *http.Request, name string) {
 	target := filepath.Join(skillsloader.GetSkillReposPath(), name)
-	if _, err := os.Stat(filepath.Join(target, ".git")); err != nil {
-		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
+	if !skillinstall.IsDownloaded(target) {
+		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), nil))
 		return
 	}
 	recorded, _ := skillsloader.LoadRepoInstall(target)
@@ -407,8 +410,8 @@ func skillEnvironmentDir(name string) string {
 func (a *App) handleSkillRepoEnvironment(w http.ResponseWriter, r *http.Request, name string) {
 	reposDir := skillsloader.GetSkillReposPath()
 	target := filepath.Join(reposDir, name)
-	if _, err := os.Stat(filepath.Join(target, ".git")); err != nil {
-		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), err))
+	if !skillinstall.IsDownloaded(target) {
+		writeBackendError(w, bkerr.NotFound(fmt.Sprintf("repo %q is not installed", name), nil))
 		return
 	}
 	recorded, _ := skillsloader.LoadRepoInstall(target)

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	neturl "net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -897,7 +898,9 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 			// skillrepos.EnsureCloned keeps its own bookkeeping in a
 			// ".pull-stamps" subdir of the same directory - skip dotfiles so
 			// it isn't re-listed here as a fake repo with no URL.
-			if e.IsDir() && !strings.HasPrefix(e.Name(), ".") {
+			// A repository downloaded as an archive (no git on the computer) has no .git to pull: it is left as it is.
+			_, gitErr := os.Stat(filepath.Join(skillsloader.GetSkillReposPath(), e.Name(), ".git"))
+			if e.IsDir() && !strings.HasPrefix(e.Name(), ".") && gitErr == nil {
 				installed = append(installed, skillrepos.Repo{Name: e.Name()})
 			}
 		}
