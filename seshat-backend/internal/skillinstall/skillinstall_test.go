@@ -37,7 +37,7 @@ func pretendMachine(t *testing.T, uv string, fail func(line string) error) *reco
 		call := append([]string{name}, args...)
 		rec.add(call)
 		if len(args) > 0 && args[0] == "-c" && strings.Contains(args[1], "sys.version_info") {
-			return "3 12 1"+"\n"+"/pretend/python", nil
+			return "3 12 1\n/pretend/python", nil
 		}
 		if fail != nil {
 			return "", fail(strings.Join(call, " "))
