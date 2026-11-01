@@ -7,17 +7,38 @@
   overflow-y: auto;
 }
 
-.home-center {
+/* The room above the docked input: it scrolls on its own, and is where the page will show more than a greeting. */
+.home-stage {
   position: relative;
   z-index: 1;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 32px 96px;
-  max-width: 960px;
+}
+
+.home-stage-inner {
+  margin: auto;
+  width: 100%;
+  max-width: 1040px;
+  padding: 28px 32px 20px;
+}
+
+/* The same place and width as the input of a conversation, so that nothing moves when the first message is sent. */
+.home-dock {
+  position: relative;
+  z-index: 1;
+  padding: 0 18px 14px;
+  flex-shrink: 0;
+}
+
+.home-dock-inner {
+  max-width: calc(var(--chat-max-width, 900px) - 36px);
   margin: 0 auto;
+  width: 100%;
+}
+
+.home-dock-input {
   width: 100%;
 }
 
@@ -83,4 +104,8 @@
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.home-stage .home-greeting {
+  text-align: left;
 }
