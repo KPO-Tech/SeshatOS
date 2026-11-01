@@ -205,8 +205,10 @@ const browserBridge = createBrowserBridgeServer({
 })
 
 app.whenReady().then(async () => {
-  // Without it Windows does not name the app on its notifications; it is the appId of the installer.
-  if (process.platform === 'win32') app.setAppUserModelId('com.seshat.os')
+  // Without it Windows does not name the app on its notifications; it is the appId of the installer, whose shortcuts carry it. Only for the
+  // installed app: a run from the sources has no shortcut with that id, and Windows then draws a blank page in the taskbar instead of the
+  // icon of the window.
+  if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId('com.seshat.os')
   Menu.setApplicationMenu(null)
   applyContentSecurityPolicy()
   registerSystemHandlers(ipcMain)

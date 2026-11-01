@@ -11,6 +11,25 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-01
+
+### Highlights
+
+- **A clean uninstall.** Removing SeshatOS on Windows ends with one question: delete your conversations, settings, downloaded models and the update cache too, or keep them for a later install.
+- **Fixes after 0.3.0.** The taskbar shows the icon of SeshatOS again when the app runs from the sources, and the three ways to set up the local models take one line each.
+
+### Added
+
+- **The Windows uninstaller asks whether to delete your data.** Removing SeshatOS now ends with one question that lists what is on the computer: your conversations, memories, settings, skills and downloaded models (`.config\seshat`), the cache of the updates (`seshat-desktop-updater`) and the command-line Seshat (`Programs\seshat`), each only if it is there. Yes deletes them so that nothing is left behind; No, the default, keeps them for a later install. Nothing is asked, nor deleted, when the uninstaller runs silently or as the first step of an update.
+
+### Changed
+
+- **The three ways to set up the local models are lighter.** Download recommended, Customize my install and Skip for now are one line each, with the radio on the right, instead of tall cards with a paragraph and a badge: the overview below them has the room.
+
+### Fixed
+
+- **The taskbar shows the icon of SeshatOS again when the app is run from the sources.** Since the notifications, the app gave Windows an application id that only the installer's shortcuts carry, and Windows drew a blank page in place of the icon of the window. The id is now set only for the installed app.
+
 ## [0.3.0] - 2026-11-01
 
 ### Highlights
