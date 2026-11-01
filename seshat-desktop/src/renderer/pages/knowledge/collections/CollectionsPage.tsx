@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { Down, FolderOpen, Plus, Search, SortThree } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
+import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useCanManageKnowledge } from '../useCanManage'
 import { CollectionCard } from './CollectionCard'
 import { CollectionDialog } from './CollectionDialog'
 import { createCollection, indexCollection } from './collectionsApi'
 import { plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
+import { SourceIcon } from './SourceIcon'
 import { DEFAULT_SOURCE_ID } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
 
@@ -68,10 +70,10 @@ export function CollectionsPage() {
     [collections, scope, needle, sort]
   )
 
-  const pills: Array<{ id: string; label: string; count: number }> = [
+  const pills: Array<{ id: string; label: string; count: number; icon?: ReactNode }> = [
     { id: 'all', label: 'All', count: collections.length },
-    { id: DEFAULT_SOURCE_ID, label: MADE_IN_APP, count: countIn(DEFAULT_SOURCE_ID) },
-    ...sources.map((source) => ({ id: source.id, label: source.name, count: countIn(source.id) }))
+    { id: DEFAULT_SOURCE_ID, label: MADE_IN_APP, count: countIn(DEFAULT_SOURCE_ID), icon: <SeshatLogo size={14} /> },
+    ...sources.map((source) => ({ id: source.id, label: source.name, count: countIn(source.id), icon: <SourceIcon icon={source.icon} size={14} /> }))
   ]
 
   async function create(name: string, description: string) {
@@ -149,6 +151,7 @@ export function CollectionsPage() {
               onClick={() => setScope(item.id)}
               className={`flex h-9 cursor-pointer items-center gap-2 rounded-full border px-4 text-[13px] font-medium ${scope === item.id ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
             >
+              {item.icon}
               {item.label}
               <Count value={item.count} active={scope === item.id} />
             </button>
