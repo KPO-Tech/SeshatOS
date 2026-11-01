@@ -9,7 +9,13 @@ import { join } from 'path'
 export function withBackendLibraries(env: NodeJS.ProcessEnv, backendDir: string, platform: NodeJS.Platform = process.platform): NodeJS.ProcessEnv {
   const next = { ...env }
   if (platform === 'win32') {
-    next.PATH = `${backendDir};${next.PATH || ''}`
+    // A copy of process.env is a plain object, so its keys are case-sensitive, and an app started from Explorer gets "Path", not "PATH".
+    // Writing PATH beside Path gave the child two of them; Windows keeps the first in sorted order, PATH, which held only this folder, and
+    // the backend no longer found git, node or python. Every spelling is folded into one PATH.
+    const pathKeys = Object.keys(next).filter((key) => key.toUpperCase() === 'PATH')
+    const current = pathKeys.map((key) => next[key]).find((value) => value) || ''
+    for (const key of pathKeys) delete next[key]
+    next.PATH = `${backendDir};${current}`
     const onnxRuntimePath = join(backendDir, 'onnxruntime.dll')
     if (!next.SESHAT_NATIVEDOC_ONNXRUNTIME_PATH && existsSync(onnxRuntimePath)) {
       next.SESHAT_NATIVEDOC_ONNXRUNTIME_PATH = onnxRuntimePath

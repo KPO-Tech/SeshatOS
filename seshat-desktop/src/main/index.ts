@@ -47,6 +47,9 @@ let mainWindow: BrowserWindow | null = null
 // (signAndEditExecutable is false), so the window carries the icon itself:
 // .ico on Windows, .png elsewhere. Packaged builds read it from the resources
 // folder (see extraResources); dev runs read it from build/.
+// The appId of the installer (package.json "build"), which its shortcuts carry.
+const APP_USER_MODEL_ID = 'com.seshat.os'
+
 function resolveWindowIcon(): string {
   const file = process.platform === 'win32' ? 'icon.ico' : 'icon.png'
   return app.isPackaged ? join(process.resourcesPath, file) : join(__dirname, '../../build', file)
@@ -79,6 +82,11 @@ function createWindow() {
     },
   })
   mainWindow = win
+  // The taskbar draws the icon of the application id, looked up through a shortcut that carries it and kept in the icon cache. A cache
+  // filled by an earlier run without that shortcut leaves a blank page there, so the window says which icon goes with its id itself.
+  if (process.platform === 'win32' && app.isPackaged) {
+    win.setAppDetails({ appId: APP_USER_MODEL_ID, appIconPath: process.execPath, appIconIndex: 0, relaunchCommand: `"${process.execPath}"`, relaunchDisplayName: 'SeshatOS' })
+  }
 
   win.removeMenu()
   // The window is shown once the renderer has painted. If the first load fails the paint never comes, so a timer shows the window
@@ -208,7 +216,7 @@ app.whenReady().then(async () => {
   // Without it Windows does not name the app on its notifications; it is the appId of the installer, whose shortcuts carry it. Only for the
   // installed app: a run from the sources has no shortcut with that id, and Windows then draws a blank page in the taskbar instead of the
   // icon of the window.
-  if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId('com.seshat.os')
+  if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId(APP_USER_MODEL_ID)
   Menu.setApplicationMenu(null)
   applyContentSecurityPolicy()
   registerSystemHandlers(ipcMain)
