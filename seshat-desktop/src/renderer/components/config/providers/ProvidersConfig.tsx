@@ -3,7 +3,6 @@ import { Plus, Refresh } from '@icon-park/react'
 import { ProviderEmptyState } from './ProviderEmptyState'
 import { AddProviderDialog } from './AddProviderDialog'
 import { ProviderCard, type TestResult } from './ProviderCard'
-import { ProvidersAside } from './ProvidersAside'
 import {
   deleteProviderSetting,
   fetchProviderChoices,
@@ -109,8 +108,7 @@ export function ProvidersConfig() {
 
       {error && <div className="mb-3 rounded-xl border border-[var(--accent-danger)]/40 bg-[var(--surface-panel)] px-4 py-3 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</div>}
 
-      <div className="flex flex-col gap-4 @4xl:flex-row @4xl:items-start">
-        <div className="grid min-w-0 flex-1 gap-3">
+      <div className="grid min-w-0 gap-3">
           {loading && rows.length === 0 ? (
             <ProviderEmptyState label="Loading providers..." />
           ) : ordered.length === 0 ? (
@@ -159,8 +157,6 @@ export function ProvidersConfig() {
               />
             ))
           )}
-        </div>
-        <ProvidersAside settings={settings} onAdd={() => setAdding({})} />
       </div>
 
       {adding && (
