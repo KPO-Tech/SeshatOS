@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Changed
+
+- **The three ways to set up the local models are lighter.** Download recommended, Customize my install and Skip for now are one line each, with the radio on the right, instead of tall cards with a paragraph and a badge: the overview below them has the room.
+
 ## [0.3.0] - 2026-11-01
 
 ### Highlights
