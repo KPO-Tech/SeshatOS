@@ -15,10 +15,10 @@ import { AvailableSkillCard, SkillCard } from './SkillCard'
 import { ImportSkillsDialog } from './ImportSkillsDialog'
 import { repoLogo } from './skillLogos'
 import { SkillIconPicker } from './SkillIconPicker'
-import { SkillInstallDialog } from './SkillInstallDialog'
+import { SKILLS_CHANGED_EVENT } from './SkillReviewHost'
 import { categoryOf, tagsFor } from './skillIcons'
-import { deleteSkill, installSkillRepo, setSkillEnabled, startSkillEnvironment, uninstallSkillRepo } from './skillsApi'
-import type { CatalogEntry, InstallPlan, Skill } from './skillsTypes'
+import { deleteSkill, installSkillRepo, setSkillEnabled } from './skillsApi'
+import type { CatalogEntry, Skill } from './skillsTypes'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkillIcons } from './useSkillIcons'
 import { filterSkills, useSkills } from './useSkills'
@@ -85,7 +85,6 @@ export function SkillsPage() {
   const [pickingFor, setPickingFor] = useState<{ name: string; description: string } | null>(null)
   const [installing, setInstalling] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
-  const [reviewing, setReviewing] = useState<{ name: string; plan: InstallPlan } | null>(null)
 
   const local = useMemo(() => {
     const listed = filterSkills(skills, { query, collection: 'all', enabledOnly })
@@ -122,14 +121,9 @@ export function SkillsPage() {
   async function install(entry: CatalogEntry) {
     setInstalling(entry.name)
     try {
-      const result = await installSkillRepo(entry.url)
-      if (result.needs_environment) {
-        // What the skills need is shown first, and nothing is installed until the person agrees.
-        setReviewing({ name: result.name, plan: result.plan })
-        return
-      }
-      await Promise.all([reload(), reloadCatalog()])
-      show(`${entry.name} installed.`)
+      // The download goes on in the background: the card shows how far it is, and the window of what the skills need opens when it ends.
+      await installSkillRepo(entry.url)
+      nudgeTasks()
     } catch (err) {
       show(err instanceof Error ? err.message : 'Could not install this skill.', 'err')
     } finally {
@@ -141,27 +135,27 @@ export function SkillsPage() {
 
   // The installations that are going on, by repository: they continue when the page is left, so what is shown comes from the tasks.
   const tasks = useTasksStore((state) => state.tasks)
-  const installTasks = useMemo(() => new Map(tasks.filter((task) => task.kind === 'skill.install' && isTaskActive(task)).map((task) => [task.subject, task])), [tasks])
+  const installTasks = useMemo(() => new Map(tasks.filter((task) => (task.kind === 'skill.install' || task.kind === 'skill.clone') && isTaskActive(task)).map((task) => [task.subject, task])), [tasks])
 
   // When one ends, the lists are read again and the page says how it went.
   useEffect(() => {
     function onFinished(event: Event) {
       const task = (event as CustomEvent<TaskInfo>).detail
-      if (task.kind !== 'skill.install') return
+      if (task.kind !== 'skill.install' && task.kind !== 'skill.clone') return
       void Promise.all([reload(), reloadCatalog()])
+      // A download that went well is followed by the window of what the skills need, which says the rest.
+      if (task.kind === 'skill.clone' && task.status === 'succeeded') return
       const message = finishedMessage(task)
       show(message.failed ? `${message.title}: ${message.body}` : message.title, message.failed ? 'err' : undefined)
     }
+    const onChanged = () => void Promise.all([reload(), reloadCatalog()])
     window.addEventListener(TASK_FINISHED_EVENT, onFinished)
-    return () => window.removeEventListener(TASK_FINISHED_EVENT, onFinished)
+    window.addEventListener(SKILLS_CHANGED_EVENT, onChanged)
+    return () => {
+      window.removeEventListener(TASK_FINISHED_EVENT, onFinished)
+      window.removeEventListener(SKILLS_CHANGED_EVENT, onChanged)
+    }
   }, [reload, reloadCatalog, show])
-
-  async function finishInstall(name: string) {
-    await startSkillEnvironment(name)
-    setReviewing(null)
-    nudgeTasks()
-    show(`${name} is installing in the background.`)
-  }
 
   async function stopInstall(task: TaskInfo) {
     try {
@@ -170,16 +164,6 @@ export function SkillsPage() {
       show(err instanceof Error ? err.message : 'Could not cancel this installation.', 'err')
     }
     nudgeTasks()
-  }
-
-  async function cancelInstall(name: string) {
-    setReviewing(null)
-    try {
-      await uninstallSkillRepo(name)
-    } catch {
-      // The repository stays marked as unfinished, and is replaced the next time it is installed.
-    }
-    await reloadCatalog()
   }
 
   const changeIcon = (target: { name: string; description: string }): DropdownItem => ({ id: 'icon', label: 'Change icon', onSelect: () => setPickingFor(target) })
@@ -404,7 +388,6 @@ export function SkillsPage() {
       {pickingFor && (
         <SkillIconPicker skillName={pickingFor.name} current={iconOf(pickingFor)} chosen={isChosen(pickingFor.name)} onPick={(icon) => choose(pickingFor.name, icon)} onClose={() => setPickingFor(null)} />
       )}
-      {reviewing && <SkillInstallDialog name={reviewing.name} plan={reviewing.plan} onConfirm={() => finishInstall(reviewing.name)} onCancel={() => void cancelInstall(reviewing.name)} />}
       <ToastStack toasts={toasts} />
     </section>
   )

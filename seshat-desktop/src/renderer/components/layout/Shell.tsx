@@ -4,6 +4,7 @@ import { InternalExpansion } from '@icon-park/react'
 import { loadConnectorLabels } from '@renderer/components/chat/tools/connectorNames'
 import { useSessionsSync } from '@renderer/hooks/useSessionsSync'
 import { useTaskSync } from '@renderer/hooks/useTaskSync'
+import { SkillReviewHost } from '@renderer/components/skills/SkillReviewHost'
 import { useUIStore } from '@renderer/stores/ui'
 import { DialogHost } from './DialogHost'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -97,6 +98,7 @@ export function Shell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--surface-root)] text-[var(--text-primary)]">
+      <SkillReviewHost />
       <Titlebar
         right={
           isChatHome || isConversation ? (

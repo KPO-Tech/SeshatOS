@@ -100,3 +100,15 @@ id so that the system notifications carry its name.
 - The first installation on a machine without uv downloads about 16 MB more, once, and says so.
 - The code that finds Python and builds environments has one place (`skillinstall`); Indra can use it when it moves to tasks.
 - Quitting from the tray while a task runs still stops it: the app asks first.
+
+## Addendum: the download is a task too (2026-11-01)
+
+`POST /skills/repos` used to clone inside the request (the module `skillrepos` runs `git clone` with no way to see or stop it), so a large
+repository held the page for minutes. It now starts a task of kind `skill.clone` and answers 202: `skillinstall.Clone` runs `git clone
+--depth=1 --single-branch --progress`, streams what git prints into the task, never lets git ask for a password (`GIT_TERMINAL_PROMPT=0`)
+and removes what it downloaded when it fails or is cancelled. A second step reads what the skills need and records it as pending. When the
+task succeeds the desktop asks `GET /skills/repos/{name}/plan` and opens the window of the plan wherever the person is
+(`SkillReviewHost`, mounted in the shell), so the answer no longer depends on a page staying open.
+
+Cancelling now ends the whole process tree (`taskkill /T` on Windows, a process group elsewhere): killing only `git` left
+`git-remote-https` writing into the folder that was being removed, and the same was true of pip and npm.

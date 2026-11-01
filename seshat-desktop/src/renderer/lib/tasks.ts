@@ -24,7 +24,7 @@ export const isTaskActive = (task: Pick<TaskInfo, 'status'>) => task.status === 
 
 /** The reason a task that did not succeed gives, in words the person can read. */
 export function taskFailure(task: TaskInfo): string {
-  if (task.status === 'cancelled') return 'The installation was cancelled.'
+  if (task.status === 'cancelled') return task.kind === 'skill.clone' ? 'The download was cancelled.' : 'The installation was cancelled.'
   if (task.status === 'interrupted') return task.error || 'The app was closed before this finished.'
   return task.error || 'The task failed.'
 }

@@ -130,13 +130,14 @@ export function Sidebar() {
           {!collapsed && !inKnowledge && <RecentSessions sessions={recentSessions} onOpenSession={openSession} onOpenHistory={() => setHistoryOpen(true)} />}
         </div>
 
+        <TaskProgress collapsed={collapsed} />
+
         {edition.store && (
           <div className={cx('mt-1 flex flex-col px-2', collapsed && 'items-center')}>
             <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />
           </div>
         )}
 
-        <TaskProgress collapsed={collapsed} />
         <SidebarFooterMenu collapsed={collapsed} />
 
         {!collapsed && (
