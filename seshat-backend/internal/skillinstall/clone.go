@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -23,7 +24,7 @@ func Clone(ctx context.Context, url, dest string, progress Progress) error {
 	}
 	// git must never wait for someone to type a password: a private or mistyped address would hang the task for good.
 	env := append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-	out, err := runCommand(ctx, "", env, "git", "clone", "--depth=1", "--single-branch", "--progress", url, dest)
+	out, err := runCommand(ctx, "", env, "git", "clone", "--depth=1", "--single-branch", "--progress", "--", url, dest)
 	if err == nil {
 		return nil
 	}
@@ -52,4 +53,23 @@ func lastMessage(out string, err error) string {
 		return strings.TrimSpace(lines[len(lines)-1])
 	}
 	return err.Error()
+}
+
+// CloneInto downloads a repository into a staging folder and moves it to dest only when the download is whole. The staging folder is outside
+// the folder the skills are read from, so that a download cut short (the app was closed, the machine went to sleep) never leaves a half
+// repository where the skills are listed as installed; the next attempt starts again from nothing.
+func CloneInto(ctx context.Context, url, staging, dest string, progress Progress) error {
+	_ = os.RemoveAll(staging)
+	if err := Clone(ctx, url, staging, progress); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		_ = os.RemoveAll(staging)
+		return fmt.Errorf("could not prepare the folder of the skills: %w", err)
+	}
+	if err := os.Rename(staging, dest); err != nil {
+		_ = os.RemoveAll(staging)
+		return fmt.Errorf("could not move the repository into place: %w", err)
+	}
+	return nil
 }

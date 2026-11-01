@@ -282,6 +282,10 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 	if featured != nil {
 		repo.Name = featured.Name
 	}
+	if !validSkillRepoName(repo.Name) {
+		writeBackendError(w, bkerr.InvalidInput("the address does not name a repository", nil))
+		return
+	}
 	reposDir := skillsloader.GetSkillReposPath()
 
 	// Check it's not already installed. An installation the person left unfinished (they did not agree to the plan) is started again.
@@ -304,7 +308,7 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 	// run, and its skills stay out of the agent's reach until the person has agreed to the installation (see handleSkillRepoEnvironment).
 	task, _ := a.taskManager().Start(skillCloneTask, repo.Name, "Downloading "+repo.Name, func(ctx context.Context, report *tasks.Reporter) error {
 		report.Step(1, 2, "Downloading the skills")
-		if err := skillinstall.Clone(ctx, repo.URL, target, report); err != nil {
+		if err := skillinstall.CloneInto(ctx, repo.URL, skillCloneStaging(repo.Name), target, report); err != nil {
 			return err
 		}
 		report.Step(2, 2, "Reading what they need")
@@ -380,6 +384,17 @@ func skillSpec(featured *FeaturedSkillRepo, recorded []string) skillinstall.Spec
 		return skillinstall.Spec{Include: recorded}
 	}
 	return skillinstall.Spec{Include: featured.Skills, PythonMinimum: featured.PythonMinimum, PythonPackages: featured.PythonPackages}
+}
+
+// skillCloneStaging is where a repository is downloaded before it is moved among the others: outside the folder the skills are read from.
+func skillCloneStaging(name string) string {
+	return runtimepath.Join("", "skill-clones", name)
+}
+
+// validSkillRepoName reports whether a name taken from an address can be a folder of its own: not empty, not "." or "..", no separator.
+// Without it an address ending in ".." would make the repository the folder of all the others.
+func validSkillRepoName(name string) bool {
+	return name != "" && name != "." && name != ".." && !strings.ContainsAny(name, `/\`) && !strings.HasPrefix(name, ".")
 }
 
 // skillEnvironmentDir is where the environment of a repository lives: outside the repository, so that reading its skills never walks it.
