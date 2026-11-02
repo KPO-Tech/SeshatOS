@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dataURLText, fixRequestMessage, htmlArtifactPanel, isHtmlPath, pageLocation, pageProblemFrom, presentedPages } from './htmlArtifact'
+import { dataURLText, fixRequestMessage, htmlArtifactPanel, isHtmlPath, lastPageWrite, pageLocation, pageProblemFrom, presentedPages } from './htmlArtifact'
 
 const present = (id: string, payload: Record<string, unknown>, status = 'completed', isError = false) => ({
   type: 'tool_use',
@@ -65,16 +65,20 @@ describe('presentedPages', () => {
 describe('pageProblemFrom', () => {
   const origin = 'http://127.0.0.1:7777'
   it('keeps a problem and shows library addresses as the page wrote them', () => {
-    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'load', message: `Could not load ${origin}/api/v1/artifacts/lib/unpkg.com/vue@2/dist/vue.js`, where: '' }, origin))
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'load', message: `Could not load ${origin}/api/v1/artifacts/lib/unpkg.com/vue@2/dist/vue.js`, where: '' }, origin, 'p.html'))
       .toEqual({ kind: 'load', message: 'Could not load https://unpkg.com/vue@2/dist/vue.js', where: '' })
   })
+  it('names the file instead of the address of the preview', () => {
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'error', message: 'x', where: `${origin}/api/v1/artifacts/preview/1f90d81c:753:8` }, origin, 'C:\\w\\cite.html')?.where)
+      .toBe('cite.html:753:8')
+  })
   it('refuses anything else', () => {
-    expect(pageProblemFrom({ type: 'other', kind: 'error', message: 'x' }, origin)).toBeNull()
-    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'run-tool', message: 'x' }, origin)).toBeNull()
-    expect(pageProblemFrom('seshat:page-problem', origin)).toBeNull()
+    expect(pageProblemFrom({ type: 'other', kind: 'error', message: 'x' }, origin, 'p.html')).toBeNull()
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'run-tool', message: 'x' }, origin, 'p.html')).toBeNull()
+    expect(pageProblemFrom('seshat:page-problem', origin, 'p.html')).toBeNull()
   })
   it('cuts long text', () => {
-    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'error', message: 'x'.repeat(5000), where: 7 }, origin)?.message).toHaveLength(2000)
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'error', message: 'x'.repeat(5000), where: 7 }, origin, 'p.html')?.message).toHaveLength(2000)
   })
 })
 
@@ -88,6 +92,20 @@ describe('fixRequestMessage', () => {
   it('lists twenty at most', () => {
     const problems = Array.from({ length: 25 }, (_, i) => ({ kind: 'console' as const, message: `m${i}`, where: '' }))
     expect(fixRequestMessage('p.html', problems)).toContain('... and 5 more')
+  })
+})
+
+describe('lastPageWrite', () => {
+  const folders = { workspacePath: 'C:\\ws' }
+  const tool = (id: string, name: string, file_path: string, isError = false, done = true) => ({ type: 'tool_use', id, name, input: { file_path }, ...(done ? { _result: { isError } } : {}) })
+  it('finds the last finished write of the page, however its path is written', () => {
+    const blocks = [tool('a', 'write_file', 'cite.html'), tool('b', 'edit_file', 'C:/WS/cite.html'), tool('c', 'edit_file', 'other.html')]
+    expect(lastPageWrite(blocks, 'C:\\ws\\cite.html', folders)).toBe('b')
+  })
+  it('skips a failed or running edit and other tools', () => {
+    const blocks = [tool('a', 'write_file', 'cite.html'), tool('b', 'edit_file', 'cite.html', true), tool('c', 'edit_file', 'cite.html', false, false), tool('d', 'read_file', 'cite.html')]
+    expect(lastPageWrite(blocks, 'C:\\ws\\cite.html', folders)).toBe('a')
+    expect(lastPageWrite([], 'C:\\ws\\cite.html', folders)).toBeUndefined()
   })
 })
 
