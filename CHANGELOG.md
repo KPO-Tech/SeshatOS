@@ -11,6 +11,13 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-02
+
+### Highlights
+
+- **Follow the pull requests the agent opens, then let it merge them.** The Changes card lists only the pull requests the agent itself opened, shows their checks, and offers a Merge button once they are green.
+- **A new version is offered while SeshatOS stays open**, instead of only when it starts.
+
 ### Added
 
 - **Follow a pull request until it can be merged, then have the agent merge it.** In the Changes card, the icon of a pull request the agent opened blinks while its checks run, turns green once the checks passed and GitHub says it merges cleanly, red on a failed check or a conflict. A green one has a Merge button that asks the agent, in the conversation, to merge it. "Merge when ready" in its menu sends that request by itself as soon as it turns green, while the conversation is open.
