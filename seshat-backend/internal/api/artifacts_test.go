@@ -102,11 +102,11 @@ func TestArtifactLibRefusesOtherHosts(t *testing.T) {
 
 func TestWithPageReporterRunsFirst(t *testing.T) {
 	cases := map[string]string{
-		`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><script>x()</script></head></html>`: `<head>` + artifactPageReporter + `<meta`,
-		`<html><body><script>x()</script></body></html>`:                                                `<html>` + artifactPageReporter + `<body>`,
-		`<!doctype html><body>hi</body>`:                                                                `<!doctype html>` + artifactPageReporter,
-		`<canvas id=c></canvas><script>x()</script>`:                                                    artifactPageReporter + `<canvas`,
-		`<HEADER>not the head</HEADER><script>x()</script>`:                                             artifactPageReporter + `<HEADER>`,
+		`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><script>x()</script></head></html>`: `<head>` + artifactPageStyle + artifactPageReporter + `<meta`,
+		`<html><body><script>x()</script></body></html>`:                                                `<html>` + artifactPageStyle + artifactPageReporter + `<body>`,
+		`<!doctype html><body>hi</body>`:                                                                `<!doctype html>` + artifactPageStyle + artifactPageReporter,
+		`<canvas id=c></canvas><script>x()</script>`:                                                    artifactPageStyle + artifactPageReporter + `<canvas`,
+		`<HEADER>not the head</HEADER><script>x()</script>`:                                             artifactPageStyle + artifactPageReporter + `<HEADER>`,
 	}
 	for in, want := range cases {
 		if got := withPageReporter(in); !strings.Contains(got, want) {

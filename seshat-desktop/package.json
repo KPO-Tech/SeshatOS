@@ -1,6 +1,6 @@
 {
   "name": "seshat-desktop",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
@@ -72,7 +72,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "electron": "^45.0.0",
+    "electron": "^45.1.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^6.0.0",
     "oxlint": "^1.56.0",

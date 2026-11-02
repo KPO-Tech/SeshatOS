@@ -5,53 +5,134 @@
   </picture>
 </p>
 
+<h3 align="center">Your AI workspace, on your own computer.</h3>
 
 <p align="center">
-  <b>SeshatOS is a self-hosted AI desktop app and local backend, built on the Seshat agent runtime.</b><br>
-  <i>Local-first &nbsp;·&nbsp; Electron desktop + Go backend &nbsp;·&nbsp; document intelligence &nbsp;·&nbsp; Apache-2.0 + Commons Clause</i>
+  An agent that researches, writes code, runs commands and builds what you ask for, right beside the conversation.<br>
+  With the models of your choice, your own keys, and no account.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Status-Active%20Development-orange?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?style=for-the-badge&logo=go">
-  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black">
-  <img src="https://img.shields.io/badge/Electron-43-47848F?style=for-the-badge&logo=electron">
-  <img src="https://img.shields.io/badge/License-Apache--2.0%20%2B%20Commons%20Clause-blue?style=for-the-badge">
+  <a href="https://github.com/KPO-Tech/SeshatOS/releases/latest"><b>Download for Windows, Linux or macOS</b></a> ·
+  <a href="https://seshat-ai.com/en"><b>Website</b></a> ·
+  <a href="https://seshat-ai.com/en/docs"><b>Documentation</b></a> ·
+  <a href="https://github.com/KPO-Tech/seshat-runtime/discussions"><b>Discussions</b></a>
 </p>
 
 <p align="center">
-  <a href="https://seshat-ai.com/en"><b>🌐 Website</b></a> ·
-  <a href="https://seshat-ai.com/en/docs"><b>📚 Documentation</b></a> ·
-  <a href="https://github.com/KPO-Tech/seshat-runtime"><b>⚙️ seshat (engine)</b></a> ·
-  <a href="https://github.com/KPO-Tech/SeshatCloud"><b>☁️ SeshatCloud (organizations)</b></a> ·
-  <a href="https://github.com/KPO-Tech/seshat-runtime/discussions"><b>💬 Discussions</b></a>
+  <a href="https://github.com/KPO-Tech/SeshatOS/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/KPO-Tech/SeshatOS?color=ef7c2f&label=release"></a>
+  <img alt="Windows, Linux, macOS" src="https://img.shields.io/badge/Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-3a3941">
+  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0%20%2B%20Commons%20Clause-3a3941"></a>
 </p>
 
-<h1 align="center">SeshatOS</h1>
+https://github.com/user-attachments/assets/2b057c07-33e8-4819-944e-001c753ca713
 
----
+## Answers you can read, not walls of text
 
-## What SeshatOS Is
+Ask a question and the answer arrives with real tables, formulas, charts and architecture drawings, drawn by the app as they are written. Each one ends with the next steps you may want, one click away.
 
-SeshatOS is the self-hosted desktop product built on top of [seshat](https://github.com/KPO-Tech/seshat-runtime), the open-source Go agent runtime. It's what you run locally to get a real chat/agent desktop app with no cloud dependency required:
+<p align="center"><img src="docs/img/rich-answers.png" alt="An answer about ant colony optimization, with rendered formulas and a table" width="900"></p>
 
-- an Electron desktop app (`seshat-desktop`) — chat, tool execution, file attachments, provider/model selection
-- a local Go backend (`seshat-backend`) — the HTTP API the desktop talks to, session/memory persistence, knowledge/RAG
+## It builds things, and shows them to you
 
-Everything here runs on your own machine, with your own provider API keys. No account, no org, no cloud required.
+Ask for a simulation, a dashboard or a 3D scene. The agent writes the page and it opens live beside the conversation, running in an isolated frame with no access to the app or the network.
+
+Chart.js, three.js, React, D3, Tailwind, Mermaid, KaTeX and more ship with the app, so these pages also work offline. If a page breaks, the panel lists what went wrong and one click asks the agent to fix it.
+
+https://github.com/user-attachments/assets/c9afc805-f044-4b29-a29d-9edf3042c3fd
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/img/artifact-3d.png" alt="An interactive 3D solar system open in the panel beside the conversation"></td>
+    <td width="50%"><img src="docs/img/agent-gif.png" alt="An animated GIF of the simulation, made by the agent and shown in the answer"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>A 3D solar system you can explore, from one request</sub></td>
+    <td align="center"><sub>Pictures, GIFs and clips it makes appear in the answer</sub></td>
+  </tr>
+</table>
+
+## An agent that really works on your files
+
+Open a project and the agent reads your code, edits it and runs your commands, asking first when it should. You follow every step, and the pull requests it opens are tracked until they can be merged.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/img/project-files.png" alt="A project open in SeshatOS: file tree, code, project information"></td>
+    <td width="50%"><img src="docs/img/agent-work.png" alt="The agent running a script, fixing a bug and showing the results step by step"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Your projects, their files and their sessions in one place</sub></td>
+    <td align="center"><sub>Every step of the agent stays visible</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/img/agent-git.png" alt="The agent working through git steps, with the branch and the pull request shown in the side panel"></td>
+    <td width="50%"><img src="docs/img/agent-commits.png" alt="The commits the agent made, listed in the answer, with its pull request in the Changes card"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>The branch and the changes, always in view</sub></td>
+    <td align="center"><sub>Clean commits, and its pull request followed in the Changes card</sub></td>
+  </tr>
+</table>
+
+## Everything in one workspace
+
+<p align="center"><img src="docs/img/home.png" alt="The start page of SeshatOS" width="900"></p>
+
+- **Your models, your keys.** Pick the provider and the model you want, and change them from one conversation to the next.
+- **Private by default.** The app and its data stay on your machine, with no account and no cloud. What you send goes only to the provider you chose.
+- **Tools that extend it.** Skills, plugins and MCP servers, a web search, a built-in browser and a terminal.
+- **Documents.** Attach your files and work from them, scanned pages included.
+- **Yours to shape.** A dark and a light theme of your choice, switched in one click, or your own colours.
+
+## Download
+
+Installers are attached to each [release](https://github.com/KPO-Tech/SeshatOS/releases/latest):
+
+| Platform | Installer |
+|---|---|
+| Windows (64-bit) | the `.exe` installer |
+| Linux (64-bit) | the `.AppImage` (any distribution) or the `.deb` (Debian, Ubuntu) |
+| macOS (Apple silicon or Intel) | the `.dmg` for your processor. **Experimental**: it has not been run on a Mac yet, and it has no built-in reader for scanned documents (the optional Indra reader in Config > Documents can read them) |
+
+Every release also carries a `SHA256SUMS.txt` to check what you downloaded.
+
+**The installers are not signed yet** (a certificate costs money and the project has none). The first time you open one:
+
+- **Windows**: SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
+- **macOS**: right-click the app, choose **Open**, then confirm. The app does not update itself on macOS: download the new version from the release page.
+- **Linux**: nothing to confirm; make the `.AppImage` executable first (`chmod +x`).
+
+To build SeshatOS from source instead, see below.
 
 ## Status
 
-SeshatOS is under active construction. The desktop is being rebuilt chat-first; the other surfaces follow in order.
+SeshatOS is in active development, with a new version often. The installed app offers each update by itself, except on macOS for now.
 
 | Capability | Status |
 |---|---|
-| Chat with tools, files, providers, MCP and skills | Active, being stabilized |
-| Local backend: sessions, memory, plans, knowledge/RAG, audit | Available |
-| Knowledge search from the chat | Available |
-| Dedicated Knowledge, Skills and Admin screens | Planned, in order after Chat |
-| Inbox, Companion, Team | Roadmap (after the MVP) |
+| Chat with tools, files, rich answers and live pages | Available |
+| Projects, skills, plugins and MCP servers | Available |
+| Local backend: sessions, memory, plans, audit | Available |
+| Knowledge: search your documents and get cited answers | In development |
+
+## Getting started
+
+```bash
+git clone <this-repo>
+cd seshatos
+cp .env.example .env   # fill in at least one provider API key
+make setup              # first-time setup: Node deps + build
+make dev                 # start the local backend + desktop app, keeping your data (FRESH=1 starts as a brand new install)
+```
+
+See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.
+
+To run the Seshat engine on its own, in a terminal and without the desktop app, follow its [installation guide](https://seshat-ai.com/en/docs/getting-started/installation) and the [quick start](https://seshat-ai.com/en/docs/getting-started/quick-start).
+
+## How it is built
+
+SeshatOS is the desktop product built on [seshat](https://github.com/KPO-Tech/seshat-runtime), the open-source Go agent runtime: an Electron desktop app (`seshat-desktop`) and a local Go backend (`seshat-backend`), the HTTP API the desktop talks to, which keeps the sessions and the memory.
 
 ## The Knowledge agent
 
@@ -79,46 +160,6 @@ SeshatOS works on its own. SeshatCloud completes it when an organization needs s
 - The commercial activity around Seshat (AI consulting and integration) is presented at [seshat-ai.com](https://seshat-ai.com/en).
 - The engine is documented at [seshat-ai.com/en/docs](https://seshat-ai.com/en/docs): the [concepts](https://seshat-ai.com/en/docs/concepts/what-is-seshat) (architecture, memory, security and trust, skills and MCP, retrieval), the [Go SDK](https://seshat-ai.com/en/docs/sdk/go-sdk) and the [HTTP API of SeshatOS](https://seshat-ai.com/en/docs/sdk/http-api).
 
-## License
-
-Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condition: free to use, self-host, modify, and redistribute for any purpose — including internal use by organizations of any size — except selling it (offering it as a paid product or service to third parties). See [LICENSE](./LICENSE).
-
-This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat-runtime) runtime is plain Apache-2.0. The license is the unmodified standard Apache-2.0 text plus the unmodified standard Commons Clause text, with a plain-words summary at the top of [LICENSE](./LICENSE); no lawyer has reviewed how they are combined, so when in doubt about a use (consulting, hosting for a client), write to the address below first.
-
-## Download
-
-Installers are attached to each [release](https://github.com/KPO-Tech/SeshatOS/releases/latest):
-
-| Platform | Installer |
-|---|---|
-| Windows (64-bit) | the `.exe` installer |
-| Linux (64-bit) | the `.AppImage` (any distribution) or the `.deb` (Debian, Ubuntu) |
-| macOS (Apple silicon or Intel) | the `.dmg` for your processor. **Experimental**: it has not been run on a Mac yet, and it has no built-in reader for scanned documents (the optional Indra reader in Config > Documents can read them) |
-
-Every release also carries a `SHA256SUMS.txt` to check what you downloaded.
-
-**The installers are not signed yet** (a certificate costs money and the project has none). The first time you open one:
-
-- **Windows**: SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
-- **macOS**: right-click the app, choose **Open**, then confirm. The app does not update itself on macOS: download the new version from the release page.
-- **Linux**: nothing to confirm; make the `.AppImage` executable first (`chmod +x`).
-
-To build SeshatOS from source instead, see below.
-
-## Getting started
-
-```bash
-git clone <this-repo>
-cd seshatos
-cp .env.example .env   # fill in at least one provider API key
-make setup              # first-time setup: Node deps + build
-make dev                 # start the local backend + desktop app, keeping your data (FRESH=1 starts as a brand new install)
-```
-
-See [`docs/development.md`](./docs/development.md) for the full setup reference, and [`docs/architecture.md`](./docs/architecture.md) for how the pieces fit together.
-
-To run the Seshat engine on its own, in a terminal and without the desktop app, follow its [installation guide](https://seshat-ai.com/en/docs/getting-started/installation) and the [quick start](https://seshat-ai.com/en/docs/getting-started/quick-start).
-
 ## Vision
 
 See [GOAL.md](./GOAL.md) for where the project is going, what's in scope, and what deliberately isn't.
@@ -126,6 +167,12 @@ See [GOAL.md](./GOAL.md) for where the project is going, what's in scope, and wh
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md) (the latter is also what AI coding agents working in this repo should read first).
+
+## License
+
+Apache License 2.0, with the [Commons Clause](https://commonsclause.com/) condition: free to use, self-host, modify, and redistribute for any purpose — including internal use by organizations of any size — except selling it (offering it as a paid product or service to third parties). See [LICENSE](./LICENSE).
+
+This makes SeshatOS **source-available**, not open source in the OSI sense. The underlying [seshat](https://github.com/KPO-Tech/seshat-runtime) runtime is plain Apache-2.0. The license is the unmodified standard Apache-2.0 text plus the unmodified standard Commons Clause text, with a plain-words summary at the top of [LICENSE](./LICENSE); no lawyer has reviewed how they are combined, so when in doubt about a use (consulting, hosting for a client), write to the address below first.
 
 ## Contact
 

@@ -2,6 +2,7 @@
 // always the file as it stands, never a copy kept from when it was written.
 import type { RightPanelPayload } from '@renderer/stores/ui'
 import { parsePayload } from '@renderer/components/chat/messages/mediaPayload'
+import { EDIT_TOOLS, WRITE_TOOLS } from './changedFiles'
 
 export function isHtmlPath(path: string): boolean {
   return /\.html?$/i.test(path.trim())
@@ -59,14 +60,17 @@ const PROBLEM_KINDS = new Set(['error', 'load', 'blocked', 'console'])
 
 /**
  * The problem a message from the page carries, or null when it is not one. The page is untrusted: only these fields are kept, as text, and
- * addresses of the backend's library route are shown again as the CDN addresses the page wrote.
+ * addresses of the backend are shown as what they stand for: a library as the CDN address the page wrote, the preview as the file itself,
+ * whose line numbers they share.
  */
-export function pageProblemFrom(data: unknown, backendOrigin: string): PageProblem | null {
+export function pageProblemFrom(data: unknown, backendOrigin: string, path: string): PageProblem | null {
   if (!data || typeof data !== 'object') return null
   const record = data as Record<string, unknown>
   if (record.type !== 'seshat:page-problem' || typeof record.kind !== 'string' || !PROBLEM_KINDS.has(record.kind)) return null
   const libRoute = `${backendOrigin}/api/v1/artifacts/lib/`
+  const previewRoute = `${backendOrigin}/api/v1/artifacts/preview/`
   const clean = (value: unknown, max: number) => String(value ?? '').slice(0, max).split(libRoute).join('https://')
+    .split(previewRoute).map((part, index) => (index === 0 ? part : part.replace(/^[0-9a-f]+/, baseName(path)))).join('')
   return { kind: record.kind as PageProblem['kind'], message: clean(record.message, 2000), where: clean(record.where, 500) }
 }
 
@@ -81,7 +85,7 @@ export function fixRequestMessage(path: string, problems: readonly PageProblem[]
     ...lines.map((line) => line.replace(/```/g, "'''")),
     '```',
     '',
-    'Fix them in the file. The preview has no network: a library loads only from jsDelivr, unpkg, cdnjs, esm.sh or the Tailwind CDN, ideally with an exact version.',
+    'Fix them in the file. The preview has no network: a library loads only from jsDelivr, unpkg, cdnjs, esm.sh or the Tailwind CDN, ideally with an exact version. Answer in the language of this conversation.',
   ].join('\n')
 }
 
@@ -96,4 +100,27 @@ export function pageLocation(path: string, folders: { projectPath?: string; work
   if (!root) return null
   const sep = root.includes('\\') ? '\\' : '/'
   return `${root.replace(/[\\/]+$/, '')}${sep}${path.replace(/^\.?[\\/]+/, '').replace(/[\\/]/g, sep)}`
+}
+
+function sameFile(a: string, b: string): boolean {
+  const normal = (path: string) => path.replace(/\\/g, '/').toLowerCase()
+  return normal(a) === normal(b)
+}
+
+type WriteBlock = { type: string; id?: string; name?: string; input?: Record<string, unknown>; _result?: { isError: boolean } }
+
+/** The id of the last finished write or edit of the page at location among these blocks, in order; undefined when there is none. */
+export function lastPageWrite(
+  blocks: readonly WriteBlock[],
+  location: string,
+  folders: { projectPath?: string; workspacePath?: string },
+): string | undefined {
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const block = blocks[i]
+    if (block.type !== 'tool_use' || !block.id || !block.name || !block._result || block._result.isError) continue
+    if (!WRITE_TOOLS.has(block.name) && !EDIT_TOOLS.has(block.name)) continue
+    const written = typeof block.input?.file_path === 'string' ? pageLocation(block.input.file_path, folders) : null
+    if (written && sameFile(written, location)) return block.id
+  }
+  return undefined
 }

@@ -15,19 +15,24 @@ const artifactPageReporter = `<script>(function(){var n=0;function send(kind,mes
 	`var ce=console.error;console.error=function(){try{send('console',Array.prototype.map.call(arguments,function(a){try{return a instanceof Error?a.message:typeof a==='object'?JSON.stringify(a):String(a)}catch(_){return String(a)}}).join(' '),'')}catch(_){}return ce.apply(console,arguments)}` +
 	`})();</script>`
 
+// artifactPageStyle gives the page's scrollbars the look of the app's: thin, on nothing, in a grey that reads on any background. Chromium draws
+// wide, white ones otherwise. It comes first, so that a page styling its own scrollbars still wins.
+const artifactPageStyle = `<style>::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}` +
+	`::-webkit-scrollbar-thumb{background:rgba(128,128,128,.35);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(128,128,128,.6)}</style>`
+
 var (
 	htmlHeadOpen    = regexp.MustCompile(`(?i)<head(?:\s[^>]*)?>`)
 	htmlOpen        = regexp.MustCompile(`(?i)<html(?:\s[^>]*)?>`)
 	htmlDoctypeOpen = regexp.MustCompile(`(?i)^\s*<!doctype[^>]*>`)
 )
 
-// withPageReporter puts artifactPageReporter before anything of the page can run: right after <head>, else after <html>, else after the
-// doctype, else at the very start.
+// withPageReporter puts artifactPageStyle and artifactPageReporter before anything of the page can run: right after <head>, else after <html>,
+// else after the doctype, else at the very start. Nothing it adds holds a line break, so an error's line number is the file's.
 func withPageReporter(html string) string {
 	for _, re := range []*regexp.Regexp{htmlHeadOpen, htmlOpen, htmlDoctypeOpen} {
 		if loc := re.FindStringIndex(html); loc != nil {
-			return html[:loc[1]] + artifactPageReporter + html[loc[1]:]
+			return html[:loc[1]] + artifactPageStyle + artifactPageReporter + html[loc[1]:]
 		}
 	}
-	return artifactPageReporter + html
+	return artifactPageStyle + artifactPageReporter + html
 }

@@ -35,3 +35,6 @@ data/
 *.db
 *.db-shm
 *.db-wal
+
+# Demo videos: too heavy for git, and a README only plays one uploaded to GitHub
+docs/img/*.mp4
