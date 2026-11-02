@@ -11,6 +11,16 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-11-02
+
+### Highlights
+
+- **The conversation follows the answer again, and the Artifact panel follows the file.** The view keeps up with what the agent writes until you scroll up yourself, and a page the agent edits reloads by itself.
+
+### Changed
+
+- **Electron 45.1.**
+
 ### Fixed
 
 - **The conversation follows the answer being written.** It stopped by itself as soon as the text grew faster than it scrolled, with nobody touching anything, and the arrow that goes back down did not start it again. Now only your own move up stops it; coming back to the end, or the arrow, starts it again.
