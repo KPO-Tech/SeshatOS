@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { StreamingBlock } from '@renderer/stores/session'
+import { FOLLOW_DISTANCE, followAfterScroll } from '@renderer/lib/followScroll'
 
 type UseConversationScrollArgs = {
   messageCount: number
@@ -38,11 +39,8 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     function onScroll() {
       if (!el) return
       const distance = el.scrollHeight - el.scrollTop - el.clientHeight
-      const down = el.scrollTop > lastTop
+      isAtBottomRef.current = followAfterScroll(isAtBottomRef.current, { top: el.scrollTop, lastTop, distance })
       lastTop = el.scrollTop
-      // Near the end the follow only starts again when the reader moves down: a small move up (the start of a wheel notch) does not.
-      if (distance > 60) isAtBottomRef.current = false
-      else if (down) isAtBottomRef.current = true
       setAway(distance > JUMP_DISTANCE)
     }
     // The reader's intent, read from what they do rather than from how far they are: the browser animates a wheel notch over several
@@ -56,7 +54,10 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
       }
     }
     function onWheel(event: WheelEvent) {
-      if (event.deltaY < 0) leave()
+      if (!el) return
+      // A conversation that fits the window does not scroll: no move to read, nothing to leave, and no scroll event to come back by.
+      if (event.deltaY < 0 && el.scrollHeight > el.clientHeight) leave()
+      else if (event.deltaY > 0 && el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_DISTANCE) isAtBottomRef.current = true
     }
     let touchY = 0
     function onTouchStart(event: TouchEvent) {
@@ -88,17 +89,18 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     }
   }, [])
 
+  // Follows the end of the conversation. On the total size as well as on the stream: a row also grows with no new token, when it is measured,
+  // when a picture has loaded, when a tool's result arrives.
+  const totalSize = rowVirtualizer.getTotalSize()
   useEffect(() => {
     if (!isAtBottomRef.current || messageCount === 0) return
     if (scrollRafRef.current !== null) return
-    const targetIndex = messageCount - 1
     scrollRafRef.current = requestAnimationFrame(() => {
       scrollRafRef.current = null
-      if (isAtBottomRef.current) {
-        rowVirtualizer.scrollToIndex(targetIndex, { align: 'end', behavior: 'auto' })
-      }
+      const el = scrollRef.current
+      if (el && isAtBottomRef.current) el.scrollTo({ top: el.scrollHeight })
     })
-  }, [messageCount, streaming]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [messageCount, streaming, totalSize])
 
   useEffect(() => {
     return () => {
