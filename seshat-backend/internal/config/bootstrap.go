@@ -1197,6 +1197,8 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	}()
 	cleanups = append(cleanups, func() error { stopSweep(); return nil })
 
+	artifactLibs := newArtifactLibs()
+
 	app := api.NewApp(api.AppConfig{
 		Backend:               backendApp,
 		DB:                    database,
@@ -1225,6 +1227,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		TargetServerURL:       defaultServerURL,
 		SandboxKind:           sandboxKind,
 		TitleBroker:           titleBroker,
+		ArtifactLibs:          artifactLibs,
 	})
 
 	// Only the local knowledge.Service has a queue for this runner to drain —

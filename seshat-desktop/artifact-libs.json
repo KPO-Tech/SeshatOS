@@ -1,0 +1,315 @@
+{
+  "comment": "Web libraries shipped with the app for the pages the agent makes (see seshat-backend/internal/artifactlibs). include lists the files to ship (a * matches one path segment); files is the lock written by `node scripts/artifact-libs.mjs lock`. Bump with `node scripts/artifact-libs.mjs update`.",
+  "libraries": [
+    {
+      "name": "chart.js",
+      "version": "4.6.1",
+      "main": "dist/chart.umd.min.js",
+      "include": [
+        "dist/chart.umd.min.js",
+        "dist/chart.umd.js"
+      ],
+      "files": {
+        "dist/chart.umd.min.js": "87364cc2b2a76a6684929e7d6b80b18a897794db38400caff1fcf1791c6925d2",
+        "dist/chart.umd.js": "338399fb5bafe598d21cfc471b0590b61ceb321a985fade4f68499b151f67fbf"
+      }
+    },
+    {
+      "name": "d3",
+      "version": "7.9.0",
+      "main": "dist/d3.min.js",
+      "include": [
+        "dist/d3.min.js",
+        "dist/d3.js"
+      ],
+      "files": {
+        "dist/d3.min.js": "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539",
+        "dist/d3.js": "0c0d58be2106c14e242fc75bc09a17467800630751580665f6e9552a0c064ea2"
+      }
+    },
+    {
+      "name": "three",
+      "version": "0.187.0",
+      "main": "build/three.module.min.js",
+      "include": [
+        "build/three.module.js",
+        "build/three.module.min.js",
+        "build/three.core.js",
+        "build/three.core.min.js",
+        "examples/jsm/controls/OrbitControls.js",
+        "examples/jsm/loaders/GLTFLoader.js",
+        "examples/jsm/utils/BufferGeometryUtils.js"
+      ],
+      "files": {
+        "build/three.module.js": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+        "build/three.module.min.js": "49bfc58c4097915b4fcf08ed1ee245c0da687f02d35908f38266dbd3d5324ac2",
+        "build/three.core.js": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+        "build/three.core.min.js": "60880f0fd017e6ad08a80c2f0f7015c336ba0a5b6dbdde733b9272ca89eb95e2",
+        "examples/jsm/controls/OrbitControls.js": "e7fca2fe9e7670a828af9b28084669a5909445b7f36f1f26cee9bf8f2961c32c",
+        "examples/jsm/loaders/GLTFLoader.js": "532ac726e120039acbcd6cf54328c57acbf7b438176afaa6951257126d11bff1",
+        "examples/jsm/utils/BufferGeometryUtils.js": "7bda2a8ba836b2bcf67cb938d4b9e1bb5d1b1bc616817103ed858c0b58296ce7"
+      }
+    },
+    {
+      "name": "react",
+      "version": "18.3.1",
+      "main": "umd/react.production.min.js",
+      "include": [
+        "umd/react.production.min.js",
+        "umd/react.development.js"
+      ],
+      "files": {
+        "umd/react.production.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+        "umd/react.development.js": "28348fef6cb0ed8b2ceeb22deaf824428fd13875d84c73d38f77dd216fc24e7f"
+      }
+    },
+    {
+      "name": "react-dom",
+      "version": "18.3.1",
+      "main": "umd/react-dom.production.min.js",
+      "include": [
+        "umd/react-dom.production.min.js",
+        "umd/react-dom.development.js"
+      ],
+      "files": {
+        "umd/react-dom.production.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+        "umd/react-dom.development.js": "f9044a5e9c39db8bb1a204dff924e526ec0a621e695bb69de1035811be8709e4"
+      }
+    },
+    {
+      "name": "@babel/standalone",
+      "version": "7.29.12",
+      "main": "babel.min.js",
+      "include": [
+        "babel.min.js"
+      ],
+      "files": {
+        "babel.min.js": "a1cabfe15b0642958300bb6f0c1aab6cf7f8f2dad22328e9773b32116363a5ee"
+      }
+    },
+    {
+      "name": "@tailwindcss/browser",
+      "version": "4.3.3",
+      "main": "dist/index.global.js",
+      "include": [
+        "dist/index.global.js"
+      ],
+      "files": {
+        "dist/index.global.js": "a60c785630a06196808cbe79e6f7bdb4abcc8f4421a47b56f29338fc84805e3b"
+      }
+    },
+    {
+      "name": "tailwindcss-play",
+      "version": "3.4.17",
+      "host": "cdn.tailwindcss.com",
+      "source": "https://cdn.tailwindcss.com/3.4.17",
+      "main": "tailwind.js",
+      "include": [
+        "tailwind.js"
+      ],
+      "files": {
+        "tailwind.js": "176e894661aa9cdc9a5cba6c720044cbbf7b8bd80d1c9a142a7c24b1b6c50d15"
+      }
+    },
+    {
+      "name": "mermaid",
+      "version": "11.17.2",
+      "main": "dist/mermaid.min.js",
+      "include": [
+        "dist/mermaid.min.js"
+      ],
+      "files": {
+        "dist/mermaid.min.js": "581ed7d74bd9048d0e3a91363927d72ef22942d7722546b27f7cc29e35390eb8"
+      }
+    },
+    {
+      "name": "katex",
+      "version": "0.16.22",
+      "main": "dist/katex.min.js",
+      "include": [
+        "dist/katex.min.js",
+        "dist/katex.min.css",
+        "dist/contrib/auto-render.min.js",
+        "dist/fonts/*.woff2"
+      ],
+      "files": {
+        "dist/contrib/auto-render.min.js": "bb53eb953394531aae36fdd537065c4244eb8542901a3ce914601d932675b8ac",
+        "dist/fonts/KaTeX_AMS-Regular.woff2": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
+        "dist/fonts/KaTeX_Caligraphic-Bold.woff2": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",
+        "dist/fonts/KaTeX_Caligraphic-Regular.woff2": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b",
+        "dist/fonts/KaTeX_Fraktur-Bold.woff2": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f",
+        "dist/fonts/KaTeX_Fraktur-Regular.woff2": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc",
+        "dist/fonts/KaTeX_Main-Bold.woff2": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021",
+        "dist/fonts/KaTeX_Main-BoldItalic.woff2": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b",
+        "dist/fonts/KaTeX_Main-Italic.woff2": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267",
+        "dist/fonts/KaTeX_Main-Regular.woff2": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866",
+        "dist/fonts/KaTeX_Math-BoldItalic.woff2": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1",
+        "dist/fonts/KaTeX_Math-Italic.woff2": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264",
+        "dist/fonts/KaTeX_SansSerif-Bold.woff2": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62",
+        "dist/fonts/KaTeX_SansSerif-Italic.woff2": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a",
+        "dist/fonts/KaTeX_SansSerif-Regular.woff2": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342",
+        "dist/fonts/KaTeX_Script-Regular.woff2": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b",
+        "dist/fonts/KaTeX_Size1-Regular.woff2": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe",
+        "dist/fonts/KaTeX_Size2-Regular.woff2": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd",
+        "dist/fonts/KaTeX_Size3-Regular.woff2": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995",
+        "dist/fonts/KaTeX_Size4-Regular.woff2": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0",
+        "dist/fonts/KaTeX_Typewriter-Regular.woff2": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b",
+        "dist/katex.min.css": "19095127357ed6d29fe0a63a6b000c913a89f7f1963b765dd3715e97c9852e75",
+        "dist/katex.min.js": "e8d885505949f3a5f4abdd5dd0d53696bd1371ad26ffbf4f310dcd77c8cdae89"
+      }
+    },
+    {
+      "name": "plotly.js-dist-min",
+      "version": "3.7.0",
+      "main": "plotly.min.js",
+      "include": [
+        "plotly.min.js"
+      ],
+      "files": {
+        "plotly.min.js": "8ef4c6ab1369f0019611cbcd2d5b8aafef23e5d19ef58c39d4b4249831fe2180"
+      }
+    },
+    {
+      "name": "leaflet",
+      "version": "1.9.4",
+      "main": "dist/leaflet.js",
+      "include": [
+        "dist/leaflet.js",
+        "dist/leaflet.css",
+        "dist/images/*.png"
+      ],
+      "files": {
+        "dist/images/layers-2x.png": "066daca850d8ffbef007af00b06eac0015728dee279c51f3cb6c716df7c42edf",
+        "dist/images/layers.png": "1dbbe9d028e292f36fcba8f8b3a28d5e8932754fc2215b9ac69e4cdecf5107c6",
+        "dist/images/marker-icon-2x.png": "00179c4c1ee830d3a108412ae0d294f55776cfeb085c60129a39aa6fc4ae2528",
+        "dist/images/marker-icon.png": "574c3a5cca85f4114085b6841596d62f00d7c892c7b03f28cbfa301deb1dc437",
+        "dist/images/marker-shadow.png": "264f5c640339f042dd729062cfc04c17f8ea0f29882b538e3848ed8f10edb4da",
+        "dist/leaflet.css": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6",
+        "dist/leaflet.js": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
+      }
+    },
+    {
+      "name": "p5",
+      "version": "1.11.13",
+      "main": "lib/p5.min.js",
+      "include": [
+        "lib/p5.min.js"
+      ],
+      "files": {
+        "lib/p5.min.js": "e9df7d05fd7c3ff028fc09a312a43101241f23c43143b387bf89d96b2e4e0849"
+      }
+    },
+    {
+      "name": "gsap",
+      "version": "3.15.0",
+      "main": "dist/gsap.min.js",
+      "include": [
+        "dist/gsap.min.js",
+        "dist/ScrollTrigger.min.js"
+      ],
+      "files": {
+        "dist/gsap.min.js": "92bb9a96476f983d212a2bc4f54c889039c1696dd4461d40a736860938570fbb",
+        "dist/ScrollTrigger.min.js": "b0b14d67b55b0c43c756ac0b106cfcb09d0879945f6ead64451065b0672916a2"
+      }
+    },
+    {
+      "name": "animejs",
+      "version": "3.2.2",
+      "main": "lib/anime.min.js",
+      "include": [
+        "lib/anime.min.js"
+      ],
+      "files": {
+        "lib/anime.min.js": "b5ce1be3c3f530f192e0f2571d1942846096d66119cbada34bfdc912c4873f35"
+      }
+    },
+    {
+      "name": "marked",
+      "version": "16.4.2",
+      "main": "lib/marked.umd.js",
+      "include": [
+        "lib/marked.umd.js"
+      ],
+      "files": {
+        "lib/marked.umd.js": "2e20e86f0a13107ae9bf00675894bbb573716a8e5b4fde612eacaff1e404c128"
+      }
+    },
+    {
+      "name": "lodash",
+      "version": "4.18.1",
+      "main": "lodash.min.js",
+      "include": [
+        "lodash.min.js"
+      ],
+      "files": {
+        "lodash.min.js": "a8d7e6291ad80256f976ace90824a71018d2f706992c9107b20bdced97bee27b"
+      }
+    },
+    {
+      "name": "dayjs",
+      "version": "1.11.23",
+      "main": "dayjs.min.js",
+      "include": [
+        "dayjs.min.js"
+      ],
+      "files": {
+        "dayjs.min.js": "0198dd0b1f760cded169c7e7ff7eaf56bc36c4c22c7c9b7c683e59437ed8700e"
+      }
+    },
+    {
+      "name": "alpinejs",
+      "version": "3.17.5",
+      "main": "dist/cdn.min.js",
+      "include": [
+        "dist/cdn.min.js"
+      ],
+      "files": {
+        "dist/cdn.min.js": "b4036e9e9ac22fa6f6ae1ba292e015e1f3e9c85d0d79e73e4c8eb9bb139b522e"
+      }
+    },
+    {
+      "name": "vue",
+      "version": "3.5.44",
+      "main": "dist/vue.global.prod.js",
+      "include": [
+        "dist/vue.global.prod.js"
+      ],
+      "files": {
+        "dist/vue.global.prod.js": "e0a2a0866a8de8887542e24f3c218aad3d907b88f30966068792ba992296dc9f"
+      }
+    },
+    {
+      "name": "echarts",
+      "version": "6.1.0",
+      "main": "dist/echarts.min.js",
+      "include": [
+        "dist/echarts.min.js"
+      ],
+      "files": {
+        "dist/echarts.min.js": "b66b25aeb4df84e33199dc21694014d336d222cbd9deb0e5a7c14bd6aa0d0fd0"
+      }
+    },
+    {
+      "name": "matter-js",
+      "version": "0.20.0",
+      "main": "build/matter.min.js",
+      "include": [
+        "build/matter.min.js"
+      ],
+      "files": {
+        "build/matter.min.js": "72d30be0f579eb02ce1e0b6f9d359a4f392e6837e5a26ba8be5dbee7f88e24ae"
+      }
+    },
+    {
+      "name": "tone",
+      "version": "15.5.66",
+      "main": "build/Tone.js",
+      "include": [
+        "build/Tone.js"
+      ],
+      "files": {
+        "build/Tone.js": "57f357ed530a7457ee4fc0866b54d97876df81e46dcf49be0f75aab4c2efc643"
+      }
+    }
+  ]
+}

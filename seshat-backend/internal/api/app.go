@@ -7,6 +7,7 @@ import (
 	"time"
 
 	seshat "github.com/KPO-Tech/SeshatOS/seshat-backend/internal"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/artifactlibs"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/artifactpreview"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/cloud/automation"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
@@ -68,6 +69,7 @@ type App struct {
 	titleBroker           *backendquery.TitleBroker
 	cloudAutomation       *cloudautomation.Service
 	artifactPreviews      *artifactpreview.Store
+	artifactLibs          *artifactlibs.Service
 	ragService            *rag.Service
 	enableSignup          bool
 	enableAPIKeys         bool
@@ -147,6 +149,8 @@ type AppConfig struct {
 	// Client actually resolved to at boot - see App.sandboxKind's doc comment.
 	SandboxKind string
 	TitleBroker *backendquery.TitleBroker
+	// ArtifactLibs serves the CDN libraries of previewed pages; nil serves none.
+	ArtifactLibs *artifactlibs.Service
 }
 
 func NewApp(cfg AppConfig) *App {
@@ -155,6 +159,10 @@ func NewApp(cfg AppConfig) *App {
 		titleBroker = backendquery.NewTitleBroker()
 	}
 	artifactPreviews := artifactpreview.NewStore()
+	artifactLibs := cfg.ArtifactLibs
+	if artifactLibs == nil {
+		artifactLibs = artifactlibs.New(nil, nil)
+	}
 	// Best-effort periodic cleanup of expired previews - Get() already
 	// self-evicts on access, this only matters for entries nobody ever
 	// re-requests. No explicit shutdown: this loops for the process's
@@ -191,6 +199,7 @@ func NewApp(cfg AppConfig) *App {
 		promptBroker:          backendquery.NewPromptBroker(),
 		titleBroker:           titleBroker,
 		artifactPreviews:      artifactPreviews,
+		artifactLibs:          artifactLibs,
 		enableSignup:          cfg.EnableSignup,
 		enableAPIKeys:         cfg.EnableAPIKeys,
 		featuredRepos:         cfg.FeaturedRepos,

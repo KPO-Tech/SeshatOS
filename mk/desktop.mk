@@ -5,7 +5,7 @@
 # Windows (see shell.mk).
 UI_PKG_MGR := $(shell $(SHELL) -c 'command -v bun >/dev/null 2>&1 && echo bun || echo npm')
 
-.PHONY: desktop-install desktop-build desktop-dev \
+.PHONY: desktop-install desktop-artifact-libs desktop-build desktop-dev \
         desktop-package-win desktop-package-linux desktop-package-win-native desktop-package-linux-native
 
 desktop-install: ## Install the desktop dependencies (skipped when node_modules is complete)
@@ -15,6 +15,9 @@ desktop-install: ## Install the desktop dependencies (skipped when node_modules 
 	else \
 	  printf "\033[32m[desktop]\033[0m node_modules present - skipping install\n"; \
 	fi
+
+desktop-artifact-libs: ## Download the web libraries agent-made pages load (kept when already there and intact)
+	@cd $(DESKTOP_DIR) && node scripts/artifact-libs.mjs
 
 desktop-build: desktop-install build ## Build the desktop app and the local backend
 	cd $(DESKTOP_DIR) && $(UI_PKG_MGR) run build

@@ -20,6 +20,7 @@
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "lint": "oxlint src",
+    "artifact-libs": "node scripts/artifact-libs.mjs",
     "ui-catalog": "node scripts/generate-ui-catalog.mjs",
     "test": "vitest run && npm run test:ipc",
     "test:watch": "vitest",
@@ -27,11 +28,11 @@
     "build:backend:linux": "node ../scripts/build-desktop-sidecar.mjs linux amd64",
     "build:backend:win:nativedoc": "node ../scripts/build-desktop-sidecar.mjs windows amd64 --nativedoc",
     "build:backend:linux:nativedoc": "node ../scripts/build-desktop-sidecar.mjs linux amd64 --nativedoc",
-    "package": "npm run build && electron-builder",
-    "package:win": "npm run build:backend:win && npm run build && electron-builder --win nsis",
-    "package:linux": "npm run build:backend:linux && npm run build && electron-builder --linux AppImage deb",
-    "package:win:nativedoc": "npm run build:backend:win:nativedoc && npm run build && electron-builder --win nsis",
-    "package:linux:nativedoc": "npm run build:backend:linux:nativedoc && npm run build && electron-builder --linux AppImage deb",
+    "package": "npm run artifact-libs && npm run build && electron-builder",
+    "package:win": "npm run build:backend:win && npm run artifact-libs && npm run build && electron-builder --win nsis",
+    "package:linux": "npm run build:backend:linux && npm run artifact-libs && npm run build && electron-builder --linux AppImage deb",
+    "package:win:nativedoc": "npm run build:backend:win:nativedoc && npm run artifact-libs && npm run build && electron-builder --win nsis",
+    "package:linux:nativedoc": "npm run build:backend:linux:nativedoc && npm run artifact-libs && npm run build && electron-builder --linux AppImage deb",
     "test:ipc": "tsc -p tsconfig.ipc-tests.json && node --test .tmp/ipc-tests/ipc/*.test.js"
   },
   "dependencies": {
@@ -102,6 +103,10 @@
       {
         "from": "resources/backend",
         "to": "backend"
+      },
+      {
+        "from": "resources/artifact-libs",
+        "to": "artifact-libs"
       },
       {
         "from": "node_modules/@anthropic-ai/sandbox-runtime",
