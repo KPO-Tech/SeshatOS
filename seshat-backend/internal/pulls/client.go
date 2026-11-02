@@ -62,6 +62,7 @@ type apiPull struct {
 	MergeableState string    `json:"mergeable_state"`
 	Additions      int       `json:"additions"`
 	Deletions      int       `json:"deletions"`
+	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	Head           struct {
 		SHA string `json:"sha"`

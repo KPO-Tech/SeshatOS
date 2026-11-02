@@ -47,9 +47,28 @@ type Pull struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
-// Request lists the addresses of the pull requests the agent of the session opened (see collectPullUrls in the desktop).
+// MaxCandidates is how many addresses a request may hold: a call that lists pull requests prints many, and each is read once to learn when
+// it was created.
+const MaxCandidates = 20
+
+// CreatedSlack widens the window of a call on both sides: GitHub's clock and the computer's are not the same, and created_at is to the
+// second.
+const CreatedSlack = 2 * time.Minute
+
+// Candidate is a pull request address that a tool call of the agent printed. With the call's window, it counts only when GitHub says the
+// pull request was created inside it: the call opened it, whatever the way (gh pr create, gh api, curl, a script, an MCP tool). A call
+// that only listed or read it printed it too, but it was created before. Without a window (a runtime that did not time its calls, or a
+// pull request already known to be the agent's), it counts as it is.
+type Candidate struct {
+	URL       string     `json:"url"`
+	StartedAt *time.Time `json:"started_at,omitempty"`
+	EndedAt   *time.Time `json:"ended_at,omitempty"`
+}
+
+// Request lists the pull request addresses the tool calls of the agent printed, the most recent first (see collectPullCandidates in the
+// desktop).
 type Request struct {
-	URLs []string `json:"urls"`
+	Candidates []Candidate `json:"candidates"`
 }
 
 // Result is the list to draw, with what to tell the person when it is short.
@@ -60,8 +79,26 @@ type Result struct {
 	Note string `json:"note,omitempty"`
 }
 
-// ref names a pull request before it is fetched.
+// ref names a pull request before it is fetched, with the windows of the calls that printed it.
 type ref struct {
 	owner, repo string
 	number      int
+	// trusted is a printing call without a window: the pull request counts without looking at when it was created.
+	trusted bool
+	windows []window
+}
+
+type window struct{ from, to time.Time }
+
+// openedBy says whether a pull request created at that time was opened by one of the calls that printed it.
+func (r ref) openedBy(created time.Time) bool {
+	if r.trusted {
+		return true
+	}
+	for _, w := range r.windows {
+		if !created.Before(w.from.Add(-CreatedSlack)) && !created.After(w.to.Add(CreatedSlack)) {
+			return true
+		}
+	}
+	return false
 }

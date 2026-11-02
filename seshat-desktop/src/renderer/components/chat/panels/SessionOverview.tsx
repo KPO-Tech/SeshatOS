@@ -7,7 +7,7 @@ import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
-import { collectPullUrls, mergeRequestMessage, type PullRequest } from '@renderer/lib/pullRequests'
+import { collectPullCandidates, mergeRequestMessage, type PullRequest } from '@renderer/lib/pullRequests'
 import { useChat } from '@renderer/hooks/useChat'
 import { useArmedPulls, usePullMergeStore } from '@renderer/stores/pullMerge'
 import { gitFolder } from '@renderer/lib/gitFolder'
@@ -74,8 +74,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   const { usage: context, windowTokens } = useContextUsage(sessionId)
   const folder = gitFolder(session)
-  const pullUrls = useMemo(() => collectPullUrls(messages), [messages])
-  const { result: pullResult, refresh: refreshPulls } = usePullRequests(pullUrls)
+  const pullCandidates = useMemo(() => collectPullCandidates(messages), [messages])
+  const { result: pullResult, refresh: refreshPulls } = usePullRequests(pullCandidates)
   const { sendMessage } = useChat(sessionId)
   const armed = useArmedPulls(sessionId)
   const [mergeNote, setMergeNote] = useState<string | null>(null)
