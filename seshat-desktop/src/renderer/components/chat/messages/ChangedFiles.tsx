@@ -1,6 +1,7 @@
 import type { ChangedFile } from '@renderer/lib/changedFiles'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { useUIStore } from '@renderer/stores/ui'
+import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 
 function folderOf(path: string, name: string): string {
   const folder = path.slice(0, Math.max(0, path.length - name.length)).replace(/[/\\]+$/, '')
@@ -9,7 +10,7 @@ function folderOf(path: string, name: string): string {
 
 /**
  * Under the end of an answer: the files the agent created or edited during the turn, each with the icon of its type.
- * A click opens the file in the Files panel.
+ * A click opens the file in the Files panel, or a web page live in the Artifact panel.
  */
 export function ChangedFiles({ files, sessionId }: { files: ChangedFile[]; sessionId?: string }) {
   const openRightPanel = useUIStore((s) => s.openRightPanel)
@@ -24,7 +25,11 @@ export function ChangedFiles({ files, sessionId }: { files: ChangedFile[]; sessi
           <li key={file.path}>
             <button
               type="button"
-              onClick={() => openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: file.toolId })}
+              onClick={() => openRightPanel(
+                sessionId && isHtmlPath(file.path)
+                  ? htmlArtifactPanel(sessionId, file.path)
+                  : { kind: 'files', title: 'Files', sessionId, focusToolId: file.toolId }
+              )}
               title={file.path}
               className="flex w-full cursor-pointer items-center gap-2.5 border-0 bg-transparent px-3 py-2 text-left hover:bg-[var(--surface-hover)]"
             >
