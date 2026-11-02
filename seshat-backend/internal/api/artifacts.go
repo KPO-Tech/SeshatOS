@@ -110,7 +110,7 @@ func (app *App) handleArtifactPreviewGet(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	libBase := artifactLibBase(r)
-	html = artifactlibs.RewriteCDNURLs(html, libBase)
+	html = withPageReporter(artifactlibs.RewriteCDNURLs(html, libBase))
 	w.Header().Set("Content-Security-Policy", artifactPreviewCSP(libBase))
 	// No X-Frame-Options here, deliberately: this response's entire purpose
 	// is being framed by the app's renderer, which is a different origin
