@@ -1,16 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import { CODE_MIN_CONTRAST, THEMES, buildTokens, codeTokens, contrastRatio, effectiveSurfaces, ensureContrast, isThemeId, mix, presetsCss, themeById } from './themes'
+import { CODE_MIN_CONTRAST, REPLACED, THEMES, buildTokens, codeTokens, contrastRatio, effectiveSurfaces, ensureContrast, isThemeId, mix, presetsCss, themeById } from './themes'
 
 describe('theme registry', () => {
-  it('has unique ids and the 29 appearances (Seshat two, 26 presets, plus the system one handled elsewhere)', () => {
+  it('has unique ids and the 14 chosen appearances', () => {
     const ids = THEMES.map((theme) => theme.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toHaveLength(28)
-    expect(ids).toEqual(expect.arrayContaining(['dark', 'light', 'kanagawa', 'phosphor', 'violet-hour', 'after-rain', 'seshat-night']))
+    expect(ids).toHaveLength(14)
+    expect(ids).toEqual(expect.arrayContaining(['dark', 'light', 'seshat-night', 'shine', 'carbon', 'graphite', 'mirage', 'dusk']))
+  })
+
+  it('replaces every preset taken out by one of the same scheme that is kept', () => {
+    const removed: Record<string, 'dark' | 'light'> = {
+      midnight: 'dark', orbit: 'dark', 'after-rain': 'dark', aurora: 'dark', phosphor: 'dark', kanagawa: 'dark', nebula: 'dark', ember: 'dark',
+      frost: 'light', seafoam: 'light', dune: 'light', peach: 'light', sherbet: 'light', lilac: 'light'
+    }
+    expect(Object.keys(REPLACED).sort()).toEqual(Object.keys(removed).sort())
+    for (const [id, scheme] of Object.entries(removed)) {
+      expect(isThemeId(id)).toBe(false)
+      expect(themeById(REPLACED[id])?.scheme, id).toBe(scheme)
+    }
   })
 
   it('knows its ids and refuses anything else', () => {
-    expect(isThemeId('kanagawa')).toBe(true)
+    expect(isThemeId('mirage')).toBe(true)
     expect(isThemeId('auto')).toBe(false)
     expect(isThemeId('"><script>')).toBe(false)
     expect(isThemeId(undefined)).toBe(false)
@@ -62,7 +74,8 @@ describe('code colours', () => {
 
   it('includes the code colours in every preset and in the two Seshat themes', () => {
     const css = presetsCss()
-    expect(css.match(/--code-keyword:/g)).toHaveLength(29)
+    // The 12 presets, Seshat Dark, Seshat Light, and Seshat Light again for a system set to light.
+    expect(css.match(/--code-keyword:/g)).toHaveLength(15)
     expect(css).toContain('@media (prefers-color-scheme: light)')
   })
 })
@@ -80,10 +93,10 @@ describe('tokens', () => {
     expect(mix('#102030', '#102030', 0.7)).toBe('#102030')
   })
 
-  it('writes every token for the 26 presets, and only the code colours for the two Seshat themes', () => {
+  it('writes every token for the 12 presets, and only the code colours for the two Seshat themes', () => {
     const css = presetsCss()
-    expect(css).toContain(':root[data-theme="kanagawa"]')
-    expect(css.match(/--surface-root:/g)).toHaveLength(26)
-    expect(css.match(/--text-primary:/g)).toHaveLength(26)
+    expect(css).toContain(':root[data-theme="mirage"]')
+    expect(css.match(/--surface-root:/g)).toHaveLength(12)
+    expect(css.match(/--text-primary:/g)).toHaveLength(12)
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dataURLText, htmlArtifactPanel, isHtmlPath, presentedPages } from './htmlArtifact'
+import { dataURLText, fixRequestMessage, htmlArtifactPanel, isHtmlPath, pageLocation, pageProblemFrom, presentedPages } from './htmlArtifact'
 
 const present = (id: string, payload: Record<string, unknown>, status = 'completed', isError = false) => ({
   type: 'tool_use',
@@ -59,5 +59,43 @@ describe('presentedPages', () => {
 
   it('ignores other tools', () => {
     expect(presentedPages([{ type: 'tool_use', id: 'w', name: 'write_file', _status: 'completed', _result: { content: '{"path":"a.html"}', isError: false } }])).toEqual([])
+  })
+})
+
+describe('pageProblemFrom', () => {
+  const origin = 'http://127.0.0.1:7777'
+  it('keeps a problem and shows library addresses as the page wrote them', () => {
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'load', message: `Could not load ${origin}/api/v1/artifacts/lib/unpkg.com/vue@2/dist/vue.js`, where: '' }, origin))
+      .toEqual({ kind: 'load', message: 'Could not load https://unpkg.com/vue@2/dist/vue.js', where: '' })
+  })
+  it('refuses anything else', () => {
+    expect(pageProblemFrom({ type: 'other', kind: 'error', message: 'x' }, origin)).toBeNull()
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'run-tool', message: 'x' }, origin)).toBeNull()
+    expect(pageProblemFrom('seshat:page-problem', origin)).toBeNull()
+  })
+  it('cuts long text', () => {
+    expect(pageProblemFrom({ type: 'seshat:page-problem', kind: 'error', message: 'x'.repeat(5000), where: 7 }, origin)?.message).toHaveLength(2000)
+  })
+})
+
+describe('fixRequestMessage', () => {
+  it('quotes the problems and keeps the fence closed', () => {
+    const text = fixRequestMessage('aco.html', [{ kind: 'error', message: 'Chart is not defined ```', where: 'aco.html:12:3' }])
+    expect(text).toContain('The page aco.html shows these problems')
+    expect(text).toContain("- error: Chart is not defined ''' (aco.html:12:3)")
+    expect(text.match(/```/g)).toHaveLength(2)
+  })
+  it('lists twenty at most', () => {
+    const problems = Array.from({ length: 25 }, (_, i) => ({ kind: 'console' as const, message: `m${i}`, where: '' }))
+    expect(fixRequestMessage('p.html', problems)).toContain('... and 5 more')
+  })
+})
+
+describe('pageLocation', () => {
+  it('resolves a relative page against the project, then the workspace', () => {
+    expect(pageLocation('out/aco.html', { projectPath: 'D:\\work\\site', workspacePath: 'C:\\ws' })).toBe('D:\\work\\site\\out\\aco.html')
+    expect(pageLocation('./aco.html', { workspacePath: '/home/me/ws/' })).toBe('/home/me/ws/aco.html')
+    expect(pageLocation('C:\\x\\a.html', {})).toBe('C:\\x\\a.html')
+    expect(pageLocation('a.html', {})).toBeNull()
   })
 })

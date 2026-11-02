@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { buildTokens, themeById, wallpaperCss, type ThemeSeed } from '@renderer/lib/themes'
+import { buildTokens, wallpaperCss, type ThemeSeed } from '@renderer/lib/themes'
 
 /** A miniature of the app in a theme: sidebar, a message, a composer with its accent button, over the wallpaper if any. */
 export function ThemePreview({ seed, height = 68 }: { seed: ThemeSeed; height?: number }) {
@@ -54,27 +54,16 @@ function CardLabel({ label, selected, hint }: { label: string; selected: boolean
   )
 }
 
-export function ThemeCard({ seed, selected, onSelect }: { seed: ThemeSeed; selected: boolean; onSelect: () => void }) {
+/** A theme to pick. `main` marks it as the main theme of its scheme, the one the button of the title bar switches to. */
+export function ThemeCard({ seed, selected, main = false, onSelect }: { seed: ThemeSeed; selected: boolean; main?: boolean; onSelect: () => void }) {
   return (
     <button type="button" onClick={onSelect} aria-pressed={selected} className={cardClass(selected)}>
       <ThemePreview seed={seed} />
-      <CardLabel label={seed.label} selected={selected} />
-    </button>
-  )
-}
-
-/** Follows the operating system: half Seshat Light, half Seshat Dark. */
-export function SystemCard({ selected, onSelect }: { selected: boolean; onSelect: () => void }) {
-  const light = themeById('light')
-  const dark = themeById('dark')
-  if (!light || !dark) return null
-  return (
-    <button type="button" onClick={onSelect} aria-pressed={selected} className={cardClass(selected)}>
-      <div className="relative h-[68px] overflow-hidden rounded-md">
-        <div className="absolute inset-0"><ThemePreview seed={light} /></div>
-        <div className="absolute inset-0" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}><ThemePreview seed={dark} /></div>
-      </div>
-      <CardLabel label="System" selected={selected} />
+      <CardLabel
+        label={seed.label}
+        selected={selected}
+        hint={main && !selected ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{seed.scheme}</span> : undefined}
+      />
     </button>
   )
 }

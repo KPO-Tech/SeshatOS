@@ -11,10 +11,32 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-11-02
+
+### Highlights
+
+- **Switch between your dark and light theme in one click**, from a shorter list of fourteen themes, and scroll smoothly through a conversation while the agent writes.
+
+### Changed
+
+- **Two main themes, one click to switch.** The appearance is now a dark theme and a light theme, Seshat Dark and Shine to begin with, and the sun and moon button of the title bar switches between them in one click instead of opening a list. Settings > Appearance chooses what each of them is, and a mode: dark, light, or following the system.
+- **Fourteen themes instead of thirty.** Seshat Dark, Seshat Night, Seshat Light and Shine, then Carbon, Graphite, Mirage, Tide, Violet hour and Dusk, then Paper, Alpine, Blossom and Daybreak. A theme taken out of the list moves to the closest one kept. The first screen of a new install offers Seshat Dark, Carbon, Dusk and Shine.
+
+### Fixed
+
+- **Scrolling up through a conversation is smooth, during a turn too.** Each streamed word drew again every message on screen; now only the answer being written is. Scrolling up no longer jumps when earlier messages take their real height, and a picture, GIF or clip the agent showed comes back at once and at its size instead of loading again (an 8.9 MB GIF made the list run away from it).
+
+## [0.3.4] - 2026-11-02
+
+### Highlights
+
+- **The web pages the agent builds open live beside the conversation**, work offline with the common libraries shipped in the app, and report their errors so the agent can fix them.
+
 ### Added
 
 - **A web page the agent makes opens live beside the conversation.** When the agent presents a page it built, the Artifact panel opens on it by itself, running in an isolated frame, with a Code tab for its source and a reload button. Clicking the page's card, or an HTML file in the list of changed files, opens it the same way instead of showing the diff. The panel reads the file as it stands on disk, so it stays available after the conversation is reopened.
 - **The libraries those pages load work offline.** Chart.js, D3, three.js, React 18 with Babel, Tailwind, Mermaid, KaTeX, Plotly, ECharts, Leaflet, Vue, Alpine, GSAP and a few others ship with the app (about 6 MB in the installer), and a page that loads one from jsDelivr, unpkg, cdnjs, esm.sh or the Tailwind CDN gets the shipped copy. Another exact version is downloaded once, while there is a network, and kept in a cache of at most 100 MB that forgets what no page used for 60 days. The page itself still cannot reach the network.
+- **A page that breaks says so, and the agent can fix it.** The Artifact panel lists what goes wrong in the page: script errors, libraries it could not load, what the preview blocked. "Ask the agent to fix" sends that list to the conversation. Nothing is sent unless you click. "Open in the browser" opens the file in your browser, with the network.
 
 ## [0.3.3] - 2026-11-02
 
