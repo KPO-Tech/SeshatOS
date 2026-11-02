@@ -4,12 +4,20 @@ import { ConfinementCard } from './ConfinementCard'
 import { EnvVarRow } from './EnvVarRow'
 import type { EnvVarDef } from './environmentTypes'
 import { groupEnvVars } from './environmentUtils'
-import { fetchSandboxConfig, invalidateSandboxModeCache, saveSandboxMode, type SandboxMode } from './sandboxApi'
+import { ProtectedFolders } from './ProtectedFolders'
+import { fetchSandboxConfig, invalidateSandboxModeCache, saveProtectedPaths, saveSandboxMode, type SandboxMode } from './sandboxApi'
 
 const SANDBOX_OPTIONS = [
   { value: 'local', label: 'Direct (this computer)' },
+  { value: 'project', label: 'Sandbox (this computer)' },
   { value: 'docker', label: 'Isolated (Docker)' }
 ]
+
+const SANDBOX_HINTS: Record<SandboxMode, string> = {
+  local: 'On this computer, with your files and tools.',
+  project: "On this computer, confined to the session's folder.",
+  docker: 'In a Docker container, apart from your files and tools.'
+}
 
 /** Where the agent's commands run, what confines them, and the secrets the backend reads at startup. */
 export function EnvironmentConfig() {
@@ -19,6 +27,10 @@ export function EnvironmentConfig() {
   const [restarting, setRestarting] = useState(false)
   const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
   const [sandboxMode, setSandboxMode] = useState<SandboxMode>('local')
+  const [projectAvailable, setProjectAvailable] = useState(false)
+  const [projectReason, setProjectReason] = useState('')
+  const [protectedPaths, setProtectedPaths] = useState<string[]>([])
+  const [applying, setApplying] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -31,7 +43,12 @@ export function EnvironmentConfig() {
       ])
       setCatalog(nextCatalog)
       setStatus(nextStatus)
-      if (sandbox) setSandboxMode(sandbox.mode)
+      if (sandbox) {
+        setSandboxMode(sandbox.mode)
+        setProjectAvailable(sandbox.project_available === true)
+        setProjectReason(sandbox.project_unavailable_reason ?? '')
+        setProtectedPaths(sandbox.deny_read ?? [])
+      }
     } catch (err) {
       setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to load environment variables.' })
     } finally {
@@ -44,17 +61,36 @@ export function EnvironmentConfig() {
   }, [])
 
   async function changeSandboxMode(mode: string) {
-    const next = mode === 'docker' ? 'docker' : 'local'
+    const next: SandboxMode = mode === 'docker' || mode === 'project' ? mode : 'local'
     const previous = sandboxMode
     setSandboxMode(next)
+    setApplying(true)
+    setNotice(null)
     try {
       await saveSandboxMode(next)
       invalidateSandboxModeCache()
     } catch (err) {
       setSandboxMode(previous)
       setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to save the sandbox setting.' })
+    } finally {
+      setApplying(false)
     }
   }
+
+  async function changeProtectedPaths(next: string[]) {
+    setApplying(true)
+    setNotice(null)
+    try {
+      const saved = await saveProtectedPaths(next)
+      setProtectedPaths(saved.deny_read ?? next)
+    } catch (err) {
+      setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to change what is protected.' })
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  const sandboxOptions = SANDBOX_OPTIONS.filter((option) => option.value !== 'project' || projectAvailable || sandboxMode === 'project')
 
   const groups = useMemo(() => groupEnvVars(catalog), [catalog])
 
@@ -78,7 +114,7 @@ export function EnvironmentConfig() {
   return (
     <SettingsPage
       id="environment"
-      badge={<StatusBadge tone={sandboxMode === 'local' ? 'warn' : 'ok'}>{sandboxMode === 'local' ? 'Direct' : 'Isolated'}</StatusBadge>}
+      badge={<StatusBadge tone={sandboxMode === 'local' ? 'warn' : 'ok'}>{sandboxMode === 'local' ? 'Direct' : sandboxMode === 'project' ? 'Sandbox' : 'Isolated'}</StatusBadge>}
       actions={
         <ActionButton type="button" onClick={() => void applyRestart()} disabled={restarting}>
           {restarting ? 'Restarting...' : 'Restart backend'}
@@ -90,15 +126,17 @@ export function EnvironmentConfig() {
       <SettingsCard title="Commands">
         <SettingRow
           title="Where commands run"
-          hint={sandboxMode === 'local' ? 'On this computer, with your files and tools.' : 'In a Docker container, apart from your files and tools.'}
+          hint={applying ? 'Applying, this can take a moment on large folders...' : (sandboxMode === 'project' && !projectAvailable && projectReason) || SANDBOX_HINTS[sandboxMode]}
         >
           <div className="w-[210px]">
-            <SelectField value={sandboxMode} options={SANDBOX_OPTIONS} onChange={(value) => void changeSandboxMode(value)} />
+            <SelectField value={sandboxMode} options={sandboxOptions} onChange={(value) => void changeSandboxMode(value)} />
           </div>
         </SettingRow>
       </SettingsCard>
 
-      <ConfinementCard docker={sandboxMode === 'docker'} />
+      <ConfinementCard mode={sandboxMode} />
+
+      {sandboxMode === 'project' && <ProtectedFolders paths={protectedPaths} busy={applying} onChange={(next) => void changeProtectedPaths(next)} />}
 
       {!loading &&
         groups.map((group) => (

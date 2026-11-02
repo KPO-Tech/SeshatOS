@@ -1,3 +1,5 @@
+import type { SandboxMode } from './sandboxApi'
+
 /** The one-time Windows setup. Run by the user, on purpose: the Windows backend of srt is alpha. */
 export const WINDOWS_SETUP_COMMAND = 'npx @anthropic-ai/sandbox-runtime windows-install'
 
@@ -7,9 +9,16 @@ interface ConfinementView {
   text: string
 }
 
-/** What to tell the user about command confinement, from the packaged srt's status and the Docker setting. */
-export function confinementView(status: SrtStatus | null, docker: boolean): ConfinementView {
-  if (docker) {
+/** What to tell the user about command confinement, from the packaged srt's status and the chosen mode. */
+export function confinementView(status: SrtStatus | null, mode: SandboxMode): ConfinementView {
+  if (mode === 'project') {
+    return {
+      label: 'Sandbox',
+      confined: true,
+      text: "Commands can write only in the session's folder and cannot read what is listed below. They can still read other files and use the network. The agent's own file edits are not confined: they follow your permission settings."
+    }
+  }
+  if (mode === 'docker') {
     return { label: 'Docker', confined: true, text: 'Commands run inside a Docker container, isolated from the rest of this machine.' }
   }
   if (!status) {

@@ -1,10 +1,13 @@
 import { api } from '@renderer/api/client'
 
-export type SandboxMode = 'docker' | 'local'
+export type SandboxMode = 'docker' | 'local' | 'project'
 
-type SandboxConfig = {
+export type SandboxConfig = {
   mode: SandboxMode
   updated_at?: number
+  project_available?: boolean
+  project_unavailable_reason?: string
+  deny_read?: string[]
 }
 
 export function fetchSandboxConfig(): Promise<SandboxConfig | null> {
@@ -15,7 +18,11 @@ export function saveSandboxMode(mode: SandboxMode): Promise<SandboxConfig> {
   return api.put<SandboxConfig>('/settings/sandbox', { mode })
 }
 
-// Cached read for callers that just need to know "local or docker" without
+export function saveProtectedPaths(paths: string[]): Promise<SandboxConfig> {
+  return api.put<SandboxConfig>('/settings/sandbox', { deny_read: paths })
+}
+
+// Cached read for callers that just need to know where commands run without
 // caring about update timestamps - avoids a settings round trip
 // on every conversation load. Invalidated whenever the setting is saved, so
 // a change in Settings > Environment takes effect without a restart.

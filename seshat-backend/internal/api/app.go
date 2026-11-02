@@ -13,6 +13,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/folderplan"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/sandboxproject"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/tasks"
 	longterm "github.com/KPO-Tech/seshat-runtime/pkg/memory/longterm"
 	"github.com/KPO-Tech/seshat-runtime/pkg/rag"
@@ -58,7 +59,11 @@ type App struct {
 	localSTTStore      *db.LocalSTTConfigStore
 	localTitleStore    *db.LocalTitleConfigStore
 	sandboxConfigStore *db.SandboxConfigStore
-	storageConfigStore *db.StorageConfigStore
+	// sandboxProject applies the project sandbox's read refusals, and
+	// sandboxDefaultDenyRead is what they cover until the user changes it.
+	sandboxProject         sandboxProtector
+	sandboxDefaultDenyRead []string
+	storageConfigStore     *db.StorageConfigStore
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
 	longTermExtractor     *longterm.Extractor
@@ -118,30 +123,32 @@ type App struct {
 
 // AppConfig holds all configuration needed to build an App.
 type AppConfig struct {
-	Backend               *seshat.App
-	DB                    *db.DB
-	ModelStore            *db.ProviderModelStore
-	EmbedderStore         *db.EmbedderConfigStore
-	CapabilityLinkStore   *db.CapabilityLinkStore
-	ProviderSettingStore  *db.ProviderSettingStore
-	DocumentReaderStore   *db.DocumentReaderConfigStore
-	RerankerStore         *db.RerankerConfigStore
-	ApplyEmbedder         func(ctx context.Context) error
-	LocalSTTStore         *db.LocalSTTConfigStore
-	LocalTitleStore       *db.LocalTitleConfigStore
-	SandboxConfigStore    *db.SandboxConfigStore
-	StorageConfigStore    *db.StorageConfigStore
-	LongTermExtractor     *longterm.Extractor
-	RateLimiter           *RateLimiter
-	LoginRateLimiter      *RateLimiter
-	CloudAutomation       *cloudautomation.Service
-	RAGService            *rag.Service
-	EnableSignup          bool
-	EnableAPIKeys         bool
-	FeaturedRepos         []FeaturedSkillRepo
-	TrustedProxyCIDRs     []*net.IPNet
-	AllowedSkillRepoHosts []string
-	ConnectedServerURL    string
+	Backend                *seshat.App
+	DB                     *db.DB
+	ModelStore             *db.ProviderModelStore
+	EmbedderStore          *db.EmbedderConfigStore
+	CapabilityLinkStore    *db.CapabilityLinkStore
+	ProviderSettingStore   *db.ProviderSettingStore
+	DocumentReaderStore    *db.DocumentReaderConfigStore
+	RerankerStore          *db.RerankerConfigStore
+	ApplyEmbedder          func(ctx context.Context) error
+	LocalSTTStore          *db.LocalSTTConfigStore
+	LocalTitleStore        *db.LocalTitleConfigStore
+	SandboxConfigStore     *db.SandboxConfigStore
+	SandboxProject         *sandboxproject.Host
+	SandboxDefaultDenyRead []string
+	StorageConfigStore     *db.StorageConfigStore
+	LongTermExtractor      *longterm.Extractor
+	RateLimiter            *RateLimiter
+	LoginRateLimiter       *RateLimiter
+	CloudAutomation        *cloudautomation.Service
+	RAGService             *rag.Service
+	EnableSignup           bool
+	EnableAPIKeys          bool
+	FeaturedRepos          []FeaturedSkillRepo
+	TrustedProxyCIDRs      []*net.IPNet
+	AllowedSkillRepoHosts  []string
+	ConnectedServerURL     string
 	// TargetServerURL is always defaultServerURL (bootstrap.go), independent
 	// of ConnectedServerURL - see App.targetServerURL's doc comment.
 	TargetServerURL string
@@ -175,39 +182,41 @@ func NewApp(cfg AppConfig) *App {
 		}
 	}()
 	return &App{
-		oauthStates:           make(map[string]oauthState),
-		folderPlans:           folderplan.NewStore(time.Hour, 10),
-		backend:               cfg.Backend,
-		db:                    cfg.DB,
-		modelStore:            cfg.ModelStore,
-		embedderStore:         cfg.EmbedderStore,
-		capabilityLinkStore:   cfg.CapabilityLinkStore,
-		providerSettingStore:  cfg.ProviderSettingStore,
-		documentReaderStore:   cfg.DocumentReaderStore,
-		rerankerStore:         cfg.RerankerStore,
-		applyEmbedder:         cfg.ApplyEmbedder,
-		localSTTStore:         cfg.LocalSTTStore,
-		localTitleStore:       cfg.LocalTitleStore,
-		sandboxConfigStore:    cfg.SandboxConfigStore,
-		storageConfigStore:    cfg.StorageConfigStore,
-		longTermExtractor:     cfg.LongTermExtractor,
-		rateLimiter:           cfg.RateLimiter,
-		loginRateLimiter:      cfg.LoginRateLimiter,
-		cloudAutomation:       cfg.CloudAutomation,
-		ragService:            cfg.RAGService,
-		permBroker:            backendquery.NewPermissionBroker(),
-		promptBroker:          backendquery.NewPromptBroker(),
-		titleBroker:           titleBroker,
-		artifactPreviews:      artifactPreviews,
-		artifactLibs:          artifactLibs,
-		enableSignup:          cfg.EnableSignup,
-		enableAPIKeys:         cfg.EnableAPIKeys,
-		featuredRepos:         cfg.FeaturedRepos,
-		trustedProxyCIDRs:     cfg.TrustedProxyCIDRs,
-		allowedSkillRepoHosts: cfg.AllowedSkillRepoHosts,
-		connectedServerURL:    cfg.ConnectedServerURL,
-		targetServerURL:       cfg.TargetServerURL,
-		sandboxKind:           cfg.SandboxKind,
-		transcribeAudio:       transcribeAudioWithTarget,
+		oauthStates:            make(map[string]oauthState),
+		folderPlans:            folderplan.NewStore(time.Hour, 10),
+		backend:                cfg.Backend,
+		db:                     cfg.DB,
+		modelStore:             cfg.ModelStore,
+		embedderStore:          cfg.EmbedderStore,
+		capabilityLinkStore:    cfg.CapabilityLinkStore,
+		providerSettingStore:   cfg.ProviderSettingStore,
+		documentReaderStore:    cfg.DocumentReaderStore,
+		rerankerStore:          cfg.RerankerStore,
+		applyEmbedder:          cfg.ApplyEmbedder,
+		localSTTStore:          cfg.LocalSTTStore,
+		localTitleStore:        cfg.LocalTitleStore,
+		sandboxConfigStore:     cfg.SandboxConfigStore,
+		sandboxProject:         cfg.SandboxProject,
+		sandboxDefaultDenyRead: cfg.SandboxDefaultDenyRead,
+		storageConfigStore:     cfg.StorageConfigStore,
+		longTermExtractor:      cfg.LongTermExtractor,
+		rateLimiter:            cfg.RateLimiter,
+		loginRateLimiter:       cfg.LoginRateLimiter,
+		cloudAutomation:        cfg.CloudAutomation,
+		ragService:             cfg.RAGService,
+		permBroker:             backendquery.NewPermissionBroker(),
+		promptBroker:           backendquery.NewPromptBroker(),
+		titleBroker:            titleBroker,
+		artifactPreviews:       artifactPreviews,
+		artifactLibs:           artifactLibs,
+		enableSignup:           cfg.EnableSignup,
+		enableAPIKeys:          cfg.EnableAPIKeys,
+		featuredRepos:          cfg.FeaturedRepos,
+		trustedProxyCIDRs:      cfg.TrustedProxyCIDRs,
+		allowedSkillRepoHosts:  cfg.AllowedSkillRepoHosts,
+		connectedServerURL:     cfg.ConnectedServerURL,
+		targetServerURL:        cfg.TargetServerURL,
+		sandboxKind:            cfg.SandboxKind,
+		transcribeAudio:        transcribeAudioWithTarget,
 	}
 }

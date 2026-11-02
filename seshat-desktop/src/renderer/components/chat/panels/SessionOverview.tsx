@@ -61,10 +61,10 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     void currentSandboxMode()
       .then(async (mode) => {
         const isDocker = mode === 'docker'
-        const status = isDocker ? null : await (window.seshat?.sandbox?.srtStatus({ passive: true }) ?? Promise.resolve(null)).catch(() => null)
+        const status = mode !== 'local' ? null : await (window.seshat?.sandbox?.srtStatus({ passive: true }) ?? Promise.resolve(null)).catch(() => null)
         if (cancelled) return
         setDocker(isDocker)
-        const view = confinementView(status, isDocker)
+        const view = confinementView(status, mode)
         setConfinement({ label: view.label, confined: view.confined })
       })
       .catch(() => undefined)

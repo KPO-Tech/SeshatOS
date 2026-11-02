@@ -49,6 +49,7 @@ import (
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/sandboxproject"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
 	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
@@ -1031,15 +1032,36 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// user's own machine, not an isolated container that can't see any of
 	// it. ok=false (a genuine store read error) falls through to
 	// queryClientConfig's own SandboxKind above instead.
-	runtime.SetSandboxModeResolver(func(ctx context.Context) (sdk.SandboxKind, bool) {
+	// The project sandbox never falls back: a sidecar that is missing or cannot start
+	// refuses every command, and the command's result says why.
+	sandboxProjectHost := sandboxproject.NewHost()
+	sandboxDefaultDenyRead := sandboxproject.DefaultDenyReadHere(appconfig.EffectiveRuntimeRoot(config))
+	runtime.SetSandboxModeResolver(func(ctx context.Context) (sdk.SandboxKind, sdk.SandboxdConfig, bool) {
 		cfg, err := sandboxConfigStore.Get(ctx)
 		if err != nil {
-			return "", false
+			return "", sdk.SandboxdConfig{}, false
 		}
-		if cfg == nil || strings.TrimSpace(cfg.Mode) != db.SandboxModeDocker {
-			return sdk.SandboxKindLocal, true
+		mode := ""
+		if cfg != nil {
+			mode = strings.TrimSpace(cfg.Mode)
 		}
-		return sdk.SandboxKindDocker, true
+		switch mode {
+		case db.SandboxModeDocker:
+			return sdk.SandboxKindDocker, sdk.SandboxdConfig{}, true
+		case db.SandboxModeProject:
+			denyRead := sandboxDefaultDenyRead
+			if cfg.DenyReadSet {
+				denyRead = cfg.DenyRead
+			}
+			return sdk.SandboxKindSandboxed, sdk.SandboxdConfig{
+				BinaryPath:    sandboxProjectHost.Path,
+				Profile:       sdk.SandboxdProfileProject,
+				CapabilitySID: cfg.CapabilitySID,
+				DenyRead:      denyRead,
+			}, true
+		default:
+			return sdk.SandboxKindLocal, sdk.SandboxdConfig{}, true
+		}
 	})
 
 	// ActionConnectors: one entry per MCP-backed connector.ActionConnector
@@ -1200,34 +1222,36 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	artifactLibs := newArtifactLibs()
 
 	app := api.NewApp(api.AppConfig{
-		Backend:               backendApp,
-		DB:                    database,
-		ModelStore:            modelStore,
-		EmbedderStore:         embedderConfigStore,
-		CapabilityLinkStore:   capabilityLinkStore,
-		ProviderSettingStore:  settingStore,
-		DocumentReaderStore:   documentReaderConfigStore,
-		RerankerStore:         rerankerConfigStore,
-		ApplyEmbedder:         applyEmbedder,
-		LocalSTTStore:         localSTTConfigStore,
-		LocalTitleStore:       localTitleConfigStore,
-		SandboxConfigStore:    sandboxConfigStore,
-		StorageConfigStore:    storageConfigStore,
-		LongTermExtractor:     longTermExtractor,
-		CloudAutomation:       cloudAutomationService,
-		RAGService:            ragService,
-		RateLimiter:           api.NewRateLimiter(config.RateLimitPerMinute, time.Minute),
-		LoginRateLimiter:      api.NewRateLimiter(10, 15*time.Minute),
-		EnableSignup:          config.EnableSignup,
-		EnableAPIKeys:         config.EnableAPIKeys,
-		FeaturedRepos:         featuredRepos,
-		TrustedProxyCIDRs:     api.ParseTrustedProxies(config.TrustedProxies),
-		AllowedSkillRepoHosts: api.ParseSkillRepoHosts(config.SkillRepoHosts),
-		ConnectedServerURL:    serverURL,
-		TargetServerURL:       defaultServerURL,
-		SandboxKind:           sandboxKind,
-		TitleBroker:           titleBroker,
-		ArtifactLibs:          artifactLibs,
+		Backend:                backendApp,
+		DB:                     database,
+		ModelStore:             modelStore,
+		EmbedderStore:          embedderConfigStore,
+		CapabilityLinkStore:    capabilityLinkStore,
+		ProviderSettingStore:   settingStore,
+		DocumentReaderStore:    documentReaderConfigStore,
+		RerankerStore:          rerankerConfigStore,
+		ApplyEmbedder:          applyEmbedder,
+		LocalSTTStore:          localSTTConfigStore,
+		LocalTitleStore:        localTitleConfigStore,
+		SandboxConfigStore:     sandboxConfigStore,
+		SandboxProject:         sandboxProjectHost,
+		SandboxDefaultDenyRead: sandboxDefaultDenyRead,
+		StorageConfigStore:     storageConfigStore,
+		LongTermExtractor:      longTermExtractor,
+		CloudAutomation:        cloudAutomationService,
+		RAGService:             ragService,
+		RateLimiter:            api.NewRateLimiter(config.RateLimitPerMinute, time.Minute),
+		LoginRateLimiter:       api.NewRateLimiter(10, 15*time.Minute),
+		EnableSignup:           config.EnableSignup,
+		EnableAPIKeys:          config.EnableAPIKeys,
+		FeaturedRepos:          featuredRepos,
+		TrustedProxyCIDRs:      api.ParseTrustedProxies(config.TrustedProxies),
+		AllowedSkillRepoHosts:  api.ParseSkillRepoHosts(config.SkillRepoHosts),
+		ConnectedServerURL:     serverURL,
+		TargetServerURL:        defaultServerURL,
+		SandboxKind:            sandboxKind,
+		TitleBroker:            titleBroker,
+		ArtifactLibs:           artifactLibs,
 	})
 
 	// Only the local knowledge.Service has a queue for this runner to drain —
