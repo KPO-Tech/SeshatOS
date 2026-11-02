@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AttachmentTypeIcon } from '@renderer/components/AttachmentTypeIcon'
 import { api } from '@renderer/api/client'
 import { useUIStore } from '@renderer/stores/ui'
+import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import { MediaDownload } from './MediaDownload'
 import { YouTubeEmbed } from './YouTubeEmbed'
 import { formatBytes, type MediaPayload } from './mediaPayload'
@@ -37,17 +38,31 @@ function useArtifactSource(sessionId: string | undefined, path: string | undefin
   return loaded
 }
 
-function FileCard({ payload, src, note }: { payload: MediaPayload; src?: string; note?: string }) {
+// A web page opens live in the Artifact panel on a click; any other file is only offered for download.
+function FileCard({ payload, src, note, onOpen }: { payload: MediaPayload; src?: string; note?: string; onOpen?: () => void }) {
   const name = payload.title || payload.path?.split('/').pop() || 'File'
   const filename = payload.path?.split('/').pop() || name
   const detail = [formatBytes(payload.size), note].filter(Boolean).join(' - ')
-  return (
-    <div className="flex w-full max-w-[420px] items-center gap-3 rounded-[12px] border border-app-border-subtle bg-app-surface px-3 py-2.5">
+  const body = (
+    <>
       <AttachmentTypeIcon filename={filename} size={22} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-semibold text-app-text">{name}</div>
         {(payload.summary || detail) && <div className="line-clamp-2 text-[12px] text-app-text-muted">{payload.summary || detail}</div>}
       </div>
+    </>
+  )
+  const frame = 'flex w-full max-w-[420px] items-center gap-3 rounded-[12px] border border-app-border-subtle bg-app-surface px-3 py-2.5'
+  if (onOpen) {
+    return (
+      <button type="button" onClick={onOpen} title="Open" className={`${frame} cursor-pointer text-left hover:bg-[var(--surface-hover)]`}>
+        {body}
+      </button>
+    )
+  }
+  return (
+    <div className={frame}>
+      {body}
       {src && <MediaDownload href={src} filename={filename} />}
     </div>
   )
@@ -56,10 +71,15 @@ function FileCard({ payload, src, note }: { payload: MediaPayload; src?: string;
 export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payload: MediaPayload }) {
   if (payload.kind === 'youtube') return <YouTubeEmbed videoId={payload.video_id} title={payload.title} />
   const openLightbox = useUIStore((s) => s.openLightbox)
+  const openRightPanel = useUIStore((s) => s.openRightPanel)
   const playable = isPlayableArtifact(payload)
   const loaded = useArtifactSource(playable ? sessionId : undefined, payload.path)
   const filename = payload.path?.split('/').pop() || 'file'
 
+  const path = payload.path
+  if (sessionId && path && (payload.kind === 'html' || isHtmlPath(path))) {
+    return <FileCard payload={payload} onOpen={() => openRightPanel(htmlArtifactPanel(sessionId, path, payload.title))} />
+  }
   if (!playable) return <FileCard payload={payload} note={payload.kind === 'video' ? 'Too large to play here' : undefined} />
   if (loaded.state === 'loading') {
     return <div className="animate-pulse text-[13px] text-app-text-muted">Loading {payload.title || filename}...</div>

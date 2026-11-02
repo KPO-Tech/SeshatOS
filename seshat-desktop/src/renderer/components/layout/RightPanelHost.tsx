@@ -331,8 +331,8 @@ function renderPanelBody(panel: RightPanelInstance) {
         <EmptyState title="Presentation preview" description="This presentation couldn't be opened." />
       )
     case 'artifact':
-      return panel.artifactPreviewId ? (
-        <ArtifactPreviewPanel artifactId={panel.artifactPreviewId} filename={panel.title} />
+      return panel.sessionId && panel.artifactPath ? (
+        <ArtifactPreviewPanel sessionId={panel.sessionId} path={panel.artifactPath} filename={panel.title} />
       ) : (
         <EmptyState title="Artifact preview" description="This artifact couldn't be opened." />
       )

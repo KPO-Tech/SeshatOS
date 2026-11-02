@@ -30,8 +30,8 @@ type RightPanelFields = {
   documentHighlight?: { text: string; pages: number[] }
   // The collection a document was opened from: set, the panel offers the passages the document was indexed as.
   indexSource?: { corpusId: string; fileId: string }
-  // Capability ID from POST /artifacts/preview - see ArtifactPreviewPanel.tsx.
-  artifactPreviewId?: string
+  // The web page an Artifact panel shows, relative to the session's folder or absolute inside it - see ArtifactPreviewPanel.tsx.
+  artifactPath?: string
   browserUrl?: string
   agentNames?: string[]
   knowledgeResults?: RAGSearchResult[]
@@ -58,8 +58,8 @@ export type RightPanelPayload = Partial<RightPanelFields> & { kind: RightPanelKi
 // already open) updates it in place instead of pushing a duplicate.
 export type RightPanelInstance = RightPanelFields & { id: string; openedAt: number }
 
-export function buildRightPanelId(panel: { kind: RightPanelKind; sessionId?: string; planId?: string; subagentToolUseId?: string; documentFileId?: string; artifactPreviewId?: string }): string {
-  return `${panel.kind}:${panel.sessionId ?? ''}:${panel.planId ?? panel.subagentToolUseId ?? panel.documentFileId ?? panel.artifactPreviewId ?? ''}`
+export function buildRightPanelId(panel: { kind: RightPanelKind; sessionId?: string; planId?: string; subagentToolUseId?: string; documentFileId?: string; artifactPath?: string }): string {
+  return `${panel.kind}:${panel.sessionId ?? ''}:${panel.planId ?? panel.subagentToolUseId ?? panel.documentFileId ?? panel.artifactPath ?? ''}`
 }
 
 // A column of 1-2 vertically-stacked panels. Never stored empty - a column

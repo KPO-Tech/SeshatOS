@@ -4,6 +4,7 @@ import type { AgentState, StreamingBlock } from '@renderer/stores/session'
 import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
 import { isAgentTool, isFileTool } from '@renderer/components/chat/tools/toolDisplay'
 import { isWebTool } from '@renderer/components/chat/tools/webTools'
+import { htmlArtifactPanel, presentedPages } from '@renderer/lib/htmlArtifact'
 
 type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'browser' | 'files'>
 
@@ -55,6 +56,7 @@ export function useConversationPanels({
 }: UseConversationPanelsArgs) {
   const browserToolNavigationRef = useRef<string | null>(null)
   const prevCategoryRef = useRef<ToolPanelCategory | null>(null)
+  const openedPagesRef = useRef(new Set<string>())
   const activeToolName = agentState.activeTool?.toolName
   const isFileToolActive = activeToolName != null && isFileTool(activeToolName)
   const activeCategory = categoryForTool(activeToolName)
@@ -106,6 +108,17 @@ export function useConversationPanels({
       void window.seshat?.browser?.openUrl(target, 'builtin', sessionId).catch(() => undefined)
     }
   }, [agentState.activeTool, sessionId, streaming])
+
+  // A web page the agent presents (present_artifact) opens live in the Artifact panel the moment the call finishes, once per call: only
+  // calls of the turn being streamed, so reopening a conversation does not reopen the pages it showed.
+  useEffect(() => {
+    if (!sessionId) return
+    const fresh = presentedPages(streaming).filter((item) => !openedPagesRef.current.has(item.toolId))
+    const page = fresh.at(-1)
+    if (!page) return
+    for (const item of fresh) openedPagesRef.current.add(item.toolId)
+    openRightPanel(htmlArtifactPanel(sessionId, page.path, page.title))
+  }, [openRightPanel, sessionId, streaming])
 
   // Auto-open the plan review panel when the agent calls exit_plan_mode
   // without a structured PlanDocument.
