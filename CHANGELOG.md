@@ -14,6 +14,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 ### Fixed
 
 - **The conversation follows the answer being written.** It stopped by itself as soon as the text grew faster than it scrolled, with nobody touching anything, and the arrow that goes back down did not start it again. Now only your own move up stops it; coming back to the end, or the arrow, starts it again.
+- **The Artifact panel follows the file.** When the agent edits a page, the panel reloads it by itself; it used to keep showing the old version and its old errors until you clicked reload.
+- **A long line stays inside your message.** A message with a long path or a wide code block ran off the screen on the left, as the one sent by "Ask the agent to fix" did. It now keeps its width, and the code scrolls inside.
+- **Thin scrollbars in previewed pages**, in place of Chromium's wide white ones.
+- **"Ask the agent to fix" says it better.** The agent answers in the language of the conversation, and an error names the file and its line instead of an internal address.
 
 ## [0.3.5] - 2026-11-02
 
