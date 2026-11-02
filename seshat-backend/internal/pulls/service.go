@@ -3,7 +3,6 @@ package pulls
 import (
 	"context"
 	"errors"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +18,8 @@ type Service struct {
 
 	mu    sync.Mutex
 	cache map[string]cached
+	// created remembers when each pull request was created: it never changes, so one the agent did not open is not read again.
+	created map[string]time.Time
 }
 
 type cached struct {
@@ -27,11 +28,12 @@ type cached struct {
 }
 
 func NewService(credential Credential) *Service {
-	return &Service{credential: credential, now: time.Now, cache: map[string]cached{}}
+	return &Service{credential: credential, now: time.Now, cache: map[string]cached{}, created: map[string]time.Time{}}
 }
 
-// Track answers with the pull requests of the session first, then the person's own, at most Visible of them. Closed and merged ones
-// older than StaleAfter are left out. Nothing is stored beyond a short in-memory cache.
+// Track answers with the pull requests the agent of the session opened, at most Visible of them: among the addresses its calls printed,
+// the ones GitHub says were created during the call that printed them. The person's own are never listed: the card follows what the
+// agent did. Nothing is stored beyond in-memory caches.
 func (s *Service) Track(ctx context.Context, req Request) Result {
 	token, source := s.credential(ctx)
 	if token == "" {
@@ -61,96 +63,100 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 	result := Result{Pulls: []Pull{}, Credential: source}
 	var problem error
 
-	candidates := s.sessionRefs(ctx, gh, req, &problem)
-	seen := map[string]bool{}
-	for _, c := range candidates {
-		seen[refKey(c)] = true
-	}
-	mine, err := gh.myPulls(ctx)
-	if err != nil {
-		problem = firstError(problem, err)
-	}
-	var own []ref
-	for _, item := range mine {
-		owner, repo, ok := repoOfAPIURL(item.RepositoryURL)
-		if !ok {
+	// A pull request whose creation is already known and falls outside every window was only read by the agent: it is not asked again.
+	var candidates []ref
+	for _, c := range sessionRefs(req) {
+		s.mu.Lock()
+		created, known := s.created[refKey(c)]
+		s.mu.Unlock()
+		if known && !c.openedBy(created) {
 			continue
 		}
-		if item.State == "closed" && s.now().Sub(item.UpdatedAt) > StaleAfter {
-			continue
-		}
-		r := ref{owner: owner, repo: repo, number: item.Number, updatedAt: item.UpdatedAt}
-		if !seen[refKey(r)] {
-			own = append(own, r)
-		}
-	}
-	sort.SliceStable(own, func(i, j int) bool { return own[i].updatedAt.After(own[j].updatedAt) })
-	candidates = append(candidates, own...)
-	if len(candidates) > Visible {
-		candidates = candidates[:Visible]
+		candidates = append(candidates, c)
 	}
 
-	// Each pull request is fetched on its own, side by side, and the list keeps the order of the candidates.
+	// Each pull request is read on its own, side by side, and the list keeps the order of the candidates (the most recent call first).
 	type fetched struct {
-		pull         Pull
-		err          error
-		checksDenied bool
+		ref  ref
+		pull apiPull
+		err  error
 	}
-	fetchedPulls := make([]fetched, len(candidates))
+	read := make([]fetched, len(candidates))
 	var wg sync.WaitGroup
 	for i, c := range candidates {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			p, err := gh.pull(ctx, c.owner, c.repo, c.number)
-			if err != nil {
-				fetchedPulls[i].err = err
-				return
+			read[i] = fetched{ref: c, pull: p, err: err}
+		}()
+	}
+	wg.Wait()
+
+	var kept []fetched
+	for _, f := range read {
+		if f.err != nil {
+			problem = firstError(problem, f.err)
+			continue
+		}
+		s.mu.Lock()
+		s.created[refKey(f.ref)] = f.pull.CreatedAt
+		s.mu.Unlock()
+		if f.ref.openedBy(f.pull.CreatedAt) && len(kept) < Visible {
+			kept = append(kept, f)
+		}
+	}
+
+	// The checks are read only for the pull requests that stay.
+	pulls := make([]Pull, len(kept))
+	denied := make([]bool, len(kept))
+	for i, f := range kept {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			verdict, err := gh.checks(ctx, f.ref.owner, f.ref.repo, f.pull.Head.SHA)
+			denied[i] = err != nil
+			p := f.pull
+			pulls[i] = Pull{
+				Owner: f.ref.owner, Repo: f.ref.repo, Number: p.Number, Title: p.Title, URL: p.HTMLURL, State: stateOf(p),
+				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, MergeableState: p.MergeableState, UpdatedAt: p.UpdatedAt,
 			}
-			verdict, err := gh.checks(ctx, c.owner, c.repo, p.Head.SHA)
-			fetchedPulls[i] = fetched{checksDenied: err != nil, pull: Pull{
-				Owner: c.owner, Repo: c.repo, Number: p.Number, Title: p.Title, URL: p.HTMLURL, State: stateOf(p),
-				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, UpdatedAt: p.UpdatedAt, FromSession: c.session,
-			}}
 		}()
 	}
 	wg.Wait()
 
 	checksDenied := false
-	for _, f := range fetchedPulls {
-		if f.err != nil {
-			problem = firstError(problem, f.err)
-			continue
-		}
-		checksDenied = checksDenied || f.checksDenied
-		result.Pulls = append(result.Pulls, f.pull)
+	for i := range pulls {
+		checksDenied = checksDenied || denied[i]
 	}
+	result.Pulls = pulls
 	result.Note = noteFor(problem, checksDenied, len(result.Pulls))
 	return result
 }
 
-// sessionRefs are the pull requests of the session: the addresses its tools printed, then the ones of the branch its folder is on.
-func (s *Service) sessionRefs(ctx context.Context, gh *client, req Request, problem *error) []ref {
+// sessionRefs are the candidates of the request, one per pull request, each with the windows of every call that printed it.
+func sessionRefs(req Request) []ref {
 	var refs []ref
-	seen := map[string]bool{}
-	add := func(r ref) {
-		if k := refKey(r); !seen[k] && len(refs) < Visible {
-			seen[k] = true
+	index := map[string]int{}
+	for _, c := range req.Candidates {
+		r, ok := parsePullURL(c.URL)
+		if !ok {
+			continue
+		}
+		k := refKey(r)
+		i, seen := index[k]
+		if !seen {
+			if len(refs) >= MaxCandidates {
+				continue
+			}
+			i = len(refs)
+			index[k] = i
 			refs = append(refs, r)
 		}
-	}
-	for _, raw := range req.URLs {
-		if r, ok := parsePullURL(raw); ok {
-			add(r)
-		}
-	}
-	if owner, repo, branch, ok := repoOfFolder(ctx, req.WorkspacePath); ok {
-		list, err := gh.pullsOfBranch(ctx, owner, repo, branch)
-		if err != nil {
-			*problem = firstError(*problem, err)
-		}
-		for _, p := range list {
-			add(ref{owner: owner, repo: repo, number: p.Number, session: true})
+		if c.StartedAt == nil || c.EndedAt == nil {
+			refs[i].trusted = true
+		} else {
+			refs[i].windows = append(refs[i].windows, window{from: *c.StartedAt, to: *c.EndedAt})
 		}
 	}
 	return refs
@@ -159,7 +165,15 @@ func (s *Service) sessionRefs(ctx context.Context, gh *client, req Request, prob
 func refKey(r ref) string { return strings.ToLower(r.owner + "/" + r.repo + "#" + itoa(r.number)) }
 
 func cacheKey(req Request, source string) string {
-	return source + "|" + req.WorkspacePath + "|" + strings.Join(req.URLs, ",")
+	var b strings.Builder
+	b.WriteString(source)
+	for _, c := range req.Candidates {
+		b.WriteString("|" + c.URL)
+		if c.StartedAt != nil && c.EndedAt != nil {
+			b.WriteString("@" + c.StartedAt.UTC().Format(time.RFC3339Nano) + "/" + c.EndedAt.UTC().Format(time.RFC3339Nano))
+		}
+	}
+	return b.String()
 }
 
 func firstError(current, next error) error {

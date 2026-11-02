@@ -7,6 +7,9 @@ import { assertTrustedSender } from './ipc/trusted-sender'
 // Give the sidecar backend (see backend-process.ts) time to start before
 // competing for network/CPU with an update check.
 const INITIAL_CHECK_DELAY_MS = 10_000
+// The app often stays open for days (in the tray while a task runs): without a check of its own, a release published meanwhile is only seen
+// at the next launch.
+const RECHECK_INTERVAL_MS = 60 * 60 * 1000
 
 let downloadedVersion: string | null = null
 
@@ -107,4 +110,9 @@ export function setupAutoUpdater(): void {
   setTimeout(() => {
     autoUpdater.checkForUpdates().catch((err) => log(`initial check failed: ${err}`))
   }, INITIAL_CHECK_DELAY_MS)
+  // Once an update is downloaded there is nothing more to fetch until the person installs it.
+  setInterval(() => {
+    if (downloadedVersion) return
+    autoUpdater.checkForUpdates().catch((err) => log(`periodic check failed: ${err}`))
+  }, RECHECK_INTERVAL_MS)
 }

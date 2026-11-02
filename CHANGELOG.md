@@ -11,6 +11,28 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-02
+
+### Highlights
+
+- **Follow the pull requests the agent opens, then let it merge them.** The Changes card lists only the pull requests the agent itself opened, shows their checks, and offers a Merge button once they are green.
+- **A new version is offered while SeshatOS stays open**, instead of only when it starts.
+
+### Added
+
+- **Follow a pull request until it can be merged, then have the agent merge it.** In the Changes card, the icon of a pull request the agent opened blinks while its checks run, turns green once the checks passed and GitHub says it merges cleanly, red on a failed check or a conflict. A green one has a Merge button that asks the agent, in the conversation, to merge it. "Merge when ready" in its menu sends that request by itself as soon as it turns green, while the conversation is open.
+
+### Changed
+
+- **Web searches and fetched pages stay in the conversation.** The session panel no longer opens and follows each search or page while the agent reads the web: the row in the chat already opens on what was found.
+- **The Changes card follows the pull requests the agent opened, and only those, however it opened them.** It used to fill up with the latest pull requests you opened anywhere on GitHub, even in a conversation that never touched it. It now lists a pull request when a tool call of the agent printed its address and GitHub says it was created while that call ran: `gh pr create`, `gh api`, `curl`, a script or an MCP tool alike. One the agent only listed or read, and yours, are left out; the card stays hidden when there are none. With a runtime older than 1.12.11, which does not say when its calls ran, only `gh pr create` and tools made to create one count.
+
+### Fixed
+
+- **A long pull request title is cut in the Changes card** instead of running out of it.
+- **A failed tool call stays closed like the others.** It used to open by itself and could not be closed again. Its row now shows "failed" in red, and a click opens or closes it.
+- **A new version is offered while SeshatOS stays open.** The app looked for updates only when it started, so one that kept running for hours never heard of a release published meanwhile. It now looks again every hour.
+
 ## [0.3.2] - 2026-11-02
 
 ### Highlights

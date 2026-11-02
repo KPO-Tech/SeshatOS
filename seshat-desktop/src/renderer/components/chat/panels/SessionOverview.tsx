@@ -7,7 +7,9 @@ import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 import { FileIcon } from '@renderer/components/ui/FileIcon'
 import { collectChangedFiles } from '@renderer/lib/changedFiles'
-import { collectPullUrls } from '@renderer/lib/pullRequests'
+import { collectPullCandidates, mergeRequestMessage, type PullRequest } from '@renderer/lib/pullRequests'
+import { useChat } from '@renderer/hooks/useChat'
+import { useArmedPulls, usePullMergeStore } from '@renderer/stores/pullMerge'
 import { gitFolder } from '@renderer/lib/gitFolder'
 import { useGitState } from '@renderer/hooks/useGitState'
 import { ChangesList } from './changes/ChangesList'
@@ -72,8 +74,28 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   const { usage: context, windowTokens } = useContextUsage(sessionId)
   const folder = gitFolder(session)
-  const pullUrls = useMemo(() => collectPullUrls(messages), [messages])
-  const { result: pullResult, refresh: refreshPulls } = usePullRequests(folder, pullUrls)
+  const pullCandidates = useMemo(() => collectPullCandidates(messages), [messages])
+  const { result: pullResult, refresh: refreshPulls } = usePullRequests(pullCandidates)
+  const { sendMessage } = useChat(sessionId)
+  const armed = useArmedPulls(sessionId)
+  const [mergeNote, setMergeNote] = useState<string | null>(null)
+
+  // The merge is asked of the agent, in the conversation, so it runs under the agent's permissions and shows in the chat. A running turn
+  // would drop the message (sendMessage does nothing then): the person is told to wait instead.
+  function askToMerge(pull: PullRequest) {
+    if (useSessionStore.getState().isSessionStreaming(sessionId)) {
+      setMergeNote('The agent is still working. Ask again when its turn ends, or choose "Merge when ready".')
+      return
+    }
+    setMergeNote(null)
+    void sendMessage(mergeRequestMessage(pull))
+  }
+
+  function toggleArmed(pull: PullRequest) {
+    const store = usePullMergeStore.getState()
+    if (armed.includes(pull.url)) store.disarm(sessionId, pull.url)
+    else store.arm(sessionId, pull.url)
+  }
 
   // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
   // compaction rewrites the conversation that turn is using (the server refuses it too).
@@ -171,8 +193,13 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   if (pullResult && pullResult.pulls.length > 0) {
     cards.push(
       <OverviewCard key="changes" title="Changes">
-        <ChangesList pulls={pullResult.pulls} onRefresh={() => { void refreshPulls() }} />
+        <ChangesList
+          pulls={pullResult.pulls}
+          onRefresh={() => { void refreshPulls() }}
+          {...(variant === 'panel' ? { onMerge: askToMerge, armed, onToggleArmed: toggleArmed } : {})}
+        />
         {pullResult.note && <div className="mt-1.5 text-[11px] text-[var(--text-muted)]">{pullResult.note}</div>}
+        {mergeNote && <div className="mt-1.5 text-[11px] text-[var(--text-muted)]">{mergeNote}</div>}
       </OverviewCard>
     )
   }

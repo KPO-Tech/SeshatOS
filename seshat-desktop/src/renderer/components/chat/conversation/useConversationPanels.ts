@@ -3,8 +3,7 @@ import type { PlanDocument } from '@renderer/api/types'
 import type { AgentState, StreamingBlock } from '@renderer/stores/session'
 import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
 import { isAgentTool, isFileTool } from '@renderer/components/chat/tools/toolDisplay'
-
-const WEB_INFO_TOOLS = new Set(['web_search', 'web_fetch', 'read_url', 'read_document_url'])
+import { isWebTool } from '@renderer/components/chat/tools/webTools'
 
 type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'browser' | 'files'>
 
@@ -24,6 +23,8 @@ function categoryForTool(toolName: string | undefined): ToolPanelCategory | null
   if (isFileTool(toolName)) return null
   // A picture or a clip is drawn in the conversation itself (InlineMedia): there is nothing to follow in a panel.
   if (toolName === 'generate_image' || toolName === 'text_to_speech' || toolName === 'present_artifact') return null
+  // A search or a fetched page is already in the conversation, opened under its row (SilentToolView): the panel only repeated it.
+  if (isWebTool(toolName)) return null
   return 'computer'
 }
 
@@ -37,7 +38,6 @@ type UseConversationPanelsArgs = {
   sessionId?: string
   agentState: AgentState
   streaming: StreamingBlock[]
-  computerOpen: boolean
   filesOpen: boolean
   isPlanPending: boolean
   pendingPlan?: PlanDocument
@@ -48,7 +48,6 @@ export function useConversationPanels({
   sessionId,
   agentState,
   streaming,
-  computerOpen,
   filesOpen,
   isPlanPending,
   pendingPlan,
@@ -57,7 +56,6 @@ export function useConversationPanels({
   const browserToolNavigationRef = useRef<string | null>(null)
   const prevCategoryRef = useRef<ToolPanelCategory | null>(null)
   const activeToolName = agentState.activeTool?.toolName
-  const isWebInfoTool = activeToolName != null && WEB_INFO_TOOLS.has(activeToolName)
   const isFileToolActive = activeToolName != null && isFileTool(activeToolName)
   const activeCategory = categoryForTool(activeToolName)
 
@@ -78,20 +76,7 @@ export function useConversationPanels({
     prevCategoryRef.current = activeCategory
   }, [activeCategory, sessionId, openRightPanel])
 
-  // While Computer is already showing, follow each web_search/web_fetch call
-  // live as it starts running instead of leaving the panel on whatever it
-  // last showed (or making the user click into it from the transcript) -
-  // same live-updating idea as the browser_* effect below, just targeting
-  // Computer's own focusToolId instead of navigating a URL.
-  useEffect(() => {
-    if (!sessionId || !computerOpen || !isWebInfoTool || !activeToolName) return
-    const toolBlock = [...streaming].reverse().find((block) => block.type === 'tool_use' && block.name === activeToolName)
-    if (toolBlock?.type !== 'tool_use') return
-    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: toolBlock.id })
-  }, [activeToolName, isWebInfoTool, computerOpen, openRightPanel, sessionId, streaming])
-
-  // Follows each read/write/edit call live while Files is showing, the same
-  // way Computer follows web tools above.
+  // Follows each read/write/edit call live while Files is showing.
   useEffect(() => {
     if (!sessionId || !filesOpen || !isFileToolActive || !activeToolName) return
     const toolBlock = [...streaming].reverse().find((block) => block.type === 'tool_use' && block.name === activeToolName)

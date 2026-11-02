@@ -57,12 +57,12 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const isRunning = status === 'running' || status === 'pending'
   const isError = status === 'failed'
   const isCompleted = status === 'completed'
-  // A row stays closed while its tool runs, so a long turn does not fill the screen with output; an erroring row is open, and so is a
-  // question waiting for its answer. A bash row can be opened and closed by a click (see toggle() below), the other tools open their own
-  // panel instead.
+  // A row stays closed while its tool runs, so a long turn does not fill the screen with output. A failed row stays closed too: the red
+  // "failed" label says it, and a forced-open row could not be closed again. Only a question waiting for its answer opens by itself. A
+  // bash row can be opened and closed by a click (see toggle() below), the other tools open their own panel instead.
   const [opened, setOpened] = useState(false)
   const awaitingAnswer = isRunning && tool.name === 'ask_user_question'
-  const expanded = autoExpand || isError || awaitingAnswer || opened
+  const expanded = autoExpand || awaitingAnswer || opened
   const label = isPreviewTool ? toolLabel(tool.name) : summarizeTool(tool)
   const detail = isPreviewTool ? previewDetail(tool) : ''
   const meta = isPreviewTool ? previewMeta(tool) : ''
@@ -77,7 +77,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
 
   // Clicking a tool row now opens its own live panel instead of expanding
   // inline - bash opens in place, browser_* has its own panel (Browser), read/write/edit open in Files (see FilesPanel.tsx), everything
-  // else (web_search/web_fetch, mcp, ...) opens in Computer, focused on this
+  // else (mcp, ...) opens in Computer, focused on this
   // exact tool call. Sub-agent tools never reach this component - they
   // render as AgentCardsRow instead (see MessageItem.tsx) - so no case is
   // needed for them here.
