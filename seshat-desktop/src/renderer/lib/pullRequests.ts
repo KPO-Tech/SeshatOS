@@ -13,6 +13,8 @@ export type PullRequest = {
   additions: number
   deletions: number
   checks: PullChecks
+  // GitHub's mergeable_state: clean, blocked, behind, dirty, unstable, draft, has_hooks, or unknown while it computes.
+  mergeable_state: string
   updated_at: string
 }
 
@@ -59,14 +61,45 @@ export function collectPullUrls(messages: readonly MessageLike[]): string[] {
   return found
 }
 
-export const STATE_LABEL: Record<PullState, string> = { open: 'Open', draft: 'Draft', merged: 'Merged', closed: 'Closed' }
+/**
+ * Where a pull request stands, in one word for the icon: running while its checks run (or GitHub has not worked out whether it merges),
+ * ready once the checks passed and GitHub says it merges cleanly, failing on a failed check or a conflict, waiting when it needs a review
+ * or is behind its base branch.
+ */
+export type PullStatus = 'running' | 'ready' | 'failing' | 'waiting' | 'draft' | 'merged' | 'closed'
 
-export const CHECKS_LABEL: Record<PullChecks, string> = {
-  passing: 'Checks passed',
-  failing: 'Checks failing',
-  pending: 'Checks running',
-  none: 'No checks',
-  unknown: 'Checks unavailable'
+export function pullStatus(pull: Pick<PullRequest, 'state' | 'checks' | 'mergeable_state'>): PullStatus {
+  if (pull.state === 'merged' || pull.state === 'closed' || pull.state === 'draft') return pull.state
+  if (pull.checks === 'failing' || pull.mergeable_state === 'dirty' || pull.mergeable_state === 'unstable') return 'failing'
+  if (pull.checks === 'pending') return 'running'
+  if (pull.mergeable_state === 'clean' || pull.mergeable_state === 'has_hooks') return 'ready'
+  if (pull.mergeable_state === 'blocked' || pull.mergeable_state === 'behind') return 'waiting'
+  return 'running'
+}
+
+/** What the icon says when the pointer rests on it. */
+export function pullStatusLabel(pull: Pick<PullRequest, 'state' | 'checks' | 'mergeable_state'>): string {
+  switch (pullStatus(pull)) {
+    case 'running':
+      return pull.checks === 'pending' ? 'Checks running' : 'GitHub is checking whether it can be merged'
+    case 'ready':
+      return 'Ready to merge'
+    case 'failing':
+      return pull.mergeable_state === 'dirty' ? 'Conflicts with its base branch' : 'Checks failing'
+    case 'waiting':
+      return pull.mergeable_state === 'behind' ? 'Behind its base branch' : 'Blocked: a review or a required check is missing'
+    case 'draft':
+      return 'Draft'
+    case 'merged':
+      return 'Merged'
+    case 'closed':
+      return 'Closed'
+  }
+}
+
+/** The message that asks the agent of the session to merge a pull request it opened. */
+export function mergeRequestMessage(pull: Pick<PullRequest, 'owner' | 'repo' | 'number' | 'url'>): string {
+  return `The pull request ${pull.owner}/${pull.repo}#${pull.number} (${pull.url}) that you opened has passed its checks and GitHub says it can be merged. Merge it with the merge method this repository uses, then confirm that it is merged.`
 }
 
 /** The line under a pull request title: where it lives. */

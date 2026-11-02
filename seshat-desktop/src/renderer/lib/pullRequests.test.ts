@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectPullUrls, pullSubtitle } from './pullRequests'
+import { collectPullUrls, mergeRequestMessage, pullStatus, pullSubtitle } from './pullRequests'
 
 const tool = (name: string, content: string, input: Record<string, unknown> = {}, isError = false) => ({ type: 'tool_use' as const, name, input, _result: { content, isError } })
 const create = (name: string, content: string, isError = false) => tool(name, content, { command: 'gh pr create --base dev --fill' }, isError)
@@ -45,6 +45,38 @@ describe('collectPullUrls', () => {
   it('stops at ten addresses', () => {
     const text = Array.from({ length: 15 }, (_, i) => `https://github.com/o/r/pull/${i + 1}`).join(' ')
     expect(collectPullUrls([assistant(create('bash', text))])).toHaveLength(10)
+  })
+})
+
+describe('pullStatus', () => {
+  const open = { state: 'open' as const, checks: 'passing' as const }
+  it('is ready only when the checks passed and GitHub says it merges cleanly', () => {
+    expect(pullStatus({ ...open, mergeable_state: 'clean' })).toBe('ready')
+    expect(pullStatus({ ...open, checks: 'none', mergeable_state: 'clean' })).toBe('ready')
+    expect(pullStatus({ ...open, mergeable_state: 'unknown' })).toBe('running')
+  })
+
+  it('runs while the checks run, fails on a failed check or a conflict, waits on a review or a base branch ahead', () => {
+    expect(pullStatus({ ...open, checks: 'pending', mergeable_state: 'blocked' })).toBe('running')
+    expect(pullStatus({ ...open, checks: 'failing', mergeable_state: 'blocked' })).toBe('failing')
+    expect(pullStatus({ ...open, mergeable_state: 'dirty' })).toBe('failing')
+    expect(pullStatus({ ...open, mergeable_state: 'blocked' })).toBe('waiting')
+    expect(pullStatus({ ...open, mergeable_state: 'behind' })).toBe('waiting')
+  })
+
+  it('keeps merged, closed and draft as they are', () => {
+    expect(pullStatus({ state: 'merged', checks: 'failing', mergeable_state: 'dirty' })).toBe('merged')
+    expect(pullStatus({ state: 'closed', checks: 'passing', mergeable_state: 'clean' })).toBe('closed')
+    expect(pullStatus({ state: 'draft', checks: 'passing', mergeable_state: 'draft' })).toBe('draft')
+  })
+})
+
+describe('mergeRequestMessage', () => {
+  it('names the pull request and asks to merge it the way the repository does', () => {
+    const text = mergeRequestMessage({ owner: 'o', repo: 'r', number: 7, url: 'https://github.com/o/r/pull/7' })
+    expect(text).toContain('o/r#7')
+    expect(text).toContain('https://github.com/o/r/pull/7')
+    expect(text).toContain('merge method this repository uses')
   })
 })
 

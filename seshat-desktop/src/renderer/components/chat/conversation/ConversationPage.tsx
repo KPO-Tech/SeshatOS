@@ -21,6 +21,7 @@ import { useChat } from '@renderer/hooks/useChat'
 import { RichActionProvider } from '../richblocks/view/actions/richActions'
 import { filePlace } from '../richblocks/view/actions/filePlace'
 import { JumpToLatest } from './JumpToLatest'
+import { useMergeWhenReady } from '../panels/changes/useMergeWhenReady'
 import './ConversationPage.css'
 
 export function ConversationPage() {
@@ -107,6 +108,8 @@ export function ConversationPage() {
     pendingPlan,
     openRightPanel,
   })
+
+  useMergeWhenReady(id || '', sendMessage, isStreaming)
 
   const askFromAnswer = useCallback((text: string) => void sendMessage(text), [sendMessage])
   const openFromAnswer = useCallback(

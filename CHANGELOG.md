@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Follow a pull request until it can be merged, then have the agent merge it.** In the Changes card, the icon of a pull request the agent opened blinks while its checks run, turns green once the checks passed and GitHub says it merges cleanly, red on a failed check or a conflict. A green one has a Merge button that asks the agent, in the conversation, to merge it. "Merge when ready" in its menu sends that request by itself as soon as it turns green, while the conversation is open.
+
 ### Changed
 
 - **Web searches and fetched pages stay in the conversation.** The session panel no longer opens and follows each search or page while the agent reads the web: the row in the chat already opens on what was found.

@@ -82,7 +82,7 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 			verdict, err := gh.checks(ctx, c.owner, c.repo, p.Head.SHA)
 			fetchedPulls[i] = fetched{checksDenied: err != nil, pull: Pull{
 				Owner: c.owner, Repo: c.repo, Number: p.Number, Title: p.Title, URL: p.HTMLURL, State: stateOf(p),
-				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, UpdatedAt: p.UpdatedAt,
+				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, MergeableState: p.MergeableState, UpdatedAt: p.UpdatedAt,
 			}}
 		}()
 	}
