@@ -54,7 +54,8 @@ function submitPlanInfo(tool: Props['tool'], result: Props['result']): { name: s
 }
 
 export function SilentToolView({ tool, result, status, snippet, sessionId }: Props) {
-  // A web tool opens inline under its row, and only there: the session panel does not show it. It stays closed while the tool runs.
+  // A web tool opens inline under its row, and only there: the session panel does not show it. It stays closed while the tool runs,
+  // and when it fails (the red "failed" label says it), until a click opens it.
   const [opened, setOpened] = useState(false)
   const isError = result?.isError === true || status === 'failed'
   const isRunning = status === 'running' || status === 'pending'
@@ -89,7 +90,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
   const hasRender = hasCustomRender(tool.name)
   const isWeb = isWebTool(tool.name)
   const hasWebBody = isWeb && Boolean(result)
-  const expanded = hasWebBody && (opened || isError)
+  const expanded = hasWebBody && opened
   const expandable = isWeb ? hasWebBody : !isPastedFile && (isError || hasRender)
 
   function handleClick() {
