@@ -11,6 +11,12 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-02
+
+### Highlights
+
+- **The web pages the agent builds open live beside the conversation**, work offline with the common libraries shipped in the app, and report their errors so the agent can fix them.
+
 ### Added
 
 - **A web page the agent makes opens live beside the conversation.** When the agent presents a page it built, the Artifact panel opens on it by itself, running in an isolated frame, with a Code tab for its source and a reload button. Clicking the page's card, or an HTML file in the list of changed files, opens it the same way instead of showing the diff. The panel reads the file as it stands on disk, so it stays available after the conversation is reopened.
