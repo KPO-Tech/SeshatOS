@@ -19,6 +19,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 ### Fixed
 
 - **A long pull request title is cut in the Changes card** instead of running out of it.
+- **A new version is offered while SeshatOS stays open.** The app looked for updates only when it started, so one that kept running for hours never heard of a release published meanwhile. It now looks again every hour.
 
 ## [0.3.2] - 2026-11-02
 
