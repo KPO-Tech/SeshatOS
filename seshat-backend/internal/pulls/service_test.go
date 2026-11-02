@@ -22,24 +22,6 @@ func TestParsePullURL(t *testing.T) {
 	}
 }
 
-func TestParseRemote(t *testing.T) {
-	for remote, want := range map[string]string{
-		"https://github.com/KPO-Tech/SeshatOS.git": "KPO-Tech/SeshatOS",
-		"https://github.com/KPO-Tech/SeshatOS":     "KPO-Tech/SeshatOS",
-		"git@github.com:KPO-Tech/SeshatOS.git":     "KPO-Tech/SeshatOS",
-	} {
-		owner, repo, ok := parseRemote(remote)
-		if !ok || owner+"/"+repo != want {
-			t.Errorf("%q: got %s/%s ok=%v", remote, owner, repo, ok)
-		}
-	}
-	for _, bad := range []string{"", "https://gitlab.com/o/r.git", "git@gitlab.com:o/r.git", "https://github.com/o"} {
-		if _, _, ok := parseRemote(bad); ok {
-			t.Errorf("%q should not parse", bad)
-		}
-	}
-}
-
 func TestChainCredentialPrefersConnector(t *testing.T) {
 	token, source := ChainCredential(func(context.Context) (string, bool) { return " abc ", true })(context.Background())
 	if token != "abc" || source != CredentialConnector {
@@ -108,8 +90,8 @@ func TestTrackShowsNothingForASessionWithoutPulls(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls++ }))
 	defer server.Close()
-	// No address printed and a folder that is not a repository: the person's other pull requests are not listed, and GitHub is not asked.
-	result := newTestService(server).Track(context.Background(), Request{WorkspacePath: t.TempDir()})
+	// The agent opened no pull request: the person's own are not listed, and GitHub is not asked.
+	result := newTestService(server).Track(context.Background(), Request{})
 	if len(result.Pulls) != 0 || calls != 0 {
 		t.Fatalf("got %d pull requests and %d calls to GitHub", len(result.Pulls), calls)
 	}

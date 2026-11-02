@@ -1,5 +1,4 @@
-// Package pulls follows the GitHub pull requests a session worked on: the addresses its tools printed and the ones of the branch its
-// folder is on. It reads, never writes, and keeps nothing on disk.
+// Package pulls follows the GitHub pull requests the agent of a session opened. It reads, never writes, and keeps nothing on disk.
 package pulls
 
 import "time"
@@ -34,22 +33,21 @@ const (
 
 // Pull is one pull request as the card draws it.
 type Pull struct {
-	Owner       string    `json:"owner"`
-	Repo        string    `json:"repo"`
-	Number      int       `json:"number"`
-	Title       string    `json:"title"`
-	URL         string    `json:"url"`
-	State       string    `json:"state"`
-	Additions   int       `json:"additions"`
-	Deletions   int       `json:"deletions"`
-	Checks      string    `json:"checks"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Owner     string    `json:"owner"`
+	Repo      string    `json:"repo"`
+	Number    int       `json:"number"`
+	Title     string    `json:"title"`
+	URL       string    `json:"url"`
+	State     string    `json:"state"`
+	Additions int       `json:"additions"`
+	Deletions int       `json:"deletions"`
+	Checks    string    `json:"checks"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// Request says what the session knows: its folder, and the pull request addresses its tools printed.
+// Request lists the addresses of the pull requests the agent of the session opened (see collectPullUrls in the desktop).
 type Request struct {
-	WorkspacePath string   `json:"workspace_path"`
-	URLs          []string `json:"urls"`
+	URLs []string `json:"urls"`
 }
 
 // Result is the list to draw, with what to tell the person when it is short.

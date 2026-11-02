@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -71,14 +70,6 @@ func (c *client) pull(ctx context.Context, owner, repo string, number int) (apiP
 	var p apiPull
 	err := c.get(ctx, fmt.Sprintf("/repos/%s/%s/pulls/%d", owner, repo, number), &p)
 	return p, err
-}
-
-// pullsOfBranch lists the pull requests opened from a branch of the repository, newest first.
-func (c *client) pullsOfBranch(ctx context.Context, owner, repo, branch string) ([]apiPull, error) {
-	query := url.Values{"head": {owner + ":" + branch}, "state": {"all"}, "sort": {"updated"}, "direction": {"desc"}, "per_page": {"5"}}
-	var list []apiPull
-	err := c.get(ctx, fmt.Sprintf("/repos/%s/%s/pulls?%s", owner, repo, query.Encode()), &list)
-	return list, err
 }
 
 // checks sums up the check runs of a commit into one verdict.

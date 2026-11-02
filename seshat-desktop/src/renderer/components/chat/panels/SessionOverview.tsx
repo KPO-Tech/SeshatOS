@@ -73,7 +73,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   const { usage: context, windowTokens } = useContextUsage(sessionId)
   const folder = gitFolder(session)
   const pullUrls = useMemo(() => collectPullUrls(messages), [messages])
-  const { result: pullResult, refresh: refreshPulls } = usePullRequests(folder, pullUrls)
+  const { result: pullResult, refresh: refreshPulls } = usePullRequests(pullUrls)
 
   // Compacts the conversation now instead of waiting for the automatic threshold. Not while a turn is running: a
   // compaction rewrites the conversation that turn is using (the server refuses it too).
