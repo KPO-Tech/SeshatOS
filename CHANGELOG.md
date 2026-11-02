@@ -11,6 +11,12 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-11-02
+
+### Highlights
+
+- **Switch between your dark and light theme in one click**, from a shorter list of fourteen themes, and scroll smoothly through a conversation while the agent writes.
+
 ### Changed
 
 - **Two main themes, one click to switch.** The appearance is now a dark theme and a light theme, Seshat Dark and Shine to begin with, and the sun and moon button of the title bar switches between them in one click instead of opening a list. Settings > Appearance chooses what each of them is, and a mode: dark, light, or following the system.
