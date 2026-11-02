@@ -24,3 +24,6 @@ Thumbs.db
 resources/backend/seshat-backend
 resources/backend/seshat-backend.exe
 .tmp/
+
+# Web libraries for agent-made pages, fetched by scripts/artifact-libs.mjs (make dev, packaging)
+resources/artifact-libs/

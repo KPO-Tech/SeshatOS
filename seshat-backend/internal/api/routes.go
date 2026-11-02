@@ -120,6 +120,8 @@ func CreateRouter(config APIConfig, app *App) *http.ServeMux {
 	apiV1.Handle("/artifacts/preview", app.authMiddleware(http.HandlerFunc(app.handleArtifactPreviewCreate)))
 	// Deliberately unauthenticated - see handleArtifactPreviewGet's doc comment.
 	apiV1.HandleFunc("/artifacts/preview/", app.handleArtifactPreviewGet)
+	// Unauthenticated for the same reason: a previewed page's <script src> cannot carry a token. See handleArtifactLib.
+	apiV1.HandleFunc("/artifacts/lib/", app.handleArtifactLib)
 
 	apiV1.Handle("/corpora", app.authMiddleware(http.HandlerFunc(app.handleCorpora)))
 	apiV1.Handle("/corpora/", app.authMiddleware(http.HandlerFunc(app.handleCorpusByID)))

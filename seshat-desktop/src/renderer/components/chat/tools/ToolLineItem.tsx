@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { connectorKind, serverLabel } from './connectorNames'
 import { CheckOne, Copy, Down } from '@icon-park/react'
-import { api } from '@renderer/api/client'
 import { useUIStore } from '@renderer/stores/ui'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { ErrorPre } from './common'
@@ -11,6 +10,7 @@ import { summarizeTool, toolResultSubtitle, toolStatus } from './quietGroupPhras
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
 import { opensWide } from './readableTools'
+import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import type { ToolBlockProps } from './types'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -159,7 +159,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       {expanded && (
         <div className="pt-1">
           {isDiffTool ? (
-            <DiffContent tool={tool} />
+            <DiffContent tool={tool} sessionId={sessionId} />
           ) : (
             renderToolBody({ tool, result: tool._result, status, sessionId }, onSubmitPrompt)
           )}
@@ -255,7 +255,7 @@ function parseMcpPreview(tool: ToolUseBlock): { server: string; tool: string } {
   }
 }
 
-function DiffContent({ tool }: { tool: ToolUseBlock }) {
+function DiffContent({ tool, sessionId }: { tool: ToolUseBlock; sessionId?: string }) {
   const diff = resolveDiffRows(tool)
   const filePath = typeof tool.input.file_path === 'string' ? (tool.input.file_path as string) : ''
   const body = (() => {
@@ -274,55 +274,26 @@ function DiffContent({ tool }: { tool: ToolUseBlock }) {
   return (
     <>
       {body}
-      <HTMLPreviewTrigger tool={tool} filePath={filePath} />
+      <HTMLPreviewTrigger tool={tool} filePath={filePath} sessionId={sessionId} />
     </>
   )
 }
 
-// Self-contained HTML the agent just wrote (see the rendering-capabilities
-// system-prompt block in seshat-backend/internal/query/context.go) can be
-// opened as a live sandboxed preview - the full written content is already
-// right here in the tool result (write_file's own JSON output echoes back
-// what it wrote), no extra file read needed. edit_file results don't carry
-// the full post-edit content the same way, so this only fires for write_file.
-function HTMLPreviewTrigger({ tool, filePath }: { tool: ToolUseBlock; filePath: string }) {
+// A web page the agent wrote or edited opens live in the Artifact panel, which reads the file as it stands on disk (see
+// ArtifactPreviewPanel.tsx).
+function HTMLPreviewTrigger({ tool, filePath, sessionId }: { tool: ToolUseBlock; filePath: string; sessionId?: string }) {
   const openRightPanel = useUIStore((s) => s.openRightPanel)
-  const [previewing, setPreviewing] = useState(false)
-  const [previewError, setPreviewError] = useState<string | null>(null)
-
-  const isHTMLFile = /\.html?$/i.test(filePath)
-  const content = typeof tool._result?.metadata?.content === 'string' ? tool._result.metadata.content : undefined
-  if (!isHTMLFile || !content || tool._result?.isError) return null
-
-  async function openPreview() {
-    if (!content || previewing) return
-    setPreviewing(true)
-    setPreviewError(null)
-    try {
-      const { id } = await api.post<{ id: string }>('/artifacts/preview', { html: content })
-      openRightPanel({
-        kind: 'artifact',
-        title: filePath.split(/[/\\]/).pop() || filePath,
-        artifactPreviewId: id,
-      })
-    } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : 'Failed to open preview')
-    } finally {
-      setPreviewing(false)
-    }
-  }
+  if (!sessionId || !isHtmlPath(filePath) || !tool._result || tool._result.isError) return null
 
   return (
     <div className="mt-2 flex items-center gap-2">
       <button
         type="button"
-        className="cursor-pointer rounded-md border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent-primary)] disabled:cursor-default disabled:opacity-60"
-        onClick={() => void openPreview()}
-        disabled={previewing}
+        className="cursor-pointer rounded-md border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent-primary)]"
+        onClick={() => openRightPanel(htmlArtifactPanel(sessionId, filePath))}
       >
-        {previewing ? 'Opening preview…' : 'Preview'}
+        Preview
       </button>
-      {previewError && <span className="text-[11px] text-app-error">{previewError}</span>}
     </div>
   )
 }
