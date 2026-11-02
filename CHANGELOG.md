@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **Scrolling up through a conversation is smooth, during a turn too.** Each streamed word drew again every message on screen; now only the answer being written is. Scrolling up no longer jumps when earlier messages take their real height, and a picture, GIF or clip the agent showed comes back at once and at its size instead of loading again (an 8.9 MB GIF made the list run away from it).
+
 ## [0.3.4] - 2026-11-02
 
 ### Highlights

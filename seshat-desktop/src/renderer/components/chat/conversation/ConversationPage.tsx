@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
-import { useSessionStore, EMPTY_STREAMING, DEFAULT_AGENT_STATE } from '@renderer/stores/session'
+import { useSessionStore, EMPTY_STREAMING, DEFAULT_AGENT_STATE, type ChatAttachment } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 import { isRenderableMessage } from '../messages/MessageItem'
 import { withArchivedHistory } from '@renderer/lib/compactedHistory'
@@ -112,6 +112,10 @@ export function ConversationPage() {
   useMergeWhenReady(id || '', sendMessage, isStreaming)
 
   const askFromAnswer = useCallback((text: string) => void sendMessage(text), [sendMessage])
+  // Stable, like every handler MessageList passes to the messages: a new function at each render drew them all again.
+  const retryMessage = useCallback((text: string, attachments?: ChatAttachment[]) => {
+    void sendMessage(text, attachments?.length ? { fileIds: attachments.map((a) => a.id), attachments } : undefined)
+  }, [sendMessage])
   const openFromAnswer = useCallback(
     (path: string) => {
       const place = filePlace(path, session?.projectPath)
@@ -136,12 +140,19 @@ export function ConversationPage() {
   // conversation re-renders this component before navigate('/') takes
   // effect) - every hook below must still run the same way regardless, so
   // the "session not found" return sits after all of them, not before.
-  const currentMessages = session ? session.messages.filter((message, index) => (
-    isRenderableMessage(message) ||
-    (isStreaming && !pendingPermission && !pendingAskUser && message.role === 'assistant' && index === session.messages.length - 1)
-  )) : []
-  // A compacted session shows what the compaction removed from the model's context above a divider.
-  const visibleMessages = withArchivedHistory(session?.archivedMessages, currentMessages, isRenderableMessage)
+  // Kept between renders while nothing it depends on changes: the archived messages are copied by withArchivedHistory, and new copies at
+  // every render drew all of them again.
+  const sessionMessages = session?.messages
+  const archivedMessages = session?.archivedMessages
+  const showsLiveAnswer = isStreaming && !pendingPermission && !pendingAskUser
+  const visibleMessages = useMemo(() => {
+    const all = sessionMessages ?? []
+    const currentMessages = all.filter((message, index) => (
+      isRenderableMessage(message) || (showsLiveAnswer && message.role === 'assistant' && index === all.length - 1)
+    ))
+    // A compacted session shows what the compaction removed from the model's context above a divider.
+    return withArchivedHistory(archivedMessages, currentMessages, isRenderableMessage)
+  }, [sessionMessages, archivedMessages, showsLiveAnswer])
 
   const {
     handlePlanProceed,
@@ -196,9 +207,7 @@ export function ConversationPage() {
         onApproveTool={onApproveTool}
         onDenyTool={onDenyTool}
         onSubmitToolPrompt={onSubmitToolPrompt}
-        onRetryMessage={(text, attachments) => {
-          void sendMessage(text, attachments?.length ? { fileIds: attachments.map((a) => a.id), attachments } : undefined)
-        }}
+        onRetryMessage={retryMessage}
       />
 
       <ConversationPendingPanels

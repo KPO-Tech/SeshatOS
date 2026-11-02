@@ -24,9 +24,12 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     measureElement: (el) => el.getBoundingClientRect().height,
   })
 
-  // Keep virtual row growth from pulling the reader downward unless they are
-  // already following the bottom of the conversation.
-  rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = () => isAtBottomRef.current
+  // When a row changes height, the scroll position follows it only if that keeps what the reader sees in place: while they follow the
+  // bottom, and for a row wholly above the screen. Scrolling up measures the rows coming into view from above (they were only estimated),
+  // and without the second case each measure pushed the text being read down, by the difference, under the reader. A row the reader is in
+  // (the answer being written, read from its middle) never moves the view: its growth goes below.
+  rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = (item, _delta, instance) =>
+    isAtBottomRef.current || item.end <= (instance.scrollOffset ?? 0)
 
   useEffect(() => {
     const el = scrollRef.current

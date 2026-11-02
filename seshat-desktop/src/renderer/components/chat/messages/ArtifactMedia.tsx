@@ -4,6 +4,7 @@ import { api } from '@renderer/api/client'
 import { useUIStore } from '@renderer/stores/ui'
 import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import { MediaDownload } from './MediaDownload'
+import { cachedSource, loadSource, rememberSize, sourceKey } from './artifactSourceCache'
 import { YouTubeEmbed } from './YouTubeEmbed'
 import { formatBytes, type MediaPayload } from './mediaPayload'
 
@@ -17,24 +18,38 @@ export function isPlayableArtifact(payload: MediaPayload): boolean {
   return PLAYABLE_KINDS.has(payload.kind ?? '') && (payload.size ?? 0) <= MAX_PLAYABLE_BYTES
 }
 
-type Loaded = { state: 'loading' } | { state: 'ready'; src: string } | { state: 'failed'; message: string }
+type Loaded =
+  | { state: 'loading' }
+  | { state: 'ready'; src: string; width?: number; height?: number; key: string }
+  | { state: 'failed'; message: string }
 
+// Loaded once per file and kept (see artifactSourceCache.ts): a message scrolled back into view draws its media at once, at the size it had.
 function useArtifactSource(sessionId: string | undefined, path: string | undefined): Loaded {
-  const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
+  const key = sessionId && path ? sourceKey(sessionId, path) : ''
+  const initial = (): Loaded => {
+    const cached = key ? cachedSource(key) : undefined
+    return cached ? { state: 'ready', src: cached.url, width: cached.width, height: cached.height, key } : { state: 'loading' }
+  }
+  const [loaded, setLoaded] = useState<Loaded>(initial)
   useEffect(() => {
     if (!sessionId || !path) {
       setLoaded({ state: 'failed', message: 'The file is not available.' })
       return
     }
+    const cached = cachedSource(key)
+    if (cached) {
+      setLoaded({ state: 'ready', src: cached.url, width: cached.width, height: cached.height, key })
+      return
+    }
     let cancelled = false
     setLoaded({ state: 'loading' })
-    api.getFileDataURL(`/sessions/${sessionId}/artifact?path=${encodeURIComponent(path)}`)
-      .then((src) => { if (!cancelled) setLoaded({ state: 'ready', src }) })
+    loadSource(key, () => api.getFileDataURL(`/sessions/${sessionId}/artifact?path=${encodeURIComponent(path)}`))
+      .then((entry) => { if (!cancelled) setLoaded({ state: 'ready', src: entry.url, width: entry.width, height: entry.height, key }) })
       .catch((error: unknown) => {
         if (!cancelled) setLoaded({ state: 'failed', message: error instanceof Error ? error.message : 'The file could not be loaded.' })
       })
     return () => { cancelled = true }
-  }, [sessionId, path])
+  }, [sessionId, path, key])
   return loaded
 }
 
@@ -86,7 +101,7 @@ export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payl
   }
   if (loaded.state === 'failed') return <FileCard payload={payload} note={loaded.message} />
 
-  const { src } = loaded
+  const { src, width, height, key } = loaded
   if (payload.kind === 'image') {
     return (
       <div className="group/media relative w-fit max-w-full">
@@ -94,6 +109,10 @@ export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payl
           className="block max-h-[560px] cursor-zoom-in rounded-[14px] border border-app-border-subtle object-contain"
           style={{ maxWidth: 'min(100%, 520px)' }}
           src={src}
+          // The size it had last time: the row keeps its height while the picture decodes again.
+          width={width}
+          height={height}
+          onLoad={(event) => rememberSize(key, event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)}
           alt={payload.title || filename}
           onClick={() => openLightbox({ url: src, filename })}
         />
@@ -107,7 +126,14 @@ export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payl
     return (
       <div className="flex w-full max-w-[560px] flex-col gap-1.5">
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <video className="max-h-[420px] w-full rounded-[14px] border border-app-border-subtle bg-black" controls preload="metadata" src={src} />
+        <video
+          className="max-h-[420px] w-full rounded-[14px] border border-app-border-subtle bg-black"
+          style={width && height ? { aspectRatio: `${width} / ${height}` } : undefined}
+          controls
+          preload="metadata"
+          src={src}
+          onLoadedMetadata={(event) => rememberSize(key, event.currentTarget.videoWidth, event.currentTarget.videoHeight)}
+        />
         <div className="flex items-center gap-2 text-[12px] text-app-text-muted">
           <span className="min-w-0 flex-1 truncate">{payload.title || filename}</span>
           <MediaDownload href={src} filename={filename} />
