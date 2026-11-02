@@ -122,6 +122,10 @@ jobs:
           VITE_SESHAT_EDITION: public
         run: npm run build
 
+      - name: Fetch the web libraries for agent-made pages
+        working-directory: seshat-desktop
+        run: node scripts/artifact-libs.mjs
+
       - name: Package (AppImage + deb)
         working-directory: seshat-desktop
         run: npx electron-builder --linux AppImage deb --publish never
@@ -199,6 +203,10 @@ jobs:
       # Signed when a certificate is configured in the repository secrets (WIN_CSC_LINK: the .pfx as a base64 string or a URL,
       # WIN_CSC_KEY_PASSWORD: its password). Without them the installer is built unsigned, as before: Windows SmartScreen then
       # warns on the first launch.
+      - name: Fetch the web libraries for agent-made pages
+        working-directory: seshat-desktop
+        run: node scripts/artifact-libs.mjs
+
       - name: Package (NSIS)
         working-directory: seshat-desktop
         env:
@@ -270,6 +278,10 @@ jobs:
         env:
           VITE_SESHAT_EDITION: public
         run: npm run build
+
+      - name: Fetch the web libraries for agent-made pages
+        working-directory: seshat-desktop
+        run: node scripts/artifact-libs.mjs
 
       - name: Package (dmg)
         working-directory: seshat-desktop

@@ -87,6 +87,8 @@ endif
 # What every dev start exports. SESHAT_SETUP_BACKEND lets the wizard of an unpackaged app run the commands of the backend built here
 # (it has no bundled one).
 DEV_EXPORTS        = export SESHAT_SETUP_BACKEND="$(BACKEND_DIR)/bin/$(DEV_BACKEND_EXE)";
+# The web libraries agent-made pages load (seshat-desktop/artifact-libs.json): the packaged backend finds them next to its own folder.
+DEV_EXPORTS       += export SESHAT_ARTIFACT_LIBS_DIR="$(DESKTOP_DIR)/resources/artifact-libs";
 ifeq ($(FRESH),1)
 DEV_EXPORTS       += export SESHAT_RUNTIME_ROOT="$(FRESH_ROOT)"; export SESHAT_FORCE_SETUP=1;
 endif
@@ -171,7 +173,7 @@ dev-reset: stop ## Forget the fresh dev install completely, downloads included (
 	  printf "\033[32m[seshatos]\033[0m nothing to forget: there is no fresh dev install\n"; \
 	fi
 
-dev: stop desktop-install $(DEV_BACKEND_TARGET) dev-fresh-state ## Start the local backend (with the native OCR when there is a C compiler) + the Electron UI, as a brand new install
+dev: stop desktop-install desktop-artifact-libs $(DEV_BACKEND_TARGET) dev-fresh-state ## Start the local backend (with the native OCR when there is a C compiler) + the Electron UI, as a brand new install
 	@printf "\033[32m[seshatos]\033[0m starting local backend ($(DEV_KIND)) and Electron UI...\n"
 	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(DEV_WITH_NATIVE) $(DEV_BACKEND_INIT) ./bin/$(DEV_BACKEND_EXE)) & \
 	BACKEND_PID=$$!; \
