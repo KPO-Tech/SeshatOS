@@ -57,12 +57,12 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const isRunning = status === 'running' || status === 'pending'
   const isError = status === 'failed'
   const isCompleted = status === 'completed'
-  // A row stays closed while its tool runs, so a long turn does not fill the screen with output; an erroring row is open, and so is a
-  // question waiting for its answer. A bash row can be opened and closed by a click (see toggle() below), the other tools open their own
-  // panel instead.
+  // A row stays closed while its tool runs, so a long turn does not fill the screen with output. A failed row stays closed too: the red
+  // "failed" label says it, and a forced-open row could not be closed again. Only a question waiting for its answer opens by itself. A
+  // bash row can be opened and closed by a click (see toggle() below), the other tools open their own panel instead.
   const [opened, setOpened] = useState(false)
   const awaitingAnswer = isRunning && tool.name === 'ask_user_question'
-  const expanded = autoExpand || isError || awaitingAnswer || opened
+  const expanded = autoExpand || awaitingAnswer || opened
   const label = isPreviewTool ? toolLabel(tool.name) : summarizeTool(tool)
   const detail = isPreviewTool ? previewDetail(tool) : ''
   const meta = isPreviewTool ? previewMeta(tool) : ''
