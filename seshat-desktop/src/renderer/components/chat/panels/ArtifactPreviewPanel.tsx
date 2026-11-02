@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Caution, Down, Refresh, ShareOne } from '@icon-park/react'
 import { api } from '@renderer/api/client'
+import type { Session } from '@renderer/api/types'
 import { CodeBox } from '@renderer/components/chat/tools/common'
 import { useChat } from '@renderer/hooks/useChat'
-import { dataURLText, fixRequestMessage, pageLocation, pageProblemFrom, type PageProblem } from '@renderer/lib/htmlArtifact'
+import { dataURLText, fixRequestMessage, lastPageWrite, pageLocation, pageProblemFrom, type PageProblem } from '@renderer/lib/htmlArtifact'
 import { useSessionStore } from '@renderer/stores/session'
 
 type Props = {
@@ -53,6 +54,55 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
     return pageLocation(path, { projectPath: session?.projectPath, workspacePath: session?.workspacePath })
   })
 
+  // The session's folders are only in the store for a conversation loaded from the backend, not for one started just now, where a page
+  // presented with a relative path would have no location: no browser button, and its edits would go unnoticed. The folder exists by now,
+  // since the page is in it.
+  const foldersKnown = useSessionStore((s) => {
+    const session = s.sessions.find((item) => item.id === sessionId)
+    return Boolean(session?.projectPath || session?.workspacePath)
+  })
+  useEffect(() => {
+    if (foldersKnown) return
+    let cancelled = false
+    api.get<Session>(`/sessions/${sessionId}`)
+      .then((detail) => {
+        if (cancelled) return
+        useSessionStore.getState().updateSession(sessionId, { workspacePath: detail.workspace_path, projectPath: detail.project_path })
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [foldersKnown, sessionId])
+
+  // The agent changed the file (its fix, a request of the person): the page shown is out of date. The tool calls still streaming come first,
+  // they are the latest; once the turn ends they are in the messages.
+  const lastWrite = useSessionStore((s) => {
+    const session = s.sessions.find((item) => item.id === sessionId)
+    if (!session || !location) return undefined
+    const folders = { projectPath: session.projectPath, workspacePath: session.workspacePath }
+    const live = lastPageWrite(s.getStreaming(sessionId), location, folders)
+    if (live) return live
+    for (let i = session.messages.length - 1; i >= 0; i--) {
+      const found = lastPageWrite(session.messages[i].content, location, folders)
+      if (found) return found
+    }
+    return undefined
+  })
+  // Only a write not seen yet: when a turn ends, its calls move from the stream to the messages, and an older one can show for an instant.
+  // Before the folders are known nothing can be matched: the first write found then is the one the panel just loaded.
+  const seenWrites = useRef(new Set<string>())
+  const baselineTaken = useRef(false)
+  useEffect(() => {
+    if (!location) return
+    if (!baselineTaken.current) {
+      baselineTaken.current = true
+      if (lastWrite) seenWrites.current.add(lastWrite)
+      return
+    }
+    if (!lastWrite || seenWrites.current.has(lastWrite)) return
+    seenWrites.current.add(lastWrite)
+    setReloads((value) => value + 1)
+  }, [lastWrite, location])
+
   useEffect(() => {
     let cancelled = false
     window.seshat?.http?.backendOrigin()
@@ -82,7 +132,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
     if (!origin) return
     function onMessage(event: MessageEvent) {
       if (!frameRef.current || event.source !== frameRef.current.contentWindow) return
-      const problem = pageProblemFrom(event.data, origin!)
+      const problem = pageProblemFrom(event.data, origin!, path)
       if (!problem) return
       setProblems((current) => {
         if (current.length >= MAX_PROBLEMS) return current
@@ -92,7 +142,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [origin])
+  }, [origin, path])
 
   // Asked of the agent in the conversation, so the fix runs under its permissions and shows in the chat. A running turn would drop the
   // message (sendMessage does nothing then): the person is told to wait instead, as for the Merge button of the Changes card.
