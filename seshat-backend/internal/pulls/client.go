@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -71,31 +70,6 @@ func (c *client) pull(ctx context.Context, owner, repo string, number int) (apiP
 	var p apiPull
 	err := c.get(ctx, fmt.Sprintf("/repos/%s/%s/pulls/%d", owner, repo, number), &p)
 	return p, err
-}
-
-// pullsOfBranch lists the pull requests opened from a branch of the repository, newest first.
-func (c *client) pullsOfBranch(ctx context.Context, owner, repo, branch string) ([]apiPull, error) {
-	query := url.Values{"head": {owner + ":" + branch}, "state": {"all"}, "sort": {"updated"}, "direction": {"desc"}, "per_page": {"5"}}
-	var list []apiPull
-	err := c.get(ctx, fmt.Sprintf("/repos/%s/%s/pulls?%s", owner, repo, query.Encode()), &list)
-	return list, err
-}
-
-type searchItem struct {
-	Number        int       `json:"number"`
-	State         string    `json:"state"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	RepositoryURL string    `json:"repository_url"`
-}
-
-// myPulls lists the pull requests the token's owner opened, the most recently updated first.
-func (c *client) myPulls(ctx context.Context) ([]searchItem, error) {
-	query := url.Values{"q": {"is:pr author:@me"}, "sort": {"updated"}, "order": {"desc"}, "per_page": {"10"}}
-	var found struct {
-		Items []searchItem `json:"items"`
-	}
-	err := c.get(ctx, "/search/issues?"+query.Encode(), &found)
-	return found.Items, err
 }
 
 // checks sums up the check runs of a commit into one verdict.

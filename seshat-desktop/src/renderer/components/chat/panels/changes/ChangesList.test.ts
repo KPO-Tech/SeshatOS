@@ -6,7 +6,7 @@ import { ChangesList } from './ChangesList'
 
 const pull = (overrides: Partial<PullRequest>): PullRequest => ({
   owner: 'KPO-Tech', repo: 'SeshatOS', number: 279, title: 'feat(chat): teach the drawing', url: 'https://github.com/KPO-Tech/SeshatOS/pull/279',
-  state: 'open', additions: 12, deletions: 3, checks: 'passing', updated_at: '2026-10-31T10:00:00Z', from_session: false, ...overrides
+  state: 'open', additions: 12, deletions: 3, checks: 'passing', updated_at: '2026-10-31T10:00:00Z', ...overrides
 })
 
 const render = (pulls: PullRequest[]) => renderToStaticMarkup(createElement(ChangesList, { pulls, onRefresh: () => undefined }))

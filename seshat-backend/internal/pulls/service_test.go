@@ -12,29 +12,11 @@ import (
 
 func TestParsePullURL(t *testing.T) {
 	r, ok := parsePullURL("https://github.com/KPO-Tech/SeshatOS/pull/344/files")
-	if !ok || r.owner != "KPO-Tech" || r.repo != "SeshatOS" || r.number != 344 || !r.session {
+	if !ok || r.owner != "KPO-Tech" || r.repo != "SeshatOS" || r.number != 344 {
 		t.Fatalf("got %+v ok=%v", r, ok)
 	}
 	for _, bad := range []string{"", "https://gitlab.com/o/r/pull/1", "https://github.com/o/r/issues/1", "https://github.com/o/r/pull/x", "not a url"} {
 		if _, ok := parsePullURL(bad); ok {
-			t.Errorf("%q should not parse", bad)
-		}
-	}
-}
-
-func TestParseRemote(t *testing.T) {
-	for remote, want := range map[string]string{
-		"https://github.com/KPO-Tech/SeshatOS.git": "KPO-Tech/SeshatOS",
-		"https://github.com/KPO-Tech/SeshatOS":     "KPO-Tech/SeshatOS",
-		"git@github.com:KPO-Tech/SeshatOS.git":     "KPO-Tech/SeshatOS",
-	} {
-		owner, repo, ok := parseRemote(remote)
-		if !ok || owner+"/"+repo != want {
-			t.Errorf("%q: got %s/%s ok=%v", remote, owner, repo, ok)
-		}
-	}
-	for _, bad := range []string{"", "https://gitlab.com/o/r.git", "git@gitlab.com:o/r.git", "https://github.com/o"} {
-		if _, _, ok := parseRemote(bad); ok {
 			t.Errorf("%q should not parse", bad)
 		}
 	}
@@ -56,21 +38,6 @@ func fakeGitHub(t *testing.T, checksStatus int) *httptest.Server {
 			number, number, number, state, merged, updated.Format(time.RFC3339), number)
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/search/issues", func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") != "Bearer tok" {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		var items []string
-		for i := 1; i <= 8; i++ {
-			state, updated := "open", now.Add(-time.Duration(i)*time.Hour)
-			if i == 3 {
-				state, updated = "closed", now.Add(-30*24*time.Hour)
-			}
-			items = append(items, fmt.Sprintf(`{"number":%d,"state":%q,"updated_at":%q,"repository_url":"https://api.github.com/repos/o/r"}`, i, state, updated.Format(time.RFC3339)))
-		}
-		fmt.Fprintf(w, `{"items":[%s]}`, strings.Join(items, ","))
-	})
 	mux.HandleFunc("/repos/o/r/pulls/", func(w http.ResponseWriter, r *http.Request) {
 		var number int
 		fmt.Sscanf(strings.TrimPrefix(r.URL.Path, "/repos/o/r/pulls/"), "%d", &number)
@@ -103,38 +70,40 @@ func newTestService(server *httptest.Server) *Service {
 	return service
 }
 
-func TestTrackShowsFiveSessionFirstAndDropsStaleClosed(t *testing.T) {
+func TestTrackListsOnlyTheSessionsPulls(t *testing.T) {
 	service := newTestService(fakeGitHub(t, http.StatusOK))
 	result := service.Track(context.Background(), Request{URLs: []string{"https://github.com/o/r/pull/99", "https://github.com/o/r/pull/7"}})
 
-	if len(result.Pulls) != Visible {
-		t.Fatalf("want %d pull requests, got %d", Visible, len(result.Pulls))
-	}
-	// The session's addresses come first, a closed one among them is kept because the session asked for it.
-	if result.Pulls[0].Number != 99 || !result.Pulls[0].FromSession || result.Pulls[1].Number != 7 {
-		t.Fatalf("session pulls should lead: %+v", result.Pulls[:2])
+	// The addresses the session printed, in their order; a closed one is kept because the session worked on it.
+	if len(result.Pulls) != 2 || result.Pulls[0].Number != 99 || result.Pulls[1].Number != 7 {
+		t.Fatalf("want the two pull requests of the session, got %+v", result.Pulls)
 	}
 	if result.Pulls[0].State != StateClosed {
 		t.Fatalf("state: %q", result.Pulls[0].State)
-	}
-	if result.Pulls[2].Number != 1 || result.Pulls[2].FromSession || result.Pulls[4].Number != 4 {
-		t.Fatalf("own pulls follow, most recent first: %+v", result.Pulls[2])
 	}
 	if result.Credential != CredentialConnector || result.Note != "" {
 		t.Fatalf("credential %q note %q", result.Credential, result.Note)
 	}
 }
 
-func TestTrackDropsOldMergedOwnPull(t *testing.T) {
-	service := newTestService(fakeGitHub(t, http.StatusOK))
-	// Pull request 3 was closed 30 days ago: among the person's own, it falls out and the next one takes its place.
-	result := service.Track(context.Background(), Request{})
-	for _, p := range result.Pulls {
-		if p.Number == 3 {
-			t.Fatalf("an old merged pull request should not be listed: %+v", p)
-		}
+func TestTrackShowsNothingForASessionWithoutPulls(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls++ }))
+	defer server.Close()
+	// The agent opened no pull request: the person's own are not listed, and GitHub is not asked.
+	result := newTestService(server).Track(context.Background(), Request{})
+	if len(result.Pulls) != 0 || calls != 0 {
+		t.Fatalf("got %d pull requests and %d calls to GitHub", len(result.Pulls), calls)
 	}
-	if len(result.Pulls) != Visible {
+}
+
+func TestTrackKeepsAtMostVisible(t *testing.T) {
+	service := newTestService(fakeGitHub(t, http.StatusOK))
+	var urls []string
+	for i := 1; i <= Visible+3; i++ {
+		urls = append(urls, fmt.Sprintf("https://github.com/o/r/pull/%d", i))
+	}
+	if result := service.Track(context.Background(), Request{URLs: urls}); len(result.Pulls) != Visible {
 		t.Fatalf("want %d, got %d", Visible, len(result.Pulls))
 	}
 }
@@ -167,12 +136,13 @@ func TestTrackAnswersFromCacheWithinTTL(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		fmt.Fprint(w, `{"items":[]}`)
+		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()
 	service := newTestService(server)
-	service.Track(context.Background(), Request{})
-	service.Track(context.Background(), Request{})
+	request := Request{URLs: []string{"https://github.com/o/r/pull/1"}}
+	service.Track(context.Background(), request)
+	service.Track(context.Background(), request)
 	if calls != 1 {
 		t.Fatalf("GitHub was asked %d times, want 1", calls)
 	}
@@ -181,7 +151,7 @@ func TestTrackAnswersFromCacheWithinTTL(t *testing.T) {
 func TestTrackExplainsARefusedToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusUnauthorized) }))
 	defer server.Close()
-	result := newTestService(server).Track(context.Background(), Request{})
+	result := newTestService(server).Track(context.Background(), Request{URLs: []string{"https://github.com/o/r/pull/1"}})
 	if !strings.Contains(result.Note, "refused") {
 		t.Fatalf("note %q", result.Note)
 	}

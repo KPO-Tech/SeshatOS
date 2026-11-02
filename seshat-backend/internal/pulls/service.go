@@ -3,7 +3,6 @@ package pulls
 import (
 	"context"
 	"errors"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -30,8 +29,8 @@ func NewService(credential Credential) *Service {
 	return &Service{credential: credential, now: time.Now, cache: map[string]cached{}}
 }
 
-// Track answers with the pull requests of the session first, then the person's own, at most Visible of them. Closed and merged ones
-// older than StaleAfter are left out. Nothing is stored beyond a short in-memory cache.
+// Track answers with the pull requests the agent of the session opened, at most Visible of them. The person's own are not listed, even
+// on the branch the session works on: the card follows what the agent did. Nothing is stored beyond a short in-memory cache.
 func (s *Service) Track(ctx context.Context, req Request) Result {
 	token, source := s.credential(ctx)
 	if token == "" {
@@ -61,34 +60,7 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 	result := Result{Pulls: []Pull{}, Credential: source}
 	var problem error
 
-	candidates := s.sessionRefs(ctx, gh, req, &problem)
-	seen := map[string]bool{}
-	for _, c := range candidates {
-		seen[refKey(c)] = true
-	}
-	mine, err := gh.myPulls(ctx)
-	if err != nil {
-		problem = firstError(problem, err)
-	}
-	var own []ref
-	for _, item := range mine {
-		owner, repo, ok := repoOfAPIURL(item.RepositoryURL)
-		if !ok {
-			continue
-		}
-		if item.State == "closed" && s.now().Sub(item.UpdatedAt) > StaleAfter {
-			continue
-		}
-		r := ref{owner: owner, repo: repo, number: item.Number, updatedAt: item.UpdatedAt}
-		if !seen[refKey(r)] {
-			own = append(own, r)
-		}
-	}
-	sort.SliceStable(own, func(i, j int) bool { return own[i].updatedAt.After(own[j].updatedAt) })
-	candidates = append(candidates, own...)
-	if len(candidates) > Visible {
-		candidates = candidates[:Visible]
-	}
+	candidates := sessionRefs(req)
 
 	// Each pull request is fetched on its own, side by side, and the list keeps the order of the candidates.
 	type fetched struct {
@@ -110,7 +82,7 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 			verdict, err := gh.checks(ctx, c.owner, c.repo, p.Head.SHA)
 			fetchedPulls[i] = fetched{checksDenied: err != nil, pull: Pull{
 				Owner: c.owner, Repo: c.repo, Number: p.Number, Title: p.Title, URL: p.HTMLURL, State: stateOf(p),
-				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, UpdatedAt: p.UpdatedAt, FromSession: c.session,
+				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, UpdatedAt: p.UpdatedAt,
 			}}
 		}()
 	}
@@ -129,8 +101,8 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 	return result
 }
 
-// sessionRefs are the pull requests of the session: the addresses its tools printed, then the ones of the branch its folder is on.
-func (s *Service) sessionRefs(ctx context.Context, gh *client, req Request, problem *error) []ref {
+// sessionRefs are the pull requests the agent of the session opened, read from the addresses the desktop found in its tool calls.
+func sessionRefs(req Request) []ref {
 	var refs []ref
 	seen := map[string]bool{}
 	add := func(r ref) {
@@ -144,22 +116,13 @@ func (s *Service) sessionRefs(ctx context.Context, gh *client, req Request, prob
 			add(r)
 		}
 	}
-	if owner, repo, branch, ok := repoOfFolder(ctx, req.WorkspacePath); ok {
-		list, err := gh.pullsOfBranch(ctx, owner, repo, branch)
-		if err != nil {
-			*problem = firstError(*problem, err)
-		}
-		for _, p := range list {
-			add(ref{owner: owner, repo: repo, number: p.Number, session: true})
-		}
-	}
 	return refs
 }
 
 func refKey(r ref) string { return strings.ToLower(r.owner + "/" + r.repo + "#" + itoa(r.number)) }
 
 func cacheKey(req Request, source string) string {
-	return source + "|" + req.WorkspacePath + "|" + strings.Join(req.URLs, ",")
+	return source + "|" + strings.Join(req.URLs, ",")
 }
 
 func firstError(current, next error) error {

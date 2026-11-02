@@ -54,7 +54,7 @@ function submitPlanInfo(tool: Props['tool'], result: Props['result']): { name: s
 }
 
 export function SilentToolView({ tool, result, status, snippet, sessionId }: Props) {
-  // A web tool opens inline under its row, the same card the session panel showed; it stays closed while the tool runs.
+  // A web tool opens inline under its row, and only there: the session panel does not show it. It stays closed while the tool runs.
   const [opened, setOpened] = useState(false)
   const isError = result?.isError === true || status === 'failed'
   const isRunning = status === 'running' || status === 'pending'

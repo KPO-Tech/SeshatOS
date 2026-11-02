@@ -11,8 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Changed
+
+- **Web searches and fetched pages stay in the conversation.** The session panel no longer opens and follows each search or page while the agent reads the web: the row in the chat already opens on what was found.
+- **The Changes card follows the pull requests the agent opened, and only those.** It used to fill up with the latest pull requests you opened anywhere on GitHub, even in a conversation that never touched it. It now lists the ones the agent of the conversation created itself (with `gh pr create` or a tool made to create one), not the ones it only listed or read, nor yours on the same branch, and stays hidden when there are none.
+
 ### Fixed
 
+- **A long pull request title is cut in the Changes card** instead of running out of it.
 - **A new version is offered while SeshatOS stays open.** The app looked for updates only when it started, so one that kept running for hours never heard of a release published meanwhile. It now looks again every hour.
 
 ## [0.3.2] - 2026-11-02
