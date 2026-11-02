@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { mergeRequestMessage, pullStatus, type PullRequest } from '@renderer/lib/pullRequests'
 import { useArmedPulls, usePullMergeStore } from '@renderer/stores/pullMerge'
 import { usePullRequests } from './usePullRequests'
@@ -12,7 +12,9 @@ import { usePullRequests } from './usePullRequests'
 export function useMergeWhenReady(sessionId: string, sendMessage: (text: string) => Promise<void> | void, isStreaming: boolean) {
   const armed = useArmedPulls(sessionId)
   const disarm = usePullMergeStore((s) => s.disarm)
-  const { result } = usePullRequests(armed)
+  // An armed pull request was already shown as the agent's: it is asked about without a window.
+  const candidates = useMemo(() => armed.map((url) => ({ url })), [armed])
+  const { result } = usePullRequests(candidates)
 
   useEffect(() => {
     if (!sessionId || !result || isStreaming) return

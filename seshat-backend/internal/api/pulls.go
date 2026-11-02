@@ -17,8 +17,8 @@ func (a *App) handlePullsTrack(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSONBody(w, r, &req) {
 		return
 	}
-	if len(req.URLs) > 20 {
-		req.URLs = req.URLs[:20]
+	if len(req.Candidates) > pulls.MaxCandidates {
+		req.Candidates = req.Candidates[:pulls.MaxCandidates]
 	}
 	writeJSON(w, http.StatusOK, a.backend.Pulls.Track(r.Context(), req))
 }
