@@ -144,28 +144,31 @@ func TestTheSandboxCannotBeChosenWhereItCannotRun(t *testing.T) {
 }
 
 func TestTakingAPathOffTheListGivesAccessBack(t *testing.T) {
+	// Absolute on the platform running the test: the handler keeps nothing else.
+	dir := t.TempDir()
+	ssh, aws := filepath.Join(dir, ".ssh"), filepath.Join(dir, ".aws")
 	protector := &fakeProtector{available: true}
-	app := sandboxTestApp(t, protector, []string{`C:\home\.ssh`, `C:\home\.aws`})
+	app := sandboxTestApp(t, protector, []string{ssh, aws})
 	if code, _, body := sandboxRequest(t, app, http.MethodPut, `{"mode":"project"}`); code != http.StatusOK {
 		t.Fatalf("%d: %s", code, body)
 	}
 
-	code, resp, body := sandboxRequest(t, app, http.MethodPut, `{"deny_read":["C:\\home\\.ssh","relative"]}`)
+	list, err := json.Marshal(map[string][]string{"deny_read": {ssh, "relative"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	code, resp, body := sandboxRequest(t, app, http.MethodPut, string(list))
 	if code != http.StatusOK {
 		t.Fatalf("%d: %s", code, body)
 	}
 	if resp.Mode != db.SandboxModeProject {
 		t.Fatalf("the mode must stay: %+v", resp)
 	}
-	if !reflect.DeepEqual(protector.removed, [][]string{{`C:\home\.aws`}}) {
+	if !reflect.DeepEqual(protector.removed, [][]string{{aws}}) {
 		t.Fatalf("removed %v", protector.removed)
 	}
-	// filepath.IsAbs depends on the platform running the test, so only the removal of
-	// the relative path is asserted.
-	for _, path := range resp.DenyRead {
-		if path == "relative" {
-			t.Fatalf("a relative path was kept: %v", resp.DenyRead)
-		}
+	if !reflect.DeepEqual(resp.DenyRead, []string{ssh}) {
+		t.Fatalf("a relative path must not be kept: %v", resp.DenyRead)
 	}
 
 	// An empty list stays empty rather than going back to the defaults.
