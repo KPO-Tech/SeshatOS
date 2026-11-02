@@ -429,7 +429,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                 className={cx(
                   'text-[length:var(--chat-font-size)] leading-[1.72] text-app-text',
                   isUser
-                    ? 'rounded-[12px_12px_4px_12px] border border-app-border-subtle bg-app-surface px-[11px] py-[7px]'
+                    ? 'min-w-0 max-w-full rounded-[12px_12px_4px_12px] border border-app-border-subtle bg-app-surface px-[11px] py-[7px] [overflow-wrap:anywhere]'
                     : 'rounded-none border-0 bg-transparent p-0',
                   isUser && message.status === 'sending' && 'opacity-55',
                   isUser && message.status === 'error' && 'border-app-error',

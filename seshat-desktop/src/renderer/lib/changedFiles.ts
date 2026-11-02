@@ -13,8 +13,8 @@ export type ChangedFile = {
 }
 
 // Same tool names as the write and edit categories of components/chat/tools/toolDisplay.tsx.
-const WRITE_TOOLS = new Set(['write', 'file_write', 'write_file'])
-const EDIT_TOOLS = new Set(['edit', 'file_edit', 'edit_file'])
+export const WRITE_TOOLS = new Set(['write', 'file_write', 'write_file'])
+export const EDIT_TOOLS = new Set(['edit', 'file_edit', 'edit_file'])
 
 type ToolBlock = {
   type: 'tool_use'
