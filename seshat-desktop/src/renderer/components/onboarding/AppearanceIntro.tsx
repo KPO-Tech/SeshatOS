@@ -4,32 +4,28 @@ import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { Titlebar } from '@renderer/components/layout/Titlebar'
 import { ThemePreview } from '@renderer/components/settings/ThemeCards'
 import { ACCENTS, chooseAccent, getStoredAccent } from '@renderer/lib/accent'
-import { chooseTheme, getEffectiveTheme, getStoredTheme } from '@renderer/lib/theme'
+import { chooseTheme, shownThemeId } from '@renderer/lib/theme'
 import { themeById } from '@renderer/lib/themes'
 import { AccentSwatches } from './AccentSwatches'
 import { IntroBackdrop } from './IntroBackdrop'
 import { IntroSteps } from './IntroSteps'
 
+// Four of the themes, one per mood; the others are in Settings > Appearance. A dark one becomes the main dark theme and a light one the
+// main light theme (see lib/theme.ts), so the button of the title bar switches between it and the default of the other scheme.
 const CHOICES = [
-  { id: 'dark', label: 'Dark', hint: 'The default theme' },
-  { id: 'light', label: 'Light', hint: 'Clean and bright' },
-  { id: 'midnight', label: 'Midnight', hint: 'A deep, vibrant theme' }
+  { id: 'dark', label: 'Seshat Dark', hint: 'The default theme' },
+  { id: 'carbon', label: 'Carbon', hint: 'Black, quiet' },
+  { id: 'dusk', label: 'Dusk', hint: 'A warm evening glow' },
+  { id: 'shine', label: 'Shine', hint: 'Light and warm' }
 ] as const
-
-/** The theme the page shows as chosen: the one stored, or, while the app follows the system, the one of the same scheme. */
-function shownTheme(stored: string): string {
-  if (stored !== 'auto') return stored
-  return getEffectiveTheme('auto') === 'light' ? 'light' : 'dark'
-}
 
 /**
  * The first screen of a new install: how the app looks, before anything else. A choice applies at once, so the page itself shows it, and
  * the same choices are in Settings > Appearance afterwards.
  */
 export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
-  const [theme, setTheme] = useState(() => getStoredTheme())
+  const [shown, setShown] = useState(() => shownThemeId())
   const [accent, setAccent] = useState<string | null>(() => getStoredAccent())
-  const shown = shownTheme(theme)
   // The accent that is on screen: the one chosen, or the one of the theme.
   const current = (accent ?? themeById(shown)?.accent ?? ACCENTS[0].hex).toLowerCase()
 
@@ -41,7 +37,7 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
 
   function pickTheme(id: string) {
     chooseTheme(id)
-    setTheme(id)
+    setShown(id)
   }
 
   function pickAccent(hex: string) {
@@ -79,7 +75,7 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
             </div>
           </div>
 
-          <div role="radiogroup" aria-label="Theme" className="mt-5 grid grid-cols-3 gap-6">
+          <div role="radiogroup" aria-label="Theme" className="mt-5 grid grid-cols-4 gap-5">
             {CHOICES.map((choice) => {
               const seed = themeById(choice.id)
               const selected = shown === choice.id
@@ -93,7 +89,7 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
                   className="flex cursor-pointer flex-col items-center gap-3 border-0 bg-transparent p-0 text-center"
                 >
                   <span className={`relative block w-full rounded-2xl p-1.5 transition-colors ${selected ? 'border-2 border-[var(--accent-primary)]' : 'border-2 border-transparent'}`}>
-                    {seed && <ThemePreview seed={accent ? { ...seed, accent } : seed} height={104} />}
+                    {seed && <ThemePreview seed={accent ? { ...seed, accent } : seed} height={96} />}
                     {selected && (
                       <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-[var(--accent-primary)] text-white">
                         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

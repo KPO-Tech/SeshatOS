@@ -41,7 +41,7 @@ function SectionContent({ id }: { id: SettingsSectionId }) {
         />
       )
     case 'appearance':
-      return <AppearanceSettings theme={state.theme} onThemeChange={state.setTheme} />
+      return <AppearanceSettings />
     case 'shortcuts':
       return <ShortcutsSettings />
     case 'account':

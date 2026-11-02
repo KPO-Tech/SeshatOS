@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   CONTENT_WIDTHS,
   DEFAULT_APPEARANCE,
@@ -13,16 +13,11 @@ import {
 import { AccentSwatches } from '@renderer/components/onboarding/AccentSwatches'
 import { ACCENTS, chooseAccent, getStoredAccent } from '@renderer/lib/accent'
 import { duplicateTheme, exportTheme, importTheme } from '@renderer/lib/customThemes'
-import { applyTheme, getStoredTheme, updateCustomThemes, type ThemePreference } from '@renderer/lib/theme'
+import { applyCurrentTheme, chooseMode, chooseTheme, getMainThemes, getThemeMode, onThemeChange, shownThemeId, updateCustomThemes, type MainThemes, type ThemeMode } from '@renderer/lib/theme'
 import { allThemes, themeById, type ThemeSeed } from '@renderer/lib/themes'
 import { ActionButton, SettingRow, SettingsCard, SettingsPage, SettingsTabs, type SettingsTab } from './kit'
-import { Segmented, SystemCard, ThemeCard, ThemeGroup, ThemePreview } from './ThemeCards'
+import { Segmented, ThemeCard, ThemeGroup, ThemePreview } from './ThemeCards'
 import { ThemeEditor } from './ThemeEditor'
-
-type Props = {
-  theme: ThemePreference
-  onThemeChange: (theme: ThemePreference) => void
-}
 
 type Filter = 'all' | 'dark' | 'light'
 type Tab = 'theme' | 'interface'
@@ -31,23 +26,34 @@ const TABS: Array<SettingsTab<Tab>> = [
   { id: 'interface', label: 'Interface' }
 ]
 
+// Seshat's own, in the order they are shown: its two dark ones, then its two light ones.
+const SESHAT_ORDER = ['dark', 'seshat-night', 'light', 'shine']
+
 function customThemes(): ThemeSeed[] {
   return allThemes().filter((seed) => seed.category === 'custom')
 }
 
-export function AppearanceSettings({ theme, onThemeChange }: Props) {
+type Appearance = { mode: ThemeMode; main: MainThemes; shown: string }
+
+function readAppearance(): Appearance {
+  return { mode: getThemeMode(), main: getMainThemes(), shown: shownThemeId() }
+}
+
+export function AppearanceSettings() {
   const [tab, setTab] = useState<Tab>('theme')
   const [filter, setFilter] = useState<Filter>('all')
-  const [custom, setCustom] = useState<ThemeSeed[]>(() => {
-    getStoredTheme() // makes sure the themes the person made are loaded
-    return customThemes()
-  })
+  const [{ mode, main, shown }, setAppearance] = useState<Appearance>(readAppearance)
+  // readAppearance above loaded the themes the person made.
+  const [custom, setCustom] = useState<ThemeSeed[]>(customThemes)
   const [prefs, setPrefs] = useState<AppearancePrefs>(() => getStoredAppearance())
   const [accent, setAccent] = useState<string | null>(() => getStoredAccent())
   const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
 
-  const selected = theme === 'auto' ? undefined : themeById(theme)
+  useEffect(() => onThemeChange(() => setAppearance(readAppearance())), [])
+
+  // The theme on screen: the one the accent, the editor and the export work on.
+  const selected = themeById(shown)
   const visible = (seed: ThemeSeed) => filter === 'all' || seed.scheme === filter
   const inCategory = (category: ThemeSeed['category']) => allThemes().filter((seed) => seed.category === category && visible(seed))
 
@@ -55,8 +61,11 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
     const stored = updateCustomThemes(list)
     setCustom(list)
     if (!stored) setNotice({ tone: 'error', text: 'Your themes could not be saved in this browser: they will be lost when the app closes.' })
-    if (select) onThemeChange(select)
-    else applyTheme(getStoredTheme())
+    if (select) chooseTheme(select)
+    else {
+      applyCurrentTheme()
+      setAppearance(readAppearance())
+    }
   }
 
   function duplicate() {
@@ -69,7 +78,7 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
 
   function remove(seed: ThemeSeed) {
     if (!window.confirm(`Delete the theme “${seed.label}”?`)) return
-    commit(custom.filter((item) => item.id !== seed.id), selected?.id === seed.id ? 'auto' : undefined)
+    commit(custom.filter((item) => item.id !== seed.id))
   }
 
   async function onImport(file: File | undefined) {
@@ -110,18 +119,19 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
   const isDefault = JSON.stringify(prefs) === JSON.stringify(DEFAULT_APPEARANCE)
   const zoomIndex = Math.max(0, ZOOMS.indexOf(prefs.zoom))
 
-  const select = (id: string) => () => onThemeChange(id)
-  const card = (seed: ThemeSeed) => <ThemeCard key={seed.id} seed={seed} selected={theme === seed.id} onSelect={select(seed.id)} />
+  const card = (seed: ThemeSeed) => (
+    <ThemeCard key={seed.id} seed={seed} selected={shown === seed.id} main={main[seed.scheme] === seed.id} onSelect={() => chooseTheme(seed.id)} />
+  )
+  const seshat = SESHAT_ORDER.map((id) => themeById(id)).filter((seed): seed is ThemeSeed => !!seed && visible(seed))
   const dark = inCategory('dark')
   const light = inCategory('light')
-  const gradients = inCategory('gradient')
   const mine = custom.filter(visible)
 
   return (
     <SettingsPage id="appearance" tabs={<SettingsTabs tabs={TABS} value={tab} onChange={setTab} />}>
       {tab === 'theme' ? (
         <>
-          <CurrentTheme theme={theme} selected={selected} />
+          <MainThemesCard mode={mode} main={main} shown={shown} />
 
           <SettingsCard
             title="Accent color"
@@ -149,7 +159,7 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
           </SettingsCard>
 
           <SettingsCard
-            title="Presets"
+            title="Themes"
             padded
             action={
               <Segmented
@@ -165,14 +175,10 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
             }
           >
             <div className="grid gap-6">
-              <ThemeGroup title="Seshat">
-                <SystemCard selected={theme === 'auto'} onSelect={select('auto')} />
-                {allThemes().filter((seed) => seed.category === 'seshat').map(card)}
-              </ThemeGroup>
+              {seshat.length > 0 && <ThemeGroup title="Seshat">{seshat.map(card)}</ThemeGroup>}
               {mine.length > 0 && <ThemeGroup title="My themes">{mine.map(card)}</ThemeGroup>}
               {dark.length > 0 && <ThemeGroup title="Dark">{dark.map(card)}</ThemeGroup>}
               {light.length > 0 && <ThemeGroup title="Light">{light.map(card)}</ThemeGroup>}
-              {gradients.length > 0 && <ThemeGroup title="Gradients">{gradients.map(card)}</ThemeGroup>}
             </div>
           </SettingsCard>
 
@@ -234,30 +240,52 @@ export function AppearanceSettings({ theme, onThemeChange }: Props) {
   )
 }
 
-function CurrentTheme({ theme, selected }: { theme: ThemePreference; selected: ThemeSeed | undefined }) {
-  const seed = selected ?? themeById('dark')
-  if (!seed) return null
-  const name = theme === 'auto' ? 'System' : seed.label
-  const swatch = (color: string, label: string) => (
-    <span key={label} title={`${label} ${color}`} className="size-5 rounded border border-[var(--border-strong)]" style={{ background: color }} />
-  )
+const MODES: Array<{ value: ThemeMode; label: string }> = [
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' },
+  { value: 'system', label: 'System' }
+]
+
+/**
+ * The two main themes and the mode. The button of the title bar switches between them; System follows the operating system. A theme
+ * picked below becomes the main one of its scheme.
+ */
+function MainThemesCard({ mode, main, shown }: { mode: ThemeMode; main: MainThemes; shown: string }) {
+  const slot = (scheme: 'dark' | 'light') => {
+    const seed = themeById(main[scheme])
+    if (!seed) return null
+    const active = shown === seed.id
+    return (
+      <button
+        type="button"
+        onClick={() => chooseMode(scheme)}
+        aria-pressed={active}
+        className={[
+          'flex min-w-[260px] flex-1 items-center gap-4 rounded-xl border p-3 text-left transition-colors',
+          active ? 'border-[var(--text-primary)] bg-[var(--surface-muted)]' : 'border-[var(--border-soft)] hover:bg-[var(--surface-muted)]'
+        ].join(' ')}
+      >
+        <div className="w-[150px] shrink-0">
+          <ThemePreview seed={seed} height={84} />
+        </div>
+        <div className="min-w-0">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{scheme === 'dark' ? 'Dark theme' : 'Light theme'}</div>
+          <div className="mt-0.5 truncate text-[18px] font-semibold text-[var(--text-primary)]">{seed.label}</div>
+          <div className="mt-1 text-[11px] text-[var(--text-muted)]">{active ? 'On screen' : 'Click to show it'}</div>
+        </div>
+      </button>
+    )
+  }
   return (
-    <div className="flex flex-wrap items-center gap-6 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-      <div className="w-[280px] max-w-full shrink-0">
-        <ThemePreview seed={seed} height={130} />
+    <SettingsCard title="Main themes" padded action={<Segmented label="Mode" value={mode} options={MODES} onChange={chooseMode} />}>
+      <div className="flex flex-wrap gap-3">
+        {slot('dark')}
+        {slot('light')}
       </div>
-      <div>
-        <div className="text-[26px] font-semibold leading-tight text-[var(--text-primary)]">{name}</div>
-        <div className="mt-1 text-[12px] text-[var(--text-muted)]">
-          {theme === 'auto' ? 'Follows your system' : seed.category === 'custom' ? 'Your theme' : seed.wallpaper ? 'Gradient' : seed.scheme === 'dark' ? 'Dark' : 'Light'}
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {swatch(seed.bg, 'Surface')}
-          {swatch(seed.accent, 'Accent')}
-          {swatch(seed.text, 'Text')}
-        </div>
-      </div>
-    </div>
+      <p className="m-0 mt-3 text-[12px] text-[var(--text-muted)]">
+        The sun and moon button of the title bar switches between these two. Pick a theme below to make it the main one of its kind.
+      </p>
+    </SettingsCard>
   )
 }
 

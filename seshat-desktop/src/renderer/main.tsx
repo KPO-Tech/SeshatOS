@@ -4,9 +4,9 @@ import './styles/tailwind.css'
 import { App } from './App'
 import { applyAccent, getStoredAccent } from './lib/accent'
 import { applyAppearance, getStoredAppearance } from './lib/appearance'
-import { applyTheme, followSystemScheme, getStoredTheme } from './lib/theme'
+import { applyCurrentTheme, followSystemScheme } from './lib/theme'
 
-applyTheme(getStoredTheme())
+applyCurrentTheme()
 applyAccent(getStoredAccent())
 followSystemScheme()
 applyAppearance(getStoredAppearance())

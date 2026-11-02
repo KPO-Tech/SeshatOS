@@ -100,17 +100,17 @@ describe('export and import', () => {
 
 describe('duplicateTheme', () => {
   it('copies the colours of a preset into a new custom theme', () => {
-    const kanagawa = themeById('kanagawa')!
-    const copy = duplicateTheme(kanagawa, 'Mine')
+    const mirage = themeById('mirage')!
+    const copy = duplicateTheme(mirage, 'Mine')
     expect(copy.id).toMatch(/^custom-/)
     expect(copy.category).toBe('custom')
-    expect(copy.bg).toBe(kanagawa.bg)
-    expect(copy.text).toBe(kanagawa.text)
-    expect(copy.accent).toBe(kanagawa.accent)
+    expect(copy.bg).toBe(mirage.bg)
+    expect(copy.text).toBe(mirage.text)
+    expect(copy.accent).toBe(mirage.accent)
   })
 
   it('keeps the wallpaper of a gradient preset', () => {
-    expect(duplicateTheme(themeById('midnight')!, 'M').wallpaper?.kind).toBe('gradient')
+    expect(duplicateTheme(themeById('dusk')!, 'M').wallpaper?.kind).toBe('gradient')
   })
 })
 
