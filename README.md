@@ -25,7 +25,7 @@
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0%20%2B%20Commons%20Clause-3a3941"></a>
 </p>
 
-<!-- video: chat -->
+https://github.com/user-attachments/assets/2b057c07-33e8-4819-944e-001c753ca713
 
 ## Answers you can read, not walls of text
 
@@ -39,7 +39,7 @@ Ask for a simulation, a dashboard or a 3D scene. The agent writes the page and i
 
 Chart.js, three.js, React, D3, Tailwind, Mermaid, KaTeX and more ship with the app, so these pages also work offline. If a page breaks, the panel lists what went wrong and one click asks the agent to fix it.
 
-<!-- video: 3d -->
+https://github.com/user-attachments/assets/c9afc805-f044-4b29-a29d-9edf3042c3fd
 
 <table>
   <tr>
@@ -64,6 +64,14 @@ Open a project and the agent reads your code, edits it and runs your commands, a
   <tr>
     <td align="center"><sub>Your projects, their files and their sessions in one place</sub></td>
     <td align="center"><sub>Every step of the agent stays visible</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/img/agent-git.png" alt="The agent working through git steps, with the branch and the pull request shown in the side panel"></td>
+    <td width="50%"><img src="docs/img/agent-commits.png" alt="The commits the agent made, listed in the answer, with its pull request in the Changes card"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>The branch and the changes, always in view</sub></td>
+    <td align="center"><sub>Clean commits, and its pull request followed in the Changes card</sub></td>
   </tr>
 </table>
 
