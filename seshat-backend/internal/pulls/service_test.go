@@ -34,7 +34,7 @@ func fakeGitHub(t *testing.T, checksStatus int) *httptest.Server {
 	t.Helper()
 	now := time.Now().UTC()
 	pull := func(number int, state string, merged bool, updated time.Time) string {
-		return fmt.Sprintf(`{"number":%d,"title":"PR %d","html_url":"https://github.com/o/r/pull/%d","state":%q,"draft":false,"merged":%t,"additions":3,"deletions":1,"updated_at":%q,"head":{"sha":"sha%d"}}`,
+		return fmt.Sprintf(`{"number":%d,"title":"PR %d","html_url":"https://github.com/o/r/pull/%d","state":%q,"draft":false,"merged":%t,"mergeable_state":"clean","additions":3,"deletions":1,"updated_at":%q,"head":{"sha":"sha%d"}}`,
 			number, number, number, state, merged, updated.Format(time.RFC3339), number)
 	}
 	mux := http.NewServeMux()
@@ -80,6 +80,9 @@ func TestTrackListsOnlyTheSessionsPulls(t *testing.T) {
 	}
 	if result.Pulls[0].State != StateClosed {
 		t.Fatalf("state: %q", result.Pulls[0].State)
+	}
+	if result.Pulls[1].MergeableState != "clean" {
+		t.Fatalf("mergeable state: %q", result.Pulls[1].MergeableState)
 	}
 	if result.Credential != CredentialConnector || result.Note != "" {
 		t.Fatalf("credential %q note %q", result.Credential, result.Note)

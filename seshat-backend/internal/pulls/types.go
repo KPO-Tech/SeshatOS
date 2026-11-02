@@ -33,16 +33,18 @@ const (
 
 // Pull is one pull request as the card draws it.
 type Pull struct {
-	Owner     string    `json:"owner"`
-	Repo      string    `json:"repo"`
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	URL       string    `json:"url"`
-	State     string    `json:"state"`
-	Additions int       `json:"additions"`
-	Deletions int       `json:"deletions"`
-	Checks    string    `json:"checks"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Owner     string `json:"owner"`
+	Repo      string `json:"repo"`
+	Number    int    `json:"number"`
+	Title     string `json:"title"`
+	URL       string `json:"url"`
+	State     string `json:"state"`
+	Additions int    `json:"additions"`
+	Deletions int    `json:"deletions"`
+	Checks    string `json:"checks"`
+	// MergeableState is GitHub's mergeable_state, as it gave it: the desktop turns it, with the checks, into one status.
+	MergeableState string    `json:"mergeable_state"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // Request lists the addresses of the pull requests the agent of the session opened (see collectPullUrls in the desktop).

@@ -52,16 +52,18 @@ func (c *client) get(ctx context.Context, path string, out any) error {
 }
 
 type apiPull struct {
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	HTMLURL   string    `json:"html_url"`
-	State     string    `json:"state"`
-	Draft     bool      `json:"draft"`
-	Merged    bool      `json:"merged"`
-	Additions int       `json:"additions"`
-	Deletions int       `json:"deletions"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Head      struct {
+	Number  int    `json:"number"`
+	Title   string `json:"title"`
+	HTMLURL string `json:"html_url"`
+	State   string `json:"state"`
+	Draft   bool   `json:"draft"`
+	Merged  bool   `json:"merged"`
+	// MergeableState is GitHub's word on merging: clean, blocked, behind, dirty, unstable, draft, has_hooks, or unknown while it computes.
+	MergeableState string    `json:"mergeable_state"`
+	Additions      int       `json:"additions"`
+	Deletions      int       `json:"deletions"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	Head           struct {
 		SHA string `json:"sha"`
 	} `json:"head"`
 }
