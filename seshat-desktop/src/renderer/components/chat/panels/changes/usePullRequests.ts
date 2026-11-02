@@ -5,7 +5,7 @@ import type { PullsResult } from '@renderer/lib/pullRequests'
 const REFRESH_MS = 60_000
 
 /**
- * The pull requests of a session and of the person, asked of the backend. It asks again every minute while the window is in front,
+ * The pull requests of a session, asked of the backend. It asks again every minute while the window is in front,
  * and once when it comes back, so a hidden panel costs GitHub nothing.
  */
 export function usePullRequests(workspacePath: string | undefined, urls: readonly string[]) {

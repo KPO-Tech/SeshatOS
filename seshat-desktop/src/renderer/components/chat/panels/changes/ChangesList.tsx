@@ -24,9 +24,10 @@ type Props = {
 /** One row per pull request: its state, title and place, how many lines it changes and where its checks stand. */
 export function ChangesList({ pulls, onRefresh }: Props) {
   return (
-    <ul className="m-0 grid list-none gap-0.5 p-0">
+    // grid-cols-1 is minmax(0, 1fr): an auto column grows to the longest title and pushes the row out of the card, so truncate never cuts.
+    <ul className="m-0 grid min-w-0 list-none grid-cols-1 gap-0.5 p-0">
       {pulls.map((pull) => (
-        <li key={`${pull.owner}/${pull.repo}#${pull.number}`} className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-[var(--surface-hover)]">
+        <li key={`${pull.owner}/${pull.repo}#${pull.number}`} className="flex min-w-0 items-center gap-2 rounded-md px-1 py-1 hover:bg-[var(--surface-hover)]">
           <span className={STATE_COLOR[pull.state]} title={STATE_LABEL[pull.state]}><PullIcon state={pull.state} /></span>
           <button
             type="button"

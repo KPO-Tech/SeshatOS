@@ -26,7 +26,7 @@ func parsePullURL(raw string) (ref, bool) {
 	if err != nil || number <= 0 {
 		return ref{}, false
 	}
-	return ref{owner: match[1], repo: match[2], number: number, session: true}, true
+	return ref{owner: match[1], repo: match[2], number: number}, true
 }
 
 // parseRemote reads owner and repo from a git remote that points at github.com, over https or ssh.
@@ -47,16 +47,3 @@ func parseRemote(remote string) (owner, repo string, ok bool) {
 }
 
 func itoa(n int) string { return strconv.Itoa(n) }
-
-// repoOfAPIURL reads owner and repo from an API repository address such as https://api.github.com/repos/o/r.
-func repoOfAPIURL(raw string) (owner, repo string, ok bool) {
-	parsed, err := url.Parse(raw)
-	if err != nil {
-		return "", "", false
-	}
-	parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
-	if len(parts) != 3 || parts[0] != "repos" {
-		return "", "", false
-	}
-	return parts[1], parts[2], true
-}

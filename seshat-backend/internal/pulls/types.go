@@ -1,14 +1,11 @@
-// Package pulls follows the GitHub pull requests of the person using the app: the ones a session worked on and the ones they
-// opened. It reads, never writes, and keeps nothing on disk.
+// Package pulls follows the GitHub pull requests a session worked on: the addresses its tools printed and the ones of the branch its
+// folder is on. It reads, never writes, and keeps nothing on disk.
 package pulls
 
 import "time"
 
 // Visible is how many pull requests the card shows. The rest, closed ones above all, simply fall out of the list.
 const Visible = 5
-
-// StaleAfter is how long a closed or merged pull request stays in the list after its last update.
-const StaleAfter = 7 * 24 * time.Hour
 
 // Pull request states.
 const (
@@ -47,7 +44,6 @@ type Pull struct {
 	Deletions   int       `json:"deletions"`
 	Checks      string    `json:"checks"`
 	UpdatedAt   time.Time `json:"updated_at"`
-	FromSession bool      `json:"from_session"`
 }
 
 // Request says what the session knows: its folder, and the pull request addresses its tools printed.
@@ -68,6 +64,4 @@ type Result struct {
 type ref struct {
 	owner, repo string
 	number      int
-	updatedAt   time.Time
-	session     bool
 }

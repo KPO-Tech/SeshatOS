@@ -11,6 +11,15 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Changed
+
+- **Web searches and fetched pages stay in the conversation.** The session panel no longer opens and follows each search or page while the agent reads the web: the row in the chat already opens on what was found.
+- **The Changes card shows the pull requests of the conversation only.** It used to fill up with the latest pull requests you opened anywhere on GitHub, even in a conversation that never touched it. It now lists the addresses the agent printed and the pull requests of the branch of its folder, and stays hidden when there are none.
+
+### Fixed
+
+- **A long pull request title is cut in the Changes card** instead of running out of it.
+
 ## [0.3.2] - 2026-11-02
 
 ### Highlights

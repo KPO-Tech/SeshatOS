@@ -14,7 +14,6 @@ export type PullRequest = {
   deletions: number
   checks: PullChecks
   updated_at: string
-  from_session: boolean
 }
 
 export type PullsResult = {

@@ -3,7 +3,6 @@ package pulls
 import (
 	"context"
 	"errors"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -30,8 +29,8 @@ func NewService(credential Credential) *Service {
 	return &Service{credential: credential, now: time.Now, cache: map[string]cached{}}
 }
 
-// Track answers with the pull requests of the session first, then the person's own, at most Visible of them. Closed and merged ones
-// older than StaleAfter are left out. Nothing is stored beyond a short in-memory cache.
+// Track answers with the pull requests of the session, at most Visible of them. The person's other pull requests are not listed: a
+// conversation that never touched GitHub showed the latest ones of another project. Nothing is stored beyond a short in-memory cache.
 func (s *Service) Track(ctx context.Context, req Request) Result {
 	token, source := s.credential(ctx)
 	if token == "" {
@@ -62,33 +61,6 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 	var problem error
 
 	candidates := s.sessionRefs(ctx, gh, req, &problem)
-	seen := map[string]bool{}
-	for _, c := range candidates {
-		seen[refKey(c)] = true
-	}
-	mine, err := gh.myPulls(ctx)
-	if err != nil {
-		problem = firstError(problem, err)
-	}
-	var own []ref
-	for _, item := range mine {
-		owner, repo, ok := repoOfAPIURL(item.RepositoryURL)
-		if !ok {
-			continue
-		}
-		if item.State == "closed" && s.now().Sub(item.UpdatedAt) > StaleAfter {
-			continue
-		}
-		r := ref{owner: owner, repo: repo, number: item.Number, updatedAt: item.UpdatedAt}
-		if !seen[refKey(r)] {
-			own = append(own, r)
-		}
-	}
-	sort.SliceStable(own, func(i, j int) bool { return own[i].updatedAt.After(own[j].updatedAt) })
-	candidates = append(candidates, own...)
-	if len(candidates) > Visible {
-		candidates = candidates[:Visible]
-	}
 
 	// Each pull request is fetched on its own, side by side, and the list keeps the order of the candidates.
 	type fetched struct {
@@ -110,7 +82,7 @@ func (s *Service) build(ctx context.Context, gh *client, req Request, source str
 			verdict, err := gh.checks(ctx, c.owner, c.repo, p.Head.SHA)
 			fetchedPulls[i] = fetched{checksDenied: err != nil, pull: Pull{
 				Owner: c.owner, Repo: c.repo, Number: p.Number, Title: p.Title, URL: p.HTMLURL, State: stateOf(p),
-				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, UpdatedAt: p.UpdatedAt, FromSession: c.session,
+				Additions: p.Additions, Deletions: p.Deletions, Checks: verdict, UpdatedAt: p.UpdatedAt,
 			}}
 		}()
 	}
@@ -150,7 +122,7 @@ func (s *Service) sessionRefs(ctx context.Context, gh *client, req Request, prob
 			*problem = firstError(*problem, err)
 		}
 		for _, p := range list {
-			add(ref{owner: owner, repo: repo, number: p.Number, session: true})
+			add(ref{owner: owner, repo: repo, number: p.Number})
 		}
 	}
 	return refs
