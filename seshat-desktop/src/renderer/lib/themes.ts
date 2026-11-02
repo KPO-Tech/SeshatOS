@@ -9,7 +9,7 @@
 
 export type ColorScheme = 'light' | 'dark'
 
-type ThemeCategory = 'seshat' | 'dark' | 'light' | 'gradient' | 'custom'
+type ThemeCategory = 'seshat' | 'dark' | 'light' | 'custom'
 
 /** A gradient behind the whole window: an angle and two to four colours. Built into CSS here, never taken as CSS from outside. */
 type GradientWallpaper = { kind: 'gradient'; angle: number; stops: string[] }
@@ -40,37 +40,44 @@ const SESHAT: ThemeSeed[] = [
   { id: 'light', label: 'Seshat Light', scheme: 'light', bg: '#fbfcfd', panel: '#ffffff', text: '#0c182e', accent: '#ef7c2f' }
 ]
 
+// A short list, chosen (2026-11-02): Seshat's own four, then a few dark and light ones from the most neutral to the most coloured. Each
+// one is a different mood, not a different hue of the same one; REPLACED says where the ones taken out went.
 const PRESETS: ThemeSeed[] = [
-  // Seshat's third appearance: the blue-black night of the Projects design (measured on it), with the orange of Seshat Dark, brighter.
+  // Seshat's own. Night: the blue-black of the Projects design (measured on it), with the orange of Seshat Dark, brighter. Shine: warm
+  // paper white, the light one Seshat starts with.
   { id: 'seshat-night', label: 'Seshat Night', category: 'seshat', scheme: 'dark', bg: '#14171d', panel: '#1b1f26', text: '#e8eaee', accent: '#e26d1f' },
+  { id: 'shine', label: 'Shine', category: 'seshat', scheme: 'light', bg: '#fbfaf6', panel: '#ffffff', text: '#1a1a1a', accent: '#d17a22' },
   // Dark
   { id: 'carbon', label: 'Carbon', scheme: 'dark', bg: '#0c0c0d', panel: '#161617', text: '#e4e4e6', accent: '#d9622a' },
-  { id: 'graphite', label: 'Graphite', category: 'gradient', scheme: 'dark', bg: '#1b1d24', panel: '#262933', text: '#e6e7e9', accent: '#5b86b8', wallpaper: { kind: 'gradient', angle: 140, stops: ['#3a3f55', '#23262f', '#15161b'] } },
-  { id: 'midnight', label: 'Midnight', category: 'gradient', scheme: 'dark', bg: '#0e1226', panel: '#171d3a', text: '#dde5f2', accent: '#4f7fe0', wallpaper: { kind: 'gradient', angle: 135, stops: ['#2b2370', '#14224a', '#0b4a5a'] } },
-  { id: 'orbit', label: 'Orbit', scheme: 'dark', bg: '#15172b', panel: '#1e2140', text: '#dfe1f5', accent: '#6c7bf0' },
-  { id: 'tide', label: 'Tide', scheme: 'dark', bg: '#14232b', panel: '#1b303a', text: '#dbe9ee', accent: '#2a93b5' },
-  { id: 'after-rain', label: 'After rain', scheme: 'dark', bg: '#1b2420', panel: '#25322c', text: '#dde8e0', accent: '#3f9568' },
-  { id: 'aurora', label: 'Aurora', scheme: 'dark', bg: '#0f2027', panel: '#17313a', text: '#d9f1ee', accent: '#1f9d86' },
-  { id: 'phosphor', label: 'Phosphor', scheme: 'dark', bg: '#0b130d', panel: '#132017', text: '#bdf5c8', accent: '#2a9a49' },
-  { id: 'kanagawa', label: 'Kanagawa', scheme: 'dark', bg: '#1f1f28', panel: '#2a2a37', text: '#dcd7ba', accent: '#6d86c9' },
+  { id: 'graphite', label: 'Graphite', scheme: 'dark', bg: '#1b1d24', panel: '#262933', text: '#e6e7e9', accent: '#5b86b8', wallpaper: { kind: 'gradient', angle: 140, stops: ['#3a3f55', '#23262f', '#15161b'] } },
   { id: 'mirage', label: 'Mirage', scheme: 'dark', bg: '#1f2430', panel: '#2a3040', text: '#d9dce4', accent: '#c7762a' },
+  { id: 'tide', label: 'Tide', scheme: 'dark', bg: '#14232b', panel: '#1b303a', text: '#dbe9ee', accent: '#2a93b5' },
   { id: 'violet-hour', label: 'Violet hour', scheme: 'dark', bg: '#1f1a2e', panel: '#2b2440', text: '#e8e1f5', accent: '#9b6dff' },
-  { id: 'nebula', label: 'Nebula', scheme: 'dark', bg: '#1a1426', panel: '#261c38', text: '#eadff5', accent: '#d04fa6' },
-  { id: 'dusk', label: 'Dusk', category: 'gradient', scheme: 'dark', bg: '#251a28', panel: '#352636', text: '#ecdfe3', accent: '#d9684a', wallpaper: { kind: 'gradient', angle: 160, stops: ['#7d3552', '#3a1c3a', '#231424'] } },
-  { id: 'ember', label: 'Ember', scheme: 'dark', bg: '#261a17', panel: '#34231f', text: '#f0e0d6', accent: '#e5582d' },
+  { id: 'dusk', label: 'Dusk', scheme: 'dark', bg: '#251a28', panel: '#352636', text: '#ecdfe3', accent: '#d9684a', wallpaper: { kind: 'gradient', angle: 160, stops: ['#7d3552', '#3a1c3a', '#231424'] } },
   // Light
-  { id: 'shine', label: 'Shine', scheme: 'light', bg: '#fbfaf6', panel: '#ffffff', text: '#1a1a1a', accent: '#d17a22' },
   { id: 'paper', label: 'Paper', scheme: 'light', bg: '#f6f3ec', panel: '#fffefb', text: '#25221d', accent: '#8a5a2b' },
   { id: 'alpine', label: 'Alpine', scheme: 'light', bg: '#f2f6f9', panel: '#ffffff', text: '#14232d', accent: '#2b7bb9' },
-  { id: 'frost', label: 'Frost', scheme: 'light', bg: '#eef4f8', panel: '#fafdff', text: '#17303f', accent: '#3b8fc4' },
-  { id: 'dune', label: 'Dune', scheme: 'light', bg: '#f5eddf', panel: '#fbf6ec', text: '#3a2f22', accent: '#b8742e' },
-  { id: 'daybreak', label: 'Daybreak', category: 'gradient', scheme: 'light', bg: '#fdf3e0', panel: '#fffdf6', text: '#2f2a1b', accent: '#a36b05', wallpaper: { kind: 'gradient', angle: 150, stops: ['#ffe4bd', '#f3e8ff', '#c7dcf8'] } },
-  { id: 'peach', label: 'Peach', category: 'gradient', scheme: 'light', bg: '#fdeee6', panel: '#fff8f3', text: '#3d2a1f', accent: '#d1531c', wallpaper: { kind: 'gradient', angle: 135, stops: ['#ffdccd', '#ffe9d9', '#ffd8e0'] } },
-  { id: 'sherbet', label: 'Sherbet', category: 'gradient', scheme: 'light', bg: '#ffeef0', panel: '#fff8f9', text: '#3a2420', accent: '#d8466f', wallpaper: { kind: 'gradient', angle: 140, stops: ['#ffd2de', '#ffe6d0', '#f6c8e6'] } },
   { id: 'blossom', label: 'Blossom', scheme: 'light', bg: '#fbf1f3', panel: '#fffafb', text: '#3a2330', accent: '#c94f7c' },
-  { id: 'lilac', label: 'Lilac', category: 'gradient', scheme: 'light', bg: '#f1ecfb', panel: '#fbf9fe', text: '#2a2140', accent: '#7d5bd0', wallpaper: { kind: 'gradient', angle: 135, stops: ['#d8d0ff', '#e9dcff', '#ffd8f0'] } },
-  { id: 'seafoam', label: 'Seafoam', category: 'gradient', scheme: 'light', bg: '#e9f6f0', panel: '#f9fdfb', text: '#14302a', accent: '#1f8a73', wallpaper: { kind: 'gradient', angle: 135, stops: ['#c3f0e2', '#e2f6ee', '#d2e9ff'] } }
+  { id: 'daybreak', label: 'Daybreak', scheme: 'light', bg: '#fdf3e0', panel: '#fffdf6', text: '#2f2a1b', accent: '#a36b05', wallpaper: { kind: 'gradient', angle: 150, stops: ['#ffe4bd', '#f3e8ff', '#c7dcf8'] } }
 ]
+
+/** Presets taken out of the list, and the one kept that is closest to each: a stored choice of one of them moves there. */
+export const REPLACED: Readonly<Record<string, string>> = {
+  midnight: 'graphite',
+  orbit: 'graphite',
+  'after-rain': 'tide',
+  aurora: 'tide',
+  phosphor: 'carbon',
+  kanagawa: 'mirage',
+  nebula: 'violet-hour',
+  ember: 'dusk',
+  frost: 'alpine',
+  seafoam: 'alpine',
+  dune: 'paper',
+  peach: 'daybreak',
+  sherbet: 'blossom',
+  lilac: 'blossom'
+}
 
 function withCategory(seed: ThemeSeed, fallback: ThemeCategory): ThemeSeed {
   return seed.category ? seed : { ...seed, category: fallback }

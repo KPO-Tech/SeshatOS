@@ -4,6 +4,7 @@ import type { Message } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/stores/session'
 import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
 import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
+import { useStableEntries } from '@renderer/lib/stableEntries'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
 import type { AnswerExtras } from '@renderer/components/chat/messages/answerExtras'
 
@@ -49,23 +50,29 @@ export function MessageList({
   extrasFor,
 }: MessageListProps) {
   // The files each turn created or edited, listed under the message that ends the turn.
-  const changedFiles = useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming])
+  // Each list is kept identical while its content does not change, so that a streamed token only draws the message it lands in.
+  const changedFiles = useStableEntries(useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming]))
   // The web pages behind each answer, listed under it.
-  const webSources = useMemo(() => webSourcesByTurnEnd(messages, isStreaming), [messages, isStreaming])
+  const webSources = useStableEntries(useMemo(() => webSourcesByTurnEnd(messages, isStreaming), [messages, isStreaming]))
   // The pages consulted so far in the turn, to tell which links of an answer are citations.
-  const consulted = useMemo(() => webSourcesSoFar(messages), [messages])
+  const consulted = useStableEntries(useMemo(() => webSourcesSoFar(messages), [messages]))
 
-  // An answer can be asked again from the prompt before it, unless a turn is running.
-  const regenerate = (index: number): (() => void) | undefined => {
-    if (isStreaming || messages[index]?.role !== 'assistant') return undefined
-    for (let i = index - 1; i >= 0; i--) {
-      if (messages[i].role !== 'user') continue
-      const { text, attachments } = userPrompt(messages[i])
-      if (!text.trim()) continue
-      return () => onRetryMessage(text, attachments)
+  // An answer can be asked again from the prompt before it, unless a turn is running. One function per answer, kept between renders.
+  const regenerators = useMemo(() => {
+    const out = new Map<number, () => void>()
+    if (isStreaming) return out
+    for (let index = 0; index < messages.length; index++) {
+      if (messages[index].role !== 'assistant') continue
+      for (let i = index - 1; i >= 0; i--) {
+        if (messages[i].role !== 'user') continue
+        const { text, attachments } = userPrompt(messages[i])
+        if (!text.trim()) continue
+        out.set(index, () => onRetryMessage(text, attachments))
+        break
+      }
     }
-    return undefined
-  }
+    return out
+  }, [messages, isStreaming, onRetryMessage])
 
   if (messages.length === 0) {
     return (
@@ -113,7 +120,7 @@ export function MessageList({
                 onDenyTool={onDenyTool}
                 onSubmitToolPrompt={onSubmitToolPrompt}
                 onRetryMessage={onRetryMessage}
-                onRegenerate={regenerate(i)}
+                onRegenerate={regenerators.get(i)}
                 endsTurn={messages[i + 1]?.role !== 'assistant'}
               />
             </div>
