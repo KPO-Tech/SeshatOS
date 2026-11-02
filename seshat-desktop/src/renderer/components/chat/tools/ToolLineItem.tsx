@@ -77,7 +77,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
 
   // Clicking a tool row now opens its own live panel instead of expanding
   // inline - bash opens in place, browser_* has its own panel (Browser), read/write/edit open in Files (see FilesPanel.tsx), everything
-  // else (web_search/web_fetch, mcp, ...) opens in Computer, focused on this
+  // else (mcp, ...) opens in Computer, focused on this
   // exact tool call. Sub-agent tools never reach this component - they
   // render as AgentCardsRow instead (see MessageItem.tsx) - so no case is
   // needed for them here.

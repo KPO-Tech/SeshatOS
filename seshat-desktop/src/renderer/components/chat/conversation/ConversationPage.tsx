@@ -30,9 +30,6 @@ export function ConversationPage() {
   const streaming = useSessionStore((s) => (id ? s.streamingBySession[id] : null) ?? EMPTY_STREAMING)
   const session = sessions.find((s) => s.id === id)
   const openRightPanel = useUIStore((s) => s.openRightPanel)
-  const computerOpen = useUIStore((s) =>
-    s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'computer' && p.sessionId === id))
-  )
   const filesOpen = useUIStore((s) =>
     s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'files' && p.sessionId === id))
   )
@@ -105,7 +102,6 @@ export function ConversationPage() {
     sessionId: id,
     agentState,
     streaming,
-    computerOpen,
     filesOpen,
     isPlanPending,
     pendingPlan,
