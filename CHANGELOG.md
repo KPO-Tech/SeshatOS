@@ -11,6 +11,11 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Changed
+
+- **Two main themes, one click to switch.** The appearance is now a dark theme and a light theme, Seshat Dark and Shine to begin with, and the sun and moon button of the title bar switches between them in one click instead of opening a list. Settings > Appearance chooses what each of them is, and a mode: dark, light, or following the system.
+- **Fourteen themes instead of thirty.** Seshat Dark, Seshat Night, Seshat Light and Shine, then Carbon, Graphite, Mirage, Tide, Violet hour and Dusk, then Paper, Alpine, Blossom and Daybreak. A theme taken out of the list moves to the closest one kept. The first screen of a new install offers Seshat Dark, Carbon, Dusk and Shine.
+
 ## [0.3.4] - 2026-11-02
 
 ### Highlights
