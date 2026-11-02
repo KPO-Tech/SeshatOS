@@ -145,6 +145,19 @@ function waitForReadyPort(child: ChildProcess, logStream: NodeJS.WritableStream)
  * there - see index.ts) and awaited by restartBackendSidecar so the
  * respawn below never races the old process's port/log-file teardown.
  */
+/**
+ * Ends the backend and what it started. On Windows a kill ends the one process at once, with no cleanup, so a dev server
+ * the agent left running would stay behind, holding its port, after the app quit. taskkill /T follows the tree.
+ */
+function stopProcessTree(child: ChildProcess): void {
+  if (process.platform !== 'win32' || !child.pid) {
+    child.kill('SIGTERM')
+    return
+  }
+  const killer = spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true })
+  killer.once('error', () => child.kill('SIGTERM'))
+}
+
 export function stopBackendSidecar(): Promise<void> {
   return new Promise((resolve) => {
     if (!backendProcess) {
@@ -153,7 +166,7 @@ export function stopBackendSidecar(): Promise<void> {
     }
     const child = backendProcess
     backendProcess = null
-    child.kill('SIGTERM')
+    stopProcessTree(child)
     const forceKillTimer = setTimeout(() => {
       if (!child.killed) child.kill('SIGKILL')
     }, 5_000)
