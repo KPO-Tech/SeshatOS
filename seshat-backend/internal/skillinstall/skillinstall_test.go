@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -280,5 +281,27 @@ func TestEnvironmentRefusesWhenAToolIsMissing(t *testing.T) {
 	plan := Plan{Python: &PythonPlan{Minimum: "3.10", Found: false, Packages: []string{"requests"}}}
 	if err := Environment(context.Background(), t.TempDir(), t.TempDir(), Spec{}, plan); err == nil {
 		t.Fatal("an installation without its tool must fail")
+	}
+}
+
+func TestACommandAnEnvironmentCannotHoldIsWarnedAboutWithoutStoppingTheInstall(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "SKILL.md"), "---\nname: a\n---\n")
+	missing := CommandNeed{Name: "LaTeX", Commands: []string{"seshat-no-such-program"}, Install: "Install it."}
+
+	plan := Detect(root, Spec{Commands: []CommandNeed{missing}})
+	if len(plan.Warnings) != 1 || plan.Warnings[0] != "LaTeX was not found on this machine. Install it." {
+		t.Fatalf("warnings %q", plan.Warnings)
+	}
+	if !plan.Ready() {
+		t.Fatal("the skills can still be installed without it")
+	}
+
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("go is not on the path")
+	}
+	found := CommandNeed{Name: "LaTeX", Commands: []string{"seshat-no-such-program", "go"}, Install: "Install it."}
+	if plan := Detect(root, Spec{Commands: []CommandNeed{found}}); len(plan.Warnings) != 0 {
+		t.Fatalf("any one of the programs will do: %q", plan.Warnings)
 	}
 }

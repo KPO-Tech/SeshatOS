@@ -6,6 +6,7 @@ package skillinstall
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -57,6 +58,28 @@ type Spec struct {
 	PythonMinimum string
 	// PythonPackages are packages the skills use and the repository does not list in a file.
 	PythonPackages []string
+	// Commands are programs the skills run and an environment cannot hold.
+	Commands []CommandNeed
+}
+
+// CommandNeed is a program the person installs themselves, such as LaTeX. It is only looked for: without it the
+// skills are still installed, and the person is told before agreeing.
+type CommandNeed struct {
+	// Name is what the person knows it as.
+	Name string
+	// Commands are the programs that show it is there; any one of them will do.
+	Commands []string
+	// Install says how to get it.
+	Install string
+}
+
+func (need CommandNeed) found() bool {
+	for _, command := range need.Commands {
+		if _, err := exec.LookPath(command); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 const defaultPythonMinimum = "3.10"
@@ -233,6 +256,11 @@ func Detect(repoRoot string, spec Spec) Plan {
 			if strings.EqualFold(name, "puppeteer") {
 				plan.Warnings = append(plan.Warnings, "Install scripts of Node packages are not run, so puppeteer will not download its browser: skills that make PDFs with it need one installed on the machine.")
 			}
+		}
+	}
+	for _, need := range spec.Commands {
+		if !need.found() {
+			plan.Warnings = append(plan.Warnings, need.Name+" was not found on this machine. "+need.Install)
 		}
 	}
 	return plan

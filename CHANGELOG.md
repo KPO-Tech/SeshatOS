@@ -11,6 +11,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **A LaTeX skill in the skills on offer.** It makes PDF reports, papers, theses, CVs, letters, exams, posters and slides. Its Python packages are installed with it, and LaTeX is yours to install: the app tells you before you agree if it is missing.
+
 ## [0.3.8] - 2026-11-03
 
 ### Highlights
