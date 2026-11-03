@@ -15,7 +15,7 @@ function announce(task: TaskInfo) {
   // The pages that show what the task made (the list of skills) read it again.
   window.dispatchEvent(new CustomEvent<TaskInfo>(TASK_FINISHED_EVENT, { detail: task }))
   // The sidebar says how it went. The bell keeps it, and when the person is elsewhere (another window, or the app hidden in the tray) the
-  // system says it too, as their choices in Settings > General allow.
+  // system says it too, as their choices in Settings > Language & notifications allow.
   // A download that went well is followed by the window of what the skills need (see SkillReviewHost), which says the rest.
   if (task.kind === 'skill.clone' && task.status === 'succeeded') return
   const { title, body, route, failed } = finishedMessage(task)

@@ -17,7 +17,7 @@ import { AboutSettings } from '../AboutSettings'
 import { AccountSettings } from '../AccountSettings'
 import { AppearanceSettings } from '../AppearanceSettings'
 import { DataControlsSettings } from '../DataControlsSettings'
-import { GeneralSettings } from '../GeneralSettings'
+import { LanguageNotificationsSettings } from '../LanguageNotificationsSettings'
 import { MemoriesSettings } from '../MemoriesSettings'
 import { ShortcutsSettings } from '../ShortcutsSettings'
 import type { SettingsSectionId } from './sections'
@@ -33,9 +33,9 @@ function SectionContent({ id }: { id: SettingsSectionId }) {
   const state = useSettingsState()
 
   switch (id) {
-    case 'general':
+    case 'language-notifications':
       return (
-        <GeneralSettings
+        <LanguageNotificationsSettings
           language={state.language}
           onLanguageChange={state.updateLanguage}
         />
