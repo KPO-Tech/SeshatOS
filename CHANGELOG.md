@@ -11,7 +11,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
-## [0.3.7] - 2026-11-03
+## [0.3.8] - 2026-11-03
 
 ### Highlights
 
@@ -29,6 +29,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **On macOS, commands are no longer confined.** The component that confined them is gone, and Environment says so. Linux keeps Landlock.
 - **The installer no longer installs the `srt` component.**
 - **Runtime 1.14.0.** Confined commands can no longer read the clipboard, capture the screen, see your windows or write to the sandbox's internal pipes.
+
+## [0.3.7] - 2026-11-03
+
+Not published: the Linux package failed, so this tag has no release. What it held is in 0.3.8.
 
 ## [0.3.6] - 2026-11-02
 
