@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	neturl "net/url"
 	"os"
@@ -470,6 +471,12 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	if err != nil {
 		_ = cleanup()
 		return nil, nil, fmt.Errorf("init sandbox config store: %w", err)
+	}
+
+	tokenActivityStore, err := db.NewTokenActivityStore(database)
+	if err != nil {
+		_ = cleanup()
+		return nil, nil, fmt.Errorf("init token activity store: %w", err)
 	}
 
 	resolveDocumentConverter := func(ctx context.Context) documentreader.Converter {
@@ -1031,6 +1038,21 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	// user's own machine, not an isolated container that can't see any of
 	// it. ok=false (a genuine store read error) falls through to
 	// queryClientConfig's own SandboxKind above instead.
+	// A turn is counted when it ends, so a chat deleted right after keeps its place in the
+	// activity. The sweep at startup brings in what came before this existed.
+	runtime.SetTurnFinishedHook(func(sessionID string) {
+		countCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := tokenActivityStore.CollectSession(countCtx, sessionID); err != nil {
+			slog.Warn("token activity: count failed", "session", sessionID, "error", err)
+		}
+	})
+	go func() {
+		if err := tokenActivityStore.CollectAll(context.Background()); err != nil {
+			slog.Warn("token activity: sweep failed", "error", err)
+		}
+	}()
+
 	runtime.SetSandboxModeResolver(func(ctx context.Context) (sdk.SandboxKind, bool) {
 		cfg, err := sandboxConfigStore.Get(ctx)
 		if err != nil {
@@ -1212,6 +1234,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		LocalSTTStore:         localSTTConfigStore,
 		LocalTitleStore:       localTitleConfigStore,
 		SandboxConfigStore:    sandboxConfigStore,
+		TokenActivityStore:    tokenActivityStore,
 		StorageConfigStore:    storageConfigStore,
 		LongTermExtractor:     longTermExtractor,
 		CloudAutomation:       cloudAutomationService,

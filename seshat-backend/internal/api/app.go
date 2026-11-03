@@ -58,6 +58,7 @@ type App struct {
 	localSTTStore      *db.LocalSTTConfigStore
 	localTitleStore    *db.LocalTitleConfigStore
 	sandboxConfigStore *db.SandboxConfigStore
+	tokenActivityStore *db.TokenActivityStore
 	storageConfigStore *db.StorageConfigStore
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
@@ -130,6 +131,7 @@ type AppConfig struct {
 	LocalSTTStore         *db.LocalSTTConfigStore
 	LocalTitleStore       *db.LocalTitleConfigStore
 	SandboxConfigStore    *db.SandboxConfigStore
+	TokenActivityStore    *db.TokenActivityStore
 	StorageConfigStore    *db.StorageConfigStore
 	LongTermExtractor     *longterm.Extractor
 	RateLimiter           *RateLimiter
@@ -189,6 +191,7 @@ func NewApp(cfg AppConfig) *App {
 		localSTTStore:         cfg.LocalSTTStore,
 		localTitleStore:       cfg.LocalTitleStore,
 		sandboxConfigStore:    cfg.SandboxConfigStore,
+		tokenActivityStore:    cfg.TokenActivityStore,
 		storageConfigStore:    cfg.StorageConfigStore,
 		longTermExtractor:     cfg.LongTermExtractor,
 		rateLimiter:           cfg.RateLimiter,

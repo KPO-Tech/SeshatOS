@@ -81,6 +81,7 @@ type SDKRuntime struct {
 	resolveBrowser        func(ctx context.Context) string
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
 	resolveSandboxMode    func(ctx context.Context) (sdk.SandboxKind, bool)
+	onTurnFinished        func(sessionID string)
 	resolveManagedPolicy  func(ctx context.Context) *sdk.ManagedPolicy
 	// hostTools are registered on every client built for a turn (see RegisterHostTool).
 	hostTools []sdk.Tool
@@ -271,6 +272,23 @@ func (r *SDKRuntime) SetSandboxModeResolver(resolve func(ctx context.Context) (s
 	r.mu.Unlock()
 }
 
+// SetTurnFinishedHook attaches what runs after each turn, ended well or not. It runs on its
+// own goroutine: nothing a turn waits for may depend on it.
+func (r *SDKRuntime) SetTurnFinishedHook(hook func(sessionID string)) {
+	r.mu.Lock()
+	r.onTurnFinished = hook
+	r.mu.Unlock()
+}
+
+func (r *SDKRuntime) turnFinished(session *sdk.Session) {
+	r.mu.RLock()
+	hook := r.onTurnFinished
+	r.mu.RUnlock()
+	if hook != nil {
+		go hook(session.GetID().String())
+	}
+}
+
 func (r *SDKRuntime) SetBrowserRemoteControlResolver(resolve func(ctx context.Context) string) {
 	r.mu.Lock()
 	r.resolveBrowser = resolve
@@ -354,6 +372,7 @@ func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryRes
 	if err != nil {
 		return nil, err
 	}
+	defer r.turnFinished(session)
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// See the matching comment in StreamPrompt: carried on ctx, not
@@ -427,6 +446,7 @@ func (r *SDKRuntime) StreamPrompt(ctx context.Context, input QueryInput, onChunk
 		return nil, err
 	}
 	sessionLoadMs := time.Since(sessionStart).Milliseconds()
+	defer r.turnFinished(session)
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// Carried on ctx (not client.SetPromptFn/SetWebSearchRunner, which mutate
