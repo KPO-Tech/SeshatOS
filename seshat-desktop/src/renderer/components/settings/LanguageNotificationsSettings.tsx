@@ -14,10 +14,10 @@ const LANGUAGES = [
 
 const icon = (Glyph: typeof Remind) => <Glyph theme="outline" size={18} />
 
-export function GeneralSettings({ language, onLanguageChange }: Props) {
+export function LanguageNotificationsSettings({ language, onLanguageChange }: Props) {
   const { prefs, change } = useNotificationPrefs()
   return (
-    <SettingsPage id="general">
+    <SettingsPage id="language-notifications">
       <SettingsCard title="Language">
         <SettingRow title="Interface language" icon={icon(Translate)}>
           <div className="w-[200px]">

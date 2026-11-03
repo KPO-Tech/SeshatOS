@@ -1,10 +1,10 @@
 import type { ComponentType } from 'react'
-import { Brain, Chip, CloudStorage, Contrast, Cube, DataServer, FileText, Info, Keyboard, Magic, MindMapping, Music, Pic, Plug, Robot, Search, SettingTwo, Shield, Terminal, User } from '@icon-park/react'
+import { Brain, Chip, CloudStorage, Contrast, Cube, DataServer, FileText, Info, Keyboard, Magic, MindMapping, Music, Pic, Plug, Robot, Search, Shield, Terminal, Translate, User } from '@icon-park/react'
 import type { Edition } from '@renderer/lib/edition'
 
 /** Every page of Settings: what used to be in Settings and in Config now live under one roof. */
 export type SettingsSectionId =
-  | 'general'
+  | 'language-notifications'
   | 'appearance'
   | 'shortcuts'
   | 'account'
@@ -38,7 +38,7 @@ export type SettingsSectionDef = {
 
 export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
   { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
-  { id: 'general', label: 'General', group: 'General', icon: SettingTwo, description: 'Language and notifications.' },
+  { id: 'language-notifications', label: 'Language & notifications', group: 'General', icon: Translate, description: 'The interface language, and what the app tells you about.' },
   { id: 'appearance', label: 'Appearance', group: 'General', icon: Contrast, description: 'Theme, colors and size.' },
   { id: 'shortcuts', label: 'Shortcuts', group: 'General', icon: Keyboard, description: 'Keys to move around quickly.' },
 

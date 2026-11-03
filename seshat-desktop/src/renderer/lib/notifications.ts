@@ -1,4 +1,4 @@
-// What the app tells the person about, kept on this computer: the choices (Settings > General) and the history shown by the bell.
+// What the app tells the person about, kept on this computer: the choices (Settings > Language & notifications) and the history shown by the bell.
 
 export type NotificationKind = 'task' | 'error' | 'update' | 'agent'
 

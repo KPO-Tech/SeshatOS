@@ -21,6 +21,6 @@ describe('the sections of Settings', () => {
   it('groups the sections in the order they are listed', () => {
     const groups = groupSections(visibleSections({ cloud: false }))
     expect(groups.map(([name]) => name)).toEqual(['General', 'AI runtime', 'Capabilities', 'Workspace', 'Data & privacy', 'About'])
-    expect(groups[0][1].map((section) => section.id)).toEqual(['account', 'general', 'appearance', 'shortcuts'])
+    expect(groups[0][1].map((section) => section.id)).toEqual(['account', 'language-notifications', 'appearance', 'shortcuts'])
   })
 })
