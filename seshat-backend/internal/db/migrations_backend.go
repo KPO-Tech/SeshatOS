@@ -437,6 +437,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gSandboxConfig{})
 			},
 		},
+		{
+			ID:    "20261103_063_token_activity",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gTokenActivityDay{}, &gTokenActivitySession{}, &gTokenActivityCall{})
+			},
+		},
 	}
 }
 

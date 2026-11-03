@@ -63,6 +63,7 @@ type App struct {
 	// sandboxDefaultDenyRead is what they cover until the user changes it.
 	sandboxProject         sandboxProtector
 	sandboxDefaultDenyRead []string
+	tokenActivityStore     *db.TokenActivityStore
 	storageConfigStore     *db.StorageConfigStore
 	// Long-term memory — kept here because extraction is fire-and-forget
 	// and depends on the extractor which lives outside seshat.App lifecycle
@@ -130,6 +131,7 @@ type AppConfig struct {
 	SandboxConfigStore     *db.SandboxConfigStore
 	SandboxProject         *sandboxproject.Host
 	SandboxDefaultDenyRead []string
+	TokenActivityStore     *db.TokenActivityStore
 	StorageConfigStore     *db.StorageConfigStore
 	LongTermExtractor      *longterm.Extractor
 	RateLimiter            *RateLimiter
@@ -188,6 +190,7 @@ func NewApp(cfg AppConfig) *App {
 		sandboxConfigStore:     cfg.SandboxConfigStore,
 		sandboxProject:         cfg.SandboxProject,
 		sandboxDefaultDenyRead: cfg.SandboxDefaultDenyRead,
+		tokenActivityStore:     cfg.TokenActivityStore,
 		storageConfigStore:     cfg.StorageConfigStore,
 		longTermExtractor:      cfg.LongTermExtractor,
 		rateLimiter:            cfg.RateLimiter,

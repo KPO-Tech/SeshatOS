@@ -12,7 +12,7 @@ type DialogsState = {
 
 export const useDialogsStore = create<DialogsState>()((set) => ({
   section: null,
-  openSettings: (section = 'general') => set({ section }),
+  openSettings: (section = 'account') => set({ section }),
   openConfig: (section = 'providers') => set({ section }),
   close: () => set({ section: null })
 }))

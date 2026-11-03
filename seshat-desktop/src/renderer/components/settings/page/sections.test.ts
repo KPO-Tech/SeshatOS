@@ -14,13 +14,13 @@ describe('the sections of Settings', () => {
 
   it('opens the first section for a name it does not know, or none', () => {
     expect(findSection('providers', { cloud: false }).id).toBe('providers')
-    expect(findSection('nonsense', { cloud: false }).id).toBe('general')
-    expect(findSection(undefined, { cloud: false }).id).toBe('general')
+    expect(findSection('nonsense', { cloud: false }).id).toBe('account')
+    expect(findSection(undefined, { cloud: false }).id).toBe('account')
   })
 
   it('groups the sections in the order they are listed', () => {
     const groups = groupSections(visibleSections({ cloud: false }))
     expect(groups.map(([name]) => name)).toEqual(['General', 'AI runtime', 'Capabilities', 'Workspace', 'Data & privacy', 'About'])
-    expect(groups[0][1].map((section) => section.id)).toEqual(['general', 'appearance', 'shortcuts', 'account'])
+    expect(groups[0][1].map((section) => section.id)).toEqual(['account', 'general', 'appearance', 'shortcuts'])
   })
 })

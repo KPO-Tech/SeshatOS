@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	neturl "net/url"
 	"os"
@@ -471,6 +472,12 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	if err != nil {
 		_ = cleanup()
 		return nil, nil, fmt.Errorf("init sandbox config store: %w", err)
+	}
+
+	tokenActivityStore, err := db.NewTokenActivityStore(database)
+	if err != nil {
+		_ = cleanup()
+		return nil, nil, fmt.Errorf("init token activity store: %w", err)
 	}
 
 	resolveDocumentConverter := func(ctx context.Context) documentreader.Converter {
@@ -1011,6 +1018,21 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return &backendquery.LocalTitleEndpoint{BaseURL: cfg.BaseURL, Model: cfg.Model}
 	})
 
+	// A turn is counted when it ends, so a chat deleted right after keeps its place in the
+	// activity. The sweep at startup brings in what came before this existed.
+	runtime.SetTurnFinishedHook(func(sessionID string) {
+		countCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := tokenActivityStore.CollectSession(countCtx, sessionID); err != nil {
+			slog.Warn("token activity: count failed", "session", sessionID, "error", err)
+		}
+	})
+	go func() {
+		if err := tokenActivityStore.CollectAll(context.Background()); err != nil {
+			slog.Warn("token activity: sweep failed", "error", err)
+		}
+	}()
+
 	// Settings > Environment lets the user choose where the bash tool runs. No stored choice
 	// (a fresh install) resolves to direct: an agent asked to write a document, move a file,
 	// or run/test code needs real access to the user's own machine. ok=false (a genuine store
@@ -1218,6 +1240,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		SandboxConfigStore:     sandboxConfigStore,
 		SandboxProject:         sandboxProjectHost,
 		SandboxDefaultDenyRead: sandboxDefaultDenyRead,
+		TokenActivityStore:     tokenActivityStore,
 		StorageConfigStore:     storageConfigStore,
 		LongTermExtractor:      longTermExtractor,
 		CloudAutomation:        cloudAutomationService,
