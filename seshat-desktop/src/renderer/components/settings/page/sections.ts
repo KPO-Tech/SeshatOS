@@ -37,10 +37,10 @@ export type SettingsSectionDef = {
 }
 
 export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
+  { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
   { id: 'general', label: 'General', group: 'General', icon: SettingTwo, description: 'Language and notifications.' },
   { id: 'appearance', label: 'Appearance', group: 'General', icon: Contrast, description: 'Theme, colors and size.' },
   { id: 'shortcuts', label: 'Shortcuts', group: 'General', icon: Keyboard, description: 'Keys to move around quickly.' },
-  { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
 
   { id: 'providers', label: 'Providers', group: 'AI runtime', icon: Cube, description: 'The AI providers your agents use.' },
   { id: 'models', label: 'Models', group: 'AI runtime', icon: Chip, description: 'Defaults, catalogs and fallbacks.' },
