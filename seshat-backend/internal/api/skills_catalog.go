@@ -1,5 +1,7 @@
 package api
 
+import "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skillinstall"
+
 // DefaultFeaturedRepos are always included in the catalog unless the operator sets SESHAT_FEATURED_SKILL_REPOS to override them entirely.
 //
 // Each entry was read before it was listed: the repository answers, is not archived, has a licence that lets it be installed, and the
@@ -49,6 +51,23 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 		Category:    "Presentations",
 		Needs:       []string{"Python 3.10+"},
 		Skills:      []string{"ppt-master"},
+	},
+	{
+		// Checked on 2026-11-03. Its README says MIT and it has no LICENSE file. Its compile script runs sudo apt-get or brew when
+		// LaTeX is missing, so the plan says LaTeX is missing first.
+		Name:        "latex-document-skill",
+		URL:         "https://github.com/ndpvt-web/latex-document-skill",
+		Description: "Makes PDF documents with LaTeX: reports, papers, theses, CVs, letters, exams, posters and Beamer slides, with charts, tables, bibliographies and fillable forms.",
+		Category:    "Documents",
+		Needs:       []string{"Python 3.10+", "LaTeX"},
+		Skills:      []string{"latex-document-skill"},
+		// Its scripts import these, and its requirements file does not list them.
+		PythonPackages: []string{"pypdf", "pillow"},
+		Commands: []skillinstall.CommandNeed{{
+			Name:     "LaTeX",
+			Commands: []string{"pdflatex", "xelatex"},
+			Install:  "Without it this skill cannot make a PDF: install TinyTeX, MiKTeX or TeX Live, then restart the app.",
+		}},
 	},
 	{
 		Name:        "strix",

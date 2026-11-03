@@ -11,6 +11,24 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-11-03
+
+### Highlights
+
+- **The Hugging Face plugin works, and a LaTeX skill makes your PDF documents.**
+
+### Added
+
+- **A LaTeX skill in the skills on offer.** It makes PDF reports, papers, theses, CVs, letters, exams, posters and slides. Its Python packages are installed with it, and LaTeX is yours to install: the app tells you before you agree if it is missing.
+
+### Fixed
+
+- **MCP servers over HTTP connect.** The Hugging Face plugin stopped on an error and showed no tools, whatever key you gave it. It now connects.
+
+### Changed
+
+- **Runtime 1.14.1.**
+
 ## [0.3.8] - 2026-11-03
 
 ### Highlights
