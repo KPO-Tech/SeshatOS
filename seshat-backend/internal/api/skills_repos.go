@@ -36,6 +36,8 @@ type FeaturedSkillRepo struct {
 	PythonMinimum string `json:"-"`
 	// PythonPackages are packages the skills use and the repository does not list in a requirements file.
 	PythonPackages []string `json:"-"`
+	// Commands are programs the skills run and an environment cannot hold, looked for when the plan is made.
+	Commands []skillinstall.CommandNeed `json:"-"`
 }
 
 // DefaultSeshatSkillsRepo is the official Seshat skills collection. Left empty
@@ -386,7 +388,7 @@ func skillSpec(featured *FeaturedSkillRepo, recorded []string) skillinstall.Spec
 	if featured == nil {
 		return skillinstall.Spec{Include: recorded}
 	}
-	return skillinstall.Spec{Include: featured.Skills, PythonMinimum: featured.PythonMinimum, PythonPackages: featured.PythonPackages}
+	return skillinstall.Spec{Include: featured.Skills, PythonMinimum: featured.PythonMinimum, PythonPackages: featured.PythonPackages, Commands: featured.Commands}
 }
 
 // skillCloneStaging is where a repository is downloaded before it is moved among the others: outside the folder the skills are read from.
