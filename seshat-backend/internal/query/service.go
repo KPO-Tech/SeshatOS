@@ -41,6 +41,9 @@ type Service struct {
 	files       filesProvider       // nil = attachments feature disabled
 	skills      skillsProvider      // nil = skills feature disabled
 	agents      agentsProvider      // nil = only built-in agents available
+
+	// beforeDelete runs while the session can still be read, nil = nothing to do.
+	beforeDelete func(ctx context.Context, sessionID string)
 }
 
 // agentsProvider resolves an agent definition by slug (local DB, then — in
@@ -104,6 +107,9 @@ type ServiceConfig struct {
 	Files       filesProvider
 	Skills      skillsProvider
 	Agents      agentsProvider // nil = only built-in agents
+
+	// BeforeDelete runs before a conversation the user deletes is removed. It cannot stop the deletion.
+	BeforeDelete func(ctx context.Context, sessionID string)
 }
 
 // defaultProviderResolver is an optional extension of providerRuntimeResolver.
@@ -148,6 +154,8 @@ func NewService(cfg ServiceConfig) *Service {
 		files:       cfg.Files,
 		skills:      cfg.Skills,
 		agents:      cfg.Agents,
+
+		beforeDelete: cfg.BeforeDelete,
 	}
 }
 
@@ -613,6 +621,9 @@ func (s *Service) DeleteSession(ctx context.Context, principal *backendauth.Prin
 			return bkerr.Forbidden("session belongs to another user", nil)
 		}
 		workspacePath = ownership.WorkspacePath
+		if s.beforeDelete != nil {
+			s.beforeDelete(ctx, sessionID)
+		}
 		if err := s.ownership.Delete(ctx, sessionID); err != nil {
 			return bkerr.Internal("delete session ownership: "+err.Error(), err)
 		}

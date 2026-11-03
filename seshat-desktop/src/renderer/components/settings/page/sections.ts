@@ -1,10 +1,10 @@
 import type { ComponentType } from 'react'
-import { Brain, Chip, CloudStorage, Contrast, Cube, DataServer, FileText, Info, Keyboard, Magic, MindMapping, Music, Pic, Plug, Robot, Search, SettingTwo, Shield, Terminal, User } from '@icon-park/react'
+import { Brain, Chip, CloudStorage, Contrast, Cube, DataServer, FileText, Info, Keyboard, Magic, MindMapping, Music, Pic, Plug, Robot, Search, Shield, Terminal, Translate, User } from '@icon-park/react'
 import type { Edition } from '@renderer/lib/edition'
 
 /** Every page of Settings: what used to be in Settings and in Config now live under one roof. */
 export type SettingsSectionId =
-  | 'general'
+  | 'language-notifications'
   | 'appearance'
   | 'shortcuts'
   | 'account'
@@ -37,10 +37,10 @@ export type SettingsSectionDef = {
 }
 
 export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
-  { id: 'general', label: 'General', group: 'General', icon: SettingTwo, description: 'Language and notifications.' },
+  { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
+  { id: 'language-notifications', label: 'Language & notifications', group: 'General', icon: Translate, description: 'The interface language, and what the app tells you about.' },
   { id: 'appearance', label: 'Appearance', group: 'General', icon: Contrast, description: 'Theme, colors and size.' },
   { id: 'shortcuts', label: 'Shortcuts', group: 'General', icon: Keyboard, description: 'Keys to move around quickly.' },
-  { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
 
   { id: 'providers', label: 'Providers', group: 'AI runtime', icon: Cube, description: 'The AI providers your agents use.' },
   { id: 'models', label: 'Models', group: 'AI runtime', icon: Chip, description: 'Defaults, catalogs and fallbacks.' },
@@ -53,7 +53,7 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
   { id: 'audio', label: 'Audio', group: 'Capabilities', icon: Music, description: 'Dictation, transcription and voice.' },
 
   { id: 'mcp', label: 'MCP servers', group: 'Workspace', icon: Plug, description: 'MCP servers for agents and tools.' },
-  { id: 'environment', label: 'Environment', group: 'Workspace', icon: Terminal, description: 'API keys and environment variables.' },
+  { id: 'environment', label: 'Environment', group: 'Workspace', icon: Terminal, description: 'Where commands run, and API keys.' },
   { id: 'storage', label: 'Storage', group: 'Workspace', icon: DataServer, description: 'Where files and caches live.' },
   { id: 'skills', label: 'Skills', group: 'Workspace', icon: Robot, description: 'Skills your agents can use.' },
   { id: 'answers', label: 'Answers', group: 'Workspace', icon: Brain, description: 'How the agent presents answers.' },

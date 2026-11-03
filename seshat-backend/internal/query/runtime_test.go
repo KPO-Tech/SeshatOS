@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"testing"
+	"time"
 
 	backendknowledge "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge"
 	knowledgetool "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/knowledge/tool"
@@ -227,6 +228,124 @@ func TestSDKRuntimeManagedPolicyChangeBuildsANewClient(t *testing.T) {
 	}
 	if changed == first {
 		t.Fatal("new rules must not be served by a client built with the old ones")
+	}
+}
+
+// A long turn must keep its client: closing it would stop that turn's sandbox.
+func TestSDKRuntimeClientInUseIsNotClosedUnderItsTurn(t *testing.T) {
+	runtime := newTestSDKRuntime(t)
+	client, release, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	entryFor := func() *cachedRuntimeClient {
+		runtime.clientCacheMu.Lock()
+		defer runtime.clientCacheMu.Unlock()
+		for _, entry := range runtime.clientCache {
+			if entry.client == client {
+				return entry
+			}
+		}
+		return nil
+	}
+	entry := entryFor()
+	if entry == nil || entry.inUse != 1 {
+		t.Fatalf("entry %+v", entry)
+	}
+
+	runtime.clientCacheMu.Lock()
+	entry.lastUsed = time.Now().Add(-2 * clientCacheTTL)
+	runtime.evictExpiredClientsLocked()
+	runtime.clientCacheMu.Unlock()
+	if entryFor() == nil {
+		t.Fatal("a client in use was evicted")
+	}
+
+	release()
+	release() // a second call must not count twice
+	if entry.inUse != 0 {
+		t.Fatalf("inUse %d", entry.inUse)
+	}
+	if time.Since(entry.lastUsed) > time.Minute {
+		t.Fatal("the idle time must start when the turn ends")
+	}
+	runtime.clientCacheMu.Lock()
+	entry.lastUsed = time.Now().Add(-2 * clientCacheTTL)
+	runtime.evictExpiredClientsLocked()
+	runtime.clientCacheMu.Unlock()
+	if entryFor() != nil {
+		t.Fatal("an idle client must be evicted")
+	}
+}
+
+func TestSDKRuntimeInvalidatedClientWaitsForItsTurnToEnd(t *testing.T) {
+	runtime := newTestSDKRuntime(t)
+	client, release, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	var entry *cachedRuntimeClient
+	runtime.clientCacheMu.Lock()
+	for _, candidate := range runtime.clientCache {
+		if candidate.client == client {
+			entry = candidate
+		}
+	}
+	runtime.clientCacheMu.Unlock()
+
+	runtime.invalidateClientCache()
+	if !entry.retired {
+		t.Fatal("a client in use must wait for its turn")
+	}
+	next, releaseNext, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	defer releaseNext()
+	if next == client {
+		t.Fatal("an invalidated client must not serve the next turn")
+	}
+	release()
+	if entry.inUse != 0 {
+		t.Fatalf("inUse %d", entry.inUse)
+	}
+}
+
+// A client built for one sandbox choice must not keep serving after the user makes
+// another, and neither must one that protects an older list.
+func TestSDKRuntimeSandboxChoiceChangeBuildsANewClient(t *testing.T) {
+	runtime := newTestSDKRuntime(t)
+	kind := sdk.SandboxKindLocal
+	sidecar := sdk.SandboxdConfig{}
+	runtime.SetSandboxModeResolver(func(context.Context) (sdk.SandboxKind, sdk.SandboxdConfig, bool) {
+		return kind, sidecar, true
+	})
+
+	local, _, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	if again, _, _ := runtime.clientForInput(context.Background(), QueryInput{}); again != local {
+		t.Fatal("the same choice must reuse the cached client")
+	}
+
+	kind = sdk.SandboxKindSandboxed
+	sidecar = sdk.SandboxdConfig{BinaryPath: "missing", Profile: sdk.SandboxdProfileProject, CapabilitySID: "S-1-5-21-1-2-3-4", DenyRead: []string{"a"}}
+	sandboxed, _, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	if sandboxed == local {
+		t.Fatal("a command must not run in the old place after the user changed it")
+	}
+
+	sidecar.DenyRead = []string{"a", "b"}
+	wider, _, err := runtime.clientForInput(context.Background(), QueryInput{})
+	if err != nil {
+		t.Fatalf("clientForInput: %v", err)
+	}
+	if wider == sandboxed {
+		t.Fatal("a client must not keep serving with an older protected list")
 	}
 }
 

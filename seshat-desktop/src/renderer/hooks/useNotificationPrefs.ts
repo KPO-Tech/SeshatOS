@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getPrefs, PREFS_EVENT, setPrefs, type NotificationPrefs } from '@renderer/lib/notifications'
 
-/** The choices about what the app tells the person, as Settings > General shows them; kept on this computer. */
+/** The choices about what the app tells the person, as Settings > Language & notifications shows them; kept on this computer. */
 export function useNotificationPrefs() {
   const [prefs, setState] = useState<NotificationPrefs>(() => getPrefs())
 

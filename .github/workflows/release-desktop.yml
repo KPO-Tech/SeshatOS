@@ -112,6 +112,7 @@ jobs:
           test -x seshat-desktop/resources/backend/seshat-backend
           test -f seshat-desktop/resources/backend/libpdfium.so
           test -f seshat-desktop/resources/backend/.nativedoc-enabled
+          test -f seshat-desktop/resources/backend/seshat-sandboxd.exe
 
       # What a release shows: public hides what is not ready (accounts, SeshatCloud), see
       # seshat-desktop/src/renderer/lib/edition.ts. Everything else, the app on the main branch included, shows it all: change this

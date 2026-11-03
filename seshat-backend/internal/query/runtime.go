@@ -80,7 +80,8 @@ type SDKRuntime struct {
 	resolveLocalTitle     func(ctx context.Context) *LocalTitleEndpoint
 	resolveBrowser        func(ctx context.Context) string
 	resolveBrowserSession func(ctx context.Context, sessionID sdk.SessionID) (string, bool)
-	resolveSandboxMode    func(ctx context.Context) (sdk.SandboxKind, bool)
+	resolveSandboxMode    func(ctx context.Context) (sdk.SandboxKind, sdk.SandboxdConfig, bool)
+	onTurnFinished        func(sessionID string)
 	resolveManagedPolicy  func(ctx context.Context) *sdk.ManagedPolicy
 	// hostTools are registered on every client built for a turn (see RegisterHostTool).
 	hostTools []sdk.Tool
@@ -117,6 +118,9 @@ type clientCacheKey struct {
 	baseURL  string
 	browser  string
 	title    string
+	// sandbox is where a cached client runs commands: a client built for one choice must
+	// not keep serving after the user makes another.
+	sandbox string
 	// managed is the organization's rules a cached client was built with: a change of rules must
 	// not keep serving a client that still has the old ones.
 	managed string
@@ -132,6 +136,11 @@ type clientCacheKey struct {
 type cachedRuntimeClient struct {
 	client   *sdk.Client
 	lastUsed time.Time
+	// inUse counts the turns running on this client. Closing it under a turn would stop
+	// that turn's sandbox, so a client in use is never closed: retired says it left the
+	// cache, and the last turn to end closes it.
+	inUse   int
+	retired bool
 }
 
 // clientCacheTTL bounds how long an idle cached client is kept alive. Long
@@ -265,10 +274,27 @@ func researchKeysFingerprint(keys map[string]string) string {
 // fresh install gets direct host access without needing the fallback path
 // below to hide that default. ok=false keeps baseConfig's own SandboxKind
 // (set at bootstrap) as a safety net.
-func (r *SDKRuntime) SetSandboxModeResolver(resolve func(ctx context.Context) (sdk.SandboxKind, bool)) {
+func (r *SDKRuntime) SetSandboxModeResolver(resolve func(ctx context.Context) (sdk.SandboxKind, sdk.SandboxdConfig, bool)) {
 	r.mu.Lock()
 	r.resolveSandboxMode = resolve
 	r.mu.Unlock()
+}
+
+// SetTurnFinishedHook attaches what runs after each turn, ended well or not. It runs on its
+// own goroutine: nothing a turn waits for may depend on it.
+func (r *SDKRuntime) SetTurnFinishedHook(hook func(sessionID string)) {
+	r.mu.Lock()
+	r.onTurnFinished = hook
+	r.mu.Unlock()
+}
+
+func (r *SDKRuntime) turnFinished(session *sdk.Session) {
+	r.mu.RLock()
+	hook := r.onTurnFinished
+	r.mu.RUnlock()
+	if hook != nil {
+		go hook(session.GetID().String())
+	}
 }
 
 func (r *SDKRuntime) SetBrowserRemoteControlResolver(resolve func(ctx context.Context) string) {
@@ -354,6 +380,7 @@ func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryRes
 	if err != nil {
 		return nil, err
 	}
+	defer r.turnFinished(session)
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// See the matching comment in StreamPrompt: carried on ctx, not
@@ -427,6 +454,7 @@ func (r *SDKRuntime) StreamPrompt(ctx context.Context, input QueryInput, onChunk
 		return nil, err
 	}
 	sessionLoadMs := time.Since(sessionStart).Milliseconds()
+	defer r.turnFinished(session)
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// Carried on ctx (not client.SetPromptFn/SetWebSearchRunner, which mutate
@@ -791,6 +819,7 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 		model:    cfg.Model.Model,
 		apiKey:   cfg.APIKey,
 		browser:  strings.TrimSpace(cfg.BrowserRemoteControlURL),
+		sandbox:  sandboxKey(cfg),
 		managed:  managedPolicyKey(cfg.ManagedPolicy),
 		research: researchKeysFingerprint(input.ResearchKeys),
 		media:    mediaKey(cfg),
@@ -806,8 +835,9 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 	r.evictExpiredClientsLocked()
 	if cached, ok := r.clientCache[key]; ok {
 		cached.lastUsed = time.Now()
+		cached.inUse++
 		r.clientCacheMu.Unlock()
-		return cached.client, func() {}, nil
+		return cached.client, r.clientReleaser(cached), nil
 	}
 	r.clientCacheMu.Unlock()
 
@@ -829,10 +859,44 @@ func (r *SDKRuntime) clientForInput(ctx context.Context, input QueryInput) (*sdk
 	if r.clientCache == nil {
 		r.clientCache = make(map[clientCacheKey]*cachedRuntimeClient)
 	}
-	r.clientCache[key] = &cachedRuntimeClient{client: client, lastUsed: time.Now()}
+	// Two turns can build the same client at once. One is kept: the other would be lost
+	// to the cache, and with it a sandbox process.
+	if cached, ok := r.clientCache[key]; ok {
+		cached.lastUsed = time.Now()
+		cached.inUse++
+		r.clientCacheMu.Unlock()
+		_ = client.Close()
+		return cached.client, r.clientReleaser(cached), nil
+	}
+	entry := &cachedRuntimeClient{client: client, lastUsed: time.Now(), inUse: 1}
+	r.clientCache[key] = entry
 	r.clientCacheMu.Unlock()
 
-	return client, func() {}, nil
+	return client, r.clientReleaser(entry), nil
+}
+
+// clientReleaser ends one turn's use of a cached client. A long turn counts as use until
+// it ends, so the idle time starts here.
+func (r *SDKRuntime) clientReleaser(entry *cachedRuntimeClient) func() {
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			r.clientCacheMu.Lock()
+			entry.inUse--
+			entry.lastUsed = time.Now()
+			closeIt := entry.retired && entry.inUse == 0
+			r.clientCacheMu.Unlock()
+			if closeIt {
+				_ = entry.client.Close()
+			}
+		})
+	}
+}
+
+// sandboxKey identifies where a client runs commands.
+func sandboxKey(cfg *sdk.ClientConfig) string {
+	sidecar := cfg.Sandboxd
+	return strings.Join(append([]string{string(cfg.SandboxKind), sidecar.BinaryPath, sidecar.Profile, sidecar.CapabilitySID}, sidecar.DenyRead...), "\x00")
 }
 
 // evictExpiredClientsLocked closes and drops every cached client idle for
@@ -843,7 +907,7 @@ func (r *SDKRuntime) evictExpiredClientsLocked() {
 	}
 	now := time.Now()
 	for key, entry := range r.clientCache {
-		if now.Sub(entry.lastUsed) > clientCacheTTL {
+		if entry.inUse == 0 && now.Sub(entry.lastUsed) > clientCacheTTL {
 			_ = entry.client.Close()
 			delete(r.clientCache, key)
 		}
@@ -859,8 +923,12 @@ func (r *SDKRuntime) invalidateClientCache() {
 	r.clientCacheMu.Lock()
 	defer r.clientCacheMu.Unlock()
 	for key, entry := range r.clientCache {
-		_ = entry.client.Close()
 		delete(r.clientCache, key)
+		if entry.inUse > 0 {
+			entry.retired = true
+			continue
+		}
+		_ = entry.client.Close()
 	}
 }
 
@@ -898,8 +966,9 @@ func (r *SDKRuntime) buildBaseClientConfig(ctx context.Context) *sdk.ClientConfi
 		cfg.ManagedPolicy = resolveManagedPolicy(ctx)
 	}
 	if resolveSandboxMode != nil {
-		if kind, ok := resolveSandboxMode(ctx); ok {
+		if kind, sidecar, ok := resolveSandboxMode(ctx); ok {
 			cfg.SandboxKind = kind
+			cfg.Sandboxd = sidecar
 		}
 	}
 	cfg.SessionStore = r.client.GetSessionStore()

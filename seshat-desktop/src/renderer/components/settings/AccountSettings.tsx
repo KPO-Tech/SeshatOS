@@ -3,6 +3,7 @@ import type { User } from '@renderer/api/types'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { ActionButton, Chip, SettingRow, SettingsCard, SettingsPage, StatusBadge } from './kit'
 import { Avatar, formatStatus, initialsFor } from './SettingsPrimitives'
+import { TokenActivityCard } from './TokenActivityCard'
 
 type Props = {
   user: User
@@ -36,6 +37,8 @@ export function AccountSettings({ user, displayName, onLogout }: Props) {
           </div>
         </div>
       </SettingsCard>
+
+      <TokenActivityCard />
 
       <SettingsCard title="Details">
         <SettingRow title="Email" icon={<Mail theme="outline" size={18} />}>

@@ -430,6 +430,20 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gCorpusFile{})
 			},
 		},
+		{
+			ID:    "20261102_062_sandbox_project_profile",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gSandboxConfig{})
+			},
+		},
+		{
+			ID:    "20261103_063_token_activity",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gTokenActivityDay{}, &gTokenActivitySession{}, &gTokenActivityCall{})
+			},
+		},
 	}
 }
 
