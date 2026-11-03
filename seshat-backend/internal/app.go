@@ -182,6 +182,9 @@ type Dependencies struct {
 	// has nothing synced and fails open (allows everything), which is the
 	// correct behavior, not a special case to guard against here.
 	DesktopPolicies *cloudautomation.PolicyStore
+
+	// BeforeSessionDelete runs before a conversation the user deletes is removed.
+	BeforeSessionDelete func(ctx context.Context, sessionID string)
 }
 
 // App is the root backend service container.
@@ -310,6 +313,8 @@ func NewApp(deps Dependencies) *App {
 			Files:       filesService,
 			Skills:      skillsService,
 			Agents:      agentsService,
+
+			BeforeDelete: deps.BeforeSessionDelete,
 		}),
 		Files:     filesService,
 		Knowledge: knowledgeService,
