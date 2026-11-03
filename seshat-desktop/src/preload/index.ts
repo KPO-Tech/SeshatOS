@@ -52,12 +52,6 @@ type LlamaProgress = {
   totalBytes: number
 }
 
-type SrtStatus = {
-  state: 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
-  platform: string
-  detail?: string
-}
-
 type EnvVarDef = {
   key: string
   label: string
@@ -215,10 +209,6 @@ const seshatBridge = {
       ipcRenderer.on('llama:progress', handler)
       return () => ipcRenderer.removeListener('llama:progress', handler)
     },
-  },
-  sandbox: {
-    srtStatus: (options?: { passive?: boolean; refresh?: boolean }): Promise<SrtStatus | null> => ipcRenderer.invoke('sandbox:srt-status', options),
-    srtEnable: (): Promise<SrtStatus> => ipcRenderer.invoke('sandbox:srt-enable'),
   },
   envVars: {
     catalog: (): Promise<EnvVarDef[]> => ipcRenderer.invoke('env-vars:catalog'),

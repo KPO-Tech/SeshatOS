@@ -788,26 +788,18 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	defaultModel := appconfig.ParseModelIdentifier(config.Model)
 	titleModel := appconfig.ParseModelIdentifier(config.TitleModel)
 	queryClientConfig := &sdk.ClientConfig{
-		APIKey:              config.APIKey,
-		Model:               defaultModel,
-		TitleModel:          titleModel,
-		TitleProviderConfig: titleProviderConfigFromAppConfig(config, titleModel),
-		LocalTitle:          localTitleConfigFromAppConfig(config),
-		PermissionMode:      sdk.PermissionModeNever,
-		MaxTokens:           backendquery.InteractiveMaxTokensForModel(defaultModel),
-		AutoCompact:         true,
-		PersistSessions:     true,
-		EnableMonitoring:    true,
-		SessionSQLitePath:   appconfig.EffectiveSessionDBPath(config),
-		WorkingDir:          workingDir,
-		// Desktop default: try Docker sandboxing for bash tool execution,
-		// with a sane zero-value SandboxDocker config. RequireSandbox stays
-		// false (the zero value) — the SDK itself documents that refusing to
-		// run bash entirely is worse desktop UX than a visible, logged
-		// fallback to unconfined execution when Docker isn't installed or
-		// running; NewTool already handles that fallback silently and safely
-		// (internal/tools/bash/bash.go's NewTool, seshat SDK).
-		SandboxKind:             sdk.SandboxKindDocker,
+		APIKey:                  config.APIKey,
+		Model:                   defaultModel,
+		TitleModel:              titleModel,
+		TitleProviderConfig:     titleProviderConfigFromAppConfig(config, titleModel),
+		LocalTitle:              localTitleConfigFromAppConfig(config),
+		PermissionMode:          sdk.PermissionModeNever,
+		MaxTokens:               backendquery.InteractiveMaxTokensForModel(defaultModel),
+		AutoCompact:             true,
+		PersistSessions:         true,
+		EnableMonitoring:        true,
+		SessionSQLitePath:       appconfig.EffectiveSessionDBPath(config),
+		WorkingDir:              workingDir,
 		BrowserRemoteControlURL: browserRemoteControlURL,
 		BrowserExecutablePath:   strings.TrimSpace(config.BrowserExecutablePath),
 		// The desktop agent loads a short list of tools and finds the rest with tool_search, which keeps about 45% of the tool
@@ -853,11 +845,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return nil, nil, fmt.Errorf("init query runtime: %w", err)
 	}
 	cleanups = append(cleanups, func() error { queryClient.Close(); return nil })
-	// The kind actually resolved to (Docker only if it passed its health
-	// check; Local otherwise) — not just what was requested above. See
-	// api.App's sandboxKind field for how this reaches /system/status.
-	sandboxKind := string(queryClient.SandboxKind())
-
 	if err := managedskills.EnsureExtracted(skillsloader.GetBuiltinSkillsPath()); err != nil {
 		fmt.Fprintf(os.Stderr, "[API] Avertissement builtin skills: %v\n", err)
 	} else {
@@ -1024,14 +1011,11 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return &backendquery.LocalTitleEndpoint{BaseURL: cfg.BaseURL, Model: cfg.Model}
 	})
 
-	// Settings > Environment lets the user choose Docker-sandboxed vs direct
-	// host execution for the bash tool (see db.SandboxConfigStore) - no
-	// stored choice (a fresh install) resolves to SandboxModeLocal, not the
-	// bootstrap default above: an agent asked to write a document, move a
-	// file, or run/test code the user is working on needs real access to the
-	// user's own machine, not an isolated container that can't see any of
-	// it. ok=false (a genuine store read error) falls through to
-	// queryClientConfig's own SandboxKind above instead.
+	// Settings > Environment lets the user choose where the bash tool runs. No stored choice
+	// (a fresh install) resolves to direct: an agent asked to write a document, move a file,
+	// or run/test code needs real access to the user's own machine. ok=false (a genuine store
+	// read error) keeps the base config's direct default.
+
 	// The project sandbox never falls back: a sidecar that is missing or cannot start
 	// refuses every command, and the command's result says why.
 	sandboxProjectHost := sandboxproject.NewHost()
@@ -1046,8 +1030,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 			mode = strings.TrimSpace(cfg.Mode)
 		}
 		switch mode {
-		case db.SandboxModeDocker:
-			return sdk.SandboxKindDocker, sdk.SandboxdConfig{}, true
 		case db.SandboxModeProject:
 			denyRead := sandboxDefaultDenyRead
 			if cfg.DenyReadSet {
@@ -1249,7 +1231,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		AllowedSkillRepoHosts:  api.ParseSkillRepoHosts(config.SkillRepoHosts),
 		ConnectedServerURL:     serverURL,
 		TargetServerURL:        defaultServerURL,
-		SandboxKind:            sandboxKind,
 		TitleBroker:            titleBroker,
 		ArtifactLibs:           artifactLibs,
 	})

@@ -207,3 +207,15 @@ func TestLeavingTheSandboxKeepsItsIdentityForLater(t *testing.T) {
 		t.Fatalf("identity %q then %q", before.CapabilitySID, after.CapabilitySID)
 	}
 }
+
+// Someone who chose isolation must be told it is gone rather than quietly run direct.
+func TestAnInstallThatChoseDockerIsToldAndCannotChooseItAgain(t *testing.T) {
+	app := sandboxTestApp(t, &fakeProtector{available: true}, nil)
+	resp := app.sandboxConfigToResponse(&db.SandboxConfig{Mode: db.SandboxModeLocal, DockerModeRemoved: true})
+	if resp.Mode != db.SandboxModeLocal || !resp.DockerModeRemoved {
+		t.Fatalf("%+v", resp)
+	}
+	if code, _, body := sandboxRequest(t, app, http.MethodPut, `{"mode":"docker"}`); code != http.StatusBadRequest {
+		t.Fatalf("the mode is gone: %d %s", code, body)
+	}
+}

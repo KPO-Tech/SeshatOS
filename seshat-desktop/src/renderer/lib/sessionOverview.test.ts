@@ -59,11 +59,11 @@ describe('formatTokens', () => {
 
 describe('environmentRows', () => {
   it('has no rows when there is nothing to say', () => {
-    expect(environmentRows({ docker: false })).toEqual([])
+    expect(environmentRows({})).toEqual([])
   })
 
   it('says where commands run, in which folder, and warns when nothing confines them', () => {
-    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', confinement: { label: 'Not confined', confined: false } })).toEqual([
+    expect(environmentRows({ workspacePath: 'D:/proj', confinement: { label: 'Not confined', confined: false } })).toEqual([
       { label: 'Runs on', value: 'This computer' },
       { label: 'Folder', value: 'D:/proj' },
       { label: 'Commands', value: 'Not confined', tone: 'warn' }
@@ -71,22 +71,21 @@ describe('environmentRows', () => {
   })
 
   it('names the git branch under the folder, and says when files are not committed', () => {
-    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: true, branch: 'dev' } }).map((row) => [row.label, row.value])).toEqual([
+    expect(environmentRows({ workspacePath: 'D:/proj', git: { repo: true, branch: 'dev' } }).map((row) => [row.label, row.value])).toEqual([
       ['Runs on', 'This computer'],
       ['Folder', 'D:/proj'],
       ['Branch', 'dev']
     ])
-    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: true, branch: 'dev', dirty: true } }).find((row) => row.label === 'Branch')?.value).toBe('dev, with changes')
+    expect(environmentRows({ workspacePath: 'D:/proj', git: { repo: true, branch: 'dev', dirty: true } }).find((row) => row.label === 'Branch')?.value).toBe('dev, with changes')
   })
 
   it('shows the short commit of a detached head and no row outside a repository', () => {
-    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: true, branch: 'a1b2c3d', detached: true } }).find((row) => row.label === 'Branch')?.value).toBe('a1b2c3d (detached)')
-    expect(environmentRows({ docker: false, workspacePath: 'D:/proj', git: { repo: false } }).some((row) => row.label === 'Branch')).toBe(false)
+    expect(environmentRows({ workspacePath: 'D:/proj', git: { repo: true, branch: 'a1b2c3d', detached: true } }).find((row) => row.label === 'Branch')?.value).toBe('a1b2c3d (detached)')
+    expect(environmentRows({ workspacePath: 'D:/proj', git: { repo: false } }).some((row) => row.label === 'Branch')).toBe(false)
   })
 
-  it('names Docker and a confined state without a warning', () => {
-    const rows = environmentRows({ docker: true, confinement: { label: 'Docker', confined: true } })
-    expect(rows[0]).toEqual({ label: 'Runs on', value: 'A Docker container' })
+  it('names a confined state without a warning', () => {
+    const rows = environmentRows({ confinement: { label: 'Sandbox', confined: true } })
     expect(rows.find((row) => row.label === 'Commands')?.tone).toBeUndefined()
   })
 })
