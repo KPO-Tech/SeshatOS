@@ -11,6 +11,8 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.10] - 2026-11-03
+
 ### Changed
 
 - **The tools of an MCP server are easy to read.** Each one takes one line with its name and first sentence, its full description opens on a click with examples as code, and a long list can be searched.
