@@ -1112,9 +1112,16 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 			DefaultUserRole: config.DefaultUserRole,
 			EnableAPIKeys:   config.EnableAPIKeys,
 		},
-		QueryRuntime:             runtime,
-		SessionManager:           runtime,
-		SessionOwnership:         sessionOwnershipStore,
+		QueryRuntime:     runtime,
+		SessionManager:   runtime,
+		SessionOwnership: sessionOwnershipStore,
+		// What a deleted chat spent stays in the activity, including what no turn end has counted:
+		// a count that failed, or a turn the app was closed during. Its transcript is about to go.
+		BeforeSessionDelete: func(ctx context.Context, sessionID string) {
+			if err := tokenActivityStore.CollectSession(ctx, sessionID); err != nil {
+				slog.Warn("token activity: count before delete failed", "session", sessionID, "error", err)
+			}
+		},
 		FileStore:                fileStore,
 		CorpusStore:              corpusStore,
 		IngestionJobStore:        ingestionJobStore,
