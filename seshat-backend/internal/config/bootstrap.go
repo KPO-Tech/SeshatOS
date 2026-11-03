@@ -50,6 +50,7 @@ import (
 	backendmemories "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/memories"
 	backendpreferences "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/sandboxproject"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
 	"github.com/KPO-Tech/seshat-runtime/pkg/documentreader"
@@ -794,26 +795,18 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	defaultModel := appconfig.ParseModelIdentifier(config.Model)
 	titleModel := appconfig.ParseModelIdentifier(config.TitleModel)
 	queryClientConfig := &sdk.ClientConfig{
-		APIKey:              config.APIKey,
-		Model:               defaultModel,
-		TitleModel:          titleModel,
-		TitleProviderConfig: titleProviderConfigFromAppConfig(config, titleModel),
-		LocalTitle:          localTitleConfigFromAppConfig(config),
-		PermissionMode:      sdk.PermissionModeNever,
-		MaxTokens:           backendquery.InteractiveMaxTokensForModel(defaultModel),
-		AutoCompact:         true,
-		PersistSessions:     true,
-		EnableMonitoring:    true,
-		SessionSQLitePath:   appconfig.EffectiveSessionDBPath(config),
-		WorkingDir:          workingDir,
-		// Desktop default: try Docker sandboxing for bash tool execution,
-		// with a sane zero-value SandboxDocker config. RequireSandbox stays
-		// false (the zero value) — the SDK itself documents that refusing to
-		// run bash entirely is worse desktop UX than a visible, logged
-		// fallback to unconfined execution when Docker isn't installed or
-		// running; NewTool already handles that fallback silently and safely
-		// (internal/tools/bash/bash.go's NewTool, seshat SDK).
-		SandboxKind:             sdk.SandboxKindDocker,
+		APIKey:                  config.APIKey,
+		Model:                   defaultModel,
+		TitleModel:              titleModel,
+		TitleProviderConfig:     titleProviderConfigFromAppConfig(config, titleModel),
+		LocalTitle:              localTitleConfigFromAppConfig(config),
+		PermissionMode:          sdk.PermissionModeNever,
+		MaxTokens:               backendquery.InteractiveMaxTokensForModel(defaultModel),
+		AutoCompact:             true,
+		PersistSessions:         true,
+		EnableMonitoring:        true,
+		SessionSQLitePath:       appconfig.EffectiveSessionDBPath(config),
+		WorkingDir:              workingDir,
 		BrowserRemoteControlURL: browserRemoteControlURL,
 		BrowserExecutablePath:   strings.TrimSpace(config.BrowserExecutablePath),
 		// The desktop agent loads a short list of tools and finds the rest with tool_search, which keeps about 45% of the tool
@@ -859,11 +852,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return nil, nil, fmt.Errorf("init query runtime: %w", err)
 	}
 	cleanups = append(cleanups, func() error { queryClient.Close(); return nil })
-	// The kind actually resolved to (Docker only if it passed its health
-	// check; Local otherwise) — not just what was requested above. See
-	// api.App's sandboxKind field for how this reaches /system/status.
-	sandboxKind := string(queryClient.SandboxKind())
-
 	if err := managedskills.EnsureExtracted(skillsloader.GetBuiltinSkillsPath()); err != nil {
 		fmt.Fprintf(os.Stderr, "[API] Avertissement builtin skills: %v\n", err)
 	} else {
@@ -1030,14 +1018,6 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		return &backendquery.LocalTitleEndpoint{BaseURL: cfg.BaseURL, Model: cfg.Model}
 	})
 
-	// Settings > Environment lets the user choose Docker-sandboxed vs direct
-	// host execution for the bash tool (see db.SandboxConfigStore) - no
-	// stored choice (a fresh install) resolves to SandboxModeLocal, not the
-	// bootstrap default above: an agent asked to write a document, move a
-	// file, or run/test code the user is working on needs real access to the
-	// user's own machine, not an isolated container that can't see any of
-	// it. ok=false (a genuine store read error) falls through to
-	// queryClientConfig's own SandboxKind above instead.
 	// A turn is counted when it ends, so a chat deleted right after keeps its place in the
 	// activity. The sweep at startup brings in what came before this existed.
 	runtime.SetTurnFinishedHook(func(sessionID string) {
@@ -1053,15 +1033,39 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		}
 	}()
 
-	runtime.SetSandboxModeResolver(func(ctx context.Context) (sdk.SandboxKind, bool) {
+	// Settings > Environment lets the user choose where the bash tool runs. No stored choice
+	// (a fresh install) resolves to direct: an agent asked to write a document, move a file,
+	// or run/test code needs real access to the user's own machine. ok=false (a genuine store
+	// read error) keeps the base config's direct default.
+
+	// The project sandbox never falls back: a sidecar that is missing or cannot start
+	// refuses every command, and the command's result says why.
+	sandboxProjectHost := sandboxproject.NewHost()
+	sandboxDefaultDenyRead := sandboxproject.DefaultDenyReadHere(appconfig.EffectiveRuntimeRoot(config))
+	runtime.SetSandboxModeResolver(func(ctx context.Context) (sdk.SandboxKind, sdk.SandboxdConfig, bool) {
 		cfg, err := sandboxConfigStore.Get(ctx)
 		if err != nil {
-			return "", false
+			return "", sdk.SandboxdConfig{}, false
 		}
-		if cfg == nil || strings.TrimSpace(cfg.Mode) != db.SandboxModeDocker {
-			return sdk.SandboxKindLocal, true
+		mode := ""
+		if cfg != nil {
+			mode = strings.TrimSpace(cfg.Mode)
 		}
-		return sdk.SandboxKindDocker, true
+		switch mode {
+		case db.SandboxModeProject:
+			denyRead := sandboxDefaultDenyRead
+			if cfg.DenyReadSet {
+				denyRead = cfg.DenyRead
+			}
+			return sdk.SandboxKindSandboxed, sdk.SandboxdConfig{
+				BinaryPath:    sandboxProjectHost.Path,
+				Profile:       sdk.SandboxdProfileProject,
+				CapabilitySID: cfg.CapabilitySID,
+				DenyRead:      denyRead,
+			}, true
+		default:
+			return sdk.SandboxKindLocal, sdk.SandboxdConfig{}, true
+		}
 	})
 
 	// ActionConnectors: one entry per MCP-backed connector.ActionConnector
@@ -1222,35 +1226,36 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	artifactLibs := newArtifactLibs()
 
 	app := api.NewApp(api.AppConfig{
-		Backend:               backendApp,
-		DB:                    database,
-		ModelStore:            modelStore,
-		EmbedderStore:         embedderConfigStore,
-		CapabilityLinkStore:   capabilityLinkStore,
-		ProviderSettingStore:  settingStore,
-		DocumentReaderStore:   documentReaderConfigStore,
-		RerankerStore:         rerankerConfigStore,
-		ApplyEmbedder:         applyEmbedder,
-		LocalSTTStore:         localSTTConfigStore,
-		LocalTitleStore:       localTitleConfigStore,
-		SandboxConfigStore:    sandboxConfigStore,
-		TokenActivityStore:    tokenActivityStore,
-		StorageConfigStore:    storageConfigStore,
-		LongTermExtractor:     longTermExtractor,
-		CloudAutomation:       cloudAutomationService,
-		RAGService:            ragService,
-		RateLimiter:           api.NewRateLimiter(config.RateLimitPerMinute, time.Minute),
-		LoginRateLimiter:      api.NewRateLimiter(10, 15*time.Minute),
-		EnableSignup:          config.EnableSignup,
-		EnableAPIKeys:         config.EnableAPIKeys,
-		FeaturedRepos:         featuredRepos,
-		TrustedProxyCIDRs:     api.ParseTrustedProxies(config.TrustedProxies),
-		AllowedSkillRepoHosts: api.ParseSkillRepoHosts(config.SkillRepoHosts),
-		ConnectedServerURL:    serverURL,
-		TargetServerURL:       defaultServerURL,
-		SandboxKind:           sandboxKind,
-		TitleBroker:           titleBroker,
-		ArtifactLibs:          artifactLibs,
+		Backend:                backendApp,
+		DB:                     database,
+		ModelStore:             modelStore,
+		EmbedderStore:          embedderConfigStore,
+		CapabilityLinkStore:    capabilityLinkStore,
+		ProviderSettingStore:   settingStore,
+		DocumentReaderStore:    documentReaderConfigStore,
+		RerankerStore:          rerankerConfigStore,
+		ApplyEmbedder:          applyEmbedder,
+		LocalSTTStore:          localSTTConfigStore,
+		LocalTitleStore:        localTitleConfigStore,
+		SandboxConfigStore:     sandboxConfigStore,
+		SandboxProject:         sandboxProjectHost,
+		SandboxDefaultDenyRead: sandboxDefaultDenyRead,
+		TokenActivityStore:     tokenActivityStore,
+		StorageConfigStore:     storageConfigStore,
+		LongTermExtractor:      longTermExtractor,
+		CloudAutomation:        cloudAutomationService,
+		RAGService:             ragService,
+		RateLimiter:            api.NewRateLimiter(config.RateLimitPerMinute, time.Minute),
+		LoginRateLimiter:       api.NewRateLimiter(10, 15*time.Minute),
+		EnableSignup:           config.EnableSignup,
+		EnableAPIKeys:          config.EnableAPIKeys,
+		FeaturedRepos:          featuredRepos,
+		TrustedProxyCIDRs:      api.ParseTrustedProxies(config.TrustedProxies),
+		AllowedSkillRepoHosts:  api.ParseSkillRepoHosts(config.SkillRepoHosts),
+		ConnectedServerURL:     serverURL,
+		TargetServerURL:        defaultServerURL,
+		TitleBroker:            titleBroker,
+		ArtifactLibs:           artifactLibs,
 	})
 
 	// Only the local knowledge.Service has a queue for this runner to drain —

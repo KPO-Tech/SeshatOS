@@ -93,14 +93,13 @@ function branchValue(git: GitState): string {
 
 /** The rows of the environment card: where commands run, the folder they run in, its git branch, and whether anything confines them. */
 export function environmentRows(input: {
-  docker: boolean
   workspacePath?: string
   git?: GitState | null
   confinement?: { label: string; confined: boolean } | null
 }): EnvironmentRow[] {
   const rows: EnvironmentRow[] = []
-  if (input.docker || input.workspacePath || input.confinement) {
-    rows.push({ label: 'Runs on', value: input.docker ? 'A Docker container' : 'This computer' })
+  if (input.workspacePath || input.confinement) {
+    rows.push({ label: 'Runs on', value: 'This computer' })
   }
   if (input.workspacePath) rows.push({ label: 'Folder', value: input.workspacePath })
   if (input.git?.repo && input.git.branch) rows.push({ label: 'Branch', value: branchValue(input.git) })

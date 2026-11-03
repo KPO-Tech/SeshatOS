@@ -36,7 +36,6 @@
     "test:ipc": "tsc -p tsconfig.ipc-tests.json && node --test .tmp/ipc-tests/ipc/*.test.js"
   },
   "dependencies": {
-    "@anthropic-ai/sandbox-runtime": "0.0.80",
     "@icon-park/react": "^1.4.2",
     "@seshat/connector-catalog": "file:../shared/connector-catalog",
     "@tailwindcss/vite": "^4.3.3",
@@ -107,10 +106,6 @@
       {
         "from": "resources/artifact-libs",
         "to": "artifact-libs"
-      },
-      {
-        "from": "node_modules/@anthropic-ai/sandbox-runtime",
-        "to": "sandbox-runtime"
       },
       {
         "from": "../LICENSE",

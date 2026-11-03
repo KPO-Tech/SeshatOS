@@ -1,4 +1,3 @@
-import { srtEnvironment } from './srt-manager'
 import { spawn, type ChildProcess } from 'child_process'
 import { createWriteStream, existsSync } from 'fs'
 import { join } from 'path'
@@ -49,7 +48,7 @@ export async function startBackendSidecar(): Promise<void> {
   // the real process environment, since setting one via the UI is a more
   // deliberate choice than an ambient shell var. See env-vars-manager.ts.
   const envVarOverrides = await resolveEnvVarOverrides()
-  const env = withBackendLibraries({ ...process.env, ...srtEnvironment(), ...envVarOverrides }, backendDir)
+  const env = withBackendLibraries({ ...process.env, ...envVarOverrides }, backendDir)
   if (!env.SESHAT_NATIVEDOC_AUTO_INIT && existsSync(join(backendDir, '.nativedoc-enabled'))) {
     env.SESHAT_NATIVEDOC_AUTO_INIT = '1'
   }

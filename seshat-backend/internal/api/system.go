@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/documentreading"
 	backendsettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
@@ -59,9 +60,15 @@ type systemStatusResponse struct {
 func (a *App) handleSystemStatus(w http.ResponseWriter, r *http.Request) {
 	sandboxKind := ""
 	sandboxConfined := false
+	projectMode := false
+	if a.sandboxConfigStore != nil {
+		if cfg, err := a.sandboxConfigStore.Get(r.Context()); err == nil && cfg != nil {
+			projectMode = cfg.Mode == db.SandboxModeProject
+		}
+	}
 	switch {
-	case a.sandboxKind == string(sdk.SandboxKindDocker):
-		sandboxKind = "docker"
+	case projectMode:
+		sandboxKind = "sandboxd"
 		sandboxConfined = true
 	case sdk.SandboxAvailable():
 		sandboxKind = "landlock"

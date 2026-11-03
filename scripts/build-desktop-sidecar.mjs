@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -99,7 +100,52 @@ if (result.status !== 0) {
 }
 
 writeNativeDocMarker(outDir, nativeDoc)
+buildSandboxSidecar()
 console.log(`Built ${selected.goos}/${arch}${nativeDoc ? ' nativedoc' : ''} sidecar: ${outPath}`)
+
+// The command sandbox, in Rust, built from the runtime's module at the version go.mod pins, so the two cannot disagree.
+// Only Windows has a backend. A release must hold it; a local build without Rust goes on, and the app then does not
+// offer the sandbox.
+function buildSandboxSidecar() {
+  const out = resolve(outDir, 'seshat-sandboxd.exe')
+  rmSync(out, { force: true })
+  if (selected.goos !== 'windows') return
+
+  const skip = (reason) => {
+    if (releaseVersion) {
+      console.error(`Could not build seshat-sandboxd: ${reason}`)
+      process.exit(1)
+    }
+    console.warn(`Skipping seshat-sandboxd: ${reason}`)
+  }
+  if (process.platform !== 'win32') return skip('it must be built on Windows')
+  const rustTarget = { amd64: 'x86_64-pc-windows-msvc', arm64: 'aarch64-pc-windows-msvc' }[arch]
+  if (!rustTarget) return skip(`no Rust target for ${arch}`)
+
+  const listed = spawnSync('go', ['list', '-m', '-f', '{{.Dir}}', 'github.com/KPO-Tech/seshat-runtime'], {
+    cwd: resolve(repoRoot, 'seshat-backend'),
+    encoding: 'utf8',
+  })
+  const moduleDir = (listed.stdout || '').trim()
+  if (listed.status !== 0 || !moduleDir) return skip(`go list failed: ${listed.stderr || listed.error}`)
+  const rustDir = resolve(moduleDir, 'rust')
+
+  // Run from the module, whose rust-toolchain.toml pins the compiler. The module cache is read-only, so the build goes elsewhere.
+  // No self-update: it replaces rustup.exe in the background, and the next call then fails.
+  const installed = spawnSync('rustup', ['toolchain', 'install', '--no-self-update'], { cwd: rustDir, stdio: 'inherit' })
+  if (installed.status !== 0) return skip('rustup could not install the pinned toolchain')
+  const added = spawnSync('rustup', ['target', 'add', rustTarget], { cwd: rustDir, stdio: 'inherit' })
+  if (added.status !== 0) return skip('rustup could not add the target')
+  const targetDir = resolve(tmpdir(), 'seshat-sandboxd-target')
+  const built = spawnSync('cargo', ['build', '--release', '--locked', '-p', 'seshat-sandboxd', '--target', rustTarget], {
+    cwd: rustDir,
+    stdio: 'inherit',
+    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+  })
+  if (built.status !== 0) return skip('cargo build failed')
+  copyFileSync(resolve(targetDir, rustTarget, 'release', 'seshat-sandboxd.exe'), out)
+  console.log(`Built the command sandbox: ${out}`)
+}
 
 function toSlash(path) {
   return path.replaceAll('\\', '/')

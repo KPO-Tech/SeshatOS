@@ -88,11 +88,6 @@ interface Window {
       disable: () => Promise<LlamaStatus>
       onProgress: (listener: (progress: { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }) => void) => () => void
     }
-    sandbox?: {
-      // passive: answer from what is known without starting a command; refresh: probe again. Null when nothing is known.
-      srtStatus: (options?: { passive?: boolean; refresh?: boolean }) => Promise<SrtStatus | null>
-      srtEnable: () => Promise<SrtStatus>
-    }
     appearance?: {
       setZoom: (factor: number) => void
     }
@@ -146,12 +141,6 @@ interface Window {
       onError: (listener: (payload: { message: string }) => void) => () => void
     }
   }
-}
-
-type SrtStatus = {
-  state: 'ready' | 'needs-setup' | 'unavailable' | 'not-needed'
-  platform: string
-  detail?: string
 }
 
 type BrowserPanelState = {
