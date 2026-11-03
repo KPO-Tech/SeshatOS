@@ -11,6 +11,25 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-11-03
+
+### Highlights
+
+- **See how many tokens you use, day by day, and let the agent's commands run in a sandbox on Windows.** Account shows your token activity, and Settings > Environment offers a Sandbox mode.
+
+### Added
+
+- **Token activity in Account.** A year of daily use, with weekly and cumulative views, and the tokens of a day when you hover over it. Deleting a chat does not change it: what the chat spent stays counted.
+- **A Sandbox mode for the agent's commands on Windows.** In Settings > Environment, commands can write only in the session's folder and cannot read the folders you protect, such as your credentials. They can still read other files and use the network. Direct stays the default.
+
+### Changed
+
+- **Account comes first in Settings**, and the General page is now called Language & notifications. General stays as the name of the section.
+- **The Docker mode is gone.** If you had chosen it, commands now run directly on your computer, and Environment tells you so until you choose again.
+- **On macOS, commands are no longer confined.** The component that confined them is gone, and Environment says so. Linux keeps Landlock.
+- **The installer no longer installs the `srt` component.**
+- **Runtime 1.14.0.** Confined commands can no longer read the clipboard, capture the screen, see your windows or write to the sandbox's internal pipes.
+
 ## [0.3.6] - 2026-11-02
 
 ### Highlights
