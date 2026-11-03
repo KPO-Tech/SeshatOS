@@ -7,6 +7,7 @@ import (
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/sandboxproject"
+	"github.com/KPO-Tech/seshat-runtime/pkg/sdk"
 )
 
 // sandboxProtector applies the project sandbox's read refusals. sandboxproject.Host is the
@@ -19,9 +20,12 @@ type sandboxProtector interface {
 }
 
 type sandboxConfigResponse struct {
-	Mode                     string   `json:"mode"`
-	UpdatedAt                int64    `json:"updated_at,omitempty"`
-	ProjectAvailable         bool     `json:"project_available"`
+	Mode             string `json:"mode"`
+	UpdatedAt        int64  `json:"updated_at,omitempty"`
+	ProjectAvailable bool   `json:"project_available"`
+	// DirectConfined says Landlock confines commands in direct mode on this host.
+	DirectConfined           bool     `json:"direct_confined"`
+	DockerModeRemoved        bool     `json:"docker_mode_removed,omitempty"`
 	ProjectUnavailableReason string   `json:"project_unavailable_reason,omitempty"`
 	DenyRead                 []string `json:"deny_read"`
 }
@@ -35,7 +39,8 @@ func (a *App) sandboxDenyRead(cfg *db.SandboxConfig) []string {
 }
 
 func (a *App) sandboxConfigToResponse(cfg *db.SandboxConfig) sandboxConfigResponse {
-	resp := sandboxConfigResponse{Mode: db.SandboxModeLocal, DenyRead: a.sandboxDenyRead(cfg)}
+	resp := sandboxConfigResponse{Mode: db.SandboxModeLocal, DenyRead: a.sandboxDenyRead(cfg), DirectConfined: sdk.SandboxAvailable()}
+	resp.DockerModeRemoved = cfg != nil && cfg.DockerModeRemoved
 	if resp.DenyRead == nil {
 		resp.DenyRead = []string{}
 	}
@@ -94,9 +99,8 @@ func (a *App) applySandboxChange(ctx context.Context, current *db.SandboxConfig,
 }
 
 // handleSandboxConfig — GET/PUT /api/v1/settings/sandbox. Lets the desktop
-// Settings UI read/choose where bash-tool commands execute: Docker-sandboxed
-// (db.SandboxModeDocker), directly on the host (db.SandboxModeLocal, the
-// default) or on the host inside the runtime's sidecar (db.SandboxModeProject),
+// Settings UI read/choose where bash-tool commands execute: directly on the host
+// (db.SandboxModeLocal, the default) or on the host inside the runtime's sidecar (db.SandboxModeProject),
 // and what that sidecar keeps from commands. See resolveSandboxMode in bootstrap.go for where this is
 // actually applied per request.
 func (a *App) handleSandboxConfig(w http.ResponseWriter, r *http.Request) {

@@ -1,11 +1,13 @@
 import { api } from '@renderer/api/client'
 
-export type SandboxMode = 'docker' | 'local' | 'project'
+export type SandboxMode = 'local' | 'project'
 
 export type SandboxConfig = {
   mode: SandboxMode
   updated_at?: number
   project_available?: boolean
+  direct_confined?: boolean
+  docker_mode_removed?: boolean
   project_unavailable_reason?: string
   deny_read?: string[]
 }
@@ -22,19 +24,18 @@ export function saveProtectedPaths(paths: string[]): Promise<SandboxConfig> {
   return api.put<SandboxConfig>('/settings/sandbox', { deny_read: paths })
 }
 
-// Cached read for callers that just need to know where commands run without
-// caring about update timestamps - avoids a settings round trip
-// on every conversation load. Invalidated whenever the setting is saved, so
-// a change in Settings > Environment takes effect without a restart.
-let cachedMode: Promise<SandboxMode> | null = null
+// Cached read for callers that just need to know where commands run, which avoids a settings
+// round trip on every conversation load. Invalidated whenever the setting is saved, so a change
+// in Settings > Environment takes effect without a restart.
+let cached: Promise<{ mode: SandboxMode; directConfined: boolean }> | null = null
 
-export function currentSandboxMode(): Promise<SandboxMode> {
-  if (!cachedMode) {
-    cachedMode = fetchSandboxConfig().then((cfg) => cfg?.mode ?? 'local')
+export function currentSandbox(): Promise<{ mode: SandboxMode; directConfined: boolean }> {
+  if (!cached) {
+    cached = fetchSandboxConfig().then((cfg) => ({ mode: cfg?.mode ?? 'local', directConfined: cfg?.direct_confined === true }))
   }
-  return cachedMode
+  return cached
 }
 
 export function invalidateSandboxModeCache() {
-  cachedMode = null
+  cached = null
 }

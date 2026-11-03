@@ -70,9 +70,6 @@ func (a *App) handleSystemStatus(w http.ResponseWriter, r *http.Request) {
 	case projectMode:
 		sandboxKind = "sandboxd"
 		sandboxConfined = true
-	case a.sandboxKind == string(sdk.SandboxKindDocker):
-		sandboxKind = "docker"
-		sandboxConfined = true
 	case sdk.SandboxAvailable():
 		sandboxKind = "landlock"
 		sandboxConfined = true

@@ -96,13 +96,6 @@ type App struct {
 	// boot-time reachability check failed, rather than having nothing to
 	// probe at all.
 	targetServerURL string
-	// sandboxKind is the bash-tool sandbox backend the query client's SDK
-	// Client actually resolved to at boot (sdk.SandboxKindDocker or
-	// sdk.SandboxKindLocal, as a string) - see bootstrap.go's
-	// queryClient.SandboxKind() call. Not the same fact as
-	// sdk.SandboxAvailable() (system.go), which only ever checks Landlock
-	// and so can't reflect a Docker sandbox being used instead.
-	sandboxKind string
 	// transcribeAudio defaults to transcribeAudioWithTarget; overridden in
 	// tests to avoid a real network call. The target is resolved by
 	// resolveTranscriptionTarget — a local whisper-server URL when local
@@ -152,10 +145,7 @@ type AppConfig struct {
 	// TargetServerURL is always defaultServerURL (bootstrap.go), independent
 	// of ConnectedServerURL - see App.targetServerURL's doc comment.
 	TargetServerURL string
-	// SandboxKind is the bash-tool sandbox backend the query client's SDK
-	// Client actually resolved to at boot - see App.sandboxKind's doc comment.
-	SandboxKind string
-	TitleBroker *backendquery.TitleBroker
+	TitleBroker     *backendquery.TitleBroker
 	// ArtifactLibs serves the CDN libraries of previewed pages; nil serves none.
 	ArtifactLibs *artifactlibs.Service
 }
@@ -216,7 +206,6 @@ func NewApp(cfg AppConfig) *App {
 		allowedSkillRepoHosts:  cfg.AllowedSkillRepoHosts,
 		connectedServerURL:     cfg.ConnectedServerURL,
 		targetServerURL:        cfg.TargetServerURL,
-		sandboxKind:            cfg.SandboxKind,
 		transcribeAudio:        transcribeAudioWithTarget,
 	}
 }

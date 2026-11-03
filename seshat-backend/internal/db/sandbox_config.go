@@ -15,16 +15,12 @@ import (
 
 const sandboxConfigID = "default"
 
-// SandboxModeDocker routes bash-tool execution through the SDK's Docker
-// sandbox (falling back to unconfined local execution if Docker isn't
-// installed/running - see bootstrap.go's queryClientConfig comment).
-const SandboxModeDocker = "docker"
+// sandboxModeRemovedDocker is what an install saved when the app still had a Docker mode.
+const sandboxModeRemovedDocker = "docker"
 
-// SandboxModeLocal skips the Docker sandbox entirely and runs bash directly
-// on the host, unconfined (Landlock on Linux) - the desktop default: an
-// agent helping write documents, move files, or run/test code the user
-// asked for needs real access to the user's own machine, not an isolated
-// container that can't see any of it.
+// SandboxModeLocal runs bash directly on the host, under Landlock on Linux - the desktop
+// default: an agent helping write documents, move files, or run/test code the user asked
+// for needs real access to the user's own machine.
 const SandboxModeLocal = "local"
 
 // SandboxModeProject runs bash through the runtime's sidecar on this computer: commands
@@ -34,7 +30,7 @@ const SandboxModeProject = "project"
 
 // ValidSandboxMode says whether mode is one this store accepts.
 func ValidSandboxMode(mode string) bool {
-	return mode == SandboxModeDocker || mode == SandboxModeLocal || mode == SandboxModeProject
+	return mode == SandboxModeLocal || mode == SandboxModeProject
 }
 
 type gSandboxConfig struct {
@@ -50,10 +46,12 @@ func (gSandboxConfig) TableName() string { return "sandbox_config" }
 
 // SandboxConfig is the persisted user choice for where bash-tool commands
 // execute - see Settings > Environment in the desktop app. No stored row
-// (a fresh install) means SandboxModeLocal, not SandboxModeDocker - see
-// resolveSandboxMode in bootstrap.go, which applies that default.
+// (a fresh install) means SandboxModeLocal.
 type SandboxConfig struct {
 	Mode string
+	// DockerModeRemoved says this install had chosen the Docker mode, which no longer
+	// exists. It now runs direct, and someone who chose isolation has to be told.
+	DockerModeRemoved bool
 	// CapabilitySID is the identity the project sandbox's refusals name, made once for
 	// this install. It has to stay the same: taking a refusal back needs it.
 	CapabilitySID string
@@ -111,7 +109,7 @@ func (s *SandboxConfigStore) Get(ctx context.Context) (*SandboxConfig, error) {
 func (s *SandboxConfigStore) Upsert(ctx context.Context, p UpsertSandboxConfigParams) (*SandboxConfig, error) {
 	mode := strings.ToLower(strings.TrimSpace(p.Mode))
 	if !ValidSandboxMode(mode) {
-		return nil, fmt.Errorf("sandbox mode must be %q, %q or %q, got %q", SandboxModeDocker, SandboxModeLocal, SandboxModeProject, p.Mode)
+		return nil, fmt.Errorf("sandbox mode must be %q or %q, got %q", SandboxModeLocal, SandboxModeProject, p.Mode)
 	}
 
 	values := map[string]any{"mode": mode}
@@ -189,6 +187,10 @@ func sandboxConfigFromModel(row gSandboxConfig) SandboxConfig {
 		CapabilitySID: row.CapabilitySID,
 		UpdatedAt:     time.Unix(row.UpdatedAtUnix, 0).UTC(),
 		CreatedAt:     time.Unix(row.CreatedAtUnix, 0).UTC(),
+	}
+	if row.Mode == sandboxModeRemovedDocker {
+		cfg.Mode = SandboxModeLocal
+		cfg.DockerModeRemoved = true
 	}
 	if row.DenyRead != "" {
 		// An unreadable list falls back to the defaults, which protect more than none.

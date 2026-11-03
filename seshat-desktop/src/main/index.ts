@@ -8,7 +8,6 @@ import { registerWhisperHandlers } from './ipc/whisper'
 import { registerSetupHandlers } from './ipc/setup'
 import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
-import { registerSandboxHandlers } from './ipc/sandbox'
 import { resolveRuntimeRoot } from './runtime'
 import { startBackendSidecar, stopBackendSidecar } from './backend-process'
 import { isSetupCompleted } from './setup-manager'
@@ -227,7 +226,6 @@ app.whenReady().then(async () => {
   registerSetupHandlers(ipcMain)
   registerLlamaHandlers(ipcMain)
   registerEnvVarsHandlers(ipcMain)
-  registerSandboxHandlers(ipcMain)
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
   registerShellHandlers(ipcMain)

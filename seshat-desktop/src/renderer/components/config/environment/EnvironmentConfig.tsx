@@ -9,14 +9,12 @@ import { fetchSandboxConfig, invalidateSandboxModeCache, saveProtectedPaths, sav
 
 const SANDBOX_OPTIONS = [
   { value: 'local', label: 'Direct (this computer)' },
-  { value: 'project', label: 'Sandbox (this computer)' },
-  { value: 'docker', label: 'Isolated (Docker)' }
+  { value: 'project', label: 'Sandbox (this computer)' }
 ]
 
 const SANDBOX_HINTS: Record<SandboxMode, string> = {
   local: 'On this computer, with your files and tools.',
-  project: "On this computer, confined to the session's folder.",
-  docker: 'In a Docker container, apart from your files and tools.'
+  project: "On this computer, confined to the session's folder."
 }
 
 /** Where the agent's commands run, what confines them, and the secrets the backend reads at startup. */
@@ -31,6 +29,8 @@ export function EnvironmentConfig() {
   const [projectReason, setProjectReason] = useState('')
   const [protectedPaths, setProtectedPaths] = useState<string[]>([])
   const [applying, setApplying] = useState(false)
+  const [directConfined, setDirectConfined] = useState(false)
+  const [dockerRemoved, setDockerRemoved] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -48,6 +48,8 @@ export function EnvironmentConfig() {
         setProjectAvailable(sandbox.project_available === true)
         setProjectReason(sandbox.project_unavailable_reason ?? '')
         setProtectedPaths(sandbox.deny_read ?? [])
+        setDirectConfined(sandbox.direct_confined === true)
+        setDockerRemoved(sandbox.docker_mode_removed === true)
       }
     } catch (err) {
       setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to load environment variables.' })
@@ -61,7 +63,7 @@ export function EnvironmentConfig() {
   }, [])
 
   async function changeSandboxMode(mode: string) {
-    const next: SandboxMode = mode === 'docker' || mode === 'project' ? mode : 'local'
+    const next: SandboxMode = mode === 'project' ? 'project' : 'local'
     const previous = sandboxMode
     setSandboxMode(next)
     setApplying(true)
@@ -69,6 +71,7 @@ export function EnvironmentConfig() {
     try {
       await saveSandboxMode(next)
       invalidateSandboxModeCache()
+      setDockerRemoved(false)
     } catch (err) {
       setSandboxMode(previous)
       setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to save the sandbox setting.' })
@@ -114,7 +117,7 @@ export function EnvironmentConfig() {
   return (
     <SettingsPage
       id="environment"
-      badge={<StatusBadge tone={sandboxMode === 'local' ? 'warn' : 'ok'}>{sandboxMode === 'local' ? 'Direct' : sandboxMode === 'project' ? 'Sandbox' : 'Isolated'}</StatusBadge>}
+      badge={<StatusBadge tone={sandboxMode === 'local' ? 'warn' : 'ok'}>{sandboxMode === 'local' ? 'Direct' : 'Sandbox'}</StatusBadge>}
       actions={
         <ActionButton type="button" onClick={() => void applyRestart()} disabled={restarting}>
           {restarting ? 'Restarting...' : 'Restart backend'}
@@ -122,6 +125,9 @@ export function EnvironmentConfig() {
       }
     >
       {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
+      {dockerRemoved && (
+        <Notice tone="error">The Docker mode you had chosen no longer exists, so commands now run directly on this computer. Choose where they should run below.</Notice>
+      )}
 
       <SettingsCard title="Commands">
         <SettingRow
@@ -134,7 +140,7 @@ export function EnvironmentConfig() {
         </SettingRow>
       </SettingsCard>
 
-      <ConfinementCard mode={sandboxMode} />
+      <ConfinementCard mode={sandboxMode} directConfined={directConfined} />
 
       {sandboxMode === 'project' && <ProtectedFolders paths={protectedPaths} busy={applying} onChange={(next) => void changeProtectedPaths(next)} />}
 

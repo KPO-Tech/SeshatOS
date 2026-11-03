@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Down } from '@icon-park/react'
 import { useContextUsage } from '@renderer/hooks/useContextUsage'
-import { currentSandboxMode } from '@renderer/components/config/environment/sandboxApi'
+import { currentSandbox } from '@renderer/components/config/environment/sandboxApi'
 import { confinementView } from '@renderer/components/config/environment/confinementView'
 import { fetchMCPServers } from '@renderer/components/config/mcp/mcpApi'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
@@ -50,7 +50,6 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const messages = session?.messages ?? EMPTY
 
-  const [docker, setDocker] = useState(false)
   const [confinement, setConfinement] = useState<{ label: string; confined: boolean } | null>(null)
   const [servers, setServers] = useState<MCPServer[]>([])
   const [compacting, setCompacting] = useState(false)
@@ -58,13 +57,10 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   useEffect(() => {
     let cancelled = false
-    void currentSandboxMode()
-      .then(async (mode) => {
-        const isDocker = mode === 'docker'
-        const status = mode !== 'local' ? null : await (window.seshat?.sandbox?.srtStatus({ passive: true }) ?? Promise.resolve(null)).catch(() => null)
+    void currentSandbox()
+      .then(({ mode, directConfined }) => {
         if (cancelled) return
-        setDocker(isDocker)
-        const view = confinementView(status, mode)
+        const view = confinementView(mode, directConfined)
         setConfinement({ label: view.label, confined: view.confined })
       })
       .catch(() => undefined)
@@ -117,7 +113,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }
 
   const git = useGitState(folder)
-  const environment = environmentRows({ docker, workspacePath: session?.workspacePath, git, confinement })
+  const environment = environmentRows({ workspacePath: session?.workspacePath, git, confinement })
   const connectors = connectorRows(servers)
   const outputs = useMemo(() => collectChangedFiles(messages), [messages])
   const hasActivity = agentState.turnNumber > 0 || toolCount > 0 || webCount > 0
