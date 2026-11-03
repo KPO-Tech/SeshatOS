@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, rmSync, utimesSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url'
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
 const nativeDoc = args.includes('--nativedoc') || process.env.SESHAT_BUILD_NATIVEDOC === '1'
-const positional = args.filter((arg) => arg !== '--nativedoc')
+// make dev only needs the command sandbox, next to the backend it runs.
+const sandboxOnly = args.includes('--sandbox-only')
+const positional = args.filter((arg) => arg !== '--nativedoc' && arg !== '--sandbox-only')
 // Release builds (CI) set the version the backend reports and ask for a smaller, reproducible binary; a local build leaves it unset.
 const releaseVersion = (process.env.SESHAT_BUILD_VERSION || '').trim()
 const releaseFlags = releaseVersion ? `-trimpath -ldflags=${shQuote(`-s -w -X main.version=${releaseVersion}`)}` : ''
@@ -25,13 +27,18 @@ const targets = {
 
 const selected = targets[target]
 if (!selected) {
-  console.error('Usage: node scripts/build-desktop-sidecar.mjs <windows|linux|darwin> [amd64|arm64] [--nativedoc]')
+  console.error('Usage: node scripts/build-desktop-sidecar.mjs <windows|linux|darwin> [amd64|arm64] [--nativedoc] [--sandbox-only]')
   process.exit(2)
 }
 
-const outDir = resolve(repoRoot, 'seshat-desktop', 'resources', 'backend')
+const outDir = sandboxOnly ? resolve(repoRoot, 'seshat-backend', 'bin') : resolve(repoRoot, 'seshat-desktop', 'resources', 'backend')
 const outPath = resolve(outDir, `seshat-backend${selected.ext}`)
 mkdirSync(outDir, { recursive: true })
+
+if (sandboxOnly) {
+  buildSandboxSidecar()
+  process.exit(0)
+}
 
 // electron-builder's extraResources bundles every file in outDir as-is, and
 // Linux/macOS binaries share the exact same filename ("seshat-backend", no
@@ -144,6 +151,9 @@ function buildSandboxSidecar() {
   })
   if (built.status !== 0) return skip('cargo build failed')
   copyFileSync(resolve(targetDir, rustTarget, 'release', 'seshat-sandboxd.exe'), out)
+  // Windows keeps the date of the source, and make dev compares this one with go.mod.
+  const now = new Date()
+  utimesSync(out, now, now)
   console.log(`Built the command sandbox: ${out}`)
 }
 
