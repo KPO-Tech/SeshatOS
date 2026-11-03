@@ -93,7 +93,7 @@ ifeq ($(FRESH),1)
 DEV_EXPORTS       += export SESHAT_RUNTIME_ROOT="$(FRESH_ROOT)"; export SESHAT_FORCE_SETUP=1;
 endif
 
-.PHONY: help setup dev dev-next dev-native dev-fresh-state dev-reset dev-backend dev-backend-native stop build build-native run run-native install-cgo-windows logs logs-last
+.PHONY: help setup dev dev-next dev-native dev-fresh-state dev-reset dev-backend dev-backend-native dev-sandboxd stop build build-native run run-native install-cgo-windows logs logs-last
 
 .DEFAULT_GOAL := help
 
@@ -138,6 +138,18 @@ dev-backend-native:
 	@mkdir -p $(BACKEND_BIN_DIR)
 	@cd $(BACKEND_DIR) && $(NATIVE_ENV) && CGO_ENABLED=1 go build -tags "$$NATIVEDOC_BUILD_TAGS" -o ./bin/$(BACKEND_DEV_NATIVE_EXE) $(BACKEND_CMD)
 
+# The command sandbox of Settings > Environment, next to the backend, where the backend looks for it. It is built from the runtime version
+# go.mod pins, so only a new pin builds it again. Without Rust make dev goes on, and the app does not offer the sandbox. Only Windows has one.
+dev-sandboxd:
+ifeq ($(OS),Windows_NT)
+	@if [ -f "$(BACKEND_BIN_DIR)/seshat-sandboxd.exe" ] && [ -z "$$(find $(BACKEND_DIR)/go.mod -newer "$(BACKEND_BIN_DIR)/seshat-sandboxd.exe" 2>/dev/null)" ]; then \
+	  printf "\033[32m[rust]\033[0m command sandbox up to date, not rebuilt\n"; \
+	else \
+	  printf "\033[32m[rust]\033[0m building the command sandbox...\n"; \
+	  node $(ROOT)/scripts/build-desktop-sidecar.mjs windows $(if $(filter ARM64,$(PROCESSOR_ARCHITECTURE)),arm64,amd64) --sandbox-only; \
+	fi
+endif
+
 # Empties the runtime root of a fresh start (see FRESH above). It only ever wipes a folder named dev-fresh, whatever CACHE_DIR is.
 dev-fresh-state:
 	@if [ "$(FRESH)" = "1" ]; then \
@@ -173,7 +185,7 @@ dev-reset: stop ## Forget the fresh dev install completely, downloads included (
 	  printf "\033[32m[seshatos]\033[0m nothing to forget: there is no fresh dev install\n"; \
 	fi
 
-dev: stop desktop-install desktop-artifact-libs $(DEV_BACKEND_TARGET) dev-fresh-state ## Start the local backend (with the native OCR when there is a C compiler) + the Electron UI, as a brand new install
+dev: stop desktop-install desktop-artifact-libs $(DEV_BACKEND_TARGET) dev-sandboxd dev-fresh-state ## Start the local backend (with the native OCR when there is a C compiler) + the Electron UI, as a brand new install
 	@printf "\033[32m[seshatos]\033[0m starting local backend ($(DEV_KIND)) and Electron UI...\n"
 	@$(DEV_EXPORTS) (cd $(BACKEND_DIR) && $(DEV_WITH_NATIVE) $(DEV_BACKEND_INIT) ./bin/$(DEV_BACKEND_EXE)) & \
 	BACKEND_PID=$$!; \
