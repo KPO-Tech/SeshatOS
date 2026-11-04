@@ -1,4 +1,5 @@
 import { randomUUID, randomBytes } from 'crypto'
+import { hostname } from 'os'
 import type { IpcMain, IpcMainInvokeEvent } from 'electron'
 import { desktopBridgeProof, ensureDesktopBridgeSecret, resolveBackendOrigin } from '../runtime'
 import { deleteSecret, getSecret, setSecret } from './secure-store'
@@ -442,7 +443,89 @@ export async function callBackendAsCurrentUser(path: string, method: string, bod
   return payload.data
 }
 
+// The device code of the sign-in in progress. It is the secret the poll uses, so it stays in this process and
+// the renderer only ever sees the short code the person compares.
+let pendingDeviceLogin: { deviceCode: string } | null = null
+
+type DeviceStartData = {
+  device_code: string
+  user_code: string
+  verification_uri: string
+  verification_uri_complete: string
+  expires_in: number
+  interval: number
+}
+
+type DevicePollData = {
+  status: 'pending' | 'slow_down' | 'approved' | 'denied' | 'expired'
+  token?: string
+  user?: AuthUser
+  roles?: string[]
+}
+
+async function deviceLoginHeaders(): Promise<Record<string, string>> {
+  const secret = await ensureDesktopBridgeSecret()
+  return { 'X-Seshat-Desktop-Proof': desktopBridgeProof(secret, 'auth/device-login') }
+}
+
 export function registerBackendHandlers(ipcMain: IpcMain): void {
+  // Sign in by code: ask the organization's server for a code, show it, and wait for the person to approve it in
+  // their browser. No password reaches this app. Only available when this install is connected to an organization.
+  ipcMain.handle('auth:device-start', async (event) => {
+    assertTrustedSender(event)
+    const payload = await performJSONRequest(
+      '/auth/device/start',
+      'POST',
+      { client_name: `Seshat Desktop on ${hostname()}` },
+      undefined,
+      await deviceLoginHeaders()
+    )
+    if (!payload.ok) {
+      throw new Error(extractErrorMessage(payload))
+    }
+    const data = payload.data as DeviceStartData
+    pendingDeviceLogin = { deviceCode: data.device_code }
+    return {
+      user_code: data.user_code,
+      verification_uri: data.verification_uri,
+      verification_uri_complete: data.verification_uri_complete,
+      expires_in: data.expires_in,
+      interval: data.interval
+    }
+  })
+
+  ipcMain.handle('auth:device-poll', async (event) => {
+    assertTrustedSender(event)
+    if (!pendingDeviceLogin) {
+      throw new Error('No sign-in is in progress. Start again.')
+    }
+    const payload = await performJSONRequest(
+      '/auth/device/poll',
+      'POST',
+      { device_code: pendingDeviceLogin.deviceCode },
+      undefined,
+      await deviceLoginHeaders()
+    )
+    if (!payload.ok) {
+      throw new Error(extractErrorMessage(payload))
+    }
+    const data = payload.data as DevicePollData
+    if (data.status === 'approved' && data.token && data.user) {
+      pendingDeviceLogin = null
+      await saveSession({ token: data.token, user: data.user, roles: data.roles ?? [] })
+      return { status: 'approved' as const, session: sessionView(cachedSession) }
+    }
+    if (data.status === 'denied' || data.status === 'expired') {
+      pendingDeviceLogin = null
+    }
+    return { status: data.status }
+  })
+
+  ipcMain.handle('auth:device-cancel', async (event) => {
+    assertTrustedSender(event)
+    pendingDeviceLogin = null
+  })
+
   ipcMain.handle('auth:login', async (event, credentials: { email: string; password: string }) => {
     assertTrustedSender(event)
     const payload = await performJSONRequest('/auth/login', 'POST', credentials)
@@ -516,7 +599,13 @@ export function registerBackendHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('http:request', async (event, payload: RequestPayload) => {
     assertTrustedSender(event)
-    if (payload.path === '/auth/login' || payload.path === '/auth/register' || payload.path === '/auth/local-session') {
+    if (
+      payload.path === '/auth/login' ||
+      payload.path === '/auth/register' ||
+      payload.path === '/auth/local-session' ||
+      payload.path === '/auth/device/start' ||
+      payload.path === '/auth/device/poll'
+    ) {
       throw new Error('Use the dedicated auth bridge for login and registration')
     }
     const session = await loadSession()

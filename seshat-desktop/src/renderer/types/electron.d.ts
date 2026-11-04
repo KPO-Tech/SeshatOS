@@ -38,6 +38,12 @@ interface Window {
       login: (credentials: { email: string; password: string }) => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean }>
       register: (payload: { name: string; email: string; password: string }) => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean }>
       continueWithoutAccount: () => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean }>
+      deviceStart: () => Promise<{ user_code: string; verification_uri: string; verification_uri_complete: string; expires_in: number; interval: number }>
+      devicePoll: () => Promise<
+        | { status: 'pending' | 'slow_down' | 'denied' | 'expired' }
+        | { status: 'approved'; session: { user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean } }
+      >
+      deviceCancel: () => Promise<void>
       logout: () => Promise<void>
       restoreSession: () => Promise<{ user: { id: string; email: string; display_name: string; status: string }; roles: string[]; isAuthenticated: boolean } | null>
       clearSession: () => Promise<void>
