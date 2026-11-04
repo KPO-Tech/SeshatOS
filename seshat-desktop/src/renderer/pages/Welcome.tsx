@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { AddUser, Computer, Login, Right } from '@icon-park/react'
 import { Alert, LinkButton } from '@renderer/components/auth/FormPrimitives'
+import { DeviceLoginPanel } from '@renderer/components/auth/DeviceLoginPanel'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { Titlebar } from '@renderer/components/layout/Titlebar'
 import { IntroBackdrop } from '@renderer/components/onboarding/IntroBackdrop'
@@ -20,6 +21,7 @@ import { useAuth } from '@renderer/hooks/useAuth'
 // internal/auth/local_provider.go's EnsureImplicitSession on the backend.
 export function Welcome() {
   const [cloudNotice, setCloudNotice] = useState(false)
+  const [deviceLogin, setDeviceLogin] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { continueWithoutAccount } = useAuth()
@@ -64,9 +66,10 @@ export function Welcome() {
             badge="Recommended"
             onClick={handleContinueWithoutAccount}
           />
-          <Choice icon={<Login theme="outline" size={26} />} title="Log in" hint="Use your SeshatOS account." onClick={() => setCloudNotice(true)} />
+          <Choice icon={<Login theme="outline" size={26} />} title="Log in" hint="Approve a code in your browser. No password is typed here." onClick={() => setDeviceLogin(true)} />
           <Choice icon={<AddUser theme="outline" size={26} />} title="Create an account" hint="Sync your workspace across devices." onClick={() => setCloudNotice(true)} />
 
+          {deviceLogin && <DeviceLoginPanel onClose={() => setDeviceLogin(false)} />}
           {cloudNotice && <Alert>Cloud accounts aren't available in this build yet. Use "Continue on this computer" for now.</Alert>}
           {error && <Alert>{error}</Alert>}
 

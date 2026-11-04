@@ -9,7 +9,11 @@ import "time"
 
 // AuthResult mirrors seshat-server's iam.AuthResult (Login/Bootstrap response).
 type AuthResult struct {
-	Token         string         `json:"token"`
+	Token string `json:"token"`
+	// MFARequired and MFAToken are set when the password was right but the account has a second factor:
+	// no session exists and Token is empty. The desktop does not take that path; it signs in by device code.
+	MFARequired   bool           `json:"mfa_required"`
+	MFAToken      string         `json:"mfa_token"`
 	User          User           `json:"user"`
 	Organizations []Organization `json:"organizations"`
 	Memberships   []Membership   `json:"memberships"`

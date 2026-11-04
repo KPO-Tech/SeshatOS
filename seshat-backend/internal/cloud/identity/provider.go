@@ -48,17 +48,25 @@ func (p *Provider) Login(ctx context.Context, email, password string) (*auth.Log
 	if err != nil {
 		return nil, cloudhttp.Translate(err)
 	}
-	// Login's response has no explicit session expiry; fetch it once via Me
-	// so ExpiresAt (used by the desktop app) is accurate rather than guessed.
-	me, err := p.client.Me(ctx, result.Token)
+	if result.MFARequired || result.Token == "" {
+		return nil, bkerr.Forbidden("this account uses two-step sign-in: use the sign-in code (Log in) instead of a password", nil)
+	}
+	return p.openSession(ctx, result.Token)
+}
+
+// openSession turns a session token from seshat-server into what a login returns here: Login's response has
+// no explicit session expiry, so it is fetched once via Me and ExpiresAt (used by the desktop app) is
+// accurate rather than guessed, and the principal is cached.
+func (p *Provider) openSession(ctx context.Context, token string) (*auth.LoginResult, error) {
+	me, err := p.client.Me(ctx, token)
 	if err != nil {
 		return nil, cloudhttp.Translate(err)
 	}
-	principal := p.principalFromMe(ctx, me, result.Token)
-	_ = p.cache.Put(ctx, result.Token, principal)
+	principal := p.principalFromMe(ctx, me, token)
+	_ = p.cache.Put(ctx, token, principal)
 
 	return &auth.LoginResult{
-		Token:     result.Token,
+		Token:     token,
 		ExpiresAt: me.Session.ExpiresAt,
 		User:      principal.User,
 		Roles:     principal.Roles,

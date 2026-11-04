@@ -1,6 +1,7 @@
 import { api } from '@renderer/api/client'
 import type { LoginRequest, LoginResponse, RegisterRequest } from '@renderer/api/types'
 import { useAuthStore } from '@renderer/stores/auth'
+import type { DevicePollStatus } from '@renderer/lib/deviceLogin'
 
 export function useAuth() {
   const store = useAuthStore()
@@ -41,6 +42,23 @@ export function useAuth() {
     return res.user
   }
 
+  // Sign in by code (connected installs): the person approves a short code in their browser.
+  async function deviceStart() {
+    if (!window.seshat?.auth) throw new Error('Sign-in by code needs the desktop app.')
+    return window.seshat.auth.deviceStart()
+  }
+
+  async function devicePoll(): Promise<DevicePollStatus> {
+    if (!window.seshat?.auth) throw new Error('Sign-in by code needs the desktop app.')
+    const answer = await window.seshat.auth.devicePoll()
+    if (answer.status === 'approved') store.setSession(answer.session)
+    return answer.status
+  }
+
+  async function deviceCancel() {
+    await window.seshat?.auth?.deviceCancel()
+  }
+
   async function restoreSession() {
     try {
       const session = await window.seshat?.auth?.restoreSession()
@@ -75,6 +93,9 @@ export function useAuth() {
     logout,
     register,
     continueWithoutAccount,
+    deviceStart,
+    devicePoll,
+    deviceCancel,
     restoreSession
   }
 }
