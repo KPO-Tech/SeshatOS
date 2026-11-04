@@ -84,8 +84,17 @@ const (
 	allowUnprovenLocalSessionEnv = "SESHAT_ALLOW_UNPROVEN_LOCAL_SESSION"
 )
 
-// localSessionProofValid reports whether r carries a valid desktop proof.
+// deviceLoginProofContext is the context of the proof a request to /auth/device/* must carry: these
+// routes start and finish a sign-in, so a web page that reached the loopback port must not be able to.
+const deviceLoginProofContext = "auth/device-login"
+
+// localSessionProofValid reports whether r carries a valid desktop proof for the local session.
 func localSessionProofValid(r *http.Request) bool {
+	return desktopProofValid(r, localSessionProofContext)
+}
+
+// desktopProofValid reports whether r carries the desktop's proof for the given context.
+func desktopProofValid(r *http.Request, context string) bool {
 	got, err := hex.DecodeString(strings.TrimSpace(r.Header.Get(localSessionProofHeader)))
 	if err != nil || len(got) == 0 {
 		return false
@@ -94,7 +103,7 @@ func localSessionProofValid(r *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	want, err := hex.DecodeString(desktopBridgeProof(secret, localSessionProofContext))
+	want, err := hex.DecodeString(desktopBridgeProof(secret, context))
 	if err != nil {
 		return false
 	}

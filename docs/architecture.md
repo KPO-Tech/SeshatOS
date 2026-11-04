@@ -33,6 +33,13 @@ integration is entirely one-directional and HTTP-only, under `internal/cloud/`:
 `seshat-server`'s own source is never a build dependency of this repository, and
 `seshat-backend` works fully standalone ("standalone mode") with no cloud connection at all.
 
+In connected mode the desktop signs in by code, not by password (RFC 8628, as served by `seshat-server`): the
+backend asks the server for a short code (`POST /api/v1/auth/device/start`), the desktop shows it and opens the
+server's console in a browser, where the person is already signed in with their second factor and approves it,
+and the desktop polls (`POST /api/v1/auth/device/poll`) until it receives its session. The device code never
+leaves the Electron main process, and both routes accept only the desktop's proof on a loopback connection.
+Standalone mode has no such sign-in.
+
 `go.work` at the repository root ties the local Go module together during local development:
 
 ```go
