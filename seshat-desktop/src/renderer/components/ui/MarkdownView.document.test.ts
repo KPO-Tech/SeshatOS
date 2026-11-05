@@ -22,6 +22,17 @@ describe('a document page with HTML', () => {
     expect(html).not.toContain('javascript:')
   })
 
+  it('never hands a <source> of a picture to the browser, which would read its address against the app', () => {
+    const readme = '<picture>\n<source media="(prefers-color-scheme: dark)" srcset="docs/brand/lockup-on-dark.svg">\n<img src="docs/brand/lockup-on-light.svg" alt="Logo" width="360">\n</picture>'
+    const withLoader = renderToStaticMarkup(createElement(MarkdownView, { variant: 'document', imageLoader: async () => 'data:image/svg+xml;base64,PHN2Zz4=', children: readme }))
+    expect(withLoader).not.toContain('<source')
+    expect(withLoader.toLowerCase()).not.toContain('srcset')
+    // Without a loader the plain img is what is left, and it is the chip of an image that cannot be read.
+    const without = draw(readme)
+    expect(without).not.toContain('<source')
+    expect(without).toContain('docs/brand/lockup-on-light.svg')
+  })
+
   it('still draws formulas and code', () => {
     expect(draw('$x^2$')).toContain('katex')
     expect(draw('```go\nfunc main() {}\n```')).toContain('main')

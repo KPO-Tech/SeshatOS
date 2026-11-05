@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { normalizeMathDelimiters, sealOpenFences } from '@renderer/lib/markdownText'
 import remarkGfm from 'remark-gfm'
@@ -11,6 +11,8 @@ import { codeTheme } from '@renderer/lib/codeTheme'
 import 'katex/dist/katex.min.css'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { isRemoteImageSrc, isRenderableImageSrc } from '@renderer/lib/inlineImage'
+import { pictureChoice } from '@renderer/lib/pictureSource'
+import { getEffectiveTheme, onThemeChange } from '@renderer/lib/theme'
 import { citedPages, type MarkdownNode } from '@renderer/lib/markdownLinks'
 import type { WebSource } from '@renderer/lib/webSources'
 import { WebCitation } from '@renderer/components/sources/WebCitation'
@@ -291,6 +293,15 @@ function LocalImage({ src, alt, width, height, load }: { src: string; alt?: stri
   return <img src={url} alt={alt ?? ''} width={width} height={height} className="inline-block max-w-full rounded-md" />
 }
 
+/** A <picture> of the page's folder: the image for the theme on screen (see pictureSource.ts), read like any other picture of the folder. */
+function ThemedPicture({ node, load, children }: { node?: unknown; load?: (src: string) => Promise<string>; children?: ReactNode }) {
+  const scheme = useSyncExternalStore(onThemeChange, getEffectiveTheme, () => 'dark' as const)
+  const choice = load ? pictureChoice(node as Parameters<typeof pictureChoice>[0], scheme) : null
+  // An address with a scheme (http, data, file) is left to the plain img, which decides what to draw of it.
+  if (!load || !choice || /^[a-z][a-z0-9+.-]*:/i.test(choice.src)) return <>{children}</>
+  return <LocalImage src={choice.src} alt={choice.alt} width={choice.width} height={choice.height} load={load} />
+}
+
 // What a page may hold of HTML, as on GitHub: the layout tags and their usual attributes, no script, style, frame or event handler, and
 // the classes kept for the code and formulas the markdown itself draws.
 const DOCUMENT_SCHEMA = {
@@ -443,6 +454,14 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           },
           blockquote({ children }) {
             return <blockquote className="my-4 border-l-4 border-[var(--accent-primary)] pl-3 text-[var(--text-secondary)]">{children}</blockquote>
+          },
+          // A browser would pick a <source> by itself and read its address against the app: the picture is chosen above instead, so a
+          // <source> draws nothing and the <img> inside the picture is what remains when no source applies.
+          picture({ node, children }: { node?: unknown; children?: ReactNode }) {
+            return <ThemedPicture node={node} load={imageLoader}>{children}</ThemedPicture>
+          },
+          source() {
+            return null
           },
           // See RemoteImageChip: no <img> reaches the DOM except a data URL.
           img({ src, alt, width, height }: any) {
