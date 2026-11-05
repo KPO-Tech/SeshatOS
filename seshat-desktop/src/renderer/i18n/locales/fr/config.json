@@ -626,10 +626,10 @@
       "removeFailed_one": "{{count}} dépôt n'a pas pu être supprimé.",
       "removeFailed_other": "{{count}} dépôts n'ont pas pu être supprimés.",
       "downloadingInBackground": "{{name}} est en cours de téléchargement en arrière-plan.",
-      "confirmRemoveRepo_one": "Supprimer le dépôt « {{name}} » et sa compétence ?",
-      "confirmRemoveRepo_other": "Supprimer le dépôt « {{name}} » et ses {{count}} compétences ?",
-      "confirmRemoveAll_one": "Supprimer le dépôt installé et ses compétences ? Cette action est irréversible.",
-      "confirmRemoveAll_other": "Supprimer les {{count}} dépôts installés et leurs compétences ? Cette action est irréversible."
+      "confirmRemoveRepo_one": "Supprimer le dépôt « {{name}} » et son skill ?",
+      "confirmRemoveRepo_other": "Supprimer le dépôt « {{name}} » et ses {{count}} skills ?",
+      "confirmRemoveAll_one": "Supprimer le dépôt installé et ses skills ? Cette action est irréversible.",
+      "confirmRemoveAll_other": "Supprimer les {{count}} dépôts installés et leurs skills ? Cette action est irréversible."
     }
   },
   "storage": {

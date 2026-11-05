@@ -28,7 +28,7 @@
     "mcp": { "label": "Serveurs MCP", "description": "Les serveurs MCP pour les agents et les outils." },
     "environment": { "label": "Environnement", "description": "Où les commandes s'exécutent, et les clés d'API." },
     "storage": { "label": "Stockage", "description": "Où se trouvent les fichiers et les caches." },
-    "skills": { "label": "Compétences", "description": "Les compétences que vos agents peuvent utiliser." },
+    "skills": { "label": "Skills", "description": "Les skills que vos agents peuvent utiliser." },
     "answers": { "label": "Réponses", "description": "La façon dont l'agent présente ses réponses." },
     "memories": { "label": "Mémoire", "description": "Ce dont l'agent se souvient." },
     "dataControls": { "label": "Contrôle des données", "description": "Ce qui est conservé sur cet appareil." },

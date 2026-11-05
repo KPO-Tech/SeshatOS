@@ -70,7 +70,7 @@
       "sidebar": {
         "newChat": "Nouvelle conversation",
         "search": "Rechercher",
-        "skills": "Compétences",
+        "skills": "Skills",
         "plugins": "Plugins",
         "projects": "Projets",
         "store": "Boutique",
@@ -241,7 +241,7 @@
   "whatsnew": {
     "visuals": {
       "downloadingPaperasse": "Téléchargement de paperasse",
-      "downloadingTheSkills1Of": "Téléchargement des compétences (1 sur 2)",
+      "downloadingTheSkills1Of": "Téléchargement des skills (1 sur 2)",
       "ro6221Mib": "RO 62 % · 2,1 Mio/s",
       "paperasseIsReady": "paperasse est prêt",
       "theInstallationIsDone": "L'installation est terminée.",
@@ -494,7 +494,7 @@
       "privateTitle": "Privé et local",
       "privateText": "Vos données restent chez vous.",
       "modularTitle": "Modulaire",
-      "modularText": "Étendez avec des compétences et des plugins.",
+      "modularText": "Étendez avec des skills et des plugins.",
       "openTitle": "Ouvert et flexible",
       "openText": "Utilisez les modèles et les outils de votre choix.",
       "whatAreWe": "Sur quoi",
