@@ -42,8 +42,10 @@ export function useSkillFiles(skillName: string) {
   }, [skillName])
 
   // The files of the skill, as the shared tree of files reads them.
-  const source = useMemo(() => treeFileSource(tree, skillName), [tree, skillName])
+  const source = useMemo(() => treeFileSource(tree, skillName.replace(/^[a-z]+:/, '')), [tree, skillName])
+  // The SKILL.md that tells what the skill is.
+  const mainPath = useMemo(() => tree.find((node) => !node.is_dir && MAIN_FILE.test(node.name))?.path ?? 'SKILL.md', [tree])
   const readText = useCallback((path: string) => (treeFailed ? fetchSkillContent(skillName) : fetchSkillFile(skillName, path)), [skillName, treeFailed])
 
-  return { tree, source, selected, setSelected, loading, readText }
+  return { tree, source, selected, setSelected, loading, readText, mainPath }
 }
