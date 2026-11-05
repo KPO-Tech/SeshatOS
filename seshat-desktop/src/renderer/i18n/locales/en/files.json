@@ -1,0 +1,35 @@
+{
+  "fileTree": {
+    "loading": "Loading...",
+    "thisFolderCannotBeRead": "This folder cannot be read.",
+    "empty": "Empty",
+    "readTheFilesAgain": "Read the files again",
+    "refresh": "Refresh",
+    "searchFiles": "Search files...",
+    "searching": "Searching...",
+    "noFileOrFolderHas": "No file or folder has this name.",
+    "searchTheFiles": "Search the files"
+  },
+  "fileViewer": {
+    "thisFileIsEmpty": "This file is empty.",
+    "view": "View",
+    "source": "Source",
+    "preview": "Preview",
+    "copyThePath": "Copy the path",
+    "open": "Open",
+    "firstRows": "The first {{rows}} rows are shown.",
+    "loading": "Loading...",
+    "tooLarge": "This file is too large to show here (2 MB at most).",
+    "notText": "This file is not text, so it cannot be shown here.",
+    "pictureTooLarge": "This picture is too large to show here (10 MB at most).",
+    "couldNotRead": "This file could not be read.",
+    "notebookUnreadable": "This notebook could not be read.",
+    "notDrawnOpen": "The {{type}} files are not drawn in this view yet. Open it with the program of your system.",
+    "notDrawn": "The {{type}} files are not drawn in this view."
+  },
+  "notebookView": {
+    "outputOfTheCell": "Output of the cell",
+    "thisNotebookHasNoCells": "This notebook has no cells.",
+    "outputNotShown": "An output of type {{type}} is not shown here."
+  }
+}

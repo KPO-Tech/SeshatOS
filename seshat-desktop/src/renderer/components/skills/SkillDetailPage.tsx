@@ -1,28 +1,36 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { CheckOne, Left, More } from '@icon-park/react'
-import { CodeBox } from '@renderer/components/chat/tools/common'
-import { languageForPath } from '@renderer/components/chat/tools/helpers'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { CheckOne, FileText, FolderClose as Folder, Left, More } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { copyItem, openItem } from '@renderer/components/ui/menuItems'
 import { SourceLink } from '@renderer/components/ui/SourceLink'
-import { MarkdownView } from '@renderer/components/ui/MarkdownView'
+import { TabBar, type TabItem } from '@renderer/components/ui/TabBar'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
-import { SkillFileTree } from './SkillFileTree'
+import { FileContentView } from '@renderer/components/files/FileContentView'
+import { FileTreeView } from '@renderer/components/files/FileTreeView'
+import { frontmatterFields, splitFrontmatter } from '@renderer/components/files/frontmatter'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillMark } from './SkillIconTile'
 import { repoLogo } from './skillLogos'
 import { tagsFor, type SkillIconId } from './skillIcons'
-import { splitFrontmatter } from './skillContent'
 import { deleteSkill, setSkillEnabled } from './skillsApi'
 import type { Skill, TreeNode } from './skillsTypes'
-import { MAIN_FILE, useSkillFiles } from './useSkillFiles'
+import { useSkillFiles } from './useSkillFiles'
 import { useSkillIcons } from './useSkillIcons'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkills } from './useSkills'
 import { useTranslation } from 'react-i18next'
 
-const SOURCE_LABEL: Record<string, string> = { bundled: 'Built-in', userSettings: 'Yours', managed: 'Managed', plugin: 'Plugin', mcp: 'MCP' }
+// The values are keys of the catalogue; the page translates them.
+const SOURCE_LABEL: Record<string, string> = {
+  bundled: 'skills:skills.skillDetailPage.sourceBundled',
+  userSettings: 'skills:skills.skillDetailPage.sourceYours',
+  managed: 'skills:skills.skillDetailPage.sourceManaged',
+  plugin: 'skills:skills.skillDetailPage.sourcePlugin',
+  mcp: 'skills:skills.skillDetailPage.sourceMcp'
+}
+
+type Tab = 'overview' | 'files'
 
 function countFiles(nodes: TreeNode[]): number {
   return nodes.reduce((total, node) => total + (node.is_dir ? countFiles(node.children ?? []) : 1), 0)
@@ -42,6 +50,15 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
     <div className="flex items-start justify-between gap-3 py-1 text-[12px]">
       <span className="shrink-0 text-[var(--text-muted)]">{label}</span>
       <span className="min-w-0 text-right text-[var(--text-primary)]">{children}</span>
+    </div>
+  )
+}
+
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--text-muted)]">{label}</div>
+      <div className="text-[13px] leading-[1.6] text-[var(--text-primary)]">{children}</div>
     </div>
   )
 }
@@ -115,22 +132,37 @@ type BodyProps = {
 
 function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChangeIcon, onBack }: BodyProps) {
   const { t } = useTranslation('skills')
-  const { tree, selected, setSelected, content, loading } = useSkillFiles(skill.name)
-  const [source, setSource] = useState(false)
+  const [params, setParams] = useSearchParams()
+  const tab: Tab = params.get('tab') === 'files' ? 'files' : 'overview'
+  const goTo = (next: Tab) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
+  const { tree, source, selected, setSelected, loading, readText, mainPath } = useSkillFiles(skill.name)
   const tags = useMemo(() => tagsFor(skill, 6), [skill])
   const owned = skill.source === 'userSettings'
   const title = skill.display_name || skill.name
-
-  const isMain = selected !== null && MAIN_FILE.test(selected.split('/').pop() ?? '')
-  const isMarkdown = isMain || /\.(md|markdown|mdx)$/i.test(selected ?? '')
-  const { frontmatter, body } = isMain ? splitFrontmatter(content) : { frontmatter: '', body: content }
-  const fileName = selected?.split('/').pop() ?? ''
+  // What the skill says of itself in its SKILL.md (its license, what it needs), read once the tree is known.
+  const [fields, setFields] = useState<Record<string, string>>({})
+  useEffect(() => {
+    if (loading) return
+    let cancelled = false
+    readText(mainPath)
+      .then((text) => !cancelled && setFields(frontmatterFields(splitFrontmatter(text).frontmatter)))
+      .catch(() => !cancelled && setFields({}))
+    return () => {
+      cancelled = true
+    }
+  }, [loading, readText, mainPath])
+  const tools = (fields['allowed-tools'] ?? '').split(/[\s,]+/).filter(Boolean)
+  const kind = SOURCE_LABEL[skill.source] ? t(SOURCE_LABEL[skill.source]) : skill.source
 
   const menu: DropdownItem[] = [
     { id: 'icon', label: t('skills.skillDetailPage.changeIcon'), onSelect: onChangeIcon },
     ...(repoUrl ? [openItem('source', t('skills.skillDetailPage.openSource'), repoUrl)] : []),
     copyItem('copy', t('skills.skillDetailPage.copyName'), skill.name, onNotice),
     ...(owned ? [{ id: 'delete', label: t('skills.skillDetailPage.delete'), danger: true, onSelect: onRemove }] : [])
+  ]
+  const tabs: TabItem<Tab>[] = [
+    { id: 'overview', label: t('skills.skillDetailPage.overview'), icon: <Folder size={14} /> },
+    { id: 'files', label: t('skills.skillDetailPage.files'), icon: <FileText size={14} />, count: countFiles(tree) }
   ]
 
   return (
@@ -154,11 +186,10 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
               </div>
               <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">
                 {skill.version ? `v${skill.version} · ` : ''}
-                {SOURCE_LABEL[skill.source] ?? skill.source}
+                {kind}
                 {skill.collection && skill.collection !== skill.source ? ` · ${skill.collection}` : ''}
               </div>
               {repoUrl && <SourceLink url={repoUrl} className="mt-1" />}
-              {skill.description && <p className="m-0 mt-1.5 max-w-[760px] text-[13px] leading-5 text-[var(--text-secondary)]">{skill.description}</p>}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -181,87 +212,97 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
           </div>
         </div>
       </header>
+      <TabBar tabs={tabs} value={tab} onChange={goTo} ariaLabel={title} className="mt-3" />
 
-      <div className="mt-3 flex min-h-0 flex-1 gap-3 px-6 pb-3">
-        <aside className="flex w-[250px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-          <h2 className="m-0 shrink-0 px-3.5 pb-1 pt-3 text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.skillDetailPage.skillFiles')}</h2>
-          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
-            {tree.length > 0 ? <SkillFileTree nodes={tree} selected={selected ?? ''} onSelect={setSelected} /> : <p className="m-0 px-2 py-1 text-[12px] text-[var(--text-muted)]">{loading ? t('skills.skillDetailPage.loading') : t('skills.skillDetailPage.noFiles')}</p>}
-          </div>
-        </aside>
-
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border-soft)] px-4 py-2">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{fileName || title}</div>
-              <div className="truncate font-mono text-[10.5px] text-[var(--text-muted)]">{selected ?? ''}</div>
-            </div>
-            {isMarkdown && !loading && (
-              <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label={t('skills.skillDetailPage.view')}>
-                {([false, true] as const).map((value) => (
-                  <button
-                    key={String(value)}
-                    type="button"
-                    aria-pressed={source === value}
-                    onClick={() => setSource(value)}
-                    className={`cursor-pointer rounded-md border-0 px-2 py-0.5 ${source === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                  >
-                    {value ? t('skills.skillDetailPage.source') : t('skills.skillDetailPage.preview')}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="no-scrollbar min-h-0 flex-1 overflow-auto">
-            {loading ? (
-              <p className="m-0 p-6 text-[13px] text-[var(--text-muted)]">{t('skills.skillDetailPage.loading')}</p>
-            ) : isMarkdown && !source ? (
-              <div className="mx-auto max-w-[860px] px-6 py-5">
-                {frontmatter && <pre className="mb-5 whitespace-pre-wrap break-words rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3 font-mono text-[12px] leading-5 text-[var(--text-secondary)]">{frontmatter}</pre>}
-                <MarkdownView variant="document">{body}</MarkdownView>
-              </div>
-            ) : (
-              <CodeBox content={content.replace(/\r?\n$/, '') || ' '} language={isMarkdown ? 'markdown' : languageForPath(selected ?? '')} lineNumbers expanded bare />
-            )}
-          </div>
-        </main>
-
-        <aside className="no-scrollbar flex w-[290px] shrink-0 flex-col gap-3 overflow-y-auto">
-          <Card title={t('skills.skillDetailPage.overview')}>
-            <Row label={t('skills.skillDetailPage.type')}>{SOURCE_LABEL[skill.source] ?? skill.source}</Row>
-            {skill.version && <Row label={t('skills.skillDetailPage.version')}>{skill.version}</Row>}
-            {skill.collection && <Row label={t('skills.skillDetailPage.collection')}>{skill.collection}</Row>}
-            <Row label={t('skills.skillDetailPage.status')}>{skill.enabled ? t('skills.skillDetailPage.on') : t('skills.skillDetailPage.off')}</Row>
-            <Row label={t('skills.skillDetailPage.files')}>{countFiles(tree)}</Row>
-          </Card>
-          <Card title={t('skills.skillDetailPage.quickActions')}>
-            <div className="flex flex-col gap-2">
-              <button type="button" onClick={onToggle} className={ACTION}>
-                {skill.enabled ? t('skills.skillDetailPage.turnOff') : t('skills.skillDetailPage.turnOn')}
-              </button>
-              <button type="button" onClick={onChangeIcon} className={ACTION}>
-                {t('skills.skillDetailPage.changeIcon')}
-              </button>
-              {owned && (
-                <button type="button" onClick={onRemove} className={`${ACTION} text-[var(--accent-danger)]`}>
-                  {t('skills.skillDetailPage.delete')}
-                </button>
+      {tab === 'overview' ? (
+        <div className="no-scrollbar flex min-h-0 flex-1 gap-3 overflow-y-auto px-6 py-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <Card title={t('skills.skillDetailPage.about')}>
+              {skill.description ? (
+                <p className="m-0 max-w-[760px] text-[14px] leading-[1.75] text-[var(--text-secondary)]">{skill.description}</p>
+              ) : (
+                <p className="m-0 text-[13px] text-[var(--text-muted)]">{t('skills.skillDetailPage.noDescription')}</p>
               )}
-            </div>
-          </Card>
-          {tags.length > 0 && (
-            <Card title={t('skills.skillDetailPage.tags')}>
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map((tag) => (
-                  <span key={tag} className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">
-                    {tag}
-                  </span>
-                ))}
+              {tags.length > 0 && (
+                <div className="mt-3.5 flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <span key={tag} className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </Card>
+            {(fields.license || fields.compatibility || tools.length > 0) && (
+              <Card title={t('skills.skillDetailPage.requirements')}>
+                <div className="flex flex-col gap-3">
+                  {fields.license && <Fact label={t('skills.skillDetailPage.license')}>{fields.license}</Fact>}
+                  {fields.compatibility && <Fact label={t('skills.skillDetailPage.compatibility')}>{fields.compatibility}</Fact>}
+                  {tools.length > 0 && (
+                    <Fact label={t('skills.skillDetailPage.allowedTools')}>
+                      <span className="flex flex-wrap gap-1.5">
+                        {tools.map((tool) => (
+                          <span key={tool} className="rounded-md border border-[var(--border-soft)] px-2 py-0.5 font-mono text-[11px] text-[var(--text-secondary)]">
+                            {tool}
+                          </span>
+                        ))}
+                      </span>
+                    </Fact>
+                  )}
+                </div>
+              </Card>
+            )}
+          </div>
+
+          <aside className="flex w-[290px] shrink-0 flex-col gap-3">
+            <Card title={t('skills.skillDetailPage.details')}>
+              <Row label={t('skills.skillDetailPage.type')}>{kind}</Row>
+              {skill.version && <Row label={t('skills.skillDetailPage.version')}>{skill.version}</Row>}
+              {skill.collection && <Row label={t('skills.skillDetailPage.collection')}>{skill.collection}</Row>}
+              <Row label={t('skills.skillDetailPage.status')}>{skill.enabled ? t('skills.skillDetailPage.on') : t('skills.skillDetailPage.off')}</Row>
+              <Row label={t('skills.skillDetailPage.files')}>{countFiles(tree)}</Row>
+            </Card>
+            <Card title={t('skills.skillDetailPage.quickActions')}>
+              <div className="flex flex-col gap-2">
+                <button type="button" onClick={onToggle} className={ACTION}>
+                  {skill.enabled ? t('skills.skillDetailPage.turnOff') : t('skills.skillDetailPage.turnOn')}
+                </button>
+                <button type="button" onClick={() => goTo('files')} className={ACTION}>
+                  {t('skills.skillDetailPage.browseFiles')}
+                </button>
+                <button type="button" onClick={onChangeIcon} className={ACTION}>
+                  {t('skills.skillDetailPage.changeIcon')}
+                </button>
+                {owned && (
+                  <button type="button" onClick={onRemove} className={`${ACTION} text-[var(--accent-danger)]`}>
+                    {t('skills.skillDetailPage.delete')}
+                  </button>
+                )}
               </div>
             </Card>
-          )}
-        </aside>
-      </div>
+          </aside>
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 gap-3 px-6 pb-3 pt-3">
+          <aside className="flex w-[270px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
+            {tree.length > 0 ? (
+              <FileTreeView source={source} title={t('skills.skillDetailPage.skillFiles')} selectedPath={selected} onOpenFile={setSelected} />
+            ) : (
+              <>
+                <h2 className="m-0 shrink-0 px-3.5 pb-1 pt-3 text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.skillDetailPage.skillFiles')}</h2>
+                <p className="m-0 px-3.5 py-1 text-[12px] text-[var(--text-muted)]">{loading ? t('skills.skillDetailPage.loading') : t('skills.skillDetailPage.noFiles')}</p>
+              </>
+            )}
+          </aside>
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
+            {selected ? (
+              <FileContentView path={selected} relativePath={selected} readText={readText} frontmatter />
+            ) : (
+              <p className="m-0 p-6 text-[13px] text-[var(--text-muted)]">{t('skills.skillDetailPage.loading')}</p>
+            )}
+          </main>
+        </div>
+      )}
     </>
   )
 }

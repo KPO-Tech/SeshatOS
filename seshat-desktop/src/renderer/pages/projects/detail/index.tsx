@@ -1,27 +1,20 @@
+import { FileText, Folder } from '../icons'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
 import { listProjects, selectRecentSessions, updateProject } from '@renderer/lib/projects'
 import { useSessionStore } from '@renderer/stores/session'
 import { EditProjectDialog } from '../EditProjectDialog'
-import { FileText, Folder, Notes, Time } from '../icons'
 import { OverviewTab } from './OverviewTab'
-import { FileTree } from './FileTree'
-import { FileViewer } from './FileViewer'
+import { FileContentView } from '@renderer/components/files/FileContentView'
+import { FileTreeView } from '@renderer/components/files/FileTreeView'
+import { localFileSource } from '@renderer/components/files/fileSource'
 import { InfoColumn } from './InfoColumn'
 import { ProjectHeader } from './ProjectHeader'
 import { SessionsTab } from './SessionsTab'
 import { useProjectScan } from './useProjectScan'
 import { useTranslation } from 'react-i18next'
-
-type Tab = 'overview' | 'files' | 'sessions' | 'notes'
-const TABS: ReadonlyArray<{ id: Tab; label: string; icon: typeof FileText; soon?: boolean }> = [
-  { id: 'overview', label: 'shell:pages.projects.detail.tabOverview', icon: Folder },
-  { id: 'files', label: 'shell:pages.projects.detail.tabFiles', icon: FileText },
-  { id: 'sessions', label: 'shell:pages.projects.detail.tabSessions', icon: Time },
-  // Greyed until the notes are thought over again: the page is kept, its tab cannot be opened.
-  { id: 'notes', label: 'shell:pages.projects.detail.tabNotes', icon: Notes, soon: true }
-]
+import { ProjectTabs, type Tab } from './ProjectTabs'
 
 function relativeToRoot(root: string, path: string): string {
   return path.startsWith(root) ? path.slice(root.length).replace(/^[\\/]+/, '') : path
@@ -57,6 +50,7 @@ export function ProjectDetailPage() {
   )
   const projectSessions = useMemo(() => (project ? selectRecentSessions(sessions, project.rootPath, Number.MAX_SAFE_INTEGER) : []), [sessions, project])
   const scan = useProjectScan(project?.rootPath ?? '', refreshKey)
+  const fileSource = useMemo(() => localFileSource(project?.rootPath ?? ''), [project?.rootPath])
 
   const rawTab = params.get('tab')
   // A project opens on its overview: the input to begin a conversation in it, and what was asked before.
@@ -126,28 +120,7 @@ export function ProjectDetailPage() {
         }}
       />
 
-      <nav className="mt-3 flex shrink-0 gap-1 border-b border-[var(--border-soft)] px-6" role="tablist" aria-label={t('pages.projects.detail.index.project')}>
-        {TABS.map((item) => {
-          const Icon = item.icon
-          const selected = tab === item.id
-          return (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              disabled={item.soon}
-              title={item.soon ? t('pages.projects.detail.index.comingBackSoon') : undefined}
-              onClick={() => goTo(item.id)}
-              className={`-mb-px flex items-center gap-1.5 border-0 border-b-2 bg-transparent px-3 py-2 text-[13px] font-medium ${item.soon ? 'cursor-not-allowed border-transparent text-[var(--text-muted)] opacity-40' : selected ? 'cursor-pointer border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'cursor-pointer border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-            >
-              <Icon size={14} />
-              {item.label}
-              {item.id === 'sessions' && projectSessions.length > 0 && <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10.5px] leading-none text-[var(--text-muted)]">{projectSessions.length}</span>}
-            </button>
-          )
-        })}
-      </nav>
+      <ProjectTabs tab={tab} sessionCount={projectSessions.length} onSelect={goTo} />
 
       <div className="flex min-h-0 flex-1 gap-3 px-6 py-3">
         <main className="flex min-w-0 flex-1 gap-3">
@@ -166,13 +139,16 @@ export function ProjectDetailPage() {
           {tab === 'files' && (
             <>
               <div className="flex w-[270px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-                <FileTree rootPath={root} selectedPath={selectedFile} onOpenFile={setSelectedFile} refreshKey={refreshKey} onRefresh={() => setRefreshKey((n) => n + 1)} />
+                <FileTreeView source={fileSource} title={t('pages.projects.detail.index.projectFiles')} selectedPath={selectedFile} onOpenFile={setSelectedFile} refreshKey={refreshKey} onRefresh={() => setRefreshKey((n) => n + 1)} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
                 {selectedFile ? (
-                  <FileViewer
+                  <FileContentView
                     path={selectedFile}
                     relativePath={relativeToRoot(root, selectedFile)}
+                    readText={(path) => window.seshat?.fs?.readTextFile(path) ?? Promise.reject(new Error('unavailable'))}
+                    readImage={(path) => window.seshat?.fs?.readImage(path) ?? Promise.reject(new Error('unavailable'))}
+                    copyPath
                     onOpenSystem={(path) => void window.seshat?.openLocalPath?.(path).catch(() => show('This file could not be opened.', 'err'))}
                   />
                 ) : (
