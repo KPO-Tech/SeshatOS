@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { MCPServer } from '@renderer/components/config/mcp/mcpTypes'
 
 /** Where what the person types goes: an environment variable, a header of the request, or an argument of the command. */
@@ -45,7 +46,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     name: 'context7',
     source: 'https://github.com/upstash/context7',
     title: 'Context7',
-    description: 'Up-to-date documentation and code examples for the libraries and frameworks you use, fetched when the agent needs them.',
+    description: 'plugins:plugins.mcpCatalog.context7.description',
     category: 'Development',
     brand: 'context7',
     tags: ['documentation', 'libraries', 'code'],
@@ -54,13 +55,13 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     server_type: 'stdio',
     command: 'npx',
     args: ['-y', '@upstash/context7-mcp'],
-    inputs: [{ id: 'key', label: 'API key (optional, raises the limits)', placeholder: 'ctx7sk-...', required: false, secret: true, target: { env: 'CONTEXT7_API_KEY' } }]
+    inputs: [{ id: 'key', label: 'plugins:plugins.mcpCatalog.context7Key', placeholder: 'ctx7sk-...', required: false, secret: true, target: { env: 'CONTEXT7_API_KEY' } }]
   },
   {
     name: 'playwright',
     source: 'https://github.com/microsoft/playwright-mcp',
     title: 'Playwright',
-    description: 'Drives a real browser: open pages, click, fill forms, take screenshots and test a web app, from the page structure rather than pictures.',
+    description: 'plugins:plugins.mcpCatalog.playwright.description',
     category: 'Browser',
     brand: 'playwright',
     tags: ['browser', 'testing', 'automation'],
@@ -75,7 +76,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     name: 'chrome-devtools',
     source: 'https://github.com/ChromeDevTools/chrome-devtools-mcp',
     title: 'Chrome DevTools',
-    description: "Lets the agent debug and measure a web page in Chrome: network, console, performance traces and what the page really does.",
+    description: 'plugins:plugins.mcpCatalog.chromedevtools.description',
     category: 'Browser',
     brand: 'googlechrome',
     tags: ['debugging', 'performance', 'web'],
@@ -90,7 +91,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     name: 'sequential-thinking',
     source: 'https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking',
     title: 'Sequential Thinking',
-    description: 'A tool to think a hard problem through in steps, revise earlier steps and try another path before answering.',
+    description: 'plugins:plugins.mcpCatalog.sequentialthinking.description',
     category: 'Reasoning',
     brand: 'mcp',
     tags: ['reasoning', 'planning'],
@@ -105,7 +106,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     name: 'dbhub',
     source: 'https://github.com/bytebase/dbhub',
     title: 'DBHub',
-    description: 'Reads the schema and runs queries on your database: PostgreSQL, MySQL, MariaDB, SQL Server or SQLite, through one connection string.',
+    description: 'plugins:plugins.mcpCatalog.dbhub.description',
     category: 'Data',
     brand: 'dbhub',
     tags: ['database', 'sql', 'query'],
@@ -114,13 +115,13 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     server_type: 'stdio',
     command: 'npx',
     args: ['-y', '@bytebase/dbhub@latest', '--transport', 'stdio'],
-    inputs: [{ id: 'dsn', label: 'Connection string', placeholder: 'postgres://user:password@localhost:5432/dbname', required: true, secret: true, target: { arg: '--dsn' } }]
+    inputs: [{ id: 'dsn', label: 'plugins:plugins.mcpCatalog.dbhubDsn', placeholder: 'postgres://user:password@localhost:5432/dbname', required: true, secret: true, target: { arg: '--dsn' } }]
   },
   {
     name: 'figma',
     source: 'https://github.com/GLips/Figma-Context-MCP',
     title: 'Figma',
-    description: 'Gives the agent the layout and styles of a Figma file or frame, so that it can build the interface from the design.',
+    description: 'plugins:plugins.mcpCatalog.figma.description',
     category: 'Design',
     brand: 'figma',
     tags: ['design', 'figma', 'interface'],
@@ -129,13 +130,13 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     server_type: 'stdio',
     command: 'npx',
     args: ['-y', 'figma-developer-mcp', '--stdio'],
-    inputs: [{ id: 'key', label: 'Figma access token', placeholder: 'figd_...', required: true, secret: true, target: { env: 'FIGMA_API_KEY' } }]
+    inputs: [{ id: 'key', label: 'plugins:plugins.mcpCatalog.figmaKey', placeholder: 'figd_...', required: true, secret: true, target: { env: 'FIGMA_API_KEY' } }]
   },
   {
     name: 'firecrawl',
     source: 'https://github.com/firecrawl/firecrawl-mcp-server',
     title: 'Firecrawl',
-    description: 'Scrapes and crawls websites into clean text, including pages that need JavaScript, and extracts structured data from them.',
+    description: 'plugins:plugins.mcpCatalog.firecrawl.description',
     category: 'Web',
     brand: 'firecrawl',
     tags: ['scraping', 'crawl', 'web'],
@@ -144,13 +145,13 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     server_type: 'stdio',
     command: 'npx',
     args: ['-y', 'firecrawl-mcp'],
-    inputs: [{ id: 'key', label: 'Firecrawl API key', placeholder: 'fc-...', required: true, secret: true, target: { env: 'FIRECRAWL_API_KEY' } }]
+    inputs: [{ id: 'key', label: 'plugins:plugins.mcpCatalog.firecrawlKey', placeholder: 'fc-...', required: true, secret: true, target: { env: 'FIRECRAWL_API_KEY' } }]
   },
   {
     name: 'huggingface',
     source: 'https://github.com/huggingface/hf-mcp-server',
     title: 'Hugging Face',
-    description: 'Searches models, datasets, Spaces and papers on the Hugging Face Hub, and reads their documentation.',
+    description: 'plugins:plugins.mcpCatalog.huggingface.description',
     category: 'AI',
     brand: 'huggingface',
     tags: ['models', 'datasets', 'papers'],
@@ -158,7 +159,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     docs: 'https://huggingface.co/docs/hub/mcp',
     server_type: 'http',
     url: 'https://huggingface.co/mcp',
-    inputs: [{ id: 'token', label: 'Access token (optional, for your private repositories)', placeholder: 'hf_...', required: false, secret: true, target: { header: 'Authorization', prefix: 'Bearer ' } }]
+    inputs: [{ id: 'token', label: 'plugins:plugins.mcpCatalog.huggingfaceToken', placeholder: 'hf_...', required: false, secret: true, target: { header: 'Authorization', prefix: 'Bearer ' } }]
   }
 ]
 
@@ -169,11 +170,11 @@ export function availableMcp(installed: Array<{ name: string }>): McpCatalogEntr
 }
 
 /** What the person will have running, as one line: shown before the server is installed. */
-export function commandLine(entry: McpCatalogEntry, values: Record<string, string> = {}): string {
+export function commandLine(entry: McpCatalogEntry, values: Record<string, string> = {}, t?: TFunction): string {
   if (entry.server_type === 'http') return entry.url ?? ''
   const args = [...(entry.args ?? [])]
   for (const input of entry.inputs) {
-    if ('arg' in input.target) args.push(input.target.arg, values[input.id]?.trim() ? '<your value>' : `<${input.label.toLowerCase()}>`)
+    if ('arg' in input.target) args.push(input.target.arg, values[input.id]?.trim() ? '<your value>' : `<${(t ? t(input.label) : input.label).toLowerCase()}>`)
   }
   return [entry.command, ...args].join(' ')
 }

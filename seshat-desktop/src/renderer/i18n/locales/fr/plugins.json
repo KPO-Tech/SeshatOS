@@ -1,0 +1,138 @@
+{
+  "plugins": {
+    "mcpInstallDialog": {
+      "installedButItDidNot": "Installé, mais il n'a pas démarré",
+      "itStaysInTheList": "Il reste dans la liste pour que vous puissiez le corriger depuis Créer > MCP personnalisé, ou le supprimer.",
+      "connectsTo": "Se connecte à",
+      "starts": "Démarre",
+      "yourAgentsSendTheirRequests": "Vos agents envoient leurs requêtes à cette adresse lorsqu'ils l'utilisent.",
+      "aProgramOfTheInternet": "Un programme d'internet, téléchargé la première fois qu'il démarre et exécuté sur cette machine avec vos autorisations.",
+      "readAboutIt": "En savoir plus",
+      "close": "Fermer",
+      "cancel": "Annuler",
+      "installing": "Installation...",
+      "install": "Installer",
+      "installName": "Installer {{name}}",
+      "needs": "Nécessite"
+    },
+    "panels": {
+      "localConnectorPanel": {
+        "needsAttention": "À vérifier",
+        "removing": "Suppression...",
+        "disconnect": "Déconnecter",
+        "toolsYourAgentsCanUse": "Outils que vos agents peuvent utiliser",
+        "pasteANewOneTo": "Collez-en une nouvelle pour la remplacer",
+        "connecting": "Connexion...",
+        "replace": "Remplacer",
+        "connect": "Connecter",
+        "createOne": "En créer une",
+        "howItWorks": "Comment ça marche",
+        "connectedTools_one": "Connecté, {{count}} outil",
+        "connectedTools_other": "Connecté, {{count}} outils",
+        "pasteYour": "Collez votre {{what}}",
+        "staysHere": "Elle reste sur cet ordinateur, chiffrée, et n'est envoyée qu'à {{name}}.",
+        "confirmDisconnect": "Déconnecter {{name}} ? La clé est oubliée et ses outils quittent vos agents."
+      }
+    },
+    "pluginCard": {
+      "needsAttention": "À vérifier",
+      "connected": "Connecté",
+      "connect": "Connecter"
+    },
+    "pluginDetailModal": {
+      "close": "Fermer"
+    },
+    "pluginsPage": {
+      "disconnect": "Déconnecter",
+      "configure": "Configurer",
+      "remove": "Retirer",
+      "install": "Installer",
+      "all": "Tous",
+      "mcpServers": "Serveurs MCP",
+      "viewAll": "Tout voir",
+      "plugins": "Plugins",
+      "connectSeshatosToYourTools": "Connectez SeshatOS à vos outils et à vos services. Étendez ses capacités et automatisez vos flux de travail.",
+      "exploreMarketplace": "Explorer la boutique",
+      "create": "Créer",
+      "searchPluginsByNameDescription": "Rechercher des plugins par nom, description ou catégorie...",
+      "sortBy": "Trier par",
+      "name": "Nom",
+      "status": "État",
+      "layout": "Disposition",
+      "loading": "Chargement...",
+      "noPluginsMatchYourSearch": "Aucun plugin ne correspond à votre recherche.",
+      "extraToolsYourAgentsCan": "Des outils supplémentaires que vos agents peuvent appeler via le Model Context Protocol (MCP).",
+      "noMcpServersYet": "Aucun serveur MCP pour l'instant",
+      "addAnMcpServerTo": "Ajoutez un serveur MCP pour donner à vos agents l'accès à des outils et à des services externes.",
+      "createMcpServer": "Créer un serveur MCP",
+      "copyCommand": "Copier la commande",
+      "copyAddress": "Copier l'adresse",
+      "createCustom": "MCP personnalisé",
+      "createJson": "Importer un MCP par JSON",
+      "createUrl": "Ajouter un MCP par URL",
+      "confirmRemove": "Retirer {{name}} ? Ses outils quittent vos agents.",
+      "menuConfigure": "Configurer",
+      "menuInstall": "Installer",
+      "getCredential": "Obtenir : {{what}}",
+      "keyWord": "clé",
+      "openDocs": "Ouvrir la documentation",
+      "copyName": "Copier le nom",
+      "mcpServerFallback": "Serveur MCP",
+      "turnOff": "Désactiver",
+      "turnOn": "Activer",
+      "openSource": "Ouvrir la source",
+      "readDocs": "Lire la documentation"
+    },
+    "pluginTile": {
+      "install": "Installer",
+      "configure": "Configurer",
+      "moreAboutThisPlugin": "En savoir plus sur ce plugin",
+      "installed": "Installé",
+      "notInstalled": "Non installé"
+    },
+    "mcpCatalog": {
+      "context7": {
+        "description": "De la documentation à jour et des exemples de code pour les bibliothèques et les frameworks que vous utilisez, récupérés quand l'agent en a besoin."
+      },
+      "playwright": {
+        "description": "Pilote un vrai navigateur : ouvrir des pages, cliquer, remplir des formulaires, faire des captures d'écran et tester une application web, à partir de la structure de la page plutôt que d'images."
+      },
+      "chromedevtools": {
+        "description": "Permet à l'agent de déboguer et de mesurer une page web dans Chrome : réseau, console, traces de performance et ce que la page fait réellement."
+      },
+      "sequentialthinking": {
+        "description": "Un outil pour réfléchir à un problème difficile par étapes, revoir les étapes précédentes et essayer une autre voie avant de répondre."
+      },
+      "dbhub": {
+        "description": "Lit le schéma et exécute des requêtes sur votre base de données : PostgreSQL, MySQL, MariaDB, SQL Server ou SQLite, via une seule chaîne de connexion."
+      },
+      "figma": {
+        "description": "Donne à l'agent la mise en page et les styles d'un fichier ou d'un cadre Figma, pour qu'il puisse construire l'interface à partir de la maquette."
+      },
+      "firecrawl": {
+        "description": "Parcourt des sites web et en tire un texte propre, y compris les pages qui ont besoin de JavaScript, et en extrait des données structurées."
+      },
+      "huggingface": {
+        "description": "Recherche des modèles, des jeux de données, des Spaces et des articles sur le Hugging Face Hub, et lit leur documentation."
+      },
+      "context7Key": "Clé d'API (facultative, relève les limites)",
+      "dbhubDsn": "Chaîne de connexion",
+      "figmaKey": "Jeton d'accès Figma",
+      "firecrawlKey": "Clé d'API Firecrawl",
+      "huggingfaceToken": "Jeton d'accès (facultatif, pour vos dépôts privés)"
+    },
+    "connectorGroups": {
+      "messagingLabel": "Messagerie et e-mail",
+      "messagingDescription": "Des outils pour envoyer et lire des messages et des e-mails.",
+      "filesLabel": "Fichiers et connaissances",
+      "filesDescription": "Des outils pour lire, rechercher et organiser des fichiers et des connaissances.",
+      "productivityLabel": "Gestion du travail",
+      "productivityDescription": "Des outils pour gérer les dépôts, les tickets, la documentation et la collaboration.",
+      "crmLabel": "CRM et support",
+      "crmDescription": "Des outils pour gérer les clients, les affaires et le support.",
+      "paymentsLabel": "Paiements et livraison",
+      "paymentsDescription": "Des outils pour gérer les clients, les paiements et les abonnements.",
+      "defaultDescription": "Des outils que vos agents peuvent utiliser."
+    }
+  }
+}

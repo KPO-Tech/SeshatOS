@@ -1,0 +1,138 @@
+{
+  "plugins": {
+    "mcpInstallDialog": {
+      "installedButItDidNot": "Installed, but it did not start",
+      "itStaysInTheList": "It stays in the list so that you can fix it from Create > Custom MCP, or remove it.",
+      "connectsTo": "Connects to",
+      "starts": "Starts",
+      "yourAgentsSendTheirRequests": "Your agents send their requests to this address when they use it.",
+      "aProgramOfTheInternet": "A program of the internet, downloaded the first time it starts and run on this machine with your permissions.",
+      "readAboutIt": "Read about it",
+      "close": "Close",
+      "cancel": "Cancel",
+      "installing": "Installing...",
+      "install": "Install",
+      "installName": "Install {{name}}",
+      "needs": "Needs"
+    },
+    "panels": {
+      "localConnectorPanel": {
+        "needsAttention": "Needs attention",
+        "removing": "Removing...",
+        "disconnect": "Disconnect",
+        "toolsYourAgentsCanUse": "Tools your agents can use",
+        "pasteANewOneTo": "Paste a new one to replace it",
+        "connecting": "Connecting...",
+        "replace": "Replace",
+        "connect": "Connect",
+        "createOne": "Create one",
+        "howItWorks": "How it works",
+        "connectedTools_one": "Connected, {{count}} tool",
+        "connectedTools_other": "Connected, {{count}} tools",
+        "pasteYour": "Paste your {{what}}",
+        "staysHere": "It stays on this computer, encrypted, and is only sent to {{name}}.",
+        "confirmDisconnect": "Disconnect {{name}}? The key is forgotten and its tools leave your agents."
+      }
+    },
+    "pluginCard": {
+      "needsAttention": "Needs attention",
+      "connected": "Connected",
+      "connect": "Connect"
+    },
+    "pluginDetailModal": {
+      "close": "Close"
+    },
+    "pluginsPage": {
+      "disconnect": "Disconnect",
+      "configure": "Configure",
+      "remove": "Remove",
+      "install": "Install",
+      "all": "All",
+      "mcpServers": "MCP servers",
+      "viewAll": "View all",
+      "plugins": "Plugins",
+      "connectSeshatosToYourTools": "Connect SeshatOS to your tools and services. Extend its capabilities and automate your workflows.",
+      "exploreMarketplace": "Explore marketplace",
+      "create": "Create",
+      "searchPluginsByNameDescription": "Search plugins by name, description or category...",
+      "sortBy": "Sort by",
+      "name": "Name",
+      "status": "Status",
+      "layout": "Layout",
+      "loading": "Loading...",
+      "noPluginsMatchYourSearch": "No plugins match your search.",
+      "extraToolsYourAgentsCan": "Extra tools your agents can call via the Model Context Protocol (MCP).",
+      "noMcpServersYet": "No MCP servers yet",
+      "addAnMcpServerTo": "Add an MCP server to give your agents access to external tools and services.",
+      "createMcpServer": "Create MCP server",
+      "copyCommand": "Copy the command",
+      "copyAddress": "Copy the address",
+      "createCustom": "Custom MCP",
+      "createJson": "Import MCP by JSON",
+      "createUrl": "Add MCP by URL",
+      "confirmRemove": "Remove {{name}}? Its tools leave your agents.",
+      "menuConfigure": "Configure",
+      "menuInstall": "Install",
+      "getCredential": "Get a {{what}}",
+      "keyWord": "key",
+      "openDocs": "Open the documentation",
+      "copyName": "Copy the name",
+      "mcpServerFallback": "MCP server",
+      "turnOff": "Turn off",
+      "turnOn": "Turn on",
+      "openSource": "Open the source",
+      "readDocs": "Read the documentation"
+    },
+    "pluginTile": {
+      "install": "Install",
+      "configure": "Configure",
+      "moreAboutThisPlugin": "More about this plugin",
+      "installed": "Installed",
+      "notInstalled": "Not installed"
+    },
+    "mcpCatalog": {
+      "context7": {
+        "description": "Up-to-date documentation and code examples for the libraries and frameworks you use, fetched when the agent needs them."
+      },
+      "playwright": {
+        "description": "Drives a real browser: open pages, click, fill forms, take screenshots and test a web app, from the page structure rather than pictures."
+      },
+      "chromedevtools": {
+        "description": "Lets the agent debug and measure a web page in Chrome: network, console, performance traces and what the page really does."
+      },
+      "sequentialthinking": {
+        "description": "A tool to think a hard problem through in steps, revise earlier steps and try another path before answering."
+      },
+      "dbhub": {
+        "description": "Reads the schema and runs queries on your database: PostgreSQL, MySQL, MariaDB, SQL Server or SQLite, through one connection string."
+      },
+      "figma": {
+        "description": "Gives the agent the layout and styles of a Figma file or frame, so that it can build the interface from the design."
+      },
+      "firecrawl": {
+        "description": "Scrapes and crawls websites into clean text, including pages that need JavaScript, and extracts structured data from them."
+      },
+      "huggingface": {
+        "description": "Searches models, datasets, Spaces and papers on the Hugging Face Hub, and reads their documentation."
+      },
+      "context7Key": "API key (optional, raises the limits)",
+      "dbhubDsn": "Connection string",
+      "figmaKey": "Figma access token",
+      "firecrawlKey": "Firecrawl API key",
+      "huggingfaceToken": "Access token (optional, for your private repositories)"
+    },
+    "connectorGroups": {
+      "messagingLabel": "Messaging & email",
+      "messagingDescription": "Tools to send and read messages and email.",
+      "filesLabel": "Files & knowledge",
+      "filesDescription": "Tools to read, search and organize files and knowledge.",
+      "productivityLabel": "Work management",
+      "productivityDescription": "Tools to manage repositories, issues, documentation and collaboration.",
+      "crmLabel": "CRM & support",
+      "crmDescription": "Tools to manage customers, deals and support.",
+      "paymentsLabel": "Payments & delivery",
+      "paymentsDescription": "Tools to manage customers, payments and subscriptions.",
+      "defaultDescription": "Tools your agents can use."
+    }
+  }
+}
