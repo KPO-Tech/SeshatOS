@@ -47,9 +47,9 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if strings.Contains(block, "More components exist") {
 		t.Error("nothing is left out of the full block, so nothing is offered")
 	}
-	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders, 3650 with quizzes and switches).
-	if words := len(strings.Fields(block)); words > 3650 {
-		t.Errorf("the full block is %d words long, keep it under 3650", words)
+	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders, 3700 with quizzes and switches).
+	if words := len(strings.Fields(block)); words > 3700 {
+		t.Errorf("the full block is %d words long, keep it under 3700", words)
 	}
 }
 

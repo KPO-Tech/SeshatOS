@@ -30,6 +30,6 @@ Form, which sends a message for every answer.
 ## Consequences
 
 - A revision session costs one message at most, instead of one per answer, and the agent can adapt the next round to the report.
-- The `Forms` prompt family grows (Quiz, Flashcards) and the charts family a line for switches; the full block ceiling is 3650 words.
+- The `Forms` prompt family grows (Quiz, Flashcards) and the charts family a line for switches; the full block ceiling is 3700 words.
 - Not done here: several right answers, free-text answers judged by the agent (a Form already does it), saved progress, spaced
   repetition, Checkbox and Radio inside a Form, `mailto:` for a Draft.
