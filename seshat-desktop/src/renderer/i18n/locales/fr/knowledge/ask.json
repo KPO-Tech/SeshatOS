@@ -53,7 +53,7 @@
           "askAboutYourDocuments": "Interrogez vos documents",
           "openTheChat": "Ouvrir le chat",
           "removedNote": "Ce document n'est plus dans la collection. Voici le passage sur lequel la réponse reposait, tel que l'agent l'a lu.",
-          "configureProvider": "Configurez d'abord un fournisseur dans les Paramètres."
+          "configureProvider": "Configurez d'abord un fournisseur dans les Réglages."
         },
         "askSessionSidebar": {
           "thisConversation": "Cette conversation"

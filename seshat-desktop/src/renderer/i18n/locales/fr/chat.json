@@ -270,7 +270,7 @@
         "summarizeTheOlderPartOf": "Résumer maintenant la partie la plus ancienne de la conversation, sans attendre le seuil automatique",
         "compacting": "Compactage…",
         "compactNow": "Compacter",
-        "changes": "Changements",
+        "changes": "Modifications",
         "connectors": "Connecteurs",
         "outputs": "Résultats",
         "files": "Fichiers",
@@ -516,7 +516,7 @@
         },
         "patchToolView": {
           "error": "Erreur",
-          "changes": "Changements"
+          "changes": "Modifications"
         },
         "proseToolView": {
           "error": "Erreur",
