@@ -29,3 +29,22 @@ describe('the data question of the uninstaller', () => {
     expect(script).toContain('it asks whether to keep your conversations, settings and downloaded models')
   })
 })
+
+describe('the words of the installer', () => {
+  const strings = [...script.matchAll(/^LangString (\w+) (\d+) "/gm)]
+
+  it('are written in English and in French, one for one', () => {
+    const names = new Set(strings.map((match) => match[1]))
+    expect(names.size).toBeGreaterThan(0)
+    for (const name of names) {
+      const languages = strings.filter((match) => match[1] === name).map((match) => match[2])
+      expect(languages.sort()).toEqual(['1033', '1036'])
+    }
+  })
+
+  it('are all used by the pages and the question, and none is left in English inside them', () => {
+    const body = script.slice(script.indexOf('!macro customWelcomePage'))
+    for (const name of new Set(strings.map((match) => match[1]))) expect(body).toContain(`$(${name})`)
+    expect(body).not.toContain('Welcome to SeshatOS')
+  })
+})
