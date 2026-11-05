@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { api } from '@renderer/api/client'
 import type { UserPreferences } from '@renderer/api/types'
+import { currentLanguage } from '@renderer/i18n'
 import { ActionButton, Chip, Notice, SelectField, SettingRow, SettingsCard, SettingsPage, StatusBadge, Toggle } from './kit'
 
 type UserMemory = {
@@ -25,6 +28,7 @@ const emptyMemoryForm = {
 }
 
 export function MemoriesSettings() {
+  const { t } = useTranslation('settings')
   const [memories, setMemories] = useState<UserMemory[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -60,7 +64,7 @@ export function MemoriesSettings() {
       const saved = await api.put<UserPreferences>('/users/me/preferences', { ...current, memory_enabled: enabled })
       setAutoMemory(saved.memory_enabled === true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save the memory setting')
+      setError(err instanceof Error ? err.message : t('memories.errors.saveSetting'))
     } finally {
       setAutoMemoryBusy(false)
     }
@@ -74,7 +78,7 @@ export function MemoriesSettings() {
         if (!cancelled) setMemories(data.memories ?? [])
       })
       .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load memories')
+        if (!cancelled) setError(err instanceof Error ? err.message : t('memories.errors.load'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -96,7 +100,7 @@ export function MemoriesSettings() {
       setMemories((current) => [created, ...current])
       setForm(emptyMemoryForm)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save memory')
+      setError(err instanceof Error ? err.message : t('memories.errors.save'))
     } finally {
       setSaving(false)
     }
@@ -110,26 +114,26 @@ export function MemoriesSettings() {
       await api.delete(`/memories/${id}`)
       setMemories((current) => current.filter((memory) => memory.id !== id))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete memory')
+      setError(err instanceof Error ? err.message : t('memories.errors.delete'))
     } finally {
       setDeletingId(null)
     }
   }
 
-  const typeOptions = memoryTypes.filter((type) => type !== 'all').map((type) => ({ value: type, label: memoryTypeLabel(type) }))
-  const filterOptions = memoryTypes.map((type) => ({ value: type, label: `${memoryTypeLabel(type)} (${type === 'all' ? memories.length : memories.filter((memory) => memory.type === type).length})` }))
+  const typeOptions = memoryTypes.filter((type) => type !== 'all').map((type) => ({ value: type, label: memoryTypeLabel(type, t) }))
+  const filterOptions = memoryTypes.map((type) => ({ value: type, label: t('memories.filterOption', { type: memoryTypeLabel(type, t), count: type === 'all' ? memories.length : memories.filter((memory) => memory.type === type).length }) }))
 
   return (
-    <SettingsPage id="memories" badge={<StatusBadge tone={autoMemory ? 'ok' : 'muted'}>{autoMemory ? 'Learning' : 'Manual only'}</StatusBadge>}>
+    <SettingsPage id="memories" badge={<StatusBadge tone={autoMemory ? 'ok' : 'muted'}>{autoMemory ? t('memories.learning') : t('memories.manualOnly')}</StatusBadge>}>
       {error && <Notice tone="error">{error}</Notice>}
 
       <SettingsCard>
-        <SettingRow title="Learn from my conversations" hint="Off by default. What you add below is always used.">
-          <Toggle label="Learn from my conversations" enabled={autoMemory} onChange={(enabled) => void handleAutoMemory(enabled)} />
+        <SettingRow title={t('memories.learnTitle')} hint={t('memories.learnHint')}>
+          <Toggle label={t('memories.learnTitle')} enabled={autoMemory} onChange={(enabled) => void handleAutoMemory(enabled)} />
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="Add a memory" padded>
+      <SettingsCard title={t('memories.addCard')} padded>
         <div className="grid gap-3">
           <div className="flex items-center gap-3">
             <div className="w-[150px] shrink-0">
@@ -138,42 +142,42 @@ export function MemoriesSettings() {
             <div className="min-w-0 flex-1">
               <input
                 value={form.key}
-                aria-label="Memory"
+                aria-label={t('memories.memoryAria')}
                 onChange={(event) => setForm((current) => ({ ...current, key: event.target.value }))}
                 onKeyDown={(event) => event.key === 'Enter' && void handleCreate()}
-                placeholder="Prefers concise summaries"
+                placeholder={t('memories.memoryPlaceholder')}
                 className="h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
               />
             </div>
             <ActionButton type="button" tone="primary" onClick={() => void handleCreate()} disabled={!canSave || saving}>
-              {saving ? 'Saving...' : 'Add'}
+              {saving ? t('memories.saving') : t('memories.add')}
             </ActionButton>
           </div>
           <input
             value={form.value}
-            aria-label="Details"
+            aria-label={t('memories.detailsAria')}
             onChange={(event) => setForm((current) => ({ ...current, value: event.target.value }))}
-            placeholder="Details (optional)"
+            placeholder={t('memories.detailsPlaceholder')}
             className="h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--accent-primary)]"
           />
         </div>
       </SettingsCard>
 
       <SettingsCard
-        title="Your memories"
+        title={t('memories.yourMemories')}
         action={
           <div className="w-[170px]">
             <SelectField value={filter} options={filterOptions} onChange={setFilter} />
           </div>
         }
       >
-        {!loading && shown.length === 0 && <SettingRow title="No memories yet" hint="What you add above is used in every chat." />}
+        {!loading && shown.length === 0 && <SettingRow title={t('memories.none')} hint={t('memories.noneHint')} />}
         {shown.map((memory) => (
           <SettingRow key={memory.id} title={memory.key} hint={memory.value || undefined}>
-            <Chip>{memoryTypeLabel(memory.type)}</Chip>
+            <Chip>{memoryTypeLabel(memory.type, t)}</Chip>
             <span className="text-[11.5px] text-[var(--text-muted)]">{formatMemoryDate(memory.updated_at || memory.created_at)}</span>
             <ActionButton type="button" tone="danger" onClick={() => void handleDelete(memory.id)} disabled={deletingId === memory.id}>
-              {deletingId === memory.id ? '...' : 'Delete'}
+              {deletingId === memory.id ? '...' : t('memories.delete')}
             </ActionButton>
           </SettingRow>
         ))}
@@ -182,12 +186,22 @@ export function MemoriesSettings() {
   )
 }
 
-function memoryTypeLabel(type: string) {
-  if (type === 'all') return 'All'
-  return type.charAt(0).toUpperCase() + type.slice(1)
+// The types are what the server stores; only their names are translated, and one the server adds later is shown as it came.
+const MEMORY_TYPE_KEYS: Record<string, string> = {
+  all: 'settings:memories.types.all',
+  preference: 'settings:memories.types.preference',
+  instruction: 'settings:memories.types.instruction',
+  pattern: 'settings:memories.types.pattern',
+  fact: 'settings:memories.types.fact',
+  context: 'settings:memories.types.context'
+}
+
+function memoryTypeLabel(type: string, t: TFunction) {
+  const key = MEMORY_TYPE_KEYS[type]
+  return key ? t(key) : type.charAt(0).toUpperCase() + type.slice(1)
 }
 
 function formatMemoryDate(value: number) {
   if (!value) return ''
-  return new Date(value * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return new Date(value * 1000).toLocaleDateString(currentLanguage(), { month: 'short', day: 'numeric' })
 }

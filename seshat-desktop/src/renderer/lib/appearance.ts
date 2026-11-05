@@ -16,25 +16,25 @@ export type AppearancePrefs = {
 
 export const DEFAULT_APPEARANCE: AppearancePrefs = { textSize: 'default', zoom: 100, spacing: 'comfortable', contentWidth: 'default' }
 
-export const TEXT_SIZES: ReadonlyArray<{ value: TextSize; label: string; px: number }> = [
-  { value: 'small', label: 'Small', px: 12 },
-  { value: 'default', label: 'Default', px: 14 },
-  { value: 'large', label: 'Large', px: 16 },
-  { value: 'xlarge', label: 'Extra large', px: 18 }
+export const TEXT_SIZES: ReadonlyArray<{ value: TextSize; px: number }> = [
+  { value: 'small', px: 12 },
+  { value: 'default', px: 14 },
+  { value: 'large', px: 16 },
+  { value: 'xlarge', px: 18 }
 ]
 
 export const ZOOMS: readonly number[] = [90, 100, 110, 125, 150]
 
-export const SPACINGS: ReadonlyArray<{ value: Spacing; label: string; messageGap: number; itemPadY: number }> = [
-  { value: 'compact', label: 'Compact', messageGap: 20, itemPadY: 4 },
-  { value: 'comfortable', label: 'Comfortable', messageGap: 36, itemPadY: 6 },
-  { value: 'spacious', label: 'Spacious', messageGap: 48, itemPadY: 9 }
+export const SPACINGS: ReadonlyArray<{ value: Spacing; messageGap: number; itemPadY: number }> = [
+  { value: 'compact', messageGap: 20, itemPadY: 4 },
+  { value: 'comfortable', messageGap: 36, itemPadY: 6 },
+  { value: 'spacious', messageGap: 48, itemPadY: 9 }
 ]
 
-export const CONTENT_WIDTHS: ReadonlyArray<{ value: ContentWidth; label: string; px: number }> = [
-  { value: 'narrow', label: 'Narrow', px: 780 },
-  { value: 'default', label: 'Default', px: 900 },
-  { value: 'wide', label: 'Wide', px: 1100 }
+export const CONTENT_WIDTHS: ReadonlyArray<{ value: ContentWidth; px: number }> = [
+  { value: 'narrow', px: 780 },
+  { value: 'default', px: 900 },
+  { value: 'wide', px: 1100 }
 ]
 
 const storageKey = 'seshat.appearance'

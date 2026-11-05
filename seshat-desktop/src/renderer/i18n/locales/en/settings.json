@@ -1,4 +1,58 @@
 {
+  "modal": {
+    "title": "Settings",
+    "close": "Close settings",
+    "pages": "Settings pages"
+  },
+  "groups": {
+    "general": "General",
+    "aiRuntime": "AI runtime",
+    "capabilities": "Capabilities",
+    "workspace": "Workspace",
+    "dataPrivacy": "Data & privacy",
+    "about": "About"
+  },
+  "sections": {
+    "account": { "label": "Account", "description": "Who you are on this device." },
+    "languageNotifications": { "label": "Language & notifications", "description": "The interface language, and what the app tells you about." },
+    "appearance": { "label": "Appearance", "description": "Theme, colors and size." },
+    "shortcuts": { "label": "Shortcuts", "description": "Keys to move around quickly." },
+    "providers": { "label": "Providers", "description": "The AI providers your agents use." },
+    "models": { "label": "Models", "description": "Defaults, catalogs and fallbacks." },
+    "titles": { "label": "Titles", "description": "Name new sessions with a small local model." },
+    "webSearch": { "label": "Web search", "description": "Search providers and web rules." },
+    "documents": { "label": "Documents", "description": "How documents are read for your agents." },
+    "search": { "label": "Search", "description": "Embedding and reranking for Knowledge." },
+    "image": { "label": "Images", "description": "How the agent creates images." },
+    "audio": { "label": "Audio", "description": "Dictation, transcription and voice." },
+    "mcp": { "label": "MCP servers", "description": "MCP servers for agents and tools." },
+    "environment": { "label": "Environment", "description": "Where commands run, and API keys." },
+    "storage": { "label": "Storage", "description": "Where files and caches live." },
+    "skills": { "label": "Skills", "description": "Skills your agents can use." },
+    "answers": { "label": "Answers", "description": "How the agent presents answers." },
+    "memories": { "label": "Memories", "description": "What the agent remembers." },
+    "dataControls": { "label": "Data controls", "description": "What is kept on this device." },
+    "about": { "label": "About", "description": "Version and origin of SeshatOS." },
+    "cloud": { "label": "SeshatCloud", "description": "Pair with your organization SeshatCloud." }
+  },
+  "account": {
+    "connected": "Connected",
+    "local": "Local",
+    "signOut": "Sign out",
+    "notSignedIn": "You are not signed in: this workspace is local",
+    "sessionReady": "Session storage ready",
+    "details": "Details",
+    "email": "Email",
+    "userId": "User ID",
+    "copy": "Copy",
+    "status": {
+      "unknown": "Unknown",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "pending": "Pending"
+    }
+  },
   "languageNotifications": {
     "languageCard": "Language",
     "interfaceLanguage": "Interface language",
@@ -12,5 +66,182 @@
     "agentRepliesHint": "When the agent finishes in a conversation you are not looking at.",
     "errors": "Errors",
     "appUpdates": "App updates"
+  },
+  "appearance": {
+    "tabs": { "theme": "Theme", "interface": "Interface" },
+    "mainThemes": {
+      "card": "Main themes",
+      "modeLabel": "Mode",
+      "mode": { "dark": "Dark", "light": "Light", "system": "System" },
+      "darkTheme": "Dark theme",
+      "lightTheme": "Light theme",
+      "onScreen": "On screen",
+      "clickToShow": "Click to show it",
+      "help": "The sun and moon button of the title bar switches between these two. Pick a theme below to make it the main one of its kind."
+    },
+    "accent": { "card": "Accent color", "useOwn": "Use the theme's own" },
+    "themes": {
+      "card": "Themes",
+      "show": "Show",
+      "filter": { "all": "All", "dark": "Dark", "light": "Light" },
+      "groups": { "seshat": "Seshat", "mine": "My themes", "dark": "Dark", "light": "Light" }
+    },
+    "customize": {
+      "card": "Customize",
+      "duplicate": "Duplicate",
+      "locked": "Presets cannot be changed. Duplicate one to make your own."
+    },
+    "importExport": {
+      "card": "Import and export",
+      "themeFile": "Theme file",
+      "import": "Import",
+      "export": "Export",
+      "copyJson": "Copy JSON"
+    },
+    "notices": {
+      "saveFailed": "Your themes could not be saved in this browser: they will be lost when the app closes.",
+      "imported": "Imported “{{name}}”.",
+      "importFailed": "This theme could not be imported.",
+      "copied": "Theme copied.",
+      "copyFailed": "The theme could not be copied."
+    },
+    "confirmDelete": "Delete the theme “{{name}}”?",
+    "copyName": "{{name}} copy",
+    "interface": {
+      "card": "Interface",
+      "reset": "Reset",
+      "size": "Interface size",
+      "textSize": "Chat text size",
+      "spacing": "Spacing",
+      "width": "Conversation width"
+    },
+    "options": {
+      "textSize": { "small": "Small", "default": "Default", "large": "Large", "xlarge": "Extra large" },
+      "spacing": { "compact": "Compact", "comfortable": "Comfortable", "spacious": "Spacious" },
+      "width": { "narrow": "Narrow", "default": "Default", "wide": "Wide" }
+    }
+  },
+  "themeEditor": {
+    "name": "Name",
+    "defaultName": "My theme",
+    "palette": "Palette",
+    "surface": "Surface",
+    "accent": "Accent",
+    "text": "Text",
+    "colourAria": "{{label}} colour",
+    "hexAria": "{{label}} hex value",
+    "wallpaper": "Wallpaper",
+    "wallpaperNone": "None",
+    "wallpaperGradient": "Gradient",
+    "wallpaperImage": "Image",
+    "colourN": "Colour {{n}}",
+    "addColour": "+ Colour",
+    "removeColour": "− Colour",
+    "angle": "Angle",
+    "veil": "Veil",
+    "chooseAnother": "Choose another picture",
+    "translucent": "Panels become slightly translucent so the wallpaper shows through. Pick a surface close to the wallpaper to keep text readable.",
+    "delete": "Delete this theme",
+    "pictureFailed": "This picture could not be used."
+  },
+  "themeCards": {
+    "selected": "Selected"
+  },
+  "tokenActivity": {
+    "card": "Token activity",
+    "viewLabel": "Token activity view",
+    "views": { "daily": "Daily", "weekly": "Weekly", "cumulative": "Cumulative" },
+    "failed": "Token activity could not be loaded.",
+    "empty": "No tokens used yet. Activity shows here once you chat with an agent.",
+    "summary_one": "{{tokens}} tokens over {{count}} active day in the last year",
+    "summary_other": "{{tokens}} tokens over {{count}} active days in the last year",
+    "tokens": "{{value}} tokens",
+    "noTokens": "No tokens",
+    "weekOf": "Week of {{date}}",
+    "throughWeekOf": "Through the week of {{date}}",
+    "less": "Less",
+    "more": "More",
+    "tableCaption": "Tokens used per week",
+    "tableWeek": "Week of",
+    "tableTokens": "Tokens"
+  },
+  "memories": {
+    "learning": "Learning",
+    "manualOnly": "Manual only",
+    "learnTitle": "Learn from my conversations",
+    "learnHint": "Off by default. What you add below is always used.",
+    "addCard": "Add a memory",
+    "memoryAria": "Memory",
+    "memoryPlaceholder": "Prefers concise summaries",
+    "detailsAria": "Details",
+    "detailsPlaceholder": "Details (optional)",
+    "saving": "Saving...",
+    "add": "Add",
+    "yourMemories": "Your memories",
+    "none": "No memories yet",
+    "noneHint": "What you add above is used in every chat.",
+    "delete": "Delete",
+    "filterOption": "{{type}} ({{count}})",
+    "errors": {
+      "saveSetting": "Failed to save the memory setting",
+      "load": "Failed to load memories",
+      "save": "Failed to save memory",
+      "delete": "Failed to delete memory"
+    },
+    "types": {
+      "all": "All",
+      "preference": "Preference",
+      "instruction": "Instruction",
+      "pattern": "Pattern",
+      "fact": "Fact",
+      "context": "Context"
+    }
+  },
+  "dataControls": {
+    "approvals": "Remembered tool approvals",
+    "approvalsHint_one": "{{count}} remembered: you are not asked again for these.",
+    "approvalsHint_other": "{{count}} remembered: you are not asked again for these.",
+    "approvalsNone": "None remembered.",
+    "clearAll": "Clear all",
+    "cleared": "Cleared",
+    "comingLater": "Coming later",
+    "clearCache": "Clear application cache",
+    "deleteConversations": "Delete all conversations",
+    "clearConnectors": "Clear connector accounts",
+    "notAvailable": "Not available"
+  },
+  "shortcuts": {
+    "groups": { "navigation": "Navigation", "chat": "Chat", "desktop": "Desktop" },
+    "items": {
+      "toggleSidebar": "Toggle sidebar",
+      "search": "Search",
+      "goHome": "Go home",
+      "goBack": "Go back",
+      "goForward": "Go forward",
+      "sendMessage": "Send message",
+      "newLine": "New line",
+      "attachFile": "Attach file",
+      "focusComposer": "Focus composer",
+      "openSettings": "Open settings",
+      "openConfig": "Open config",
+      "closeModal": "Close modal"
+    }
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "updateReady": "SeshatOS {{version}} is ready to install.",
+    "checking": "Checking...",
+    "upToDate": "You have the latest version.",
+    "checkFailed": "The check failed.",
+    "restart": "Restart and install",
+    "check": "Check for updates",
+    "systemCard": "System",
+    "backend": "Backend",
+    "connected": "Connected",
+    "notDetected": "Not detected",
+    "mode": "Mode",
+    "modeConnected": "Connected to SeshatCloud",
+    "modeLocal": "Local workspace",
+    "backendVersion": "Backend version"
   }
 }
