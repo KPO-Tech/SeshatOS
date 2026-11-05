@@ -430,7 +430,8 @@
       "pickOne": "Pick a provider to set up.",
       "builtIn": "Built into the Seshat runtime.",
       "genericUntested": "Generic provider from the public models.dev catalog ({{total}} models), not tested with a real key by Seshat.",
-      "unverifiedAddress": "{{text}} Its address comes from a downloaded catalog and was not reviewed."
+      "unverifiedAddress": "{{text}} Its address comes from a downloaded catalog and was not reviewed.",
+      "freellmapiHint": "FreeLLMAPI is a router that you install and run yourself, for personal use and under the terms of each provider it uses. In its dashboard, copy the unified key (freellmapi-…). Its desktop app answers on port 31415; the server and Docker on 3001."
     },
     "providerCard": {
       "setAsDefaultProvider": "Set as default provider",
