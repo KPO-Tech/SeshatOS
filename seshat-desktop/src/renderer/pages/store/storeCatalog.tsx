@@ -24,8 +24,8 @@ export const STORE_APPS: StoreApp[] = [
   {
     id: 'knowledge',
     name: 'Knowledge',
-    tagline: 'Search and ask across the documents of your organization.',
-    description: 'Connect your sources, find a document by keyword, or ask a question and read the answer next to the passages it comes from.',
+    tagline: 'store:pages.store.apps.knowledge.tagline',
+    description: 'store:pages.store.apps.knowledge.description',
     logo: 'brand/knowledge-icon.svg',
     route: edition.knowledgeApp ? '/knowledge' : undefined,
     needsCloud: true,
@@ -34,13 +34,13 @@ export const STORE_APPS: StoreApp[] = [
   {
     id: 'automation',
     name: 'Automation',
-    tagline: 'Agent workflows that run on a schedule or a trigger.',
-    description: 'Build governed workflows where agents use your tools, ask for approval when needed, and leave a trace of what they did.',
+    tagline: 'store:pages.store.apps.automation.tagline',
+    description: 'store:pages.store.apps.automation.description',
     logo: 'brand/automation-icon.svg',
     needsCloud: true
   },
-  { id: 'data', name: 'Data', tagline: 'Explore and transform structured data.', description: 'Work on tables and files with an agent at your side.', icon: <ChartHistogram size={20} /> },
-  { id: 'inbox', name: 'Inbox', tagline: 'A connected mailbox with agent triage.', description: 'Sort and answer mail with an agent that knows your context.', icon: <MailOpen size={20} /> },
-  { id: 'companion', name: 'Companion', tagline: 'A roster of agent personas.', description: 'Keep agents with their own role, tone and memory.', icon: <Robot size={20} /> },
-  { id: 'team', name: 'Team', tagline: 'Agents and people working together.', description: 'Share agents and follow multi-agent work as a team.', icon: <Peoples size={20} /> }
+  { id: 'data', name: 'Data', tagline: 'store:pages.store.apps.data.tagline', description: 'store:pages.store.apps.data.description', icon: <ChartHistogram size={20} /> },
+  { id: 'inbox', name: 'Inbox', tagline: 'store:pages.store.apps.inbox.tagline', description: 'store:pages.store.apps.inbox.description', icon: <MailOpen size={20} /> },
+  { id: 'companion', name: 'Companion', tagline: 'store:pages.store.apps.companion.tagline', description: 'store:pages.store.apps.companion.description', icon: <Robot size={20} /> },
+  { id: 'team', name: 'Team', tagline: 'store:pages.store.apps.team.tagline', description: 'store:pages.store.apps.team.description', icon: <Peoples size={20} /> }
 ]

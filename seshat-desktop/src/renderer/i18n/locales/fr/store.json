@@ -1,0 +1,42 @@
+{
+  "pages": {
+    "store": {
+      "index": {
+        "store": "Boutique",
+        "thePlatformsSeshatosCanHost": "Les plateformes que SeshatOS peut héberger. Chacune s'ouvre dans sa propre page.",
+        "available": "Disponibles",
+        "comingSoon": "Bientôt disponible",
+        "soon": "Bientôt",
+        "worksOnTheDataOf": "Travaille sur les données de votre organisation : nécessite une connexion à SeshatCloud.",
+        "open": "Ouvrir",
+        "notBuiltYet": "Pas encore construites. Elles apparaissent ici, puis dans la barre latérale, quand elles sont prêtes."
+      },
+      "apps": {
+        "knowledge": {
+          "tagline": "Recherchez et posez des questions dans les documents de votre organisation.",
+          "description": "Connectez vos sources, retrouvez un document par mot-clé, ou posez une question et lisez la réponse à côté des passages dont elle provient."
+        },
+        "automation": {
+          "tagline": "Des flux de travail d'agents qui s'exécutent selon un horaire ou un déclencheur.",
+          "description": "Construisez des flux de travail encadrés où les agents utilisent vos outils, demandent une approbation quand il le faut et laissent une trace de ce qu'ils ont fait."
+        },
+        "data": {
+          "tagline": "Explorez et transformez des données structurées.",
+          "description": "Travaillez sur des tableaux et des fichiers avec un agent à vos côtés."
+        },
+        "inbox": {
+          "tagline": "Une boîte mail connectée, triée par un agent.",
+          "description": "Triez et répondez à vos e-mails avec un agent qui connaît votre contexte."
+        },
+        "companion": {
+          "tagline": "Un répertoire de personnalités d'agents.",
+          "description": "Gardez des agents avec leur propre rôle, leur propre ton et leur propre mémoire."
+        },
+        "team": {
+          "tagline": "Des agents et des personnes qui travaillent ensemble.",
+          "description": "Partagez des agents et suivez le travail de plusieurs agents en équipe."
+        }
+      }
+    }
+  }
+}
