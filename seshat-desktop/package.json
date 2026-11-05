@@ -22,6 +22,8 @@
     "lint": "oxlint src",
     "artifact-libs": "node scripts/artifact-libs.mjs",
     "ui-catalog": "node scripts/generate-ui-catalog.mjs",
+    "i18n:check": "node scripts/i18n-scan.mjs check",
+    "i18n:sync": "node scripts/i18n-scan.mjs sync",
     "test": "vitest run && npm run test:ipc",
     "test:watch": "vitest",
     "build:backend:win": "node ../scripts/build-desktop-sidecar.mjs windows amd64",
