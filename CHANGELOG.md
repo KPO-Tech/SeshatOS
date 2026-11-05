@@ -11,6 +11,26 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.11] - 2026-11-05
+
+### Highlights
+
+- **A One Dark appearance, file icons like in VS Code, and sign-in by code for organizations.**
+
+### Added
+
+- **A One Dark appearance.** In Settings > Appearance, a dark theme after One Dark Pro for VS Code, with Seshat's orange as its accent and the One Dark colours in code.
+- **File and folder icons in the files of a project.** Each file shows the icon of its type and each folder the icon of its name (src, docs, .github...), open or closed, from Material Icon Theme as in VS Code.
+- **Sign in to an organization by approving a code in the browser.** When the app is connected to an organization, it shows a short code and opens the organization's console, where you approve it. Standalone mode is unchanged.
+
+### Fixed
+
+- **The logo of a README shows in the files of a project.** A README that names one image for dark pages and another for light ones showed a broken image when the system was dark. The app now picks the one for its own theme.
+
+### Changed
+
+- **Runtime 1.14.2.**
+
 ## [0.3.10] - 2026-11-03
 
 ### Changed
