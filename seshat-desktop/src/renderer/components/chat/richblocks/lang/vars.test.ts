@@ -71,7 +71,7 @@ describe('what a block of sliders may not do', () => {
 
   it('is told when a range is empty or there are too many sliders', () => {
     expect(problems('root = Slider("a", 3, 3)').some((message) => message.includes('not above min'))).toBe(true)
-    const many = Array.from({ length: VAR_LIMITS.sliders + 1 }, (_, i) => `Slider("v${i}", 0, 1)`).join(', ')
+    const many = Array.from({ length: VAR_LIMITS.variables + 1 }, (_, i) => `Slider("v${i}", 0, 1)`).join(', ')
     expect(problems(`root = Stack([${many}])`).some((message) => message.includes('at most'))).toBe(true)
   })
 
@@ -89,5 +89,26 @@ describe('the marks that follow the sliders', () => {
     const ok = `root = Stack([Slider("a", 1, 3), Slider("b", -4, 4), Plot([Curve("a*x^2 + b*x"), Dot("-b/(2*a)", "-b^2/(4*a)", "vertex"), VLine("-b/(2*a)"), HLine("-b^2/(4*a)")], -5, 5)])`
     expect(problems(ok)).toEqual([])
     expect(problems(`root = Stack([Slider("a", 1, 3), Dot("a*zz", 0)])`).some((message) => message.includes('Dot x "a*zz"'))).toBe(true)
+  })
+})
+
+describe('switches and choices', () => {
+  const block = `root = Stack([Toggle("show", "Cosine", true), Select("fn", ["sin", "cos", "tan"], 1), Plot([Curve("sin(x)", "s", "blue", false, "value", "eq(fn, 0)"), Curve("cos(x)", "c", "green", false, "value", "show")], -5, 5)])`
+
+  it('are variables too: 1 or 0 for a switch, the number of the choice for a list', () => {
+    const result = parseUi(block, { streaming: false })
+    expect(result.errors).toEqual([])
+    const specs = slidersOf(result.root!)
+    expect(specs.map((spec) => [spec.name, spec.min, spec.max, spec.value])).toEqual([['show', 0, 1, 1], ['fn', 0, 2, 1]])
+  })
+
+  it('are refused with a bad name, one list of a single option, or a show that cannot be read', () => {
+    expect(problems('root = Stack([Toggle("sin"), Select("k", ["only"])])').length).toBeGreaterThanOrEqual(2)
+    expect(problems('root = Stack([Select("k", ["a", "b"]), Plot([Curve("x", "l", "blue", false, "value", "zz")], 0, 1)])').some((message) => message.includes('show "zz"'))).toBe(true)
+  })
+
+  it('compare with eq', () => {
+    expect(tryParseExpression('eq(k, 2)', { k: 2 }).formula?.(0)).toBe(1)
+    expect(tryParseExpression('eq(k, 2)', { k: 1 }).formula?.(0)).toBe(0)
   })
 })

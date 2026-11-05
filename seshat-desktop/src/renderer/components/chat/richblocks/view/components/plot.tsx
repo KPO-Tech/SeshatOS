@@ -39,7 +39,8 @@ function Plot({ props }: ComponentProps) {
   }
   const xmin = finite(props.xmin)
   const xmax = finite(props.xmax)
-  const layers = (Array.isArray(props.layers) ? props.layers : []).filter(isNode)
+  // A layer with show is drawn while the value of its formula is not 0: a Toggle, or eq(choice, 2) for a Select.
+  const layers = (Array.isArray(props.layers) ? props.layers : []).filter(isNode).filter((node) => read(node.props.show) !== 0)
   const clipId = `clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
   if (xmin === undefined || xmax === undefined || xmax <= xmin) {
     return <div className="my-3 rounded-lg border border-dashed border-app-border-subtle px-3 py-2 text-xs text-app-text-muted">{t('chat.richblocks.view.components.plot.aPlotNeedsXminBelow')}</div>

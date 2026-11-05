@@ -54,6 +54,9 @@ b = Slider("b", 0.2, 4, 1, 0.1, "Frequency (b)")
 c = Slider("c", -3.14, 3.14, 0, 0.1, "Phase (c)")
 d = Slider("d", -3, 3, 0, 0.1, "Vertical shift (d)")
 eq = Live("Current equation: $f(x) = {{a}}\\\\sin({{b}}x + {{c}}) + {{d}}$, period {{2*pi/b}}")`,
+  `root = Stack([quiz, cards])
+quiz = Quiz([Question("Which keyword starts a goroutine?", ["go", "async", "spawn"], 0, "go f() runs f concurrently."), Question("What does a nil map do on write?", ["Creates the key", "Panics", "Ignores it"], 1, "Writing to a nil map panics; reading is fine.")], "Go basics", "My Go quiz: {{score}} out of {{total}}. I missed:\\n{{missed}}\\nExplain what I got wrong.")
+cards = Flashcards([Flash("goroutine", "A lightweight thread managed by the Go runtime."), Flash("channel", "A typed pipe to send values between goroutines.")], "Vocabulary", "I know {{known}} of {{total}} cards. To review: {{again}}. Quiz me on those.")`,
   `root = Stack([plan, exercise])
 plan = SegmentBar([Segment("Discover 2 words", 2, "blue"), Segment("Write 100 to 150 words", 8, "green"), Segment("Correct and rewrite", 5, "orange")], "min", "A session of 15 minutes")
 exercise = Form([topic, essay, count], send, "Day 1: argue")

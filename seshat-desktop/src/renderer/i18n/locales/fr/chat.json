@@ -371,6 +371,19 @@
             "to": "À",
             "subject": "Objet",
             "draft": "Brouillon"
+          },
+          "quiz": {
+            "send": "Envoyer mon résultat",
+            "correct": "Juste",
+            "wrong": "Faux",
+            "score": "Score : {{score}} / {{total}}",
+            "retry": "Recommencer",
+            "flip": "Voir la réponse",
+            "showFront": "Voir la question",
+            "again": "À revoir",
+            "knew": "Je savais",
+            "cardOf": "Carte {{n}} sur {{total}}",
+            "cardsDone": "{{known}} connues sur {{total}}"
           }
         },
         "expand": {

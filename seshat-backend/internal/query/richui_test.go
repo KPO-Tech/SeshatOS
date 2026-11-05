@@ -47,9 +47,9 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if strings.Contains(block, "More components exist") {
 		t.Error("nothing is left out of the full block, so nothing is offered")
 	}
-	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders).
-	if words := len(strings.Fields(block)); words > 3350 {
-		t.Errorf("the full block is %d words long, keep it under 3350", words)
+	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders, 3650 with quizzes and switches).
+	if words := len(strings.Fields(block)); words > 3650 {
+		t.Errorf("the full block is %d words long, keep it under 3650", words)
 	}
 }
 
@@ -225,5 +225,24 @@ func TestRichUISlidersAreTaughtWithTheCharts(t *testing.T) {
 	}
 	if strings.Contains(richAnswersBlock(richUIFamilies{}), "Slider(") {
 		t.Error("the core must not teach sliders")
+	}
+}
+
+func TestRichUIQuizzesAreTaughtWithTheForms(t *testing.T) {
+	block := richAnswersBlock(richUIFamilies{forms: true})
+	for _, want := range []string{"Quiz(", "Question(", "Flashcards(", "Flash(", "{{missed}}"} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the forms block must mention %q", want)
+		}
+	}
+	charts := richAnswersBlock(richUIFamilies{charts: true})
+	for _, want := range []string{"Toggle(", "Select(", "eq(name, 1)"} {
+		if !strings.Contains(charts, want) {
+			t.Errorf("the charts block must mention %q", want)
+		}
+	}
+	quiz := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Quiz([Question(\"q\", [\"a\", \"b\"], 0)])\n```")
+	if got := richUIFamiliesInHistory([]types.Message{quiz}); !got.forms {
+		t.Errorf("a quiz brings the forms family back, got %+v", got)
 	}
 }

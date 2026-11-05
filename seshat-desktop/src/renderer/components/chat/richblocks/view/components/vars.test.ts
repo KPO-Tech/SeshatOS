@@ -36,3 +36,16 @@ describe('the sliders of an answer, drawn', () => {
     expect(html).not.toContain('cannot be read')
   })
 })
+
+describe('switches and choices, drawn', () => {
+  const code = `root = Stack([Toggle("c", "Cosine", false), Select("fn", ["Sine", "Cosine"], 1, "Function"), Plot([Curve("sin(x)", "sine", "blue", false, "value", "eq(fn, 0)"), Curve("cos(x)", "cosine", "green", false, "value", "c")], -5, 5)])`
+
+  it('draws a switch and a list, and leaves out the curve that is not shown', async () => {
+    const html = await draw(code)
+    expect(html).toContain('role="switch"')
+    expect(html).toContain('aria-checked="false"')
+    expect(html).toContain('<option value="1" selected="">Cosine</option>')
+    expect(html).not.toContain('>sine<')
+    expect(html).not.toContain('>cosine<')
+  })
+})

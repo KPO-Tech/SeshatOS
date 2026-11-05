@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { fillLive, formatNumber, sliderOf, VAR_LIMITS } from '../../lang/vars'
+import { fillLive, formatNumber, optionsOf, selectOf, sliderOf, toggleOf, VAR_LIMITS } from '../../lang/vars'
 import type { ComponentProps } from '../NodeView'
 import { text } from '../charts/readers'
 import { MarkdownText } from '../text/MarkdownText'
@@ -37,6 +37,55 @@ function Slider({ props }: ComponentProps) {
   )
 }
 
+function Toggle({ props }: ComponentProps) {
+  const vars = useVars()
+  const spec = toggleOf({ props })
+  if (!spec) return null
+  const on = (vars.values[spec.name] ?? spec.value) === 1
+  const label = text(props.label) ?? spec.name
+  return (
+    <label className="my-1 flex cursor-pointer items-center gap-3 text-[12.5px] text-app-text-secondary">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label={label}
+        onClick={() => vars.set(spec.name, on ? 0 : 1)}
+        className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full border-0 transition-colors ${on ? 'bg-[var(--accent-primary)]' : 'bg-app-border'}`}
+      >
+        <span className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white transition-transform ${on ? 'translate-x-4' : ''}`} />
+      </button>
+      <span className="font-medium">{label}</span>
+    </label>
+  )
+}
+
+function Select({ props }: ComponentProps) {
+  const vars = useVars()
+  const spec = selectOf({ props })
+  if (!spec) return null
+  const options = optionsOf({ props })
+  const value = vars.values[spec.name] ?? spec.value
+  const label = text(props.label) ?? spec.name
+  return (
+    <label className="my-1 flex items-center gap-3 text-[12.5px] text-app-text-secondary">
+      <span className="w-[30%] min-w-16 max-w-44 shrink-0 truncate font-medium">{label}</span>
+      <select
+        value={value}
+        aria-label={label}
+        onChange={(event) => vars.set(spec.name, Number(event.target.value))}
+        className="min-w-0 flex-1 cursor-pointer rounded-lg border border-app-border-subtle bg-app-surface px-2.5 py-1.5 text-[13px] text-app-text outline-none focus:border-[var(--accent-primary)]"
+      >
+        {options.map((option, index) => (
+          <option key={index} value={index}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
 function Live({ props }: ComponentProps) {
   const vars = useVars()
   const source = text(props.text)
@@ -45,4 +94,4 @@ function Live({ props }: ComponentProps) {
   return <MarkdownText text={shown} className="my-1 text-app-text" />
 }
 
-export const varsComponents: Record<string, ComponentType<ComponentProps>> = { Slider, Live }
+export const varsComponents: Record<string, ComponentType<ComponentProps>> = { Slider, Toggle, Select, Live }

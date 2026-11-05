@@ -28,7 +28,7 @@ const FUNCTIONS: Record<string, { arity: number; fn: (...v: number[]) => number 
   log10: { arity: 1, fn: Math.log10 }, log2: { arity: 1, fn: Math.log2 },
   sqrt: { arity: 1, fn: Math.sqrt }, cbrt: { arity: 1, fn: Math.cbrt }, abs: { arity: 1, fn: Math.abs },
   sign: { arity: 1, fn: Math.sign }, floor: { arity: 1, fn: Math.floor }, ceil: { arity: 1, fn: Math.ceil }, round: { arity: 1, fn: Math.round },
-  min: { arity: 2, fn: Math.min }, max: { arity: 2, fn: Math.max }, pow: { arity: 2, fn: Math.pow }, atan2: { arity: 2, fn: Math.atan2 }
+  eq: { arity: 2, fn: (a, b) => (Math.abs(a - b) < 1e-9 ? 1 : 0) }, min: { arity: 2, fn: Math.min }, max: { arity: 2, fn: Math.max }, pow: { arity: 2, fn: Math.pow }, atan2: { arity: 2, fn: Math.atan2 }
 }
 
 function normalise(source: string): string {

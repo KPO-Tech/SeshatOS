@@ -371,6 +371,19 @@
             "to": "To",
             "subject": "Subject",
             "draft": "Draft"
+          },
+          "quiz": {
+            "send": "Send my result",
+            "correct": "Right",
+            "wrong": "Wrong",
+            "score": "Score: {{score}} / {{total}}",
+            "retry": "Try again",
+            "flip": "Show the answer",
+            "showFront": "Show the question",
+            "again": "To review",
+            "knew": "I knew it",
+            "cardOf": "Card {{n}} of {{total}}",
+            "cardsDone": "{{known}} known out of {{total}}"
           }
         },
         "expand": {

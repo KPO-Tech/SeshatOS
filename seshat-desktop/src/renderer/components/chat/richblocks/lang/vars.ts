@@ -6,8 +6,10 @@ import type { UiError, UiNode } from './types'
 // here runs code from the answer.
 
 export const VAR_LIMITS = {
-  /** Sliders in one block. */
-  sliders: 8,
+  /** Variables (Slider, Toggle, Select) in one block. */
+  variables: 12,
+  /** Choices of a Select. */
+  options: 12,
   /** Characters of the name of a variable. */
   name: 16,
   /** Characters of the text of a Live. */
@@ -20,9 +22,12 @@ export const VAR_LIMITS = {
 export const VAR_NAME = /^[A-Za-z][A-Za-z0-9_]*$/
 
 // The arguments of a mark of a Plot that may be a formula in the variables.
-const MARK_ARGS: Record<string, string[]> = { Dot: ['x', 'y'], VLine: ['x'], HLine: ['y'], Shade: ['from', 'to'] }
+const MARK_ARGS: Record<string, string[]> = { Curve: ['show'], Dot: ['x', 'y'], VLine: ['x'], HLine: ['y'], Shade: ['from', 'to'] }
 
 const EXPRESSION = /\{\{\s*([^{}]+?)\s*\}\}/g
+
+/** What sets a variable: a slider, a switch (0 or 1) or a list of choices (the number of the choice, from 0). */
+export const VAR_COMPONENTS = ['Slider', 'Toggle', 'Select'] as const
 
 export type SliderSpec = { name: string; min: number; max: number; value: number; step: number }
 
@@ -67,18 +72,43 @@ export function sliderOf(node: Pick<UiNode, 'props'>): SliderSpec | null {
   return { name, min, max, value: clamp(value, min, max), step: stepOf(min, max, node.props.step) }
 }
 
-/** The sliders of a block, in the order they are written, the first of a name winning. */
+/** A Toggle is a variable that is 0 or 1. */
+export function toggleOf(node: Pick<UiNode, 'props'>): SliderSpec | null {
+  const name = typeof node.props.name === 'string' ? node.props.name.trim() : ''
+  if (!VAR_NAME.test(name) || name.length > VAR_LIMITS.name || isReservedName(name)) return null
+  return { name, min: 0, max: 1, value: node.props.value === true || node.props.value === 1 ? 1 : 0, step: 1 }
+}
+
+/** The labels of a Select, at most the limit. */
+export function optionsOf(node: Pick<UiNode, 'props'>): string[] {
+  return Array.isArray(node.props.options) ? node.props.options.slice(0, VAR_LIMITS.options).map(String) : []
+}
+
+/** A Select is a variable that is the number of the choice made, from 0. */
+export function selectOf(node: Pick<UiNode, 'props'>): SliderSpec | null {
+  const name = typeof node.props.name === 'string' ? node.props.name.trim() : ''
+  const options = optionsOf(node)
+  if (!VAR_NAME.test(name) || name.length > VAR_LIMITS.name || isReservedName(name) || options.length < 2) return null
+  const asked = typeof node.props.value === 'number' && Number.isFinite(node.props.value) ? Math.round(node.props.value) : 0
+  return { name, min: 0, max: options.length - 1, value: clamp(asked, 0, options.length - 1), step: 1 }
+}
+
+function variableOf(node: UiNode): SliderSpec | null {
+  return node.name === 'Slider' ? sliderOf(node) : node.name === 'Toggle' ? toggleOf(node) : node.name === 'Select' ? selectOf(node) : null
+}
+
+/** The variables of a block (sliders, switches, choices), in the order they are written, the first of a name winning. */
 export function slidersOf(root: UiNode): SliderSpec[] {
   const seen = new Set<string>()
   const sliders: SliderSpec[] = []
   for (const node of allNodes(root)) {
-    if (node.name !== 'Slider') continue
-    const spec = sliderOf(node)
+    if (!(VAR_COMPONENTS as readonly string[]).includes(node.name)) continue
+    const spec = variableOf(node)
     if (!spec || seen.has(spec.name)) continue
     seen.add(spec.name)
     sliders.push(spec)
   }
-  return sliders.slice(0, VAR_LIMITS.sliders)
+  return sliders.slice(0, VAR_LIMITS.variables)
 }
 
 /** What each variable holds when nothing was moved. */
@@ -123,18 +153,20 @@ export function checkVars(root: UiNode): UiError[] {
   const errors: UiError[] = []
   const problem = (message: string, hint?: string) => errors.push({ code: 'bad-argument', message, hint })
   const nodes = allNodes(root)
-  const sliders = nodes.filter((node) => node.name === 'Slider')
+  const sliders = nodes.filter((node) => (VAR_COMPONENTS as readonly string[]).includes(node.name))
   const names = new Set<string>()
   for (const node of sliders) {
     const name = typeof node.props.name === 'string' ? node.props.name.trim() : ''
-    if (!VAR_NAME.test(name) || name.length > VAR_LIMITS.name) problem(`The name "${name}" of a Slider is not valid.`, 'Use letters, digits and _, starting with a letter, as a, b or amp.')
-    else if (isReservedName(name)) problem(`The name "${name}" of a Slider is already used by formulas (x, pi, e, sin...).`, 'Use another letter.')
-    else if (names.has(name)) problem(`The Slider name "${name}" is used twice.`)
+    if (!VAR_NAME.test(name) || name.length > VAR_LIMITS.name) problem(`The name "${name}" of a ${node.name} is not valid.`, 'Use letters, digits and _, starting with a letter, as a, b or amp.')
+    else if (isReservedName(name)) problem(`The name "${name}" of a ${node.name} is already used by formulas (x, pi, e, sin...).`, 'Use another letter.')
+    else if (names.has(name)) problem(`The ${node.name} name "${name}" is used twice.`)
     names.add(name)
     const { min, max } = node.props
+    if (node.name === 'Select' && optionsOf(node).length < 2) problem(`The Select "${name}" needs at least two options.`)
+    if (Array.isArray(node.props.options) && node.props.options.length > VAR_LIMITS.options) problem(`A Select holds at most ${VAR_LIMITS.options} options.`)
     if (typeof min === 'number' && typeof max === 'number' && max <= min) problem(`The Slider "${name}" has max ${max} not above min ${min}.`)
   }
-  if (sliders.length > VAR_LIMITS.sliders) problem(`A block holds at most ${VAR_LIMITS.sliders} Sliders.`)
+  if (sliders.length > VAR_LIMITS.variables) problem(`A block holds at most ${VAR_LIMITS.variables} Sliders, Toggles and Selects together.`)
 
   const defaults = defaultsOf(slidersOf(root))
   // A mark or a bound written as a formula must be readable with the sliders given.
