@@ -21,11 +21,12 @@ import { AskHistory } from './AskHistory'
 import { AskSessionSidebar } from './AskSessionSidebar'
 import { AskSidebar } from './AskSidebar'
 import type { OpenHow } from './askExtras'
+import { useTranslation } from 'react-i18next'
 
 // A citation of a conversation outlives the document it quotes: the passage is shown as the agent read it, and the message says why the document does not open.
-const REMOVED_NOTE = 'This document is no longer in the collection. This is the passage the answer rested on, as the agent read it.'
 
 export function AskPage() {
+  const { t } = useTranslation('knowledge/ask')
   const navigate = useNavigate()
   const startingQuestion = (useLocation().state as { question?: string } | null)?.question ?? ''
   const { collections, loading: collectionsLoading, failed: collectionsFailed, reload: reloadCollections } = useCollections()
@@ -54,7 +55,7 @@ export function AskPage() {
     async (passage: Passage, how: OpenHow = 'cited') => {
       const origin = passage.fileId && passage.corpusId ? { fileId: passage.fileId, corpusId: passage.corpusId } : await resolvePassageFile(passage, collections)
       if (origin && !(await stillInCollection(origin.corpusId, origin.fileId))) {
-        setOpened({ passage, note: REMOVED_NOTE })
+        setOpened({ passage, note: t('pages.knowledge.ask.askPage.removedNote') })
         return
       }
       if (origin) {
@@ -82,7 +83,7 @@ export function AskPage() {
   )
   const scopeName = collections.find((item) => item.id === scope.collectionId)?.name ?? null
 
-  const problem = startError ?? (!configured && !modelLoading ? 'Configure a provider in Settings before asking.' : null)
+  const problem = startError ?? (!configured && !modelLoading ? t('pages.knowledge.ask.askPage.configureProvider') : null)
 
   const composer = (
     <AskComposer
@@ -94,7 +95,7 @@ export function AskPage() {
       autoFocus
       initialValue={started ? '' : startingQuestion}
       prefill={prefill}
-      placeholder={started ? 'Ask a follow-up' : 'Ask about your documents'}
+      placeholder={started ? t('pages.knowledge.ask.askPage.askAFollowUp') : t('pages.knowledge.ask.askPage.askAboutYourDocuments')}
       onScopeChange={setScope}
       onSubmit={(question) => void ask(question, scope.collectionId)}
       onStop={() => void stop()}
@@ -108,7 +109,7 @@ export function AskPage() {
         <>
           {' '}
           <button type="button" onClick={() => navigate('/')} className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-semibold text-[var(--accent-primary)] underline">
-            Open the chat
+            {t('pages.knowledge.ask.askPage.openTheChat')}
           </button>
         </>
       )}

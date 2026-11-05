@@ -5,10 +5,10 @@ import type { FileState } from './fileStatus'
 export type DocumentFormat = 'text' | 'word' | 'pdf' | 'other'
 
 export const FORMATS: ReadonlyArray<{ id: DocumentFormat; label: string }> = [
-  { id: 'text', label: 'Text' },
-  { id: 'word', label: 'Word' },
-  { id: 'pdf', label: 'PDF' },
-  { id: 'other', label: 'Other' }
+  { id: 'text', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.format.text' },
+  { id: 'word', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.format.word' },
+  { id: 'pdf', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.format.pdf' },
+  { id: 'other', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.format.other' }
 ]
 
 const TEXT_EXTENSIONS = new Set(['txt', 'md', 'markdown', 'csv', 'tsv', 'json', 'html', 'htm'])
@@ -26,18 +26,18 @@ export type SortKey = 'format' | 'name-asc' | 'name-desc' | 'state'
 export type StateFilter = 'all' | 'indexed' | 'failed' | 'working' | 'waiting'
 
 export const SORTS: ReadonlyArray<{ id: SortKey; label: string }> = [
-  { id: 'format', label: 'Format' },
-  { id: 'name-asc', label: 'Name A to Z' },
-  { id: 'name-desc', label: 'Name Z to A' },
-  { id: 'state', label: 'State' }
+  { id: 'format', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.sort.format' },
+  { id: 'name-asc', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.sort.nameAsc' },
+  { id: 'name-desc', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.sort.nameDesc' },
+  { id: 'state', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.sort.state' }
 ]
 
 export const STATES: ReadonlyArray<{ id: StateFilter; label: string }> = [
-  { id: 'all', label: 'Any state' },
-  { id: 'indexed', label: 'Indexed' },
-  { id: 'failed', label: 'Failed' },
-  { id: 'working', label: 'In progress' },
-  { id: 'waiting', label: 'Not indexed' }
+  { id: 'all', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.state.any' },
+  { id: 'indexed', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.state.indexed' },
+  { id: 'failed', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.state.failed' },
+  { id: 'working', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.state.working' },
+  { id: 'waiting', label: 'knowledge/collections:pages.knowledge.collections.documentOrder.state.waiting' }
 ]
 
 export type DocumentView = { sort: SortKey; format: DocumentFormat | 'all'; state: StateFilter }

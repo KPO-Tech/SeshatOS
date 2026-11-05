@@ -5,7 +5,8 @@ import { FileKindIcon } from '../components/FileKindIcon'
 import { cleanExcerpt } from './excerpt'
 import { Highlighted } from './Highlighted'
 import { snippet } from './highlight'
-import { ago, countLabel, KIND_LABEL, type Doc, type Hit } from './searchModel'
+import { ago, KIND_LABEL, type Doc, type Hit } from './searchModel'
+import { useTranslation } from 'react-i18next'
 
 export type View = 'list' | 'grid'
 
@@ -40,9 +41,10 @@ function Chip({ children }: { children: string }) {
 // How well the document matches, against the best of the search: the best fills the bar. The raw scores are low numbers that read as a poor
 // match whatever they are, so only the comparison is shown.
 function Meter({ score, top }: { score: number; top: number }) {
+  const { t } = useTranslation('knowledge/search')
   const share = top > 0 ? Math.max(0.08, Math.min(1, score / top)) : 1
   return (
-    <span className="flex h-1 w-12 shrink-0 overflow-hidden rounded-full bg-[var(--border-soft)]" title={`Match ${score.toFixed(2)}`} aria-hidden="true">
+    <span className="flex h-1 w-12 shrink-0 overflow-hidden rounded-full bg-[var(--border-soft)]" title={t('pages.knowledge.search.resultRow.match', { score: score.toFixed(2) })} aria-hidden="true">
       <span className="block h-full rounded-full bg-[var(--accent-primary)]" style={{ width: `${Math.round(share * 100)}%`, opacity: 0.4 + share * 0.6 }} />
     </span>
   )
@@ -54,14 +56,15 @@ function Meter({ score, top }: { score: number; top: number }) {
 // Each row is its own container, so that it is laid out by its own width, not the window's: a list row is one line of icon, text and date
 // when it is wide, and the date moves under the text when it is narrow; a grid card is always a column, whatever its width.
 export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = false, onOpen }: Props) {
+  const { t, i18n } = useTranslation('knowledge/search')
   const [allOthers, setAllOthers] = useState(false)
   const top = doc.hits[0]
   const found = doc.hits.length > 0
-  const passages = found ? countLabel(doc.hits.length, 'passage matched', 'passages matched') : doc.chunkCount > 0 ? countLabel(doc.chunkCount, 'passage', 'passages') : ''
+  const passages = found ? t('pages.knowledge.search.resultRow.passageMatched', { count: doc.hits.length }) : doc.chunkCount > 0 ? t('pages.knowledge.search.resultRow.passageCount', { count: doc.chunkCount }) : ''
   // A document with passages on many pages names the first ones; the buttons under the row go to the others.
   const pagesText = doc.pages.length > MANY_PAGES ? `${pagesLabel(doc.pages.slice(0, MANY_PAGES))} …` : pagesLabel(doc.pages)
-  const meta = [KIND_LABEL[doc.kind], pagesText, passages].filter(Boolean)
-  const added = ago(doc.addedAt)
+  const meta = [t(KIND_LABEL[doc.kind]), pagesText, passages].filter(Boolean)
+  const added = ago(doc.addedAt, t, i18n.language)
   const grid = view === 'grid'
   const others = doc.hits.slice(1, 1 + MORE_PASSAGES)
   const shownOthers = allOthers ? others : others.slice(0, MORE_SHOWN)
@@ -83,7 +86,7 @@ export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = f
           type="button"
           onClick={() => onOpen(top)}
           aria-current={opened}
-          title={top && top.pages.length > 0 ? `Open at page ${top.pages[0]}` : 'Open the document'}
+          title={top && top.pages.length > 0 ? t('pages.knowledge.search.resultRow.openAtPage', { page: top.pages[0] }) : t('pages.knowledge.search.resultRow.openTheDocument')}
           className={['flex w-full min-w-0 flex-1 cursor-pointer items-start gap-3 border-0 bg-transparent text-left', found ? 'p-3.5' : 'px-3 py-2.5'].join(' ')}
         >
           <span className="shrink-0">
@@ -94,7 +97,7 @@ export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = f
               <span className={['block min-w-0 text-[14.5px] font-semibold leading-[20px] text-[var(--text-primary)]', grid ? 'line-clamp-2 [overflow-wrap:anywhere]' : 'truncate'].join(' ')} title={doc.path}>
                 {doc.name}
               </span>
-              {isBest && <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] px-2 py-px text-[10.5px] font-semibold text-[var(--accent-primary)]">Best match</span>}
+              {isBest && <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] px-2 py-px text-[10.5px] font-semibold text-[var(--accent-primary)]">{t('pages.knowledge.search.resultRow.bestMatch')}</span>}
               {found && topScore !== undefined && !grid && (
                 <span className="ml-auto flex shrink-0 items-center">
                   <Meter score={doc.score} top={topScore} />
@@ -123,24 +126,24 @@ export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = f
               <Chip>{doc.collection}</Chip>
               {doc.folder && <Chip>{doc.folder}</Chip>}
               <span className="text-[11.5px] text-[var(--text-muted)]">{meta.join('  •  ')}</span>
-              {added && <span className={['text-[11.5px] text-[var(--text-muted)]', grid ? '' : '@xl:hidden'].join(' ')}>{`Added ${added}`}</span>}
+              {added && <span className={['text-[11.5px] text-[var(--text-muted)]', grid ? '' : '@xl:hidden'].join(' ')}>{t('pages.knowledge.search.resultRow.added', { when: added })}</span>}
             </span>
           </span>
-          {added && !grid && <span className="hidden shrink-0 self-end whitespace-nowrap pb-0.5 text-[12px] text-[var(--text-muted)] @xl:block">{`Added ${added}`}</span>}
+          {added && !grid && <span className="hidden shrink-0 self-end whitespace-nowrap pb-0.5 text-[12px] text-[var(--text-muted)] @xl:block">{t('pages.knowledge.search.resultRow.added', { when: added })}</span>}
         </button>
 
         {others.length > 0 && (
           <div className={['flex min-w-0 flex-wrap items-center gap-1 px-3.5 pb-3', grid ? '' : '@xl:pl-[66px]'].join(' ')}>
-            <span className="mr-0.5 text-[11px] text-[var(--text-muted)]">Other matches</span>
+            <span className="mr-0.5 text-[11px] text-[var(--text-muted)]">{t('pages.knowledge.search.resultRow.otherMatches')}</span>
             {shownOthers.map((hit) => (
               <button
                 key={hit.ref}
                 type="button"
                 onClick={() => onOpen(hit)}
-                title={sectionTrail(hit.section) || 'Open this passage'}
+                title={sectionTrail(hit.section) || t('pages.knowledge.search.resultRow.openThisPassage')}
                 className="min-w-0 max-w-[14rem] cursor-pointer truncate whitespace-nowrap rounded-[5px] border border-app-border-subtle bg-transparent px-1.5 py-px text-[11px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
               >
-                {pagesLabel(hit.pages) || lastHeading(hit.section) || 'passage'}
+                {pagesLabel(hit.pages) || lastHeading(hit.section) || t('pages.knowledge.search.resultRow.passageWord')}
               </button>
             ))}
             {others.length > MORE_SHOWN && (
@@ -149,7 +152,7 @@ export function ResultRow({ doc, terms, opened, view, topScore, best: isBest = f
                 onClick={() => setAllOthers((value) => !value)}
                 className="cursor-pointer border-0 bg-transparent px-1 py-px text-[11px] font-medium text-[var(--accent-primary)] hover:underline"
               >
-                {allOthers ? 'Fewer' : `+${others.length - MORE_SHOWN}`}
+                {allOthers ? t('pages.knowledge.search.resultRow.fewer') : `+${others.length - MORE_SHOWN}`}
               </button>
             )}
           </div>

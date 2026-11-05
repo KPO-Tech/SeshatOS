@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCorrect, Data, Info, Light } from '@icon-park/react'
 import { EXAMPLES, TIPS } from './askContent'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   onPick: (prompt: string) => void
@@ -9,15 +10,16 @@ const CARD = 'rounded-[16px] border border-app-border-subtle bg-[color-mix(in_sr
 
 // The column on the right of the Ask screen before any question: what Ask draws on, questions to start from, and a few tips.
 export function AskSidebar({ onPick }: Props) {
+  const { t } = useTranslation('knowledge/ask')
   return (
-    <aside aria-label="Help to ask" className="no-scrollbar flex min-h-0 w-[300px] shrink-0 flex-col gap-3 overflow-y-auto">
+    <aside aria-label={t('pages.knowledge.ask.askSidebar.helpToAsk')} className="no-scrollbar flex min-h-0 w-[300px] shrink-0 flex-col gap-3 overflow-y-auto">
       <section className={`${CARD} flex items-start gap-3 p-3.5`}>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">
           <Data size={20} />
         </span>
         <div className="min-w-0">
-          <h2 className="m-0 text-[13.5px] font-semibold text-[var(--text-primary)]">Ask with your sources</h2>
-          <p className="m-0 mt-1 text-[12px] leading-[18px] text-[var(--text-muted)]">Seshat can use your collections and documents to give contextual answers.</p>
+          <h2 className="m-0 text-[13.5px] font-semibold text-[var(--text-primary)]">{t('pages.knowledge.ask.askSidebar.askWithYourSources')}</h2>
+          <p className="m-0 mt-1 text-[12px] leading-[18px] text-[var(--text-muted)]">{t('pages.knowledge.ask.askSidebar.seshatCanUseYourCollections')}</p>
         </div>
       </section>
 
@@ -26,7 +28,7 @@ export function AskSidebar({ onPick }: Props) {
           <span className="text-[var(--accent-primary)]">
             <Light size={15} />
           </span>
-          Example questions
+          {t('pages.knowledge.ask.askSidebar.exampleQuestions')}
         </h2>
         <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
           {EXAMPLES.map((example) => (
@@ -49,7 +51,7 @@ export function AskSidebar({ onPick }: Props) {
           <span className="text-[var(--accent-info)]">
             <Info size={15} />
           </span>
-          Tips
+          {t('pages.knowledge.ask.askSidebar.tips')}
         </h2>
         <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
           {TIPS.map((tip) => (
@@ -57,7 +59,7 @@ export function AskSidebar({ onPick }: Props) {
               <span className="text-[var(--text-muted)]">
                 <CheckCorrect size={14} />
               </span>
-              {tip}
+              {t(tip)}
             </li>
           ))}
         </ul>

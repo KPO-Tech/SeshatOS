@@ -1,0 +1,202 @@
+{
+  "pages": {
+    "knowledge": {
+      "collections": {
+        "addSourceDialog": {
+          "addASource": "Add a source",
+          "aFolderOfThisComputer": "A folder of this computer. Adding it reads nothing and copies nothing: you choose later whether to analyse it into collections.",
+          "folder": "Folder",
+          "cUsersYouDocumentsArchive": "C:\\Users\\you\\Documents\\Archive",
+          "browse": "Browse...",
+          "nameAndIcon": "Name and icon",
+          "optionalTheFolderSName": "(optional, the folder's name by default)",
+          "cancel": "Cancel",
+          "adding": "Adding...",
+          "addSource": "Add source"
+        },
+        "collectionCard": {
+          "open": "Open",
+          "collection": "Collection",
+          "noDescription": "No description",
+          "updated": "Updated {{day}}"
+        },
+        "collectionDialog": {
+          "name": "Name",
+          "contracts": "Contracts",
+          "description": "Description",
+          "optional": "(optional)",
+          "whatTheseDocumentsAreAbout": "What these documents are about",
+          "cancel": "Cancel"
+        },
+        "collectionPage": {
+          "removeTheDocument": "Remove the document",
+          "remove": "Remove",
+          "deleteTheCollection": "Delete the collection",
+          "delete": "Delete",
+          "thisCollectionCouldNotBe": "This collection could not be read.",
+          "back": "Back",
+          "collections": "Collections",
+          "rename": "Rename",
+          "renameTheCollection": "Rename the collection",
+          "starting": "Starting...",
+          "addDocuments": "Add documents",
+          "uploading": "Uploading",
+          "showAll": "Show all",
+          "dropDocumentsHereOrChoose": "Drop documents here, or choose files",
+          "pdfWordPowerpointExcelText": "PDF, Word, PowerPoint, Excel, text and Markdown",
+          "theCollection": "the collection",
+          "nothingWaiting": "Nothing is waiting to be indexed",
+          "queuedForIndexing_one": "{{count}} document queued for indexing",
+          "queuedForIndexing_other": "{{count}} documents queued for indexing",
+          "startedAgain_one": "{{count}} document started again",
+          "startedAgain_other": "{{count}} documents started again",
+          "startedRefused": "{{started}} started again, {{refused}} could not be started",
+          "removeMessage": "{{name}} will be removed from this collection and no longer used to answer.",
+          "deleteMessage": "{{name}} and its {{documents}} will be deleted. This cannot be undone.",
+          "noMatch": "No document matches this filter.",
+          "dropToAdd": "Drop to add to {{name}}",
+          "indexDocuments_one": "Index {{count}} document",
+          "indexDocuments_other": "Index {{count}} documents",
+          "indexedCount": "{{count}} indexed",
+          "failedCount": "{{count}} failed",
+          "noPreview": "There is no preview for this kind of file yet: {{name}}",
+          "indexedWithMeaning": "The documents are indexed with their meaning now"
+        },
+        "collectionsPage": {
+          "all": "All",
+          "collections": "Collections",
+          "theDocumentsYourAgentsCan": "The documents your agents can search, filtered by the source they come from.",
+          "sources": "Sources",
+          "starting": "Starting...",
+          "indexEverything": "Index everything",
+          "newCollection": "New collection",
+          "searchCollections": "Search collections...",
+          "source": "Source",
+          "sortBy": "Sort by",
+          "name": "Name",
+          "recentlyUpdated": "Recently updated",
+          "theCollectionsCouldNotBe": "The collections could not be read.",
+          "loading": "Loading...",
+          "noCollectionYetNewCollection": "No collection yet. New collection makes one, and a folder added in Sources proposes its own.",
+          "noCollectionInThisSource": "No collection in this source yet.",
+          "noCollectionMatches": "No collection matches.",
+          "nothingWaiting": "Nothing is waiting to be indexed.",
+          "queued_one": "{{count}} document queued for indexing. Open a collection to follow it.",
+          "queued_other": "{{count}} documents queued for indexing. Open a collection to follow them.",
+          "madeInApp": "Made in the app"
+        },
+        "confirmDialog": {
+          "cancel": "Cancel"
+        },
+        "documentIndexPanel": {
+          "readingTheIndex": "Reading the index...",
+          "thisDocumentHasNoPassages": "This document has no passages yet. It appears here once it is indexed.",
+          "showThePassagesFormatted": "Show the passages formatted",
+          "showTheExactTextThat": "Show the exact text that was indexed",
+          "formatted": "Formatted",
+          "rawText": "Raw text",
+          "summary_one": "{{count}} passage, {{characters, number}} characters. A search returns these pieces, not the whole document.",
+          "summary_other": "{{count}} passages, {{characters, number}} characters. A search returns these pieces, not the whole document.",
+          "passageN": "Passage {{n}}",
+          "characters_one": "{{count, number}} character",
+          "characters_other": "{{count, number}} characters"
+        },
+        "documentRow": {
+          "tryIndexingAgain": "Try indexing again",
+          "removeFromTheCollection": "Remove from the collection",
+          "read": "Read {{name}}",
+          "indexAgain": "Index {{name}} again",
+          "remove": "Remove {{name}}"
+        },
+        "documentToolbar": {
+          "sortTheDocuments": "Sort the documents",
+          "filterByFormat": "Filter by format",
+          "anyFormat": "Any format",
+          "filterByState": "Filter by state",
+          "starting": "Starting...",
+          "sort": "Sort",
+          "shownOf": "{{shown}} of {{documents}}",
+          "retryFailed": "Retry {{documents}}"
+        },
+        "indexingNotice": {
+          "noEmbeddingModelIsSet": "No embedding model is set, so documents are searched by keywords only: a question finds the words it shares with a document, not its meaning. Set an embedding model in the settings of Knowledge to search by meaning."
+        },
+        "keywordsOnlyNotice": {
+          "starting": "Starting...",
+          "indexAgain": "Index again",
+          "text_one": "{{count}} document is indexed for keywords only: the embedding failed, so a question finds the words of it, not the meaning. Choose an embedding model with more quota in the settings of Knowledge, then index it again.",
+          "text_other": "{{count}} documents are indexed for keywords only: the embedding failed, so a question finds the words of them, not the meaning. Choose an embedding model with more quota in the settings of Knowledge, then index them again."
+        },
+        "sourceIcon": {
+          "changeTheIcon": "Change the icon",
+          "icons": "Icons",
+          "icon": {
+            "folder": "Folder",
+            "briefcase": "Work",
+            "book": "Library",
+            "bank": "Finance",
+            "wallet": "Accounts",
+            "chart": "Reports",
+            "document": "Documents",
+            "data": "Data",
+            "code": "Code",
+            "tool": "Tools",
+            "cube": "Projects",
+            "flask": "Research",
+            "school": "Education",
+            "hospital": "Health",
+            "shield": "Compliance",
+            "key": "Private",
+            "inbox": "Inbox",
+            "globe": "Public",
+            "home": "Personal",
+            "star": "Favourite",
+            "bolt": "Active"
+          }
+        },
+        "counts": {
+          "document_one": "{{count}} document",
+          "document_other": "{{count}} documents",
+          "passage_one": "{{count}} passage",
+          "passage_other": "{{count}} passages",
+          "failedDocument_one": "{{count}} failed document",
+          "failedDocument_other": "{{count}} failed documents"
+        },
+        "quotaPausedNotice": {
+          "paused": "Indexing is paused: {{message}}",
+          "backIn": "Back in {{time}}."
+        },
+        "documentOrder": {
+          "format": {
+            "text": "Text",
+            "word": "Word",
+            "pdf": "PDF",
+            "other": "Other"
+          },
+          "sort": {
+            "format": "Format",
+            "nameAsc": "Name A to Z",
+            "nameDesc": "Name Z to A",
+            "state": "State"
+          },
+          "state": {
+            "any": "Any state",
+            "indexed": "Indexed",
+            "failed": "Failed",
+            "working": "In progress",
+            "waiting": "Not indexed"
+          }
+        },
+        "fileStatus": {
+          "keywordsOnly": "keywords only",
+          "notStarted": "Indexing has not started.",
+          "indexed": "Indexed",
+          "indexing": "Indexing",
+          "waiting": "Waiting",
+          "failed": "Failed",
+          "notIndexed": "Not indexed"
+        }
+      }
+    }
+  }
+}

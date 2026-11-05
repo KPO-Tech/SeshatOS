@@ -1,32 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bank, Book, Briefcase, ChartLine, Code, Cube, DataFile, Experiment, FileText, FolderOpen, Globe, Home, Hospital, Inbox, Key, Lightning, Protect, School, Star, Tool, Wallet } from '@icon-park/react'
+import { useTranslation } from 'react-i18next'
 
 type IconComponent = typeof FolderOpen
 
 // The icons a person can give a source. The key is what the backend keeps, so it never changes; an unknown key (written by a newer
 // version) is shown as the kind's own icon.
 const ICONS: Array<{ key: string; label: string; Icon: IconComponent }> = [
-  { key: 'folder', label: 'Folder', Icon: FolderOpen },
-  { key: 'briefcase', label: 'Work', Icon: Briefcase },
-  { key: 'book', label: 'Library', Icon: Book },
-  { key: 'bank', label: 'Finance', Icon: Bank },
-  { key: 'wallet', label: 'Accounts', Icon: Wallet },
-  { key: 'chart', label: 'Reports', Icon: ChartLine },
-  { key: 'document', label: 'Documents', Icon: FileText },
-  { key: 'data', label: 'Data', Icon: DataFile },
-  { key: 'code', label: 'Code', Icon: Code },
-  { key: 'tool', label: 'Tools', Icon: Tool },
-  { key: 'cube', label: 'Projects', Icon: Cube },
-  { key: 'flask', label: 'Research', Icon: Experiment },
-  { key: 'school', label: 'Education', Icon: School },
-  { key: 'hospital', label: 'Health', Icon: Hospital },
-  { key: 'shield', label: 'Compliance', Icon: Protect },
-  { key: 'key', label: 'Private', Icon: Key },
-  { key: 'inbox', label: 'Inbox', Icon: Inbox },
-  { key: 'globe', label: 'Public', Icon: Globe },
-  { key: 'home', label: 'Personal', Icon: Home },
-  { key: 'star', label: 'Favourite', Icon: Star },
-  { key: 'bolt', label: 'Active', Icon: Lightning }
+  { key: 'folder', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.folder', Icon: FolderOpen },
+  { key: 'briefcase', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.briefcase', Icon: Briefcase },
+  { key: 'book', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.book', Icon: Book },
+  { key: 'bank', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.bank', Icon: Bank },
+  { key: 'wallet', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.wallet', Icon: Wallet },
+  { key: 'chart', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.chart', Icon: ChartLine },
+  { key: 'document', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.document', Icon: FileText },
+  { key: 'data', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.data', Icon: DataFile },
+  { key: 'code', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.code', Icon: Code },
+  { key: 'tool', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.tool', Icon: Tool },
+  { key: 'cube', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.cube', Icon: Cube },
+  { key: 'flask', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.flask', Icon: Experiment },
+  { key: 'school', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.school', Icon: School },
+  { key: 'hospital', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.hospital', Icon: Hospital },
+  { key: 'shield', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.shield', Icon: Protect },
+  { key: 'key', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.key', Icon: Key },
+  { key: 'inbox', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.inbox', Icon: Inbox },
+  { key: 'globe', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.globe', Icon: Globe },
+  { key: 'home', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.home', Icon: Home },
+  { key: 'star', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.star', Icon: Star },
+  { key: 'bolt', label: 'knowledge/collections:pages.knowledge.collections.sourceIcon.icon.bolt', Icon: Lightning }
 ]
 
 /** The icon of a source: the one the person chose, or the folder icon of its kind. */
@@ -37,6 +38,7 @@ export function SourceIcon({ icon, size = 18 }: { icon?: string; size?: number }
 
 /** A button showing the current icon, that opens the choice of another. The default source has no picker: it keeps its own. */
 export function SourceIconPicker({ value, onChange, disabled }: { value: string; onChange: (key: string) => void; disabled?: boolean }) {
+  const { t } = useTranslation('knowledge/collections')
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
 
@@ -60,23 +62,23 @@ export function SourceIconPicker({ value, onChange, disabled }: { value: string;
         type="button"
         disabled={disabled}
         onClick={() => setOpen(!open)}
-        aria-label="Change the icon"
+        aria-label={t('pages.knowledge.collections.sourceIcon.changeTheIcon')}
         aria-expanded={open}
-        title="Change the icon"
+        title={t('pages.knowledge.collections.sourceIcon.changeTheIcon')}
         className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[11px] border-0 bg-[var(--accent-subtle)] text-[var(--accent-primary)] transition-[box-shadow] hover:shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent-primary)_35%,transparent)] disabled:cursor-default"
       >
         <SourceIcon icon={value} size={20} />
       </button>
       {open && (
-        <div role="listbox" aria-label="Icons" className="absolute left-0 top-12 z-[60] grid w-[236px] grid-cols-6 gap-1 rounded-xl border border-app-border-subtle bg-[var(--surface-panel)] p-2 shadow-[var(--shadow-medium)]">
+        <div role="listbox" aria-label={t('pages.knowledge.collections.sourceIcon.icons')} className="absolute left-0 top-12 z-[60] grid w-[236px] grid-cols-6 gap-1 rounded-xl border border-app-border-subtle bg-[var(--surface-panel)] p-2 shadow-[var(--shadow-medium)]">
           {ICONS.map(({ key, label, Icon }) => (
             <button
               key={key}
               type="button"
               role="option"
               aria-selected={value === key || (value === '' && key === 'folder')}
-              aria-label={label}
-              title={label}
+              aria-label={t(label)}
+              title={t(label)}
               onClick={() => {
                 setOpen(false)
                 onChange(key === 'folder' ? '' : key)

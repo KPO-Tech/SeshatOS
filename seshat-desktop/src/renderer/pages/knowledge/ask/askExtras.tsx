@@ -6,6 +6,7 @@ import { passagesOfResult, type Passage } from '../chat/knowledgeSearchResults'
 import { groupPassages } from '../chat/passageSources'
 import { CitationChip } from '../components/CitationChip'
 import { passageSourceItems } from '../components/passageSourceItems'
+import { useTranslation } from 'react-i18next'
 
 const SEARCH_TOOL = 'knowledge_search'
 
@@ -16,14 +17,13 @@ type BlockLike = { type: string }
 type MessageLike = { role: string; content: ReadonlyArray<BlockLike> }
 type SearchBlock = BlockLike & { name: string; _result?: { content?: string; metadata?: Record<string, unknown> } }
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
-
 const isSearch = (block: BlockLike): block is SearchBlock => block.type === 'tool_use' && (block as SearchBlock).name === SEARCH_TOOL
 
 const textOf = (message: MessageLike) =>
   message.content.map((block) => (block.type === 'text' ? ((block as BlockLike & { text?: string }).text ?? '') : '')).join('')
 
 function AnswerBasis({ basis, searched, collections, onOpen, scopeName }: { basis: Passage[]; searched: boolean; collections: number | null; onOpen: (passage: Passage, how: OpenHow) => void; scopeName: string | null }) {
+  const { t } = useTranslation('knowledge/ask')
   if (basis.length > 0) {
     const documents = groupPassages(basis).length
     return (
@@ -32,7 +32,7 @@ function AnswerBasis({ basis, searched, collections, onOpen, scopeName }: { basi
         label={
           <span className="inline-flex items-center gap-1.5">
             <Info size={13} />
-            {`Based on ${plural(documents, 'document', 'documents')}${collections ? ` among ${plural(collections, 'collection', 'collections')} you can read` : ''}`}
+            {collections ? t('pages.knowledge.ask.askExtras.basedOnAmong', { documents: t('pages.knowledge.ask.askExtras.documentCount', { count: documents }), collections: t('pages.knowledge.ask.askExtras.collectionCount', { count: collections }) }) : t('pages.knowledge.ask.askExtras.basedOn', { documents: t('pages.knowledge.ask.askExtras.documentCount', { count: documents }) })}
           </span>
         }
       />
@@ -41,7 +41,7 @@ function AnswerBasis({ basis, searched, collections, onOpen, scopeName }: { basi
   if (!searched) return null
   return (
     <p className="m-0 rounded-lg border border-solid border-[color-mix(in_srgb,var(--accent-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-warning)_10%,transparent)] px-3 py-2 text-[12.5px] leading-[18px] text-[var(--text-secondary)]">
-      {scopeName ? `No passage in ${scopeName} matched. Try another collection or other words.` : 'No passage matched. Try other words, or look for the document by keyword.'}
+      {scopeName ? t('pages.knowledge.ask.askExtras.noPassageIn', { name: scopeName }) : t('pages.knowledge.ask.askExtras.noPassageMatchedTryOther')}
     </p>
   )
 }

@@ -1,6 +1,7 @@
 // The translation of the interface (what a person reads, never what a model reads: see docs/I18N.md).
 //
-// A catalogue is a file per language and per namespace, src/renderer/i18n/locales/<language>/<namespace>.json. English is the source and
+// A catalogue is a file per language and per namespace, src/renderer/i18n/locales/<language>/<namespace>.json (a folder groups several:
+// knowledge/ask.json is the namespace knowledge/ask). English is the source and
 // the fallback: a text a language lacks is shown in English, and a key nobody wrote is shown as the key, never as "namespace:key".
 import i18n, { type BackendModule, type InitOptions } from 'i18next'
 import { initReactI18next } from 'react-i18next'
@@ -8,7 +9,7 @@ import { FALLBACK_LANGUAGE, SUPPORTED_LANGUAGES, detectLanguage, normalizeLangua
 
 type Catalog = Record<string, unknown>
 
-const loaders = import.meta.glob<{ default: Catalog }>('./locales/*/*.json')
+const loaders = import.meta.glob<{ default: Catalog }>('./locales/**/*.json')
 const ENGLISH_DIR = `./locales/${FALLBACK_LANGUAGE}/`
 
 /** The namespaces: the files of the English catalogue, since English is the source. */

@@ -1,0 +1,16 @@
+{
+  "pages": {
+    "knowledge": {
+      "nav": {
+        "groupAsk": "Ask",
+        "ask": "Ask",
+        "search": "Search",
+        "groupBrowse": "Browse",
+        "collections": "Collections",
+        "groupManage": "Manage",
+        "sources": "Sources",
+        "settings": "Settings"
+      }
+    }
+  }
+}

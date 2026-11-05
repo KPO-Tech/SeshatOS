@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import type { TFunction } from 'i18next'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { englishT } from '@renderer/i18n/testing'
 import { ago, baseName, docOfFile, facetsOf, fileIdOfKey, filterDocs, folderOf, groupDocs, sortDocs, withListing, NO_FILTERS, type Hit } from './searchModel'
 
 const hit = (over: Partial<Hit>): Hit => ({ ref: 'r', score: 0.5, corpusId: 'c1', collection: 'Legal', fileId: 'f1', path: 'Legal/a.pdf', pages: [], section: '', text: 't', ...over })
@@ -83,11 +85,15 @@ describe('listing', () => {
 
 describe('ago', () => {
   const now = 1_000_000 * 1000
+  let t: TFunction
+  beforeAll(async () => {
+    t = await englishT()
+  })
   it('says how long ago', () => {
-    expect(ago(0, now)).toBe('')
-    expect(ago(1_000_000 - 30, now)).toBe('just now')
-    expect(ago(1_000_000 - 5 * 60, now)).toBe('5 minutes ago')
-    expect(ago(1_000_000 - 3600, now)).toBe('1 hour ago')
-    expect(ago(1_000_000 - 3 * 86400, now)).toBe('3 days ago')
+    expect(ago(0, t, 'en-GB', now)).toBe('')
+    expect(ago(1_000_000 - 30, t, 'en-GB', now)).toBe('just now')
+    expect(ago(1_000_000 - 5 * 60, t, 'en-GB', now)).toBe('5 minutes ago')
+    expect(ago(1_000_000 - 3600, t, 'en-GB', now)).toBe('1 hour ago')
+    expect(ago(1_000_000 - 3 * 86400, t, 'en-GB', now)).toBe('3 days ago')
   })
 })

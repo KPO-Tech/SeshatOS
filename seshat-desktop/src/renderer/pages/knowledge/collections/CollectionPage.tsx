@@ -10,16 +10,18 @@ import { DocumentRow } from './DocumentRow'
 import { DocumentToolbar } from './DocumentToolbar'
 import { arrange, DEFAULT_VIEW, failedFiles, type DocumentView } from './documentOrder'
 import { openDocument } from './openDocument'
-import { fileState, plural } from './fileStatus'
+import { fileState } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
 import { KeywordsOnlyNotice } from './KeywordsOnlyNotice'
 import { QuotaPausedNotice } from './QuotaPausedNotice'
 import { DEFAULT_SOURCE_ID, sourcePath } from './sourcesApi'
 import { useCollectionDetail } from './useCollectionDetail'
+import { useTranslation } from 'react-i18next'
 
 const message = (error: unknown, fallback: string) => (error instanceof Error && error.message ? error.message : fallback)
 
 export function CollectionPage() {
+  const { t } = useTranslation('knowledge/collections')
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { collection, files, jobOf, pause, indexingConfigured, loading, failed, reload } = useCollectionDetail(id)
@@ -67,14 +69,14 @@ export function CollectionPage() {
   }
 
   function askRemove(fileId: string, name: string) {
-    setConfirming({ title: 'Remove the document', message: `${name} will be removed from this collection and no longer used to answer.`, label: 'Remove', run: () => remove(fileId) })
+    setConfirming({ title: t('pages.knowledge.collections.collectionPage.removeTheDocument'), message: t('pages.knowledge.collections.collectionPage.removeMessage', { name }), label: t('pages.knowledge.collections.collectionPage.remove'), run: () => remove(fileId) })
   }
 
   async function indexWaiting() {
     setIndexing(true)
     try {
       const queued = await indexCollection(id)
-      show(queued === 0 ? 'Nothing is waiting to be indexed' : `${plural(queued, 'document', 'documents')} queued for indexing`, 'ok')
+      show(queued === 0 ? t('pages.knowledge.collections.collectionPage.nothingWaiting') : t('pages.knowledge.collections.collectionPage.queuedForIndexing', { count: queued }), 'ok')
       await reload()
     } catch (error) {
       show(message(error, 'The indexing could not be started'), 'err')
@@ -85,7 +87,7 @@ export function CollectionPage() {
 
   async function read(file: CollectionFile) {
     try {
-      if (!(await openDocument(file, id))) show(`There is no preview for this kind of file yet: ${file.name}`, 'err')
+      if (!(await openDocument(file, id))) show(t('pages.knowledge.collections.collectionPage.noPreview', { name: file.name }), 'err')
     } catch (error) {
       show(message(error, 'The document could not be opened'), 'err')
     }
@@ -121,7 +123,7 @@ export function CollectionPage() {
       }
       if (!mounted.current) return
       await reload()
-      if (status.state === 'done') show('The documents are indexed with their meaning now', 'ok')
+      if (status.state === 'done') show(t('pages.knowledge.collections.collectionPage.indexedWithMeaning'), 'ok')
       else show(status.error || 'The documents could not be indexed again', 'err')
     } catch (error) {
       if (mounted.current) show(message(error, 'The documents could not be indexed again'), 'err')
@@ -144,7 +146,7 @@ export function CollectionPage() {
           refused += 1
         }
       }
-      show(refused === 0 ? `${plural(started, 'document', 'documents')} started again` : `${started} started again, ${refused} could not be started`, refused === 0 ? 'ok' : 'err')
+      show(refused === 0 ? t('pages.knowledge.collections.collectionPage.startedAgain', { count: started }) : t('pages.knowledge.collections.collectionPage.startedRefused', { started, refused }), refused === 0 ? 'ok' : 'err')
       await reload()
     } finally {
       setRetryingAll(false)
@@ -154,9 +156,9 @@ export function CollectionPage() {
   function askRemoveCollection() {
     if (!collection) return
     setConfirming({
-      title: 'Delete the collection',
-      message: `${collection.name} and its ${plural(files.length, 'document', 'documents')} will be deleted. This cannot be undone.`,
-      label: 'Delete',
+      title: t('pages.knowledge.collections.collectionPage.deleteTheCollection'),
+      message: t('pages.knowledge.collections.collectionPage.deleteMessage', { name: collection.name, documents: t('pages.knowledge.collections.counts.document', { count: files.length }) }),
+      label: t('pages.knowledge.collections.collectionPage.delete'),
       run: removeCollection
     })
   }
@@ -180,10 +182,10 @@ export function CollectionPage() {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
         <p className="m-0 text-[13px] text-[var(--accent-danger)]" role="alert">
-          This collection could not be read.
+          {t('pages.knowledge.collections.collectionPage.thisCollectionCouldNotBe')}
         </p>
         <button type="button" onClick={back} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--accent-primary)] underline">
-          Back
+          {t('pages.knowledge.collections.collectionPage.back')}
         </button>
       </div>
     )
@@ -215,7 +217,7 @@ export function CollectionPage() {
       <div className="mx-auto w-full max-w-[880px]" style={{ animation: 'slide-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
         <button type="button" onClick={back} className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] text-[var(--text-muted)] hover:text-[var(--text-primary)]">
           <Left size={13} />
-          Collections
+          {t('pages.knowledge.collections.collectionPage.collections')}
         </button>
 
         {collection && (
@@ -227,18 +229,18 @@ export function CollectionPage() {
                 </h1>
                 {collection.description && <p className="mb-0 mt-2 max-w-[600px] text-[13.5px] leading-[21px] text-[var(--text-muted)]">{collection.description}</p>}
                 <p className="mb-0 mt-2.5 text-[12px] text-[var(--text-muted)]">
-                  {plural(files.length, 'document', 'documents')}
-                  {passages > 0 && `   ${plural(passages, 'passage', 'passages')}`}
-                  {indexed > 0 && indexed < files.length && `   ${indexed} indexed`}
-                  {failedCount > 0 && `   ${failedCount} failed`}
+                  {t('pages.knowledge.collections.counts.document', { count: files.length })}
+                  {passages > 0 && `   ${t('pages.knowledge.collections.counts.passage', { count: passages })}`}
+                  {indexed > 0 && indexed < files.length && `   ${t('pages.knowledge.collections.collectionPage.indexedCount', { count: indexed })}`}
+                  {failedCount > 0 && `   ${t('pages.knowledge.collections.collectionPage.failedCount', { count: failedCount })}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setRenaming(true)}
-                  title="Rename"
-                  aria-label="Rename the collection"
+                  title={t('pages.knowledge.collections.collectionPage.rename')}
+                  aria-label={t('pages.knowledge.collections.collectionPage.renameTheCollection')}
                   className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-app-border-subtle bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
                 >
                   <Edit size={14} />
@@ -246,8 +248,8 @@ export function CollectionPage() {
                 <button
                   type="button"
                   onClick={askRemoveCollection}
-                  title="Delete the collection"
-                  aria-label="Delete the collection"
+                  title={t('pages.knowledge.collections.collectionPage.deleteTheCollection')}
+                  aria-label={t('pages.knowledge.collections.collectionPage.deleteTheCollection')}
                   className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-app-border-subtle bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-danger)]"
                 >
                   <Delete size={14} />
@@ -259,7 +261,7 @@ export function CollectionPage() {
                     disabled={indexing}
                     className="ml-1 flex cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {indexing ? 'Starting...' : `Index ${plural(waiting, 'document', 'documents')}`}
+                    {indexing ? t('pages.knowledge.collections.collectionPage.starting') : t('pages.knowledge.collections.collectionPage.indexDocuments', { count: waiting })}
                   </button>
                 )}
                 <button
@@ -268,7 +270,7 @@ export function CollectionPage() {
                   className={`ml-1 flex cursor-pointer items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-medium transition-colors ${waiting > 0 ? 'border border-app-border-subtle bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]' : 'border-0 bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-hover)]'}`}
                 >
                   <Upload size={14} />
-                  Add documents
+                  {t('pages.knowledge.collections.collectionPage.addDocuments')}
                 </button>
                 <input
                   ref={picker}
@@ -311,7 +313,7 @@ export function CollectionPage() {
                 <li key={`${name}-${index}`} className="flex items-center gap-3 border-0 border-b border-solid border-[var(--border-soft)] px-1 py-2.5 text-[13.5px] text-[var(--text-muted)]">
                   <span className="size-[30px] shrink-0" />
                   <span className="min-w-0 flex-1 truncate">{name}</span>
-                  <span className="text-[12px] text-[var(--accent-primary)]">Uploading</span>
+                  <span className="text-[12px] text-[var(--accent-primary)]">{t('pages.knowledge.collections.collectionPage.uploading')}</span>
                 </li>
               ))}
               {shownFiles.map((file) => (
@@ -328,9 +330,9 @@ export function CollectionPage() {
 
             {files.length > 0 && shownFiles.length === 0 && (
               <p className="mt-6 text-center text-[13px] text-[var(--text-muted)]">
-                No document matches this filter.{' '}
+                {t('pages.knowledge.collections.collectionPage.noMatch')}{' '}
                 <button type="button" onClick={() => setView(DEFAULT_VIEW)} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--accent-primary)] underline">
-                  Show all
+                  {t('pages.knowledge.collections.collectionPage.showAll')}
                 </button>
               </p>
             )}
@@ -342,8 +344,8 @@ export function CollectionPage() {
                 className="mt-6 flex w-full cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed border-[var(--border-strong)] bg-transparent px-6 py-14 text-center transition-colors hover:bg-[var(--surface-hover)]"
               >
                 <Upload size={20} className="text-[var(--text-muted)]" />
-                <span className="text-[14px] text-[var(--text-primary)]">Drop documents here, or choose files</span>
-                <span className="text-[12.5px] text-[var(--text-muted)]">PDF, Word, PowerPoint, Excel, text and Markdown</span>
+                <span className="text-[14px] text-[var(--text-primary)]">{t('pages.knowledge.collections.collectionPage.dropDocumentsHereOrChoose')}</span>
+                <span className="text-[12.5px] text-[var(--text-muted)]">{t('pages.knowledge.collections.collectionPage.pdfWordPowerpointExcelText')}</span>
               </button>
             )}
           </>
@@ -352,13 +354,13 @@ export function CollectionPage() {
 
       {dragging && (
         <div className="pointer-events-none fixed inset-0 z-[1400] flex items-center justify-center bg-[color-mix(in_srgb,var(--accent-primary)_8%,transparent)]">
-          <div className="rounded-2xl border-2 border-dashed border-[var(--accent-primary)] bg-[var(--surface-panel)] px-10 py-8 text-[14px] text-[var(--text-primary)]">Drop to add to {collection?.name ?? 'the collection'}</div>
+          <div className="rounded-2xl border-2 border-dashed border-[var(--accent-primary)] bg-[var(--surface-panel)] px-10 py-8 text-[14px] text-[var(--text-primary)]">{t('pages.knowledge.collections.collectionPage.dropToAdd', { name: collection?.name ?? t('pages.knowledge.collections.collectionPage.theCollection') })}</div>
         </div>
       )}
 
       {renaming && collection && (
         <CollectionDialog
-          title="Rename the collection"
+          title={t('pages.knowledge.collections.collectionPage.renameTheCollection')}
           submitLabel="Save"
           initialName={collection.name}
           initialDescription={collection.description}

@@ -1,0 +1,16 @@
+{
+  "pages": {
+    "knowledge": {
+      "nav": {
+        "groupAsk": "Interroger",
+        "ask": "Demander",
+        "search": "Rechercher",
+        "groupBrowse": "Parcourir",
+        "collections": "Collections",
+        "groupManage": "Gérer",
+        "sources": "Sources",
+        "settings": "Paramètres"
+      }
+    }
+  }
+}

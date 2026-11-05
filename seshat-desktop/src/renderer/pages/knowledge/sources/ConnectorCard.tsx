@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CustomSelect, SoftButton, StatusPill } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { ConnectorIcon } from './ConnectorIcons'
 import type { ConnectorAccount, ConnectorDefinition, Corpus } from './connectorTypes'
+import { useTranslation } from 'react-i18next'
 
 export function ConnectorCard({
   definition,
@@ -22,6 +23,7 @@ export function ConnectorCard({
   onSync: (account: ConnectorAccount, corpusId: string) => void
   onRunAction: (account: ConnectorAccount) => void
 }) {
+  const { t } = useTranslation('knowledge/sources')
   const connected = accounts.length > 0
 
   return (
@@ -32,20 +34,20 @@ export function ConnectorCard({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">{definition.title}</h3>
-              <StatusPill tone={connected ? 'ok' : 'muted'}>{connected ? `${accounts.length} connected` : 'Not connected'}</StatusPill>
-              <StatusPill tone="muted">{definition.category}</StatusPill>
+              <StatusPill tone={connected ? 'ok' : 'muted'}>{connected ? `${accounts.length} connected` : t('pages.knowledge.sources.connectorCard.notConnected')}</StatusPill>
+              <StatusPill tone="muted">{t(definition.category === 'Knowledge' ? 'pages.knowledge.sources.connectorsConfig.knowledge' : 'pages.knowledge.sources.connectorsConfig.actions')}</StatusPill>
             </div>
-            <p className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">{definition.description}</p>
+            <p className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">{t(definition.description)}</p>
           </div>
         </div>
         <SoftButton tone={connected ? 'default' : 'primary'} onClick={onConnect} disabled={busy}>
-          {definition.mode === 'oauth' ? 'Start OAuth' : 'Connect'}
+          {definition.mode === 'oauth' ? t('pages.knowledge.sources.connectorCard.startOauth') : t('pages.knowledge.sources.connectorCard.connect')}
         </SoftButton>
       </div>
 
       <div className="grid gap-2 p-3">
         {accounts.length === 0 ? (
-          <div className="rounded-md bg-[var(--surface-muted)] px-3 py-3 text-[12px] text-[var(--text-muted)]">No account connected yet.</div>
+          <div className="rounded-md bg-[var(--surface-muted)] px-3 py-3 text-[12px] text-[var(--text-muted)]">{t('pages.knowledge.sources.connectorCard.noAccountConnectedYet')}</div>
         ) : accounts.map((account) => (
           <ConnectorAccountRow
             key={account.id}
@@ -80,6 +82,7 @@ function ConnectorAccountRow({
   onSync: (corpusId: string) => void
   onRunAction: () => void
 }) {
+  const { t } = useTranslation('knowledge/sources')
   const [corpusId, setCorpusId] = useState(corpora[0]?.id ?? '')
   const canSync = definition.category === 'Knowledge'
   const corpusOptions = corpora.map((corpus) => ({ value: corpus.id, label: corpus.name, description: `${corpus.file_count ?? 0} files` }))
@@ -100,14 +103,14 @@ function ConnectorAccountRow({
             <CustomSelect
               compact
               value={corpusId}
-              options={corpusOptions.length > 0 ? corpusOptions : [{ value: '', label: 'No corpus' }]}
+              options={corpusOptions.length > 0 ? corpusOptions : [{ value: '', label: t('pages.knowledge.sources.connectorCard.noCorpus') }]}
               onChange={setCorpusId}
             />
           </div>
         )}
-        {canSync && <SoftButton onClick={() => onSync(corpusId)} disabled={busy || !corpusId}>Sync</SoftButton>}
-        {definition.mode === 'action' && <SoftButton onClick={onRunAction} disabled={busy}>Test action</SoftButton>}
-        <SoftButton tone="danger" onClick={onDisconnect} disabled={busy}>Disconnect</SoftButton>
+        {canSync && <SoftButton onClick={() => onSync(corpusId)} disabled={busy || !corpusId}>{t('pages.knowledge.sources.connectorCard.sync')}</SoftButton>}
+        {definition.mode === 'action' && <SoftButton onClick={onRunAction} disabled={busy}>{t('pages.knowledge.sources.connectorCard.testAction')}</SoftButton>}
+        <SoftButton tone="danger" onClick={onDisconnect} disabled={busy}>{t('pages.knowledge.sources.connectorCard.disconnect')}</SoftButton>
       </div>
     </div>
   )

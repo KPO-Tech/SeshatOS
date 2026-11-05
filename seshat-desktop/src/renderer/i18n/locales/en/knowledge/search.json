@@ -1,0 +1,84 @@
+{
+  "pages": {
+    "knowledge": {
+      "search": {
+        "resultRow": {
+          "openTheDocument": "Open the document",
+          "bestMatch": "Best match",
+          "otherMatches": "Other matches",
+          "openThisPassage": "Open this passage",
+          "fewer": "Fewer",
+          "passageMatched_one": "{{count}} passage matched",
+          "passageMatched_other": "{{count}} passages matched",
+          "passageCount_one": "{{count}} passage",
+          "passageCount_other": "{{count}} passages",
+          "match": "Match {{score}}",
+          "openAtPage": "Open at page {{page}}",
+          "added": "Added {{when}}",
+          "passageWord": "passage"
+        },
+        "searchBar": {
+          "search": "Search",
+          "clearTheSearch": "Clear the search",
+          "ctrlK": "Ctrl K",
+          "placeholder": "Search your documents: a question, a topic, a number or a code"
+        },
+        "searchPage": {
+          "search": "Search",
+          "answerThisQuestionFromYour": "Answer this question from your documents, with its sources",
+          "askSeshat": "Ask Seshat",
+          "theCollectionsCouldNotBe": "The collections could not be read.",
+          "collections": "Collections",
+          "allCollections": "All collections",
+          "results": "Results",
+          "documents": "Documents",
+          "askAQuestionAboutThis": "Ask a question about this search",
+          "ask": "Ask",
+          "aQuestionAboutThis": "a question about this",
+          "type": "Type",
+          "sort": "Sort",
+          "view": "View",
+          "list": "List",
+          "grid": "Grid",
+          "searching": "Searching",
+          "theSearchCouldNotBe": "The search could not be done. Check that the backend is running and try again.",
+          "readingYourDocuments": "Reading your documents",
+          "theDocumentsCouldNotBe": "The documents could not be listed.",
+          "noDocumentIsLeftWith": "No document is left with these filters.",
+          "noDocumentIsIndexedYet": "No document is indexed yet. Add a source and index it from Collections, then come back.",
+          "nothingAnswersThis": "Nothing answers this.",
+          "loadingMoreDocuments": "Loading more documents",
+          "noPreview": "There is no preview for this kind of file yet: {{name}}",
+          "couldNotOpen": "{{name}} could not be opened.",
+          "mostRelevant": "Most relevant",
+          "recentlyAdded": "Recently added",
+          "nameSort": "Name",
+          "subtitleScoped": "Find the documents and the passages that answer you, in {{name}}.",
+          "subtitleAll": "Find the documents and the passages that answer you, across all your collections.",
+          "placeholderScoped": "Search in {{name}}: a question, a topic, a number or a code",
+          "allTypes": "All types ({{count}})",
+          "nothingIn": "Nothing in {{name}} answers this.",
+          "tryWording": "Try another wording, or a word the document is likely to use.",
+          "bestShown": "The {{count}} best passages are shown. Add words, or choose a collection, to narrow the search."
+        },
+        "searchModel": {
+          "kind": {
+            "pdf": "PDF",
+            "docx": "Word",
+            "xlsx": "Excel",
+            "pptx": "Slides",
+            "md": "Text",
+            "other": "Other"
+          },
+          "justNow": "just now",
+          "minutesAgo_one": "{{count}} minute ago",
+          "minutesAgo_other": "{{count}} minutes ago",
+          "hoursAgo_one": "{{count}} hour ago",
+          "hoursAgo_other": "{{count}} hours ago",
+          "daysAgo_one": "{{count}} day ago",
+          "daysAgo_other": "{{count}} days ago"
+        }
+      }
+    }
+  }
+}

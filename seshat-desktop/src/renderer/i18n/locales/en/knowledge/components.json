@@ -1,0 +1,37 @@
+{
+  "pages": {
+    "knowledge": {
+      "components": {
+        "knowledgeNav": {
+          "knowledge": "Knowledge"
+        },
+        "passageDrawer": {
+          "closePassage": "Close passage",
+          "close": "Close",
+          "defaultNote": "This is the passage the answer rests on, as the agent read it."
+        },
+        "scopeSelect": {
+          "allCollections": "All collections"
+        },
+        "comingNext": {
+          "searchTitle": "Find a document by keyword",
+          "searchText": "A search engine for the own data of your organization. No model involved: the same words give the same results, filtered by collection, source, type and date.",
+          "collectionsTitle": "Browse what is inside",
+          "collectionsText": "Every collection with its documents, their source and their last update, and a way to open any of them.",
+          "sourcesTitle": "Connect and follow your sources",
+          "sourcesText": "Connect Drive, SharePoint, Confluence and more, see how each synchronization is going, and learn why a document is missing.",
+          "settingsTitle": "Choose the models and the access",
+          "settingsText": "The embedding and reranking models of the organization, and who can read which collection.",
+          "designedNotBuilt": "· designed, not built yet"
+        },
+        "citationChip": {
+          "openThePassage": "Open the passage"
+        },
+        "modelSelect": {
+          "loadingModels": "Loading models",
+          "noModel": "No model"
+        }
+      }
+    }
+  }
+}

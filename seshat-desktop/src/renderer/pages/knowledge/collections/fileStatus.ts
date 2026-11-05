@@ -1,7 +1,7 @@
 import type { CollectionFile, IndexingJob } from './collectionsApi'
 
 /** `queued` is a document that waits its turn, quietly; `working` is the one being indexed. */
-export type FileState = { tone: 'ready' | 'working' | 'queued' | 'failed' | 'waiting'; label: string; detail?: string; note?: string }
+export type FileState = { tone: 'ready' | 'working' | 'queued' | 'failed' | 'waiting'; label: string; detail?: string; detailKey?: string; note?: string }
 
 /** Starts the last error of a job that waits for the quota of the embedding provider (the backend writes it): the queue is paused, nothing failed. */
 export const QUOTA_PAUSED_PREFIX = 'Paused:'
@@ -10,15 +10,15 @@ export const QUOTA_PAUSED_PREFIX = 'Paused:'
 export function fileState(file: CollectionFile, job: IndexingJob | undefined): FileState {
   if (file.status === 'ingested') {
     // Indexed by its words only: the reading worked and the embedding did not, so it is found by keywords until the vectors are made.
-    return file.keywordsOnly ? { tone: 'ready', label: 'Indexed', note: 'keywords only', detail: file.keywordsReason || undefined } : { tone: 'ready', label: 'Indexed' }
+    return file.keywordsOnly ? { tone: 'ready', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexed', note: 'knowledge/collections:pages.knowledge.collections.fileStatus.keywordsOnly', detail: file.keywordsReason || undefined } : { tone: 'ready', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexed' }
   }
   // A job on its way wins over the state a failed earlier attempt left on the file: it is being tried again.
-  if (job?.status === 'running') return { tone: 'working', label: 'Indexing' }
-  if (job?.status === 'pending') return isPaused(job) ? { tone: 'queued', label: 'Waiting', detail: job.lastError } : { tone: 'queued', label: 'Waiting' }
-  if (file.status === 'failed') return { tone: 'failed', label: 'Failed', detail: job?.lastError || undefined }
-  if (job?.status === 'failed') return { tone: 'failed', label: 'Failed', detail: job.lastError || undefined }
-  if (!job) return { tone: 'waiting', label: 'Not indexed', detail: 'Indexing has not started.' }
-  return { tone: 'queued', label: 'Waiting' }
+  if (job?.status === 'running') return { tone: 'working', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexing' }
+  if (job?.status === 'pending') return isPaused(job) ? { tone: 'queued', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.waiting', detail: job.lastError } : { tone: 'queued', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.waiting' }
+  if (file.status === 'failed') return { tone: 'failed', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.failed', detail: job?.lastError || undefined }
+  if (job?.status === 'failed') return { tone: 'failed', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.failed', detail: job.lastError || undefined }
+  if (!job) return { tone: 'waiting', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.notIndexed', detailKey: 'knowledge/collections:pages.knowledge.collections.fileStatus.notStarted' }
+  return { tone: 'queued', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.waiting' }
 }
 
 /** Files still on their way to an index: the ones to keep watching. */
@@ -44,6 +44,3 @@ export function timeLeft(until: number, now: number): string {
   return seconds < 90 ? `${seconds} s` : `${Math.ceil(seconds / 60)} min`
 }
 
-export function plural(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`
-}

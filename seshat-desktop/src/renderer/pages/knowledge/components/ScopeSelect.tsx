@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { FolderOpen } from '@icon-park/react'
 import { SelectorMenu, SelectorPill, type SelectorOption } from '@renderer/components/ui/SelectorPill'
 import type { AskScope, KnowledgeCollection } from '../chat/useCollections'
+import { useTranslation } from 'react-i18next'
 
 const ALL = '__all__'
 
@@ -15,6 +16,7 @@ type Props = {
 
 // Where a question looks: every collection the person can read, or one. The same pill and menu as the model selector of the chat input.
 export function ScopeSelect({ collections, scope, onChange, placement = 'up' }: Props) {
+  const { t } = useTranslation('knowledge/components')
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   const current = collections.find((item) => item.id === scope.collectionId)
@@ -35,7 +37,7 @@ export function ScopeSelect({ collections, scope, onChange, placement = 'up' }: 
 
   const options = useMemo<SelectorOption[]>(
     () => [
-      { id: ALL, label: 'All collections', description: `${collections.length} ${collections.length === 1 ? 'collection' : 'collections'}` },
+      { id: ALL, label: t('pages.knowledge.components.scopeSelect.allCollections'), description: `${collections.length} ${collections.length === 1 ? 'collection' : 'collections'}` },
       ...collections.map((item) => ({
         id: item.id,
         label: item.name,
@@ -48,7 +50,7 @@ export function ScopeSelect({ collections, scope, onChange, placement = 'up' }: 
   return (
     <div ref={root} className="relative min-w-0 max-w-[min(240px,32vw)]">
       <SelectorPill
-        label={current?.name ?? 'All collections'}
+        label={current?.name ?? t('pages.knowledge.components.scopeSelect.allCollections')}
         icon={<FolderOpen size={12} />}
         onClick={() => setOpen((value) => !value)}
         active={open}

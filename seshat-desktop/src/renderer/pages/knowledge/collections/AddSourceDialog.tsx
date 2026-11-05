@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { SourceIconPicker } from './SourceIcon'
 import { addFolderSource, type KnowledgeSource } from './sourcesApi'
+import { useTranslation } from 'react-i18next'
 
 const FIELD =
   'w-full rounded-[10px] border border-app-border-subtle bg-[var(--surface-root)] px-3 py-2 text-[13px] text-app-text outline-none transition-[border-color] placeholder:text-app-text-muted focus:border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))]'
 
 /** Adds a folder of this computer as a source. Nothing is read: the collections are made later, by analysing the source. */
 export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: KnowledgeSource) => void | Promise<void>; onClose: () => void }) {
+  const { t } = useTranslation('knowledge/collections')
   const [path, setPath] = useState('')
   const [name, setName] = useState('')
   const [icon, setIcon] = useState('')
@@ -46,17 +48,17 @@ export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: Knowle
         onSubmit={submit}
         role="dialog"
         aria-modal="true"
-        aria-label="Add a source"
+        aria-label={t('pages.knowledge.collections.addSourceDialog.addASource')}
         className="w-full max-w-[480px] rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]"
         style={{ animation: 'slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both' }}
       >
-        <h2 className="m-0 text-[17px] font-medium text-[var(--text-primary)]">Add a source</h2>
+        <h2 className="m-0 text-[17px] font-medium text-[var(--text-primary)]">{t('pages.knowledge.collections.addSourceDialog.addASource')}</h2>
         <p className="mb-0 mt-1.5 text-[12.5px] leading-[19px] text-[var(--text-muted)]">
-          A folder of this computer. Adding it reads nothing and copies nothing: you choose later whether to analyse it into collections.
+          {t('pages.knowledge.collections.addSourceDialog.aFolderOfThisComputer')}
         </p>
 
         <label className="mt-4 block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="source-path">
-          Folder
+          {t('pages.knowledge.collections.addSourceDialog.folder')}
         </label>
         <div className="mt-1.5 flex items-center gap-2">
           <input
@@ -64,19 +66,19 @@ export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: Knowle
             ref={pathField}
             value={path}
             onChange={(event) => setPath(event.target.value)}
-            placeholder="C:\Users\you\Documents\Archive"
+            placeholder={t('pages.knowledge.collections.addSourceDialog.cUsersYouDocumentsArchive')}
             className={FIELD}
             spellCheck={false}
           />
           {canBrowse && (
             <button type="button" onClick={() => void browse()} className="h-9 shrink-0 cursor-pointer rounded-[10px] border border-app-border-subtle bg-transparent px-3 text-[13px] text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">
-              Browse...
+              {t('pages.knowledge.collections.addSourceDialog.browse')}
             </button>
           )}
         </div>
 
         <label className="mt-3.5 block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="source-name">
-          Name and icon <span className="font-normal text-[var(--text-muted)]">(optional, the folder's name by default)</span>
+          {t('pages.knowledge.collections.addSourceDialog.nameAndIcon')} <span className="font-normal text-[var(--text-muted)]">{t('pages.knowledge.collections.addSourceDialog.optionalTheFolderSName')}</span>
         </label>
         <div className="mt-1.5 flex items-center gap-2">
           <SourceIconPicker value={icon} onChange={setIcon} />
@@ -91,14 +93,14 @@ export function AddSourceDialog({ onAdded, onClose }: { onAdded: (source: Knowle
 
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="cursor-pointer rounded-[10px] border border-app-border-subtle bg-transparent px-3.5 py-2 text-[13px] text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">
-            Cancel
+            {t('pages.knowledge.collections.addSourceDialog.cancel')}
           </button>
           <button
             type="submit"
             disabled={!path.trim() || busy}
             className="cursor-pointer rounded-[10px] border-0 bg-[var(--accent-primary)] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? 'Adding...' : 'Add source'}
+            {busy ? t('pages.knowledge.collections.addSourceDialog.adding') : t('pages.knowledge.collections.addSourceDialog.addSource')}
           </button>
         </div>
       </form>

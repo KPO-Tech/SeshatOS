@@ -22,12 +22,12 @@ export function keyDifferences(source: Catalog, other: Catalog): { missing: stri
   return { missing: [...wanted].filter((key) => !have.has(key)), extra: [...have].filter((key) => !wanted.has(key)) }
 }
 
-const modules = import.meta.glob<Catalog>('./locales/*/*.json', { eager: true, import: 'default' })
+const modules = import.meta.glob<Catalog>('./locales/**/*.json', { eager: true, import: 'default' })
 
 function catalogs(): Record<string, Record<string, Catalog>> {
   const out: Record<string, Record<string, Catalog>> = {}
   for (const [path, catalog] of Object.entries(modules)) {
-    const [, language, file] = /^\.\/locales\/([^/]+)\/([^/]+)\.json$/.exec(path) ?? []
+    const [, language, file] = /^\.\/locales\/([^/]+)\/(.+)\.json$/.exec(path) ?? []
     if (!language) continue
     out[language] ??= {}
     out[language][file] = catalog

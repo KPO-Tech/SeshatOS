@@ -13,7 +13,7 @@
 // refuses to run when one of them is named on the command line. Only what a person reads is translated, never what a machine reads.
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { join, relative, resolve, sep } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
@@ -22,7 +22,7 @@ const ts = require('typescript')
 const SOURCE_LANGUAGE = 'en'
 const DEFAULT_NAMESPACE = 'common'
 const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/
-const QUALIFIED_KEY = /^([a-z][A-Za-z0-9]*):([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*)$/
+const QUALIFIED_KEY = /^([a-z][A-Za-z0-9]*(?:\/[A-Za-z0-9]+)*):([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*)$/
 
 // ── Protected paths ─────────────────────────────────────────────────────────
 
@@ -65,16 +65,22 @@ function readCatalogs(localesDir) {
   const catalogs = {}
   for (const language of languages) {
     catalogs[language] = {}
-    for (const file of readdirSync(join(localesDir, language)).filter((name) => name.endsWith('.json'))) {
-      catalogs[language][file.slice(0, -'.json'.length)] = JSON.parse(readFileSync(join(localesDir, language, file), 'utf8'))
+    // A namespace is a file; a folder groups several (knowledge/ask.json is the namespace knowledge/ask).
+    const walk = (directory, prefix) => {
+      for (const entry of readdirSync(join(localesDir, language, directory), { withFileTypes: true })) {
+        if (entry.isDirectory()) walk(`${directory}/${entry.name}`.replace(/^\//, ''), `${prefix}${entry.name}/`)
+        else if (entry.name.endsWith('.json')) catalogs[language][`${prefix}${entry.name.slice(0, -'.json'.length)}`] = JSON.parse(readFileSync(join(localesDir, language, directory, entry.name), 'utf8'))
+      }
     }
+    walk('', '')
   }
   return { languages, catalogs }
 }
 
 function writeCatalog(localesDir, language, namespace, object) {
-  mkdirSync(join(localesDir, language), { recursive: true })
-  writeFileSync(join(localesDir, language, `${namespace}.json`), `${JSON.stringify(object, null, 2)}\n`)
+  const file = join(localesDir, language, `${namespace}.json`)
+  mkdirSync(dirname(file), { recursive: true })
+  writeFileSync(file, `${JSON.stringify(object, null, 2)}\n`)
 }
 
 // ── Reading the code ────────────────────────────────────────────────────────
