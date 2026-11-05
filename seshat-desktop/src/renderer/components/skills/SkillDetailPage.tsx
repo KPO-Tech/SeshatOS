@@ -1,22 +1,19 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { CheckOne, Left, More } from '@icon-park/react'
-import { CodeBox } from '@renderer/components/chat/tools/common'
-import { languageForPath } from '@renderer/components/chat/tools/helpers'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { copyItem, openItem } from '@renderer/components/ui/menuItems'
 import { SourceLink } from '@renderer/components/ui/SourceLink'
-import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { ToastStack, useToast } from '@renderer/components/ui/Toast'
-import { SkillFileTree } from './SkillFileTree'
+import { FileContentView } from '@renderer/components/files/FileContentView'
+import { FileTreeView } from '@renderer/components/files/FileTreeView'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SkillMark } from './SkillIconTile'
 import { repoLogo } from './skillLogos'
 import { tagsFor, type SkillIconId } from './skillIcons'
-import { splitFrontmatter } from './skillContent'
 import { deleteSkill, setSkillEnabled } from './skillsApi'
 import type { Skill, TreeNode } from './skillsTypes'
-import { MAIN_FILE, useSkillFiles } from './useSkillFiles'
+import { useSkillFiles } from './useSkillFiles'
 import { useSkillIcons } from './useSkillIcons'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkills } from './useSkills'
@@ -115,16 +112,11 @@ type BodyProps = {
 
 function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChangeIcon, onBack }: BodyProps) {
   const { t } = useTranslation('skills')
-  const { tree, selected, setSelected, content, loading } = useSkillFiles(skill.name)
-  const [source, setSource] = useState(false)
+  const { tree, source, selected, setSelected, loading, readText } = useSkillFiles(skill.name)
   const tags = useMemo(() => tagsFor(skill, 6), [skill])
   const owned = skill.source === 'userSettings'
   const title = skill.display_name || skill.name
 
-  const isMain = selected !== null && MAIN_FILE.test(selected.split('/').pop() ?? '')
-  const isMarkdown = isMain || /\.(md|markdown|mdx)$/i.test(selected ?? '')
-  const { frontmatter, body } = isMain ? splitFrontmatter(content) : { frontmatter: '', body: content }
-  const fileName = selected?.split('/').pop() ?? ''
 
   const menu: DropdownItem[] = [
     { id: 'icon', label: t('skills.skillDetailPage.changeIcon'), onSelect: onChangeIcon },
@@ -184,46 +176,21 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
 
       <div className="mt-3 flex min-h-0 flex-1 gap-3 px-6 pb-3">
         <aside className="flex w-[250px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-          <h2 className="m-0 shrink-0 px-3.5 pb-1 pt-3 text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.skillDetailPage.skillFiles')}</h2>
-          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
-            {tree.length > 0 ? <SkillFileTree nodes={tree} selected={selected ?? ''} onSelect={setSelected} /> : <p className="m-0 px-2 py-1 text-[12px] text-[var(--text-muted)]">{loading ? t('skills.skillDetailPage.loading') : t('skills.skillDetailPage.noFiles')}</p>}
-          </div>
+          {tree.length > 0 ? (
+            <FileTreeView source={source} title={t('skills.skillDetailPage.skillFiles')} selectedPath={selected} onOpenFile={setSelected} />
+          ) : (
+            <>
+              <h2 className="m-0 shrink-0 px-3.5 pb-1 pt-3 text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.skillDetailPage.skillFiles')}</h2>
+              <p className="m-0 px-3.5 py-1 text-[12px] text-[var(--text-muted)]">{loading ? t('skills.skillDetailPage.loading') : t('skills.skillDetailPage.noFiles')}</p>
+            </>
+          )}
         </aside>
-
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border-soft)] px-4 py-2">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{fileName || title}</div>
-              <div className="truncate font-mono text-[10.5px] text-[var(--text-muted)]">{selected ?? ''}</div>
-            </div>
-            {isMarkdown && !loading && (
-              <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label={t('skills.skillDetailPage.view')}>
-                {([false, true] as const).map((value) => (
-                  <button
-                    key={String(value)}
-                    type="button"
-                    aria-pressed={source === value}
-                    onClick={() => setSource(value)}
-                    className={`cursor-pointer rounded-md border-0 px-2 py-0.5 ${source === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                  >
-                    {value ? t('skills.skillDetailPage.source') : t('skills.skillDetailPage.preview')}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="no-scrollbar min-h-0 flex-1 overflow-auto">
-            {loading ? (
-              <p className="m-0 p-6 text-[13px] text-[var(--text-muted)]">{t('skills.skillDetailPage.loading')}</p>
-            ) : isMarkdown && !source ? (
-              <div className="mx-auto max-w-[860px] px-6 py-5">
-                {frontmatter && <pre className="mb-5 whitespace-pre-wrap break-words rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3 font-mono text-[12px] leading-5 text-[var(--text-secondary)]">{frontmatter}</pre>}
-                <MarkdownView variant="document">{body}</MarkdownView>
-              </div>
-            ) : (
-              <CodeBox content={content.replace(/\r?\n$/, '') || ' '} language={isMarkdown ? 'markdown' : languageForPath(selected ?? '')} lineNumbers expanded bare />
-            )}
-          </div>
+          {selected ? (
+            <FileContentView path={selected} relativePath={selected} readText={readText} frontmatter />
+          ) : (
+            <p className="m-0 p-6 text-[13px] text-[var(--text-muted)]">{t('skills.skillDetailPage.loading')}</p>
+          )}
         </main>
 
         <aside className="no-scrollbar flex w-[290px] shrink-0 flex-col gap-3 overflow-y-auto">

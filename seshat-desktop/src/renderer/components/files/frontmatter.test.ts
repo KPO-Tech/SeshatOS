@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitFrontmatter } from './skillContent'
+import { splitFrontmatter } from './frontmatter'
 
 describe('splitFrontmatter', () => {
   it('separates YAML front matter from the markdown body', () => {

@@ -6,8 +6,9 @@ import { listProjects, selectRecentSessions, updateProject } from '@renderer/lib
 import { useSessionStore } from '@renderer/stores/session'
 import { EditProjectDialog } from '../EditProjectDialog'
 import { OverviewTab } from './OverviewTab'
-import { FileTree } from './FileTree'
-import { FileViewer } from './FileViewer'
+import { FileContentView } from '@renderer/components/files/FileContentView'
+import { FileTreeView } from '@renderer/components/files/FileTreeView'
+import { localFileSource } from '@renderer/components/files/fileSource'
 import { InfoColumn } from './InfoColumn'
 import { ProjectHeader } from './ProjectHeader'
 import { SessionsTab } from './SessionsTab'
@@ -49,6 +50,7 @@ export function ProjectDetailPage() {
   )
   const projectSessions = useMemo(() => (project ? selectRecentSessions(sessions, project.rootPath, Number.MAX_SAFE_INTEGER) : []), [sessions, project])
   const scan = useProjectScan(project?.rootPath ?? '', refreshKey)
+  const fileSource = useMemo(() => localFileSource(project?.rootPath ?? ''), [project?.rootPath])
 
   const rawTab = params.get('tab')
   // A project opens on its overview: the input to begin a conversation in it, and what was asked before.
@@ -137,13 +139,16 @@ export function ProjectDetailPage() {
           {tab === 'files' && (
             <>
               <div className="flex w-[270px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-                <FileTree rootPath={root} selectedPath={selectedFile} onOpenFile={setSelectedFile} refreshKey={refreshKey} onRefresh={() => setRefreshKey((n) => n + 1)} />
+                <FileTreeView source={fileSource} title={t('pages.projects.detail.index.projectFiles')} selectedPath={selectedFile} onOpenFile={setSelectedFile} refreshKey={refreshKey} onRefresh={() => setRefreshKey((n) => n + 1)} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
                 {selectedFile ? (
-                  <FileViewer
+                  <FileContentView
                     path={selectedFile}
                     relativePath={relativeToRoot(root, selectedFile)}
+                    readText={(path) => window.seshat?.fs?.readTextFile(path) ?? Promise.reject(new Error('unavailable'))}
+                    readImage={(path) => window.seshat?.fs?.readImage(path) ?? Promise.reject(new Error('unavailable'))}
+                    copyPath
                     onOpenSystem={(path) => void window.seshat?.openLocalPath?.(path).catch(() => show('This file could not be opened.', 'err'))}
                   />
                 ) : (

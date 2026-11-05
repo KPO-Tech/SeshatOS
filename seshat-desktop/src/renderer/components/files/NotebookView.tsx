@@ -4,7 +4,7 @@ import type { Notebook, NotebookCell, NotebookOutput } from '@renderer/lib/noteb
 import { useTranslation } from 'react-i18next'
 
 function Output({ output }: { output: NotebookOutput }) {
-  const { t } = useTranslation('shell')
+  const { t } = useTranslation('files')
   switch (output.kind) {
     case 'text':
       return (
@@ -13,7 +13,7 @@ function Output({ output }: { output: NotebookOutput }) {
     case 'image':
       return (
         <div className="px-3 py-2">
-          <img src={output.src} alt={t('pages.projects.detail.notebookView.outputOfTheCell')} className="max-h-[480px] max-w-full rounded-md bg-white" />
+          <img src={output.src} alt={t('notebookView.outputOfTheCell')} className="max-h-[480px] max-w-full rounded-md bg-white" />
         </div>
       )
     case 'error':
@@ -27,7 +27,7 @@ function Output({ output }: { output: NotebookOutput }) {
         </div>
       )
     case 'unsupported':
-      return <div className="px-3 py-2 text-[12px] italic text-[var(--text-muted)]">{t('pages.projects.detail.notebookView.outputNotShown', { type: output.mime })}</div>
+      return <div className="px-3 py-2 text-[12px] italic text-[var(--text-muted)]">{t('notebookView.outputNotShown', { type: output.mime })}</div>
   }
 }
 
@@ -61,8 +61,8 @@ function Cell({ cell, language }: { cell: NotebookCell; language: string }) {
 
 /** A notebook to read: its text and its code, with what each cell printed and drew. Nothing in it is run. */
 export function NotebookView({ notebook }: { notebook: Notebook }) {
-  const { t } = useTranslation('shell')
-  if (notebook.cells.length === 0) return <div className="p-6 text-[13px] text-[var(--text-muted)]">{t('pages.projects.detail.notebookView.thisNotebookHasNoCells')}</div>
+  const { t } = useTranslation('files')
+  if (notebook.cells.length === 0) return <div className="p-6 text-[13px] text-[var(--text-muted)]">{t('notebookView.thisNotebookHasNoCells')}</div>
   return (
     <div className="mx-auto flex max-w-[980px] flex-col gap-3 px-5 py-4">
       {notebook.cells.map((cell, index) => (

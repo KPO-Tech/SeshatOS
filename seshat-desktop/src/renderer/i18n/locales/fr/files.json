@@ -1,0 +1,35 @@
+{
+  "fileTree": {
+    "loading": "Chargement...",
+    "thisFolderCannotBeRead": "Ce dossier ne peut pas être lu.",
+    "empty": "Vide",
+    "readTheFilesAgain": "Relire les fichiers",
+    "refresh": "Actualiser",
+    "searchFiles": "Rechercher des fichiers...",
+    "searching": "Recherche...",
+    "noFileOrFolderHas": "Aucun fichier ni dossier ne porte ce nom.",
+    "searchTheFiles": "Rechercher dans les fichiers"
+  },
+  "fileViewer": {
+    "thisFileIsEmpty": "Ce fichier est vide.",
+    "view": "Affichage",
+    "source": "Source",
+    "preview": "Aperçu",
+    "copyThePath": "Copier le chemin",
+    "open": "Ouvrir",
+    "firstRows": "Les {{rows}} premières lignes sont affichées.",
+    "loading": "Chargement...",
+    "tooLarge": "Ce fichier est trop volumineux pour être affiché ici (2 Mo au maximum).",
+    "notText": "Ce fichier n'est pas du texte, il ne peut donc pas être affiché ici.",
+    "pictureTooLarge": "Cette image est trop volumineuse pour être affichée ici (10 Mo au maximum).",
+    "couldNotRead": "Ce fichier n'a pas pu être lu.",
+    "notebookUnreadable": "Ce notebook n'a pas pu être lu.",
+    "notDrawnOpen": "Les fichiers {{type}} ne sont pas encore affichés dans cette vue. Ouvrez-le avec le programme de votre système.",
+    "notDrawn": "Les fichiers {{type}} ne sont pas affichés dans cette vue."
+  },
+  "notebookView": {
+    "outputOfTheCell": "Sortie de la cellule",
+    "thisNotebookHasNoCells": "Ce notebook n'a aucune cellule.",
+    "outputNotShown": "Une sortie de type {{type}} n'est pas affichée ici."
+  }
+}
