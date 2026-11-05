@@ -1,0 +1,22 @@
+{
+  "waiting": "En attente de son tour",
+  "starting": "Démarrage",
+  "stepOf": "{{step}} ({{index}}/{{count}})",
+  "cloneDone": "{{subject}} est téléchargé",
+  "cloneDoneBody": "Vérifiez ce qu'il faut pour finir l'installation.",
+  "cloneCancelled": "Téléchargement de {{subject}} annulé",
+  "cloneCancelledBody": "Téléchargement arrêté.",
+  "cloneFailed": "Échec du téléchargement de {{subject}}",
+  "didNotFinish": "Il ne s'est pas terminé.",
+  "installReady": "{{subject}} est prêt",
+  "installDone": "Installation terminée.",
+  "installCancelled": "{{subject}} annulé",
+  "installStopped": "Installation arrêtée.",
+  "installFailed": "Échec de l'installation de {{subject}}",
+  "failure": {
+    "cloneCancelled": "Téléchargement annulé.",
+    "installCancelled": "Installation annulée.",
+    "interrupted": "L'app a été fermée avant la fin.",
+    "failed": "La tâche a échoué."
+  }
+}

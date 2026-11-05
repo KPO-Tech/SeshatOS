@@ -1,9 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { catalogLoader, i18n, i18nOptions } from '@renderer/i18n'
 
 const get = vi.fn()
 vi.mock('@renderer/api/client', () => ({ api: { get: (...args: unknown[]) => get(...args), post: vi.fn(), delete: vi.fn() } }))
 
 import { isTaskActive, taskFailure, waitForTask, type TaskInfo } from './tasks'
+
+// The messages are told in the language of the app, here English.
+beforeAll(async () => {
+  await i18n.use(catalogLoader).init(i18nOptions('en'))
+})
 
 const task = (status: TaskInfo['status'], extra: Partial<TaskInfo> = {}): TaskInfo => ({ id: 't1', kind: 'skill.install', subject: 'a', title: 'Installing a', status, started_at: 1, ...extra })
 
