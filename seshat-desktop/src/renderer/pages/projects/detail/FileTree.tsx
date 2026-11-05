@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Down, FileText, FolderClose, FolderOpen, Refresh, Right, Search } from '../icons'
+import { Down, Refresh, Right, Search } from '../icons'
+import { FileIcon, FolderIcon } from '@renderer/components/ui/FileIcon'
 import { joinPath } from '@renderer/lib/projectFiles'
 
 type Entry = { name: string; isDirectory: boolean }
@@ -107,7 +108,7 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
               className="flex w-full cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent py-1 pr-2 text-left text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
             >
               <span className="flex size-3.5 shrink-0 items-center justify-center text-[var(--text-muted)]">{isOpen ? <Down size={11} /> : <Right size={11} />}</span>
-              <span className="shrink-0 text-[var(--accent-primary)]">{isOpen ? <FolderOpen size={14} /> : <FolderClose size={14} />}</span>
+              <FolderIcon path={entry.name} open={isOpen} size={16} className="shrink-0" />
               <span className="truncate">{entry.name}</span>
             </button>
             {isOpen && renderDirectory(entryPath, depth + 1)}
@@ -121,12 +122,10 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
           type="button"
           onClick={() => onOpenFile(entryPath)}
           title={entry.name}
-          style={{ paddingLeft: 6 + depth * INDENT + 18 }}
+          style={{ paddingLeft: 6 + depth * INDENT + 20 }}
           className={`flex w-full cursor-pointer items-center gap-1.5 rounded-md border-0 py-1 pr-2 text-left text-[12.5px] ${selected ? 'bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--text-primary)]' : 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'}`}
         >
-          <span className="shrink-0 text-[var(--text-muted)]">
-            <FileText size={13} />
-          </span>
+          <FileIcon path={entry.name} size={16} className="shrink-0" />
           <span className="truncate">{entry.name}</span>
         </button>
       )
@@ -160,9 +159,7 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
         {results === null ? (
           <>
             <div className="flex items-center gap-1.5 px-1.5 py-1 text-[12.5px] font-medium text-[var(--text-primary)]">
-              <span className="text-[var(--accent-primary)]">
-                <FolderOpen size={14} />
-              </span>
+              <FolderIcon path={rootName} open size={16} className="shrink-0" />
               <span className="truncate">{rootName}</span>
             </div>
             {renderDirectory(rootPath, 0)}
@@ -181,7 +178,7 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
               className="flex w-full cursor-pointer flex-col rounded-md border-0 bg-transparent px-2 py-1 text-left hover:bg-[var(--surface-hover)]"
             >
               <span className="flex items-center gap-1.5 text-[12.5px] text-[var(--text-primary)]">
-                <span className="shrink-0 text-[var(--text-muted)]">{found.isDirectory ? <FolderClose size={13} /> : <FileText size={13} />}</span>
+                {found.isDirectory ? <FolderIcon path={found.name} open={false} size={16} className="shrink-0" /> : <FileIcon path={found.name} size={16} className="shrink-0" />}
                 <span className="truncate">{found.name}</span>
               </span>
               <span className="truncate pl-5 font-mono text-[10.5px] text-[var(--text-muted)]">{found.relativePath}</span>
