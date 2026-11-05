@@ -7,6 +7,7 @@ import { MediaDownload } from './MediaDownload'
 import { cachedSource, loadSource, rememberSize, sourceKey } from './artifactSourceCache'
 import { YouTubeEmbed } from './YouTubeEmbed'
 import { formatBytes, type MediaPayload } from './mediaPayload'
+import { useTranslation } from 'react-i18next'
 
 // A video is loaded whole into the page (the backend serves the file, the page reads it as a data URL), so a very large one is offered as a
 // download card instead of being played.
@@ -25,6 +26,7 @@ type Loaded =
 
 // Loaded once per file and kept (see artifactSourceCache.ts): a message scrolled back into view draws its media at once, at the size it had.
 function useArtifactSource(sessionId: string | undefined, path: string | undefined): Loaded {
+  const { t } = useTranslation('chat')
   const key = sessionId && path ? sourceKey(sessionId, path) : ''
   const initial = (): Loaded => {
     const cached = key ? cachedSource(key) : undefined
@@ -33,7 +35,7 @@ function useArtifactSource(sessionId: string | undefined, path: string | undefin
   const [loaded, setLoaded] = useState<Loaded>(initial)
   useEffect(() => {
     if (!sessionId || !path) {
-      setLoaded({ state: 'failed', message: 'The file is not available.' })
+      setLoaded({ state: 'failed', message: t('chat.messages.artifactMedia.theFileIsNotAvailable') })
       return
     }
     const cached = cachedSource(key)
@@ -55,6 +57,7 @@ function useArtifactSource(sessionId: string | undefined, path: string | undefin
 
 // A web page opens live in the Artifact panel on a click; any other file is only offered for download.
 function FileCard({ payload, src, note, onOpen }: { payload: MediaPayload; src?: string; note?: string; onOpen?: () => void }) {
+  const { t } = useTranslation('chat')
   const name = payload.title || payload.path?.split('/').pop() || 'File'
   const filename = payload.path?.split('/').pop() || name
   const detail = [formatBytes(payload.size), note].filter(Boolean).join(' - ')
@@ -70,7 +73,7 @@ function FileCard({ payload, src, note, onOpen }: { payload: MediaPayload; src?:
   const frame = 'flex w-full max-w-[420px] items-center gap-3 rounded-[12px] border border-app-border-subtle bg-app-surface px-3 py-2.5'
   if (onOpen) {
     return (
-      <button type="button" onClick={onOpen} title="Open" className={`${frame} cursor-pointer text-left hover:bg-[var(--surface-hover)]`}>
+      <button type="button" onClick={onOpen} title={t('chat.messages.artifactMedia.open')} className={`${frame} cursor-pointer text-left hover:bg-[var(--surface-hover)]`}>
         {body}
       </button>
     )
@@ -84,6 +87,7 @@ function FileCard({ payload, src, note, onOpen }: { payload: MediaPayload; src?:
 }
 
 export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payload: MediaPayload }) {
+  const { t } = useTranslation('chat')
   if (payload.kind === 'youtube') return <YouTubeEmbed videoId={payload.video_id} title={payload.title} />
   const openLightbox = useUIStore((s) => s.openLightbox)
   const openRightPanel = useUIStore((s) => s.openRightPanel)
@@ -95,9 +99,9 @@ export function ArtifactMedia({ sessionId, payload }: { sessionId?: string; payl
   if (sessionId && path && (payload.kind === 'html' || isHtmlPath(path))) {
     return <FileCard payload={payload} onOpen={() => openRightPanel(htmlArtifactPanel(sessionId, path, payload.title))} />
   }
-  if (!playable) return <FileCard payload={payload} note={payload.kind === 'video' ? 'Too large to play here' : undefined} />
+  if (!playable) return <FileCard payload={payload} note={payload.kind === 'video' ? t('chat.messages.artifactMedia.tooLarge') : undefined} />
   if (loaded.state === 'loading') {
-    return <div className="animate-pulse text-[13px] text-app-text-muted">Loading {payload.title || filename}...</div>
+    return <div className="animate-pulse text-[13px] text-app-text-muted">{t('chat.messages.artifactMedia.loading', { name: payload.title || filename })}</div>
   }
   if (loaded.state === 'failed') return <FileCard payload={payload} note={loaded.message} />
 

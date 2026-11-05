@@ -1,0 +1,732 @@
+{
+  "answers": {
+    "answersConfig": {
+      "richAnswers": "Réponses enrichies",
+      "tablesFiguresAndStepsDrawn": "Tableaux, figures et étapes dessinés sous forme de composants. À partir du prochain message."
+    }
+  },
+  "cloud": {
+    "cloudConfig": {
+      "connected": "Connecté",
+      "notConnected": "Non connecté",
+      "thisDevice": "Cet appareil",
+      "server": "Serveur",
+      "seshatcloud": "SeshatCloud",
+      "device": "Appareil",
+      "unknown": "Inconnu",
+      "connectedSince": "Connecté depuis",
+      "policies": "Règles",
+      "disconnectThisDevice": "Déconnecter cet appareil",
+      "disconnecting": "Déconnexion...",
+      "disconnect": "Déconnecter",
+      "connectToSeshatcloud": "Se connecter à SeshatCloud",
+      "signInOnThisComputer": "Se connecter sur cet ordinateur",
+      "whenItIsAlreadySigned": "Lorsqu'il est déjà connecté à votre organisation.",
+      "registering": "Enregistrement...",
+      "registerDevice": "Enregistrer l'appareil",
+      "serverUrl": "URL du serveur",
+      "deviceToken": "Jeton de l'appareil",
+      "pasteToken": "Collez le jeton",
+      "connecting": "Connexion...",
+      "connect": "Se connecter",
+      "organizationRules": "Règles de l'organisation"
+    }
+  },
+  "documents": {
+    "documentsConfig": {
+      "on": "Activé",
+      "off": "Désactivé",
+      "unsavedChanges": "Modifications non enregistrées",
+      "saving": "Enregistrement...",
+      "saveChanges": "Enregistrer les modifications",
+      "saved": "Enregistré",
+      "overview": "Vue d'ensemble",
+      "scannedPages": "Pages numérisées"
+    },
+    "documentsOverview": {
+      "readDocuments": "Lire les documents",
+      "theAgentsOnlySeeThe": "Les agents ne voient que le texte que vous saisissez.",
+      "reader": "Lecteur",
+      "readerFirst": "Lecteur en premier",
+      "server": "Serveur",
+      "documentServerAddress": "Adresse du serveur de documents",
+      "testing": "Test en cours...",
+      "test": "Tester",
+      "theServerDidNotAnswer": "Le serveur n'a pas répondu.",
+      "conversion": "Conversion",
+      "chunking": "Découpage",
+      "onThisComputer": "Sur cet ordinateur",
+      "builtInReaders": "Lecteurs intégrés",
+      "pdfPages": "Pages PDF",
+      "scannedPages": "Pages numérisées",
+      "visionFallback": "Lecture par vision en dernier recours",
+      "connectedIn": "Connecté en {{ms}} ms",
+      "scannedPagesDetail": "Pages numérisées : {{detail}}",
+      "documentServer": "Serveur de documents",
+      "reachable": "Joignable",
+      "notReachable": "Injoignable",
+      "configured": "Configuré",
+      "notSet": "Non défini"
+    },
+    "localOcrPanel": {
+      "builtInReader": "Lecteur intégré",
+      "notInThisVersion": "Absent de cette version",
+      "indraBelowCanReadScanned": "Indra, ci-dessous, peut lire les pages numérisées.",
+      "languages": "Langues",
+      "readingScannedPages": "Lecture des pages numérisées",
+      "downloadTheModels": "Télécharger les modèles",
+      "startTheReader": "Démarrer le lecteur",
+      "ready": "Prêt",
+      "starting": "Démarrage...",
+      "start": "Démarrer",
+      "downloadingModels": "Téléchargement des modèles",
+      "needsModels": "Modèles requis",
+      "notStarted": "Non démarré"
+    },
+    "useDocumentReader": {
+      "needsRuntime": "Moteur requis",
+      "unavailable": "Indisponible",
+      "nativeReady": "La reconnaissance native est prête pour les PDF numérisés locaux.",
+      "noBuiltInReader": "Cette version de SeshatOS n'a pas de lecteur intégré pour les documents numérisés (la version macOS n'en dispose pas encore). Le lecteur optionnel Indra peut les lire.",
+      "downloadFirst": "Téléchargez les modèles avant de démarrer la reconnaissance native.",
+      "modelsPresent": "Les modèles sont présents. Démarrez la reconnaissance native pour lire les PDF numérisés sur cet ordinateur.",
+      "downloading": "Téléchargement...",
+      "modelsDetected": "Modèles détectés",
+      "useRecognizer": "Utiliser ce module de reconnaissance",
+      "downloadModels": "Télécharger les modèles"
+    }
+  },
+  "environment": {
+    "confinementCard": {
+      "commandConfinement": "Confinement des commandes"
+    },
+    "environmentConfig": {
+      "backendRestartedTheChangesAre": "Backend redémarré. Les modifications sont actives.",
+      "direct": "Direct",
+      "sandbox": "Bac à sable",
+      "restarting": "Redémarrage...",
+      "restartBackend": "Redémarrer le backend",
+      "theDockerModeYouHad": "Le mode Docker que vous aviez choisi n'existe plus : les commandes s'exécutent donc directement sur cet ordinateur. Choisissez ci-dessous où elles doivent s'exécuter.",
+      "commands": "Commandes",
+      "whereCommandsRun": "Où les commandes s'exécutent",
+      "applyingThisCanTakeA": "Application en cours, cela peut prendre un moment sur de gros dossiers...",
+      "directThisComputer": "Direct (cet ordinateur)",
+      "sandboxThisComputer": "Bac à sable (cet ordinateur)",
+      "hintLocal": "Sur cet ordinateur, avec vos fichiers et vos outils.",
+      "hintProject": "Sur cet ordinateur, confiné au dossier de la session."
+    },
+    "envVarRow": {
+      "set": "Définir",
+      "change": "Modifier",
+      "remove": "Retirer",
+      "getOne": "En obtenir une",
+      "value": "Valeur",
+      "saving": "Enregistrement...",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "protectedFolders": {
+      "keptFromCommands": "Protégés des commandes",
+      "addAFileOrFolder": "Ajouter un fichier ou un dossier",
+      "commandsCannotReadWhatIs": "Les commandes ne peuvent pas lire ce qui est listé ici. Un chemin que cet ordinateur n'a pas est ignoré.",
+      "pathToProtect": "Chemin à protéger",
+      "cUsersYouSecrets": "C:\\Users\\vous\\secrets",
+      "add": "Ajouter",
+      "remove": "Retirer"
+    },
+    "confinementView": {
+      "sandbox": "Bac à sable",
+      "sandboxText": "Les commandes ne peuvent écrire que dans le dossier de la session et ne peuvent pas lire ce qui est listé ci-dessous. Elles peuvent toujours lire d'autres fichiers et utiliser le réseau. Les modifications de fichiers faites par l'agent lui-même ne sont pas confinées : elles suivent vos réglages d'autorisation.",
+      "landlock": "Landlock",
+      "landlockText": "Les commandes sont confinées par le noyau Linux (Landlock) : elles ne peuvent écrire que dans le dossier du projet.",
+      "notConfined": "Non confiné",
+      "notConfinedText": "Les commandes s'exécutent avec tous les droits de votre compte utilisateur."
+    }
+  },
+  "knowledge": {
+    "indraPanel": {
+      "indraOcr": "Indra OCR",
+      "python310OrNewer": "Python 3.10 ou plus récent est nécessaire",
+      "checkAgain": "Vérifier à nouveau",
+      "theLicenceChangedAcceptIt": "La licence a changé. Acceptez-la de nouveau pour continuer à utiliser Indra.",
+      "readTheLicence": "Lire la licence",
+      "iAcceptTheLicenceOf": "J'accepte la licence des poids",
+      "accept": "Accepter",
+      "install": "Installer",
+      "aFewMinutes": "Quelques minutes",
+      "licence": "Licence",
+      "delete": "Supprimer",
+      "keep": "Conserver",
+      "remove": "Retirer",
+      "installationFailed": "L'installation a échoué : {{error}}",
+      "version": "Version {{version}}"
+    },
+    "knowledgePrimitives": {
+      "select": "Sélectionner",
+      "connectionFailed": "La connexion a échoué.",
+      "connectedIn": "Connecté en {{ms}} ms."
+    },
+    "nativeModelsPanel": {
+      "models": "Modèles",
+      "hide": "Masquer",
+      "show": "Afficher",
+      "installed": "Installé",
+      "missing": "Manquant",
+      "notInstalled": "Non installé",
+      "layoutTextDetectionRecognitionAnd": "Mise en page, détection du texte, reconnaissance et tableaux.",
+      "installedCount": "{{installed}} sur {{total}} installés",
+      "pageLayout": "Mise en page",
+      "textDetection": "Détection du texte",
+      "textRecognition": "Reconnaissance du texte",
+      "characterList": "Liste de caractères",
+      "tableStructure": "Structure des tableaux"
+    },
+    "indraView": {
+      "licensePoint1": "Le code est sous licence Apache 2.0. Les poids du modèle, téléchargés depuis Hugging Face, sont sous une licence OpenRAIL-M modifiée de Datalab.",
+      "licensePoint2": "Les poids sont gratuits pour un usage personnel et pour la recherche, ainsi que pour les organisations dont le chiffre d'affaires de l'an dernier est inférieur à 20 millions de dollars et qui ont levé moins de 20 millions de dollars de financement.",
+      "licensePoint3": "Quelle que soit leur taille, les organisations qui proposent un produit ou un service concurrent de celui de Datalab ne peuvent pas les utiliser.",
+      "licensePoint4": "Les organisations plus grandes ont besoin d'une licence commerciale de Datalab.",
+      "licensePoint5": "La licence s'applique aussi au texte que produit le modèle (section 8), et demande que cet avis accompagne les copies du modèle.",
+      "on": "Activé",
+      "off": "Désactivé",
+      "installing": "Installation",
+      "licenceToAccept": "Licence à accepter",
+      "notInstalled": "Non installé",
+      "starting": "Démarrage",
+      "stepOf": "Étape {{index}} sur {{total}} · {{step}}",
+      "sizeText": "Environ {{size}} Mo sur le disque, téléchargé une seule fois. Nécessite Python 3.10 ou plus récent."
+    }
+  },
+  "mcp": {
+    "mCPConfig": {
+      "importMcpJson": "Importer mcp.json",
+      "reloading": "Rechargement...",
+      "applyChanges": "Appliquer les modifications",
+      "reload": "Recharger",
+      "addServer": "Ajouter un serveur",
+      "servers": "Serveurs",
+      "noServerYet": "Aucun serveur pour l'instant",
+      "addOneOrImportYour": "Ajoutez-en un ou importez votre mcp.json."
+    },
+    "mCPOrgCatalog": {
+      "organizationCatalog": "Catalogue de l'organisation",
+      "approved": "Approuvé",
+      "pending": "En attente",
+      "revoke": "Révoquer",
+      "approve": "Approuver"
+    },
+    "mCPServerCard": {
+      "error": "Erreur",
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "mCPServerForm": {
+      "editServer": "Modifier le serveur",
+      "newServer": "Nouveau serveur",
+      "cancel": "Annuler",
+      "saving": "Enregistrement...",
+      "save": "Enregistrer",
+      "name": "Nom",
+      "displayName": "Nom affiché",
+      "filesystem": "Filesystem",
+      "transport": "Transport",
+      "timeoutSeconds": "Délai d'attente (secondes)",
+      "timeout": "Délai d'attente",
+      "command": "Commande",
+      "arguments": "Arguments",
+      "yModelcontextprotocolServerFilesystem": "-y\n@modelcontextprotocol/server-filesystem",
+      "environment": "Environnement",
+      "token": "TOKEN=...",
+      "headers": "En-têtes",
+      "authorizationBearer": "Authorization=Bearer ..."
+    },
+    "mCPToolList": {
+      "noToolsYetApplyAnd": "Aucun outil pour l'instant. Appliquez puis rechargez.",
+      "searchTheTools": "Rechercher les outils",
+      "noToolMatchesThisSearch": "Aucun outil ne correspond à cette recherche."
+    },
+    "mcpConfig": {
+      "summary": "{{enabled}} actifs · {{tools}} outils"
+    },
+    "mcpServerCard": {
+      "tools_one": "{{count}} outil",
+      "tools_other": "{{count}} outils",
+      "enable": "Activer {{name}}"
+    },
+    "mcpToolList": {
+      "search_one": "Rechercher parmi {{count}} outil",
+      "search_other": "Rechercher parmi {{count}} outils"
+    },
+    "mcpUtils": {
+      "nameRequired": "Le nom est obligatoire.",
+      "commandRequired": "La commande est obligatoire pour les serveurs stdio.",
+      "urlRequired": "L'URL est obligatoire pour les serveurs réseau."
+    }
+  },
+  "models": {
+    "addCustomModelForm": {
+      "addCustomModel": "Ajouter un modèle personnalisé",
+      "cancel": "Annuler",
+      "modelId": "Identifiant du modèle",
+      "displayName": "Nom affiché",
+      "optionalLabel": "Libellé facultatif",
+      "contextWindow": "Fenêtre de contexte",
+      "maxOutput": "Sortie maximale",
+      "adding": "Ajout...",
+      "addModel": "Ajouter le modèle"
+    },
+    "modelRow": {
+      "default": "Par défaut",
+      "useAsDefault": "Utiliser par défaut",
+      "contextAndOutput": "{{context}} de contexte · {{output}} en sortie"
+    },
+    "modelsConfig": {
+      "defaultModel": "Modèle par défaut",
+      "loading": "Chargement...",
+      "noneYet": "Aucun pour l'instant",
+      "addAProviderThenPick": "Ajoutez un fournisseur, puis choisissez un modèle ci-dessous.",
+      "searchModelsOrProviders": "Rechercher des modèles ou des fournisseurs",
+      "searchModels": "Rechercher des modèles",
+      "refresh": "Actualiser",
+      "loadingModelCatalogs": "Chargement des catalogues de modèles...",
+      "addAProviderFirstThen": "Ajoutez d'abord un fournisseur : les modèles apparaîtront ici.",
+      "providersCount_one": "{{count}} fournisseur",
+      "providersCount_other": "{{count}} fournisseurs",
+      "modelsCount_one": "{{count}} modèle",
+      "modelsCount_other": "{{count}} modèles",
+      "usedByNewConversations": "{{name}}, utilisé pour les nouvelles conversations",
+      "noModelMatches": "Aucun modèle ne correspond à « {{query}} »."
+    },
+    "providerModelGroup": {
+      "defaultProvider": "Fournisseur par défaut",
+      "loadingModels": "Chargement des modèles...",
+      "custom": "Personnalisé",
+      "syncing": "Synchronisation...",
+      "sync": "Synchroniser",
+      "noModelsYetUseSync": "Aucun modèle pour l'instant. Utilisez Synchroniser pour charger le catalogue.",
+      "noModelMatchesTheSearch": "Aucun modèle ne correspond à la recherche."
+    }
+  },
+  "multimodal": {
+    "audio": {
+      "audioFieldRows": {
+        "providerDefault": "Valeur par défaut du fournisseur"
+      },
+      "dictationTab": {
+        "onThisComputer": "Sur cet ordinateur",
+        "running": "En cours d'exécution",
+        "off": "Désactivé",
+        "transcribeOnThisComputer": "Transcrire sur cet ordinateur",
+        "theFirstTimeAbout640": "La première fois, environ 640 Mo sont téléchargés.",
+        "localEngine": "Moteur local",
+        "notAvailableOnThisSystem": "Indisponible sur ce système. Utilisez un fournisseur ou votre propre serveur.",
+        "downloadingTheSpeechEngine": "Téléchargement du moteur de reconnaissance vocale",
+        "spokenLanguage": "Langue parlée",
+        "processorThreads": "Threads du processeur",
+        "models": "Modèles",
+        "cloudTranscription": "Transcription dans le cloud",
+        "yourOwnWhisperServer": "Votre propre serveur Whisper",
+        "serverAddress": "Adresse du serveur",
+        "save": "Enregistrer",
+        "automaticUses": "Le mode automatique utilise {{used}} sur {{cores}}."
+      },
+      "providerTab": {
+        "none": "Aucun",
+        "audioProvider": "Fournisseur audio",
+        "linked": "Associé",
+        "notLinked": "Non associé",
+        "provider": "Fournisseur",
+        "noProviderYet": "Aucun fournisseur pour l'instant",
+        "addAnOpenaiProviderIn": "Ajoutez un fournisseur OpenAI dans Fournisseurs, puis choisissez-le ici."
+      },
+      "voiceTab": {
+        "readingAloud": "Lecture à voix haute"
+      },
+      "whisperModelList": {
+        "inUse": "Utilisé",
+        "onThisComputer": "Sur cet ordinateur",
+        "download": "Télécharger",
+        "use": "Utiliser",
+        "delete": "Supprimer",
+        "downloadingPercent": "Téléchargement {{percent}} %",
+        "downloading": "Téléchargement..."
+      },
+      "audioFields": {
+        "transcriptionModel": "Modèle de transcription",
+        "voiceModel": "Modèle de voix",
+        "voice": "Voix",
+        "audioFormat": "Format audio"
+      }
+    },
+    "audioConfig": {
+      "onThisComputer": "Sur cet ordinateur",
+      "cloud": "Cloud",
+      "notSetUp": "Non configuré",
+      "unsavedChanges": "Modifications non enregistrées",
+      "saving": "Enregistrement...",
+      "saveChanges": "Enregistrer les modifications",
+      "saved": "Enregistré",
+      "dictation": "Dictée",
+      "voice": "Voix",
+      "provider": "Fournisseur"
+    },
+    "capabilitySourceCard": {
+      "none": "Aucun",
+      "linked": "Associé",
+      "notLinked": "Non associé",
+      "provider": "Fournisseur",
+      "saving": "Enregistrement...",
+      "noProviderYet": "Aucun fournisseur pour l'instant",
+      "addImageProviders": "Ajoutez OpenAI, Gemini ou OpenRouter dans Fournisseurs.",
+      "addOpenAi": "Ajoutez OpenAI dans Fournisseurs."
+    },
+    "imageConfig": {
+      "model": "Modèle",
+      "shape": "Format",
+      "theProportionsOfTheImages": "Les proportions des images.",
+      "size": "Taille",
+      "inPixelsOrAuto": "En pixels, ou automatique.",
+      "providerDefault": "Valeur par défaut du fournisseur",
+      "quality": "Qualité",
+      "higherCostsMoreAndTakes": "Plus élevée, elle coûte plus cher et prend plus de temps.",
+      "ready": "Prêt",
+      "noProvider": "Aucun fournisseur",
+      "provider": "Fournisseur",
+      "generation": "Génération",
+      "square": "Carré (1:1)",
+      "landscape": "Paysage (4:3)",
+      "wide": "Large (16:9)",
+      "portrait": "Portrait (3:4)",
+      "tall": "Haut (9:16)",
+      "emptyModel": "Vide : {{model}}",
+      "emptyDefault": "Vide : la valeur par défaut du fournisseur."
+    },
+    "optionsCard": {
+      "saving": "Enregistrement...",
+      "saveChanges": "Enregistrer les modifications",
+      "saved": "Enregistré",
+      "providerDefault": "Valeur par défaut du fournisseur"
+    },
+    "spokenLanguages": {
+      "detect": "Détecter la langue",
+      "detectDescription": "Fonctionne pour toutes les langues, mais prend environ deux fois plus de temps"
+    }
+  },
+  "providers": {
+    "addProviderDialog": {
+      "addAProvider": "Ajouter un fournisseur",
+      "connectALocalOrCloud": "Connectez un fournisseur de modèles local ou cloud pour le chat, les outils et les capacités.",
+      "name": "Nom",
+      "apiKey": "Clé d'API",
+      "savedEncryptedByTheBackend": "Enregistrée chiffrée par le backend",
+      "baseUrlCheckItYour": "URL de base (vérifiez-la, votre clé y est envoyée)",
+      "baseUrl": "URL de base",
+      "providerDefault": "Valeur par défaut du fournisseur",
+      "codexUsesABrowserSign": "Codex utilise une connexion par navigateur avec votre compte ChatGPT. Il n'est disponible que pour les comptes de bureau locaux.",
+      "cancel": "Annuler",
+      "adding": "Ajout...",
+      "addOauthProvider": "Ajouter un fournisseur OAuth",
+      "addProvider": "Ajouter le fournisseur",
+      "pickOne": "Choisissez un fournisseur à configurer.",
+      "builtIn": "Intégré au runtime Seshat.",
+      "genericUntested": "Fournisseur générique du catalogue public models.dev ({{total}} modèles), non testé avec une vraie clé par Seshat.",
+      "unverifiedAddress": "{{text}} Son adresse provient d'un catalogue téléchargé et n'a pas été vérifiée."
+    },
+    "providerCard": {
+      "setAsDefaultProvider": "Définir comme fournisseur par défaut",
+      "changeTheApiKey": "Changer la clé d'API",
+      "changeTheAddress": "Changer l'adresse",
+      "manageTheModels": "Gérer les modèles",
+      "remove": "Retirer",
+      "default": "Par défaut",
+      "active": "Actif",
+      "notConfigured": "Non configuré",
+      "newApiKey": "Nouvelle clé d'API",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "signIn": "Connexion",
+      "address": "Adresse",
+      "apiKey": "Clé d'API",
+      "chatgptAccount": "Compte ChatGPT",
+      "testing": "Test en cours...",
+      "test": "Tester",
+      "moreAboutThisProvider": "En savoir plus sur ce fournisseur",
+      "defaultModel": "Modèle par défaut",
+      "noModelsYet": "Aucun modèle pour l'instant",
+      "chooseAModel": "Choisir un modèle",
+      "setUp": "Configurer",
+      "syncing": "Synchronisation...",
+      "syncTheList": "Synchroniser la liste",
+      "noModelsLoadedYet": "Aucun modèle chargé pour l'instant.",
+      "reachedProvider_one": "Fournisseur joignable : {{count}} modèle.",
+      "reachedProvider_other": "Fournisseur joignable : {{count}} modèles.",
+      "modelsTotal": "Modèles ({{total}})"
+    },
+    "providerOAuthControls": {
+      "chatgptAccount": "Compte ChatGPT",
+      "connected": "Connecté",
+      "notConnected": "Non connecté",
+      "signInThroughTheBrowser": "Connectez-vous dans le navigateur avec le compte OpenAI qui a accès à Codex.",
+      "code": "Code",
+      "openBrowser": "Ouvrir le navigateur",
+      "disconnecting": "Déconnexion...",
+      "disconnect": "Déconnecter",
+      "opening": "Ouverture...",
+      "connect": "Se connecter",
+      "checking": "Vérification...",
+      "iFinished": "J'ai terminé",
+      "connectedAs": "Connecté en tant que {{email}}."
+    },
+    "providersConfig": {
+      "refresh": "Actualiser",
+      "testAll": "Tout tester",
+      "addProvider": "Ajouter un fournisseur",
+      "loadingProviders": "Chargement des fournisseurs...",
+      "noProvidersYet": "Aucun fournisseur pour l'instant.",
+      "confirmRemove": "Supprimer {{name}} ? Sa clé est oubliée."
+    },
+    "providerSelect": {
+      "provider": "Fournisseur",
+      "selectProvider": "Choisir un fournisseur",
+      "searchProviders": "Rechercher des fournisseurs",
+      "noProviderMatchesThisSearch": "Aucun fournisseur ne correspond à cette recherche.",
+      "moreProviders": "Autres fournisseurs ({{total}})",
+      "notTested": " - {{total}} modèles, non testé avec une vraie clé"
+    },
+    "providerUtils": {
+      "local": "Local",
+      "connected": "Connecté",
+      "oauthPending": "OAuth en attente",
+      "missingKey": "Clé manquante",
+      "contextTokens": "{{value}} de contexte",
+      "contextUnknown": "contexte inconnu",
+      "outputMax": "{{value}} max",
+      "outputUnknown": "sortie inconnue",
+      "catalog": "catalogue",
+      "noKey": "Sans clé",
+      "oauth": "OAuth",
+      "apiKey": "Clé d'API"
+    }
+  },
+  "search": {
+    "embedderCard": {
+      "teiLocal": "TEI local",
+      "ollamaLocal": "Ollama local",
+      "openai": "OpenAI",
+      "mistral": "Mistral",
+      "googleGemini": "Google Gemini",
+      "voyageAi": "Voyage AI",
+      "jinaAi": "Jina AI",
+      "openrouter": "OpenRouter",
+      "connectionFailed": "La connexion a échoué.",
+      "embeddings": "Plongements",
+      "ready": "Prêt",
+      "review": "À vérifier",
+      "useEmbeddings": "Utiliser les plongements",
+      "provider": "Fournisseur",
+      "address": "Adresse",
+      "baseUrl": "URL de base",
+      "model": "Modèle",
+      "detecting": "Détection...",
+      "detectModels": "Détecter les modèles",
+      "testing": "Test en cours...",
+      "test": "Tester",
+      "saving": "Enregistrement...",
+      "saveChanges": "Enregistrer les modifications",
+      "saved": "Enregistré",
+      "connectedIn": "Connecté en {{ms}} ms",
+      "changesModel": "Les documents indexés utilisent {{model}}. Après l'enregistrement, recréez leurs vecteurs."
+    },
+    "freeModelNote": {
+      "fineToTryNotTo": "Convient pour essayer, pas pour indexer une collection.",
+      "eachSearchUsesOnePick": "Chaque recherche en utilise une : choisissez un modèle payant pour un usage quotidien.",
+      "limited": "Les modèles gratuits sont limités à 50 requêtes par jour."
+    },
+    "modelCombobox": {
+      "closeTheListOfModels": "Fermer la liste des modèles",
+      "showTheModels": "Afficher les modèles",
+      "noModelOfTheList": "Aucun modèle de la liste ne correspond. Le texte est utilisé tel quel.",
+      "free": "Gratuit",
+      "total": "{{total}} modèles",
+      "shownOfTotal": "{{shown}} sur {{total}} modèles"
+    },
+    "providerKeyField": {
+      "apiKey": "Clé d'API",
+      "useAnother": "En utiliser une autre",
+      "keepCurrentKey": "Conserver la clé actuelle",
+      "usesKeyOf": "Utilise la clé de {{name}}",
+      "addToReuse": "Ajoutez {{name}} dans Fournisseurs pour réutiliser sa clé.",
+      "use": "Utiliser {{name}}"
+    },
+    "reembedPanel": {
+      "stop": "Arrêter",
+      "saveTheModelFirst": "Enregistrez d'abord le modèle",
+      "starting": "Démarrage...",
+      "continue": "Continuer",
+      "reEmbed": "Recalculer les plongements",
+      "vectors": "Vecteurs",
+      "makeAgain": "Recalculer les vecteurs",
+      "changedAfter": "Le modèle a changé après l'indexation des documents.",
+      "staleTitle": "Indexé avec un autre modèle",
+      "staleHint": "La recherche par sens est faussée tant que les vecteurs ne sont pas recalculés. La recherche par mots fonctionne toujours.",
+      "runningTitle": "Recalcul des vecteurs en cours",
+      "runningHint": "{{done}} passages sur {{total}}. Vous pouvez fermer cette fenêtre.",
+      "failedTitle": "Arrêté avant la fin",
+      "failedHint": "{{error}} Un nouveau lancement reprend à partir de là.",
+      "refused": "Le service de plongements a refusé.",
+      "cancelledTitle": "Arrêté",
+      "cancelledHint": "{{done}} passages sur {{total}} traités.",
+      "doneTitle": "Vecteurs à jour",
+      "doneHint": "{{total}} passages correspondent à {{model}}."
+    },
+    "rerankerCard": {
+      "connectionFailed": "La connexion a échoué.",
+      "reranker": "Reclassement",
+      "ready": "Prêt",
+      "optional": "Facultatif",
+      "useAReranker": "Utiliser un reclassement",
+      "service": "Service",
+      "address": "Adresse",
+      "baseUrl": "URL de base",
+      "model": "Modèle",
+      "baaiBgeRerankerV2M3": "BAAI/bge-reranker-v2-m3",
+      "detecting": "Détection...",
+      "detectModel": "Détecter le modèle",
+      "testing": "Test en cours...",
+      "test": "Tester",
+      "saving": "Enregistrement...",
+      "saveAndUse": "Enregistrer et utiliser",
+      "saveChanges": "Enregistrer les modifications",
+      "saved": "Enregistré",
+      "connectedIn": "Connecté en {{ms}} ms",
+      "customEndpoint": "Point d'accès personnalisé"
+    },
+    "rerankerModels": {
+      "yourRerankModels": "Vos modèles de reclassement",
+      "defaultModel": "Modèle par défaut",
+      "inUse": "Utilisé",
+      "use": "Utiliser",
+      "forget": "Oublier",
+      "forgetModel": "Oublier {{model}}"
+    }
+  },
+  "skills": {
+    "skillsConfig": {
+      "allRepositoriesRemoved": "Tous les dépôts ont été supprimés.",
+      "loading": "Chargement...",
+      "addARepository": "Ajouter un dépôt",
+      "gitUrl": "URL Git",
+      "installing": "Installation...",
+      "install": "Installer",
+      "installed": "Installé",
+      "removing": "Suppression...",
+      "removeAll": "Tout supprimer",
+      "noRepositoriesInstalled": "Aucun dépôt installé",
+      "remove": "Supprimer",
+      "removeFailed_one": "{{count}} dépôt n'a pas pu être supprimé.",
+      "removeFailed_other": "{{count}} dépôts n'ont pas pu être supprimés.",
+      "downloadingInBackground": "{{name}} est en cours de téléchargement en arrière-plan.",
+      "confirmRemoveRepo_one": "Supprimer le dépôt « {{name}} » et son skill ?",
+      "confirmRemoveRepo_other": "Supprimer le dépôt « {{name}} » et ses {{count}} skills ?",
+      "confirmRemoveAll_one": "Supprimer le dépôt installé et ses skills ? Cette action est irréversible.",
+      "confirmRemoveAll_other": "Supprimer les {{count}} dépôts installés et leurs skills ? Cette action est irréversible."
+    }
+  },
+  "storage": {
+    "storageConfig": {
+      "restartRequired": "Redémarrage nécessaire",
+      "localDisk": "Disque local",
+      "saving": "Enregistrement...",
+      "save": "Enregistrer",
+      "filesAndAttachments": "Fichiers et pièces jointes",
+      "provider": "Fournisseur",
+      "s3Compatible": "Compatible S3",
+      "savedRestart": "Enregistré. Redémarrez le backend pour l'appliquer.",
+      "saved": "Enregistré.",
+      "folder": "Dossier",
+      "defaultFolder": "Dossier par défaut",
+      "endpoint": "Point d'accès",
+      "bucket": "Bucket",
+      "region": "Région",
+      "keyPrefix": "Préfixe de clé",
+      "optional": "Facultatif",
+      "accessKey": "Clé d'accès",
+      "keepCurrentKey": "Conserver la clé actuelle",
+      "required": "Obligatoire",
+      "secretKey": "Clé secrète",
+      "keepCurrentSecret": "Conserver le secret actuel"
+    }
+  },
+  "titles": {
+    "titlesConfig": {
+      "desktopOnly": "Bureau uniquement",
+      "loading": "Chargement",
+      "notAvailable": "Indisponible",
+      "running": "En cours d'exécution",
+      "off": "Désactivé",
+      "nameChatsOnThisComputer": "Nommer les conversations sur cet ordinateur",
+      "offTitlesComeFromYour": "Désactivé : les titres viennent de votre modèle de chat.",
+      "downloadingLlamaCpp": "Téléchargement de llama.cpp",
+      "downloadingTheTitleModel": "Téléchargement du modèle de titres",
+      "runtimeAndModel": "Moteur et modèle",
+      "installNow": "Installer maintenant",
+      "model": "Modèle",
+      "inUse": "Utilisé",
+      "use": "Utiliser",
+      "download": "Télécharger",
+      "delete": "Supprimer",
+      "yourOwnModel": "Votre propre modèle",
+      "anyInstructGgufFromHugging": "Tout modèle GGUF de type instruct de Hugging Face. Les modèles de raisonnement sont refusés.",
+      "close": "Fermer",
+      "add": "Ajouter",
+      "repository": "Dépôt",
+      "file": "Fichier",
+      "addAndUse": "Ajouter et utiliser"
+    }
+  },
+  "webSearch": {
+    "domainCatalog": {
+      "allowedDomains": "Domaines autorisés",
+      "blockedByOrganization_one": "{{count}} bloqué par votre organisation",
+      "blockedByOrganization_other": "{{count}} bloqués par votre organisation",
+      "toggleAll": "Activer ou désactiver tous les domaines {{category}}"
+    },
+    "searchProviderCard": {
+      "saved": "Enregistré",
+      "required": "Obligatoire",
+      "clientId": "Identifiant client",
+      "redditAppClientId": "Identifiant client de l'application Reddit",
+      "username": "Nom d'utilisateur",
+      "optional": "Facultatif",
+      "baseUrl": "URL de base",
+      "testing": "Test en cours...",
+      "test": "Tester",
+      "saving": "Enregistrement...",
+      "save": "Enregistrer",
+      "enable": "Activer {{name}}",
+      "connectedIn": "Connecté en {{ms}} ms",
+      "password": "Mot de passe",
+      "clientSecret": "Secret client",
+      "apiKey": "Clé d'API"
+    },
+    "webSearchConfig": {
+      "off": "Désactivé",
+      "unsavedChanges": "Modifications non enregistrées",
+      "saving": "Enregistrement...",
+      "saveChanges": "Enregistrer les modifications",
+      "saved": "Enregistré",
+      "searchTheWeb": "Rechercher sur le web",
+      "useKeysFromTheEnvironment": "Utiliser les clés de l'environnement",
+      "whenNoKeyIsSaved": "Lorsqu'aucune clé n'est enregistrée ici.",
+      "queriesPerDay": "Requêtes par jour",
+      "t0IsUnlimited": "0 signifie illimité.",
+      "researchSources": "Sources de recherche"
+    },
+    "webSearchUtils": {
+      "disabled": "Désactivé",
+      "missingKey": "Clé manquante",
+      "missingUrl": "URL manquante",
+      "ready": "Prêt"
+    }
+  }
+}

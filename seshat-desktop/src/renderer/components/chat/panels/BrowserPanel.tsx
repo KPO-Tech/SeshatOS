@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AddOne, Close, Globe, Left, LoadingOne, Refresh, Right } from '@icon-park/react'
+import { useTranslation } from 'react-i18next'
 
 // contextId scopes tabs/history to a single browsing session: the shared chat
 // panel, or each project/session-specific Browser tab.
 export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contextId?: string }) {
+  const { t } = useTranslation('chat')
   const browserApi = window.seshat?.browser
   const initialUrl = url || 'https://www.google.com/'
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -96,7 +98,7 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
                 <span
                   className="ml-1 flex size-[18px] shrink-0 items-center justify-center rounded-[5px] text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
                   role="button"
-                  aria-label="Close tab"
+                  aria-label={t('chat.panels.browserPanel.closeTab')}
                   onClick={(event) => closeTab(event, tab.id)}
                 >
                   <Close size={10} />
@@ -104,19 +106,19 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
               )}
             </button>
           ))}
-          <button type="button" className="flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-[7px] border border-app-border-subtle bg-app-bg text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={() => void browserApi?.newTab(contextId).then(setState)} aria-label="New tab">
+          <button type="button" className="flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-[7px] border border-app-border-subtle bg-app-bg text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={() => void browserApi?.newTab(contextId).then(setState)} aria-label={t('chat.panels.browserPanel.newTab')}>
             <AddOne size={12} />
           </button>
         </div>
       )}
       <div className="flex shrink-0 items-center gap-1 border-b border-app-border-subtle bg-app-surface px-2 py-1.5">
-        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.back(contextId).then(setState)} disabled={!activeTab?.canGoBack} aria-label="Back">
+        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.back(contextId).then(setState)} disabled={!activeTab?.canGoBack} aria-label={t('chat.panels.browserPanel.back')}>
           <Left size={12} />
         </button>
-        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.forward(contextId).then(setState)} disabled={!activeTab?.canGoForward} aria-label="Forward">
+        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.forward(contextId).then(setState)} disabled={!activeTab?.canGoForward} aria-label={t('chat.panels.browserPanel.forward')}>
           <Right size={12} />
         </button>
-        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.reload(contextId).then(setState)} aria-label="Reload">
+        <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.reload(contextId).then(setState)} aria-label={t('chat.panels.browserPanel.reload')}>
           <Refresh size={12} />
         </button>
         <form
@@ -130,7 +132,7 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
             className="h-7 w-full rounded-[8px] border border-app-border-subtle bg-app-bg px-2.5 text-[var(--font-size-sm)] text-app-text outline-none transition-colors duration-150 placeholder:text-app-text-muted focus:border-app-primary"
             value={address}
             onChange={(event) => setAddress(event.target.value)}
-            placeholder="Search or enter website"
+            placeholder={t('chat.panels.browserPanel.searchOrEnterWebsite')}
             spellCheck={false}
           />
         </form>
@@ -139,7 +141,7 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
         {!browserApi && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-[var(--font-size-sm)] text-app-text-muted">
             <Globe size={18} />
-            <span>Embedded browser is only available in the desktop app.</span>
+            <span>{t('chat.panels.browserPanel.embeddedBrowserIsOnlyAvailable')}</span>
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import type { ChatSession } from '@renderer/stores/session'
 import { NewChat, type NewChatSuggestion } from '@renderer/pages/Home'
 import { BookOpen, FileText, Folder, Play, Search, Time } from '../icons'
 import { TagList } from '../ProjectCard'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   project: ProjectSummary
@@ -45,19 +46,20 @@ function Card({ title, action, children }: { title: string; action?: ReactNode; 
  * A conversation begun here is held in the folder of the project, like one begun from the start page with that folder chosen.
  */
 export function OverviewTab({ project, sessions, streaming, now, autoFocus, onOpenSession, onViewAll, onEdit }: Props) {
+  const { t } = useTranslation('shell')
   const listed = sessions.slice(0, LISTED)
   return (
     <div className="no-scrollbar flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <Card title="Ask about this project">
-        <NewChat variant="project" fixedProjectPath={project.rootPath} placeholder="Ask about this project..." suggestions={SUGGESTIONS} autoFocus={autoFocus} />
+      <Card title={t('pages.projects.detail.overviewTab.askAboutThisProject')}>
+        <NewChat variant="project" fixedProjectPath={project.rootPath} placeholder={t('pages.projects.detail.overviewTab.askAboutThisProject2')} suggestions={SUGGESTIONS} autoFocus={autoFocus} />
       </Card>
 
       {(project.description || project.tags.length > 0) && (
         <Card
-          title="About"
+          title={t('pages.projects.detail.overviewTab.about')}
           action={
             <button type="button" onClick={onEdit} className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-medium text-[var(--accent-primary)] hover:underline">
-              Edit
+              {t('pages.projects.detail.overviewTab.edit')}
             </button>
           }
         >
@@ -67,17 +69,17 @@ export function OverviewTab({ project, sessions, streaming, now, autoFocus, onOp
       )}
 
       <Card
-        title="What you asked"
+        title={t('pages.projects.detail.overviewTab.whatYouAsked')}
         action={
           sessions.length > 0 ? (
             <button type="button" onClick={onViewAll} className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-medium text-[var(--accent-primary)] hover:underline">
-              {sessions.length > listed.length ? `View all ${sessions.length}` : 'View all'}
+              {sessions.length > listed.length ? t('pages.projects.detail.overviewTab.viewAllTotal', { total: sessions.length }) : t('pages.projects.detail.overviewTab.viewAll')}
             </button>
           ) : undefined
         }
       >
         {listed.length === 0 ? (
-          <p className="m-0 text-[12.5px] leading-[1.6] text-[var(--text-muted)]">Nothing yet. What you ask about this project, and the answers, will be listed here.</p>
+          <p className="m-0 text-[12.5px] leading-[1.6] text-[var(--text-muted)]">{t('pages.projects.detail.overviewTab.nothingYetWhatYouAsk')}</p>
         ) : (
           listed.map((session) => (
             <button key={session.id} type="button" onClick={() => onOpenSession(session.id)} className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border-0 bg-transparent px-1.5 py-1.5 text-left hover:bg-[var(--surface-hover)]">
@@ -89,7 +91,7 @@ export function OverviewTab({ project, sessions, streaming, now, autoFocus, onOp
                 {streaming[session.id] && (
                   <span className="inline-flex shrink-0 items-center gap-1 text-[10.5px] font-medium text-[var(--accent-success)]">
                     <span className="size-1.5 rounded-full bg-current" style={{ animation: 'pulse-opacity 1.1s ease-in-out infinite' }} />
-                    Working
+                    {t('pages.projects.detail.overviewTab.working')}
                   </span>
                 )}
               </span>

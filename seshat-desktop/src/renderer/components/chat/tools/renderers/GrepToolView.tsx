@@ -1,14 +1,16 @@
 import { CodeBox, ErrorPre, HCARD_HEADER_PATH_CSS, HeaderCard, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function GrepToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const pattern = (tool.input.pattern as string) ?? ''
   const path = (tool.input.path as string) ?? ''
   const include = (tool.input.include as string) ?? ''
 
   if (result?.isError && result.content) {
     return (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.grepToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     )

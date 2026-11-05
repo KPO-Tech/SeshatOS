@@ -12,6 +12,7 @@ import { ProjectCard, type ProjectActions } from './ProjectCard'
 import { ProjectRow } from './ProjectRow'
 import { readmeSentence } from './readmeSentence'
 import { useFileCounts } from './useFileCounts'
+import { useTranslation } from 'react-i18next'
 
 type ViewMode = 'grid' | 'list'
 
@@ -40,6 +41,7 @@ const TAB_ICON: Record<ProjectTab, typeof Folder> = { all: Folder, recent: Time,
 // Local folders the user works with - see lib/projects.ts for what a "project" actually is here (no backend entity: a folder, with what the
 // person says about it). The page finds one, shows what is in it and what it is doing, and starts a conversation in it.
 export function ProjectsPage() {
+  const { t } = useTranslation('shell')
   const navigate = useNavigate()
   const { toasts, show } = useToast()
   const sessions = useSessionStore((state) => state.sessions)
@@ -125,8 +127,8 @@ export function ProjectsPage() {
               <Folder theme="filled" size={24} />
             </span>
             <div className="min-w-0">
-              <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Projects</h1>
-              <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">Open, organize and work with your local projects. Start a session, explore files, or continue where you left off.</p>
+              <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{t('pages.projects.index.projects')}</h1>
+              <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">{t('pages.projects.index.openOrganizeAndWorkWith')}</p>
             </div>
           </div>
           <button
@@ -135,7 +137,7 @@ export function ProjectsPage() {
             className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
           >
             <FolderPlus size={15} />
-            New project
+            {t('pages.projects.index.newProject')}
           </button>
         </header>
 
@@ -147,18 +149,18 @@ export function ProjectsPage() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search projects by name, folder, description or tag..."
-              aria-label="Search projects"
+              placeholder={t('pages.projects.index.searchProjectsByNameFolder')}
+              aria-label={t('pages.projects.index.searchProjects')}
               className="h-10 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
             />
           </div>
-          <div className="flex h-10 shrink-0 items-center rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-1" role="group" aria-label="View">
+          <div className="flex h-10 shrink-0 items-center rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-1" role="group" aria-label={t('pages.projects.index.view')}>
             {(['grid', 'list'] as const).map((value) => (
               <button
                 key={value}
                 type="button"
                 aria-pressed={mode === value}
-                aria-label={value === 'grid' ? 'Grid view' : 'List view'}
+                aria-label={value === 'grid' ? t('pages.projects.index.gridView') : t('pages.projects.index.listView')}
                 onClick={() => {
                   setMode(value)
                   saveSetting(VIEW_KEY, value)
@@ -170,7 +172,7 @@ export function ProjectsPage() {
             ))}
           </div>
           <Dropdown
-            label="Sort projects"
+            label={t('pages.projects.index.sortProjects')}
             items={PROJECT_SORTS.map((item) => ({
               id: item.id,
               label: item.label,
@@ -190,7 +192,7 @@ export function ProjectsPage() {
           />
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Show">
+        <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label={t('pages.projects.index.show')}>
           {PROJECT_TABS.map((item) => {
             const Icon = TAB_ICON[item.id]
             const selected = tab === item.id
@@ -214,13 +216,13 @@ export function ProjectsPage() {
         {shown.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-1.5 py-24 text-center">
             <Folder size={24} className="mb-1 text-[var(--text-muted)]" />
-            <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{emptyAll ? 'No projects yet' : 'No projects here'}</h2>
+            <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{emptyAll ? t('pages.projects.index.noProjectsYet') : t('pages.projects.index.noProjectsHere')}</h2>
             <p className="m-0 max-w-[360px] text-[13px] leading-[1.6] text-[var(--text-muted)]">
-              {emptyAll ? 'Add a folder, or pick one from the composer next time you start a chat.' : query ? 'Try a different search.' : 'Nothing in this tab yet.'}
+              {emptyAll ? t('pages.projects.index.addAFolderOrPick') : query ? t('pages.projects.index.tryADifferentSearch') : t('pages.projects.index.nothingInThisTabYet')}
             </p>
             {emptyAll && (
               <button type="button" onClick={() => void handleNewProject()} className="mt-3 cursor-pointer rounded-xl border-0 bg-[var(--accent-primary)] px-4 py-2 text-[13.5px] font-semibold text-white hover:opacity-90">
-                New project
+                {t('pages.projects.index.newProject')}
               </button>
             )}
           </div>
@@ -257,9 +259,9 @@ export function ProjectsPage() {
       )}
       {removing && (
         <ConfirmDialog
-          title="Remove the project"
-          message={`${removing.name} is taken off this list. The folder and its files are not touched.`}
-          confirmLabel="Remove"
+          title={t('pages.projects.index.removeTheProject')}
+          message={t('pages.projects.index.removeMessage', { name: removing.name })}
+          confirmLabel={t('pages.projects.index.remove')}
           onClose={() => setRemoving(null)}
           onConfirm={() => {
             removeProject(removing.id)

@@ -1,6 +1,7 @@
 import { CodeBox, ErrorPre, HCARD_HEADER_PATH_CSS, HeaderCard, ProseBox, Section } from '../common'
 import { basename } from '../helpers'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 function notebookPath(input: Record<string, unknown>): string {
   return typeof input.notebook_path === 'string'
@@ -25,13 +26,14 @@ function looksStructured(content: string): boolean {
 }
 
 export function NotebookToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const path = notebookPath(tool.input)
   const title = path ? basename(path) : 'Notebook'
   const action = actionLabel(tool.name)
 
   if (result?.isError) {
     return result.content ? (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.notebookToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     ) : null

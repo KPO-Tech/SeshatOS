@@ -28,41 +28,55 @@ export type SettingsSectionId =
 
 type IconComponent = ComponentType<{ theme?: 'outline' | 'filled'; size?: number | string; fill?: string }>
 
+/** The headings the pages are listed under in the navigation. */
+export type SettingsGroupId = 'general' | 'aiRuntime' | 'capabilities' | 'workspace' | 'dataPrivacy' | 'about'
+
+/** The text of a heading, as a key of the settings catalogue. */
+export const GROUP_KEYS: Record<SettingsGroupId, string> = {
+  general: 'settings:groups.general',
+  aiRuntime: 'settings:groups.aiRuntime',
+  capabilities: 'settings:groups.capabilities',
+  workspace: 'settings:groups.workspace',
+  dataPrivacy: 'settings:groups.dataPrivacy',
+  about: 'settings:groups.about'
+}
+
+// A page names its text by key, not by sentence: the navigation and the header of the page translate them when they draw.
 export type SettingsSectionDef = {
   id: SettingsSectionId
-  label: string
-  group: string
+  labelKey: string
+  group: SettingsGroupId
   icon: IconComponent
-  description: string
+  descriptionKey: string
 }
 
 export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
-  { id: 'account', label: 'Account', group: 'General', icon: User, description: 'Who you are on this device.' },
-  { id: 'language-notifications', label: 'Language & notifications', group: 'General', icon: Translate, description: 'The interface language, and what the app tells you about.' },
-  { id: 'appearance', label: 'Appearance', group: 'General', icon: Contrast, description: 'Theme, colors and size.' },
-  { id: 'shortcuts', label: 'Shortcuts', group: 'General', icon: Keyboard, description: 'Keys to move around quickly.' },
+  { id: 'account', group: 'general', icon: User, labelKey: 'settings:sections.account.label', descriptionKey: 'settings:sections.account.description' },
+  { id: 'language-notifications', group: 'general', icon: Translate, labelKey: 'settings:sections.languageNotifications.label', descriptionKey: 'settings:sections.languageNotifications.description' },
+  { id: 'appearance', group: 'general', icon: Contrast, labelKey: 'settings:sections.appearance.label', descriptionKey: 'settings:sections.appearance.description' },
+  { id: 'shortcuts', group: 'general', icon: Keyboard, labelKey: 'settings:sections.shortcuts.label', descriptionKey: 'settings:sections.shortcuts.description' },
 
-  { id: 'providers', label: 'Providers', group: 'AI runtime', icon: Cube, description: 'The AI providers your agents use.' },
-  { id: 'models', label: 'Models', group: 'AI runtime', icon: Chip, description: 'Defaults, catalogs and fallbacks.' },
-  { id: 'titles', label: 'Titles', group: 'AI runtime', icon: Magic, description: 'Name new sessions with a small local model.' },
-  { id: 'web-search', label: 'Web search', group: 'AI runtime', icon: Search, description: 'Search providers and web rules.' },
+  { id: 'providers', group: 'aiRuntime', icon: Cube, labelKey: 'settings:sections.providers.label', descriptionKey: 'settings:sections.providers.description' },
+  { id: 'models', group: 'aiRuntime', icon: Chip, labelKey: 'settings:sections.models.label', descriptionKey: 'settings:sections.models.description' },
+  { id: 'titles', group: 'aiRuntime', icon: Magic, labelKey: 'settings:sections.titles.label', descriptionKey: 'settings:sections.titles.description' },
+  { id: 'web-search', group: 'aiRuntime', icon: Search, labelKey: 'settings:sections.webSearch.label', descriptionKey: 'settings:sections.webSearch.description' },
 
-  { id: 'documents', label: 'Documents', group: 'Capabilities', icon: FileText, description: 'How documents are read for your agents.' },
-  { id: 'search', label: 'Search', group: 'Capabilities', icon: MindMapping, description: 'Embedding and reranking for Knowledge.' },
-  { id: 'image', label: 'Images', group: 'Capabilities', icon: Pic, description: 'How the agent creates images.' },
-  { id: 'audio', label: 'Audio', group: 'Capabilities', icon: Music, description: 'Dictation, transcription and voice.' },
+  { id: 'documents', group: 'capabilities', icon: FileText, labelKey: 'settings:sections.documents.label', descriptionKey: 'settings:sections.documents.description' },
+  { id: 'search', group: 'capabilities', icon: MindMapping, labelKey: 'settings:sections.search.label', descriptionKey: 'settings:sections.search.description' },
+  { id: 'image', group: 'capabilities', icon: Pic, labelKey: 'settings:sections.image.label', descriptionKey: 'settings:sections.image.description' },
+  { id: 'audio', group: 'capabilities', icon: Music, labelKey: 'settings:sections.audio.label', descriptionKey: 'settings:sections.audio.description' },
 
-  { id: 'mcp', label: 'MCP servers', group: 'Workspace', icon: Plug, description: 'MCP servers for agents and tools.' },
-  { id: 'environment', label: 'Environment', group: 'Workspace', icon: Terminal, description: 'Where commands run, and API keys.' },
-  { id: 'storage', label: 'Storage', group: 'Workspace', icon: DataServer, description: 'Where files and caches live.' },
-  { id: 'skills', label: 'Skills', group: 'Workspace', icon: Robot, description: 'Skills your agents can use.' },
-  { id: 'answers', label: 'Answers', group: 'Workspace', icon: Brain, description: 'How the agent presents answers.' },
+  { id: 'mcp', group: 'workspace', icon: Plug, labelKey: 'settings:sections.mcp.label', descriptionKey: 'settings:sections.mcp.description' },
+  { id: 'environment', group: 'workspace', icon: Terminal, labelKey: 'settings:sections.environment.label', descriptionKey: 'settings:sections.environment.description' },
+  { id: 'storage', group: 'workspace', icon: DataServer, labelKey: 'settings:sections.storage.label', descriptionKey: 'settings:sections.storage.description' },
+  { id: 'skills', group: 'workspace', icon: Robot, labelKey: 'settings:sections.skills.label', descriptionKey: 'settings:sections.skills.description' },
+  { id: 'answers', group: 'workspace', icon: Brain, labelKey: 'settings:sections.answers.label', descriptionKey: 'settings:sections.answers.description' },
 
-  { id: 'memories', label: 'Memories', group: 'Data & privacy', icon: Brain, description: 'What the agent remembers.' },
-  { id: 'data-controls', label: 'Data controls', group: 'Data & privacy', icon: Shield, description: 'What is kept on this device.' },
+  { id: 'memories', group: 'dataPrivacy', icon: Brain, labelKey: 'settings:sections.memories.label', descriptionKey: 'settings:sections.memories.description' },
+  { id: 'data-controls', group: 'dataPrivacy', icon: Shield, labelKey: 'settings:sections.dataControls.label', descriptionKey: 'settings:sections.dataControls.description' },
 
-  { id: 'about', label: 'About', group: 'About', icon: Info, description: 'Version and origin of SeshatOS.' },
-  { id: 'cloud', label: 'SeshatCloud', group: 'About', icon: CloudStorage, description: 'Pair with your organization SeshatCloud.' }
+  { id: 'about', group: 'about', icon: Info, labelKey: 'settings:sections.about.label', descriptionKey: 'settings:sections.about.description' },
+  { id: 'cloud', group: 'about', icon: CloudStorage, labelKey: 'settings:sections.cloud.label', descriptionKey: 'settings:sections.cloud.description' }
 ]
 
 /** The sections an edition shows: the ones it hides (see lib/edition.ts) are left out. */
@@ -76,8 +90,8 @@ export function findSection(id: string | undefined, edition: Pick<Edition, 'clou
 }
 
 /** The sections grouped in the order they are listed, for the navigation. */
-export function groupSections(list: SettingsSectionDef[]): Array<[string, SettingsSectionDef[]]> {
-  const groups = new Map<string, SettingsSectionDef[]>()
+export function groupSections(list: SettingsSectionDef[]): Array<[SettingsGroupId, SettingsSectionDef[]]> {
+  const groups = new Map<SettingsGroupId, SettingsSectionDef[]>()
   for (const section of list) groups.set(section.group, [...(groups.get(section.group) ?? []), section])
   return [...groups.entries()]
 }

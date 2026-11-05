@@ -1,5 +1,6 @@
 import { ErrorPre, FILEPATH_CSS, FILE_ITEM_CSS, FILE_LIST_CSS, HCARD_HEADER_PATH_CSS, HCARD_HEADER_STAT_CSS, HeaderCard, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 type DirEntry = { name: string; is_directory: boolean; is_symlink: boolean; size_bytes: number }
 type ListDirectoryOutput = { path?: string; entries?: DirEntry[]; count?: number; truncated?: boolean }
@@ -25,12 +26,13 @@ function fmtSize(bytes: number): string {
 // the list itself, instead of a bare unstyled path line floating above a
 // separately-boxed list.
 export function ListDirectoryToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const path = (tool.input.path as string) ?? ''
   const parsed = result?.content ? parse(result.content) : null
 
   if (result?.isError && result.content) {
     return (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.listDirectoryToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     )
@@ -46,7 +48,7 @@ export function ListDirectoryToolView({ tool, result }: ToolViewProps) {
         <>
           {path && <span className={HCARD_HEADER_PATH_CSS}>{path}</span>}
           <span className={HCARD_HEADER_STAT_CSS}>
-            {count} item{count !== 1 ? 's' : ''}{parsed.truncated ? ' (truncated)' : ''}
+            {t('chat.tools.renderers.listDirectoryToolView.items', { count })}{parsed.truncated ? t('chat.tools.renderers.listDirectoryToolView.truncated') : ''}
           </span>
         </>
       }
@@ -61,7 +63,7 @@ export function ListDirectoryToolView({ tool, result }: ToolViewProps) {
           ))}
         </div>
       ) : (
-        <span className={FILEPATH_CSS}>Empty directory.</span>
+        <span className={FILEPATH_CSS}>{t('chat.tools.renderers.listDirectoryToolView.emptyDirectory')}</span>
       )}
     </HeaderCard>
   )

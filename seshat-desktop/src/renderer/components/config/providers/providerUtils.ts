@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { ProviderChoice, ProviderForm, ProviderModel, ProviderRowModel, ProviderSetting } from './providerTypes'
 
 // Main providers always get a row (so they can be set up from it); the catalog's others only once configured.
@@ -74,27 +75,28 @@ export function upsertProviderSetting(settings: ProviderSetting[], next: Provide
   return [next, ...settings]
 }
 
-export function getProviderConnection(setting: ProviderSetting): { label: string; tone: 'success' | 'muted' } {
-  if (setting.provider === 'ollama') return { label: 'Local', tone: 'success' }
+export function getProviderConnection(setting: ProviderSetting, t: TFunction): { label: string; tone: 'success' | 'muted' } {
+  if (setting.provider === 'ollama') return { label: t('config:providers.providerUtils.local'), tone: 'success' }
   if (setting.auth_kind === 'oauth') {
     return setting.connection_status === 'connected'
-      ? { label: 'Connected', tone: 'success' }
-      : { label: setting.connection_status || 'OAuth pending', tone: 'muted' }
+      ? { label: t('config:providers.providerUtils.connected'), tone: 'success' }
+      : { label: setting.connection_status || t('config:providers.providerUtils.oauthPending'), tone: 'muted' }
   }
-  if (setting.has_api_key) return { label: 'Connected', tone: 'success' }
-  return { label: 'Missing key', tone: 'muted' }
+  if (setting.has_api_key) return { label: t('config:providers.providerUtils.connected'), tone: 'success' }
+  return { label: t('config:providers.providerUtils.missingKey'), tone: 'muted' }
 }
 
-export function formatModelMeta(model: ProviderModel) {
-  const context = model.context_window ? `${formatNumber(model.context_window)} ctx` : 'context unknown'
-  const output = model.max_output ? `${formatNumber(model.max_output)} max` : 'output unknown'
-  return `${context} - ${output} - ${model.source || 'catalog'}`
+export function formatModelMeta(model: ProviderModel, t: TFunction) {
+  const context = model.context_window ? t('config:providers.providerUtils.contextTokens', { value: formatNumber(model.context_window) }) : t('config:providers.providerUtils.contextUnknown')
+  const output = model.max_output ? t('config:providers.providerUtils.outputMax', { value: formatNumber(model.max_output) }) : t('config:providers.providerUtils.outputUnknown')
+  return `${context} - ${output} - ${model.source || t('config:providers.providerUtils.catalog')}`
 }
 
+/** The key of the text that names an authentication type: the screen translates it. */
 export function authTypeLabel(authType: string) {
-  if (authType === 'none') return 'No key'
-  if (authType === 'oauth') return 'OAuth'
-  return 'API key'
+  if (authType === 'none') return 'config:providers.providerUtils.noKey'
+  if (authType === 'oauth') return 'config:providers.providerUtils.oauth'
+  return 'config:providers.providerUtils.apiKey'
 }
 
 export function isCodexProvider(provider: string) {

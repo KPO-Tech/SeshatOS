@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   CONTENT_WIDTHS,
   DEFAULT_APPEARANCE,
@@ -8,7 +9,10 @@ import {
   applyAppearance,
   getStoredAppearance,
   setStoredAppearance,
-  type AppearancePrefs
+  type AppearancePrefs,
+  type ContentWidth,
+  type Spacing,
+  type TextSize
 } from '@renderer/lib/appearance'
 import { AccentSwatches } from '@renderer/components/onboarding/AccentSwatches'
 import { ACCENTS, chooseAccent, getStoredAccent } from '@renderer/lib/accent'
@@ -21,10 +25,24 @@ import { ThemeEditor } from './ThemeEditor'
 
 type Filter = 'all' | 'dark' | 'light'
 type Tab = 'theme' | 'interface'
-const TABS: Array<SettingsTab<Tab>> = [
-  { id: 'theme', label: 'Theme' },
-  { id: 'interface', label: 'Interface' }
-]
+
+// The names of the steps of the interface settings, as keys of the settings catalogue (the steps themselves are in lib/appearance.ts).
+const TEXT_SIZE_KEYS: Record<TextSize, string> = {
+  small: 'settings:appearance.options.textSize.small',
+  default: 'settings:appearance.options.textSize.default',
+  large: 'settings:appearance.options.textSize.large',
+  xlarge: 'settings:appearance.options.textSize.xlarge'
+}
+const SPACING_KEYS: Record<Spacing, string> = {
+  compact: 'settings:appearance.options.spacing.compact',
+  comfortable: 'settings:appearance.options.spacing.comfortable',
+  spacious: 'settings:appearance.options.spacing.spacious'
+}
+const WIDTH_KEYS: Record<ContentWidth, string> = {
+  narrow: 'settings:appearance.options.width.narrow',
+  default: 'settings:appearance.options.width.default',
+  wide: 'settings:appearance.options.width.wide'
+}
 
 // Seshat's own, in the order they are shown: its two dark ones, then its two light ones.
 const SESHAT_ORDER = ['dark', 'seshat-night', 'light', 'shine']
@@ -40,6 +58,11 @@ function readAppearance(): Appearance {
 }
 
 export function AppearanceSettings() {
+  const { t } = useTranslation('settings')
+  const tabs: Array<SettingsTab<Tab>> = [
+    { id: 'theme', label: t('appearance.tabs.theme') },
+    { id: 'interface', label: t('appearance.tabs.interface') }
+  ]
   const [tab, setTab] = useState<Tab>('theme')
   const [filter, setFilter] = useState<Filter>('all')
   const [{ mode, main, shown }, setAppearance] = useState<Appearance>(readAppearance)
@@ -60,7 +83,7 @@ export function AppearanceSettings() {
   function commit(list: ThemeSeed[], select?: string) {
     const stored = updateCustomThemes(list)
     setCustom(list)
-    if (!stored) setNotice({ tone: 'error', text: 'Your themes could not be saved in this browser: they will be lost when the app closes.' })
+    if (!stored) setNotice({ tone: 'error', text: t('appearance.notices.saveFailed') })
     if (select) chooseTheme(select)
     else {
       applyCurrentTheme()
@@ -71,13 +94,13 @@ export function AppearanceSettings() {
   function duplicate() {
     const source = selected ?? themeById('dark')
     if (!source) return
-    const copy = duplicateTheme(source, `${source.label} copy`)
+    const copy = duplicateTheme(source, t('appearance.copyName', { name: source.label }))
     commit([...custom, copy], copy.id)
     setNotice(null)
   }
 
   function remove(seed: ThemeSeed) {
-    if (!window.confirm(`Delete the theme “${seed.label}”?`)) return
+    if (!window.confirm(t('appearance.confirmDelete', { name: seed.label }))) return
     commit(custom.filter((item) => item.id !== seed.id))
   }
 
@@ -86,9 +109,9 @@ export function AppearanceSettings() {
     try {
       const seed = importTheme(await file.text())
       commit([...custom, seed], seed.id)
-      setNotice({ tone: 'ok', text: `Imported “${seed.label}”.` })
+      setNotice({ tone: 'ok', text: t('appearance.notices.imported', { name: seed.label }) })
     } catch (err) {
-      setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'This theme could not be imported.' })
+      setNotice({ tone: 'error', text: err instanceof Error ? err.message : t('appearance.notices.importFailed') })
     }
   }
 
@@ -104,9 +127,9 @@ export function AppearanceSettings() {
   async function copyJson(seed: ThemeSeed) {
     try {
       await navigator.clipboard.writeText(exportTheme(seed))
-      setNotice({ tone: 'ok', text: 'Theme copied.' })
+      setNotice({ tone: 'ok', text: t('appearance.notices.copied') })
     } catch {
-      setNotice({ tone: 'error', text: 'The theme could not be copied.' })
+      setNotice({ tone: 'error', text: t('appearance.notices.copyFailed') })
     }
   }
 
@@ -128,13 +151,13 @@ export function AppearanceSettings() {
   const mine = custom.filter(visible)
 
   return (
-    <SettingsPage id="appearance" tabs={<SettingsTabs tabs={TABS} value={tab} onChange={setTab} />}>
+    <SettingsPage id="appearance" tabs={<SettingsTabs tabs={tabs} value={tab} onChange={setTab} />}>
       {tab === 'theme' ? (
         <>
           <MainThemesCard mode={mode} main={main} shown={shown} />
 
           <SettingsCard
-            title="Accent color"
+            title={t('appearance.accent.card')}
             padded
             action={
               accent ? (
@@ -144,7 +167,7 @@ export function AppearanceSettings() {
                     setAccent(null)
                   }}
                 >
-                  Use the theme's own
+                  {t('appearance.accent.useOwn')}
                 </ActionButton>
               ) : undefined
             }
@@ -159,30 +182,30 @@ export function AppearanceSettings() {
           </SettingsCard>
 
           <SettingsCard
-            title="Themes"
+            title={t('appearance.themes.card')}
             padded
             action={
               <Segmented
-                label="Show"
+                label={t('appearance.themes.show')}
                 value={filter}
                 options={[
-                  { value: 'all', label: 'All' },
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'light', label: 'Light' }
+                  { value: 'all', label: t('appearance.themes.filter.all') },
+                  { value: 'dark', label: t('appearance.themes.filter.dark') },
+                  { value: 'light', label: t('appearance.themes.filter.light') }
                 ]}
                 onChange={setFilter}
               />
             }
           >
             <div className="grid gap-6">
-              {seshat.length > 0 && <ThemeGroup title="Seshat">{seshat.map(card)}</ThemeGroup>}
-              {mine.length > 0 && <ThemeGroup title="My themes">{mine.map(card)}</ThemeGroup>}
-              {dark.length > 0 && <ThemeGroup title="Dark">{dark.map(card)}</ThemeGroup>}
-              {light.length > 0 && <ThemeGroup title="Light">{light.map(card)}</ThemeGroup>}
+              {seshat.length > 0 && <ThemeGroup title={t('appearance.themes.groups.seshat')}>{seshat.map(card)}</ThemeGroup>}
+              {mine.length > 0 && <ThemeGroup title={t('appearance.themes.groups.mine')}>{mine.map(card)}</ThemeGroup>}
+              {dark.length > 0 && <ThemeGroup title={t('appearance.themes.groups.dark')}>{dark.map(card)}</ThemeGroup>}
+              {light.length > 0 && <ThemeGroup title={t('appearance.themes.groups.light')}>{light.map(card)}</ThemeGroup>}
             </div>
           </SettingsCard>
 
-          <SettingsCard title="Customize" padded action={<ActionButton onClick={duplicate}>Duplicate</ActionButton>}>
+          <SettingsCard title={t('appearance.customize.card')} padded action={<ActionButton onClick={duplicate}>{t('appearance.customize.duplicate')}</ActionButton>}>
             {selected?.category === 'custom' ? (
               <ThemeEditor
                 theme={selected}
@@ -190,38 +213,38 @@ export function AppearanceSettings() {
                 onDelete={() => remove(selected)}
               />
             ) : (
-              <p className="m-0 text-[12px] text-[var(--text-muted)]">Presets cannot be changed. Duplicate one to make your own.</p>
+              <p className="m-0 text-[12px] text-[var(--text-muted)]">{t('appearance.customize.locked')}</p>
             )}
           </SettingsCard>
 
-          <SettingsCard title="Import and export">
-            <SettingRow title="Theme file">
+          <SettingsCard title={t('appearance.importExport.card')}>
+            <SettingRow title={t('appearance.importExport.themeFile')}>
               <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(event) => { void onImport(event.target.files?.[0]); event.target.value = '' }} />
-              <ActionButton onClick={() => importRef.current?.click()}>Import</ActionButton>
-              <ActionButton disabled={!selected} onClick={() => selected && download(selected)}>Export</ActionButton>
-              <ActionButton disabled={!selected} onClick={() => selected && void copyJson(selected)}>Copy JSON</ActionButton>
+              <ActionButton onClick={() => importRef.current?.click()}>{t('appearance.importExport.import')}</ActionButton>
+              <ActionButton disabled={!selected} onClick={() => selected && download(selected)}>{t('appearance.importExport.export')}</ActionButton>
+              <ActionButton disabled={!selected} onClick={() => selected && void copyJson(selected)}>{t('appearance.importExport.copyJson')}</ActionButton>
             </SettingRow>
             {notice && <p className={`m-0 px-4 py-2.5 text-[12px] ${notice.tone === 'ok' ? 'text-[var(--accent-success)]' : 'text-[var(--accent-danger)]'}`}>{notice.text}</p>}
           </SettingsCard>
         </>
       ) : (
         <SettingsCard
-          title="Interface"
+          title={t('appearance.interface.card')}
           action={
             <ActionButton disabled={isDefault} onClick={() => update(DEFAULT_APPEARANCE)}>
-              Reset
+              {t('appearance.interface.reset')}
             </ActionButton>
           }
         >
           <div className="px-4 py-3">
-            <div className="mb-2 text-[13px] font-semibold text-[var(--text-primary)]">Interface size</div>
+            <div className="mb-2 text-[13px] font-semibold text-[var(--text-primary)]">{t('appearance.interface.size')}</div>
             <input
               type="range"
               min={0}
               max={ZOOMS.length - 1}
               step={1}
               value={zoomIndex}
-              aria-label="Interface size"
+              aria-label={t('appearance.interface.size')}
               onChange={(event) => update({ zoom: ZOOMS[Number(event.target.value)] })}
               className="w-full accent-[var(--accent-primary)]"
             />
@@ -231,26 +254,26 @@ export function AppearanceSettings() {
               ))}
             </div>
           </div>
-          <Choice title="Chat text size" value={prefs.textSize} options={TEXT_SIZES.map((o) => ({ value: o.value, label: o.label }))} onChange={(textSize) => update({ textSize })} />
-          <Choice title="Spacing" value={prefs.spacing} options={SPACINGS.map((o) => ({ value: o.value, label: o.label }))} onChange={(spacing) => update({ spacing })} />
-          <Choice title="Conversation width" value={prefs.contentWidth} options={CONTENT_WIDTHS.map((o) => ({ value: o.value, label: o.label }))} onChange={(contentWidth) => update({ contentWidth })} />
+          <Choice title={t('appearance.interface.textSize')} value={prefs.textSize} options={TEXT_SIZES.map((o) => ({ value: o.value, label: t(TEXT_SIZE_KEYS[o.value]) }))} onChange={(textSize) => update({ textSize })} />
+          <Choice title={t('appearance.interface.spacing')} value={prefs.spacing} options={SPACINGS.map((o) => ({ value: o.value, label: t(SPACING_KEYS[o.value]) }))} onChange={(spacing) => update({ spacing })} />
+          <Choice title={t('appearance.interface.width')} value={prefs.contentWidth} options={CONTENT_WIDTHS.map((o) => ({ value: o.value, label: t(WIDTH_KEYS[o.value]) }))} onChange={(contentWidth) => update({ contentWidth })} />
         </SettingsCard>
       )}
     </SettingsPage>
   )
 }
 
-const MODES: Array<{ value: ThemeMode; label: string }> = [
-  { value: 'dark', label: 'Dark' },
-  { value: 'light', label: 'Light' },
-  { value: 'system', label: 'System' }
-]
-
 /**
  * The two main themes and the mode. The button of the title bar switches between them; System follows the operating system. A theme
  * picked below becomes the main one of its scheme.
  */
 function MainThemesCard({ mode, main, shown }: { mode: ThemeMode; main: MainThemes; shown: string }) {
+  const { t } = useTranslation('settings')
+  const modes: Array<{ value: ThemeMode; label: string }> = [
+    { value: 'dark', label: t('appearance.mainThemes.mode.dark') },
+    { value: 'light', label: t('appearance.mainThemes.mode.light') },
+    { value: 'system', label: t('appearance.mainThemes.mode.system') }
+  ]
   const slot = (scheme: 'dark' | 'light') => {
     const seed = themeById(main[scheme])
     if (!seed) return null
@@ -269,21 +292,21 @@ function MainThemesCard({ mode, main, shown }: { mode: ThemeMode; main: MainThem
           <ThemePreview seed={seed} height={84} />
         </div>
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{scheme === 'dark' ? 'Dark theme' : 'Light theme'}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{scheme === 'dark' ? t('appearance.mainThemes.darkTheme') : t('appearance.mainThemes.lightTheme')}</div>
           <div className="mt-0.5 truncate text-[18px] font-semibold text-[var(--text-primary)]">{seed.label}</div>
-          <div className="mt-1 text-[11px] text-[var(--text-muted)]">{active ? 'On screen' : 'Click to show it'}</div>
+          <div className="mt-1 text-[11px] text-[var(--text-muted)]">{active ? t('appearance.mainThemes.onScreen') : t('appearance.mainThemes.clickToShow')}</div>
         </div>
       </button>
     )
   }
   return (
-    <SettingsCard title="Main themes" padded action={<Segmented label="Mode" value={mode} options={MODES} onChange={chooseMode} />}>
+    <SettingsCard title={t('appearance.mainThemes.card')} padded action={<Segmented label={t('appearance.mainThemes.modeLabel')} value={mode} options={modes} onChange={chooseMode} />}>
       <div className="flex flex-wrap gap-3">
         {slot('dark')}
         {slot('light')}
       </div>
       <p className="m-0 mt-3 text-[12px] text-[var(--text-muted)]">
-        The sun and moon button of the title bar switches between these two. Pick a theme below to make it the main one of its kind.
+        {t('appearance.mainThemes.help')}
       </p>
     </SettingsCard>
   )

@@ -3,14 +3,16 @@ import { ActionButton, Notice, SelectField, SettingRow, SettingsCard, SettingsPa
 import { fetchStorageStatus, saveStorageConfig } from './storageApi'
 import type { StorageForm, StorageStatus } from './storageTypes'
 import { storageFormFromStatus } from './storageUtils'
+import { useTranslation } from 'react-i18next'
 
 const providerOptions = [
-  { value: 'local', label: 'Local disk' },
-  { value: 's3', label: 'S3 compatible' }
+  { value: 'local', label: 'config:storage.storageConfig.localDisk' },
+  { value: 's3', label: 'config:storage.storageConfig.s3Compatible' }
 ]
 
 /** Where generated files, attachments and long-lived artifacts are stored. */
 export function StorageConfig() {
+  const { t } = useTranslation('config')
   const [status, setStatus] = useState<StorageStatus | null>(null)
   const [form, setForm] = useState<StorageForm>(() => storageFormFromStatus(null))
   const [loading, setLoading] = useState(true)
@@ -46,7 +48,7 @@ export function StorageConfig() {
       const next = await saveStorageConfig(form)
       setStatus(next)
       setForm(storageFormFromStatus(next))
-      setMessage({ tone: 'ok', text: next.restart_required ? 'Saved. Restart the backend to apply it.' : 'Saved.' })
+      setMessage({ tone: 'ok', text: next.restart_required ? t('storage.storageConfig.savedRestart') : t('storage.storageConfig.saved') })
     } catch (err) {
       setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to save storage settings.' })
     } finally {
@@ -64,31 +66,31 @@ export function StorageConfig() {
   return (
     <SettingsPage
       id="storage"
-      badge={loading ? undefined : <StatusBadge tone={restart ? 'warn' : 'ok'}>{restart ? 'Restart required' : form.provider === 's3' ? 'S3' : 'Local disk'}</StatusBadge>}
+      badge={loading ? undefined : <StatusBadge tone={restart ? 'warn' : 'ok'}>{restart ? t('storage.storageConfig.restartRequired') : form.provider === 's3' ? 'S3' : t('storage.storageConfig.localDisk')}</StatusBadge>}
       actions={
         <ActionButton type="button" tone="primary" onClick={() => void save()} disabled={saving || loading}>
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? t('storage.storageConfig.saving') : t('storage.storageConfig.save')}
         </ActionButton>
       }
     >
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       {!loading && (
-        <SettingsCard title="Files and attachments">
-          <SettingRow title="Provider">
+        <SettingsCard title={t('storage.storageConfig.filesAndAttachments')}>
+          <SettingRow title={t('storage.storageConfig.provider')}>
             <div className="w-[210px]">
-              <SelectField value={form.provider} options={providerOptions} onChange={(value) => set('provider', value)} />
+              <SelectField value={form.provider} options={providerOptions.map((option) => ({ ...option, label: t(option.label) }))} onChange={(value) => set('provider', value)} />
             </div>
           </SettingRow>
           {form.provider === 'local' ? (
-            field('Folder', 'local_path', 'Default folder')
+            field(t('storage.storageConfig.folder'), 'local_path', t('storage.storageConfig.defaultFolder'))
           ) : (
             <>
-              {field('Endpoint', 's3_endpoint', 'https://s3.amazonaws.com')}
-              {field('Bucket', 's3_bucket', 'seshat-artifacts')}
-              {field('Region', 's3_region', 'us-east-1')}
-              {field('Key prefix', 's3_key_prefix', 'Optional')}
-              {field('Access key', 's3_access_key', status?.config.has_s3_access_key ? 'Keep current key' : 'Required')}
-              {field('Secret key', 's3_secret_key', status?.config.has_s3_secret_key ? 'Keep current secret' : 'Required', 'password')}
+              {field(t('storage.storageConfig.endpoint'), 's3_endpoint', 'https://s3.amazonaws.com')}
+              {field(t('storage.storageConfig.bucket'), 's3_bucket', 'seshat-artifacts')}
+              {field(t('storage.storageConfig.region'), 's3_region', 'us-east-1')}
+              {field(t('storage.storageConfig.keyPrefix'), 's3_key_prefix', t('storage.storageConfig.optional'))}
+              {field(t('storage.storageConfig.accessKey'), 's3_access_key', status?.config.has_s3_access_key ? t('storage.storageConfig.keepCurrentKey') : t('storage.storageConfig.required'))}
+              {field(t('storage.storageConfig.secretKey'), 's3_secret_key', status?.config.has_s3_secret_key ? t('storage.storageConfig.keepCurrentSecret') : t('storage.storageConfig.required'), 'password')}
             </>
           )}
         </SettingsCard>

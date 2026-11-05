@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
 import { FolderOpen, Play } from '@icon-park/react'
 import type { Collection } from './collectionsApi'
-import { plural } from './fileStatus'
+import { useTranslation } from 'react-i18next'
 
 const formatDay = (seconds: number) => (seconds ? new Date(seconds * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '')
 
 /** The frame of a card of Collections: the same as a card of Skills, so the two pages read alike. */
 export function KnowledgeCard({ icon, title, subtitle, description, footer, onOpen }: { icon: ReactNode; title: string; subtitle: string; description: string; footer?: ReactNode; onOpen: () => void }) {
+  const { t } = useTranslation('knowledge/collections')
   return (
     <div className="flex min-w-0 flex-col rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
       <div className="flex items-start gap-3">
@@ -24,7 +25,7 @@ export function KnowledgeCard({ icon, title, subtitle, description, footer, onOp
         className="mt-3 flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-transparent text-[13px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]"
       >
         <Play theme="outline" size={13} />
-        Open
+        {t('pages.knowledge.collections.collectionCard.open')}
       </button>
     </div>
   )
@@ -32,13 +33,14 @@ export function KnowledgeCard({ icon, title, subtitle, description, footer, onOp
 
 
 export function CollectionCard({ collection, onOpen }: { collection: Collection; onOpen: () => void }) {
-  const documents = collection.fileCount === null ? null : plural(collection.fileCount, 'document', 'documents')
+  const { t } = useTranslation('knowledge/collections')
+  const documents = collection.fileCount === null ? null : t('pages.knowledge.collections.counts.document', { count: collection.fileCount })
   return (
     <KnowledgeCard
       icon={<FolderOpen theme="outline" size={20} />}
       title={collection.name}
-      subtitle={[documents, collection.updatedAt ? `Updated ${formatDay(collection.updatedAt)}` : null].filter(Boolean).join(' · ') || 'Collection'}
-      description={collection.description || 'No description'}
+      subtitle={[documents, collection.updatedAt ? t('pages.knowledge.collections.collectionCard.updated', { day: formatDay(collection.updatedAt) }) : null].filter(Boolean).join(' · ') || t('pages.knowledge.collections.collectionCard.collection')}
+      description={collection.description || t('pages.knowledge.collections.collectionCard.noDescription')}
       onOpen={onOpen}
     />
   )

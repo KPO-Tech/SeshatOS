@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router'
 import { SourceIconPicker } from '../collections/SourceIcon'
-import { plural } from '../collections/fileStatus'
 import { removeSource, sourcePath, updateSource, type KnowledgeSource } from '../collections/sourcesApi'
+import { useTranslation } from 'react-i18next'
 
 const BUTTON = 'flex h-9 flex-1 cursor-pointer items-center justify-center rounded-xl border text-[13px] font-medium'
 
@@ -14,6 +14,7 @@ type Props = {
 
 /** The folders of this computer added as sources: their icon, what they hold, and what is done with them (open, analyse, remove). */
 export function YourFolders({ sources, onAnalyse, onChanged, onError }: Props) {
+  const { t } = useTranslation('knowledge/sources')
   const navigate = useNavigate()
 
   async function run(action: () => Promise<unknown>, failure: string) {
@@ -35,16 +36,16 @@ export function YourFolders({ sources, onAnalyse, onChanged, onError }: Props) {
               <SourceIconPicker value={source.icon} onChange={(icon) => void run(() => updateSource(source.id, { icon }), 'The icon could not be changed.')} />
               <div className="min-w-0 flex-1 pt-0.5">
                 <div className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{source.name}</div>
-                <div className="mt-0.5 text-[11.5px] text-[var(--text-muted)]">{empty ? 'Not analysed yet' : plural(source.collectionCount, 'collection', 'collections')}</div>
+                <div className="mt-0.5 text-[11.5px] text-[var(--text-muted)]">{empty ? t('pages.knowledge.sources.yourFolders.notAnalysedYet') : t('pages.knowledge.sources.yourFolders.collectionCount', { count: source.collectionCount })}</div>
               </div>
               {empty && (
                 <button
                   type="button"
                   onClick={() => void run(() => removeSource(source.id), 'The source could not be removed.')}
-                  title="Remove this source. No file is touched."
+                  title={t('pages.knowledge.sources.yourFolders.removeThisSourceNoFile')}
                   className="h-7 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-2.5 text-[12px] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
                 >
-                  Remove
+                  {t('pages.knowledge.sources.yourFolders.remove')}
                 </button>
               )}
             </div>
@@ -54,7 +55,7 @@ export function YourFolders({ sources, onAnalyse, onChanged, onError }: Props) {
             <div className="mt-3 flex gap-2">
               {!empty && (
                 <button type="button" onClick={() => navigate(sourcePath(source.id))} className={`${BUTTON} border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]`}>
-                  Collections
+                  {t('pages.knowledge.sources.yourFolders.collections')}
                 </button>
               )}
               <button
@@ -62,7 +63,7 @@ export function YourFolders({ sources, onAnalyse, onChanged, onError }: Props) {
                 onClick={() => onAnalyse(source)}
                 className={`${BUTTON} ${empty ? 'border-transparent bg-[var(--accent-primary)] text-white hover:opacity-90' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
               >
-                {empty ? 'Analyse' : 'Analyse again'}
+                {empty ? t('pages.knowledge.sources.yourFolders.analyse') : t('pages.knowledge.sources.yourFolders.analyseAgain')}
               </button>
             </div>
           </div>

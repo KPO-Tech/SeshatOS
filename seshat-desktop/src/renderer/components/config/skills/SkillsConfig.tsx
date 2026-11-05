@@ -7,8 +7,10 @@ import type { RepoInfo } from '@renderer/components/skills/skillsTypes'
 import { Add, FolderOpen } from '@icon-park/react'
 import { ActionButton, Chip, SettingRow, SettingsCard, SettingsPage, StatusBadge } from '../../settings/kit'
 import { TextInput } from '../knowledge/KnowledgePrimitives'
+import { useTranslation } from 'react-i18next'
 
 export function SkillsConfig() {
+  const { t } = useTranslation('config')
   const [installed, setInstalled] = useState<RepoInfo[]>([])
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(true)
@@ -50,7 +52,7 @@ export function SkillsConfig() {
       setUrl('')
       nudgeTasks()
       // The download goes on in the background; the window of what the skills need opens when it ends.
-      setMessage({ tone: 'ok', text: `${result.name} is downloading in the background.` })
+      setMessage({ tone: 'ok', text: t('skills.skillsConfig.downloadingInBackground', { name: result.name }) })
     } catch (err) {
       setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Could not install this repository.' })
     } finally {
@@ -59,7 +61,7 @@ export function SkillsConfig() {
   }
 
   async function remove(repo: RepoInfo) {
-    if (!window.confirm(`Remove the "${repo.name}" repository and its ${repo.skill_count} skill(s)?`)) return
+    if (!window.confirm(t('skills.skillsConfig.confirmRemoveRepo', { name: repo.name, count: repo.skill_count }))) return
     setBusy(repo.name)
     setMessage(null)
     try {
@@ -73,7 +75,7 @@ export function SkillsConfig() {
   }
 
   async function removeAll() {
-    if (!window.confirm(`Remove all ${installed.length} installed repositories and their skills? This cannot be undone.`)) return
+    if (!window.confirm(t('skills.skillsConfig.confirmRemoveAll', { count: installed.length }))) return
     setBusy('all')
     setMessage(null)
     let failed = 0
@@ -85,11 +87,11 @@ export function SkillsConfig() {
       }
     }
     await load()
-    setMessage(failed > 0 ? { tone: 'error', text: `${failed} repositories could not be removed.` } : { tone: 'ok', text: 'All repositories removed.' })
+    setMessage(failed > 0 ? { tone: 'error', text: t('skills.skillsConfig.removeFailed', { count: failed }) } : { tone: 'ok', text: t('skills.skillsConfig.allRepositoriesRemoved') })
     setBusy(null)
   }
 
-  if (loading) return <SettingsPage id="skills"><p className="m-0 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</p></SettingsPage>
+  if (loading) return <SettingsPage id="skills"><p className="m-0 text-[13px] font-semibold text-[var(--text-muted)]">{t('skills.skillsConfig.loading')}</p></SettingsPage>
 
   return (
     <SettingsPage id="skills" badge={<StatusBadge tone={installed.length > 0 ? 'ok' : 'muted'}>{`${installed.length} ${installed.length === 1 ? 'repository' : 'repositories'}`}</StatusBadge>}>
@@ -102,28 +104,28 @@ export function SkillsConfig() {
         </div>
       )}
 
-      <SettingsCard title="Add a repository" icon={<Add theme="outline" size={16} />}>
-        <SettingRow title="Git URL">
+      <SettingsCard title={t('skills.skillsConfig.addARepository')} icon={<Add theme="outline" size={16} />}>
+        <SettingRow title={t('skills.skillsConfig.gitUrl')}>
           <TextInput className="h-9 w-[340px]" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://github.com/owner/skills" />
           <ActionButton tone="primary" disabled={!url.trim() || busy === 'url'} onClick={() => void install(url.trim())}>
-            {busy === 'url' ? 'Installing...' : 'Install'}
+            {busy === 'url' ? t('skills.skillsConfig.installing') : t('skills.skillsConfig.install')}
           </ActionButton>
         </SettingRow>
       </SettingsCard>
 
       <SettingsCard
-        title="Installed"
+        title={t('skills.skillsConfig.installed')}
         icon={<FolderOpen theme="outline" size={16} />}
-        action={installed.length > 0 ? <ActionButton tone="danger" disabled={busy === 'all'} onClick={() => void removeAll()}>{busy === 'all' ? 'Removing...' : 'Remove all'}</ActionButton> : undefined}
+        action={installed.length > 0 ? <ActionButton tone="danger" disabled={busy === 'all'} onClick={() => void removeAll()}>{busy === 'all' ? t('skills.skillsConfig.removing') : t('skills.skillsConfig.removeAll')}</ActionButton> : undefined}
       >
         {installed.length === 0 ? (
-          <SettingRow title="No repositories installed" />
+          <SettingRow title={t('skills.skillsConfig.noRepositoriesInstalled')} />
         ) : (
           installed.map((repo) => (
             <SettingRow key={repo.name} title={repo.name} hint={repo.url || undefined}>
               <Chip>{`${repo.skill_count} skill${repo.skill_count === 1 ? '' : 's'}`}</Chip>
               <ActionButton tone="danger" disabled={busy === repo.name || busy === 'all'} onClick={() => void remove(repo)}>
-                {busy === repo.name ? 'Removing...' : 'Remove'}
+                {busy === repo.name ? t('skills.skillsConfig.removing') : t('skills.skillsConfig.remove')}
               </ActionButton>
             </SettingRow>
           ))

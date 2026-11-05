@@ -11,6 +11,7 @@ import { SessionOverview } from './SessionOverview'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import type { StreamingBlock } from '@renderer/stores/session'
 import type { Message, ToolUseBlock } from '@renderer/api/types'
+import { useTranslation } from 'react-i18next'
 
 // Stable empty reference - must be module-level so the Zustand selector returns
 // the same reference every render when no session is found. An inline []
@@ -70,6 +71,7 @@ type ComputerPanelProps = {
  * Tools and a tool's live detail are pages with a slim header that has a way back, maximize and close.
  */
 export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onClose, onToggleMaximize }: ComputerPanelProps) {
+  const { t } = useTranslation('chat')
   const planArtifact = useSessionStore(
     (s) => s.sessions.find((session) => session.id === sessionId)?.planArtifact,
   )
@@ -120,7 +122,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
     if (focusedId && !focusedTool) return
     const shown = focusedTool?.id
     if ((focusToolId ?? undefined) === shown) return
-    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: shown, readable: focusedTool ? opensWide(focusedTool.name) : false })
+    openRightPanel({ kind: 'computer', title: t('chat.panels.computerPanel.session'), sessionId, focusToolId: shown, readable: focusedTool ? opensWide(focusedTool.name) : false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedId, focusedTool?.id])
 
@@ -143,7 +145,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
   }
 
   function visitSite(site: VisitedSite) {
-    openRightPanel({ kind: 'browser', title: 'Browser', sessionId })
+    openRightPanel({ kind: 'browser', title: t('chat.panels.computerPanel.browser'), sessionId })
     void window.seshat?.browser?.openUrl(site.url, 'builtin', sessionId).catch(() => undefined)
   }
 
@@ -158,7 +160,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
             className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left"
             onClick={() => setPlanOpen((v) => !v)}
           >
-            <span className={cx(sectionLabelClass, 'shrink-0')}>Plan</span>
+            <span className={cx(sectionLabelClass, 'shrink-0')}>{t('chat.panels.computerPanel.plan')}</span>
             <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
               <span
                 className="block h-full rounded-full bg-[var(--accent-primary)] transition-[width] duration-200"
@@ -195,9 +197,9 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
                 <button
                   type="button"
                   className="mt-1 flex w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[10.5px] font-semibold text-[var(--accent-primary)] hover:underline"
-                  onClick={() => openRightPanel({ kind: 'markdown', title: 'Implementation Plan', sessionId, markdown: planArtifact })}
+                  onClick={() => openRightPanel({ kind: 'markdown', title: t('chat.panels.computerPanel.implementationPlan'), sessionId, markdown: planArtifact })}
                 >
-                  View full plan
+                  {t('chat.panels.computerPanel.viewFullPlan')}
                 </button>
               )}
             </div>
@@ -227,39 +229,39 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
                   <Globe size={12} />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Web</span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">{t('chat.panels.computerPanel.web')}</span>
               </>
             ) : view === 'tools' ? (
               <>
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
                   <History size={12} />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Tools</span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">{t('chat.panels.computerPanel.tools')}</span>
               </>
             ) : (
               <>
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-app-surface-elevated text-app-text-secondary">
                   <ChartHistogram size={12} />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">Session</span>
+                <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-app-text">{t('chat.panels.computerPanel.session')}</span>
               </>
             )}
             <button
               type="button"
-              aria-label="Back to the overview"
-              title="Back to the overview"
+              aria-label={t('chat.panels.computerPanel.backToTheOverview')}
+              title={t('chat.panels.computerPanel.backToTheOverview')}
               className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
               onClick={goHome}
             >
               <Home size={12} />
             </button>
             {onToggleMaximize && (
-              <button type="button" aria-label={isMaximized ? 'Restore' : 'Maximize'} className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onToggleMaximize}>
+              <button type="button" aria-label={isMaximized ? t('chat.panels.computerPanel.restore') : t('chat.panels.computerPanel.maximize')} className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onToggleMaximize}>
                 <WindowMaximizeIcon />
               </button>
             )}
             {onClose && (
-              <button type="button" aria-label="Close" className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onClose}>
+              <button type="button" aria-label={t('chat.panels.computerPanel.close')} className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onClose}>
                 <WindowCloseIcon />
               </button>
             )}
@@ -271,14 +273,14 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
             {focusedIsSubagent ? (
               <div className="flex flex-col items-start gap-2.5 p-1">
                 <p className="m-0 text-[11.5px] leading-normal text-app-text-secondary">
-                  Sub-agent activity has its own live view, with its own transcript and tool calls.
+                  {t('chat.panels.computerPanel.subAgentActivityHasIts')}
                 </p>
                 <button
                   type="button"
                   className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold text-[var(--accent-primary)] hover:underline"
                   onClick={() => openSubagentPanel(focusedTool)}
                 >
-                  Open sub-agent view
+                  {t('chat.panels.computerPanel.openSubAgentView')}
                   <RightC size={11} />
                 </button>
               </div>
@@ -295,7 +297,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
         ) : view === 'web' ? (
           <div className="min-h-0 flex-1 overflow-auto p-2.5">
             {sites.length === 0 ? (
-              <p className="m-0 text-[10.5px] italic text-app-text-muted">No sites visited yet.</p>
+              <p className="m-0 text-[10.5px] italic text-app-text-muted">{t('chat.panels.computerPanel.noSitesVisitedYet')}</p>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {sites.map((site) => (
@@ -321,7 +323,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
         ) : view === 'tools' ? (
           <div className="min-h-0 flex-1 overflow-auto p-2.5">
             {tools.length === 0 ? (
-              <p className="m-0 text-[10.5px] italic text-app-text-muted">No tool activity has been recorded yet.</p>
+              <p className="m-0 text-[10.5px] italic text-app-text-muted">{t('chat.panels.computerPanel.noToolActivityHasBeen')}</p>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {tools.slice().reverse().map((tool) => {

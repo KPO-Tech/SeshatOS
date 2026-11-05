@@ -18,6 +18,7 @@ import type { WebSource } from '@renderer/lib/webSources'
 import { WebCitation } from '@renderer/components/sources/WebCitation'
 import { RichBlock } from '@renderer/components/chat/richblocks/view/RichBlock'
 import { isRichBlockNode } from '@renderer/components/chat/richblocks/view/isRichBlockNode'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -65,6 +66,7 @@ function ChevronIcon({ collapsed }: { collapsed: boolean }) {
 // toggle, copy button) over Prism-highlighted content, instead of a bare
 // syntax-highlighted block with no way to collapse or copy it.
 function CodeBlock({ language, code }: { language: string; code: string }) {
+  const { t } = useTranslation('chat')
   const [collapsed, setCollapsed] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -92,7 +94,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
           onClick={copy}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
-          <span>{copied ? 'Copied' : 'Copy'}</span>
+          <span>{copied ? t('ui.markdownView.copied') : t('ui.markdownView.copy')}</span>
         </button>
       </div>
       {!collapsed && (
@@ -122,6 +124,7 @@ const CODE_BLOCK_STYLE = {
 // lazily (it's a sizeable dependency) and only once a diagram actually
 // appears - most conversations never use one.
 function MermaidBlock({ code }: { code: string }) {
+  const { t } = useTranslation('chat')
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   // mermaid.render needs an id unique per diagram on the page; useId() is
@@ -161,13 +164,13 @@ function MermaidBlock({ code }: { code: string }) {
   if (error) {
     return (
       <div className="my-4 flex flex-col items-stretch gap-1.5 overflow-x-auto">
-        <div className="text-[12px] text-[var(--accent-danger)]">Diagram failed to render: {error}</div>
+        <div className="text-[12px] text-[var(--accent-danger)]">{t('ui.markdownView.diagramFailed', { error })}</div>
         <pre className="m-0 overflow-x-auto rounded-md bg-[var(--surface-muted)] p-2.5 text-[12px]">{code}</pre>
       </div>
     )
   }
   if (!svg) {
-    return <div className="my-4 flex justify-start overflow-x-auto p-4 text-[12px] text-[var(--text-muted)]">Rendering diagram…</div>
+    return <div className="my-4 flex justify-start overflow-x-auto p-4 text-[12px] text-[var(--text-muted)]">{t('ui.markdownView.renderingDiagram')}</div>
   }
   // svg is mermaid's own sanitized output (securityLevel: 'strict' above),
   // not raw user/model text - see the note on that setting.
@@ -180,6 +183,7 @@ function MermaidBlock({ code }: { code: string }) {
 // supplies a declarative spec, never arbitrary script. Chart.js is loaded
 // lazily, same rationale as mermaid.
 function ChartBlock({ code }: { code: string }) {
+  const { t } = useTranslation('chat')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -192,11 +196,11 @@ function ChartBlock({ code }: { code: string }) {
     try {
       config = JSON.parse(code)
     } catch {
-      setError('Invalid chart JSON')
+      setError(t('ui.markdownView.invalidChartJson'))
       return
     }
     if (!config.type || !config.data) {
-      setError('Chart config needs a "type" and "data" field')
+      setError(t('ui.markdownView.chartConfigNeedsAType'))
       return
     }
 
@@ -237,7 +241,7 @@ function ChartBlock({ code }: { code: string }) {
   if (error) {
     return (
       <div className="my-4 flex flex-col gap-1.5">
-        <div className="text-[12px] text-[var(--accent-danger)]">Chart failed to render: {error}</div>
+        <div className="text-[12px] text-[var(--accent-danger)]">{t('ui.markdownView.chartFailed', { error })}</div>
         <pre className="m-0 overflow-x-auto rounded-md bg-[var(--surface-muted)] p-2.5 text-[12px]">{code}</pre>
       </div>
     )
@@ -256,11 +260,12 @@ function ChartBlock({ code }: { code: string }) {
 // inline data URLs are drawn. Anything else becomes a chip the user has to
 // click, and that click routes through the app browser like any other link.
 function RemoteImageChip({ src, alt, sessionId }: { src: string; alt?: string; sessionId?: string }) {
+  const { t } = useTranslation('chat')
   const remote = isRemoteImageSrc(src)
 
   return (
     <span className="my-3 inline-flex max-w-full items-center gap-2 rounded-md border border-app-border-subtle bg-app-surface px-2 py-1.5 text-xs text-app-text-muted">
-      <span className="min-w-0 truncate text-app-text-secondary">{alt?.trim() || 'Image'}</span>
+      <span className="min-w-0 truncate text-app-text-secondary">{alt?.trim() || t('ui.markdownView.image')}</span>
       <span className="min-w-0 flex-1 truncate font-mono text-[10px]" title={src}>{src}</span>
       {remote && (
         <button
@@ -268,7 +273,7 @@ function RemoteImageChip({ src, alt, sessionId }: { src: string; alt?: string; s
           className="shrink-0 cursor-pointer rounded-[5px] border-0 bg-transparent px-1 text-xs font-semibold text-[var(--accent-primary)] hover:underline"
           onClick={() => openInAppBrowser(src, sessionId)}
         >
-          Open
+          {t('ui.markdownView.open')}
         </button>
       )}
     </span>

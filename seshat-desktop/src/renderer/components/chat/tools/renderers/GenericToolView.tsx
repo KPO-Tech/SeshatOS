@@ -1,5 +1,6 @@
 import { CodeBox, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 // Detects genuine JSON content (result.content for tools with no dedicated
 // renderer can be JSON, prose, or a log dump - only pretty-print/colorize
@@ -16,24 +17,25 @@ function jsonOrRaw(content: string): { text: string; isJson: boolean } {
 }
 
 export function GenericToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const inputStr = JSON.stringify(tool.input, null, 2)
   const output = result?.content ? jsonOrRaw(result.content) : null
   const metadataStr = result?.metadata ? JSON.stringify(result.metadata, null, 2) : ''
 
   return (
     <>
-      <Section label="Input">
+      <Section label={t('chat.tools.renderers.genericToolView.input')}>
         <CodeBox content={inputStr} language="json" />
       </Section>
 
       {output && (
-        <Section label="Output">
+        <Section label={t('chat.tools.renderers.genericToolView.output')}>
           <CodeBox content={output.text} copyable language={output.isJson ? 'json' : undefined} />
         </Section>
       )}
 
       {!result?.content && metadataStr && (
-        <Section label="Details">
+        <Section label={t('chat.tools.renderers.genericToolView.details')}>
           <CodeBox content={metadataStr} copyable language="json" />
         </Section>
       )}

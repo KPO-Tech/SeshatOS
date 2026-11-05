@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { downloadPng, downloadSvg } from './exportFigure'
+import { useTranslation } from 'react-i18next'
 
 const FORMATS = [
   { id: 'png', name: 'PNG image', note: 'Twice the size, sharp' },
@@ -24,6 +25,7 @@ export function DownloadIcon() {
 
 /** A download arrow that opens a menu of formats. Esc closes the menu first. */
 export function DownloadMenu({ label, target, buttonClassName }: Props) {
+  const { t } = useTranslation('chat')
   const [menu, setMenu] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -53,8 +55,8 @@ export function DownloadMenu({ label, target, buttonClassName }: Props) {
 
   return (
     <div className="relative flex items-center">
-      {failed && <span className="mr-1 whitespace-nowrap text-xs text-app-error">Could not save the image</span>}
-      <button type="button" onClick={() => setMenu((open) => !open)} title="Download" aria-label={`Download ${label}`} aria-haspopup="menu" aria-expanded={menu} className={buttonClassName}>
+      {failed && <span className="mr-1 whitespace-nowrap text-xs text-app-error">{t('chat.richblocks.view.expand.downloadMenu.couldNotSaveTheImage')}</span>}
+      <button type="button" onClick={() => setMenu((open) => !open)} title={t('chat.richblocks.view.expand.downloadMenu.download')} aria-label={t('chat.richblocks.view.expand.downloadMenu.downloadLabel', { label })} aria-haspopup="menu" aria-expanded={menu} className={buttonClassName}>
         <DownloadIcon />
       </button>
       {menu && (

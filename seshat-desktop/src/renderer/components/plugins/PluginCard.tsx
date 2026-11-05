@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { BrandIcon } from './catalog/BrandIcon'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   title: string
@@ -13,6 +14,7 @@ type Props = {
 }
 
 export function PluginCard({ title, description, brand, icon, connected, needsAttention, onOpen }: Props) {
+  const { t } = useTranslation('plugins')
   return (
     <button
       type="button"
@@ -29,7 +31,7 @@ export function PluginCard({ title, description, brand, icon, connected, needsAt
           'flex size-7 shrink-0 items-center justify-center rounded-lg border',
           needsAttention ? 'border-transparent text-[var(--accent-danger)]' : connected ? 'border-transparent text-[var(--accent-success)]' : 'border-[var(--border-soft)] text-[var(--text-secondary)]'
         ].join(' ')}
-        title={needsAttention ? 'Needs attention' : connected ? 'Connected' : 'Connect'}
+        title={needsAttention ? t('plugins.pluginCard.needsAttention') : connected ? t('plugins.pluginCard.connected') : t('plugins.pluginCard.connect')}
       >
         {needsAttention ? <AlertIcon /> : connected ? <CheckIcon /> : <PlusIcon />}
       </span>

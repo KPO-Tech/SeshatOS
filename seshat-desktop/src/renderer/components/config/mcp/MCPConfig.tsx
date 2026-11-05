@@ -5,8 +5,10 @@ import { MCPOrgCatalog } from './MCPOrgCatalog'
 import { MCPServerCard } from './MCPServerCard'
 import { MCPServerForm } from './MCPServerForm'
 import type { MCPServer, MCPStatus, MCPToolEntry } from './mcpTypes'
+import { useTranslation } from 'react-i18next'
 
 export function MCPConfig() {
+  const { t } = useTranslation('config')
   const [servers, setServers] = useState<MCPServer[]>([])
   const [tools, setTools] = useState<Record<string, MCPToolEntry[]>>({})
   const [statuses, setStatuses] = useState<MCPStatus[]>([])
@@ -116,17 +118,17 @@ export function MCPConfig() {
   return (
     <SettingsPage
       id="mcp"
-      badge={<StatusBadge tone={enabledCount > 0 ? 'ok' : 'muted'}>{`${enabledCount} on · ${toolCount} tools`}</StatusBadge>}
+      badge={<StatusBadge tone={enabledCount > 0 ? 'ok' : 'muted'}>{t('mcp.mcpConfig.summary', { enabled: enabledCount, tools: toolCount })}</StatusBadge>}
       actions={
         <>
           <ActionButton type="button" onClick={() => void importLocalJson()} disabled={busyId === 'import'}>
-            Import mcp.json
+            {t('mcp.mCPConfig.importMcpJson')}
           </ActionButton>
           <ActionButton type="button" tone={pendingReload ? 'primary' : 'default'} onClick={() => void reload()} disabled={busyId === 'reload'}>
-            {busyId === 'reload' ? 'Reloading...' : pendingReload ? 'Apply changes' : 'Reload'}
+            {busyId === 'reload' ? t('mcp.mCPConfig.reloading') : pendingReload ? t('mcp.mCPConfig.applyChanges') : t('mcp.mCPConfig.reload')}
           </ActionButton>
           <ActionButton type="button" tone="primary" onClick={() => setEditing('new')}>
-            Add server
+            {t('mcp.mCPConfig.addServer')}
           </ActionButton>
         </>
       }
@@ -142,8 +144,8 @@ export function MCPConfig() {
         />
       )}
 
-      <SettingsCard title="Servers">
-        {!loading && servers.length === 0 && <SettingRow title="No server yet" hint="Add one or import your mcp.json." />}
+      <SettingsCard title={t('mcp.mCPConfig.servers')}>
+        {!loading && servers.length === 0 && <SettingRow title={t('mcp.mCPConfig.noServerYet')} hint={t('mcp.mCPConfig.addOneOrImportYour')} />}
         {servers.map((server) => (
           <MCPServerCard
             key={server.id}

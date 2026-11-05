@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Free models of OpenRouter carry ":free" at the end of their id.
 const isFree = (model: string) => model.endsWith(':free')
@@ -6,6 +7,7 @@ const isFree = (model: string) => model.endsWith(':free')
 // The field of a model: type any id, or open the list of the models a provider offers. The list always shows all of them when it opens;
 // it narrows only once something is typed, so the model already chosen does not hide the others.
 export function ModelCombobox({ value, options, placeholder, onChange }: { value: string; options: string[]; placeholder?: string; onChange: (model: string) => void }) {
+  const { t } = useTranslation('config')
   const root = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState<string | null>(null)
@@ -83,7 +85,7 @@ export function ModelCombobox({ value, options, placeholder, onChange }: { value
         <button
           type="button"
           tabIndex={-1}
-          aria-label={open ? 'Close the list of models' : 'Show the models'}
+          aria-label={open ? t('search.modelCombobox.closeTheListOfModels') : t('search.modelCombobox.showTheModels')}
           onClick={() => setOpen((current) => !current)}
           className="absolute right-0 top-0 flex h-10 w-9 cursor-pointer items-center justify-center border-0 bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
         >
@@ -96,10 +98,10 @@ export function ModelCombobox({ value, options, placeholder, onChange }: { value
       {open && hasList && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
           <div className="border-b border-[var(--border-soft)] px-3 py-1.5 text-[11px] font-semibold text-[var(--text-muted)]">
-            {shown.length === options.length ? `${options.length} models` : `${shown.length} of ${options.length} models`}
+            {shown.length === options.length ? t('search.modelCombobox.total', { total: options.length }) : t('search.modelCombobox.shownOfTotal', { shown: shown.length, total: options.length })}
           </div>
           <div className="no-scrollbar max-h-[260px] overflow-y-auto p-1.5" role="listbox">
-            {shown.length === 0 && <div className="px-2.5 py-3 text-[12px] text-[var(--text-muted)]">No model of the list matches. The text is used as it is.</div>}
+            {shown.length === 0 && <div className="px-2.5 py-3 text-[12px] text-[var(--text-muted)]">{t('search.modelCombobox.noModelOfTheList')}</div>}
             {shown.map((model, index) => (
               <button
                 key={model}
@@ -114,7 +116,7 @@ export function ModelCombobox({ value, options, placeholder, onChange }: { value
                 ].join(' ')}
               >
                 <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{model}</span>
-                {isFree(model) && <span className="shrink-0 rounded-full bg-[var(--accent-success)]/12 px-2 py-0.5 text-[10.5px] font-semibold text-[var(--accent-success)]">Free</span>}
+                {isFree(model) && <span className="shrink-0 rounded-full bg-[var(--accent-success)]/12 px-2 py-0.5 text-[10.5px] font-semibold text-[var(--accent-success)]">{t('search.modelCombobox.free')}</span>}
                 {model === value && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                     <path d="m5 12 5 5 9-10" />

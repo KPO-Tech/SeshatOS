@@ -4,6 +4,7 @@ import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { BrandIcon } from './catalog/BrandIcon'
 import { mcpLogo } from './catalog/mcpLogos'
 import { buildServer, commandLine, missingInputs, type McpCatalogEntry } from './mcpCatalog'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   entry: McpCatalogEntry
@@ -17,6 +18,7 @@ type Props = {
  * program from the internet that runs here with the person's permissions, so nothing is added until they have seen that.
  */
 export function McpInstallDialog({ entry, onInstalled, onClose }: Props) {
+  const { t } = useTranslation('plugins')
   const [values, setValues] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,37 +56,37 @@ export function McpInstallDialog({ entry, onInstalled, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-[rgba(0,0,0,0.45)] px-6" onMouseDown={(event) => event.target === event.currentTarget && !busy && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label={`Install ${entry.title}`} className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
+      <div role="dialog" aria-modal="true" aria-label={t('plugins.mcpInstallDialog.installName', { name: entry.title })} className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
         <div className="flex items-start gap-3">
           <BrandIcon brand={entry.brand} src={mcpLogo(entry.brand)} title={entry.title} size={48} />
           <div className="min-w-0">
-            <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">Install {entry.title}</h2>
-            <p className="m-0 mt-1 text-[12.5px] leading-5 text-[var(--text-muted)]">{entry.description}</p>
+            <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">{t('plugins.mcpInstallDialog.installName', { name: entry.title })}</h2>
+            <p className="m-0 mt-1 text-[12.5px] leading-5 text-[var(--text-muted)]">{t(entry.description)}</p>
           </div>
         </div>
 
         <div className="no-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
           {failedToStart ? (
             <div className="rounded-xl border border-[var(--accent-danger)]/40 p-3">
-              <div className="text-[13px] font-semibold text-[var(--accent-danger)]">Installed, but it did not start</div>
+              <div className="text-[13px] font-semibold text-[var(--accent-danger)]">{t('plugins.mcpInstallDialog.installedButItDidNot')}</div>
               <pre className="m-0 mt-2 max-h-40 overflow-auto whitespace-pre-wrap font-mono text-[11px] leading-4 text-[var(--text-secondary)]">{failedToStart}</pre>
-              <p className="m-0 mt-2 text-[12px] text-[var(--text-muted)]">It stays in the list so that you can fix it from Create &gt; Custom MCP, or remove it.</p>
+              <p className="m-0 mt-2 text-[12px] text-[var(--text-muted)]">{t('plugins.mcpInstallDialog.itStaysInTheList')}</p>
             </div>
           ) : (
             <>
               <section className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-root)] p-3">
-                <div className="text-[12px] font-semibold text-[var(--text-muted)]">{remote ? 'Connects to' : 'Starts'}</div>
-                <code className="mt-1 block break-all font-mono text-[12px] leading-5 text-[var(--text-primary)]">{commandLine(entry, values)}</code>
+                <div className="text-[12px] font-semibold text-[var(--text-muted)]">{remote ? t('plugins.mcpInstallDialog.connectsTo') : t('plugins.mcpInstallDialog.starts')}</div>
+                <code className="mt-1 block break-all font-mono text-[12px] leading-5 text-[var(--text-primary)]">{commandLine(entry, values, t)}</code>
                 <p className="m-0 mt-2 text-[11.5px] leading-4 text-[var(--text-muted)]">
                   {remote
-                    ? 'Your agents send their requests to this address when they use it.'
-                    : 'A program of the internet, downloaded the first time it starts and run on this machine with your permissions.'}
+                    ? t('plugins.mcpInstallDialog.yourAgentsSendTheirRequests')
+                    : t('plugins.mcpInstallDialog.aProgramOfTheInternet')}
                 </p>
               </section>
 
               {entry.needs.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-[var(--text-muted)]">
-                  Needs
+                  {t('plugins.mcpInstallDialog.needs')}
                   {entry.needs.map((need) => (
                     <span key={need} className="rounded-md border border-[var(--border-soft)] px-1.5 py-0.5 text-[var(--text-secondary)]">
                       {need}
@@ -96,7 +98,7 @@ export function McpInstallDialog({ entry, onInstalled, onClose }: Props) {
               {entry.inputs.map((input) => (
                 <label key={input.id} className="grid gap-1.5">
                   <span className="text-[12px] font-semibold text-[var(--text-muted)]">
-                    {input.label}
+                    {t(input.label)}
                     {input.required ? ' *' : ''}
                   </span>
                   <input
@@ -116,15 +118,15 @@ export function McpInstallDialog({ entry, onInstalled, onClose }: Props) {
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <button type="button" onClick={() => openInAppBrowser(entry.docs)} className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-medium text-[var(--accent-primary)] hover:underline">
-            Read about it
+            {t('plugins.mcpInstallDialog.readAboutIt')}
           </button>
           <div className="flex gap-2">
             <button type="button" disabled={busy} onClick={onClose} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
-              {failedToStart ? 'Close' : 'Cancel'}
+              {failedToStart ? t('plugins.mcpInstallDialog.close') : t('plugins.mcpInstallDialog.cancel')}
             </button>
             {!failedToStart && (
               <button type="button" disabled={busy || missing.length > 0} onClick={() => void install()} className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-50">
-                {busy ? 'Installing...' : 'Install'}
+                {busy ? t('plugins.mcpInstallDialog.installing') : t('plugins.mcpInstallDialog.install')}
               </button>
             )}
           </div>

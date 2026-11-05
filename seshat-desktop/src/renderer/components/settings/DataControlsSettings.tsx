@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '@renderer/stores/ui'
 import { ActionButton, SettingRow, SettingsCard, SettingsPage, StatusBadge } from './kit'
 
-const UNAVAILABLE = ['Clear application cache', 'Delete all conversations', 'Clear connector accounts']
+const UNAVAILABLE = ['settings:dataControls.clearCache', 'settings:dataControls.deleteConversations', 'settings:dataControls.clearConnectors']
 
 export function DataControlsSettings() {
+  const { t } = useTranslation('settings')
   const approvalCount = useUIStore((s) => Object.keys(s.rememberedApprovals).length)
   const clearAllApprovals = useUIStore((s) => s.clearAllApprovals)
   const [justCleared, setJustCleared] = useState(false)
@@ -18,17 +20,17 @@ export function DataControlsSettings() {
   return (
     <SettingsPage id="data-controls">
       <SettingsCard>
-        <SettingRow title="Remembered tool approvals" hint={approvalCount > 0 ? `${approvalCount} remembered: you are not asked again for these.` : 'None remembered.'}>
+        <SettingRow title={t('dataControls.approvals')} hint={approvalCount > 0 ? t('dataControls.approvalsHint', { count: approvalCount }) : t('dataControls.approvalsNone')}>
           <ActionButton type="button" onClick={handleClearApprovals} disabled={approvalCount === 0}>
-            {justCleared ? 'Cleared' : 'Clear all'}
+            {justCleared ? t('dataControls.cleared') : t('dataControls.clearAll')}
           </ActionButton>
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="Coming later">
+      <SettingsCard title={t('dataControls.comingLater')}>
         {UNAVAILABLE.map((title) => (
-          <SettingRow key={title} title={title}>
-            <StatusBadge tone="muted">Not available</StatusBadge>
+          <SettingRow key={title} title={t(title)}>
+            <StatusBadge tone="muted">{t('dataControls.notAvailable')}</StatusBadge>
           </SettingRow>
         ))}
       </SettingsCard>

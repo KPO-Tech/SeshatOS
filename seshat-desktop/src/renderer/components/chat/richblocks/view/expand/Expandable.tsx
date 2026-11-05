@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { DownloadMenu } from './DownloadMenu'
+import { useTranslation } from 'react-i18next'
 
 const ExpandedContext = createContext(false)
 
@@ -45,6 +46,7 @@ function CloseIcon() {
 }
 
 function LargeView({ label, onClose, className, children }: { label: string; onClose: () => void; className?: string; children: ReactNode }) {
+  const { t } = useTranslation('chat')
   const close = useRef<HTMLButtonElement>(null)
   const figure = useRef<HTMLDivElement>(null)
 
@@ -72,7 +74,7 @@ function LargeView({ label, onClose, className, children }: { label: string; onC
               target={() => figure.current}
               buttonClassName="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
             />
-            <button ref={close} type="button" onClick={onClose} aria-label="Close" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text">
+            <button ref={close} type="button" onClick={onClose} aria-label={t('chat.richblocks.view.expand.expandable.close')} className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text">
               <CloseIcon />
             </button>
           </div>
@@ -92,6 +94,7 @@ function LargeView({ label, onClose, className, children }: { label: string; onC
 
 /** Shows the content in the answer, with a corner button that opens it in a large view or saves it as an image. */
 export function Expandable({ label, children, mode = 'expand', force = false, maxHeight, scrollX = false, className = '' }: Props) {
+  const { t } = useTranslation('chat')
   const box = useRef<HTMLDivElement>(null)
   const [tooBig, setTooBig] = useState(false)
   const [open, setOpen] = useState(false)
@@ -126,7 +129,7 @@ export function Expandable({ label, children, mode = 'expand', force = false, ma
         </div>
       )}
       {offer && mode === 'expand' && (
-        <button type="button" onClick={() => setOpen(true)} title="Open in a large view" aria-label={`Open ${label} in a large view`} className={`absolute right-2 top-2 ${CORNER_BUTTON}`}>
+        <button type="button" onClick={() => setOpen(true)} title={t('chat.richblocks.view.expand.expandable.openInALargeView')} aria-label={t('chat.richblocks.view.expand.expandable.openLarge', { label })} className={`absolute right-2 top-2 ${CORNER_BUTTON}`}>
           <ExpandIcon />
         </button>
       )}

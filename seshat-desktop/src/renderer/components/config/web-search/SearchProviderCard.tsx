@@ -4,6 +4,7 @@ import { testSearchProvider, updateSearchProvider } from './webSearchApi'
 import type { ProviderTestState, SearchProviderConfig } from './webSearchTypes'
 import { providerStatus } from './webSearchUtils'
 import { WebSearchProviderIcon } from './WebSearchProviderIcon'
+import { useTranslation } from 'react-i18next'
 
 type SearchProviderCardProps = {
   provider: SearchProviderConfig
@@ -12,6 +13,7 @@ type SearchProviderCardProps = {
 
 /** One search provider: its switch, its credentials and a test, in a card of its own. */
 export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProps) {
+  const { t } = useTranslation('config')
   const [enabled, setEnabled] = useState(provider.enabled)
   const [apiKey, setApiKey] = useState('')
   const [baseUrl, setBaseUrl] = useState(provider.base_url || provider.default_base_url || '')
@@ -34,7 +36,7 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
     setAuthUsername(provider.auth_username || '')
   }, [provider])
 
-  const status = providerStatus({ ...provider, enabled })
+  const status = providerStatus({ ...provider, enabled }, t)
 
   function markDirty() {
     setDirty(true)
@@ -77,14 +79,14 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
         auth_username: authChanged || clientIdChanged ? authUsername : undefined
       })
       setTesting(result.ok ? 'ok' : 'error')
-      setMessage(result.ok ? `Connected in ${result.latency_ms} ms` : result.error || 'Provider test failed.')
+      setMessage(result.ok ? t('webSearch.searchProviderCard.connectedIn', { ms: result.latency_ms }) : result.error || 'Provider test failed.')
     } catch (err) {
       setTesting('error')
       setMessage(err instanceof Error ? err.message : 'Provider test failed.')
     }
   }
 
-  const credentialLabel = isSearxng ? 'Password' : isReddit ? 'Client secret' : 'API key'
+  const credentialLabel = isSearxng ? t('webSearch.searchProviderCard.password') : isReddit ? t('webSearch.searchProviderCard.clientSecret') : t('webSearch.searchProviderCard.apiKey')
   const hasActions = !isResearch || dirty
 
   return (
@@ -100,7 +102,7 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
           </div>
         </div>
         <Toggle
-          label={`Enable ${provider.label}`}
+          label={t('webSearch.searchProviderCard.enable', { name: provider.label })}
           enabled={enabled}
           onChange={(next) => {
             setEnabled(next)
@@ -126,42 +128,42 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
                 }
                 markDirty()
               }}
-              placeholder={provider.has_api_key ? 'Saved' : 'Required'}
+              placeholder={provider.has_api_key ? t('webSearch.searchProviderCard.saved') : t('webSearch.searchProviderCard.required')}
             />
           </Field>
         )}
         {isReddit && (
-          <Field label="Client ID">
+          <Field label={t('webSearch.searchProviderCard.clientId')}>
             <Input
-              label="Client ID"
+              label={t('webSearch.searchProviderCard.clientId')}
               value={authUsername}
               onChange={(value) => {
                 setAuthUsername(value)
                 setClientIdChanged(true)
                 markDirty()
               }}
-              placeholder="Reddit app client id"
+              placeholder={t('webSearch.searchProviderCard.redditAppClientId')}
             />
           </Field>
         )}
         {isSearxng && (
-          <Field label="Username">
+          <Field label={t('webSearch.searchProviderCard.username')}>
             <Input
-              label="Username"
+              label={t('webSearch.searchProviderCard.username')}
               value={authUsername}
               onChange={(value) => {
                 setAuthUsername(value)
                 setAuthChanged(true)
                 markDirty()
               }}
-              placeholder="Optional"
+              placeholder={t('webSearch.searchProviderCard.optional')}
             />
           </Field>
         )}
         {provider.requires_base_url && (
-          <Field label="Base URL">
+          <Field label={t('webSearch.searchProviderCard.baseUrl')}>
             <Input
-              label="Base URL"
+              label={t('webSearch.searchProviderCard.baseUrl')}
               value={baseUrl}
               onChange={(value) => {
                 setBaseUrl(value)
@@ -180,12 +182,12 @@ export function SearchProviderCard({ provider, onSaved }: SearchProviderCardProp
           <div className="flex shrink-0 items-center gap-2">
             {!isResearch && (
               <ActionButton type="button" onClick={() => void handleTest()} disabled={testing === 'running' || saving}>
-                {testing === 'running' ? 'Testing...' : 'Test'}
+                {testing === 'running' ? t('webSearch.searchProviderCard.testing') : t('webSearch.searchProviderCard.test')}
               </ActionButton>
             )}
             {dirty && (
               <ActionButton type="button" tone="primary" onClick={() => void handleSave()} disabled={saving}>
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? t('webSearch.searchProviderCard.saving') : t('webSearch.searchProviderCard.save')}
               </ActionButton>
             )}
           </div>

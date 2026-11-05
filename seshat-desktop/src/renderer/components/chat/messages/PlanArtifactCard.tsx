@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { CheckOne, CloseOne, DocDetail } from "@icon-park/react"
 import { useUIStore } from '@renderer/stores/ui'
 import type { PlanDocument } from '@renderer/api/types'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -30,6 +31,7 @@ type Props = {
 }
 
 export const PlanArtifactCard = memo(function PlanArtifactCard({ plan, sessionId, onProceed, onReject, readOnly }: Props) {
+  const { t } = useTranslation('chat')
   const openRightPanel = useUIStore((s) => s.openRightPanel)
 
   function openPanel(e: React.MouseEvent) {
@@ -70,12 +72,12 @@ export const PlanArtifactCard = memo(function PlanArtifactCard({ plan, sessionId
             </span>
             <span className={cx('shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em]', BADGE_CSS[plan.status])}>{plan.status}</span>
           </div>
-          <div className="text-[10px] text-app-text-muted">{plan.filename} · v{plan.version} · Click to review</div>
+          <div className="text-[10px] text-app-text-muted">{plan.filename} · v{plan.version} · {t('chat.messages.planArtifactCard.clickToReview')}</div>
         </div>
       </div>
       {!readOnly && plan.status === 'pending' && (
         <div className="flex shrink-0 items-center justify-between px-2.5 pb-1.5 pt-1.5">
-          <span className="text-[10px] text-app-text-muted">Review and approve to continue execution</span>
+          <span className="text-[10px] text-app-text-muted">{t('chat.messages.planArtifactCard.reviewAndApproveToContinue')}</span>
           <div className="flex shrink-0 items-center gap-1.5">
             {onReject && (
               <button
@@ -84,7 +86,7 @@ export const PlanArtifactCard = memo(function PlanArtifactCard({ plan, sessionId
                 onClick={handleReject}
               >
                 <CloseOne size={10} />
-                Reject
+                {t('chat.messages.planArtifactCard.reject')}
               </button>
             )}
             <button
@@ -93,7 +95,7 @@ export const PlanArtifactCard = memo(function PlanArtifactCard({ plan, sessionId
               onClick={handleProceed}
             >
               <CheckOne size={10} />
-              Proceed
+              {t('chat.messages.planArtifactCard.proceed')}
             </button>
           </div>
         </div>

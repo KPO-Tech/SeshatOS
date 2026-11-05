@@ -3,6 +3,7 @@ import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { Titlebar } from '@renderer/components/layout/Titlebar'
 import { IntroBackdrop } from '@renderer/components/onboarding/IntroBackdrop'
 import { IntroSteps } from '@renderer/components/onboarding/IntroSteps'
+import { useTranslation } from 'react-i18next'
 
 const ENTER = { animation: 'fade-in 320ms ease both' } as const
 
@@ -25,6 +26,7 @@ export function SetupShell({
   footer?: ReactNode
   children: ReactNode
 }) {
+  const { t } = useTranslation('shell')
   return (
     <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--surface-root)] text-[var(--text-primary)]">
       <IntroBackdrop />
@@ -35,7 +37,7 @@ export function SetupShell({
           <div className="flex items-center gap-2.5">
             <SeshatLogo size={40} />
             <div className="text-[28px] font-semibold leading-tight tracking-[-0.01em]">
-              Seshat<span className="text-[var(--accent-primary)]">OS</span>
+              {t('setup.setupShell.seshat')}<span className="text-[var(--accent-primary)]">{t('setup.setupShell.os')}</span>
             </div>
           </div>
           <h1 className="m-0 mt-4 text-center text-[28px] font-semibold leading-tight">{title}</h1>

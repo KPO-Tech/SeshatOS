@@ -3,6 +3,7 @@ import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { deleteNote, listNotes, noteTitle, saveNote, type ProjectNote } from '@renderer/lib/projectNotes'
 import { relativeTime } from '@renderer/lib/projectsView'
 import { Delete, Plus } from '../icons'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   projectId: string
@@ -16,6 +17,7 @@ const SAVE_DELAY_MS = 600
  * key, and when the person leaves it, so that nothing has to be saved by hand.
  */
 export function NotesTab({ projectId, now }: Props) {
+  const { t } = useTranslation('shell')
   const [notes, setNotes] = useState<ProjectNote[]>(() => listNotes(projectId))
   const [selectedId, setSelectedId] = useState<string | null>(() => listNotes(projectId)[0]?.id ?? null)
   const [title, setTitle] = useState('')
@@ -85,13 +87,13 @@ export function NotesTab({ projectId, now }: Props) {
     <div className="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
       <div className="flex w-[250px] shrink-0 flex-col border-r border-[var(--border-soft)]">
         <div className="flex shrink-0 items-center justify-between px-3 py-3">
-          <span className="text-[13px] font-semibold text-[var(--text-primary)]">Notes</span>
-          <button type="button" onClick={() => open(null)} aria-label="New note" title="New note" className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+          <span className="text-[13px] font-semibold text-[var(--text-primary)]">{t('pages.projects.detail.notesTab.notes')}</span>
+          <button type="button" onClick={() => open(null)} aria-label={t('pages.projects.detail.notesTab.newNote')} title={t('pages.projects.detail.notesTab.newNote')} className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
             <Plus size={14} />
           </button>
         </div>
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-1.5 pb-2">
-          {notes.length === 0 && <p className="m-0 px-2 py-2 text-[12px] text-[var(--text-muted)]">No notes yet. Write the first one on the right.</p>}
+          {notes.length === 0 && <p className="m-0 px-2 py-2 text-[12px] text-[var(--text-muted)]">{t('pages.projects.detail.notesTab.noNotesYetWriteThe')}</p>}
           {notes.map((note) => (
             <button
               key={note.id}
@@ -100,7 +102,7 @@ export function NotesTab({ projectId, now }: Props) {
               className={`flex w-full cursor-pointer flex-col rounded-md border-0 px-2.5 py-1.5 text-left ${note.id === selectedId ? 'bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)]' : 'bg-transparent hover:bg-[var(--surface-hover)]'}`}
             >
               <span className="truncate text-[12.5px] font-medium text-[var(--text-primary)]">{noteTitle(note)}</span>
-              <span className="text-[11px] text-[var(--text-muted)]">{relativeTime(note.updatedAt, now) || 'just now'}</span>
+              <span className="text-[11px] text-[var(--text-muted)]">{relativeTime(note.updatedAt, now) || t('pages.projects.detail.notesTab.justNow')}</span>
             </button>
           ))}
         </div>
@@ -112,41 +114,41 @@ export function NotesTab({ projectId, now }: Props) {
             value={title}
             onChange={(event) => change({ title: event.target.value })}
             onBlur={flush}
-            placeholder="Title"
-            aria-label="Title of the note"
+            placeholder={t('pages.projects.detail.notesTab.title')}
+            aria-label={t('pages.projects.detail.notesTab.titleOfTheNote')}
             className="min-w-0 flex-1 border-0 bg-transparent text-[15px] font-semibold text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
           />
-          <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label="View">
+          <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label={t('pages.projects.detail.notesTab.view')}>
             {([false, true] as const).map((value) => (
               <button key={String(value)} type="button" aria-pressed={preview === value} onClick={() => setPreview(value)} className={`cursor-pointer rounded-md border-0 px-2 py-0.5 ${preview === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
-                {value ? 'Preview' : 'Write'}
+                {value ? t('pages.projects.detail.notesTab.preview') : t('pages.projects.detail.notesTab.write')}
               </button>
             ))}
           </div>
           {editing.current && (confirming ? (
             <div className="flex items-center gap-1.5">
               <button type="button" onClick={() => setConfirming(false)} className="cursor-pointer rounded-md border border-[var(--border-soft)] bg-transparent px-2 py-0.5 text-[11.5px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-                Cancel
+                {t('pages.projects.detail.notesTab.cancel')}
               </button>
               <button type="button" onClick={remove} className="cursor-pointer rounded-md border border-[var(--accent-danger)]/30 bg-[var(--accent-danger)]/10 px-2 py-0.5 text-[11.5px] font-semibold text-[var(--accent-danger)]">
-                Delete
+                {t('pages.projects.detail.notesTab.delete')}
               </button>
             </div>
           ) : (
-            <button type="button" onClick={() => setConfirming(true)} aria-label="Delete the note" title="Delete the note" className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-danger)]">
+            <button type="button" onClick={() => setConfirming(true)} aria-label={t('pages.projects.detail.notesTab.deleteTheNote')} title={t('pages.projects.detail.notesTab.deleteTheNote')} className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-danger)]">
               <Delete size={13} />
             </button>
           ))}
         </div>
         {preview ? (
-          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-4">{body.trim() ? <MarkdownView variant="document">{body}</MarkdownView> : <p className="m-0 text-[13px] text-[var(--text-muted)]">Nothing to show yet.</p>}</div>
+          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-4">{body.trim() ? <MarkdownView variant="document">{body}</MarkdownView> : <p className="m-0 text-[13px] text-[var(--text-muted)]">{t('pages.projects.detail.notesTab.nothingToShowYet')}</p>}</div>
         ) : (
           <textarea
             value={body}
             onChange={(event) => change({ body: event.target.value })}
             onBlur={flush}
-            placeholder={fresh ? 'Write a note in Markdown: what the project is for, decisions, things to remember...' : 'Write in Markdown...'}
-            aria-label="Text of the note"
+            placeholder={fresh ? t('pages.projects.detail.notesTab.writeANoteInMarkdown') : t('pages.projects.detail.notesTab.writeInMarkdown')}
+            aria-label={t('pages.projects.detail.notesTab.textOfTheNote')}
             className="no-scrollbar min-h-0 flex-1 resize-none border-0 bg-transparent px-6 py-4 font-mono text-[13px] leading-[1.6] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
           />
         )}

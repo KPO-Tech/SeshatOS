@@ -4,6 +4,7 @@ import { fileCountLabel, relativeTime } from '@renderer/lib/projectsView'
 import { Dropdown } from '@renderer/components/ui/Dropdown'
 import { ActivityMark, menuItems, ProjectTile, TagList, type ProjectActions } from './ProjectCard'
 import type { FileCount } from './useFileCounts'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   project: ProjectSummary
@@ -14,10 +15,11 @@ type Props = {
 
 /** A project as one line, for the list view. */
 export function ProjectRow({ project, files, now, actions }: Props) {
+  const { t } = useTranslation('shell')
   const last = relativeTime(project.lastActiveAt, now)
   return (
     <li className={`group flex items-center gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 transition-colors focus-within:border-[var(--accent-primary)] hover:border-[var(--accent-primary)] ${project.archived ? 'opacity-75' : ''}`}>
-      <button type="button" onClick={() => actions.open(project)} aria-label={`Open ${project.name}`} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left">
+      <button type="button" onClick={() => actions.open(project)} aria-label={t('pages.projects.projectCard.openProject', { name: project.name })} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left">
         <ProjectTile project={project} size={36} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
@@ -36,23 +38,23 @@ export function ProjectRow({ project, files, now, actions }: Props) {
         <TagList tags={project.tags.slice(0, 2)} />
       </div>
       <span className="hidden w-[84px] shrink-0 text-right text-[11px] text-[var(--text-muted)] md:block">{fileCountLabel(files?.count, files?.capped ?? false)}</span>
-      <span className="hidden w-[140px] shrink-0 text-right text-[11px] text-[var(--text-muted)] md:block">{last ? `Active ${last}` : 'No activity yet'}</span>
+      <span className="hidden w-[140px] shrink-0 text-right text-[11px] text-[var(--text-muted)] md:block">{last ? t('pages.projects.projectRow.active', { when: last }) : t('pages.projects.projectRow.noActivityYet')}</span>
       <button
         type="button"
         onClick={() => actions.startSession(project)}
         className="flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-transparent px-2.5 py-1 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)] group-hover:border-[var(--accent-primary)]"
       >
         <Play size={12} />
-        Start session
+        {t('pages.projects.projectRow.startSession')}
       </button>
-      <button type="button" onClick={() => actions.openFolder(project)} aria-label={`Open the folder of ${project.name}`} title="Open folder" className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+      <button type="button" onClick={() => actions.openFolder(project)} aria-label={t('pages.projects.projectCard.openFolderOf', { name: project.name })} title={t('pages.projects.projectRow.openFolder')} className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
         <FolderOpen size={14} />
       </button>
       <Dropdown
-        label={`Actions of ${project.name}`}
-        items={menuItems(project, actions)}
+        label={t('pages.projects.projectCard.actionsOf', { name: project.name })}
+        items={menuItems(project, actions, t)}
         trigger={({ toggle }) => (
-          <button type="button" onClick={toggle} aria-label={`Actions of ${project.name}`} aria-haspopup="menu" className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+          <button type="button" onClick={toggle} aria-label={t('pages.projects.projectCard.actionsOf', { name: project.name })} aria-haspopup="menu" className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
             <MoreOne size={15} />
           </button>
         )}

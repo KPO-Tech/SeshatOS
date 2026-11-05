@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   size?: number
@@ -11,13 +12,14 @@ type Props = {
 // the packaged app loads over file://, where a root-absolute path resolves
 // against the filesystem root.
 export function SeshatLogo({ size = 80, className, style }: Props) {
+  const { t } = useTranslation('shell')
   const classes = ['object-contain', className].filter(Boolean).join(' ')
 
   return (
     <>
       <img
         src="brand/mark-on-light.svg"
-        alt="SeshatOS"
+        alt={t('brand.seshatLogo.seshatos')}
         width={size}
         height={size}
         className={`brand-mark-on-light ${classes}`}
@@ -25,7 +27,7 @@ export function SeshatLogo({ size = 80, className, style }: Props) {
       />
       <img
         src="brand/mark-on-dark.svg"
-        alt="SeshatOS"
+        alt={t('brand.seshatLogo.seshatos')}
         width={size}
         height={size}
         className={`brand-mark-on-dark ${classes}`}

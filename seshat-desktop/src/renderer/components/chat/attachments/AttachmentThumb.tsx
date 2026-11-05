@@ -7,6 +7,7 @@ import { useUIStore } from '@renderer/stores/ui'
 import type { ChatAttachment } from './attachmentTypes'
 import { absoluteLocalPath, attachmentPreviewURL, fetchAttachmentTextPreview, isImageAttachment, isPDFAttachment, resolveAttachmentOpenAction } from './attachmentPreview'
 import { renderPDFPagePreviews } from '@renderer/lib/pdfPreview'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -40,6 +41,7 @@ type Props = {
 // else is an icon + filename, no extension badge, no unreadable text
 // snippet - clicking it opens the right kind of full preview instead.
 export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
+  const { t } = useTranslation('chat')
   const openLightbox = useUIStore((s) => s.openLightbox)
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const [hydratedURL, setHydratedURL] = useState<string | undefined>()
@@ -99,7 +101,7 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
   const isUploading = file.upload_status === 'uploading'
   const isFailed = file.upload_status === 'failed'
   const sizeLabel = formatSize(file.size)
-  const statusLabel = isUploading ? 'Uploading...' : isFailed ? file.error || 'Upload failed' : sizeLabel
+  const statusLabel = isUploading ? t('chat.attachments.attachmentThumb.uploading') : isFailed ? file.error || t('chat.attachments.attachmentThumb.uploadFailed') : sizeLabel
   const tooltip = [file.filename, statusLabel].filter(Boolean).join(' - ')
 
   async function handleOpen() {
@@ -152,7 +154,7 @@ export function AttachmentThumb({ file, size = 56, onRemove }: Props) {
           type="button"
           className="absolute -right-1.5 -top-1.5 z-[2] flex size-4 items-center justify-center rounded-full border border-app-border-subtle bg-app-surface p-0 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary"
           onMouseDown={(e) => { e.preventDefault(); onRemove(file.id) }}
-          aria-label="Remove attachment"
+          aria-label={t('chat.attachments.attachmentThumb.removeAttachment')}
         >
           <WindowCloseIcon size={10} />
         </button>

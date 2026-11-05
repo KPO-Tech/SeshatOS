@@ -19,8 +19,10 @@ import { TitlebarSessionControls } from './TitlebarSessionControls'
 import { NotificationBell } from './NotificationBell'
 import { UpdateBanner } from './UpdateBanner'
 import { useUpdateNotice } from '@renderer/hooks/useUpdateNotice'
+import { useTranslation } from 'react-i18next'
 
 export function Shell() {
+  const { t } = useTranslation('shell')
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
   const navigate = useNavigate()
@@ -124,7 +126,7 @@ export function Shell() {
             <button
               className="flex size-8 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-[var(--text-secondary)] transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
               onClick={toggleSidebar}
-              aria-label="Toggle sidebar"
+              aria-label={t('layout.shell.toggleSidebar')}
               type="button"
             >
               <InternalExpansion size={15} />

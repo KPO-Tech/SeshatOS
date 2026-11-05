@@ -3,10 +3,12 @@ import { SidebarItem } from '@renderer/components/layout/sidebar/SidebarItem'
 import { useDialogsStore } from '@renderer/stores/dialogs'
 import { KNOWLEDGE_NAV, tabFromPath, type KnowledgeTab } from '../nav'
 import { useCanManageKnowledge } from '../useCanManage'
+import { useTranslation } from 'react-i18next'
 
 // The sidebar of the Knowledge platform. While it is open it takes the place of the main sidebar's navigation; the Store entry and the
 // SeshatOS menu below stay. The pages that manage Knowledge are left out for a person who may not.
 export function KnowledgeNav({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation('knowledge/components')
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { allowed: canManage } = useCanManageKnowledge()
@@ -23,10 +25,10 @@ export function KnowledgeNav({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <nav className={`flex flex-col gap-4 px-2 pb-1 pt-3.5 ${collapsed ? 'items-center' : ''}`} aria-label="Knowledge">
+    <nav className={`flex flex-col gap-4 px-2 pb-1 pt-3.5 ${collapsed ? 'items-center' : ''}`} aria-label={t('pages.knowledge.components.knowledgeNav.knowledge')}>
       <div className={`flex items-center gap-2.5 ${collapsed ? 'justify-center' : 'px-2.5'}`}>
         <img src="brand/knowledge-icon.svg" alt="" width={collapsed ? 26 : 28} height={collapsed ? 26 : 28} className="rounded-[22%]" />
-        {!collapsed && <span className="text-[14px] font-semibold text-[var(--text-primary)]">Knowledge</span>}
+        {!collapsed && <span className="text-[14px] font-semibold text-[var(--text-primary)]">{t('pages.knowledge.components.knowledgeNav.knowledge')}</span>}
       </div>
 
       {KNOWLEDGE_NAV.map((group) => {
@@ -37,13 +39,13 @@ export function KnowledgeNav({ collapsed }: { collapsed: boolean }) {
             {collapsed ? (
               <div className="mb-1 h-px w-5 bg-[var(--border-soft)]" aria-hidden="true" />
             ) : (
-              <div className="mb-1 px-2.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">{group.title}</div>
+              <div className="mb-1 px-2.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">{t(group.title)}</div>
             )}
             {items.map((item) => (
               <SidebarItem
                 key={item.id}
                 icon={item.icon}
-                label={item.label}
+                label={t(item.label)}
                 badge={item.ready ? undefined : 'Soon'}
                 collapsed={collapsed}
                 active={active === item.id}

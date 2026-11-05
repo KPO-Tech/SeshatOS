@@ -3,6 +3,7 @@ import { CodeBox, ErrorPre, HCARD_HEADER_PATH_CSS, HeaderCard, Section } from '.
 import { connectorKind, serverLabel } from '../connectorNames'
 import { formatMcpResult } from '../mcpResult'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 type ParsedMcpName = { server: string; tool: string }
 
@@ -42,6 +43,7 @@ function parseMcpToolName(name: string, input: Record<string, unknown>): ParsedM
 }
 
 export function McpToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const parsed = parseMcpToolName(tool.name, tool.input)
   const args = Object.entries(tool.input).filter(
     ([key]) => !['tool', '_tool', 'server', '_server'].includes(key),
@@ -74,18 +76,18 @@ export function McpToolView({ tool, result }: ToolViewProps) {
               ))}
           </div>
         ) : (
-          <div className="px-2.5 py-2 text-[11px] text-app-text-muted">No arguments.</div>
+          <div className="px-2.5 py-2 text-[11px] text-app-text-muted">{t('chat.tools.renderers.mcpToolView.noArguments')}</div>
         )}
       </HeaderCard>
 
       {result?.content && !result.isError && (
-        <Section label="Result">
+        <Section label={t('chat.tools.renderers.mcpToolView.result')}>
           <CodeBox content={formatted?.text ?? result.content} language={formatted?.language} copyable />
         </Section>
       )}
 
       {result?.isError && result.content && (
-        <Section label="Error">
+        <Section label={t('chat.tools.renderers.mcpToolView.error')}>
           <ErrorPre content={result.content} />
         </Section>
       )}

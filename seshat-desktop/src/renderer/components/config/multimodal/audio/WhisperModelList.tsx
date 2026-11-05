@@ -1,5 +1,6 @@
 import { ActionButton, Chip, SettingRow } from '../../../settings/kit'
 import type { WhisperModel, WhisperProgress, WhisperState } from '../multimodalTypes'
+import { useTranslation } from 'react-i18next'
 
 function formatSize(bytes: number): string {
   if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`
@@ -18,6 +19,7 @@ type Props = {
 
 /** The models of the local speech engine: which one answers, which are on the disk, and the download of a new one. */
 export function WhisperModelList({ models, state, progress, busy, onDownload, onUse, onDelete }: Props) {
+  const { t } = useTranslation('config')
   return (
     <>
       {models.map((model) => {
@@ -32,20 +34,20 @@ export function WhisperModelList({ models, state, progress, busy, onDownload, on
                 <div className="h-full bg-[var(--accent-primary)] transition-[width]" style={{ width: `${percent ?? 5}%` }} />
               </div>
             )}
-            {active && <Chip tone="ok">In use</Chip>}
-            {downloaded && !active && <Chip>On this computer</Chip>}
+            {active && <Chip tone="ok">{t('multimodal.audio.whisperModelList.inUse')}</Chip>}
+            {downloaded && !active && <Chip>{t('multimodal.audio.whisperModelList.onThisComputer')}</Chip>}
             {!downloaded && (
               <ActionButton type="button" tone="primary" disabled={busy} onClick={() => onDownload(model.id)}>
-                {downloading ? `Downloading${percent !== null ? ` ${percent}%` : '...'}` : 'Download'}
+                {downloading ? (percent !== null ? t('multimodal.audio.whisperModelList.downloadingPercent', { percent }) : t('multimodal.audio.whisperModelList.downloading')) : t('multimodal.audio.whisperModelList.download')}
               </ActionButton>
             )}
             {downloaded && !active && (
               <>
                 <ActionButton type="button" disabled={busy} onClick={() => onUse(model.id)}>
-                  Use
+                  {t('multimodal.audio.whisperModelList.use')}
                 </ActionButton>
                 <ActionButton type="button" tone="danger" disabled={busy} onClick={() => onDelete(model.id)}>
-                  Delete
+                  {t('multimodal.audio.whisperModelList.delete')}
                 </ActionButton>
               </>
             )}

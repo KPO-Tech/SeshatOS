@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { PROJECT_COLORS, type ProjectColor, type ProjectSummary } from '@renderer/lib/projects'
 import { parseTags } from '@renderer/lib/projectsView'
 import { PROJECT_COLOR_LABEL, PROJECT_COLOR_VALUE } from './projectColors'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   project: ProjectSummary
@@ -15,6 +16,7 @@ const FIELD = 'w-full rounded-lg border border-app-border-subtle font-normal bg-
 
 /** What a person says about a project: its name, a line about it, tags to find it by, and its colour. */
 export function EditProjectDialog({ project, suggestedDescription = '', onSave, onClose }: Props) {
+  const { t } = useTranslation('shell')
   const [name, setName] = useState(project.name)
   const [description, setDescription] = useState(project.description || suggestedDescription)
   const suggested = !project.description && suggestedDescription !== '' && description === suggestedDescription
@@ -36,7 +38,7 @@ export function EditProjectDialog({ project, suggestedDescription = '', onSave, 
       <form
         role="dialog"
         aria-modal="true"
-        aria-label="Edit the project"
+        aria-label={t('pages.projects.editProjectDialog.editTheProject')}
         onSubmit={(event) => {
           event.preventDefault()
           submit()
@@ -44,28 +46,28 @@ export function EditProjectDialog({ project, suggestedDescription = '', onSave, 
         className="w-full max-w-[460px] rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]"
         style={{ animation: 'slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both' }}
       >
-        <h2 className="m-0 text-[17px] font-medium text-[var(--text-primary)]">Edit the project</h2>
+        <h2 className="m-0 text-[17px] font-medium text-[var(--text-primary)]">{t('pages.projects.editProjectDialog.editTheProject')}</h2>
         <p className="mb-0 mt-1 truncate font-mono text-[11.5px] text-[var(--text-muted)]" title={project.rootPath}>
           {project.rootPath}
         </p>
 
         <label className="mt-4 block text-[12px] font-medium text-[var(--text-secondary)]">
-          Name
+          {t('pages.projects.editProjectDialog.name')}
           <input value={name} onChange={(event) => setName(event.target.value)} autoFocus className={`${FIELD} mt-1`} />
         </label>
         <label className="mt-3 block text-[12px] font-medium text-[var(--text-secondary)]">
-          Description
-          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="What this project is for" className={`${FIELD} mt-1 resize-none`} />
-          {suggested && <span className="mt-1 block text-[11px] font-normal text-[var(--text-muted)]">Taken from the README of the folder. Change it if it is not right.</span>}
+          {t('pages.projects.editProjectDialog.description')}
+          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder={t('pages.projects.editProjectDialog.whatThisProjectIsFor')} className={`${FIELD} mt-1 resize-none`} />
+          {suggested && <span className="mt-1 block text-[11px] font-normal text-[var(--text-muted)]">{t('pages.projects.editProjectDialog.takenFromTheReadmeOf')}</span>}
         </label>
         <label className="mt-3 block text-[12px] font-medium text-[var(--text-secondary)]">
-          Tags
-          <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="data, analysis, market" className={`${FIELD} mt-1`} />
+          {t('pages.projects.editProjectDialog.tags')}
+          <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder={t('pages.projects.editProjectDialog.dataAnalysisMarket')} className={`${FIELD} mt-1`} />
         </label>
 
         <div className="mt-3">
-          <span className="text-[12px] font-medium text-[var(--text-secondary)]">Colour</span>
-          <div className="mt-1.5 flex gap-2" role="radiogroup" aria-label="Colour of the project">
+          <span className="text-[12px] font-medium text-[var(--text-secondary)]">{t('pages.projects.editProjectDialog.colour')}</span>
+          <div className="mt-1.5 flex gap-2" role="radiogroup" aria-label={t('pages.projects.editProjectDialog.colourOfTheProject')}>
             {PROJECT_COLORS.map((option) => (
               <button
                 key={option}
@@ -84,10 +86,10 @@ export function EditProjectDialog({ project, suggestedDescription = '', onSave, 
 
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="cursor-pointer rounded-[9px] border border-app-border-subtle bg-transparent px-3.5 py-1.5 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-            Cancel
+            {t('pages.projects.editProjectDialog.cancel')}
           </button>
           <button type="submit" className="cursor-pointer rounded-[9px] border-0 bg-[var(--accent-primary)] px-3.5 py-1.5 text-[13px] font-medium text-white hover:opacity-90">
-            Save
+            {t('pages.projects.editProjectDialog.save')}
           </button>
         </div>
       </form>

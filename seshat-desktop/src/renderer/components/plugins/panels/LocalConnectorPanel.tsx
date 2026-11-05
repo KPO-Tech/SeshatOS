@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { connectLocalConnector, disconnectLocalConnector, type LocalConnector } from '../api/localConnectorsApi'
 import { ErrorNote, PrimaryAction } from './formParts'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   connector: LocalConnector
@@ -9,6 +10,7 @@ type Props = {
 
 // Connects a connector with the person's own key, shows its tools and lets them disconnect.
 export function LocalConnectorPanel({ connector, onChanged }: Props) {
+  const { t } = useTranslation('plugins')
   const [key, setKey] = useState('')
   const [saving, setSaving] = useState(false)
   const [removing, setRemoving] = useState(false)
@@ -33,7 +35,7 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
   }
 
   async function disconnect() {
-    if (!window.confirm(`Disconnect ${connector.label}? The key is forgotten and its tools leave your agents.`)) return
+    if (!window.confirm(t('plugins.panels.localConnectorPanel.confirmDisconnect', { name: connector.label }))) return
     setRemoving(true)
     setError(null)
     try {
@@ -55,7 +57,7 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
             <div className={['mt-0.5 flex items-start gap-1.5 text-[11px] leading-[16px]', healthy ? 'text-[var(--accent-success)]' : 'text-[var(--accent-danger)]'].join(' ')}>
               <span className="mt-[5px] size-1.5 shrink-0 rounded-full bg-current" />
               <span className="min-w-0 break-words">
-                {healthy ? `Connected, ${connector.tools.length} ${connector.tools.length === 1 ? 'tool' : 'tools'}` : connector.last_error || 'Needs attention'}
+                {healthy ? t('plugins.panels.localConnectorPanel.connectedTools', { count: connector.tools.length }) : connector.last_error || t('plugins.panels.localConnectorPanel.needsAttention')}
               </span>
             </div>
           </div>
@@ -65,14 +67,14 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
             onClick={() => void disconnect()}
             className="h-7 shrink-0 rounded-md border border-[var(--border-soft)] px-2.5 text-[11.5px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] disabled:opacity-50"
           >
-            {removing ? 'Removing...' : 'Disconnect'}
+            {removing ? t('plugins.panels.localConnectorPanel.removing') : t('plugins.panels.localConnectorPanel.disconnect')}
           </button>
         </div>
       )}
 
       {healthy && connector.tools.length > 0 && (
         <details className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
-          <summary className="cursor-pointer text-[12px] font-semibold text-[var(--text-secondary)]">Tools your agents can use</summary>
+          <summary className="cursor-pointer text-[12px] font-semibold text-[var(--text-secondary)]">{t('plugins.panels.localConnectorPanel.toolsYourAgentsCanUse')}</summary>
           <ul className="mt-2 grid max-h-40 gap-1 overflow-y-auto">
             {connector.tools.map((tool) => (
               <li key={tool.name} className="truncate text-[11.5px] text-[var(--text-muted)]" title={tool.description}>
@@ -95,18 +97,18 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
             value={key}
             onChange={(event) => setKey(event.target.value)}
             onKeyDown={(event) => { if (event.key === 'Enter') void save() }}
-            placeholder={connected ? 'Paste a new one to replace it' : `Paste your ${connector.credential_label.toLowerCase()}`}
+            placeholder={connected ? t('plugins.panels.localConnectorPanel.pasteANewOneTo') : t('plugins.panels.localConnectorPanel.pasteYour', { what: connector.credential_label.toLowerCase() })}
             className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[12px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
           />
-          <PrimaryAction disabled={saving || !key.trim()} onClick={() => void save()}>{saving ? 'Connecting...' : connected ? 'Replace' : 'Connect'}</PrimaryAction>
+          <PrimaryAction disabled={saving || !key.trim()} onClick={() => void save()}>{saving ? t('plugins.panels.localConnectorPanel.connecting') : connected ? t('plugins.panels.localConnectorPanel.replace') : t('plugins.panels.localConnectorPanel.connect')}</PrimaryAction>
         </div>
         <p className="text-[11px] leading-[16px] text-[var(--text-muted)]">
-          It stays on this computer, encrypted, and is only sent to {connector.label}.
+          {t('plugins.panels.localConnectorPanel.staysHere', { name: connector.label })}
           {connector.credential_url && (
             <>
               {' '}
               <button type="button" onClick={() => void window.seshat.openExternal(connector.credential_url!)} className="font-semibold text-[var(--accent-primary)] hover:underline">
-                Create one
+                {t('plugins.panels.localConnectorPanel.createOne')}
               </button>
             </>
           )}
@@ -114,7 +116,7 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
             <>
               {' '}
               <button type="button" onClick={() => void window.seshat.openExternal(connector.docs_url!)} className="font-semibold text-[var(--accent-primary)] hover:underline">
-                How it works
+                {t('plugins.panels.localConnectorPanel.howItWorks')}
               </button>
             </>
           )}

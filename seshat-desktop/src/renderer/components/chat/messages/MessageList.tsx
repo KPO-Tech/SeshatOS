@@ -7,6 +7,7 @@ import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
 import { useStableEntries } from '@renderer/lib/stableEntries'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
 import type { AnswerExtras } from '@renderer/components/chat/messages/answerExtras'
+import { useTranslation } from 'react-i18next'
 
 type LiveActivity = {
   label: string
@@ -51,6 +52,7 @@ export function MessageList({
 }: MessageListProps) {
   // The files each turn created or edited, listed under the message that ends the turn.
   // Each list is kept identical while its content does not change, so that a streamed token only draws the message it lands in.
+  const { t } = useTranslation('chat')
   const changedFiles = useStableEntries(useMemo(() => changedFilesByTurnEnd(messages, isStreaming), [messages, isStreaming]))
   // The web pages behind each answer, listed under it.
   const webSources = useStableEntries(useMemo(() => webSourcesByTurnEnd(messages, isStreaming), [messages, isStreaming]))
@@ -78,7 +80,7 @@ export function MessageList({
     return (
       <div className={`conv-messages${blurred ? ' conv-messages--blurred' : ''}`} ref={scrollRef}>
         <div className="conv-empty">
-          <p className="m-0 text-[13px] text-app-text-muted">Send a message to start this conversation.</p>
+          <p className="m-0 text-[13px] text-app-text-muted">{t('chat.messages.messageList.sendAMessageToStart')}</p>
         </div>
       </div>
     )

@@ -21,18 +21,18 @@ const SCAN_ICON = (
 
 export const COMPONENT_CARDS = {
   title: {
-    title: 'Smart titles',
-    tagline: 'Names your conversations for you, with a small model that runs beside the answer.',
+    title: 'shell:setup.componentCards.titleTitle',
+    tagline: 'shell:setup.componentCards.titleTagline',
     icon: TITLE_ICON
   },
   speech: {
-    title: 'Voice dictation',
-    tagline: 'Turns your voice into text on this computer, in about a hundred languages.',
+    title: 'shell:setup.componentCards.speechTitle',
+    tagline: 'shell:setup.componentCards.speechTagline',
     icon: VOICE_ICON
   },
   ocr: {
-    title: 'Scanned documents',
-    tagline: 'Reads scanned PDFs and photos of documents on this computer, so you can search them and ask questions about them.',
+    title: 'shell:setup.componentCards.ocrTitle',
+    tagline: 'shell:setup.componentCards.ocrTagline',
     icon: SCAN_ICON
   }
 } as const

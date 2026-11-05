@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Reduce, Add, Download } from '@icon-park/react'
 import { useUIStore } from '@renderer/stores/ui'
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
+import { useTranslation } from 'react-i18next'
 
 const glassButton = 'flex cursor-pointer items-center justify-center border-0 bg-white/10 text-white/85 transition-colors duration-150 hover:bg-white/20 hover:text-white'
 
 export function ImageLightbox() {
+  const { t } = useTranslation('shell')
   const image = useUIStore((s) => s.lightboxImage)
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
   const closeLightbox = useUIStore((s) => s.closeLightbox)
@@ -60,10 +62,10 @@ export function ImageLightbox() {
       <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-2.5" onMouseDown={(e) => e.stopPropagation()}>
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[var(--font-size-sm)] text-white/85">{image.filename}</span>
         <div className="flex shrink-0 items-center gap-1.5">
-          <button className={`${glassButton} size-[26px] rounded-md`} type="button" onClick={download} aria-label="Download">
+          <button className={`${glassButton} size-[26px] rounded-md`} type="button" onClick={download} aria-label={t('layout.imageLightbox.download')}>
             <Download size={13} />
           </button>
-          <button className={`${glassButton} size-[26px] rounded-md`} type="button" onClick={closeLightbox} aria-label="Close">
+          <button className={`${glassButton} size-[26px] rounded-md`} type="button" onClick={closeLightbox} aria-label={t('layout.imageLightbox.close')}>
             <WindowCloseIcon size={14} />
           </button>
         </div>
@@ -78,11 +80,11 @@ export function ImageLightbox() {
         />
       </div>
       <div className="flex shrink-0 items-center justify-center gap-2.5 px-4 pb-4 pt-2.5" onMouseDown={(e) => e.stopPropagation()}>
-        <button className={`${glassButton} size-[30px] rounded-full`} type="button" onClick={() => zoomBy(1 / 1.25)} aria-label="Zoom out">
+        <button className={`${glassButton} size-[30px] rounded-full`} type="button" onClick={() => zoomBy(1 / 1.25)} aria-label={t('layout.imageLightbox.zoomOut')}>
           <Reduce size={13} />
         </button>
         <span className="min-w-10 text-center text-[var(--font-size-sm)] text-white/80">{Math.round(scale * 100)}%</span>
-        <button className={`${glassButton} size-[30px] rounded-full`} type="button" onClick={() => zoomBy(1.25)} aria-label="Zoom in">
+        <button className={`${glassButton} size-[30px] rounded-full`} type="button" onClick={() => zoomBy(1.25)} aria-label={t('layout.imageLightbox.zoomIn')}>
           <Add size={13} />
         </button>
       </div>

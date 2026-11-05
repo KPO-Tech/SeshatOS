@@ -1,0 +1,202 @@
+{
+  "pages": {
+    "knowledge": {
+      "collections": {
+        "addSourceDialog": {
+          "addASource": "Ajouter une source",
+          "aFolderOfThisComputer": "Un dossier de cet ordinateur. L'ajouter ne lit rien et ne copie rien : vous choisirez plus tard si vous l'analysez en collections.",
+          "folder": "Dossier",
+          "cUsersYouDocumentsArchive": "C:\\Users\\you\\Documents\\Archive",
+          "browse": "Parcourir...",
+          "nameAndIcon": "Nom et icône",
+          "optionalTheFolderSName": "(facultatif, le nom du dossier par défaut)",
+          "cancel": "Annuler",
+          "adding": "Ajout...",
+          "addSource": "Ajouter la source"
+        },
+        "collectionCard": {
+          "open": "Ouvrir",
+          "collection": "Collection",
+          "noDescription": "Pas de description",
+          "updated": "Mis à jour le {{day}}"
+        },
+        "collectionDialog": {
+          "name": "Nom",
+          "contracts": "Contrats",
+          "description": "Description",
+          "optional": "(facultatif)",
+          "whatTheseDocumentsAreAbout": "De quoi parlent ces documents",
+          "cancel": "Annuler"
+        },
+        "collectionPage": {
+          "removeTheDocument": "Retirer le document",
+          "remove": "Retirer",
+          "deleteTheCollection": "Supprimer la collection",
+          "delete": "Supprimer",
+          "thisCollectionCouldNotBe": "Cette collection n'a pas pu être lue.",
+          "back": "Retour",
+          "collections": "Collections",
+          "rename": "Renommer",
+          "renameTheCollection": "Renommer la collection",
+          "starting": "Démarrage...",
+          "addDocuments": "Ajouter des documents",
+          "uploading": "Envoi en cours",
+          "showAll": "Tout afficher",
+          "dropDocumentsHereOrChoose": "Déposez des documents ici, ou choisissez des fichiers",
+          "pdfWordPowerpointExcelText": "PDF, Word, PowerPoint, Excel, texte et Markdown",
+          "theCollection": "la collection",
+          "nothingWaiting": "Rien n'attend d'être indexé",
+          "queuedForIndexing_one": "{{count}} document mis en file pour indexation",
+          "queuedForIndexing_other": "{{count}} documents mis en file pour indexation",
+          "startedAgain_one": "{{count}} document relancé",
+          "startedAgain_other": "{{count}} documents relancés",
+          "startedRefused": "{{started}} relancés, {{refused}} n’ont pas pu être relancés",
+          "removeMessage": "{{name}} sera retiré de cette collection et ne servira plus à répondre.",
+          "deleteMessage": "{{name}} et ses {{documents}} seront supprimés. Cette action est irréversible.",
+          "noMatch": "Aucun document ne correspond à ce filtre.",
+          "dropToAdd": "Déposez pour ajouter à {{name}}",
+          "indexDocuments_one": "Indexer {{count}} document",
+          "indexDocuments_other": "Indexer {{count}} documents",
+          "indexedCount": "{{count}} indexé(s)",
+          "failedCount": "{{count}} en échec",
+          "noPreview": "Il n'y a pas encore d'aperçu pour ce type de fichier : {{name}}",
+          "indexedWithMeaning": "Les documents sont maintenant indexés avec leur sens"
+        },
+        "collectionsPage": {
+          "all": "Toutes",
+          "collections": "Collections",
+          "theDocumentsYourAgentsCan": "Les documents que vos agents peuvent rechercher, filtrés par la source dont ils viennent.",
+          "sources": "Sources",
+          "starting": "Démarrage...",
+          "indexEverything": "Tout indexer",
+          "newCollection": "Nouvelle collection",
+          "searchCollections": "Rechercher des collections...",
+          "source": "Source",
+          "sortBy": "Trier par",
+          "name": "Nom",
+          "recentlyUpdated": "Mises à jour récemment",
+          "theCollectionsCouldNotBe": "Les collections n'ont pas pu être lues.",
+          "loading": "Chargement...",
+          "noCollectionYetNewCollection": "Aucune collection pour le moment. « Nouvelle collection » en crée une, et un dossier ajouté dans Sources en propose lui-même.",
+          "noCollectionInThisSource": "Aucune collection dans cette source pour le moment.",
+          "noCollectionMatches": "Aucune collection ne correspond.",
+          "nothingWaiting": "Rien n'attend d'être indexé.",
+          "queued_one": "{{count}} document mis en file pour indexation. Ouvrez une collection pour le suivre.",
+          "queued_other": "{{count}} documents mis en file pour indexation. Ouvrez une collection pour les suivre.",
+          "madeInApp": "Créées dans l'application"
+        },
+        "confirmDialog": {
+          "cancel": "Annuler"
+        },
+        "documentIndexPanel": {
+          "readingTheIndex": "Lecture de l'index...",
+          "thisDocumentHasNoPassages": "Ce document n'a pas encore de passages. Il apparaîtra ici une fois indexé.",
+          "showThePassagesFormatted": "Afficher les passages mis en forme",
+          "showTheExactTextThat": "Afficher le texte exact qui a été indexé",
+          "formatted": "Mis en forme",
+          "rawText": "Texte brut",
+          "summary_one": "{{count}} passage, {{characters, number}} caractères. Une recherche renvoie ces morceaux, pas le document entier.",
+          "summary_other": "{{count}} passages, {{characters, number}} caractères. Une recherche renvoie ces morceaux, pas le document entier.",
+          "passageN": "Passage {{n}}",
+          "characters_one": "{{count, number}} caractère",
+          "characters_other": "{{count, number}} caractères"
+        },
+        "documentRow": {
+          "tryIndexingAgain": "Réessayer l'indexation",
+          "removeFromTheCollection": "Retirer de la collection",
+          "read": "Lire {{name}}",
+          "indexAgain": "Indexer de nouveau {{name}}",
+          "remove": "Retirer {{name}}"
+        },
+        "documentToolbar": {
+          "sortTheDocuments": "Trier les documents",
+          "filterByFormat": "Filtrer par format",
+          "anyFormat": "N'importe quel format",
+          "filterByState": "Filtrer par état",
+          "starting": "Démarrage...",
+          "sort": "Trier",
+          "shownOf": "{{shown}} sur {{documents}}",
+          "retryFailed": "Relancer {{documents}}"
+        },
+        "indexingNotice": {
+          "noEmbeddingModelIsSet": "Aucun modèle d'embedding n'est défini : les documents ne sont donc recherchés que par mots-clés. Une question trouve les mots qu'elle partage avec un document, pas son sens. Définissez un modèle d'embedding dans les réglages de Knowledge pour rechercher par le sens."
+        },
+        "keywordsOnlyNotice": {
+          "starting": "Démarrage...",
+          "indexAgain": "Indexer de nouveau",
+          "text_one": "{{count}} document n'est indexé que pour les mots-clés : l'embedding a échoué, donc une question en trouve les mots, pas le sens. Choisissez un modèle d'embedding avec plus de quota dans les réglages de Knowledge, puis indexez-le de nouveau.",
+          "text_other": "{{count}} documents ne sont indexés que pour les mots-clés : l'embedding a échoué, donc une question en trouve les mots, pas le sens. Choisissez un modèle d'embedding avec plus de quota dans les réglages de Knowledge, puis indexez-les de nouveau."
+        },
+        "sourceIcon": {
+          "changeTheIcon": "Changer l'icône",
+          "icons": "Icônes",
+          "icon": {
+            "folder": "Dossier",
+            "briefcase": "Travail",
+            "book": "Bibliothèque",
+            "bank": "Finance",
+            "wallet": "Comptes",
+            "chart": "Rapports",
+            "document": "Documents",
+            "data": "Données",
+            "code": "Code",
+            "tool": "Outils",
+            "cube": "Projets",
+            "flask": "Recherche",
+            "school": "Éducation",
+            "hospital": "Santé",
+            "shield": "Conformité",
+            "key": "Privé",
+            "inbox": "Boîte de réception",
+            "globe": "Public",
+            "home": "Personnel",
+            "star": "Favori",
+            "bolt": "Actif"
+          }
+        },
+        "counts": {
+          "document_one": "{{count}} document",
+          "document_other": "{{count}} documents",
+          "passage_one": "{{count}} passage",
+          "passage_other": "{{count}} passages",
+          "failedDocument_one": "{{count}} document en échec",
+          "failedDocument_other": "{{count}} documents en échec"
+        },
+        "quotaPausedNotice": {
+          "paused": "L'indexation est en pause : {{message}}",
+          "backIn": "Reprise dans {{time}}."
+        },
+        "documentOrder": {
+          "format": {
+            "text": "Texte",
+            "word": "Word",
+            "pdf": "PDF",
+            "other": "Autre"
+          },
+          "sort": {
+            "format": "Format",
+            "nameAsc": "Nom de A à Z",
+            "nameDesc": "Nom de Z à A",
+            "state": "État"
+          },
+          "state": {
+            "any": "N'importe quel état",
+            "indexed": "Indexé",
+            "failed": "En échec",
+            "working": "En cours",
+            "waiting": "Non indexé"
+          }
+        },
+        "fileStatus": {
+          "keywordsOnly": "mots-clés seulement",
+          "notStarted": "L'indexation n'a pas commencé.",
+          "indexed": "Indexé",
+          "indexing": "Indexation",
+          "waiting": "En attente",
+          "failed": "En échec",
+          "notIndexed": "Non indexé"
+        }
+      }
+    }
+  }
+}

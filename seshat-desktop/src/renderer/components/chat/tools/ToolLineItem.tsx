@@ -12,6 +12,7 @@ import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, tool
 import { opensWide } from './readableTools'
 import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import type { ToolBlockProps } from './types'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -46,6 +47,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   // inline on error or on a click - but it gets the same static-label + detail
   // split as the other preview tools instead of one long sentence, just
   // without their bigger card (isBigRow below).
+  const { t } = useTranslation('chat')
   const isPreviewTool =
     tool.name === 'bash' ||
     tool.name === 'ask_user_question' ||
@@ -87,7 +89,7 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       return
     }
     if (tool.name.startsWith('browser_')) {
-      openRightPanel({ kind: 'browser', title: 'Browser', sessionId })
+      openRightPanel({ kind: 'browser', title: t('chat.tools.toolLineItem.browser'), sessionId })
       return
     }
     if (isFileTool(tool.name)) {
@@ -95,11 +97,11 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       // The user's own pasted-text attachment isn't "a file" worth a Files
       // tab - see SilentToolView's identical guard on Read.
       if (isPastedTextFilename(basename(filePath))) return
-      openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
+      openRightPanel({ kind: 'files', title: t('chat.tools.toolLineItem.files'), sessionId, focusToolId: tool.id })
       return
     }
     // What a knowledge search or a document read returns is text to read: its panel opens as wide as a document's.
-    openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
+    openRightPanel({ kind: 'computer', title: t('chat.tools.toolLineItem.session'), sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
   }
 
   return (
@@ -127,17 +129,17 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
         </span>
         <span className="min-w-0 flex-none overflow-hidden text-ellipsis whitespace-nowrap font-medium text-app-text-secondary">{label}</span>
         {detail && <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-app-text" title={detail}>{detail}</span>}
-        {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">failed</span>}
+        {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">{t('chat.tools.toolLineItem.failed')}</span>}
         {meta && <span className="ml-auto shrink-0 text-[10px] text-app-text-muted">{meta}</span>}
         {isCompleted && (
-          <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-success)_12%,var(--surface-root))] text-app-success" title="Completed" aria-label="Completed">
+          <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-success)_12%,var(--surface-root))] text-app-success" title={t('chat.tools.toolLineItem.completed')} aria-label={t('chat.tools.toolLineItem.completed')}>
             <CheckOne size={10} />
           </span>
         )}
         <button
           type="button"
           className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
-          aria-label="Copy"
+          aria-label={t('chat.tools.toolLineItem.copy')}
           onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(copyText) }}
         >
           <Copy size={10} />
@@ -282,6 +284,7 @@ function DiffContent({ tool, sessionId }: { tool: ToolUseBlock; sessionId?: stri
 // A web page the agent wrote or edited opens live in the Artifact panel, which reads the file as it stands on disk (see
 // ArtifactPreviewPanel.tsx).
 function HTMLPreviewTrigger({ tool, filePath, sessionId }: { tool: ToolUseBlock; filePath: string; sessionId?: string }) {
+  const { t } = useTranslation('chat')
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   if (!sessionId || !isHtmlPath(filePath) || !tool._result || tool._result.isError) return null
 
@@ -292,7 +295,7 @@ function HTMLPreviewTrigger({ tool, filePath, sessionId }: { tool: ToolUseBlock;
         className="cursor-pointer rounded-md border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent-primary)]"
         onClick={() => openRightPanel(htmlArtifactPanel(sessionId, filePath))}
       >
-        Preview
+        {t('chat.tools.toolLineItem.preview')}
       </button>
     </div>
   )

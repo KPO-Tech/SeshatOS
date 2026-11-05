@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Down, CheckCorrect } from '@icon-park/react'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -124,6 +125,7 @@ export function SelectorMenu({
   className,
   searchable = false,
 }: SelectorMenuProps) {
+  const { t } = useTranslation('chat')
   const [query, setQuery] = useState('')
   const showSearch = searchable && options.length > SEARCH_ABOVE
   const visible = useMemo(() => (showSearch ? filterSelectorOptions(options, query) : options), [options, query, showSearch])
@@ -146,13 +148,13 @@ export function SelectorMenu({
           autoFocus
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search"
-          aria-label="Search"
+          placeholder={t('ui.selectorPill.search')}
+          aria-label={t('ui.selectorPill.search')}
           className="mb-1 h-7 w-full shrink-0 rounded-none border border-app-border-subtle bg-transparent px-[7px] text-[var(--font-size-sm)] text-app-text outline-none"
         />
       )}
       {visible.length === 0 ? (
-        <div className="px-[7px] py-2 text-[var(--font-size-xs)] text-app-text-muted">No match.</div>
+        <div className="px-[7px] py-2 text-[var(--font-size-xs)] text-app-text-muted">{t('ui.selectorPill.noMatch')}</div>
       ) : grouped ? (
         <GroupedOptionList options={visible} selectedId={selectedId} onSelect={onSelect} expandAll={searching} />
       ) : virtualized ? (

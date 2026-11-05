@@ -8,11 +8,13 @@ import { baseName, openDocument, passageTarget } from '@renderer/pages/knowledge
 import { ErrorPre } from '../common'
 import type { ToolViewProps } from '../types'
 import { excerptBody, isLongExcerpt, relevance, searchSummary, sectionTrail } from './knowledgeSearchSummary'
+import { useTranslation } from 'react-i18next'
 
 function Meter({ score }: { score: number }) {
+  const { t } = useTranslation('chat')
   const percent = relevance(score)
   return (
-    <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] tabular-nums text-app-text-muted" title={`${percent}% match`}>
+    <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] tabular-nums text-app-text-muted" title={t('chat.tools.renderers.knowledgeSearchToolView.percentMatch', { percent })}>
       <span className="h-1 w-10 overflow-hidden rounded-full bg-app-border-subtle">
         <span className="block h-full rounded-full bg-[var(--accent-primary)]" style={{ width: `${percent}%`, opacity: 0.35 + percent / 160 }} />
       </span>
@@ -22,6 +24,7 @@ function Meter({ score }: { score: number }) {
 }
 
 function PassageRow({ passage, expanded }: { passage: Passage; expanded: boolean }) {
+  const { t } = useTranslation('chat')
   const [open, setOpen] = useState(false)
   const body = excerptBody(passage.text, passage.section)
   const long = isLongExcerpt(body)
@@ -36,7 +39,7 @@ function PassageRow({ passage, expanded }: { passage: Passage; expanded: boolean
   return (
     <div className="flex flex-col gap-1.5 border-0 border-t border-solid border-app-border-subtle px-3 py-2.5 first:border-t-0">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-app-text-muted">
-        <span className="rounded-[4px] bg-[var(--surface-muted)] px-1.5 py-px font-mono text-[10.5px] text-app-text-secondary" title="The reference the answer cites it by">
+        <span className="rounded-[4px] bg-[var(--surface-muted)] px-1.5 py-px font-mono text-[10.5px] text-app-text-secondary" title={t('chat.tools.renderers.knowledgeSearchToolView.theReferenceTheAnswerCites')}>
           {passage.ref}
         </span>
         {pages && <span className="font-medium text-app-text-secondary">{pages}</span>}
@@ -52,12 +55,12 @@ function PassageRow({ passage, expanded }: { passage: Passage; expanded: boolean
         <div className="flex items-center gap-3 text-[11.5px]">
           {long && (
             <button type="button" onClick={() => setOpen((value) => !value)} className="cursor-pointer border-0 bg-transparent p-0 font-medium text-app-text-muted hover:text-app-text">
-              {open ? 'Show less' : 'Show more'}
+              {open ? t('chat.tools.renderers.knowledgeSearchToolView.showLess') : t('chat.tools.renderers.knowledgeSearchToolView.showMore')}
             </button>
           )}
           {canOpen && (
             <button type="button" onClick={open_} className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[var(--accent-primary)] hover:underline">
-              {passage.pages.length > 0 ? `Open at ${pagesLabel(passage.pages.slice(0, 1))}` : 'Open document'}
+              {passage.pages.length > 0 ? t('chat.tools.renderers.knowledgeSearchToolView.openAt', { pages: pagesLabel(passage.pages.slice(0, 1)) }) : t('chat.tools.renderers.knowledgeSearchToolView.openDocument')}
             </button>
           )}
         </div>
@@ -90,6 +93,7 @@ function DocumentCard({ group, expanded }: { group: PassageGroup; expanded: bool
 // The knowledge_search tool: what was asked, and the passages it found, by document, with the page, the section and how well each matches.
 // Opened in the side panel it uses the room; in the chat it is the same view, with the excerpts cut shorter.
 export function KnowledgeSearchToolView({ tool, result, status, expanded }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const query = typeof tool.input.query === 'string' ? tool.input.query : ''
   const corpusId = typeof tool.input.corpus_id === 'string' ? tool.input.corpus_id : ''
   const corpusName = useCorpusName(corpusId)
@@ -104,7 +108,7 @@ export function KnowledgeSearchToolView({ tool, result, status, expanded }: Tool
       <div className="flex flex-col gap-1.5">
         <div className="flex items-start gap-2 rounded-app-md border border-solid border-app-border-subtle bg-app-surface px-3 py-2">
           <Search size={14} className="mt-0.5 shrink-0 text-[var(--accent-primary)]" />
-          <span className="min-w-0 flex-1 break-words text-[13px] font-medium leading-snug text-app-text">{query || 'Search'}</span>
+          <span className="min-w-0 flex-1 break-words text-[13px] font-medium leading-snug text-app-text">{query || t('chat.tools.renderers.knowledgeSearchToolView.search')}</span>
           {corpusId && (
             <span className="shrink-0 whitespace-nowrap rounded-[5px] border border-[rgba(239,124,47,0.2)] bg-[rgba(239,124,47,0.1)] px-1.5 py-px text-[11px] font-semibold text-[var(--accent-primary)]" title={corpusId}>
               {corpusName ?? corpusId}
@@ -112,7 +116,7 @@ export function KnowledgeSearchToolView({ tool, result, status, expanded }: Tool
           )}
         </div>
         <div className="px-1 text-[11.5px] text-app-text-muted">
-          {searching ? 'Searching the collections' : summary || (result?.isError ? '' : 'No passage matched')}
+          {searching ? t('chat.tools.renderers.knowledgeSearchToolView.searchingTheCollections') : summary || (result?.isError ? '' : t('chat.tools.renderers.knowledgeSearchToolView.noPassageMatched'))}
         </div>
       </div>
 
@@ -130,7 +134,7 @@ export function KnowledgeSearchToolView({ tool, result, status, expanded }: Tool
 
       {finished && !result?.isError && passages.length === 0 && (
         <p className="m-0 rounded-app-md border border-dashed border-app-border-subtle px-3 py-3 text-[12px] leading-[1.6] text-app-text-muted">
-          Nothing in the collections answers this search. The agent may try other words.
+          {t('chat.tools.renderers.knowledgeSearchToolView.nothingInTheCollectionsAnswers')}
         </p>
       )}
 

@@ -12,7 +12,8 @@ import {
   type FolderPlanCollection
 } from './folderPlanApi'
 import type { KnowledgeSource } from '../collections/sourcesApi'
-import { createdSentence, formatSize, planSentence, plural, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
+import { createdSentence, formatSize, planSentence, reasonLabel, reasonsOf, shortPath, suggestedMergeName } from './folderPlanFormat'
+import { useTranslation } from 'react-i18next'
 
 type LoadedFiles = { files: string[]; total: number }
 
@@ -26,6 +27,7 @@ function errorText(err: unknown, fallback: string): string {
 // Proposes the collections of a folder of this computer, and lets the person adjust them. The folder is listed, not read; the plan lives
 // on the backend until it is thrown away or used. Creating the collections records the files where they are, waiting to be indexed.
 export function FolderPlanModal({ source, onClose, onCreated }: { source: KnowledgeSource; onClose: () => void; onCreated: () => void }) {
+  const { t } = useTranslation('knowledge/sources')
   const [plan, setPlan] = useState<FolderPlan | null>(null)
   const [busy, setBusy] = useState<'analysing' | 'editing' | 'creating' | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -139,16 +141,16 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
         className="relative flex max-h-[85vh] w-full max-w-[780px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]"
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
-        aria-label="Propose collections from a folder"
+        aria-label={t('pages.knowledge.sources.folderPlanModal.proposeCollectionsFromAFolder')}
       >
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[var(--border-soft)] px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-[16px] font-semibold text-[var(--text-primary)]">Collections from {source.name}</h2>
+            <h2 className="text-[16px] font-semibold text-[var(--text-primary)]">{t('pages.knowledge.sources.folderPlanModal.collectionsFrom', { name: source.name })}</h2>
             <p className="mt-1 text-[12px] leading-5 text-[var(--text-muted)]">
-              Seshat lists the files of this source and proposes collections. It does not read, copy or send the files.
+              {t('pages.knowledge.sources.folderPlanModal.seshatListsTheFilesOf')}
             </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="flex size-8 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+          <button type="button" onClick={onClose} aria-label={t('pages.knowledge.sources.folderPlanModal.close')} className="flex size-8 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
         </header>
@@ -157,16 +159,16 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
           {created ? (
             <section className="space-y-3">
               <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3">
-                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{createdSentence(created)}</div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{createdSentence(created, t)}</div>
                 <p className="mt-1 text-[12px] leading-5 text-[var(--text-muted)]">
-                  The files stay where they are on this computer; nothing was read or copied. Indexing them is the next step, not built yet.
+                  {t('pages.knowledge.sources.folderPlanModal.theFilesStayWhereThey')}
                 </p>
               </div>
               <ul className="space-y-1.5">
                 {created.map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-soft)] px-4 py-2.5">
                     <span className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{c.name}</span>
-                    <span className="shrink-0 text-[12px] text-[var(--text-muted)]">{plural(c.file_count, 'file')} · waiting</span>
+                    <span className="shrink-0 text-[12px] text-[var(--text-muted)]">{t('pages.knowledge.sources.folderPlanModal.fileWaiting', { files: t('pages.knowledge.sources.folderPlanFormat.fileCount', { count: c.file_count }) })}</span>
                   </li>
                 ))}
               </ul>
@@ -178,7 +180,7 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
               <span className="truncate">{source.root}</span>
             </div>
             <SoftButton tone="primary" onClick={() => void analyse()} disabled={busy !== null}>
-              {busy === 'analysing' ? 'Analysing...' : plan ? 'Analyse again' : 'Analyse'}
+              {busy === 'analysing' ? t('pages.knowledge.sources.folderPlanModal.analysing') : plan ? t('pages.knowledge.sources.folderPlanModal.analyseAgain') : t('pages.knowledge.sources.folderPlanModal.analyse')}
             </SoftButton>
           </div>
 
@@ -191,28 +193,28 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
           {plan && (
             <>
               <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3">
-                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{planSentence(plan)}</div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{planSentence(plan, t)}</div>
                 <div className="mt-0.5 truncate text-[11.5px] text-[var(--text-muted)]" title={plan.root}>
-                  {plan.root} · {plural(plan.listed, 'entry', 'entries')} listed
+                  {t('pages.knowledge.sources.folderPlanModal.rootListed', { root: plan.root, count: plan.listed })}
                 </div>
                 <p className="mt-2 text-[12px] leading-5 text-[var(--text-muted)]">
-                  This is a proposal and nothing has been created. Rename, merge or remove collections until it suits you, then create them: the files stay where they are and are not read until they are indexed (not built yet).
+                  {t('pages.knowledge.sources.folderPlanModal.thisIsAProposalAnd')}
                 </p>
               </section>
 
               <section>
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <h3 className="text-[13px] font-semibold text-[var(--text-primary)]">Proposed collections</h3>
+                  <h3 className="text-[13px] font-semibold text-[var(--text-primary)]">{t('pages.knowledge.sources.folderPlanModal.proposedCollections')}</h3>
                   {selected.length >= 2 && merging === null && (
                     <SoftButton onClick={() => setMerging(suggestedMergeName(plan, selected))} disabled={busy !== null}>
-                      Merge {selected.length} selected
+                      {t('pages.knowledge.sources.folderPlanModal.mergeSelected', { count: selected.length })}
                     </SoftButton>
                   )}
                 </div>
 
                 {merging !== null && (
                   <div className="mb-2 flex items-center gap-2 rounded-lg border border-[var(--accent-primary)]/35 bg-[var(--accent-primary)]/8 px-3 py-2.5">
-                    <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">Merge {selected.length} collections into</span>
+                    <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">{t('pages.knowledge.sources.folderPlanModal.mergeInto', { count: selected.length })}</span>
                     <input
                       autoFocus
                       value={merging}
@@ -221,19 +223,19 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
                         if (event.key === 'Enter' && merging.trim()) void edit(() => mergeCollections(plan.id, selected, merging.trim()))
                         if (event.key === 'Escape') setMerging(null)
                       }}
-                      aria-label="Name of the merged collection"
+                      aria-label={t('pages.knowledge.sources.folderPlanModal.nameOfTheMergedCollection')}
                       className={`${inputClass} flex-1`}
                     />
                     <SoftButton tone="primary" onClick={() => void edit(() => mergeCollections(plan.id, selected, merging.trim()))} disabled={!merging.trim() || busy !== null}>
-                      Merge
+                      {t('pages.knowledge.sources.folderPlanModal.merge')}
                     </SoftButton>
-                    <SoftButton onClick={() => setMerging(null)}>Cancel</SoftButton>
+                    <SoftButton onClick={() => setMerging(null)}>{t('pages.knowledge.sources.folderPlanModal.cancel')}</SoftButton>
                   </div>
                 )}
 
                 {plan.collections.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-[var(--border-soft)] px-4 py-6 text-center text-[12.5px] text-[var(--text-muted)]">
-                    No collection left in the plan. Analyse the folder again to start over.
+                    {t('pages.knowledge.sources.folderPlanModal.noCollectionLeftInThe')}
                   </div>
                 ) : (
                   <ul className="space-y-1.5">
@@ -264,10 +266,9 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
                 <section>
                   <button type="button" onClick={() => setShowLeftOut(!showLeftOut)} aria-expanded={showLeftOut} className="flex w-full items-center justify-between rounded-lg border border-[var(--border-soft)] px-4 py-2.5 text-left hover:bg-[var(--surface-muted)]">
                     <span className="text-[13px] font-semibold text-[var(--text-primary)]">
-                      Left out: {plan.excluded_count} {plan.excluded_count === 1 ? 'file' : 'files'}
-                      {plan.duplicate_count > 0 ? `, ${plural(plan.duplicate_count, 'duplicate')}` : ''}
+                      {plan.duplicate_count > 0 ? t('pages.knowledge.sources.folderPlanModal.leftOutDuplicates', { count: plan.excluded_count, duplicates: t('pages.knowledge.sources.folderPlanFormat.duplicateCount', { count: plan.duplicate_count }) }) : t('pages.knowledge.sources.folderPlanModal.leftOut', { count: plan.excluded_count })}
                     </span>
-                    <span className="text-[12px] text-[var(--text-muted)]">{showLeftOut ? 'Hide' : 'Show'}</span>
+                    <span className="text-[12px] text-[var(--text-muted)]">{showLeftOut ? t('pages.knowledge.sources.folderPlanModal.hide') : t('pages.knowledge.sources.folderPlanModal.show')}</span>
                   </button>
                   {showLeftOut && <LeftOut plan={plan} />}
                 </section>
@@ -279,12 +280,12 @@ export function FolderPlanModal({ source, onClose, onCreated }: { source: Knowle
         </div>
 
         <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--border-soft)] px-5 py-3">
-          <span className="text-[11.5px] text-[var(--text-muted)]">{created ? 'Done.' : plan ? 'The plan is kept for an hour.' : 'Choose a folder to begin.'}</span>
+          <span className="text-[11.5px] text-[var(--text-muted)]">{created ? t('pages.knowledge.sources.folderPlanModal.done') : plan ? t('pages.knowledge.sources.folderPlanModal.thePlanIsKeptFor') : t('pages.knowledge.sources.folderPlanModal.chooseAFolderToBegin')}</span>
           {created ? (
-            <SoftButton tone="primary" onClick={onClose}>Done</SoftButton>
+            <SoftButton tone="primary" onClick={onClose}>{t('pages.knowledge.sources.folderPlanModal.done2')}</SoftButton>
           ) : (
             <SoftButton tone="primary" onClick={() => void create()} disabled={!plan || plan.collections.length === 0 || busy !== null}>
-              {busy === 'creating' ? 'Creating...' : 'Create collections'}
+              {busy === 'creating' ? t('pages.knowledge.sources.folderPlanModal.creating') : t('pages.knowledge.sources.folderPlanModal.createCollections')}
             </SoftButton>
           )}
         </footer>
@@ -311,12 +312,13 @@ type RowProps = {
 }
 
 function CollectionRow(props: RowProps) {
+  const { t } = useTranslation('knowledge/sources')
   const { collection: c, busy, selected, expanded, loaded, renaming } = props
   return (
     <li className={['rounded-lg border bg-[var(--surface-root)]', selected ? 'border-[var(--accent-primary)]/50' : 'border-[var(--border-soft)]'].join(' ')}>
       <div className="flex items-center gap-3 px-3 py-2.5">
-        <input type="checkbox" checked={selected} onChange={props.onSelect} aria-label={`Select ${c.name}`} className="size-4 shrink-0 accent-[var(--accent-primary)]" />
-        <button type="button" onClick={props.onExpand} aria-expanded={expanded} aria-label={`${expanded ? 'Hide' : 'Show'} the files of ${c.name}`} className="flex size-6 shrink-0 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[var(--surface-muted)]">
+        <input type="checkbox" checked={selected} onChange={props.onSelect} aria-label={t('pages.knowledge.sources.folderPlanModal.select', { name: c.name })} className="size-4 shrink-0 accent-[var(--accent-primary)]" />
+        <button type="button" onClick={props.onExpand} aria-expanded={expanded} aria-label={expanded ? t('pages.knowledge.sources.folderPlanModal.hideFiles', { name: c.name }) : t('pages.knowledge.sources.folderPlanModal.showFiles', { name: c.name })} className="flex size-6 shrink-0 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[var(--surface-muted)]">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={expanded ? 'rotate-90' : ''}><path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
         </button>
         <div className="min-w-0 flex-1">
@@ -330,24 +332,24 @@ function CollectionRow(props: RowProps) {
                 if (event.key === 'Enter') props.onRenameCommit()
                 if (event.key === 'Escape') props.onRenameCancel()
               }}
-              aria-label={`New name of ${c.name}`}
+              aria-label={t('pages.knowledge.sources.folderPlanModal.newNameOf', { name: c.name })}
               className={`${inputClass} h-8 w-full`}
             />
           ) : (
             <div className="truncate text-[13px] font-semibold text-[var(--text-primary)]" title={c.name}>{c.name}</div>
           )}
           <div className="truncate text-[11.5px] text-[var(--text-muted)]" title={c.folders.join(', ')}>
-            {plural(c.file_count, 'file')} · {formatSize(c.bytes)}
-            {c.folders.length > 0 ? ` · from ${c.folders.map((f) => (f === '' ? 'the root' : shortPath(f))).slice(0, 3).join(', ')}${c.folders.length > 3 ? ', ...' : ''}` : ''}
+            {t('pages.knowledge.sources.folderPlanModal.rowMeta', { files: t('pages.knowledge.sources.folderPlanFormat.fileCount', { count: c.file_count }), size: formatSize(c.bytes, t) })}
+            {c.folders.length > 0 ? t('pages.knowledge.sources.folderPlanModal.fromFolders', { folders: `${c.folders.map((f) => (f === '' ? t('pages.knowledge.sources.folderPlanModal.theRoot') : shortPath(f))).slice(0, 3).join(', ')}${c.folders.length > 3 ? ', ...' : ''}` }) : ''}
           </div>
         </div>
-        <SoftButton onClick={props.onStartRename} disabled={busy || renaming !== null} className="!h-8">Rename</SoftButton>
-        <SoftButton tone="danger" onClick={props.onRemove} disabled={busy} className="!h-8" title="Take this collection out of the plan; no file is touched">Remove</SoftButton>
+        <SoftButton onClick={props.onStartRename} disabled={busy || renaming !== null} className="!h-8">{t('pages.knowledge.sources.folderPlanModal.rename')}</SoftButton>
+        <SoftButton tone="danger" onClick={props.onRemove} disabled={busy} className="!h-8" title={t('pages.knowledge.sources.folderPlanModal.takeThisCollectionOutOf')}>{t('pages.knowledge.sources.folderPlanModal.remove')}</SoftButton>
       </div>
       {expanded && (
         <div className="border-t border-[var(--border-soft)] px-4 py-2.5">
           {!loaded ? (
-            <div className="text-[12px] text-[var(--text-muted)]">Loading...</div>
+            <div className="text-[12px] text-[var(--text-muted)]">{t('pages.knowledge.sources.folderPlanModal.loading')}</div>
           ) : (
             <>
               <ul className="space-y-0.5">
@@ -357,7 +359,7 @@ function CollectionRow(props: RowProps) {
               </ul>
               {loaded.files.length < loaded.total && (
                 <button type="button" onClick={props.onMore} className="mt-2 text-[12px] font-semibold text-[var(--accent-primary)] hover:underline">
-                  Show more ({loaded.total - loaded.files.length} left)
+                  {t('pages.knowledge.sources.folderPlanModal.showMore', { count: loaded.total - loaded.files.length })}
                 </button>
               )}
             </>
@@ -369,7 +371,8 @@ function CollectionRow(props: RowProps) {
 }
 
 function LeftOut({ plan }: { plan: FolderPlan }) {
-  const reasons = reasonsOf(plan)
+  const { t } = useTranslation('knowledge/sources')
+  const reasons = reasonsOf(plan, t)
   const listed = plan.excluded.length
   return (
     <div className="mt-2 space-y-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3">
@@ -386,13 +389,13 @@ function LeftOut({ plan }: { plan: FolderPlan }) {
       {listed > 0 && (
         <div>
           <div className="mb-1 text-[11.5px] font-semibold text-[var(--text-muted)]">
-            {listed < plan.excluded_count ? `First ${listed} of ${plan.excluded_count}` : 'Files left out'}
+            {listed < plan.excluded_count ? t('pages.knowledge.sources.folderPlanModal.firstOf', { shown: listed, total: plan.excluded_count }) : t('pages.knowledge.sources.folderPlanModal.filesLeftOut')}
           </div>
           <ul className="space-y-0.5">
             {plan.excluded.map((e) => (
               <li key={e.path} className="flex items-baseline justify-between gap-3 text-[11.5px]">
                 <span className="truncate font-mono text-[var(--text-secondary)]" title={e.path}>{e.path}</span>
-                <span className="shrink-0 text-[var(--text-muted)]">{reasonLabel(e.reason)}</span>
+                <span className="shrink-0 text-[var(--text-muted)]">{reasonLabel(e.reason, t)}</span>
               </li>
             ))}
           </ul>
@@ -401,11 +404,11 @@ function LeftOut({ plan }: { plan: FolderPlan }) {
       {plan.duplicates.length > 0 && (
         <div>
           <div className="mb-1 text-[11.5px] font-semibold text-[var(--text-muted)]">
-            {plan.duplicates.length < plan.duplicate_count ? `Duplicates: first ${plan.duplicates.length} of ${plan.duplicate_count}` : 'Duplicates (same content, only the first is kept)'}
+            {plan.duplicates.length < plan.duplicate_count ? t('pages.knowledge.sources.folderPlanModal.duplicatesFirstOf', { shown: plan.duplicates.length, total: plan.duplicate_count }) : t('pages.knowledge.sources.folderPlanModal.duplicatesSameContentOnlyThe')}
           </div>
           <ul className="space-y-0.5">
             {plan.duplicates.map((d) => (
-              <li key={d.path} className="truncate font-mono text-[11.5px] text-[var(--text-secondary)]" title={`${d.path} is the same as ${d.of}`}>
+              <li key={d.path} className="truncate font-mono text-[11.5px] text-[var(--text-secondary)]" title={t('pages.knowledge.sources.folderPlanModal.sameAs', { path: d.path, of: d.of })}>
                 {d.path} <span className="text-[var(--text-muted)]">= {d.of}</span>
               </li>
             ))}

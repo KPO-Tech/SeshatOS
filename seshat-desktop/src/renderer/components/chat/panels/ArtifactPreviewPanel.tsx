@@ -6,6 +6,7 @@ import { CodeBox } from '@renderer/components/chat/tools/common'
 import { useChat } from '@renderer/hooks/useChat'
 import { dataURLText, fixRequestMessage, lastPageWrite, pageLocation, pageProblemFrom, type PageProblem } from '@renderer/lib/htmlArtifact'
 import { useSessionStore } from '@renderer/stores/session'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   sessionId: string
@@ -40,6 +41,7 @@ const iconButton =
 // The backend also puts a small reporter first in the page (artifact_reporter.go), which posts what goes wrong to this panel. Only messages
 // from this exact frame are read, kept as text, and sent to the agent when the person asks: the page never reaches the agent by itself.
 export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
+  const { t } = useTranslation('chat')
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [origin, setOrigin] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('preview')
@@ -174,22 +176,22 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
               tab === value ? 'bg-[var(--surface-hover)] text-app-text' : 'bg-transparent text-app-text-muted hover:text-app-text-secondary',
             )}
           >
-            {value === 'preview' ? 'Preview' : 'Code'}
+            {value === 'preview' ? t('chat.panels.artifactPreviewPanel.preview') : t('chat.panels.artifactPreviewPanel.code')}
           </button>
         ))}
         <span className="min-w-0 flex-1 truncate px-2 text-[11px] text-app-text-muted" title={location ?? path}>{path}</span>
-        <button type="button" onClick={openInBrowser} disabled={!location} className={iconButton} aria-label="Open in the browser" title="Open in the browser (with the network)">
+        <button type="button" onClick={openInBrowser} disabled={!location} className={iconButton} aria-label={t('chat.panels.artifactPreviewPanel.openInTheBrowser')} title={t('chat.panels.artifactPreviewPanel.openInTheBrowserWith')}>
           <ShareOne size={12} />
         </button>
-        <button type="button" onClick={() => setReloads((value) => value + 1)} className={iconButton} aria-label="Reload" title="Reload">
+        <button type="button" onClick={() => setReloads((value) => value + 1)} className={iconButton} aria-label={t('chat.panels.artifactPreviewPanel.reload')} title={t('chat.panels.artifactPreviewPanel.reload')}>
           <Refresh size={12} />
         </button>
       </div>
       <div className="relative min-h-0 flex-1">
         {loaded.state === 'failed' ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">Couldn't load the page: {loaded.message}</div>
+          <div className="absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">{t('chat.panels.artifactPreviewPanel.couldntLoadPage', { message: loaded.message })}</div>
         ) : loaded.state === 'loading' || !origin ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">Loading the page…</div>
+          <div className="absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">{t('chat.panels.artifactPreviewPanel.loadingThePage')}</div>
         ) : (
           <>
             {/* The frame stays mounted under the Code tab: switching back does not run the page again. */}
@@ -222,7 +224,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
               >
                 <Caution size={12} className="shrink-0" />
                 <span className="truncate">
-                  {problems.length === 1 ? '1 problem on the page' : `${problems.length} problems on the page`}
+                  {problems.length === 1 ? t('chat.panels.artifactPreviewPanel.t1ProblemOnThePage') : t('chat.panels.artifactPreviewPanel.problemsOnPage', { total: problems.length })}
                 </span>
                 <span className={cx('inline-flex shrink-0 opacity-60 transition-transform duration-150', problemsOpen && 'rotate-180')}>
                   <Down size={10} />
@@ -233,7 +235,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
                 onClick={askToFix}
                 className="shrink-0 cursor-pointer rounded-md border border-[rgba(239,124,47,0.3)] bg-[rgba(239,124,47,0.1)] px-2.5 py-1 text-[12px] font-semibold text-[var(--accent-primary)]"
               >
-                Ask the agent to fix
+                {t('chat.panels.artifactPreviewPanel.askTheAgentToFix')}
               </button>
             </div>
           )}

@@ -6,6 +6,7 @@ import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 import { edition } from '@renderer/lib/edition'
 import { OPEN_WHATS_NEW_EVENT } from '@renderer/lib/whatsNew'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -14,6 +15,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 // Bottom-of-sidebar menu: Settings, Admin (organization accounts)
 // and Sign out.
 export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation('shell')
   const [open, setOpen] = useState(false)
   const { isAdmin, connected, go } = useSettingsMenu()
   const { user, logout } = useAuth()
@@ -53,7 +55,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
             open && 'bg-[var(--surface-hover)] text-[var(--text-primary)]'
           )}
           onClick={() => setOpen((value) => !value)}
-          aria-label={collapsed ? 'Seshat menu' : undefined}
+          aria-label={collapsed ? t('layout.sidebar.sidebarFooterMenu.seshatMenu') : undefined}
           aria-expanded={open}
           aria-haspopup="menu"
           type="button"
@@ -61,7 +63,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
           <SeshatLogo size={collapsed ? 22 : 18} />
           {!collapsed && (
             <>
-              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left">{edition.accounts ? user?.display_name || 'SeshatOS' : 'SeshatOS'}</span>
+              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left">{edition.accounts ? user?.display_name || t('layout.sidebar.sidebarFooterMenu.seshatos') : t('layout.sidebar.sidebarFooterMenu.seshatos')}</span>
               <Down size={12} />
             </>
           )}
@@ -75,14 +77,14 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
             )}
             role="menu"
           >
-            <MenuButton icon={<SettingTwo theme="outline" size={14} />} label="Settings" onClick={() => pick(() => go('settings'))} />
-            <MenuSwitch icon={<Magic theme="outline" size={14} />} label="Generative UI" hint="Tables, figures and steps drawn in answers. From the next message." on={generativeOn} disabled={busy || !prefs} onClick={toggleGenerativeUi} />
-            <MenuButton icon={<Gift theme="outline" size={14} />} label="What's new" onClick={() => pick(() => window.dispatchEvent(new Event(OPEN_WHATS_NEW_EVENT)))} />
-            {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label="Admin" disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
+            <MenuButton icon={<SettingTwo theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.settings')} onClick={() => pick(() => go('settings'))} />
+            <MenuSwitch icon={<Magic theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.generativeUi')} hint={t('layout.sidebar.sidebarFooterMenu.tablesFiguresAndStepsDrawn')} on={generativeOn} disabled={busy || !prefs} onClick={toggleGenerativeUi} />
+            <MenuButton icon={<Gift theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.whatSNew')} onClick={() => pick(() => window.dispatchEvent(new Event(OPEN_WHATS_NEW_EVENT)))} />
+            {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.admin')} disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
             {edition.accounts && (
               <>
                 <div className="my-0.5 h-px bg-[var(--border-soft)]" aria-hidden="true" />
-                <MenuButton icon={<Logout theme="outline" size={14} />} label="Sign out" disabled={!connected} onClick={() => pick(() => void logout())} />
+                <MenuButton icon={<Logout theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.signOut')} disabled={!connected} onClick={() => pick(() => void logout())} />
               </>
             )}
           </div>

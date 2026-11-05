@@ -1,8 +1,10 @@
+import type { TFunction } from 'i18next'
 import type { ReactNode } from 'react'
 import { Download, More, SettingTwo } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { SourceLink } from '@renderer/components/ui/SourceLink'
 import { BrandIcon } from './catalog/BrandIcon'
+import { useTranslation } from 'react-i18next'
 
 export type PluginState = 'installed' | 'available' | 'attention'
 
@@ -30,9 +32,9 @@ const BADGE: Record<PluginState, string> = {
   available: 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'
 }
 
-function stateLabel(state: PluginState, offLabel: string): string {
-  if (state === 'installed') return 'Installed'
-  if (state === 'attention') return 'Needs attention'
+function stateLabel(state: PluginState, offLabel: string, t: TFunction): string {
+  if (state === 'installed') return t('plugins:plugins.pluginTile.installed')
+  if (state === 'attention') return t('plugins:plugins.pluginCard.needsAttention')
   return offLabel
 }
 
@@ -52,30 +54,32 @@ function Tags({ tags }: { tags: string[] }) {
 }
 
 function Action({ state, onOpen, compact }: { state: PluginState; onOpen: () => void; compact?: boolean }) {
+  const { t } = useTranslation('plugins')
   const height = compact ? 'h-8' : 'h-9'
   if (state === 'available') {
     return (
       <button type="button" onClick={onOpen} className={`${height} flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90`}>
         <Download theme="outline" size={14} />
-        Install
+        {t('plugins.pluginTile.install')}
       </button>
     )
   }
   return (
     <button type="button" onClick={onOpen} className={`${height} flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)]`}>
       <SettingTwo theme="outline" size={14} />
-      Configure
+      {t('plugins.pluginTile.configure')}
     </button>
   )
 }
 
 function Menu({ items }: { items: DropdownItem[] }) {
+  const { t } = useTranslation('plugins')
   return (
     <Dropdown
-      label="More about this plugin"
+      label={t('plugins.pluginTile.moreAboutThisPlugin')}
       items={items}
       trigger={({ toggle }) => (
-        <button type="button" aria-label="More about this plugin" onClick={toggle} className="flex size-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
+        <button type="button" aria-label={t('plugins.pluginTile.moreAboutThisPlugin')} onClick={toggle} className="flex size-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
           <More theme="outline" size={15} />
         </button>
       )}
@@ -84,9 +88,10 @@ function Menu({ items }: { items: DropdownItem[] }) {
 }
 
 /** A plugin, as a card or as a row: what it is, whether it is connected, and the one thing to do with it. */
-export function PluginTile({ title, description, brand, icon, state, tags, offLabel = 'Not installed', menu, source, layout, onOpen }: Props) {
+export function PluginTile({ title, description, brand, icon, state, tags, offLabel, menu, source, layout, onOpen }: Props) {
+  const { t } = useTranslation('plugins')
   const tile = icon ?? <BrandIcon brand={brand} title={title} size={layout === 'grid' ? 52 : 40} />
-  const badge = <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold ${BADGE[state]}`}>{stateLabel(state, offLabel)}</span>
+  const badge = <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold ${BADGE[state]}`}>{stateLabel(state, offLabel ?? t('plugins.pluginTile.notInstalled'), t)}</span>
 
   if (layout === 'list') {
     return (

@@ -19,8 +19,9 @@ import { BrandIcon } from './catalog/BrandIcon'
 import { mcpLogo } from './catalog/mcpLogos'
 import { PluginDetailModal } from './PluginDetailModal'
 import { useLocalConnectors } from './useLocalConnectors'
+import { useTranslation } from 'react-i18next'
 
-const CREATE_ENTRIES = ['Custom MCP', 'Import MCP by JSON', 'Add MCP by URL']
+const CREATE_ENTRIES = ['plugins:plugins.pluginsPage.createCustom', 'plugins:plugins.pluginsPage.createJson', 'plugins:plugins.pluginsPage.createUrl']
 const PREVIEW = 3
 const MCP = 'mcp'
 
@@ -53,6 +54,7 @@ function Section({ title, count, description, action, children }: { title: strin
 const statusRank = (state: PluginState) => (state === 'attention' ? 0 : state === 'installed' ? 1 : 2)
 
 export function PluginsPage() {
+  const { t } = useTranslation('plugins')
   const state = useLocalConnectors()
   const navigate = useNavigate()
   const openConfig = useDialogsStore((store) => store.openConfig)
@@ -67,7 +69,7 @@ export function PluginsPage() {
   const openConnector = state.connectors.find((connector) => connector.kind === openId) ?? null
 
   async function disconnect(connector: LocalConnector) {
-    if (!window.confirm(`Disconnect ${connector.label}? The key is forgotten and its tools leave your agents.`)) return
+    if (!window.confirm(t('plugins:plugins.panels.localConnectorPanel.confirmDisconnect', { name: connector.label }))) return
     try {
       await disconnectLocalConnector(connector.kind)
       await state.reload()
@@ -87,7 +89,7 @@ export function PluginsPage() {
   }
 
   function removeServer(server: MCPServer) {
-    if (!window.confirm(`Remove ${server.display_name || server.name}? Its tools leave your agents.`)) return
+    if (!window.confirm(t('plugins.pluginsPage.confirmRemove', { name: server.display_name || server.name }))) return
     void changeServer(server, () => deleteMCPServer(server.id))
   }
 
@@ -95,11 +97,11 @@ export function PluginsPage() {
     const connected = connector.status !== 'disconnected'
     const pluginState: PluginState = connector.status === 'error' ? 'attention' : connected ? 'installed' : 'available'
     const menu: DropdownItem[] = [
-      { id: 'details', label: connected ? 'Configure' : 'Install', onSelect: () => setOpenId(connector.kind) },
-      ...(connector.credential_url ? [openItem('key', `Get a ${connector.credential_label || 'key'}`, connector.credential_url)] : []),
-      ...(connector.docs_url ? [openItem('docs', 'Open the documentation', connector.docs_url)] : []),
-      copyItem('copy', 'Copy the name', connector.kind, (message) => show(message)),
-      ...(connected ? [{ id: 'disconnect', label: 'Disconnect', danger: true, onSelect: () => void disconnect(connector) }] : [])
+      { id: 'details', label: connected ? t('plugins.pluginsPage.menuConfigure') : t('plugins.pluginsPage.menuInstall'), onSelect: () => setOpenId(connector.kind) },
+      ...(connector.credential_url ? [openItem('key', t('plugins.pluginsPage.getCredential', { what: connector.credential_label || t('plugins.pluginsPage.keyWord') }), connector.credential_url)] : []),
+      ...(connector.docs_url ? [openItem('docs', t('plugins.pluginsPage.openDocs'), connector.docs_url)] : []),
+      copyItem('copy', t('plugins.pluginsPage.copyName'), connector.kind, (message) => show(message)),
+      ...(connected ? [{ id: 'disconnect', label: t('plugins.pluginsPage.disconnect'), danger: true, onSelect: () => void disconnect(connector) }] : [])
     ]
     const tags = tagsFor({ name: connector.kind, display_name: connector.label, description: connector.description }, 5)
     return {
@@ -113,15 +115,15 @@ export function PluginsPage() {
   }
 
   const needle = query.trim().toLowerCase()
-  const groups = useMemo(() => groupConnectors(state.connectors.filter((connector) => matchesQuery(connector, query))), [state.connectors, query])
-  const allGroups = useMemo(() => groupConnectors(state.connectors), [state.connectors])
+  const groups = useMemo(() => groupConnectors(state.connectors.filter((connector) => matchesQuery(connector, query)), t), [state.connectors, query, t])
+  const allGroups = useMemo(() => groupConnectors(state.connectors, t), [state.connectors, t])
   const mcpServers = useMemo(() => state.mcpServers.filter((server) => !needle || `${server.display_name ?? ''} ${server.name}`.toLowerCase().includes(needle)), [state.mcpServers, needle])
 
   const sorted = (items: Item[]) => [...items].sort(sort === 'status' ? (a, b) => statusRank(a.state) - statusRank(b.state) || a.title.localeCompare(b.title) : (a, b) => a.title.localeCompare(b.title))
 
   const mcpItems: Item[] = mcpServers.map((server) => {
     const title = server.display_name || server.name
-    const description = server.url || [server.command, ...(server.args ?? [])].filter(Boolean).join(' ') || 'MCP server'
+    const description = server.url || [server.command, ...(server.args ?? [])].filter(Boolean).join(' ') || t('plugins.pluginsPage.mcpServerFallback')
     const pluginState: PluginState = server.enabled ? 'installed' : 'available'
     // A server that came from the list keeps the mark of its vendor, whatever symbol it was saved with.
     const known = MCP_CATALOG.find((entry) => entry.name.toLowerCase() === server.name.toLowerCase())
@@ -141,11 +143,11 @@ export function PluginsPage() {
           offLabel="Off"
           tags={[server.server_type]}
           menu={[
-            { id: 'configure', label: 'Configure', onSelect: () => openConfig('mcp') },
-            { id: 'toggle', label: server.enabled ? 'Turn off' : 'Turn on', onSelect: () => void changeServer(server, () => updateMCPServer(server.id, { ...server, enabled: !server.enabled })) },
-            ...(known ? [openItem('source', 'Open the source', known.source)] : []),
-            copyItem('copy', server.server_type === 'stdio' ? 'Copy the command' : 'Copy the address', server.url || [server.command, ...(server.args ?? [])].filter(Boolean).join(' '), (message) => show(message)),
-            { id: 'remove', label: 'Remove', danger: true, onSelect: () => removeServer(server) }
+            { id: 'configure', label: t('plugins.pluginsPage.configure'), onSelect: () => openConfig('mcp') },
+            { id: 'toggle', label: server.enabled ? t('plugins.pluginsPage.turnOff') : t('plugins.pluginsPage.turnOn'), onSelect: () => void changeServer(server, () => updateMCPServer(server.id, { ...server, enabled: !server.enabled })) },
+            ...(known ? [openItem('source', t('plugins.pluginsPage.openSource'), known.source)] : []),
+            copyItem('copy', server.server_type === 'stdio' ? t('plugins.pluginsPage.copyCommand') : t('plugins.pluginsPage.copyAddress'), server.url || [server.command, ...(server.args ?? [])].filter(Boolean).join(' '), (message) => show(message)),
+            { id: 'remove', label: t('plugins.pluginsPage.remove'), danger: true, onSelect: () => removeServer(server) }
           ]}
           source={known?.source}
           layout={shape}
@@ -156,28 +158,28 @@ export function PluginsPage() {
   })
 
   const offeredMcp = useMemo(
-    () => availableMcp(state.mcpServers).filter((entry) => !needle || `${entry.title} ${entry.description} ${entry.category}`.toLowerCase().includes(needle)),
-    [state.mcpServers, needle]
+    () => availableMcp(state.mcpServers).filter((entry) => !needle || `${entry.title} ${t(entry.description)} ${entry.category}`.toLowerCase().includes(needle)),
+    [state.mcpServers, needle, t]
   )
   const catalogItems: Item[] = offeredMcp.map((entry) => ({
     id: `mcp-catalog:${entry.name}`,
     title: entry.title,
-    description: entry.description,
+    description: t(entry.description),
     state: 'available',
     tags: entry.tags,
     render: (shape) => (
       <PluginTile
         key={`mcp-catalog:${entry.name}`}
         title={entry.title}
-        description={entry.description}
+        description={t(entry.description)}
         icon={<BrandIcon brand={entry.brand} src={mcpLogo(entry.brand)} title={entry.title} size={shape === 'grid' ? 52 : 40} />}
         state="available"
         tags={entry.tags}
         menu={[
-          { id: 'install', label: 'Install', onSelect: () => setInstallingMcp(entry) },
-          openItem('source', 'Open the source', entry.source),
-          ...(entry.docs !== entry.source ? [openItem('docs', 'Read the documentation', entry.docs)] : []),
-          copyItem('copy', entry.server_type === 'stdio' ? 'Copy the command' : 'Copy the address', commandLine(entry), (message) => show(message))
+          { id: 'install', label: t('plugins.pluginsPage.install'), onSelect: () => setInstallingMcp(entry) },
+          openItem('source', t('plugins.pluginsPage.openSource'), entry.source),
+          ...(entry.docs !== entry.source ? [openItem('docs', t('plugins.pluginsPage.readDocs'), entry.docs)] : []),
+          copyItem('copy', entry.server_type === 'stdio' ? t('plugins.pluginsPage.copyCommand') : t('plugins.pluginsPage.copyAddress'), commandLine(entry, {}, t), (message) => show(message))
         ]}
         source={entry.source}
         layout={shape}
@@ -188,9 +190,9 @@ export function PluginsPage() {
   const allMcpItems = [...mcpItems, ...catalogItems]
 
   const pills = [
-    { id: 'all', label: 'All', count: state.connectors.length + state.mcpServers.length + availableMcp(state.mcpServers).length },
+    { id: 'all', label: t('plugins.pluginsPage.all'), count: state.connectors.length + state.mcpServers.length + availableMcp(state.mcpServers).length },
     ...allGroups.map((group) => ({ id: group.id, label: group.label, count: group.connectors.length })),
-    { id: MCP, label: 'MCP servers', count: state.mcpServers.length + availableMcp(state.mcpServers).length }
+    { id: MCP, label: t('plugins.pluginsPage.mcpServers'), count: state.mcpServers.length + availableMcp(state.mcpServers).length }
   ]
 
   const visibleGroups = groups.filter((group) => filter === 'all' || filter === group.id)
@@ -202,7 +204,7 @@ export function PluginsPage() {
 
   const viewAll = (id: string) => (
     <button type="button" onClick={() => setFilter(id)} className="flex shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] font-medium text-[var(--accent-primary)] hover:underline">
-      View all
+      {t('plugins.pluginsPage.viewAll')}
       <Right theme="outline" size={13} />
     </button>
   )
@@ -215,24 +217,24 @@ export function PluginsPage() {
             <Plug theme="filled" size={24} fill="currentColor" />
           </span>
           <div className="min-w-0">
-            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Plugins</h1>
-            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">Connect SeshatOS to your tools and services. Extend its capabilities and automate your workflows.</p>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{t('plugins.pluginsPage.plugins')}</h1>
+            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">{t('plugins.pluginsPage.connectSeshatosToYourTools')}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {edition.store && (
             <button type="button" onClick={() => navigate('/store')} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
               <Application theme="outline" size={15} />
-              Explore marketplace
+              {t('plugins.pluginsPage.exploreMarketplace')}
             </button>
           )}
           <Dropdown
-            label="Create"
-            items={CREATE_ENTRIES.map((label) => ({ id: label, label, onSelect: () => openConfig('mcp') }))}
+            label={t('plugins.pluginsPage.create')}
+            items={CREATE_ENTRIES.map((key) => ({ id: key, label: t(key), onSelect: () => openConfig('mcp') }))}
             trigger={({ toggle }) => (
               <button type="button" onClick={toggle} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
                 <Plus theme="outline" size={15} />
-                Create
+                {t('plugins.pluginsPage.create')}
                 <Down theme="outline" size={12} />
               </button>
             )}
@@ -247,7 +249,7 @@ export function PluginsPage() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search plugins by name, description or category..."
+          placeholder={t('plugins.pluginsPage.searchPluginsByNameDescription')}
           className="h-10 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
         />
       </div>
@@ -270,21 +272,21 @@ export function PluginsPage() {
         </div>
         <div className="flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
           <SortThree theme="outline" size={14} />
-          Sort by
+          {t('plugins.pluginsPage.sortBy')}
           <Dropdown
-            label="Sort by"
+            label={t('plugins.pluginsPage.sortBy')}
             items={[
-              { id: 'name', label: 'Name', checked: sort === 'name', onSelect: () => setSort('name') },
-              { id: 'status', label: 'Status', checked: sort === 'status', onSelect: () => setSort('status') }
+              { id: 'name', label: t('plugins.pluginsPage.name'), checked: sort === 'name', onSelect: () => setSort('name') },
+              { id: 'status', label: t('plugins.pluginsPage.status'), checked: sort === 'status', onSelect: () => setSort('status') }
             ]}
             trigger={({ toggle }) => (
               <button type="button" onClick={toggle} className="flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
-                {sort === 'name' ? 'Name' : 'Status'}
+                {sort === 'name' ? t('plugins.pluginsPage.name') : t('plugins.pluginsPage.status')}
                 <Down theme="outline" size={12} />
               </button>
             )}
           />
-          <div className="ml-1 flex rounded-lg border border-[var(--border-soft)] p-0.5" role="group" aria-label="Layout">
+          <div className="ml-1 flex rounded-lg border border-[var(--border-soft)] p-0.5" role="group" aria-label={t('plugins.pluginsPage.layout')}>
             {([['grid', Application, 'Grid'], ['list', ListView, 'List']] as const).map(([id, Icon, label]) => (
               <button
                 key={id}
@@ -303,32 +305,32 @@ export function PluginsPage() {
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pb-8">
         {state.loading ? (
-          <div className="flex items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+          <div className="flex items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{t('plugins.pluginsPage.loading')}</div>
         ) : nothing ? (
-          <div className="flex items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">No plugins match your search.</div>
+          <div className="flex items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{t('plugins.pluginsPage.noPluginsMatchYourSearch')}</div>
         ) : (
           <>
             {visibleGroups.map((group) => {
               const items = group.connectors.map(connectorItem)
               const shown = filter === 'all' ? sorted(items).slice(0, PREVIEW) : items
               return (
-                <Section key={group.id} title={group.label} count={items.length} description={categoryDescription(group.id)} action={filter === 'all' && items.length > PREVIEW ? viewAll(group.id) : undefined}>
+                <Section key={group.id} title={group.label} count={items.length} description={categoryDescription(group.id, t)} action={filter === 'all' && items.length > PREVIEW ? viewAll(group.id) : undefined}>
                   {frame(shown)}
                 </Section>
               )
             })}
             {showMcp && (
-              <Section title="MCP servers" count={allMcpItems.length} description="Extra tools your agents can call via the Model Context Protocol (MCP).">
+              <Section title={t('plugins.pluginsPage.mcpServers')} count={allMcpItems.length} description={t('plugins.pluginsPage.extraToolsYourAgentsCan')}>
                 {allMcpItems.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-[var(--border-strong)] px-5 py-8 text-center">
                     <span className="text-[var(--text-muted)]">
                       <Plug theme="outline" size={22} />
                     </span>
-                    <div className="text-[14px] font-semibold text-[var(--text-primary)]">No MCP servers yet</div>
-                    <p className="m-0 text-[12.5px] text-[var(--text-muted)]">Add an MCP server to give your agents access to external tools and services.</p>
+                    <div className="text-[14px] font-semibold text-[var(--text-primary)]">{t('plugins.pluginsPage.noMcpServersYet')}</div>
+                    <p className="m-0 text-[12.5px] text-[var(--text-muted)]">{t('plugins.pluginsPage.addAnMcpServerTo')}</p>
                     <button type="button" onClick={() => openConfig('mcp')} className="mt-1 flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
                       <Plus theme="outline" size={15} />
-                      Create MCP server
+                      {t('plugins.pluginsPage.createMcpServer')}
                     </button>
                   </div>
                 ) : (

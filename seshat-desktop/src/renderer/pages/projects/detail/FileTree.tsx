@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Down, Refresh, Right, Search } from '../icons'
 import { FileIcon, FolderIcon } from '@renderer/components/ui/FileIcon'
 import { joinPath } from '@renderer/lib/projectFiles'
+import { useTranslation } from 'react-i18next'
 
 type Entry = { name: string; isDirectory: boolean }
 type Listing = Entry[] | 'loading' | 'error'
@@ -22,6 +23,7 @@ const INDENT = 14
 
 /** The files of a project as a tree that opens by folder, with a search over the names of the whole project. */
 export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRefresh }: Props) {
+  const { t } = useTranslation('shell')
   const [listings, setListings] = useState<Record<string, Listing>>({})
   const [open, setOpen] = useState<Record<string, boolean>>({ [rootPath]: true })
   const [query, setQuery] = useState('')
@@ -91,9 +93,9 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
 
   function renderDirectory(path: string, depth: number) {
     const listing = listings[path]
-    if (listing === undefined || listing === 'loading') return <div style={{ paddingLeft: 12 + depth * INDENT }} className="py-1 text-[11.5px] text-[var(--text-muted)]">Loading...</div>
-    if (listing === 'error') return <div style={{ paddingLeft: 12 + depth * INDENT }} className="py-1 text-[11.5px] text-[var(--accent-danger)]">This folder cannot be read.</div>
-    if (listing.length === 0) return <div style={{ paddingLeft: 12 + depth * INDENT }} className="py-1 text-[11.5px] text-[var(--text-muted)]">Empty</div>
+    if (listing === undefined || listing === 'loading') return <div style={{ paddingLeft: 12 + depth * INDENT }} className="py-1 text-[11.5px] text-[var(--text-muted)]">{t('pages.projects.detail.fileTree.loading')}</div>
+    if (listing === 'error') return <div style={{ paddingLeft: 12 + depth * INDENT }} className="py-1 text-[11.5px] text-[var(--accent-danger)]">{t('pages.projects.detail.fileTree.thisFolderCannotBeRead')}</div>
+    if (listing.length === 0) return <div style={{ paddingLeft: 12 + depth * INDENT }} className="py-1 text-[11.5px] text-[var(--text-muted)]">{t('pages.projects.detail.fileTree.empty')}</div>
     return listing.map((entry) => {
       const entryPath = joinPath(path, entry.name)
       if (entry.isDirectory) {
@@ -137,8 +139,8 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center justify-between px-3 pb-2 pt-3">
-        <span className="text-[13px] font-semibold text-[var(--text-primary)]">Project files</span>
-        <button type="button" onClick={onRefresh} aria-label="Read the files again" title="Refresh" className="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{t('pages.projects.detail.fileTree.projectFiles')}</span>
+        <button type="button" onClick={onRefresh} aria-label={t('pages.projects.detail.fileTree.readTheFilesAgain')} title={t('pages.projects.detail.fileTree.refresh')} className="flex size-6 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
           <Refresh size={13} />
         </button>
       </div>
@@ -149,8 +151,8 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search files..."
-          aria-label="Search the files of the project"
+          placeholder={t('pages.projects.detail.fileTree.searchFiles')}
+          aria-label={t('pages.projects.detail.fileTree.searchTheFilesOfThe')}
           className="h-8 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] pl-8 pr-2 text-[12.5px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
         />
       </div>
@@ -165,9 +167,9 @@ export function FileTree({ rootPath, selectedPath, onOpenFile, refreshKey, onRef
             {renderDirectory(rootPath, 0)}
           </>
         ) : results === 'searching' ? (
-          <div className="px-3 py-2 text-[12px] text-[var(--text-muted)]">Searching...</div>
+          <div className="px-3 py-2 text-[12px] text-[var(--text-muted)]">{t('pages.projects.detail.fileTree.searching')}</div>
         ) : results.length === 0 ? (
-          <div className="px-3 py-2 text-[12px] text-[var(--text-muted)]">No file or folder has this name.</div>
+          <div className="px-3 py-2 text-[12px] text-[var(--text-muted)]">{t('pages.projects.detail.fileTree.noFileOrFolderHas')}</div>
         ) : (
           results.map((found) => (
             <button

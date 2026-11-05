@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ChartHistogram, Code, FileText, Light, Message, ShareOne } from '@icon-park/react'
 import { AskIllustration } from './AskIllustration'
 import { CAPABILITIES, type CapabilityId } from './askContent'
+import { useTranslation } from 'react-i18next'
 
 const ICONS: Record<CapabilityId, ReactNode> = {
   answer: <Message size={20} />,
@@ -19,15 +20,16 @@ type Props = {
 
 // The middle of the Ask screen before any question: the picture, what Ask can do as six cards, and four questions to start from.
 export function AskHero({ onPick }: Props) {
+  const { t } = useTranslation('knowledge/ask')
   return (
     <div className="mx-auto flex w-full max-w-[860px] flex-col items-center px-6 pb-4 pt-2" style={{ animation: 'slide-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both' }}>
       <div className="w-full max-w-[460px]">
         <AskIllustration />
       </div>
       <h2 className="m-0 mt-1 text-center text-[30px] font-normal leading-[1.15] tracking-[-0.015em] text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-app-serif)' }}>
-        Ask anything about your knowledge
+        {t('pages.knowledge.ask.askHero.askAnythingAboutYourKnowledge')}
       </h2>
-      <p className="m-0 mt-2.5 max-w-[520px] text-center text-[13.5px] leading-[21px] text-[var(--text-muted)]">Seshat reads your documents and connected sources to give you accurate, contextual and actionable answers.</p>
+      <p className="m-0 mt-2.5 max-w-[520px] text-center text-[13.5px] leading-[21px] text-[var(--text-muted)]">{t('pages.knowledge.ask.askHero.seshatReadsYourDocumentsAnd')}</p>
 
       <ul className="m-0 mt-6 grid w-full list-none grid-cols-1 gap-2.5 p-0 sm:grid-cols-2 xl:grid-cols-3">
         {CAPABILITIES.map((capability) => (
@@ -36,7 +38,7 @@ export function AskHero({ onPick }: Props) {
               type="button"
               disabled={capability.soon}
               onClick={() => onPick(capability.prompt)}
-              title={capability.soon ? 'Not available yet' : undefined}
+              title={capability.soon ? t('pages.knowledge.ask.askHero.notAvailableYet') : undefined}
               className={[
                 'flex h-full w-full items-start gap-3 rounded-[14px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))] px-3.5 py-3 text-left transition-colors',
                 capability.soon ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-[var(--surface-hover)]'
@@ -45,10 +47,10 @@ export function AskHero({ onPick }: Props) {
               <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-[var(--accent-subtle)] text-[var(--accent-primary)]">{ICONS[capability.id]}</span>
               <span className="min-w-0">
                 <span className="flex items-center gap-2 text-[13.5px] font-semibold text-[var(--text-primary)]">
-                  {capability.title}
-                  {capability.soon && <span className="rounded-md bg-[var(--surface-hover)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--text-muted)]">Soon</span>}
+                  {t(capability.title)}
+                  {capability.soon && <span className="rounded-md bg-[var(--surface-hover)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--text-muted)]">{t('pages.knowledge.ask.askHero.soon')}</span>}
                 </span>
-                <span className="mt-0.5 block text-[12px] leading-[17px] text-[var(--text-muted)]">{capability.description}</span>
+                <span className="mt-0.5 block text-[12px] leading-[17px] text-[var(--text-muted)]">{t(capability.description)}</span>
               </span>
             </button>
           </li>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { TFunction } from 'i18next'
 
 type SettingsIconName =
   | 'sliders'
@@ -140,8 +141,18 @@ export function initialsFor(name: string): string {
   return name.slice(0, 2).toUpperCase()
 }
 
-export function formatStatus(status: string) {
-  if (!status) return 'Unknown'
+const STATUS_KEYS: Record<string, string> = {
+  active: 'settings:account.status.active',
+  inactive: 'settings:account.status.inactive',
+  suspended: 'settings:account.status.suspended',
+  pending: 'settings:account.status.pending'
+}
+
+export function formatStatus(status: string, t: TFunction) {
+  if (!status) return t('settings:account.status.unknown')
+  const key = STATUS_KEYS[status.toLowerCase()]
+  if (key) return t(key)
+  // A status the server invents is shown as it came.
   return status.charAt(0).toUpperCase() + status.slice(1)
 }
 

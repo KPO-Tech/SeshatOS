@@ -2,6 +2,7 @@ import { Copy } from '@icon-park/react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -110,6 +111,7 @@ export function CodeBox({
   // cap, the content just fills its container.
   expanded?: boolean
 }) {
+  const { t } = useTranslation('chat')
   const isError = variant === 'error'
   return (
     <div
@@ -142,7 +144,7 @@ export function CodeBox({
         <button
           className={COPY_BUTTON_CSS}
           type="button"
-          aria-label="Copy"
+          aria-label={t('chat.tools.common.copy')}
           onClick={() => void navigator.clipboard.writeText(content)}
         >
           <Copy size={10} />
@@ -157,6 +159,7 @@ export function CodeBox({
 // and no monospace, so it reads like text instead of looking like a code
 // dump that happens to contain sentences.
 export function ProseBox({ content, copyable, bare, expanded }: { content: string; copyable?: boolean; bare?: boolean; expanded?: boolean }) {
+  const { t } = useTranslation('chat')
   return (
     <div
       className={cx(
@@ -175,7 +178,7 @@ export function ProseBox({ content, copyable, bare, expanded }: { content: strin
         <button
           className={COPY_BUTTON_CSS}
           type="button"
-          aria-label="Copy"
+          aria-label={t('chat.tools.common.copy')}
           onClick={() => void navigator.clipboard.writeText(content)}
         >
           <Copy size={10} />

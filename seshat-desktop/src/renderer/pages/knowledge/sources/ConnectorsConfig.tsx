@@ -24,8 +24,10 @@ import { type KnowledgeSource } from '../collections/sourcesApi'
 import { useCollectionList } from '../collections/useCollectionList'
 import { useDeviceMode } from '../useCanManage'
 import type { ConnectAccountPayload, ConnectorAccount, ConnectorDefinition, ConnectorKind, Corpus } from './connectorTypes'
+import { useTranslation } from 'react-i18next'
 
 export function ConnectorsConfig() {
+  const { t } = useTranslation('knowledge/sources')
   const [accountsByKind, setAccountsByKind] = useState<Record<string, ConnectorAccount[]>>({})
   const [corpora, setCorpora] = useState<Corpus[]>([])
   const [connecting, setConnecting] = useState<ConnectorDefinition | null>(null)
@@ -74,7 +76,7 @@ export function ConnectorsConfig() {
         const started = await startConnectorOAuth(definition.oauthStartPath ?? `/connectors/${definition.kind}/oauth/start`)
         if (started.authorization_url) {
           window.open(started.authorization_url, '_blank')
-          setMessage({ tone: 'ok', text: 'OAuth flow opened. Refresh this page after approving access.' })
+          setMessage({ tone: 'ok', text: t('pages.knowledge.sources.connectorsConfig.oauthFlowOpenedRefreshThis') })
         }
       } catch (err) {
         setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to start OAuth.' })
@@ -118,7 +120,7 @@ export function ConnectorsConfig() {
     setMessage(null)
     try {
       const result = await syncConnectorAccount(definition.kind, account.id, corpusId)
-      setMessage({ tone: 'ok', text: `Sync complete: ${result.ingested ?? 0} item(s) ingested.` })
+      setMessage({ tone: 'ok', text: t('pages.knowledge.sources.connectorsConfig.syncComplete', { count: result.ingested ?? 0 }) })
       await load()
     } catch (err) {
       setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Sync failed.' })
@@ -141,7 +143,7 @@ export function ConnectorsConfig() {
   }
 
   const needle = query.trim().toLowerCase()
-  const matching = connectorCatalog.filter((item) => `${item.title} ${item.description}`.toLowerCase().includes(needle))
+  const matching = connectorCatalog.filter((item) => `${item.title} ${t(item.description)}`.toLowerCase().includes(needle))
   // A folder of this computer is analysed on this computer only: a device paired with an organization keeps its collections on the server.
   const showFolder = mode === 'standalone' && (filter === 'all' || filter === 'Knowledge') && LOCAL_FOLDER_TEXT.includes(needle)
   const groups = (['Knowledge', 'Actions'] as const)
@@ -156,17 +158,17 @@ export function ConnectorsConfig() {
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pt-5">
       <PageHeader
         icon={<Plug theme="filled" size={24} fill="currentColor" />}
-        title="Sources"
-        text="The places your documents live, and the actions your agents can take, connected to a collection."
+        title={t('pages.knowledge.sources.connectorsConfig.sources')}
+        text={t('pages.knowledge.sources.connectorsConfig.thePlacesYourDocumentsLive')}
         actions={
           <>
             <button type="button" onClick={() => void load()} disabled={loading} className={SECONDARY_BUTTON}>
-              {loading ? 'Loading...' : 'Refresh'}
+              {loading ? t('pages.knowledge.sources.connectorsConfig.loading') : t('pages.knowledge.sources.connectorsConfig.refresh')}
             </button>
             {mode === 'standalone' && (
               <button type="button" onClick={() => setFolderOpen(true)} className={PRIMARY_BUTTON}>
                 <span aria-hidden="true">+</span>
-                Add a folder
+                {t('pages.knowledge.sources.connectorsConfig.addAFolder')}
               </button>
             )}
           </>
@@ -174,18 +176,18 @@ export function ConnectorsConfig() {
       />
 
       <div className="mt-5 shrink-0">
-        <ListSearch value={query} onChange={setQuery} placeholder="Search sources..." />
+        <ListSearch value={query} onChange={setQuery} placeholder={t('pages.knowledge.sources.connectorsConfig.searchSources')} />
       </div>
 
       <div className="mt-4 shrink-0">
         <Pills
-          label="Kind of source"
+          label={t('pages.knowledge.sources.connectorsConfig.kindOfSource')}
           value={filter}
           onChange={(id) => setFilter(id as typeof filter)}
           items={[
-            { id: 'all', label: 'All', count: connectorCatalog.length + (mode === 'standalone' ? 1 : 0) },
-            { id: 'Knowledge', label: 'Knowledge', count: connectorCatalog.filter((item) => item.category === 'Knowledge').length + (mode === 'standalone' ? 1 : 0) },
-            { id: 'Actions', label: 'Actions', count: connectorCatalog.filter((item) => item.category === 'Actions').length }
+            { id: 'all', label: t('pages.knowledge.sources.connectorsConfig.all'), count: connectorCatalog.length + (mode === 'standalone' ? 1 : 0) },
+            { id: 'Knowledge', label: t('pages.knowledge.sources.connectorsConfig.knowledge'), count: connectorCatalog.filter((item) => item.category === 'Knowledge').length + (mode === 'standalone' ? 1 : 0) },
+            { id: 'Actions', label: t('pages.knowledge.sources.connectorsConfig.actions'), count: connectorCatalog.filter((item) => item.category === 'Actions').length }
           ]}
         />
       </div>
@@ -200,15 +202,15 @@ export function ConnectorsConfig() {
       )}
 
       {loading ? (
-        <div className="flex flex-1 items-center justify-center text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+        <div className="flex flex-1 items-center justify-center text-[13px] font-semibold text-[var(--text-muted)]">{t('pages.knowledge.sources.connectorsConfig.loading')}</div>
       ) : groups.length === 0 && myFolders.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center pb-16 text-[13px] font-semibold text-[var(--text-muted)]">No sources match your search.</div>
+        <div className="flex flex-1 items-center justify-center pb-16 text-[13px] font-semibold text-[var(--text-muted)]">{t('pages.knowledge.sources.connectorsConfig.noSourcesMatchYourSearch')}</div>
       ) : (
         <div className="no-scrollbar mt-5 min-h-0 flex-1 space-y-8 overflow-y-auto pb-8">
           {myFolders.length > 0 && (
             <div>
               <h2 className="m-0 text-[14.5px] font-semibold text-[var(--text-primary)]">
-                Your folders <span className="font-normal text-[var(--text-muted)]">{myFolders.length}</span>
+                {t('pages.knowledge.sources.connectorsConfig.yourFolders')} <span className="font-normal text-[var(--text-muted)]">{myFolders.length}</span>
               </h2>
               <YourFolders
                 sources={myFolders}
@@ -222,10 +224,10 @@ export function ConnectorsConfig() {
             <div key={group}>
               <h2 className="m-0 text-[14.5px] font-semibold text-[var(--text-primary)]">{group}</h2>
               <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-3">
-                {group === 'Knowledge' && showFolder && (
+                {group === t('pages.knowledge.sources.connectorsConfig.knowledge') && showFolder && (
                   <PluginCard
-                    title="Local folder"
-                    description="Add a folder of this computer as a source. Nothing is read until you analyse it."
+                    title={t('pages.knowledge.sources.connectorsConfig.localFolder')}
+                    description={t('pages.knowledge.sources.connectorsConfig.addAFolderOfThis')}
                     icon={<FolderIcon />}
                     connected={false}
                     onOpen={() => setFolderOpen(true)}
@@ -238,7 +240,7 @@ export function ConnectorsConfig() {
                     <PluginCard
                       key={definition.kind}
                       title={definition.title}
-                      description={definition.description}
+                      description={t(definition.description)}
                       icon={<ConnectorIcon kind={definition.kind} size={34} />}
                       connected={accounts.length > 0}
                       needsAttention={needsAttention}
@@ -271,7 +273,7 @@ export function ConnectorsConfig() {
             className="relative flex max-h-[85vh] w-full max-w-[640px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_26px_90px_rgba(0,0,0,0.45)]"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button type="button" onClick={() => setOpenKind(null)} aria-label="Close" className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+            <button type="button" onClick={() => setOpenKind(null)} aria-label={t('pages.knowledge.sources.connectorsConfig.close')} className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>
             <div className="no-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pt-12">

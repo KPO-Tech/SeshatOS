@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ActionButton, Notice, SelectField, SettingRow, SettingsCard, TextField } from '../../settings/kit'
 import type { MCPServer, MCPServerFormValues } from './mcpTypes'
 import { formValuesToPayload, validateMCPForm, valuesFromServer } from './mcpUtils'
+import { useTranslation } from 'react-i18next'
 
 const transportOptions = [
   { value: 'stdio', label: 'stdio' },
@@ -21,6 +22,7 @@ export function MCPServerForm({
   onCancel: () => void
   onSave: (payload: Partial<MCPServer>) => Promise<void>
 }) {
+  const { t } = useTranslation('config')
   const [values, setValues] = useState<MCPServerFormValues>(() => valuesFromServer(server))
   const [error, setError] = useState<string | null>(null)
   const isStdio = values.server_type === 'stdio'
@@ -30,7 +32,7 @@ export function MCPServerForm({
   }
 
   async function submit() {
-    const nextError = validateMCPForm(values)
+    const nextError = validateMCPForm(values, t)
     if (nextError) {
       setError(nextError)
       return
@@ -43,46 +45,46 @@ export function MCPServerForm({
     <>
       {error && <Notice tone="error">{error}</Notice>}
       <SettingsCard
-        title={server ? 'Edit server' : 'New server'}
+        title={server ? t('mcp.mCPServerForm.editServer') : t('mcp.mCPServerForm.newServer')}
         action={
           <div className="flex items-center gap-2">
             <ActionButton type="button" onClick={onCancel}>
-              Cancel
+              {t('mcp.mCPServerForm.cancel')}
             </ActionButton>
             <ActionButton type="button" tone="primary" onClick={() => void submit()} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? t('mcp.mCPServerForm.saving') : t('mcp.mCPServerForm.save')}
             </ActionButton>
           </div>
         }
       >
-        <SettingRow title="Name">
-          <TextField label="Name" value={values.name} onChange={(value) => set('name', value)} placeholder="filesystem" />
+        <SettingRow title={t('mcp.mCPServerForm.name')}>
+          <TextField label={t('mcp.mCPServerForm.name')} value={values.name} onChange={(value) => set('name', value)} placeholder="filesystem" />
         </SettingRow>
-        <SettingRow title="Display name">
-          <TextField label="Display name" value={values.display_name} onChange={(value) => set('display_name', value)} placeholder="Filesystem" />
+        <SettingRow title={t('mcp.mCPServerForm.displayName')}>
+          <TextField label={t('mcp.mCPServerForm.displayName')} value={values.display_name} onChange={(value) => set('display_name', value)} placeholder={t('mcp.mCPServerForm.filesystem')} />
         </SettingRow>
-        <SettingRow title="Transport">
+        <SettingRow title={t('mcp.mCPServerForm.transport')}>
           <div className="w-[210px]">
             <SelectField value={values.server_type} options={transportOptions} onChange={(value) => set('server_type', value)} />
           </div>
         </SettingRow>
-        <SettingRow title="Timeout (seconds)">
-          <TextField label="Timeout" value={String(values.timeout_secs)} onChange={(value) => set('timeout_secs', Number(value) || 0)} width={100} />
+        <SettingRow title={t('mcp.mCPServerForm.timeoutSeconds')}>
+          <TextField label={t('mcp.mCPServerForm.timeout')} value={String(values.timeout_secs)} onChange={(value) => set('timeout_secs', Number(value) || 0)} width={100} />
         </SettingRow>
         {isStdio ? (
           <>
-            <SettingRow title="Command">
-              <TextField label="Command" value={values.command} onChange={(value) => set('command', value)} placeholder="npx" mono />
+            <SettingRow title={t('mcp.mCPServerForm.command')}>
+              <TextField label={t('mcp.mCPServerForm.command')} value={values.command} onChange={(value) => set('command', value)} placeholder="npx" mono />
             </SettingRow>
-            <MultilineRow title="Arguments" value={values.args} onChange={(value) => set('args', value)} placeholder={'-y\n@modelcontextprotocol/server-filesystem'} />
-            <MultilineRow title="Environment" value={values.env} onChange={(value) => set('env', value)} placeholder={'TOKEN=...'} />
+            <MultilineRow title={t('mcp.mCPServerForm.arguments')} value={values.args} onChange={(value) => set('args', value)} placeholder={t('mcp.mCPServerForm.yModelcontextprotocolServerFilesystem')} />
+            <MultilineRow title={t('mcp.mCPServerForm.environment')} value={values.env} onChange={(value) => set('env', value)} placeholder={t('mcp.mCPServerForm.token')} />
           </>
         ) : (
           <>
             <SettingRow title="URL">
               <TextField label="URL" value={values.url} onChange={(value) => set('url', value)} placeholder="http://localhost:3000/mcp" mono />
             </SettingRow>
-            <MultilineRow title="Headers" value={values.headers} onChange={(value) => set('headers', value)} placeholder="Authorization=Bearer ..." />
+            <MultilineRow title={t('mcp.mCPServerForm.headers')} value={values.headers} onChange={(value) => set('headers', value)} placeholder={t('mcp.mCPServerForm.authorizationBearer')} />
           </>
         )}
       </SettingsCard>

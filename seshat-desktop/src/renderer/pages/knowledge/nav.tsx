@@ -14,18 +14,18 @@ export type KnowledgeNavItem = {
 
 export const KNOWLEDGE_NAV: Array<{ title: string; items: KnowledgeNavItem[] }> = [
   {
-    title: 'Ask',
+    title: 'knowledge/common:pages.knowledge.nav.groupAsk',
     items: [
-      { id: 'ask', label: 'Ask', icon: <Message size={15} />, ready: true },
-      { id: 'search', label: 'Search', icon: <Search size={15} />, ready: true }
+      { id: 'ask', label: 'knowledge/common:pages.knowledge.nav.ask', icon: <Message size={15} />, ready: true },
+      { id: 'search', label: 'knowledge/common:pages.knowledge.nav.search', icon: <Search size={15} />, ready: true }
     ]
   },
-  { title: 'Browse', items: [{ id: 'collections', label: 'Collections', icon: <FolderOpen size={15} />, ready: true }] },
+  { title: 'knowledge/common:pages.knowledge.nav.groupBrowse', items: [{ id: 'collections', label: 'knowledge/common:pages.knowledge.nav.collections', icon: <FolderOpen size={15} />, ready: true }] },
   {
-    title: 'Manage',
+    title: 'knowledge/common:pages.knowledge.nav.groupManage',
     items: [
-      { id: 'sources', label: 'Sources', icon: <PlugOne size={15} />, ready: true, adminOnly: true },
-      { id: 'settings', label: 'Settings', icon: <SettingTwo size={15} />, ready: true, adminOnly: true }
+      { id: 'sources', label: 'knowledge/common:pages.knowledge.nav.sources', icon: <PlugOne size={15} />, ready: true, adminOnly: true },
+      { id: 'settings', label: 'knowledge/common:pages.knowledge.nav.settings', icon: <SettingTwo size={15} />, ready: true, adminOnly: true }
     ]
   }
 ]

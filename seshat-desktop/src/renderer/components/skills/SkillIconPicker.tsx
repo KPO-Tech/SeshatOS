@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { SkillIconTile } from './SkillIconTile'
 import { SKILL_ICON_IDS, type SkillIconId } from './skillIcons'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   skillName: string
@@ -13,6 +14,7 @@ type Props = {
 
 /** The icons a skill may take. "Automatic" gives it back the one its topic suggests. */
 export function SkillIconPicker({ skillName, current, chosen, onPick, onClose }: Props) {
+  const { t } = useTranslation('skills')
   useEffect(() => {
     const escape = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
     document.addEventListener('keydown', escape)
@@ -21,8 +23,8 @@ export function SkillIconPicker({ skillName, current, chosen, onPick, onClose }:
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-[rgba(0,0,0,0.45)] px-6" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label="Choose an icon" className="w-full max-w-[420px] rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
-        <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">Icon for {skillName}</h2>
+      <div role="dialog" aria-modal="true" aria-label={t('skills.skillIconPicker.chooseAnIcon')} className="w-full max-w-[420px] rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
+        <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{t('skills.skillIconPicker.iconFor', { name: skillName })}</h2>
         <div className="mt-4 grid grid-cols-6 gap-2">
           {SKILL_ICON_IDS.map((icon) => (
             <button
@@ -50,10 +52,10 @@ export function SkillIconPicker({ skillName, current, chosen, onPick, onClose }:
             }}
             className="cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-3 py-1.5 text-[12.5px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-40"
           >
-            Automatic
+            {t('skills.skillIconPicker.automatic')}
           </button>
           <button type="button" onClick={onClose} className="cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-3 py-1.5 text-[12.5px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
-            Close
+            {t('skills.skillIconPicker.close')}
           </button>
         </div>
       </div>

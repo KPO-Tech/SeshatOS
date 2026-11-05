@@ -1,0 +1,247 @@
+{
+  "modal": {
+    "title": "Réglages",
+    "close": "Fermer les réglages",
+    "pages": "Pages des réglages"
+  },
+  "groups": {
+    "general": "Général",
+    "aiRuntime": "Moteur d'IA",
+    "capabilities": "Capacités",
+    "workspace": "Espace de travail",
+    "dataPrivacy": "Données et confidentialité",
+    "about": "À propos"
+  },
+  "sections": {
+    "account": { "label": "Compte", "description": "Qui vous êtes sur cet appareil." },
+    "languageNotifications": { "label": "Langue et notifications", "description": "La langue de l'interface, et ce dont l'application vous informe." },
+    "appearance": { "label": "Apparence", "description": "Thème, couleurs et taille." },
+    "shortcuts": { "label": "Raccourcis", "description": "Les touches pour vous déplacer rapidement." },
+    "providers": { "label": "Fournisseurs", "description": "Les fournisseurs d'IA utilisés par vos agents." },
+    "models": { "label": "Modèles", "description": "Valeurs par défaut, catalogues et modèles de secours." },
+    "titles": { "label": "Titres", "description": "Nommer les nouvelles sessions avec un petit modèle local." },
+    "webSearch": { "label": "Recherche web", "description": "Moteurs de recherche et règles d'accès au web." },
+    "documents": { "label": "Documents", "description": "La façon dont les documents sont lus pour vos agents." },
+    "search": { "label": "Recherche", "description": "Plongements et reclassement pour Knowledge." },
+    "image": { "label": "Images", "description": "La façon dont l'agent crée des images." },
+    "audio": { "label": "Audio", "description": "Dictée, transcription et voix." },
+    "mcp": { "label": "Serveurs MCP", "description": "Les serveurs MCP pour les agents et les outils." },
+    "environment": { "label": "Environnement", "description": "Où les commandes s'exécutent, et les clés d'API." },
+    "storage": { "label": "Stockage", "description": "Où se trouvent les fichiers et les caches." },
+    "skills": { "label": "Skills", "description": "Les skills que vos agents peuvent utiliser." },
+    "answers": { "label": "Réponses", "description": "La façon dont l'agent présente ses réponses." },
+    "memories": { "label": "Mémoire", "description": "Ce dont l'agent se souvient." },
+    "dataControls": { "label": "Contrôle des données", "description": "Ce qui est conservé sur cet appareil." },
+    "about": { "label": "À propos", "description": "Version et origine de SeshatOS." },
+    "cloud": { "label": "SeshatCloud", "description": "Associer l'application au SeshatCloud de votre organisation." }
+  },
+  "account": {
+    "connected": "Connecté",
+    "local": "Local",
+    "signOut": "Se déconnecter",
+    "notSignedIn": "Vous n'êtes pas connecté : cet espace de travail est local",
+    "sessionReady": "Stockage de session prêt",
+    "details": "Détails",
+    "email": "E-mail",
+    "userId": "Identifiant d'utilisateur",
+    "copy": "Copier",
+    "status": {
+      "unknown": "Inconnu",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "suspended": "Suspendu",
+      "pending": "En attente"
+    }
+  },
+  "languageNotifications": {
+    "languageCard": "Langue",
+    "interfaceLanguage": "Langue de l'interface",
+    "notificationsCard": "Notifications",
+    "desktop": "Notifications de bureau",
+    "desktopHint": "Affichées uniquement lorsque SeshatOS n'est pas la fenêtre au premier plan.",
+    "sound": "Son",
+    "toldAboutCard": "Ce dont vous souhaitez être informé",
+    "tasks": "Tâches",
+    "agentReplies": "Réponses de l'agent",
+    "agentRepliesHint": "Lorsque l'agent termine dans une conversation que vous ne regardez pas.",
+    "errors": "Erreurs",
+    "appUpdates": "Mises à jour de l'application"
+  },
+  "appearance": {
+    "tabs": { "theme": "Thème", "interface": "Interface" },
+    "mainThemes": {
+      "card": "Thèmes principaux",
+      "modeLabel": "Mode",
+      "mode": { "dark": "Sombre", "light": "Clair", "system": "Système" },
+      "darkTheme": "Thème sombre",
+      "lightTheme": "Thème clair",
+      "onScreen": "Affiché",
+      "clickToShow": "Cliquez pour l'afficher",
+      "help": "Le bouton soleil et lune de la barre de titre bascule entre ces deux thèmes. Choisissez un thème ci-dessous pour en faire le thème principal de son type."
+    },
+    "accent": { "card": "Couleur d'accent", "useOwn": "Utiliser celle du thème" },
+    "themes": {
+      "card": "Thèmes",
+      "show": "Afficher",
+      "filter": { "all": "Tous", "dark": "Sombres", "light": "Clairs" },
+      "groups": { "seshat": "Seshat", "mine": "Mes thèmes", "dark": "Sombres", "light": "Clairs" }
+    },
+    "customize": {
+      "card": "Personnaliser",
+      "duplicate": "Dupliquer",
+      "locked": "Les thèmes prédéfinis ne peuvent pas être modifiés. Dupliquez-en un pour créer le vôtre."
+    },
+    "importExport": {
+      "card": "Importer et exporter",
+      "themeFile": "Fichier de thème",
+      "import": "Importer",
+      "export": "Exporter",
+      "copyJson": "Copier le JSON"
+    },
+    "notices": {
+      "saveFailed": "Vos thèmes n'ont pas pu être enregistrés dans ce navigateur : ils seront perdus à la fermeture de l'application.",
+      "imported": "« {{name}} » importé.",
+      "importFailed": "Ce thème n'a pas pu être importé.",
+      "copied": "Thème copié.",
+      "copyFailed": "Le thème n'a pas pu être copié."
+    },
+    "confirmDelete": "Supprimer le thème « {{name}} » ?",
+    "copyName": "{{name}} (copie)",
+    "interface": {
+      "card": "Interface",
+      "reset": "Réinitialiser",
+      "size": "Taille de l'interface",
+      "textSize": "Taille du texte du chat",
+      "spacing": "Espacement",
+      "width": "Largeur de la conversation"
+    },
+    "options": {
+      "textSize": { "small": "Petite", "default": "Par défaut", "large": "Grande", "xlarge": "Très grande" },
+      "spacing": { "compact": "Compact", "comfortable": "Confortable", "spacious": "Aéré" },
+      "width": { "narrow": "Étroite", "default": "Par défaut", "wide": "Large" }
+    }
+  },
+  "themeEditor": {
+    "name": "Nom",
+    "defaultName": "Mon thème",
+    "palette": "Palette",
+    "surface": "Surface",
+    "accent": "Accent",
+    "text": "Texte",
+    "colourAria": "{{label}} (couleur)",
+    "hexAria": "{{label}} (valeur hexadécimale)",
+    "wallpaper": "Fond d'écran",
+    "wallpaperNone": "Aucun",
+    "wallpaperGradient": "Dégradé",
+    "wallpaperImage": "Image",
+    "colourN": "Couleur {{n}}",
+    "addColour": "+ Couleur",
+    "removeColour": "− Couleur",
+    "angle": "Angle",
+    "veil": "Voile",
+    "chooseAnother": "Choisir une autre image",
+    "translucent": "Les panneaux deviennent légèrement translucides pour laisser voir le fond d'écran. Choisissez une surface proche du fond d'écran pour que le texte reste lisible.",
+    "delete": "Supprimer ce thème",
+    "pictureFailed": "Cette image n'a pas pu être utilisée."
+  },
+  "themeCards": {
+    "selected": "Sélectionné"
+  },
+  "tokenActivity": {
+    "card": "Activité des jetons",
+    "viewLabel": "Affichage de l'activité des jetons",
+    "views": { "daily": "Par jour", "weekly": "Par semaine", "cumulative": "Cumulée" },
+    "failed": "L'activité des jetons n'a pas pu être chargée.",
+    "empty": "Aucun jeton utilisé pour l'instant. L'activité s'affichera ici dès que vous discuterez avec un agent.",
+    "summary_one": "{{tokens}} jetons sur {{count}} jour actif au cours de la dernière année",
+    "summary_other": "{{tokens}} jetons sur {{count}} jours actifs au cours de la dernière année",
+    "tokens": "{{value}} jetons",
+    "noTokens": "Aucun jeton",
+    "weekOf": "Semaine du {{date}}",
+    "throughWeekOf": "Jusqu'à la semaine du {{date}}",
+    "less": "Moins",
+    "more": "Plus",
+    "tableCaption": "Jetons utilisés par semaine",
+    "tableWeek": "Semaine du",
+    "tableTokens": "Jetons"
+  },
+  "memories": {
+    "learning": "Apprentissage",
+    "manualOnly": "Manuel uniquement",
+    "learnTitle": "Apprendre de mes conversations",
+    "learnHint": "Désactivé par défaut. Ce que vous ajoutez ci-dessous est toujours utilisé.",
+    "addCard": "Ajouter un souvenir",
+    "memoryAria": "Souvenir",
+    "memoryPlaceholder": "Préfère les résumés concis",
+    "detailsAria": "Détails",
+    "detailsPlaceholder": "Détails (facultatif)",
+    "saving": "Enregistrement...",
+    "add": "Ajouter",
+    "yourMemories": "Vos souvenirs",
+    "none": "Aucun souvenir pour l'instant",
+    "noneHint": "Ce que vous ajoutez ci-dessus est utilisé dans chaque conversation.",
+    "delete": "Supprimer",
+    "filterOption": "{{type}} ({{count}})",
+    "errors": {
+      "saveSetting": "L'enregistrement du réglage de la mémoire a échoué",
+      "load": "Le chargement des souvenirs a échoué",
+      "save": "L'enregistrement du souvenir a échoué",
+      "delete": "La suppression du souvenir a échoué"
+    },
+    "types": {
+      "all": "Tous",
+      "preference": "Préférence",
+      "instruction": "Instruction",
+      "pattern": "Habitude",
+      "fact": "Fait",
+      "context": "Contexte"
+    }
+  },
+  "dataControls": {
+    "approvals": "Autorisations d'outils mémorisées",
+    "approvalsHint_one": "{{count}} mémorisée : vous n'êtes plus sollicité pour celle-ci.",
+    "approvalsHint_other": "{{count}} mémorisées : vous n'êtes plus sollicité pour celles-ci.",
+    "approvalsNone": "Aucune mémorisée.",
+    "clearAll": "Tout effacer",
+    "cleared": "Effacé",
+    "comingLater": "Prochainement",
+    "clearCache": "Vider le cache de l'application",
+    "deleteConversations": "Supprimer toutes les conversations",
+    "clearConnectors": "Effacer les comptes de connecteurs",
+    "notAvailable": "Indisponible"
+  },
+  "shortcuts": {
+    "groups": { "navigation": "Navigation", "chat": "Chat", "desktop": "Bureau" },
+    "items": {
+      "toggleSidebar": "Afficher ou masquer la barre latérale",
+      "search": "Rechercher",
+      "goHome": "Aller à l'accueil",
+      "goBack": "Retour",
+      "goForward": "Avancer",
+      "sendMessage": "Envoyer le message",
+      "newLine": "Nouvelle ligne",
+      "attachFile": "Joindre un fichier",
+      "focusComposer": "Activer le champ de saisie",
+      "openSettings": "Ouvrir les réglages",
+      "openConfig": "Ouvrir la configuration",
+      "closeModal": "Fermer la fenêtre"
+    }
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "updateReady": "SeshatOS {{version}} est prêt à être installé.",
+    "checking": "Vérification...",
+    "upToDate": "Vous disposez de la dernière version.",
+    "checkFailed": "La vérification a échoué.",
+    "restart": "Redémarrer et installer",
+    "check": "Rechercher des mises à jour",
+    "systemCard": "Système",
+    "backend": "Backend",
+    "connected": "Connecté",
+    "notDetected": "Non détecté",
+    "mode": "Mode",
+    "modeConnected": "Connecté à SeshatCloud",
+    "modeLocal": "Espace de travail local",
+    "backendVersion": "Version du backend"
+  }
+}

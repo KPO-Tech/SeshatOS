@@ -1,6 +1,9 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import type { i18n } from 'i18next'
+import { I18nextProvider } from 'react-i18next'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { englishI18n } from '@renderer/i18n/testing'
 import type { PullRequest } from '@renderer/lib/pullRequests'
 import { ChangesList } from './ChangesList'
 
@@ -9,8 +12,13 @@ const pull = (overrides: Partial<PullRequest>): PullRequest => ({
   state: 'open', additions: 12, deletions: 3, checks: 'passing', mergeable_state: 'clean', updated_at: '2026-10-31T10:00:00Z', ...overrides
 })
 
+let english: i18n
+beforeAll(async () => {
+  english = await englishI18n()
+})
+
 const render = (pulls: PullRequest[], extra: Partial<Parameters<typeof ChangesList>[0]> = {}) =>
-  renderToStaticMarkup(createElement(ChangesList, { pulls, onRefresh: () => undefined, ...extra }))
+  renderToStaticMarkup(createElement(I18nextProvider, { i18n: english }, createElement(ChangesList, { pulls, onRefresh: () => undefined, ...extra })))
 
 describe('ChangesList', () => {
   it('draws the title, the place, the lines and where the pull request stands', () => {

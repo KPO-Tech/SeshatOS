@@ -7,16 +7,15 @@ import { useCanManageKnowledge } from '../useCanManage'
 import { CollectionCard } from './CollectionCard'
 import { CollectionDialog } from './CollectionDialog'
 import { createCollection, indexCollection } from './collectionsApi'
-import { plural } from './fileStatus'
 import { IndexingNotice } from './IndexingNotice'
 import { SourceIcon } from './SourceIcon'
 import { DEFAULT_SOURCE_ID } from './sourcesApi'
 import { useCollectionList } from './useCollectionList'
+import { useTranslation } from 'react-i18next'
 
 type Sort = 'name' | 'recent'
 
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3'
-const MADE_IN_APP = 'Made in the app'
 
 function Count({ value, active }: { value: number; active?: boolean }) {
   return <span className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none ${active ? 'bg-white/25 text-white' : 'bg-[var(--surface-muted)] text-[var(--text-muted)]'}`}>{value}</span>
@@ -41,6 +40,7 @@ const BUTTON = 'flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg
 
 // The collections, in one list. A source filters them: the address says which (?source=), so the Sources page can open its own.
 export function CollectionsPage() {
+  const { t } = useTranslation('knowledge/collections')
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const { collections, sources, loading, failed, indexingConfigured, reload } = useCollectionList()
@@ -71,8 +71,8 @@ export function CollectionsPage() {
   )
 
   const pills: Array<{ id: string; label: string; count: number; icon?: ReactNode }> = [
-    { id: 'all', label: 'All', count: collections.length },
-    { id: DEFAULT_SOURCE_ID, label: MADE_IN_APP, count: countIn(DEFAULT_SOURCE_ID), icon: <SeshatLogo size={14} /> },
+    { id: 'all', label: t('pages.knowledge.collections.collectionsPage.all'), count: collections.length },
+    { id: DEFAULT_SOURCE_ID, label: t('pages.knowledge.collections.collectionsPage.madeInApp'), count: countIn(DEFAULT_SOURCE_ID), icon: <SeshatLogo size={14} /> },
     ...sources.map((source) => ({ id: source.id, label: source.name, count: countIn(source.id), icon: <SourceIcon icon={source.icon} size={14} /> }))
   ]
 
@@ -90,7 +90,7 @@ export function CollectionsPage() {
     try {
       let queued = 0
       for (const collection of shown) queued += await indexCollection(collection.id)
-      setNotice(queued === 0 ? 'Nothing is waiting to be indexed.' : `${plural(queued, 'document', 'documents')} queued for indexing. Open a collection to follow it.`)
+      setNotice(queued === 0 ? t('pages.knowledge.collections.collectionsPage.nothingWaiting') : t('pages.knowledge.collections.collectionsPage.queued', { count: queued }))
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : 'The indexing could not be started.')
     } finally {
@@ -106,24 +106,24 @@ export function CollectionsPage() {
             <FolderOpen theme="filled" size={24} fill="currentColor" />
           </span>
           <div className="min-w-0">
-            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Collections</h1>
-            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">The documents your agents can search, filtered by the source they come from.</p>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{t('pages.knowledge.collections.collectionsPage.collections')}</h1>
+            <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">{t('pages.knowledge.collections.collectionsPage.theDocumentsYourAgentsCan')}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {canManage && (
             <button type="button" onClick={() => navigate('/knowledge/sources')} className={`${BUTTON} border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]`}>
-              Sources
+              {t('pages.knowledge.collections.collectionsPage.sources')}
             </button>
           )}
           {scope !== 'all' && shown.length > 0 && (
             <button type="button" onClick={() => void indexAll()} disabled={indexing} className={`${BUTTON} border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:opacity-60`}>
-              {indexing ? 'Starting...' : 'Index everything'}
+              {indexing ? t('pages.knowledge.collections.collectionsPage.starting') : t('pages.knowledge.collections.collectionsPage.indexEverything')}
             </button>
           )}
           <button type="button" onClick={() => setCreating(true)} className={`${BUTTON} border-0 bg-[var(--accent-primary)] text-white hover:opacity-90`}>
             <Plus theme="outline" size={15} />
-            New collection
+            {t('pages.knowledge.collections.collectionsPage.newCollection')}
           </button>
         </div>
       </div>
@@ -135,13 +135,13 @@ export function CollectionsPage() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search collections..."
+          placeholder={t('pages.knowledge.collections.collectionsPage.searchCollections')}
           className="h-10 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
         />
       </div>
 
       <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-2">
-        <div role="tablist" aria-label="Source" className="flex flex-wrap items-center gap-2">
+        <div role="tablist" aria-label={t('pages.knowledge.collections.collectionsPage.source')} className="flex flex-wrap items-center gap-2">
           {pills.map((item) => (
             <button
               key={item.id}
@@ -159,13 +159,13 @@ export function CollectionsPage() {
         </div>
         <div className="flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
           <SortThree theme="outline" size={14} />
-          Sort by
+          {t('pages.knowledge.collections.collectionsPage.sortBy')}
           <Pick
-            label="Sort by"
+            label={t('pages.knowledge.collections.collectionsPage.sortBy')}
             value={sort === 'name' ? 'Name' : 'Recently updated'}
             items={[
-              { id: 'name', label: 'Name', checked: sort === 'name', onSelect: () => setSort('name') },
-              { id: 'recent', label: 'Recently updated', checked: sort === 'recent', onSelect: () => setSort('recent') }
+              { id: 'name', label: t('pages.knowledge.collections.collectionsPage.name'), checked: sort === 'name', onSelect: () => setSort('name') },
+              { id: 'recent', label: t('pages.knowledge.collections.collectionsPage.recentlyUpdated'), checked: sort === 'recent', onSelect: () => setSort('recent') }
             ]}
           />
         </div>
@@ -173,7 +173,7 @@ export function CollectionsPage() {
 
       {(failed || error) && (
         <p className="mt-4 shrink-0 text-[12.5px] font-semibold text-[var(--accent-danger)]" role="alert">
-          {error ?? 'The collections could not be read.'}
+          {error ?? t('pages.knowledge.collections.collectionsPage.theCollectionsCouldNotBe')}
         </p>
       )}
       {notice && <p className="mt-4 shrink-0 text-[12.5px] text-[var(--text-secondary)]">{notice}</p>}
@@ -185,10 +185,10 @@ export function CollectionsPage() {
 
       <div className="no-scrollbar mt-4 min-h-0 flex-1 overflow-y-auto pb-8">
         {loading ? (
-          <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+          <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{t('pages.knowledge.collections.collectionsPage.loading')}</div>
         ) : failed ? null : shown.length === 0 ? (
           <p className="m-0 py-6 text-[13px] text-[var(--text-muted)]">
-            {collections.length === 0 ? 'No collection yet. New collection makes one, and a folder added in Sources proposes its own.' : scope !== 'all' && !needle ? 'No collection in this source yet.' : 'No collection matches.'}
+            {collections.length === 0 ? t('pages.knowledge.collections.collectionsPage.noCollectionYetNewCollection') : scope !== 'all' && !needle ? t('pages.knowledge.collections.collectionsPage.noCollectionInThisSource') : t('pages.knowledge.collections.collectionsPage.noCollectionMatches')}
           </p>
         ) : (
           <div className={GRID}>
@@ -199,7 +199,7 @@ export function CollectionsPage() {
         )}
       </div>
 
-      {creating && <CollectionDialog title="New collection" submitLabel="Create" onSubmit={create} onClose={() => setCreating(false)} />}
+      {creating && <CollectionDialog title={t('pages.knowledge.collections.collectionsPage.newCollection')} submitLabel="Create" onSubmit={create} onClose={() => setCreating(false)} />}
     </section>
   )
 }

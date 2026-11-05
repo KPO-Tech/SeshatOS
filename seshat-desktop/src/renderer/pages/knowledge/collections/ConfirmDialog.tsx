@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   title: string
@@ -9,6 +10,7 @@ type Props = {
 }
 
 export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onClose }: Props) {
+  const { t } = useTranslation('knowledge/collections')
   useEffect(() => {
     const escape = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
     document.addEventListener('keydown', escape)
@@ -28,7 +30,7 @@ export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onClose
         <p className="mb-0 mt-2.5 text-[13px] leading-[20px] text-[var(--text-secondary)]">{message}</p>
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="cursor-pointer rounded-[9px] border border-app-border-subtle bg-transparent px-3.5 py-1.5 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-            Cancel
+            {t('pages.knowledge.collections.confirmDialog.cancel')}
           </button>
           <button type="button" autoFocus onClick={onConfirm} className="cursor-pointer rounded-[9px] border-0 bg-[var(--accent-danger)] px-3.5 py-1.5 text-[13px] font-medium text-white hover:opacity-90">
             {confirmLabel}

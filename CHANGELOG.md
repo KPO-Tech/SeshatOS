@@ -11,6 +11,22 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.12] - 2026-11-05
+
+### Highlights
+
+- **SeshatOS speaks French.** The whole interface can be read in English or in French.
+
+### Added
+
+- **A language setting.** In Settings, choose English or French. The choice applies at once and is remembered. By default the app follows the language of your system.
+- **The interface in French.** Settings, Chat, the sidebar and Home, the Store, Plugins, Skills, agents and Knowledge (Ask, Search, Collections, Sources) are translated. The words Skills and Plugins stay as they are, and so do the names of tools.
+- **Plurals and dates in your language.** "3 documents", "il y a 5 min", file sizes and dates follow the language you chose.
+
+### Not translated yet
+
+- The administration pages, the release notes and the native menus stay in English for now. What an agent is told (prompts, instructions) is never translated.
+
 ## [0.3.11] - 2026-11-05
 
 ### Highlights
