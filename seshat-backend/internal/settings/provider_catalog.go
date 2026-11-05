@@ -67,6 +67,15 @@ func Catalog() []CatalogEntry {
 		}
 		out = append(out, entry)
 	}
+	// FreeLLMAPI is not in the runtime: it is an OpenAI-compatible router the person runs on this computer (see freellmapi.go).
+	out = append(out, CatalogEntry{
+		ID:          FreeLLMAPIProvider,
+		Name:        "FreeLLMAPI",
+		Description: "Free models from many providers behind one address: the FreeLLMAPI router that you run on this computer. Personal use.",
+		Main:        true,
+		AuthType:    "api_key",
+		BaseURL:     FreeLLMAPIDefaultBaseURL,
+	})
 	more := sdk.CatalogProviders()
 	sort.SliceStable(more, func(i, j int) bool { return strings.ToLower(more[i].Name) < strings.ToLower(more[j].Name) })
 	for _, p := range more {

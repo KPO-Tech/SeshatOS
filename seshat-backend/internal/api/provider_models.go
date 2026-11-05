@@ -1,12 +1,16 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	backendaudit "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/audit"
+	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/bkerr"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/db"
+	bksettings "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/settings"
 	appconfig "github.com/KPO-Tech/seshat-runtime/pkg/config"
 	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 )
@@ -101,14 +105,24 @@ func (a *App) handleProviderModels(w http.ResponseWriter, r *http.Request, setti
 			writeBackendError(w, err)
 			return
 		}
-		providerEnum := providers.ResolveProviderFromString(setting.Provider)
+		providerEnum := providers.ResolveProviderFromString(bksettings.RuntimeProvider(setting.Provider))
+
+		// FreeLLMAPI has no list of its own in the runtime: its models are the ones the router says it can serve now, asked when the
+		// list is empty (a new setting) and again by Sync.
+		freeLLMAPI := bksettings.IsFreeLLMAPI(setting.Provider)
+		if freeLLMAPI && len(models) == 0 {
+			apiKey, _ := a.backend.Settings.GetDecryptedAPIKey(r.Context(), principal, settingID)
+			if synced, syncErr := a.replaceFreeLLMAPIModels(r.Context(), settingID, setting.BaseURL, apiKey); syncErr == nil {
+				models = synced
+			}
+		}
 
 		// Auto-seed if DB is empty or contains models from the wrong provider.
 		knownIDs := make([]string, len(models))
 		for i, m := range models {
 			knownIDs[i] = m.ModelID
 		}
-		if providers.NeedsCatalogReseed(setting.Provider, knownIDs) {
+		if !freeLLMAPI && providers.NeedsCatalogReseed(setting.Provider, knownIDs) {
 			if static := providers.StaticModels(setting.Provider); len(static) > 0 {
 				if seeded, seedErr := a.modelStore.BulkReplaceCatalog(r.Context(), settingID, toDBParams(static)); seedErr == nil {
 					models = seeded
@@ -274,6 +288,21 @@ func (a *App) handleProviderModelsSync(w http.ResponseWriter, r *http.Request, s
 	// Decrypt API key (may be empty for providers like Ollama)
 	apiKey, _ := a.backend.Settings.GetDecryptedAPIKey(r.Context(), principal, settingID)
 
+	if bksettings.IsFreeLLMAPI(providerName) {
+		models, err := a.replaceFreeLLMAPIModels(r.Context(), settingID, baseURL, apiKey)
+		if err != nil {
+			// There is no static list to fall back on: say why the router could not be read.
+			writeBackendError(w, bkerr.BadGateway(err.Error(), err))
+			return
+		}
+		items := make([]providerModelResponse, 0, len(models))
+		for _, m := range models {
+			items = append(items, modelToResponse(m))
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"models": items, "count": len(items), "synced": true})
+		return
+	}
+
 	fetched, err := providers.FetchModels(r.Context(), providerName, baseURL, apiKey)
 	if err != nil {
 		// Fall back to static catalog from registry
@@ -358,4 +387,24 @@ func handleModelsList(w http.ResponseWriter, r *http.Request) {
 		"count":       len(entries),
 		"total_count": modelCount,
 	})
+}
+
+// replaceFreeLLMAPIModels asks the router which models it can serve now and makes them the models of the setting (the first one, "auto",
+// is the default). The models the user added by hand stay.
+func (a *App) replaceFreeLLMAPIModels(ctx context.Context, settingID, baseURL, apiKey string) ([]db.ProviderModel, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	listed, err := bksettings.FetchFreeLLMAPIModels(ctx, &http.Client{Timeout: 12 * time.Second}, baseURL, apiKey)
+	if err != nil {
+		return nil, err
+	}
+	fetched := make([]providers.FetchedModel, 0, len(listed))
+	for i, model := range listed {
+		name := model.Name
+		if name == "" {
+			name = model.ID
+		}
+		fetched = append(fetched, providers.FetchedModel{ModelID: model.ID, DisplayName: name, ContextWindow: model.ContextWindow, IsDefault: i == 0, SortOrder: i})
+	}
+	return a.modelStore.BulkReplaceCatalog(ctx, settingID, toDBParams(fetched))
 }

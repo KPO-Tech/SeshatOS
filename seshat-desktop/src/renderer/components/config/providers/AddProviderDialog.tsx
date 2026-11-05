@@ -16,6 +16,7 @@ type Props = {
 
 function providerHint(t: TFunction, entry?: ProviderChoice) {
   if (!entry) return t('config:providers.addProviderDialog.pickOne')
+  if (entry.id === 'freellmapi') return t('config:providers.addProviderDialog.freellmapiHint')
   if (entry.main) return plainText(entry.description || t('config:providers.addProviderDialog.builtIn'))
   const untested = t('config:providers.addProviderDialog.genericUntested', { total: entry.model_count })
   return entry.unverified ? t('config:providers.addProviderDialog.unverifiedAddress', { text: untested }) : untested

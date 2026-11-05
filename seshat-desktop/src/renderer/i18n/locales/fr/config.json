@@ -430,7 +430,8 @@
       "pickOne": "Choisissez un fournisseur.",
       "builtIn": "Intégré au runtime Seshat.",
       "genericUntested": "Fournisseur générique du catalogue public models.dev ({{total}} modèles), non testé avec une vraie clé par Seshat.",
-      "unverifiedAddress": "{{text}} Son adresse provient d'un catalogue téléchargé et n'a pas été vérifiée."
+      "unverifiedAddress": "{{text}} Son adresse provient d'un catalogue téléchargé et n'a pas été vérifiée.",
+      "freellmapiHint": "FreeLLMAPI est un routeur à installer et lancer vous-même, pour un usage personnel et selon les conditions de chaque fournisseur. Copiez la clé unifiée (freellmapi-…) dans son tableau de bord. Son app de bureau écoute sur le port 31415, le serveur et Docker sur 3001."
     },
     "providerCard": {
       "setAsDefaultProvider": "Définir par défaut",

@@ -72,4 +72,10 @@ describe('initialProviderForm', () => {
     expect(initialProviderForm(choices[4]).base_url).toBe('https://example.test/v1')
     expect(initialProviderForm(choice('groq', { base_url: 'https://api.groq.test/v1' })).base_url).toBe('')
   })
+
+  it('shows the address of FreeLLMAPI, which the person runs on this computer and may run on another port', () => {
+    const form = initialProviderForm(choice('freellmapi', { main: true, base_url: 'http://127.0.0.1:31415/v1' }))
+    expect(form.base_url).toBe('http://127.0.0.1:31415/v1')
+    expect(form.auth_kind).toBe('api_key')
+  })
 })

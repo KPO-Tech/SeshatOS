@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strings"
 
 	"github.com/KPO-Tech/seshat-runtime/pkg/providers"
 )
@@ -29,7 +28,7 @@ type KeyCheck struct {
 // For the others a refusal can only mean the check asked the wrong way, so it is not taken for a verdict.
 var keyChecked = map[string]bool{
 	"anthropic": true, "openai": true, "openrouter": true, "mistral": true, "deepseek": true,
-	"z-ai": true, "kimi": true, "minimax": true, "opencode": true,
+	"z-ai": true, "kimi": true, "minimax": true, "opencode": true, FreeLLMAPIProvider: true,
 }
 
 var versionedBase = regexp.MustCompile(`/v\d+[a-z0-9]*$`)
@@ -48,7 +47,7 @@ func modelsRoute(provider, baseURL string) string {
 // Nothing is stored and the key appears in no message.
 func CheckProviderKey(ctx context.Context, client *http.Client, provider, baseURL, apiKey string) KeyCheck {
 	provider = CanonicalProvider(provider)
-	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	baseURL = EffectiveBaseURL(provider, baseURL)
 	if baseURL == "" {
 		baseURL = providers.DefaultBaseURL(provider)
 	}

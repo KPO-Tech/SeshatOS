@@ -44,7 +44,7 @@ export function initialProviderForm(entry?: ProviderChoice): ProviderForm {
     auth_kind: authKind,
     api_key: '',
     // An unverified address is shown so the user confirms it before a key is sent to it.
-    base_url: provider === 'ollama' ? 'http://localhost:11434' : entry?.unverified ? entry.base_url ?? '' : ''
+    base_url: provider === 'ollama' ? 'http://localhost:11434' : entry?.unverified || provider === 'freellmapi' ? entry?.base_url ?? '' : ''
   }
 }
 

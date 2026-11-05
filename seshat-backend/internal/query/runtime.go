@@ -1015,15 +1015,16 @@ func (r *SDKRuntime) buildClientConfig(ctx context.Context, providerCfg RuntimeP
 		}
 	}
 	// A setting made before the runtime v1.11 may carry a former built-in name (workers-ai): use the name the runtime has now.
-	provider := types.APIProvider(bksettings.CanonicalProvider(providerCfg.Provider))
+	// FreeLLMAPI is an OpenAI-compatible server for the runtime, which does not know it by name (see settings/freellmapi.go).
+	provider := types.APIProvider(bksettings.RuntimeProvider(providerCfg.Provider))
 	providerConfig := providers.GetProviderConfig(provider)
 	if providerConfig == nil {
 		providerConfig = &providers.Config{Provider: provider}
 	}
 	providerConfig.Provider = provider
 	providerConfig.APIKey = providerCfg.Secret
-	if strings.TrimSpace(providerCfg.BaseURL) != "" {
-		providerConfig.BaseURL = strings.TrimSpace(providerCfg.BaseURL)
+	if baseURL := bksettings.EffectiveBaseURL(providerCfg.Provider, providerCfg.BaseURL); baseURL != "" {
+		providerConfig.BaseURL = baseURL
 	}
 
 	cfg.APIKey = providerCfg.Secret
