@@ -1,5 +1,8 @@
 import { CELL_COMPONENTS, SPEC_BY_NAME } from '../catalog/specs'
 import type { ArgType, ComponentSpec } from '../catalog/types'
+import { checkForms } from './forms'
+import { checkQuiz } from './quiz'
+import { checkVars } from './vars'
 import { parseStatements } from './parseStatements'
 import type { Statement, UiAction, UiError, UiErrorCode, UiNode, UiResult, Value } from './types'
 
@@ -53,6 +56,8 @@ export function parseUi(src: string, options: { streaming: boolean }): UiResult 
     report(ctx, 'root-not-component', 'root must be a component.')
     return { root: null, errors, unresolved: [...ctx.unresolved] }
   }
+  // The forms are checked once the block is complete: while it streams, a Submit may not be written yet.
+  if (!options.streaming) errors.push(...checkForms(root), ...checkVars(root), ...checkQuiz(root))
   return { root, errors, unresolved: [...ctx.unresolved] }
 }
 

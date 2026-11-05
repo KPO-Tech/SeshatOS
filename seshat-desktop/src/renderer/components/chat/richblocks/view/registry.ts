@@ -2,8 +2,11 @@ import type { ComponentType } from 'react'
 import { architectureComponents } from './components/architecture'
 import { chartComponents } from './components/charts'
 import { dataComponents } from './components/data'
+import { formComponents } from './components/forms'
 import { guidanceComponents } from './components/guidance'
 import { interactionComponents } from './components/interaction'
+import { quizComponents } from './components/quiz'
+import { varsComponents } from './components/vars'
 import { layoutComponents } from './components/layout'
 import { plotComponents } from './components/plot'
 import { statsComponents } from './components/stats'
@@ -19,7 +22,10 @@ export const REGISTRY: Record<string, ComponentType<ComponentProps>> = {
   ...chartComponents,
   ...plotComponents,
   ...statsComponents,
-  ...interactionComponents
+  ...interactionComponents,
+  ...varsComponents,
+  ...quizComponents,
+  ...formComponents
 }
 
 export const DRAWN_COMPONENTS: readonly string[] = Object.keys(REGISTRY)

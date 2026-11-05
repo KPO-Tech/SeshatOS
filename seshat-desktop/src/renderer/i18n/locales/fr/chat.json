@@ -358,6 +358,32 @@
             "histogram": "Histogramme",
             "heatmap": "Heatmap",
             "binTitle": "{{from}} à {{to}} : {{count}}"
+          },
+          "forms": {
+            "sent": "Envoyé",
+            "words": "mots",
+            "fillIn": "Remplissez les champs pour continuer.",
+            "needsConversation": "Ouvrez la conversation pour envoyer.",
+            "wait": "Attendez la fin de la réponse.",
+            "willSend": "Envoie : {{text}}",
+            "copy": "Copier",
+            "copied": "Copié",
+            "to": "À",
+            "subject": "Objet",
+            "draft": "Brouillon"
+          },
+          "quiz": {
+            "send": "Envoyer mon résultat",
+            "correct": "Juste",
+            "wrong": "Faux",
+            "score": "Score : {{score}} / {{total}}",
+            "retry": "Recommencer",
+            "flip": "Voir la réponse",
+            "showFront": "Voir la question",
+            "again": "À revoir",
+            "knew": "Je savais",
+            "cardOf": "Carte {{n}} sur {{total}}",
+            "cardsDone": "{{known}} connues sur {{total}}"
           }
         },
         "expand": {

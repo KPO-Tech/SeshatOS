@@ -28,7 +28,7 @@ const FUNCTIONS: Record<string, { arity: number; fn: (...v: number[]) => number 
   log10: { arity: 1, fn: Math.log10 }, log2: { arity: 1, fn: Math.log2 },
   sqrt: { arity: 1, fn: Math.sqrt }, cbrt: { arity: 1, fn: Math.cbrt }, abs: { arity: 1, fn: Math.abs },
   sign: { arity: 1, fn: Math.sign }, floor: { arity: 1, fn: Math.floor }, ceil: { arity: 1, fn: Math.ceil }, round: { arity: 1, fn: Math.round },
-  min: { arity: 2, fn: Math.min }, max: { arity: 2, fn: Math.max }, pow: { arity: 2, fn: Math.pow }, atan2: { arity: 2, fn: Math.atan2 }
+  eq: { arity: 2, fn: (a, b) => (Math.abs(a - b) < 1e-9 ? 1 : 0) }, min: { arity: 2, fn: Math.min }, max: { arity: 2, fn: Math.max }, pow: { arity: 2, fn: Math.pow }, atan2: { arity: 2, fn: Math.atan2 }
 }
 
 function normalise(source: string): string {
@@ -73,7 +73,10 @@ function tokenize(text: string): Token[] {
 
 class Parser {
   private pos = 0
-  constructor(private readonly tokens: Token[]) {}
+  constructor(
+    private readonly tokens: Token[],
+    private readonly scope: Record<string, number>
+  ) {}
 
   parse(): Node {
     const node = this.sum()
@@ -169,6 +172,7 @@ class Parser {
       if (args.length !== FUNCTIONS[name].arity) throw new ExpressionError(`${name} takes ${FUNCTIONS[name].arity} value${FUNCTIONS[name].arity === 1 ? '' : 's'}`)
       return { k: 'call', fn: name, args }
     }
+    if (Object.prototype.hasOwnProperty.call(this.scope, name)) return { k: 'num', v: this.scope[name] }
     if (name in CONSTANTS) return { k: 'num', v: CONSTANTS[name] }
     if (name in FUNCTIONS) throw new ExpressionError(`${name} needs its value in parentheses`)
     throw new ExpressionError(`Unknown name "${name}"`)
@@ -196,19 +200,32 @@ function evaluate(node: Node, x: number): number {
   }
 }
 
+/** The names of the variables a reader moves (the sliders of a block) are read in lower case, like every name of a formula. */
+function lowerKeys(scope: Record<string, number>): Record<string, number> {
+  const lowered: Record<string, number> = {}
+  for (const [name, value] of Object.entries(scope)) if (Number.isFinite(value)) lowered[name.toLowerCase()] = value
+  return lowered
+}
+
+/** True for a name a formula already means something by: x, a constant (pi, e) or a function (sin, sqrt). A variable cannot take it. */
+export function isReservedName(name: string): boolean {
+  const lowered = name.toLowerCase()
+  return lowered === 'x' || lowered in CONSTANTS || lowered in FUNCTIONS
+}
+
 export type Formula = (x: number) => number
 
 /** Turns the text of a formula in x into a function. It throws an ExpressionError that says what could not be read. */
-export function parseExpression(source: string): Formula {
+export function parseExpression(source: string, scope: Record<string, number> = {}): Formula {
   if (source.trim() === '') throw new ExpressionError('The formula is empty')
-  const tree = new Parser(tokenize(normalise(source))).parse()
+  const tree = new Parser(tokenize(normalise(source)), lowerKeys(scope)).parse()
   return (x) => evaluate(tree, x)
 }
 
 /** The same, for a caller that would rather have the message than an exception. */
-export function tryParseExpression(source: string): { formula: Formula; error?: undefined } | { formula?: undefined; error: string } {
+export function tryParseExpression(source: string, scope: Record<string, number> = {}): { formula: Formula; error?: undefined } | { formula?: undefined; error: string } {
   try {
-    return { formula: parseExpression(source) }
+    return { formula: parseExpression(source, scope) }
   } catch (error) {
     return { error: error instanceof ExpressionError ? error.message : 'The formula cannot be read' }
   }

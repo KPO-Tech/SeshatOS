@@ -47,9 +47,9 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if strings.Contains(block, "More components exist") {
 		t.Error("nothing is left out of the full block, so nothing is offered")
 	}
-	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice.
-	if words := len(strings.Fields(block)); words > 2400 {
-		t.Errorf("the full block is %d words long, keep it under 2400", words)
+	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders, 3700 with quizzes and switches).
+	if words := len(strings.Fields(block)); words > 3700 {
+		t.Errorf("the full block is %d words long, keep it under 3700", words)
 	}
 }
 
@@ -161,8 +161,12 @@ func TestRichUIFamiliesInHistory(t *testing.T) {
 	if got := richUIFamiliesInHistory([]types.Message{asked}); got != (richUIFamilies{}) {
 		t.Errorf("only what the assistant drew counts, got %+v", got)
 	}
-	if got := richUIFamiliesInHistory([]types.Message{plot, drawing}); got != richUIAllFamilies {
+	if got := richUIFamiliesInHistory([]types.Message{plot, drawing}); got != (richUIFamilies{architecture: true, charts: true}) {
 		t.Errorf("both families are found, got %+v", got)
+	}
+	exercise := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Form([TextArea(\"a\")], Submit(\"Send\", \"{{a}}\"))\n```")
+	if got := richUIFamiliesInHistory([]types.Message{exercise}); got != (richUIFamilies{forms: true}) {
+		t.Errorf("a form brings the forms family back, so that its answer can be corrected, got %+v", got)
 	}
 
 	old := []types.Message{plot}
@@ -179,5 +183,66 @@ func TestRichUIFamiliesInText(t *testing.T) {
 	prose := richUIMessage(types.RoleAssistant, "The Plot( function is described above, and an Architecture( too.")
 	if got := richUIFamiliesInHistory([]types.Message{prose}); got != (richUIFamilies{}) {
 		t.Errorf("prose is not a block, got %+v", got)
+	}
+}
+
+func TestRichUIFormsAreTaughtForExercisesAndDrafts(t *testing.T) {
+	for _, prompt := range []string{"entraîne-moi à la rédaction en anglais", "aide-moi à écrire un mail de démission", "give me a quiz on Go", "help me write a cover letter"} {
+		if !richUIFamiliesFor(prompt).forms {
+			t.Errorf("%q should bring the forms family", prompt)
+		}
+	}
+	for _, prompt := range []string{"explique les goroutines", "what is the capital of France"} {
+		if richUIFamiliesFor(prompt).forms {
+			t.Errorf("%q should not bring the forms family", prompt)
+		}
+	}
+	block := richAnswersBlock(richUIFamilies{forms: true})
+	for _, want := range []string{"Form(", "Submit(", "TextArea(", "Draft("} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the forms block must mention %q", want)
+		}
+	}
+	if strings.Contains(richAnswersBlock(richUIFamilies{}), "TextArea(") {
+		t.Error("the core must not teach forms")
+	}
+	if strings.Contains(richKnowledgeAnswersBlock(richUIAllFamilies), "TextArea(") {
+		t.Error("the Knowledge agent must not be taught forms")
+	}
+}
+
+func TestRichUISlidersAreTaughtWithTheCharts(t *testing.T) {
+	for _, prompt := range []string{"fais-moi un graphique interactif du sinus avec des curseurs", "let me explore a parabola with sliders"} {
+		if !richUIFamiliesFor(prompt).charts {
+			t.Errorf("%q should bring the charts family", prompt)
+		}
+	}
+	block := richAnswersBlock(richUIFamilies{charts: true})
+	for _, want := range []string{"Slider(", "Live(", "a*sin(b*x + c) + d"} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the charts block must mention %q", want)
+		}
+	}
+	if strings.Contains(richAnswersBlock(richUIFamilies{}), "Slider(") {
+		t.Error("the core must not teach sliders")
+	}
+}
+
+func TestRichUIQuizzesAreTaughtWithTheForms(t *testing.T) {
+	block := richAnswersBlock(richUIFamilies{forms: true})
+	for _, want := range []string{"Quiz(", "Question(", "Flashcards(", "Flash(", "{{missed}}"} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the forms block must mention %q", want)
+		}
+	}
+	charts := richAnswersBlock(richUIFamilies{charts: true})
+	for _, want := range []string{"Toggle(", "Select(", "eq(name, 1)"} {
+		if !strings.Contains(charts, want) {
+			t.Errorf("the charts block must mention %q", want)
+		}
+	}
+	quiz := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Quiz([Question(\"q\", [\"a\", \"b\"], 0)])\n```")
+	if got := richUIFamiliesInHistory([]types.Message{quiz}); !got.forms {
+		t.Errorf("a quiz brings the forms family back, got %+v", got)
 	}
 }
