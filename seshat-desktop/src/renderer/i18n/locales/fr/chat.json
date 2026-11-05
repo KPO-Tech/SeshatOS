@@ -1,0 +1,606 @@
+{
+  "chat": {
+    "attachments": {
+      "attachmentThumb": {
+        "removeAttachment": "Retirer la pièce jointe",
+        "uploading": "Envoi...",
+        "uploadFailed": "Échec de l'envoi"
+      }
+    },
+    "composer": {
+      "chatInput": {
+        "removeKnowledgeBase": "Retirer la base de connaissances",
+        "retry": "Réessayer",
+        "attachFiles": "Joindre des fichiers",
+        "setProjectFolder": "Définir le dossier du projet",
+        "clearProjectFolder": "Effacer le dossier du projet",
+        "attachKnowledgeBase": "Joindre une base de connaissances",
+        "knowledgeBases": "Bases de connaissances",
+        "couldnTLoadKnowledgeBases": "Impossible de charger les bases de connaissances.",
+        "noKnowledgeBasesFound": "Aucune base de connaissances trouvée",
+        "running": "En cours...",
+        "stopRecording": "Arrêter l'enregistrement",
+        "transcribing": "Transcription...",
+        "recordAVoiceMessage": "Enregistrer un message vocal",
+        "stop": "Arrêter",
+        "project": "Projet : {{path}}",
+        "chunks_one": "{{count}} fragment",
+        "chunks_other": "{{count}} fragments"
+      },
+      "conversationComposer": {
+        "messageSeshatos": "Écrire à SeshatOS...",
+        "modelsUnavailable": "Modèles indisponibles"
+      },
+      "contextGauge": {
+        "percentOfContext": "{{percent}} % du contexte",
+        "title": "Contexte : {{used}} jetons sur {{window}}",
+        "compactedAt": ". Compacté automatiquement à {{percent}} %."
+      },
+      "branchLabel": {
+        "detached": "{{branch}} (détachée)",
+        "title": "Branche Git {{name}}",
+        "dirty": ", avec des modifications non validées"
+      }
+    },
+    "conversation": {
+      "conversationEmpty": {
+        "conversationNotFound": "Conversation introuvable",
+        "returnHome": "Retour à l'accueil"
+      },
+      "conversationPage": {
+        "files": "Fichiers",
+        "compacted": "Conversation compactée - {{saved}} jetons économisés ({{before}} → {{after}})"
+      },
+      "jumpToLatest": {
+        "goToTheLatestMessage": "Aller au dernier message"
+      },
+      "useConversationPanels": {
+        "files": "Fichiers",
+        "implementationPlan": "Plan d'implémentation"
+      }
+    },
+    "messages": {
+      "artifactMedia": {
+        "theFileIsNotAvailable": "Le fichier n'est pas disponible.",
+        "open": "Ouvrir",
+        "loading": "Chargement de {{name}}...",
+        "tooLarge": "Trop volumineux pour être lu ici"
+      },
+      "changedFiles": {
+        "t1File": "1 fichier",
+        "files": "Fichiers",
+        "new": "Nouveau",
+        "edited": "Modifié"
+      },
+      "inlineMedia": {
+        "preparingTheFile": "Préparation du fichier...",
+        "creatingImage": "Création de l'image...",
+        "generatedImage": "Image générée",
+        "generatingAudio": "Génération de l'audio..."
+      },
+      "mediaDownload": {
+        "download": "Télécharger"
+      },
+      "messageActions": {
+        "copy": "Copier",
+        "share": "Partager",
+        "sharingIsNotAvailableYet": "Le partage n'est pas encore disponible",
+        "regenerate": "Régénérer",
+        "editPrompt": "Modifier le message"
+      },
+      "messageItem": {
+        "thinking": "Réflexion",
+        "timeSpentThinking": "Temps passé à réfléchir",
+        "copy": "Copier",
+        "done": "Terminé",
+        "failedToSendRetry": "Échec de l'envoi · Réessayer"
+      },
+      "messageList": {
+        "sendAMessageToStart": "Envoyez un message pour commencer cette conversation."
+      },
+      "planArtifactCard": {
+        "reviewAndApproveToContinue": "Relisez et approuvez pour poursuivre l'exécution",
+        "reject": "Refuser",
+        "proceed": "Poursuivre",
+        "clickToReview": "Cliquez pour relire"
+      },
+      "youTubeEmbed": {
+        "thisVideoLinkIsNot": "Ce lien vidéo n'est pas valide.",
+        "youtubeVideo": "Vidéo YouTube"
+      },
+      "liveActivity": {
+        "writingFile": "écriture d'un fichier",
+        "editingFile": "modification d'un fichier",
+        "runningCommand": "exécution d'une commande",
+        "readingFile": "lecture d'un fichier",
+        "searchingFiles": "recherche de fichiers",
+        "searchingCode": "recherche dans le code",
+        "browsingFiles": "parcours des fichiers",
+        "searchingWeb": "recherche sur le web",
+        "fetchingPage": "récupération d'une page",
+        "planningTasks": "planification des tâches",
+        "updatingTasks": "mise à jour des tâches",
+        "writingPlan": "rédaction du plan",
+        "wrappingPlan": "finalisation du plan",
+        "delegating": "délégation à un sous-agent",
+        "generatingImage": "génération d'une image",
+        "preparingFile": "préparation d'un fichier",
+        "generatingAudio": "génération de l'audio",
+        "transcribingAudio": "transcription de l'audio",
+        "working": "travail en cours",
+        "word": {
+          "thinking": "Réflexion",
+          "reasoning": "Raisonnement",
+          "considering": "Examen",
+          "synthesizing": "Synthèse",
+          "puzzling": "Déchiffrage",
+          "mulling": "Mûre réflexion",
+          "weighing": "Pesée des options",
+          "piecing": "Assemblage des idées",
+          "contemplating": "Contemplation",
+          "turning": "Retournement du problème",
+          "workingOut": "Mise au point",
+          "sketching": "Ébauche d'un plan"
+        }
+      }
+    },
+    "panels": {
+      "artifactPreviewPanel": {
+        "preview": "Aperçu",
+        "code": "Code",
+        "openInTheBrowser": "Ouvrir dans le navigateur",
+        "openInTheBrowserWith": "Ouvrir dans le navigateur (avec le réseau)",
+        "reload": "Recharger",
+        "loadingThePage": "Chargement de la page…",
+        "t1ProblemOnThePage": "1 problème sur la page",
+        "askTheAgentToFix": "Demander à l'agent de corriger",
+        "couldntLoadPage": "La page n'a pas pu être chargée : {{message}}",
+        "problemsOnPage": "{{total}} problèmes sur la page"
+      },
+      "askUserPanel": {
+        "askUser": "Ask User",
+        "yourAnswer": "Votre réponse",
+        "autreReponse": "Autre réponse...",
+        "typeYourAnswer": "Saisissez votre réponse...",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "submit": "Envoyer",
+        "questionOf": "Question {{n}} sur {{total}}"
+      },
+      "browserPanel": {
+        "closeTab": "Fermer l'onglet",
+        "newTab": "Nouvel onglet",
+        "back": "Retour",
+        "forward": "Avancer",
+        "reload": "Recharger",
+        "searchOrEnterWebsite": "Rechercher ou saisir une adresse",
+        "embeddedBrowserIsOnlyAvailable": "Le navigateur intégré n'est disponible que dans l'application de bureau."
+      },
+      "changes": {
+        "changesList": {
+          "mergesWhenReady": " · fusion dès que possible",
+          "askTheAgentToMerge": "Demander à l'agent de fusionner cette pull request",
+          "merge": "Fusionner",
+          "more": "Plus",
+          "openOnGithub": "Ouvrir sur GitHub",
+          "copyLink": "Copier le lien",
+          "refresh": "Actualiser",
+          "actionsFor": "Actions pour la pull request {{number}}",
+          "dontMergeWhenReady": "Ne pas fusionner dès que possible",
+          "mergeWhenReady": "Fusionner dès que possible"
+        }
+      },
+      "computerPanel": {
+        "session": "Session",
+        "browser": "Navigateur",
+        "plan": "Plan",
+        "implementationPlan": "Plan d'implémentation",
+        "viewFullPlan": "Voir le plan complet",
+        "web": "Web",
+        "tools": "Outils",
+        "backToTheOverview": "Retour à l'aperçu",
+        "restore": "Restaurer",
+        "maximize": "Agrandir",
+        "close": "Fermer",
+        "subAgentActivityHasIts": "L'activité d'un sous-agent a sa propre vue en direct, avec sa propre transcription et ses propres appels d'outils.",
+        "openSubAgentView": "Ouvrir la vue du sous-agent",
+        "noSitesVisitedYet": "Aucun site visité pour l'instant.",
+        "noToolActivityHasBeen": "Aucune activité d'outil enregistrée pour l'instant."
+      },
+      "filesPanel": {
+        "toggleFileTree": "Afficher ou masquer l'arborescence",
+        "restore": "Restaurer",
+        "maximize": "Agrandir",
+        "close": "Fermer",
+        "noProjectFolderSetFor": "Aucun dossier de projet défini pour cette conversation.",
+        "closeTab": "Fermer l'onglet",
+        "noFileOpen": "Aucun fichier ouvert",
+        "clickAReadWriteOr": "Cliquez sur un appel Read, Write ou Edit dans le chat, ou parcourez l'arborescence à gauche.",
+        "loading": "Chargement…",
+        "canTReadThisFolder": "Impossible de lire ce dossier.",
+        "error": "Erreur",
+        "waitingForTheReadTo": "En attente de la fin de la lecture…",
+        "noChangesToShowYet": "Aucune modification à afficher pour l'instant."
+      },
+      "knowledgePanel": {
+        "knowledgeContext": "Contexte de connaissances",
+        "retrievedKnowledgeExcerptsWillAppear": "Les extraits de connaissances retrouvés apparaîtront ici lorsqu'une conversation est rattachée à un corpus.",
+        "excerpt": "Extrait {{n}}",
+        "relevance": "Pertinence {{score}}"
+      },
+      "pDFViewerPanel": {
+        "previousPage": "Page précédente",
+        "nextPage": "Page suivante",
+        "pdfLayout": "Mise en page du PDF",
+        "pages": "Pages",
+        "width": "Largeur",
+        "zoomOut": "Zoom arrière",
+        "zoomIn": "Zoom avant"
+      },
+      "planEditorPanel": {
+        "implementationPlan": "Plan d'implémentation",
+        "restore": "Restaurer",
+        "maximize": "Agrandir",
+        "close": "Fermer",
+        "loadingPlan": "Chargement du plan…",
+        "noPlanContentYet": "Le plan est vide pour l'instant.",
+        "retry": "Réessayer",
+        "preview": "Aperçu",
+        "edit": "Modifier",
+        "loadingContent": "Chargement du contenu…",
+        "commentOnThisSection": "Commenter cette section",
+        "yourCommentOnThisSelection": "Votre commentaire sur cette sélection…",
+        "cancel": "Annuler",
+        "add": "Ajouter",
+        "comment": "✎ Commenter",
+        "clearAll": "tout effacer",
+        "remove": "Retirer",
+        "sendsYourFeedbackToThe": "Envoie vos commentaires à l'agent, qui révise le plan immédiatement",
+        "hoverASectionForTo": "Survolez une section pour voir le + et commenter, ou sélectionnez des lignes",
+        "sendFeedback": "Envoyer les commentaires",
+        "reject": "Refuser",
+        "proceed": "Poursuivre",
+        "annotationsTotal": "Annotations ({{total}})"
+      },
+      "sessionOverview": {
+        "environment": "Environnement",
+        "context": "Contexte",
+        "sent": "Envoyé",
+        "replied": "Reçu",
+        "summarizeTheOlderPartOf": "Résumer maintenant la partie la plus ancienne de la conversation, sans attendre le seuil automatique",
+        "compacting": "Compactage…",
+        "compactNow": "Compacter maintenant",
+        "changes": "Modifications",
+        "connectors": "Connecteurs",
+        "outputs": "Résultats",
+        "files": "Fichiers",
+        "activity": "Activité",
+        "turns": "Tours",
+        "tools": "Outils",
+        "sites": "Sites",
+        "fromSendingToTheFirst": "De l'envoi à la première chose écrite par le modèle",
+        "firstToken": "Premier jeton",
+        "lastTurn": "Dernier tour",
+        "allTools": "Tous les outils",
+        "sitesVisited": "Sites visités",
+        "nothingToShowYetThis": "Rien à afficher pour l'instant. Cela se remplit au fil de la conversation.",
+        "percentUsed": "{{percent}} % utilisé",
+        "tokensUsed": "{{value}} jetons",
+        "compactsAt": "La conversation est compactée automatiquement à {{percent}} %",
+        "andMore": "et {{total}} autres"
+      },
+      "shellPanel": {
+        "thisBuildHasNoShell": "Cette version n'a pas de pont vers le terminal.",
+        "noProjectFolder": "Aucun dossier de projet",
+        "thisConversationHasNoWorkspace": "Cette conversation n'a pas encore de dossier de travail, donc il n'y a nulle part où ouvrir un terminal.",
+        "shell": "Terminal",
+        "clear": "Effacer",
+        "restart": "Redémarrer"
+      },
+      "subagentPanel": {
+        "waitingForSubAgent": "En attente du sous-agent…",
+        "cancelling": "Annulation…",
+        "cancel": "Annuler",
+        "activity": "Activité",
+        "agentIsStarting": "L'agent démarre…",
+        "toolLog": "Journal des outils",
+        "failed": "échec",
+        "outputWillAppearHereOnce": "Le résultat apparaîtra ici une fois l'agent terminé.",
+        "noFinalOutputWasCaptured": "Aucun résultat final n'a été capturé.",
+        "agentOutput": "Résultat de l'agent",
+        "turns_one": "{{count}} tour",
+        "turns_other": "{{count}} tours",
+        "tokensInOut": "{{input}} en entrée / {{output}} en sortie"
+      },
+      "xlsxPreviewPanel": {
+        "thisSheetIsEmpty": "Cette feuille est vide.",
+        "showingFirst": "Affichage des {{rows}} premières lignes.",
+        "loading": "Chargement de {{name}}…",
+        "couldntLoad": "Ce tableur n'a pas pu être chargé : {{message}}"
+      },
+      "docxPreviewPanel": {
+        "loading": "Chargement de {{name}}…",
+        "couldntLoad": "Ce document n'a pas pu être chargé : {{message}}"
+      },
+      "pdfViewerPanel": {
+        "couldntLoad": "Ce PDF n'a pas pu être chargé : {{message}}"
+      },
+      "pptxPreviewPanel": {
+        "loading": "Chargement de {{name}}...",
+        "couldntLoad": "Cette présentation n'a pas pu être chargée : {{message}}"
+      }
+    },
+    "richblocks": {
+      "view": {
+        "charts": {
+          "chartShell": {
+            "chart": "Graphique"
+          }
+        },
+        "components": {
+          "architecture": {
+            "architecture": "Architecture"
+          },
+          "charts": {
+            "barChart": "Graphique en barres",
+            "lineChart": "Graphique en courbes",
+            "pieChart": "Graphique circulaire",
+            "scatterChart": "Nuage de points"
+          },
+          "data": {
+            "table": "Tableau"
+          },
+          "plot": {
+            "aPlotNeedsXminBelow": "Un tracé nécessite xmin inférieur à xmax.",
+            "plot": "Tracé"
+          },
+          "stats": {
+            "histogram": "Histogramme",
+            "heatmap": "Carte de chaleur",
+            "binTitle": "{{from}} à {{to}} : {{count}}"
+          }
+        },
+        "expand": {
+          "downloadMenu": {
+            "couldNotSaveTheImage": "Impossible d'enregistrer l'image",
+            "download": "Télécharger",
+            "downloadLabel": "Télécharger {{label}}"
+          },
+          "expandable": {
+            "close": "Fermer",
+            "openInALargeView": "Ouvrir en grand",
+            "openLarge": "Ouvrir {{label}} en grand"
+          }
+        }
+      }
+    },
+    "streaming": {
+      "useChatStream": {
+        "emptyResponse": "(réponse vide)",
+        "reconnecting": "> Connexion perdue. Reconnexion (tentative {{attempt}}/{{max}})…"
+      },
+      "streamErrors": {
+        "authTitle": "Clé du fournisseur refusée",
+        "authHint": "Le fournisseur n'a pas accepté la clé d'API. Vérifiez-la dans la configuration, sous Fournisseurs.",
+        "accessTitle": "Erreur d'accès au fournisseur",
+        "accessHint": "La clé fonctionne, mais son offre ou sa région n'inclut pas ce modèle. Choisissez un autre modèle ou vérifiez l'offre.",
+        "rate_limitTitle": "Limite de débit du fournisseur",
+        "rate_limitHint": "Le fournisseur limite les requêtes. Patientez un instant puis renvoyez, ou changez de modèle.",
+        "quotaTitle": "Crédit du fournisseur épuisé",
+        "quotaHint": "Le compte n'a plus de crédit chez ce fournisseur. Rechargez-le, ou changez de fournisseur.",
+        "context_lengthTitle": "Conversation trop longue pour ce modèle",
+        "context_lengthHint": "La conversation ne tient plus dans le modèle. Compactez-la depuis le panneau de la session, ou continuez avec un modèle à plus grande fenêtre.",
+        "modelTitle": "Modèle indisponible",
+        "modelHint": "Le fournisseur ne propose pas ce modèle. Choisissez-en un autre dans le sélecteur de modèle.",
+        "timeoutTitle": "Le fournisseur a mis trop de temps",
+        "timeoutHint": "Aucune réponse n'est arrivée à temps. Renvoyez ; si cela continue, essayez un autre modèle.",
+        "networkTitle": "Erreur de connexion",
+        "networkHint": "Le fournisseur est injoignable. Vérifiez la connexion (ou le serveur de modèle local) puis renvoyez.",
+        "providerTitle": "Erreur du fournisseur",
+        "providerHint": "Le fournisseur a rencontré un problème de son côté. Renvoyez dans un instant, ou changez de modèle.",
+        "invalid_requestTitle": "Requête refusée",
+        "invalid_requestHint": "Le fournisseur a rejeté la requête comme invalide. Les détails sont ci-dessous.",
+        "internalTitle": "Une erreur s'est produite",
+        "internalHint": "Les détails sont ci-dessous. Renvoyer peut fonctionner."
+      }
+    },
+    "tools": {
+      "agentToolView": {
+        "completed": "Terminé",
+        "failed": "Échec",
+        "runningInBackground": "En cours en arrière-plan…",
+        "running": "En cours…",
+        "viewActivity": "Voir l'activité →"
+      },
+      "common": {
+        "copy": "Copier"
+      },
+      "diffView": {
+        "copyDiff": "Copier le diff"
+      },
+      "permissionCard": {
+        "deny": "Refuser",
+        "alwaysAllow": "Toujours autoriser",
+        "allowOnce": "Autoriser une fois",
+        "allowRun": "Autoriser l'agent à exécuter",
+        "allowRunEnd": " ?"
+      },
+      "quietToolGroup": {
+        "thinking": "Réflexion",
+        "timeSpentThinking": "Temps passé à réfléchir"
+      },
+      "renderers": {
+        "askUserToolView": {
+          "waitingForYourAnswerAbove": "En attente de votre réponse au-dessus de la zone de saisie.",
+          "noAnswerRecordedYet": "Aucune réponse enregistrée pour l'instant.",
+          "waitingForTheUserResponse": "En attente de la réponse de l'utilisateur.",
+          "error": "Erreur"
+        },
+        "bashToolView": {
+          "copy": "Copier",
+          "command": "Commande",
+          "output": "Résultat",
+          "error": "Erreur",
+          "exitCode": "Code de sortie : {{code}}",
+          "duration": "Durée : {{value}}"
+        },
+        "browserToolView": {
+          "error": "Erreur",
+          "fullPage": "Page entière",
+          "viewport": "Zone visible",
+          "browserScreenshot": "Capture d'écran du navigateur",
+          "result": "Résultat"
+        },
+        "editToolView": {
+          "error": "Erreur"
+        },
+        "genericToolView": {
+          "input": "Entrée",
+          "output": "Sortie",
+          "details": "Détails"
+        },
+        "globToolView": {
+          "error": "Erreur",
+          "noMatchesFound": "Aucun résultat trouvé.",
+          "matches_one": "{{count}} résultat",
+          "matches_other": "{{count}} résultats"
+        },
+        "grepToolView": {
+          "error": "Erreur"
+        },
+        "imageGenToolView": {
+          "prompt": "Prompt",
+          "error": "Erreur",
+          "revisedPrompt": "Prompt révisé",
+          "result": "Résultat"
+        },
+        "jsonToolView": {
+          "error": "Erreur",
+          "result": "Résultat"
+        },
+        "knowledgeReadToolView": {
+          "document": "Document",
+          "readToEnd": "Lu jusqu'à la fin : {{total}} caractères",
+          "readRange": "Lu de {{from}} à {{to}} sur {{total}} caractères, l'agent poursuit la lecture à partir de {{to}}",
+          "page": "Page {{page}}"
+        },
+        "knowledgeSearchToolView": {
+          "theReferenceTheAnswerCites": "La référence par laquelle la réponse le cite",
+          "showLess": "Voir moins",
+          "showMore": "Voir plus",
+          "openDocument": "Ouvrir le document",
+          "search": "Rechercher",
+          "searchingTheCollections": "Recherche dans les collections",
+          "noPassageMatched": "Aucun passage ne correspond",
+          "nothingInTheCollectionsAnswers": "Rien dans les collections ne répond à cette recherche. L'agent peut essayer d'autres mots.",
+          "percentMatch": "{{percent}} % de correspondance",
+          "openAt": "Ouvrir à {{pages}}"
+        },
+        "listDirectoryToolView": {
+          "error": "Erreur",
+          "emptyDirectory": "Dossier vide.",
+          "items_one": "{{count}} élément",
+          "items_other": "{{count}} éléments",
+          "truncated": " (tronqué)"
+        },
+        "mathToolView": {
+          "result": "Résultat"
+        },
+        "mcpToolView": {
+          "noArguments": "Aucun argument.",
+          "result": "Résultat",
+          "error": "Erreur"
+        },
+        "notebookToolView": {
+          "error": "Erreur"
+        },
+        "patchToolView": {
+          "error": "Erreur",
+          "changes": "Modifications"
+        },
+        "proseToolView": {
+          "error": "Erreur",
+          "output": "Résultat"
+        },
+        "ragSearchToolView": {
+          "results": "Résultats",
+          "error": "Erreur",
+          "sourcesTotal": "Sources ({{total}})",
+          "percentMatch": "{{percent}} % de correspondance"
+        },
+        "readToolView": {
+          "error": "Erreur"
+        },
+        "silentToolView": {
+          "files": "Fichiers",
+          "session": "Session",
+          "failed": "échec"
+        },
+        "sttToolView": {
+          "error": "Erreur",
+          "transcript": "Transcription"
+        },
+        "ttsToolView": {
+          "text": "Texte",
+          "error": "Erreur",
+          "audio": "Audio",
+          "voice": "voix : {{voice}}",
+          "chars": "{{value}} car."
+        },
+        "webFetchToolView": {
+          "webFetch": "Web Fetch",
+          "noContentExtracted": "Aucun contenu extrait."
+        },
+        "webSearchToolView": {
+          "webSearch": "Web Search",
+          "showFewerSources": "Afficher moins de sources",
+          "noResultsForThisSearch": "Aucun résultat pour cette recherche.",
+          "selectedResults_one": "{{count}} résultat sélectionné",
+          "selectedResults_other": "{{count}} résultats sélectionnés",
+          "noSelectedResults": "Aucun résultat sélectionné",
+          "viewAllSources": "Voir toutes les sources ({{total}})"
+        },
+        "writeToolView": {
+          "error": "Erreur"
+        }
+      },
+      "toolLineItem": {
+        "browser": "Navigateur",
+        "files": "Fichiers",
+        "session": "Session",
+        "failed": "échec",
+        "completed": "Terminé",
+        "copy": "Copier",
+        "preview": "Aperçu"
+      }
+    }
+  },
+  "ui": {
+    "markdownView": {
+      "copied": "Copié",
+      "copy": "Copier",
+      "renderingDiagram": "Affichage du diagramme…",
+      "invalidChartJson": "JSON de graphique invalide",
+      "chartConfigNeedsAType": "La configuration du graphique doit contenir un champ « type » et un champ « data »",
+      "image": "Image",
+      "open": "Ouvrir",
+      "diagramFailed": "Le diagramme n'a pas pu être affiché : {{error}}",
+      "chartFailed": "Le graphique n'a pas pu être affiché : {{error}}"
+    },
+    "selectorPill": {
+      "search": "Rechercher",
+      "noMatch": "Aucune correspondance."
+    }
+  },
+  "hooks": {
+    "useSessionPanelToggles": {
+      "session": "Session",
+      "browser": "Navigateur",
+      "terminal": "Terminal"
+    },
+    "useUpdateNotice": {
+      "ready": "SeshatOS {{version}} est prêt",
+      "restart": "Redémarrez l'application pour l'installer."
+    }
+  }
+}

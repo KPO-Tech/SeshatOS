@@ -1,5 +1,6 @@
 import { CodeBox, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 // Shared body for tools whose result content is a JSON blob meant to be read
 // as data (memory graph nodes, automation job records) - pretty-printed
@@ -14,9 +15,10 @@ function prettify(content: string): string {
 }
 
 export function JsonToolView({ result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   if (!result?.content) return null
   return (
-    <Section label={result.isError ? 'Error' : 'Result'}>
+    <Section label={result.isError ? t('chat.tools.renderers.jsonToolView.error') : t('chat.tools.renderers.jsonToolView.result')}>
       <CodeBox
         content={prettify(result.content)}
         copyable

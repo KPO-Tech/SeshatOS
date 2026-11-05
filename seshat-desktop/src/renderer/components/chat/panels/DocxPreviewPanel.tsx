@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { renderAsync } from 'docx-preview'
 import { api, ApiError } from '@renderer/api/client'
 import { clearPassageMarks, highlightPassageInElement } from '@renderer/lib/textPassageHighlight'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   fileId: string
@@ -22,6 +23,7 @@ const SCROLL_PADDING = 0 // keep in sync with .docx-preview-scroll's padding bel
 // parses the document XML client-side, which keeps the default preview path
 // local to the renderer and avoids server-side document rendering.
 export function DocxPreviewPanel({ fileId, filename, highlight }: Props) {
+  const { t } = useTranslation('chat')
   const scrollRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   // The page's real width in CSS px, as docx-preview laid it out (its own
@@ -119,10 +121,10 @@ export function DocxPreviewPanel({ fileId, filename, highlight }: Props) {
         <div className="docx-preview-container" ref={containerRef} />
       </div>
       {status === 'loading' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">Loading {filename}…</div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">{t('chat.panels.docxPreviewPanel.loading', { name: filename })}</div>
       )}
       {status === 'error' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">Couldn't load this document: {errorMessage}</div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">{t('chat.panels.docxPreviewPanel.couldntLoad', { message: errorMessage })}</div>
       )}
     </div>
   )

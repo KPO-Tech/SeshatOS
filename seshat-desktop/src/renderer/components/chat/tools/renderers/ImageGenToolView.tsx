@@ -1,6 +1,7 @@
 import { ErrorPre, Section } from '../common'
 import { useUIStore } from '@renderer/stores/ui'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 const NOTE_CSS = 'text-[12px] leading-[1.55] text-app-text-muted'
 const CHIP_CSS = 'rounded-[3px] border border-app-border-subtle bg-[rgba(255,255,255,0.05)] px-[5px] py-0.5 font-mono'
@@ -23,15 +24,16 @@ function parseImageResult(content: string): ImageResult | null {
 }
 
 export function ImageGenToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const openLightbox = useUIStore((s) => s.openLightbox)
   const prompt = typeof tool.input.prompt === 'string' ? tool.input.prompt : ''
 
   if (!result || result.isError) {
     return (
       <>
-        {prompt && <Section label="Prompt"><span className={NOTE_CSS}>{prompt}</span></Section>}
+        {prompt && <Section label={t('chat.tools.renderers.imageGenToolView.prompt')}><span className={NOTE_CSS}>{prompt}</span></Section>}
         {result?.isError && result.content && (
-          <Section label="Error"><ErrorPre content={result.content} /></Section>
+          <Section label={t('chat.tools.renderers.imageGenToolView.error')}><ErrorPre content={result.content} /></Section>
         )}
       </>
     )
@@ -50,19 +52,19 @@ export function ImageGenToolView({ tool, result }: ToolViewProps) {
   return (
     <>
       {prompt && (
-        <Section label="Prompt">
+        <Section label={t('chat.tools.renderers.imageGenToolView.prompt')}>
           <span className={NOTE_CSS}>{prompt}</span>
         </Section>
       )}
 
       {promptChanged && (
-        <Section label="Revised prompt">
+        <Section label={t('chat.tools.renderers.imageGenToolView.revisedPrompt')}>
           <span className="text-[10px] italic leading-[1.5] text-app-text-muted">{revisedPrompt}</span>
         </Section>
       )}
 
       {src && (
-        <Section label="Result">
+        <Section label={t('chat.tools.renderers.imageGenToolView.result')}>
           <div className="flex max-h-[480px] items-center justify-center overflow-hidden rounded-md border border-app-border-subtle bg-[rgba(0,0,0,0.12)]">
             <img
               className="block h-auto max-h-[480px] w-full cursor-zoom-in object-contain"

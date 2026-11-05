@@ -1,6 +1,7 @@
 import { CodeBox, ErrorPre, HCARD_HEADER_STAT_CSS, HeaderCard, Section } from '../common'
 import { languageForPath, basename, parseReadToolContent } from '../helpers'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 function rangeLabel(offset?: number, limit?: number): string {
   if (offset != null && limit != null) return `lines ${offset + 1}–${offset + limit}`
@@ -10,6 +11,7 @@ function rangeLabel(offset?: number, limit?: number): string {
 }
 
 export function ReadToolView({ tool, result, expanded }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const filePath = (tool.input.file_path as string) ?? ''
   const offset = tool.input.offset as number | undefined
   const limit = tool.input.limit as number | undefined
@@ -17,7 +19,7 @@ export function ReadToolView({ tool, result, expanded }: ToolViewProps) {
 
   if (result?.isError && result.content) {
     return (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.readToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     )

@@ -1,8 +1,10 @@
 import { ErrorPre, Section } from '../common'
 import { DiffView, resolveDiffRows } from '../DiffView'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function EditToolView({ tool, result, expanded }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const filePath = (tool.input.file_path as string) ?? ''
   const diff = resolveDiffRows(tool)
 
@@ -13,7 +15,7 @@ export function EditToolView({ tool, result, expanded }: ToolViewProps) {
       )}
 
       {result?.isError && result.content && (
-        <Section label="Error">
+        <Section label={t('chat.tools.renderers.editToolView.error')}>
           <ErrorPre content={result.content} />
         </Section>
       )}

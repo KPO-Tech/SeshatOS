@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { useUIStore } from '@renderer/stores/ui'
 import { resolveAskUserQuestions } from '../tools/helpers'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -28,6 +29,7 @@ type Props = {
 // submission, so local state wouldn't survive to be reviewed); navigating
 // past the live question isn't possible until it's answered.
 export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
+  const { t } = useTranslation('chat')
   const prompt = tool._prompt
   const questions = useMemo(() => resolveAskUserQuestions(tool.input, prompt), [prompt, tool.input])
   const activeIndex = useMemo(() => {
@@ -115,7 +117,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
       <div className="flex min-h-12 items-center justify-between gap-3.5 border-b border-app-border-subtle px-3 py-[9px] max-[760px]:flex-col max-[760px]:items-start">
         <div className="inline-flex min-w-0 items-center gap-2 text-[13px] font-bold text-app-text">
           <span className="inline-flex size-6 items-center justify-center rounded-md border border-[color-mix(in_srgb,var(--accent-primary)_22%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_10%,var(--surface-root))] text-[14px] font-[750] text-[var(--accent-primary)]">?</span>
-          <span>Ask User</span>
+          <span>{t('chat.panels.askUserPanel.askUser')}</span>
         </div>
         {questions.length > 1 && (
           <div className="ml-auto flex items-center justify-end max-[760px]:w-full max-[760px]:justify-start">
@@ -143,7 +145,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
           </div>
         )}
         {questions.length > 1 && (
-          <div className="whitespace-nowrap text-[9px] uppercase tracking-[0.04em] text-app-text-muted">Question {viewIndex + 1} of {questions.length}</div>
+          <div className="whitespace-nowrap text-[9px] uppercase tracking-[0.04em] text-app-text-muted">{t('chat.panels.askUserPanel.questionOf', { n: viewIndex + 1, total: questions.length })}</div>
         )}
       </div>
 
@@ -152,7 +154,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
 
         {pastAnswer !== undefined ? (
           <div className="grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-2 rounded-[5px] bg-[color-mix(in_srgb,var(--accent-success)_8%,var(--surface-root))] px-2 py-1.5">
-            <span className="text-[9px] font-bold uppercase tracking-[0.05em] text-app-success">Your answer</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.05em] text-app-success">{t('chat.panels.askUserPanel.yourAnswer')}</span>
             <span className="min-w-0 truncate text-[11px] text-app-text">{pastAnswer}</span>
           </div>
         ) : (
@@ -213,7 +215,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
                   setCustomAnswer(value)
                   if (value.trim()) setSelectedValues([])
                 }}
-                placeholder={question.options.length > 0 ? 'Autre reponse...' : 'Type your answer...'}
+                placeholder={question.options.length > 0 ? t('chat.panels.askUserPanel.autreReponse') : t('chat.panels.askUserPanel.typeYourAnswer')}
               />
             </label>
           </>
@@ -227,7 +229,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
           onClick={goPrev}
           disabled={viewIndex === 0}
         >
-          Previous
+          {t('chat.panels.askUserPanel.previous')}
         </button>
         <button
           type="button"
@@ -235,7 +237,7 @@ export function AskUserPanel({ tool, onSubmitPrompt }: Props) {
           onClick={goNext}
           disabled={!canSubmit}
         >
-          {!isActive ? 'Next' : isLast ? 'Submit' : 'Next'}
+          {!isActive ? t('chat.panels.askUserPanel.next') : isLast ? t('chat.panels.askUserPanel.submit') : t('chat.panels.askUserPanel.next')}
         </button>
       </div>
     </div>

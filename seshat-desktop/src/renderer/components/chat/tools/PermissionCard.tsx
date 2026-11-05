@@ -5,6 +5,7 @@ import { permissionSignature } from '@renderer/lib/permissionSignature'
 import { revealHidden } from '@renderer/lib/revealHidden'
 import { fallbackApprovalDescription, toolIcon } from './helpers'
 import { toolLabel } from './toolDisplay'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   tool: ToolUseBlock
@@ -27,6 +28,7 @@ type Props = {
 // handlePermissionDecision (which POSTs to /permissions/{tool_use_id}) —
 // does not make its own API call, to avoid a second, divergent approval path.
 export function PermissionCard({ tool, onApprove, onDeny }: Props) {
+  const { t } = useTranslation('chat')
   const rememberApproval = useUIStore((s) => s.rememberApproval)
   const description = tool._approval?.description || fallbackApprovalDescription(tool)
   // The person approves by reading: hidden and direction-changing characters are shown as «U+XXXX».
@@ -49,7 +51,7 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
           <div className="text-[12px] font-bold leading-[1.4] text-app-text">
-            Allow the agent to run <span className="inline-flex items-center gap-[3px] text-app-text">{toolIcon(tool.name)}{toolLabel(tool.name)}</span>?
+            {t('chat.tools.permissionCard.allowRun')} <span className="inline-flex items-center gap-[3px] text-app-text">{toolIcon(tool.name)}{toolLabel(tool.name)}</span>{t('chat.tools.permissionCard.allowRunEnd')}
           </div>
           <div className="text-[11px] leading-[1.5] text-app-text-muted">{description}</div>
         </div>
@@ -68,7 +70,7 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
             type="button"
             onClick={() => onDeny(tool.id)}
           >
-            Deny
+            {t('chat.tools.permissionCard.deny')}
           </button>
         )}
         {onApprove && (
@@ -78,14 +80,14 @@ export function PermissionCard({ tool, onApprove, onDeny }: Props) {
               type="button"
               onClick={handleAlwaysAllow}
             >
-              Always allow
+              {t('chat.tools.permissionCard.alwaysAllow')}
             </button>
             <button
               className="cursor-pointer whitespace-nowrap rounded-md border border-[rgba(var(--color-success-rgb),0.3)] bg-[rgba(var(--color-success-rgb),0.15)] px-[11px] py-1 text-[11px] font-semibold text-app-success transition-all duration-150 hover:border-[rgba(var(--color-success-rgb),0.5)] hover:bg-[rgba(var(--color-success-rgb),0.25)]"
               type="button"
               onClick={() => onApprove(tool.id)}
             >
-              Allow once
+              {t('chat.tools.permissionCard.allowOnce')}
             </button>
           </>
         )}

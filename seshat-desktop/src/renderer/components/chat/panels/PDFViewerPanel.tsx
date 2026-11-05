@@ -5,6 +5,7 @@ import { loadPdfViewerModule, pdfjsLib } from '@renderer/lib/pdfInteractiveViewe
 import { createPDFWorkerPort } from '@renderer/lib/pdfWorker'
 import { clearPassageHighlight, highlightPassageOnPage } from '@renderer/lib/pdfPassageHighlight'
 import 'pdfjs-dist/web/pdf_viewer.css'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -85,6 +86,7 @@ function applyPDFLayout(
 // web app (toolbar chrome, l10n, etc.) - this component supplies its own
 // minimal toolbar instead.
 export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Props) {
+  const { t } = useTranslation('chat')
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
   const initialPageRef = useRef(initialPage ?? 1)
@@ -279,22 +281,22 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center gap-1.5 border-b border-app-border-subtle px-2.5 py-1.5">
-        <button type="button" className={toolbarBtnCx()} onClick={() => goToPage(-1)} disabled={status !== 'ready' || pageNumber <= 1} aria-label="Previous page">
+        <button type="button" className={toolbarBtnCx()} onClick={() => goToPage(-1)} disabled={status !== 'ready' || pageNumber <= 1} aria-label={t('chat.panels.pDFViewerPanel.previousPage')}>
           <Left size={12} />
         </button>
         <span className="min-w-[44px] text-center text-[11px] text-app-text-secondary">{status === 'ready' ? `${pageNumber} / ${pageCount}` : '-'}</span>
-        <button type="button" className={toolbarBtnCx()} onClick={() => goToPage(1)} disabled={status !== 'ready' || pageNumber >= pageCount} aria-label="Next page">
+        <button type="button" className={toolbarBtnCx()} onClick={() => goToPage(1)} disabled={status !== 'ready' || pageNumber >= pageCount} aria-label={t('chat.panels.pDFViewerPanel.nextPage')}>
           <Right size={12} />
         </button>
         <span className="flex-1" />
-        <div className="flex items-center gap-0.5 rounded-[7px] border border-app-border-subtle bg-app-surface p-0.5" aria-label="PDF layout">
+        <div className="flex items-center gap-0.5 rounded-[7px] border border-app-border-subtle bg-app-surface p-0.5" aria-label={t('chat.panels.pDFViewerPanel.pdfLayout')}>
           <button
             type="button"
             className={cx('h-5 min-w-[48px] rounded-[5px] border-0 bg-transparent px-2 text-[11px] text-app-text-secondary', layoutMode === 'pages' && '!bg-[rgba(255,122,24,0.16)] !text-[var(--accent-primary)]')}
             onClick={() => setLayout('pages')}
             disabled={status !== 'ready'}
           >
-            Pages
+            {t('chat.panels.pDFViewerPanel.pages')}
           </button>
           <button
             type="button"
@@ -302,14 +304,14 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
             onClick={() => setLayout('width')}
             disabled={status !== 'ready'}
           >
-            Width
+            {t('chat.panels.pDFViewerPanel.width')}
           </button>
         </div>
-        <button type="button" className={toolbarBtnCx()} onClick={() => zoomBy(1 / 1.15)} disabled={status !== 'ready'} aria-label="Zoom out">
+        <button type="button" className={toolbarBtnCx()} onClick={() => zoomBy(1 / 1.15)} disabled={status !== 'ready'} aria-label={t('chat.panels.pDFViewerPanel.zoomOut')}>
           <Reduce size={12} />
         </button>
         <span className="min-w-[44px] text-center text-[11px] text-app-text-secondary">{status === 'ready' ? `${scalePercent}%` : '-'}</span>
-        <button type="button" className={toolbarBtnCx()} onClick={() => zoomBy(1.15)} disabled={status !== 'ready'} aria-label="Zoom in">
+        <button type="button" className={toolbarBtnCx()} onClick={() => zoomBy(1.15)} disabled={status !== 'ready'} aria-label={t('chat.panels.pDFViewerPanel.zoomIn')}>
           <Add size={12} />
         </button>
       </div>
@@ -324,7 +326,7 @@ export function PDFViewerPanel({ fileId, filename, initialPage, highlight }: Pro
           </div>
         )}
         {status === 'error' && (
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 px-5 text-center text-[12px] text-app-error">Couldn't load this PDF: {errorMessage}</div>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 px-5 text-center text-[12px] text-app-error">{t('chat.panels.pdfViewerPanel.couldntLoad', { message: errorMessage })}</div>
         )}
       </div>
     </div>

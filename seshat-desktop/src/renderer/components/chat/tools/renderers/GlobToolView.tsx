@@ -1,7 +1,9 @@
 import { ErrorPre, FILEPATH_CSS, FILE_ITEM_CSS, FILE_LIST_CSS, HCARD_HEADER_PATH_CSS, HCARD_HEADER_STAT_CSS, HeaderCard, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function GlobToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const pattern = (tool.input.pattern as string) ?? ''
   const path = (tool.input.path as string) ?? ''
   // Only treat content as a file list on success - on error, result.content
@@ -18,7 +20,7 @@ export function GlobToolView({ tool, result }: ToolViewProps) {
 
   if (result?.isError && result.content) {
     return (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.globToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     )
@@ -31,7 +33,7 @@ export function GlobToolView({ tool, result }: ToolViewProps) {
           <span>{pattern}</span>
           {path && <span className={HCARD_HEADER_PATH_CSS}>{path}</span>}
           <span className={HCARD_HEADER_STAT_CSS}>
-            {files.length} match{files.length !== 1 ? 'es' : ''}
+            {t('chat.tools.renderers.globToolView.matches', { count: files.length })}
           </span>
         </>
       }
@@ -43,7 +45,7 @@ export function GlobToolView({ tool, result }: ToolViewProps) {
           ))}
         </div>
       ) : (
-        <span className={FILEPATH_CSS}>No matches found.</span>
+        <span className={FILEPATH_CSS}>{t('chat.tools.renderers.globToolView.noMatchesFound')}</span>
       )}
     </HeaderCard>
   )

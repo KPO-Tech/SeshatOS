@@ -7,6 +7,7 @@ import { useChat } from '@renderer/hooks/useChat'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore, buildRightPanelId } from '@renderer/stores/ui'
 import type { PlanDocument, PlanStatus } from '@renderer/api/types'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -71,6 +72,7 @@ type Props = {
 }
 
 export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawContent, isMaximized, onClose, onToggleMaximize }: Props) {
+  const { t } = useTranslation('chat')
   const isDocumentBacked = !!planId
   const plan = useSessionStore((s) => (planId ? s.getPlan(sessionId, planId) : undefined))
   const upsertPlan = useSessionStore((s) => s.upsertPlan)
@@ -220,14 +222,14 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
     <div className="flex shrink-0 flex-col gap-1.5 border-b border-app-border-subtle px-[11px] py-2.5">
       <div className="flex items-center gap-1.5">
         <DocDetail size={13} className="shrink-0 text-[var(--accent-primary)]" />
-        <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-app-text">Implementation Plan</span>
+        <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-app-text">{t('chat.panels.planEditorPanel.implementationPlan')}</span>
         {onToggleMaximize && (
-          <button className={FRAME_BTN_CSS} type="button" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
+          <button className={FRAME_BTN_CSS} type="button" onClick={onToggleMaximize} aria-label={isMaximized ? t('chat.panels.planEditorPanel.restore') : t('chat.panels.planEditorPanel.maximize')}>
             <WindowMaximizeIcon />
           </button>
         )}
         {onClose && (
-          <button className={FRAME_BTN_CSS} type="button" onClick={onClose} aria-label="Close">
+          <button className={FRAME_BTN_CSS} type="button" onClick={onClose} aria-label={t('chat.panels.planEditorPanel.close')}>
             <WindowCloseIcon />
           </button>
         )}
@@ -239,7 +241,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {minimalHeader}
-        <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-[11px] text-app-text-muted">Loading plan…</div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-[11px] text-app-text-muted">{t('chat.panels.planEditorPanel.loadingPlan')}</div>
       </div>
     )
   }
@@ -250,11 +252,11 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
         {minimalHeader}
         <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-[11px] text-app-text-muted">
           <span className={cx(actionError && 'text-center text-app-error')}>
-            {actionError ?? 'No plan content yet.'}
+            {actionError ?? t('chat.panels.planEditorPanel.noPlanContentYet')}
           </span>
           {isDocumentBacked && (
             <button type="button" className="inline-flex cursor-pointer items-center gap-1 rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-1 text-[10px] font-medium text-app-text-muted transition-all duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={() => void loadFull()}>
-              Retry
+              {t('chat.panels.planEditorPanel.retry')}
             </button>
           )}
         </div>
@@ -412,19 +414,19 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
               )}
               type="button"
               onClick={() => setEditMode((v) => !v)}
-              aria-label={editMode ? 'Preview' : 'Edit'}
+              aria-label={editMode ? t('chat.panels.planEditorPanel.preview') : t('chat.panels.planEditorPanel.edit')}
             >
               <Edit size={11} />
             </button>
           )}
           <span className={cx('shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em]', BADGE_CSS[status])}>{status}</span>
           {onToggleMaximize && (
-            <button className={FRAME_BTN_CSS} type="button" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
+            <button className={FRAME_BTN_CSS} type="button" onClick={onToggleMaximize} aria-label={isMaximized ? t('chat.panels.planEditorPanel.restore') : t('chat.panels.planEditorPanel.maximize')}>
               <WindowMaximizeIcon />
             </button>
           )}
           {onClose && (
-            <button className={FRAME_BTN_CSS} type="button" onClick={onClose} aria-label="Close">
+            <button className={FRAME_BTN_CSS} type="button" onClick={onClose} aria-label={t('chat.panels.planEditorPanel.close')}>
               <WindowCloseIcon />
             </button>
           )}
@@ -444,7 +446,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
         ) : (
           <div className="relative flex-1 select-text px-[13px] py-[11px]" ref={markdownRef} onMouseUp={handleMarkdownMouseUp}>
             {!contentToShow ? (
-              <span className="text-[13px] text-app-text-muted">Loading content…</span>
+              <span className="text-[13px] text-app-text-muted">{t('chat.panels.planEditorPanel.loadingContent')}</span>
             ) : isReadonly ? (
               <MarkdownView sessionId={sessionId}>{contentToShow}</MarkdownView>
             ) : (
@@ -453,7 +455,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                   <button
                     type="button"
                     className="absolute left-0 top-1 flex size-[17px] scale-[0.8] cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--accent-primary)] text-[12px] font-bold leading-none text-white opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-[opacity,transform] duration-[120ms] group-hover:scale-100 group-hover:opacity-100"
-                    aria-label="Comment on this section"
+                    aria-label={t('chat.panels.planEditorPanel.commentOnThisSection')}
                     onClick={(e) => openLineComment(e, block)}
                   >
                     +
@@ -477,7 +479,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                       className="box-border w-full resize-none rounded-[5px] border border-app-border-subtle bg-[rgba(255,255,255,0.04)] px-1.5 py-[5px] text-[10px] text-app-text outline-none transition-colors duration-150 [font-family:inherit] focus:border-[rgba(239,124,47,0.4)]"
                       autoFocus
                       rows={3}
-                      placeholder="Your comment on this selection…"
+                      placeholder={t('chat.panels.planEditorPanel.yourCommentOnThisSelection')}
                       value={annotationInput}
                       onChange={(e) => setAnnotationInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -486,14 +488,14 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                       }}
                     />
                     <div className="flex justify-end gap-[5px]">
-                      <button type="button" className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-[3px] text-[10px] text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={closeFloat}>Cancel</button>
+                      <button type="button" className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-[7px] py-[3px] text-[10px] text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={closeFloat}>{t('chat.panels.planEditorPanel.cancel')}</button>
                       <button
                         type="button"
                         className="cursor-pointer rounded-[5px] border-0 bg-[var(--accent-primary)] px-[7px] py-[3px] text-[10px] font-semibold text-white transition-opacity duration-[120ms] disabled:cursor-not-allowed disabled:opacity-40"
                         onClick={addAnnotation}
                         disabled={!annotationInput.trim()}
                       >
-                        Add
+                        {t('chat.panels.planEditorPanel.add')}
                       </button>
                     </div>
                   </div>
@@ -503,7 +505,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                     className="cursor-pointer whitespace-nowrap rounded-md border-0 bg-[var(--accent-primary)] px-2 py-1 text-[10px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[rgba(239,124,47,0.9)]"
                     onClick={() => setShowAnnotationForm(true)}
                   >
-                    ✎ Comment
+                    {t('chat.panels.planEditorPanel.comment')}
                   </button>
                 )}
               </div>
@@ -515,13 +517,13 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
       {!isReadonly && annotations.length > 0 && (
         <div className="flex shrink-0 flex-col gap-[5px] px-2.5">
           <div className="flex items-center justify-between pt-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-app-text-muted">
-            Annotations ({annotations.length})
+            {t('chat.panels.planEditorPanel.annotationsTotal', { total: annotations.length })}
             <button
               type="button"
               className="cursor-pointer border-0 bg-none p-0 text-[10px] font-medium normal-case tracking-normal text-app-text-muted transition-colors duration-[120ms] hover:text-app-error"
               onClick={() => setAnnotations([])}
             >
-              clear all
+              {t('chat.panels.planEditorPanel.clearAll')}
             </button>
           </div>
           {annotations.map((a) => (
@@ -534,7 +536,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
                 type="button"
                 className="flex shrink-0 cursor-pointer items-center border-0 bg-none p-0.5 text-app-text-muted opacity-50 transition-opacity duration-[120ms] hover:text-app-error hover:opacity-100"
                 onClick={() => removeAnnotation(a.id)}
-                aria-label="Remove"
+                aria-label={t('chat.panels.planEditorPanel.remove')}
               >
                 <CloseOne size={10} />
               </button>
@@ -551,8 +553,8 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
         <div className="flex shrink-0 items-center justify-between gap-[9px] border-t border-app-border-subtle bg-[rgba(0,0,0,0.08)] px-2.5 py-[7px]">
           <span className="flex-1 text-[10px] text-app-text-muted">
             {hasFeedback
-              ? 'Sends your feedback to the agent, which revises the plan right away'
-              : 'Hover a section for + to comment, or select a range of lines'}
+              ? t('chat.panels.planEditorPanel.sendsYourFeedbackToThe')
+              : t('chat.panels.planEditorPanel.hoverASectionForTo')}
           </span>
           <div className="flex shrink-0 gap-[5px]">
             <button
@@ -562,7 +564,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
               disabled={sending}
             >
               <CloseOne size={10} />
-              {hasFeedback ? 'Send Feedback' : 'Reject'}
+              {hasFeedback ? t('chat.panels.planEditorPanel.sendFeedback') : t('chat.panels.planEditorPanel.reject')}
             </button>
             <button
               className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-[rgba(var(--color-success-rgb),0.3)] bg-[rgba(var(--color-success-rgb),0.12)] px-2.5 py-[5px] text-[10px] font-semibold text-app-success transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:border-[rgba(var(--color-success-rgb),0.5)] enabled:hover:bg-[rgba(var(--color-success-rgb),0.22)]"
@@ -571,7 +573,7 @@ export function PlanEditorPanel({ planId, sessionId, pendingPermission, rawConte
               disabled={sending}
             >
               <CheckOne size={10} />
-              Proceed
+              {t('chat.panels.planEditorPanel.proceed')}
             </button>
           </div>
         </div>

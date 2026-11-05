@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { buildRightPanelId, useUIStore, type RightPanelKind } from '@renderer/stores/ui'
+import { useTranslation } from 'react-i18next'
 
 function rightPanelId(kind: RightPanelKind, sessionId?: string): string {
   return buildRightPanelId({ kind, sessionId })
@@ -10,6 +11,7 @@ function rightPanelId(kind: RightPanelKind, sessionId?: string): string {
 // only knows the active session id from the route, not the rest of a loaded
 // conversation's local state.
 export function useSessionPanelToggles(sessionId?: string) {
+  const { t } = useTranslation('chat')
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const closeRightPanel = useUIStore((s) => s.closeRightPanel)
   const computerOpen = useUIStore((s) => s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'computer' && p.sessionId === sessionId)))
@@ -20,17 +22,17 @@ export function useSessionPanelToggles(sessionId?: string) {
 
   const toggleComputer = useCallback(() => {
     if (computerOpen) closeRightPanel(rightPanelId('computer', sessionId))
-    else openRightPanel({ kind: 'computer', title: 'Session', sessionId })
+    else openRightPanel({ kind: 'computer', title: t('hooks.useSessionPanelToggles.session'), sessionId })
   }, [closeRightPanel, computerOpen, openRightPanel, sessionId])
 
   const toggleBrowser = useCallback(() => {
     if (browserOpen) closeRightPanel(rightPanelId('browser', sessionId))
-    else openRightPanel({ kind: 'browser', title: 'Browser', sessionId })
+    else openRightPanel({ kind: 'browser', title: t('hooks.useSessionPanelToggles.browser'), sessionId })
   }, [browserOpen, closeRightPanel, openRightPanel, sessionId])
 
   const toggleTerminal = useCallback(() => {
     if (terminalOpen) closeRightPanel(rightPanelId('shell', sessionId))
-    else openRightPanel({ kind: 'shell', title: 'Terminal', sessionId })
+    else openRightPanel({ kind: 'shell', title: t('hooks.useSessionPanelToggles.terminal'), sessionId })
   }, [terminalOpen, closeRightPanel, openRightPanel, sessionId])
 
   return { computerOpen, browserOpen, terminalOpen, toggleComputer, toggleBrowser, toggleTerminal }

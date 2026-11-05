@@ -10,6 +10,7 @@ import { EmptyState } from './EmptyState'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import type { StreamingBlock } from '@renderer/stores/session'
 import type { Message, ToolUseBlock } from '@renderer/api/types'
+import { useTranslation } from 'react-i18next'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -69,6 +70,7 @@ export function FilesPanel({
   onClose: () => void
   onToggleMaximize: () => void
 }) {
+  const { t } = useTranslation('chat')
   const session = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId))
   const messages = session?.messages ?? EMPTY_MESSAGES
   const streaming = useSessionStore((s) => s.getStreaming(sessionId))
@@ -113,8 +115,8 @@ export function FilesPanel({
     const filePath = typeof tool.input.file_path === 'string' ? tool.input.file_path : ''
     const id = filePath ? `file:${filePath}` : `tool:${tool.id}`
     setTabs((prev) => {
-      if (prev.some((t) => t.id === id)) {
-        return prev.map((t) => (t.id === id ? { id, kind: 'tool', tool } : t))
+      if (prev.some((tab) => tab.id === id)) {
+        return prev.map((tab) => (tab.id === id ? { id, kind: 'tool', tool } : tab))
       }
       return [...prev, { id, kind: 'tool', tool }]
     })
@@ -123,7 +125,7 @@ export function FilesPanel({
 
   function openPathTab(path: string) {
     const id = `path:${path}`
-    setTabs((prev) => (prev.some((t) => t.id === id) ? prev : [...prev, { id, kind: 'path', path }]))
+    setTabs((prev) => (prev.some((tab) => tab.id === id) ? prev : [...prev, { id, kind: 'path', path }]))
     setActiveTabId(id)
     if (!fileContent[path]) {
       setFileContent((prev) => ({ ...prev, [path]: 'loading' }))
@@ -135,7 +137,7 @@ export function FilesPanel({
 
   function closeTab(id: string) {
     setTabs((prev) => {
-      const next = prev.filter((t) => t.id !== id)
+      const next = prev.filter((tab) => tab.id !== id)
       if (activeTabId === id) setActiveTabId(next.length ? next[next.length - 1].id : null)
       return next
     })
@@ -146,7 +148,7 @@ export function FilesPanel({
   // inline - pick that up even when Files was already open on something else.
   useEffect(() => {
     if (!focusToolId) return
-    const tool = fileTools.find((t) => t.id === focusToolId)
+    const tool = fileTools.find((item) => item.id === focusToolId)
     if (tool) openToolTab(tool)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusToolId, fileTools])
@@ -157,7 +159,7 @@ export function FilesPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusPath])
 
-  const activeTab = tabs.find((t) => t.id === activeTabId) ?? null
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? null
   const activeLabel = activeTab ? tabLabel(activeTab) : 'Files'
   const activeKindBadge = activeTab?.kind === 'tool'
     ? (toolCategory(activeTab.tool.name) === 'write' ? 'Written' : toolCategory(activeTab.tool.name) === 'edit' ? 'Edited' : 'Read')
@@ -173,7 +175,7 @@ export function FilesPanel({
       <div className="flex shrink-0 items-center gap-2 border-b border-app-border-subtle px-2.5 py-1.5">
         <button
           type="button"
-          aria-label="Toggle file tree"
+          aria-label={t('chat.panels.filesPanel.toggleFileTree')}
           onClick={() => setTreeOpen((v) => !v)}
           className={cx(
             'flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border text-app-text-secondary',
@@ -189,10 +191,10 @@ export function FilesPanel({
         {activeKindBadge && (
           <span className={cx('shrink-0 text-[9px] font-bold uppercase tracking-[0.04em]', activeKindColor)}>{activeKindBadge}</span>
         )}
-        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
+        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onToggleMaximize} aria-label={isMaximized ? t('chat.panels.filesPanel.restore') : t('chat.panels.filesPanel.maximize')}>
           <WindowMaximizeIcon />
         </button>
-        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onClose} aria-label="Close">
+        <button type="button" className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-0 bg-transparent text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text" onClick={onClose} aria-label={t('chat.panels.filesPanel.close')}>
           <WindowCloseIcon />
         </button>
       </div>
@@ -201,7 +203,7 @@ export function FilesPanel({
         {treeOpen && (
           <div className="w-[170px] shrink-0 overflow-y-auto border-r border-app-border-subtle bg-app-bg py-1.5">
             {!projectPath ? (
-              <p className="px-2.5 py-2 text-[11px] leading-normal text-app-text-muted">No project folder set for this conversation.</p>
+              <p className="px-2.5 py-2 text-[11px] leading-normal text-app-text-muted">{t('chat.panels.filesPanel.noProjectFolderSetFor')}</p>
             ) : (
               <TreeChildren
                 path={projectPath}
@@ -237,7 +239,7 @@ export function FilesPanel({
                     <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{tabLabel(tab)}</span>
                     <button
                       type="button"
-                      aria-label="Close tab"
+                      aria-label={t('chat.panels.filesPanel.closeTab')}
                       onClick={(e) => { e.stopPropagation(); closeTab(tab.id) }}
                       className="flex size-[15px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
                     >
@@ -252,8 +254,8 @@ export function FilesPanel({
           <div className="min-h-0 flex-1 overflow-auto p-2.5 [&>*]:max-w-full">
             {!activeTab ? (
               <EmptyState
-                title="No file open"
-                description="Click a Read, Write, or Edit call in the chat, or browse the tree on the left."
+                title={t('chat.panels.filesPanel.noFileOpen')}
+                description={t('chat.panels.filesPanel.clickAReadWriteOr')}
               />
             ) : (
               <FileTabContent tab={activeTab} fileContent={fileContent} sessionId={sessionId} />
@@ -282,12 +284,13 @@ function TreeChildren({
   onToggleFolder: (path: string) => void
   onOpenFile: (path: string) => void
 }) {
+  const { t } = useTranslation('chat')
   const state = dirCache[path]
   if (state === 'loading') {
-    return <p className="px-2.5 py-1 text-[11px] text-app-text-muted" style={{ paddingLeft: 10 + depth * 14 }}>Loading…</p>
+    return <p className="px-2.5 py-1 text-[11px] text-app-text-muted" style={{ paddingLeft: 10 + depth * 14 }}>{t('chat.panels.filesPanel.loading')}</p>
   }
   if (state === 'error' || !state) {
-    return depth === 0 ? <p className="px-2.5 py-1 text-[11px] text-app-text-muted" style={{ paddingLeft: 10 + depth * 14 }}>Can't read this folder.</p> : null
+    return depth === 0 ? <p className="px-2.5 py-1 text-[11px] text-app-text-muted" style={{ paddingLeft: 10 + depth * 14 }}>{t('chat.panels.filesPanel.canTReadThisFolder')}</p> : null
   }
   return (
     <>
@@ -384,10 +387,11 @@ function ReadContent({ path, content, startLine = 1, sessionId }: { path: string
 // a bespoke PathFileView for a tree tab), which meant every display fix had
 // to be applied twice and inevitably drifted apart.
 function FileTabContent({ tab, fileContent, sessionId }: { tab: FilesTab; fileContent: Record<string, FileContentState>; sessionId?: string }) {
+  const { t } = useTranslation('chat')
   if (tab.kind === 'path') {
     const state = fileContent[tab.path]
     if (state === 'loading' || state === undefined) {
-      return <p className="p-2 text-[11px] text-app-text-muted">Loading…</p>
+      return <p className="p-2 text-[11px] text-app-text-muted">{t('chat.panels.filesPanel.loading')}</p>
     }
     if (state === 'error') {
       return <ErrorPre content={`Couldn't read ${tab.path} - it may be binary, too large, or no longer exist.`} />
@@ -402,14 +406,14 @@ function FileTabContent({ tab, fileContent, sessionId }: { tab: FilesTab; fileCo
 
   if (result?.isError && result.content) {
     return (
-      <Section label="Error">
+      <Section label={t('chat.panels.filesPanel.error')}>
         <ErrorPre content={result.content} />
       </Section>
     )
   }
 
   if (category === 'read') {
-    if (!result?.content) return <p className="p-2 text-[11px] text-app-text-muted">Waiting for the read to finish…</p>
+    if (!result?.content) return <p className="p-2 text-[11px] text-app-text-muted">{t('chat.panels.filesPanel.waitingForTheReadTo')}</p>
     // result.content is never the file's raw bytes - it's a "File:/Lines:"
     // header plus every line prefixed with its own cat -n number (see
     // parseReadToolContent's own comment). Recover the real text (and the
@@ -422,7 +426,7 @@ function FileTabContent({ tab, fileContent, sessionId }: { tab: FilesTab; fileCo
 
   const diff = resolveDiffRows(tool)
   if (!diff || diff.rows.length === 0) {
-    return <p className="p-2 text-[11px] text-app-text-muted">No changes to show yet.</p>
+    return <p className="p-2 text-[11px] text-app-text-muted">{t('chat.panels.filesPanel.noChangesToShowYet')}</p>
   }
   return <DiffView rows={diff.rows} addCount={diff.addCount} delCount={diff.delCount} expanded />
 }

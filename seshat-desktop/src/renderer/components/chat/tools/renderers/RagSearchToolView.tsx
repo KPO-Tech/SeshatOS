@@ -2,8 +2,10 @@ import { useCorpusName } from '@renderer/hooks/useCorpusName'
 import { CodeBox, ErrorPre, Section } from '../common'
 import type { ToolViewProps } from '../types'
 import { parseRagResults } from './ragResults'
+import { useTranslation } from 'react-i18next'
 
 export function RagSearchToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const query = typeof tool.input.query === 'string' ? tool.input.query : ''
   const corpusId = typeof tool.input.corpus_id === 'string' ? tool.input.corpus_id : ''
   const corpusName = useCorpusName(corpusId)
@@ -17,7 +19,7 @@ export function RagSearchToolView({ tool, result }: ToolViewProps) {
       </div>
 
       {result?.content && !result.isError && (
-        <Section label={parsed ? `Sources (${parsed.length})` : 'Results'}>
+        <Section label={parsed ? t('chat.tools.renderers.ragSearchToolView.sourcesTotal', { total: parsed.length }) : t('chat.tools.renderers.ragSearchToolView.results')}>
           {parsed ? (
             <div className="flex flex-col gap-2">
               {parsed.map((item) => (
@@ -26,7 +28,7 @@ export function RagSearchToolView({ tool, result }: ToolViewProps) {
                     <span className="font-bold text-app-text-secondary">[{item.index}]</span>
                     <span className="min-w-0 truncate font-semibold text-app-text" title={item.file}>{item.file ?? item.corpus}</span>
                     {item.file && <span className="truncate">{item.corpus}</span>}
-                    <span className="ml-auto shrink-0 tabular-nums">{Math.round(item.score * 100)}% match</span>
+                    <span className="ml-auto shrink-0 tabular-nums">{t('chat.tools.renderers.ragSearchToolView.percentMatch', { percent: Math.round(item.score * 100) })}</span>
                   </div>
                   <div className="mt-1 max-h-[140px] overflow-y-auto whitespace-pre-wrap break-words text-[12px] leading-[1.55] text-app-text-secondary">{item.text}</div>
                 </div>
@@ -39,7 +41,7 @@ export function RagSearchToolView({ tool, result }: ToolViewProps) {
       )}
 
       {result?.isError && result.content && (
-        <Section label="Error">
+        <Section label={t('chat.tools.renderers.ragSearchToolView.error')}>
           <ErrorPre content={result.content} />
         </Section>
       )}

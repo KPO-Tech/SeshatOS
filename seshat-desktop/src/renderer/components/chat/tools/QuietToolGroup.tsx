@@ -11,6 +11,7 @@ import { toolStatus } from './quietGroupPhrase'
 import { isSilentTool, toolSnippet } from './toolDisplay'
 import type { ToolBlockProps } from './types'
 import type { QuietGroupItem } from '../messages/MessageItem'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -87,6 +88,7 @@ function ThinkingGroupItem({
   sessionId?: string
   live?: boolean
 }) {
+  const { t } = useTranslation('chat')
   const storedExpansion = useUIStore((s) => s.thinkingExpansion[thinkingId])
   const expanded = storedExpansion ?? false
   const setThinkingExpansion = useUIStore((s) => s.setThinkingExpansion)
@@ -110,14 +112,14 @@ function ThinkingGroupItem({
         <span className="inline-flex size-3.5 shrink-0 items-center justify-center not-italic text-app-text-muted">
           <Time size={11} />
         </span>
-        <span className="flex-none">Thinking</span>
+        <span className="flex-none">{t('chat.tools.quietToolGroup.thinking')}</span>
         {preview && (
           <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-70">
             · {preview}
           </span>
         )}
         <span className="ml-auto inline-flex shrink-0 items-center gap-1.5">
-          {seconds !== null && <span className="not-italic tabular-nums" aria-label="Time spent thinking">{formatThinkingDuration(seconds)}</span>}
+          {seconds !== null && <span className="not-italic tabular-nums" aria-label={t('chat.tools.quietToolGroup.timeSpentThinking')}>{formatThinkingDuration(seconds)}</span>}
           <span className={cx('inline-flex shrink-0 items-center not-italic opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
             <Down size={10} />
           </span>

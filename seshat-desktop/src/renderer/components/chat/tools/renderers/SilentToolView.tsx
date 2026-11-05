@@ -10,6 +10,7 @@ import { basename } from '../helpers'
 import { categoryIcon, hasCustomRender, isFileTool, renderToolBody, toolLabel } from '../toolDisplay'
 import { opensWide } from '../readableTools'
 import { isWebTool } from '../webTools'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -56,6 +57,7 @@ function submitPlanInfo(tool: Props['tool'], result: Props['result']): { name: s
 export function SilentToolView({ tool, result, status, snippet, sessionId }: Props) {
   // A web tool opens inline under its row, and only there: the session panel does not show it. It stays closed while the tool runs,
   // and when it fails (the red "failed" label says it), until a click opens it.
+  const { t } = useTranslation('chat')
   const [opened, setOpened] = useState(false)
   const isError = result?.isError === true || status === 'failed'
   const isRunning = status === 'running' || status === 'pending'
@@ -109,10 +111,10 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
     // (it still needs to auto-expand inline on running/error), so it never
     // reaches this component - see ToolLineItem.tsx instead.
     if (isFileTool(tool.name)) {
-      useUIStore.getState().openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: tool.id })
+      useUIStore.getState().openRightPanel({ kind: 'files', title: t('chat.tools.renderers.silentToolView.files'), sessionId, focusToolId: tool.id })
       return
     }
-    useUIStore.getState().openRightPanel({ kind: 'computer', title: 'Session', sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
+    useUIStore.getState().openRightPanel({ kind: 'computer', title: t('chat.tools.renderers.silentToolView.session'), sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
   }
 
   const clickable = expandable || canOpenPlan
@@ -133,7 +135,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
         {lineIcon(tool.name, isRunning, isError)}
       </span>
       <span className="shrink-0 font-medium not-italic text-inherit">{label}</span>
-      {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">failed</span>}
+      {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">{t('chat.tools.renderers.silentToolView.failed')}</span>}
       {snippet && <span className="min-w-0 flex-1 truncate font-mono text-[10px] opacity-[0.62]">{snippet}</span>}
       {isWeb && hasWebBody && (
         <span className={cx('ml-auto inline-flex shrink-0 items-center opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>

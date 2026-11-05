@@ -6,6 +6,7 @@ import { CrosshairOverlay, CrosshairTip, useCrosshair, type Hover } from '../cha
 import { readPoints, readSeries, strings, text, withUnit, type SeriesData } from '../charts/readers'
 import { formatTick, linear, niceDomain, niceTicks } from '../charts/scale'
 import { seriesAccent } from '../charts/seriesTone'
+import { useTranslation } from 'react-i18next'
 
 // A single series needs no legend: its name is the title or the axis.
 const legendOf = (series: SeriesData[], swatch: LegendItem['swatch'] = 'line'): LegendItem[] =>
@@ -40,6 +41,7 @@ function valueRange(series: SeriesData[], stacked: boolean, includeZero: boolean
 }
 
 function BarChart({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const labels = strings(props.labels)
   const series = readSeries(props.series)
   const horizontal = props.horizontal === true
@@ -58,7 +60,7 @@ function BarChart({ props }: ComponentProps) {
         const inner = band * 0.72
         const each = stacked ? inner : inner / series.length
         return (
-          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? 'Bar chart'}>
+          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? t('chat.richblocks.view.components.charts.barChart')}>
             <Axes
               area={area}
               size={size}
@@ -129,6 +131,7 @@ function LineBody({ size, props, labels, series, unit, stacked, filled, low, hig
   high: number
   ticks: number[]
 }) {
+  const { t } = useTranslation('chat')
   const area = plotArea(size, { xLabel: text(props.xLabel), yLabel: text(props.yLabel) })
   const y = linear([low, high], [area.top + area.height, area.top])
   const step = area.width / labels.length
@@ -157,7 +160,7 @@ function LineBody({ size, props, labels, series, unit, stacked, filled, low, hig
 
   return (
     <>
-      <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? 'Line chart'}>
+      <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? t('chat.richblocks.view.components.charts.lineChart')}>
         <Axes area={area} size={size} xLabel={text(props.xLabel)} yLabel={text(props.yLabel)} y={{ scale: y, ticks }} categories={labels.map((label, i) => ({ label: labels.length > 14 && i % Math.ceil(labels.length / 14) !== 0 ? '' : label, at: xAt(i) }))} origin />
         {lines.map(({ item, s, base, tops }) => {
           const accent = seriesAccent(s, item.tone)
@@ -183,6 +186,7 @@ const LineChart = ({ props }: ComponentProps) => lineLike(props, false)
 const AreaChart = ({ props }: ComponentProps) => lineLike(props, true)
 
 function PieChart({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const labels = strings(props.labels)
   const values = (Array.isArray(props.values) ? props.values : []).map((v) => (Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : 0))
   const total = values.reduce((sum, v) => sum + v, 0)
@@ -198,7 +202,7 @@ function PieChart({ props }: ComponentProps) {
         const cy = size.height / 2
         let angle = -Math.PI / 2
         return (
-          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? 'Pie chart'}>
+          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? t('chat.richblocks.view.components.charts.pieChart')}>
             {values.map((v, i) => {
               if (v <= 0) return null
               const sweep = (v / total) * Math.PI * 2
@@ -225,6 +229,7 @@ function PieChart({ props }: ComponentProps) {
 }
 
 function ScatterChart({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const series = readPoints(props.series)
   const all = series.flatMap((item) => item.points)
   if (all.length === 0) return <Empty what="A scatter chart needs at least one point." />
@@ -239,7 +244,7 @@ function ScatterChart({ props }: ComponentProps) {
         const x = linear([xLow, xHigh], [area.left, area.left + area.width])
         const y = linear([yLow, yHigh], [area.top + area.height, area.top])
         return (
-          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? 'Scatter chart'}>
+          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? t('chat.richblocks.view.components.charts.scatterChart')}>
             <Axes area={area} size={size} xLabel={text(props.xLabel)} yLabel={text(props.yLabel)} x={{ scale: x, ticks: niceTicks(xLow, xHigh, 7) }} y={{ scale: y, ticks: niceTicks(yLow, yHigh, 6) }} origin />
             {series.map((item, s) => (
               <g key={s} className={seriesAccent(s, item.tone)}>

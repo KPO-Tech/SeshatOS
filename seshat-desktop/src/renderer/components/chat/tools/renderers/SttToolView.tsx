@@ -1,5 +1,6 @@
 import { ErrorPre, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 const CHIP_CSS = 'rounded-[3px] border border-app-border-subtle bg-[rgba(255,255,255,0.05)] px-[5px] py-0.5 font-mono'
 
@@ -24,9 +25,10 @@ function formatDuration(s: number): string {
 }
 
 export function SttToolView({ result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   if (result?.isError && result.content) {
     return (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.sttToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     )
@@ -39,7 +41,7 @@ export function SttToolView({ result }: ToolViewProps) {
 
   return (
     <>
-      <Section label="Transcript">
+      <Section label={t('chat.tools.renderers.sttToolView.transcript')}>
         <div className="whitespace-pre-wrap rounded-md border border-app-border-subtle bg-[rgba(255,255,255,0.03)] px-2 py-[7px] text-[12px] leading-[1.65] text-app-text">{transcript}</div>
       </Section>
 

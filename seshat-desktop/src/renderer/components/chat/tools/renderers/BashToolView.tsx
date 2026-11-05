@@ -1,6 +1,7 @@
 import { Copy } from '@icon-park/react'
 import { fmtDuration, parseBashResult } from '../helpers'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -17,6 +18,7 @@ function BashPanel({
   tone?: 'default' | 'error'
   copyable?: boolean
 }) {
+  const { t } = useTranslation('chat')
   if (!content) return null
   const isError = tone === 'error'
   return (
@@ -39,7 +41,7 @@ function BashPanel({
         <button
           className="absolute right-2 top-1.5 inline-flex size-5 items-center justify-center rounded border-0 bg-transparent p-0 text-app-text-muted opacity-0 transition-[opacity,color,background] duration-[120ms] group-hover:opacity-100 hover:bg-[var(--surface-hover)] hover:text-app-text"
           type="button"
-          aria-label="Copy"
+          aria-label={t('chat.tools.renderers.bashToolView.copy')}
           onClick={() => void navigator.clipboard.writeText(content)}
         >
           <Copy size={10} />
@@ -50,30 +52,31 @@ function BashPanel({
 }
 
 export function BashToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const command = (tool.input.command as string) ?? ''
   const parsed = parseBashResult(result)
   const showResultError = Boolean(result?.isError && result.content && result.content !== parsed?.stderr)
 
   return (
     <div className="flex flex-col overflow-hidden rounded-b-md border border-t-0 border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-root)_88%,var(--surface-panel))]">
-      <BashPanel label="Command" content={command} copyable />
+      <BashPanel label={t('chat.tools.renderers.bashToolView.command')} content={command} copyable />
 
       {parsed?.stdout != null && (
-        <BashPanel label="Output" content={parsed.stdout || '(no output)'} copyable />
+        <BashPanel label={t('chat.tools.renderers.bashToolView.output')} content={parsed.stdout || '(no output)'} copyable />
       )}
 
       {parsed?.stderr && (
-        <BashPanel label="Error" content={parsed.stderr} tone="error" copyable />
+        <BashPanel label={t('chat.tools.renderers.bashToolView.error')} content={parsed.stderr} tone="error" copyable />
       )}
 
       {parsed != null && parsed.exitCode != null && (
         <div className="flex items-center justify-end gap-2.5 border-t border-app-border-subtle px-[11px] pb-[7px] pt-[5px] font-mono text-[10px] text-app-text-muted">
-          <span>Exit code: {parsed.exitCode}</span>
-          {result?.durationMs != null && <span>Duration: {fmtDuration(result.durationMs)}</span>}
+          <span>{t('chat.tools.renderers.bashToolView.exitCode', { code: parsed.exitCode })}</span>
+          {result?.durationMs != null && <span>{t('chat.tools.renderers.bashToolView.duration', { value: fmtDuration(result.durationMs) })}</span>}
         </div>
       )}
 
-      {showResultError && <BashPanel label="Error" content={result?.content ?? ''} tone="error" copyable />}
+      {showResultError && <BashPanel label={t('chat.tools.renderers.bashToolView.error')} content={result?.content ?? ''} tone="error" copyable />}
     </div>
   )
 }

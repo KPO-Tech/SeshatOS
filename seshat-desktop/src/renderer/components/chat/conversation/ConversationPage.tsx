@@ -23,8 +23,10 @@ import { filePlace } from '../richblocks/view/actions/filePlace'
 import { JumpToLatest } from './JumpToLatest'
 import { useMergeWhenReady } from '../panels/changes/useMergeWhenReady'
 import './ConversationPage.css'
+import { useTranslation } from 'react-i18next'
 
 export function ConversationPage() {
+  const { t } = useTranslation('chat')
   const { id } = useParams()
   const sessions = useSessionStore((s) => s.sessions)
   const updateSession = useSessionStore((s) => s.updateSession)
@@ -91,7 +93,7 @@ export function ConversationPage() {
   const { sendMessage, stopMessage, isStreaming } = useChat(id || '', {
     onCompaction: (preTokens, postTokens) => {
       const saved = preTokens - postTokens
-      showToast(`Compacted conversation - saved ${saved.toLocaleString()} tokens (${preTokens.toLocaleString()} → ${postTokens.toLocaleString()})`, 'info')
+      showToast(t('chat.conversation.conversationPage.compacted', { saved: saved.toLocaleString(), before: preTokens.toLocaleString(), after: postTokens.toLocaleString() }), 'info')
     },
     onTurnSuccess: () => {
       setJustCompleted(true)
@@ -119,7 +121,7 @@ export function ConversationPage() {
   const openFromAnswer = useCallback(
     (path: string) => {
       const place = filePlace(path, session?.projectPath)
-      const showInFiles = () => openRightPanel({ kind: 'files', title: 'Files', sessionId: id, focusPath: place.path })
+      const showInFiles = () => openRightPanel({ kind: 'files', title: t('chat.conversation.conversationPage.files'), sessionId: id, focusPath: place.path })
       // openPath only reaches the app's own data folder: a file of a project is opened by its path, and the main process refuses a program.
       // What cannot be opened that way (a relative path with no project, a program) is shown in the Files panel instead of doing nothing.
       if (place.where === 'system') (window.seshat?.openLocalPath?.(place.path) ?? Promise.reject(new Error('no bridge'))).catch(showInFiles)

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Expandable } from '../expand/Expandable'
 import { useElementWidth } from './useElementWidth'
+import { useTranslation } from 'react-i18next'
 
 export type LegendItem = { label: string; accent: string; dashed?: boolean; swatch?: 'line' | 'box' | 'dot' }
 
@@ -50,8 +51,9 @@ function ChartFigure({ title, legend, ratio = 0.5, minHeight = 220, maxHeight = 
 
 /** The frame of a chart: a title, a legend, and a drawing area that is told its width and gives back an SVG of that size. It can be saved as an image. */
 export function ChartShell(props: Props) {
+  const { t } = useTranslation('chat')
   return (
-    <Expandable label={props.title ?? 'Chart'} mode="download" className="my-3">
+    <Expandable label={props.title ?? t('chat.richblocks.view.charts.chartShell.chart')} mode="download" className="my-3">
       <ChartFigure {...props} />
     </Expandable>
   )

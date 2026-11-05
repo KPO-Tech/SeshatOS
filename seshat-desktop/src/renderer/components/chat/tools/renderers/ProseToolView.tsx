@@ -1,5 +1,6 @@
 import { ErrorPre, ProseBox, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 // Shared body for tools whose result is genuinely readable text (a feed of
 // articles, a skill's markdown doc, a validation report) rather than data
@@ -7,16 +8,17 @@ import type { ToolViewProps } from '../types'
 // dropping GenericToolView's permanent raw `tool.input` JSON dump and
 // showing the content as prose instead of a monospace code block.
 export function ProseToolView({ result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   if (result?.isError) {
     return result.content ? (
-      <Section label="Error">
+      <Section label={t('chat.tools.renderers.proseToolView.error')}>
         <ErrorPre content={result.content} />
       </Section>
     ) : null
   }
   if (!result?.content) return null
   return (
-    <Section label="Output">
+    <Section label={t('chat.tools.renderers.proseToolView.output')}>
       <ProseBox content={result.content} copyable />
     </Section>
   )

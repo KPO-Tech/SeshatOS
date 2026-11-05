@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { notify } from '@renderer/stores/notifications'
+import { useTranslation } from 'react-i18next'
 
 /** Puts the arrival of a new version in the bell: the banner offers the restart, and this keeps a trace of it. */
 export function useUpdateNotice() {
-  useEffect(() => window.seshat?.updates?.onDownloaded((payload) => notify('update', { title: `SeshatOS ${payload.version} is ready`, body: 'Restart the app to install it.' })), [])
+  const { t } = useTranslation('chat')
+  useEffect(() => window.seshat?.updates?.onDownloaded((payload) => notify('update', { title: t('hooks.useUpdateNotice.ready', { version: payload.version }), body: t('hooks.useUpdateNotice.restart') })), [])
 }

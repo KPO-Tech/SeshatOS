@@ -27,6 +27,7 @@ import { PromptEditor } from './PromptEditor'
 import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 import type { AnswerExtras } from './answerExtras'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -92,6 +93,7 @@ function ThinkingBlock({
   /** True while this is the part of the answer being written: the time is counted, and kept when it ends. */
   live?: boolean
 }) {
+  const { t } = useTranslation('chat')
   const storedExpansion = useUIStore((s) => s.thinkingExpansion[thinkingId])
   // A thought stays folded while it is written, whatever its length: a person opens it if they want to read it.
   const expanded = storedExpansion ?? false
@@ -114,18 +116,18 @@ function ThinkingBlock({
         <span className="inline-flex size-3.5 shrink-0 items-center justify-center not-italic text-app-text-muted">
           <Time size={11} />
         </span>
-        <span className="flex-none">Thinking</span>
+        <span className="flex-none">{t('chat.messages.messageItem.thinking')}</span>
         {preview && (
           <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-70">
             · {preview}
           </span>
         )}
         <span className="ml-auto inline-flex shrink-0 items-center gap-1.5">
-          {seconds !== null && <span className="not-italic tabular-nums" aria-label="Time spent thinking">{formatThinkingDuration(seconds)}</span>}
+          {seconds !== null && <span className="not-italic tabular-nums" aria-label={t('chat.messages.messageItem.timeSpentThinking')}>{formatThinkingDuration(seconds)}</span>}
           <button
             type="button"
             className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent not-italic text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
-            aria-label="Copy"
+            aria-label={t('chat.messages.messageItem.copy')}
             onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(thinking) }}
           >
             <Copy size={10} />
@@ -305,10 +307,11 @@ function LiveActivityBlock({ label, detail }: { label: string; detail?: string }
 // acknowledgment the turn actually completed. Its parent clears justCompleted
 // after ~1.5s (see Conversation.tsx), so this never needs its own timer.
 function CompletionFlash() {
+  const { t } = useTranslation('chat')
   return (
     <div className={cx(LIVE_ACTIVITY_ROOT_CSS, 'text-app-success [animation:msg-live-activity-fade_0.25s_ease]')} aria-live="polite">
       <CheckOne size={16} theme="filled" className="shrink-0" />
-      <span className={LIVE_ACTIVITY_TEXT_CSS}>Done</span>
+      <span className={LIVE_ACTIVITY_TEXT_CSS}>{t('chat.messages.messageItem.done')}</span>
     </div>
   )
 }
@@ -333,6 +336,7 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
 }
 
 export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
+  const { t } = useTranslation('chat')
   const [editing, setEditing] = useState(false)
   if (isCompactionDivider(message)) {
     const first = message.content[0]
@@ -442,7 +446,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                     className="mt-1.5 block cursor-pointer border-0 bg-none p-0 text-left text-[12px] font-medium text-app-error hover:underline"
                     onClick={() => onRetryMessage?.(block.text, attachments)}
                   >
-                    Failed to send · Retry
+                    {t('chat.messages.messageItem.failedToSendRetry')}
                   </button>
                 )}
               </div>
