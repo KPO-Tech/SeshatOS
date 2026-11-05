@@ -21,7 +21,6 @@ import { LanguageNotificationsSettings } from '../LanguageNotificationsSettings'
 import { MemoriesSettings } from '../MemoriesSettings'
 import { ShortcutsSettings } from '../ShortcutsSettings'
 import type { SettingsSectionId } from './sections'
-import { useSettingsState } from './useSettingsState'
 
 /** The content of one page of Settings: every page draws its own header with the kit. */
 export function SettingsSectionView({ id }: { id: SettingsSectionId }) {
@@ -30,16 +29,10 @@ export function SettingsSectionView({ id }: { id: SettingsSectionId }) {
 
 function SectionContent({ id }: { id: SettingsSectionId }) {
   const { user, logout } = useAuth()
-  const state = useSettingsState()
 
   switch (id) {
     case 'language-notifications':
-      return (
-        <LanguageNotificationsSettings
-          language={state.language}
-          onLanguageChange={state.updateLanguage}
-        />
-      )
+      return <LanguageNotificationsSettings />
     case 'appearance':
       return <AppearanceSettings />
     case 'shortcuts':

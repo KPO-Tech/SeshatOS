@@ -1,52 +1,50 @@
 import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution } from '@icon-park/react'
+import { useTranslation } from 'react-i18next'
 import { useNotificationPrefs } from '@renderer/hooks/useNotificationPrefs'
+import { SUPPORTED_LANGUAGES, normalizeLanguage } from '@renderer/i18n/languages'
+import { useLanguage } from '@renderer/i18n/useLanguage'
 import { SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
 
-type Props = {
-  language: string
-  onLanguageChange: (language: string) => void
-}
-
-const LANGUAGES = [
-  { value: 'English', label: 'English' },
-  { value: 'Francais', label: 'Francais' }
-]
+// A language is named in itself, in every language of the interface: "Français" is never "French" to a person who reads French.
+const LANGUAGES = SUPPORTED_LANGUAGES.map((entry) => ({ value: entry.code, label: entry.label }))
 
 const icon = (Glyph: typeof Remind) => <Glyph theme="outline" size={18} />
 
-export function LanguageNotificationsSettings({ language, onLanguageChange }: Props) {
+export function LanguageNotificationsSettings() {
+  const { t } = useTranslation('settings')
+  const { language, setLanguage } = useLanguage()
   const { prefs, change } = useNotificationPrefs()
   return (
     <SettingsPage id="language-notifications">
-      <SettingsCard title="Language">
-        <SettingRow title="Interface language" icon={icon(Translate)}>
+      <SettingsCard title={t('languageNotifications.languageCard')}>
+        <SettingRow title={t('languageNotifications.interfaceLanguage')} icon={icon(Translate)}>
           <div className="w-[200px]">
-            <SelectField value={language} options={LANGUAGES} onChange={onLanguageChange} compact />
+            <SelectField value={language} options={LANGUAGES} onChange={(value) => { const next = normalizeLanguage(value); if (next) void setLanguage(next) }} compact />
           </div>
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="Notifications">
-        <SettingRow title="Desktop notifications" hint="Shown only when SeshatOS is not the window in front." icon={icon(Remind)}>
-          <Toggle label="Desktop notifications" enabled={prefs.desktop} onChange={(value) => change('desktop', value)} />
+      <SettingsCard title={t('languageNotifications.notificationsCard')}>
+        <SettingRow title={t('languageNotifications.desktop')} hint={t('languageNotifications.desktopHint')} icon={icon(Remind)}>
+          <Toggle label={t('languageNotifications.desktop')} enabled={prefs.desktop} onChange={(value) => change('desktop', value)} />
         </SettingRow>
-        <SettingRow title="Sound" icon={icon(VolumeNotice)}>
-          <Toggle label="Sound" enabled={prefs.sound} onChange={(value) => change('sound', value)} />
+        <SettingRow title={t('languageNotifications.sound')} icon={icon(VolumeNotice)}>
+          <Toggle label={t('languageNotifications.sound')} enabled={prefs.sound} onChange={(value) => change('sound', value)} />
         </SettingRow>
       </SettingsCard>
 
-      <SettingsCard title="What to be told about">
-        <SettingRow title="Tasks" icon={icon(CheckCorrect as typeof Remind)}>
-          <Toggle label="Tasks" enabled={prefs.tasks} onChange={(value) => change('tasks', value)} />
+      <SettingsCard title={t('languageNotifications.toldAboutCard')}>
+        <SettingRow title={t('languageNotifications.tasks')} icon={icon(CheckCorrect as typeof Remind)}>
+          <Toggle label={t('languageNotifications.tasks')} enabled={prefs.tasks} onChange={(value) => change('tasks', value)} />
         </SettingRow>
-        <SettingRow title="Agent replies" icon={icon(Remind)} hint="When the agent finishes in a conversation you are not looking at.">
-          <Toggle label="Agent replies" enabled={prefs.agents} onChange={(value) => change('agents', value)} />
+        <SettingRow title={t('languageNotifications.agentReplies')} icon={icon(Remind)} hint={t('languageNotifications.agentRepliesHint')}>
+          <Toggle label={t('languageNotifications.agentReplies')} enabled={prefs.agents} onChange={(value) => change('agents', value)} />
         </SettingRow>
-        <SettingRow title="Errors" icon={icon(Caution as typeof Remind)}>
-          <Toggle label="Errors" enabled={prefs.errors} onChange={(value) => change('errors', value)} />
+        <SettingRow title={t('languageNotifications.errors')} icon={icon(Caution as typeof Remind)}>
+          <Toggle label={t('languageNotifications.errors')} enabled={prefs.errors} onChange={(value) => change('errors', value)} />
         </SettingRow>
-        <SettingRow title="App updates" icon={icon(Up as typeof Remind)}>
-          <Toggle label="App updates" enabled={prefs.updates} onChange={(value) => change('updates', value)} />
+        <SettingRow title={t('languageNotifications.appUpdates')} icon={icon(Up as typeof Remind)}>
+          <Toggle label={t('languageNotifications.appUpdates')} enabled={prefs.updates} onChange={(value) => change('updates', value)} />
         </SettingRow>
       </SettingsCard>
     </SettingsPage>

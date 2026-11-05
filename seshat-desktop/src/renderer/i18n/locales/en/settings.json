@@ -1,0 +1,16 @@
+{
+  "languageNotifications": {
+    "languageCard": "Language",
+    "interfaceLanguage": "Interface language",
+    "notificationsCard": "Notifications",
+    "desktop": "Desktop notifications",
+    "desktopHint": "Shown only when SeshatOS is not the window in front.",
+    "sound": "Sound",
+    "toldAboutCard": "What to be told about",
+    "tasks": "Tasks",
+    "agentReplies": "Agent replies",
+    "agentRepliesHint": "When the agent finishes in a conversation you are not looking at.",
+    "errors": "Errors",
+    "appUpdates": "App updates"
+  }
+}

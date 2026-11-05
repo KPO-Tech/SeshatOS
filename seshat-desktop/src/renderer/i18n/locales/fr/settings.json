@@ -1,0 +1,16 @@
+{
+  "languageNotifications": {
+    "languageCard": "Langue",
+    "interfaceLanguage": "Langue de l'interface",
+    "notificationsCard": "Notifications",
+    "desktop": "Notifications de bureau",
+    "desktopHint": "Affichées uniquement lorsque SeshatOS n'est pas la fenêtre au premier plan.",
+    "sound": "Son",
+    "toldAboutCard": "Ce dont vous souhaitez être informé",
+    "tasks": "Tâches",
+    "agentReplies": "Réponses de l'agent",
+    "agentRepliesHint": "Lorsque l'agent termine dans une conversation que vous ne regardez pas.",
+    "errors": "Erreurs",
+    "appUpdates": "Mises à jour de l'application"
+  }
+}
