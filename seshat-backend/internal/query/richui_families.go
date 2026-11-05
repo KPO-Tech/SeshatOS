@@ -53,7 +53,7 @@ var richUIChartWords = richUIWords(
 		"integral", "intégral", "primitive", "fonction", "function", "equation", "équation", "asymptote", "extremum", "extrema",
 		"racine", "regression", "régression", "loss", "accuracy", "learning curve", "apprentissage", "overfit", "machine learning",
 		"deep learning", "neural", "réseau de neurones", "distribution", "statisti", "x^", "x²", "x³",
-		"illustrat", "visuel", "visual", "figure", "gradient", "descente", "optimi", "convergence", "simulation"},
+		"slider", "curseur", "interactif", "interactive", "parametr", "paramètre", "explor", "illustrat", "visuel", "visual", "figure", "gradient", "descente", "optimi", "convergence", "simulation"},
 	[]string{"pie", "roc", "auc", "limite", "limit"},
 )
 

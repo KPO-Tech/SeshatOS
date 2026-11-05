@@ -46,6 +46,14 @@ curve = Plot([Curve("x^3 - 3x + 1", "f(x)"), Shade("x^3 - 3x + 1", -2, 2, "area 
 loss = LineChart(["1", "2", "3", "4", "5"], [Series("train", [0.92, 0.55, 0.38, 0.29, 0.24]), Series("validation", [0.95, 0.63, 0.47, 0.42, 0.41])], null, "Loss per epoch", "epoch", "loss")
 matrix = Heatmap(["cat", "dog", "bird"], ["cat", "dog", "bird"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], "Confusion matrix", "blue", 0)
 errors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, "Residuals", "error")`,
+  `root = Stack([intro, graph, a, b, c, d, eq])
+intro = Markdown("Move the sliders to see how each parameter changes the sine wave.")
+graph = Plot([Curve("a*sin(b*x + c) + d", "a sin(bx + c) + d", "blue"), Curve("cos(x)", "cos(x)", "green", true), HLine(0)], -10, 10, -4, 4, null, "x", "y")
+a = Slider("a", -3, 3, 1, 0.1, "Amplitude (a)")
+b = Slider("b", 0.2, 4, 1, 0.1, "Frequency (b)")
+c = Slider("c", -3.14, 3.14, 0, 0.1, "Phase (c)")
+d = Slider("d", -3, 3, 0, 0.1, "Vertical shift (d)")
+eq = Live("Current equation: $f(x) = {{a}}\\\\sin({{b}}x + {{c}}) + {{d}}$, period {{2*pi/b}}")`,
   `root = Stack([plan, exercise])
 plan = SegmentBar([Segment("Discover 2 words", 2, "blue"), Segment("Write 100 to 150 words", 8, "green"), Segment("Correct and rewrite", 5, "orange")], "min", "A session of 15 minutes")
 exercise = Form([topic, essay, count], send, "Day 1: argue")

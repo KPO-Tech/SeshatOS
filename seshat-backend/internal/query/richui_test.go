@@ -47,9 +47,9 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if strings.Contains(block, "More components exist") {
 		t.Error("nothing is left out of the full block, so nothing is offered")
 	}
-	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 since the forms family).
-	if words := len(strings.Fields(block)); words > 3100 {
-		t.Errorf("the full block is %d words long, keep it under 3100", words)
+	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders).
+	if words := len(strings.Fields(block)); words > 3350 {
+		t.Errorf("the full block is %d words long, keep it under 3350", words)
 	}
 }
 
@@ -208,5 +208,22 @@ func TestRichUIFormsAreTaughtForExercisesAndDrafts(t *testing.T) {
 	}
 	if strings.Contains(richKnowledgeAnswersBlock(richUIAllFamilies), "TextArea(") {
 		t.Error("the Knowledge agent must not be taught forms")
+	}
+}
+
+func TestRichUISlidersAreTaughtWithTheCharts(t *testing.T) {
+	for _, prompt := range []string{"fais-moi un graphique interactif du sinus avec des curseurs", "let me explore a parabola with sliders"} {
+		if !richUIFamiliesFor(prompt).charts {
+			t.Errorf("%q should bring the charts family", prompt)
+		}
+	}
+	block := richAnswersBlock(richUIFamilies{charts: true})
+	for _, want := range []string{"Slider(", "Live(", "a*sin(b*x + c) + d"} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the charts block must mention %q", want)
+		}
+	}
+	if strings.Contains(richAnswersBlock(richUIFamilies{}), "Slider(") {
+		t.Error("the core must not teach sliders")
 	}
 }

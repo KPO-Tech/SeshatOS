@@ -37,3 +37,25 @@ export function saveForm(key: string, form: StoredForm): void {
     // Storage may be full, blocked or absent: the form keeps working, it only cannot be found again later.
   }
 }
+
+// The same for the sliders of a block (ADR 0014): the numbers a reader set, so that a change of page does not put them back.
+const VARS_PREFIX = 'seshat.vars.'
+
+export function loadVars(key: string): Record<string, unknown> | null {
+  try {
+    const raw = window.localStorage.getItem(VARS_PREFIX + key)
+    if (!raw) return null
+    const parsed: unknown = JSON.parse(raw)
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null
+  } catch {
+    return null
+  }
+}
+
+export function saveVars(key: string, values: Record<string, number>): void {
+  try {
+    window.localStorage.setItem(VARS_PREFIX + key, JSON.stringify(values))
+  } catch {
+    // Storage may be full, blocked or absent: the sliders keep working.
+  }
+}

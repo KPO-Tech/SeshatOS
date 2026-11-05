@@ -12,6 +12,7 @@ import { formatTick, linear, niceTicks } from '../charts/scale'
 import { seriesAccent } from '../charts/seriesTone'
 import { TONES, toneOrNull } from '../tones'
 import { useTranslation } from 'react-i18next'
+import { useVars } from '../vars/VarsContext'
 
 const NEUTRAL = TONES.neutral.accent
 const kind = (node: UiNode) => node.name
@@ -29,6 +30,13 @@ function describeCurve(node: UiNode): string {
 
 function Plot({ props }: ComponentProps) {
   const { t } = useTranslation('chat')
+  const vars = useVars()
+  // A mark or a bound is a number, or a formula in the variables of the sliders (-b/(2*a)): it follows them.
+  const read = (value: unknown): number | undefined => {
+    if (typeof value !== 'string') return finite(value)
+    const parsed = tryParseExpression(value, vars.values)
+    return parsed.formula ? finite(parsed.formula(0)) : undefined
+  }
   const xmin = finite(props.xmin)
   const xmax = finite(props.xmax)
   const layers = (Array.isArray(props.layers) ? props.layers : []).filter(isNode)
@@ -42,7 +50,7 @@ function Plot({ props }: ComponentProps) {
       {(size) => {
         const problems: string[] = []
         const formulaOf = (node: UiNode): Formula | null => {
-          const parsed = tryParseExpression(String(node.props.expr))
+          const parsed = tryParseExpression(String(node.props.expr), vars.values)
           if (parsed.error) problems.push(`${kind(node)} "${String(node.props.expr)}": ${parsed.error}`)
           return parsed.formula ?? null
         }
@@ -70,8 +78,8 @@ function Plot({ props }: ComponentProps) {
           }
           if (kind(node) === 'Shade') {
             const f = formulaOf(node)
-            const from = finite(node.props.from) ?? xmin
-            const to = finite(node.props.to) ?? xmax
+            const from = read(node.props.from) ?? xmin
+            const to = read(node.props.to) ?? xmax
             if (!f) return { node, accent: NEUTRAL }
             const accent = seriesAccent(colour++, node.props.tone)
             const samples = sampleFormula(f, Math.min(from, to), Math.max(from, to), n)
@@ -90,8 +98,8 @@ function Plot({ props }: ComponentProps) {
           }
           const tone = toneOrNull(node.props.tone)
           const accent = tone ? TONES[tone].accent : NEUTRAL
-          if (kind(node) === 'Dot') rangeSources.push([{ x: finite(node.props.x) ?? 0, y: finite(node.props.y) ?? 0 }])
-          if (kind(node) === 'HLine') rangeSources.push([{ x: xmin, y: finite(node.props.y) ?? 0 }])
+          if (kind(node) === 'Dot') rangeSources.push([{ x: read(node.props.x) ?? 0, y: read(node.props.y) ?? 0 }])
+          if (kind(node) === 'HLine') rangeSources.push([{ x: xmin, y: read(node.props.y) ?? 0 }])
           return { node, accent }
         })
 
@@ -140,8 +148,8 @@ function Plot({ props }: ComponentProps) {
                 {prepared.map(({ node, accent, ...rest }, i) => {
                   const name = kind(node)
                   if (name === 'Shade' && 'samples' in rest && rest.samples) {
-                    const from = Math.min(finite(node.props.from) ?? xmin, finite(node.props.to) ?? xmax)
-                    const to = Math.max(finite(node.props.from) ?? xmin, finite(node.props.to) ?? xmax)
+                    const from = Math.min(read(node.props.from) ?? xmin, read(node.props.to) ?? xmax)
+                    const to = Math.max(read(node.props.from) ?? xmin, read(node.props.to) ?? xmax)
                     const runs = drawableRuns(rest.samples, [low, high])
                     return (
                       <g key={i} className={accent}>
@@ -176,7 +184,7 @@ function Plot({ props }: ComponentProps) {
                   }
                   if (kind(node) === 'HLine' || kind(node) === 'VLine') {
                     const horizontal = kind(node) === 'HLine'
-                    const at = finite(node.props[horizontal ? 'y' : 'x'])
+                    const at = read(node.props[horizontal ? 'y' : 'x'])
                     if (at === undefined) return null
                     const label = text(node.props.label)
                     return (
@@ -193,8 +201,8 @@ function Plot({ props }: ComponentProps) {
               </g>
               {prepared.map(({ node, accent }, i) => {
                 if (kind(node) !== 'Dot') return null
-                const px = finite(node.props.x)
-                const py = finite(node.props.y)
+                const px = read(node.props.x)
+                const py = read(node.props.y)
                 if (px === undefined || py === undefined) return null
                 const label = text(node.props.label)
                 const flip = x(px) > area.left + area.width * 0.78

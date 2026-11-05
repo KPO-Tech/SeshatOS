@@ -3,6 +3,7 @@ import { parseUi } from '../lang/parseUi'
 import { RichBlockKeyContext } from './forms/FormContext'
 import { blockHash } from './forms/formStorage'
 import { NodeView } from './NodeView'
+import { VarsProvider } from './vars/VarsContext'
 import { RichLinkProvider, type LinkRenderer } from './links/richLinks'
 
 type Props = {
@@ -27,7 +28,9 @@ export function RichBlock({ code, streaming, fallback, renderLink }: Props) {
     <div className="seshat-ui my-4" data-ui-errors={result.errors.length > 0 ? result.errors.length : undefined}>
       <RichBlockKeyContext.Provider value={blockKey}>
         <RichLinkProvider render={renderLink}>
-          <NodeView node={result.root} />
+          <VarsProvider root={result.root}>
+            <NodeView node={result.root} />
+          </VarsProvider>
         </RichLinkProvider>
       </RichBlockKeyContext.Provider>
     </div>
