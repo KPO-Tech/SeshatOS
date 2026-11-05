@@ -11,7 +11,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-11-05
+## [0.3.12] - 2026-11-05
 
 ### Highlights
 
