@@ -12,7 +12,7 @@
           "optionalTheFolderSName": "(facultatif, le nom du dossier par défaut)",
           "cancel": "Annuler",
           "adding": "Ajout...",
-          "addSource": "Ajouter la source"
+          "addSource": "Ajouter"
         },
         "collectionCard": {
           "open": "Ouvrir",
@@ -42,7 +42,7 @@
           "addDocuments": "Ajouter des documents",
           "uploading": "Envoi en cours",
           "showAll": "Tout afficher",
-          "dropDocumentsHereOrChoose": "Déposez des documents ici, ou choisissez des fichiers",
+          "dropDocumentsHereOrChoose": "Déposez ou choisissez des fichiers",
           "pdfWordPowerpointExcelText": "PDF, Word, PowerPoint, Excel, texte et Markdown",
           "theCollection": "la collection",
           "nothingWaiting": "Rien n'attend d'être indexé",
@@ -70,20 +70,20 @@
           "starting": "Démarrage...",
           "indexEverything": "Tout indexer",
           "newCollection": "Nouvelle collection",
-          "searchCollections": "Rechercher des collections...",
+          "searchCollections": "Chercher une collection…",
           "source": "Source",
           "sortBy": "Trier par",
           "name": "Nom",
-          "recentlyUpdated": "Mises à jour récemment",
+          "recentlyUpdated": "Récentes",
           "theCollectionsCouldNotBe": "Les collections n'ont pas pu être lues.",
           "loading": "Chargement...",
           "noCollectionYetNewCollection": "Aucune collection pour le moment. « Nouvelle collection » en crée une, et un dossier ajouté dans Sources en propose lui-même.",
-          "noCollectionInThisSource": "Aucune collection dans cette source pour le moment.",
-          "noCollectionMatches": "Aucune collection ne correspond.",
+          "noCollectionInThisSource": "Aucune collection ici.",
+          "noCollectionMatches": "Aucune collection.",
           "nothingWaiting": "Rien n'attend d'être indexé.",
           "queued_one": "{{count}} document mis en file pour indexation. Ouvrez une collection pour le suivre.",
           "queued_other": "{{count}} documents mis en file pour indexation. Ouvrez une collection pour les suivre.",
-          "madeInApp": "Créées dans l'application"
+          "madeInApp": "Créées dans l'app"
         },
         "confirmDialog": {
           "cancel": "Annuler"
@@ -105,13 +105,13 @@
           "tryIndexingAgain": "Réessayer l'indexation",
           "removeFromTheCollection": "Retirer de la collection",
           "read": "Lire {{name}}",
-          "indexAgain": "Indexer de nouveau {{name}}",
+          "indexAgain": "Réindexer {{name}}",
           "remove": "Retirer {{name}}"
         },
         "documentToolbar": {
           "sortTheDocuments": "Trier les documents",
           "filterByFormat": "Filtrer par format",
-          "anyFormat": "N'importe quel format",
+          "anyFormat": "Tout format",
           "filterByState": "Filtrer par état",
           "starting": "Démarrage...",
           "sort": "Trier",
@@ -123,7 +123,7 @@
         },
         "keywordsOnlyNotice": {
           "starting": "Démarrage...",
-          "indexAgain": "Indexer de nouveau",
+          "indexAgain": "Réindexer",
           "text_one": "{{count}} document n'est indexé que pour les mots-clés : l'embedding a échoué, donc une question en trouve les mots, pas le sens. Choisissez un modèle d'embedding avec plus de quota dans les réglages de Knowledge, puis indexez-le de nouveau.",
           "text_other": "{{count}} documents ne sont indexés que pour les mots-clés : l'embedding a échoué, donc une question en trouve les mots, pas le sens. Choisissez un modèle d'embedding avec plus de quota dans les réglages de Knowledge, puis indexez-les de nouveau."
         },
@@ -147,7 +147,7 @@
             "hospital": "Santé",
             "shield": "Conformité",
             "key": "Privé",
-            "inbox": "Boîte de réception",
+            "inbox": "Réception",
             "globe": "Public",
             "home": "Personnel",
             "star": "Favori",
@@ -180,7 +180,7 @@
             "state": "État"
           },
           "state": {
-            "any": "N'importe quel état",
+            "any": "Tout état",
             "indexed": "Indexé",
             "failed": "En échec",
             "working": "En cours",
@@ -188,7 +188,7 @@
           }
         },
         "fileStatus": {
-          "keywordsOnly": "mots-clés seulement",
+          "keywordsOnly": "mots-clés",
           "notStarted": "L'indexation n'a pas commencé.",
           "indexed": "Indexé",
           "indexing": "Indexation",

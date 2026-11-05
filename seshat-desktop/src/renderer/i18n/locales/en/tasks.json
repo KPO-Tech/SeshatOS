@@ -1,0 +1,22 @@
+{
+  "waiting": "Waiting for its turn",
+  "starting": "Starting",
+  "stepOf": "{{step}} ({{index}} of {{count}})",
+  "cloneDone": "{{subject}} is downloaded",
+  "cloneDoneBody": "Check what it needs to finish the installation.",
+  "cloneCancelled": "The download of {{subject}} was cancelled",
+  "cloneCancelledBody": "The download was stopped.",
+  "cloneFailed": "Downloading {{subject}} failed",
+  "didNotFinish": "It did not finish.",
+  "installReady": "{{subject}} is ready",
+  "installDone": "The installation is done.",
+  "installCancelled": "{{subject}} was cancelled",
+  "installStopped": "The installation was stopped.",
+  "installFailed": "Installing {{subject}} failed",
+  "failure": {
+    "cloneCancelled": "The download was cancelled.",
+    "installCancelled": "The installation was cancelled.",
+    "interrupted": "The app was closed before this finished.",
+    "failed": "The task failed."
+  }
+}

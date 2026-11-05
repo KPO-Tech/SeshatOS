@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next'
+import { i18n } from '@renderer/i18n'
 import { api } from '@renderer/api/client'
 
 // The long jobs of the app run in the backend (see docs/decisions/0012): this is how the desktop reads them.
@@ -23,10 +25,10 @@ export type TaskInfo = {
 export const isTaskActive = (task: Pick<TaskInfo, 'status'>) => task.status === 'queued' || task.status === 'running'
 
 /** The reason a task that did not succeed gives, in words the person can read. */
-export function taskFailure(task: TaskInfo): string {
-  if (task.status === 'cancelled') return task.kind === 'skill.clone' ? 'The download was cancelled.' : 'The installation was cancelled.'
-  if (task.status === 'interrupted') return task.error || 'The app was closed before this finished.'
-  return task.error || 'The task failed.'
+export function taskFailure(task: TaskInfo, t: TFunction = i18n.t.bind(i18n)): string {
+  if (task.status === 'cancelled') return task.kind === 'skill.clone' ? t('tasks:failure.cloneCancelled') : t('tasks:failure.installCancelled')
+  if (task.status === 'interrupted') return task.error || t('tasks:failure.interrupted')
+  return task.error || t('tasks:failure.failed')
 }
 
 export async function fetchTasks() {

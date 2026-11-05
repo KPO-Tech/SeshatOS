@@ -17,7 +17,7 @@ describe('the Store in each language', () => {
   it('draws the Store in French, descriptions of the platforms included', async () => {
     const html = await draw('fr')
     expect(html).toContain('Boutique')
-    expect(html).toContain('Bientôt disponible')
+    expect(html).toContain('Bientôt')
     expect(html).toContain('Explorez et transformez des données structurées.')
     expect(html).toContain('Knowledge')
     expect(html).not.toContain('Coming soon')

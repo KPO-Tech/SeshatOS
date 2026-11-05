@@ -1,0 +1,16 @@
+{
+  "api": {
+    "sessionExpired": "Session expirée. Reconnectez-vous.",
+    "signInRequired": "Connexion requise.",
+    "notConnected": "Cet appareil n'est pas relié à un serveur d'organisation.",
+    "tooLarge": "Requête trop volumineuse (4 Mo max).",
+    "rateLimit": "Trop de requêtes. Réessayez dans un instant.",
+    "settingsLocked": "Votre organisation interdit de changer les réglages sur cet appareil.",
+    "analysisExpired": "Analyse expirée. Analysez de nouveau le dossier.",
+    "promptTooLong": "Message trop long (128 Kio max).",
+    "notFound": "Introuvable.",
+    "fileNotFound": "Fichier introuvable.",
+    "accountNotFound": "Compte de connecteur introuvable.",
+    "uploadUnreadable": "Le fichier envoyé n'a pas pu être lu."
+  }
+}

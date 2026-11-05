@@ -16,7 +16,7 @@
       "unreadCount": "Notifications, {{unread}} non lues"
     },
     "rightPanelHost": {
-      "dragToResize": "Faire glisser pour redimensionner",
+      "dragToResize": "Glisser pour redimensionner",
       "backToTheDocument": "Retour au document",
       "thePassagesThisDocumentWas": "Les passages sous lesquels ce document a été indexé",
       "document": "Document",
@@ -25,10 +25,10 @@
       "maximize": "Agrandir"
     },
     "searchModal": {
-      "searchConversations": "Rechercher des conversations",
-      "searchConversations2": "Rechercher des conversations...",
+      "searchConversations": "Chercher une conversation",
+      "searchConversations2": "Chercher une conversation…",
       "searching": "Recherche...",
-      "couldNotSearchConversations": "Impossible de rechercher les conversations",
+      "couldNotSearchConversations": "Recherche impossible",
       "tryAgain": "Réessayer",
       "noConversationsFound": "Aucune conversation trouvée",
       "upDown": "haut/bas",
@@ -39,52 +39,52 @@
       "close": "fermer"
     },
     "sessionHistoryModal": {
-      "conversationHistory": "Historique des conversations",
-      "closeHistory": "Fermer l'historique",
+      "conversationHistory": "Historique",
+      "closeHistory": "Fermer",
       "cancel": "Annuler",
       "deleting": "Suppression...",
       "delete": "Supprimer",
       "clear": "Effacer",
       "noConversationsFound": "Aucune conversation trouvée",
-      "noConversationsYet": "Aucune conversation pour l'instant",
+      "noConversationsYet": "Aucune conversation",
       "filter": "Filtrer les conversations ({{scope}})...",
       "confirmDelete": "Supprimer {{count}} ? Cette action est irréversible.",
-      "select": "Sélectionner {{title}}"
+      "select": "Choisir {{title}}"
     },
     "shell": {
-      "toggleSidebar": "Afficher ou masquer la barre latérale"
+      "toggleSidebar": "Basculer la barre latérale"
     },
     "sidebar": {
       "recentSessions": {
         "tasks": "Tâches",
         "history": "Historique",
         "running": "En cours",
-        "chatOptions": "Options de la conversation",
+        "chatOptions": "Options du chat",
         "rename": "Renommer",
         "exportAsMarkdown": "Exporter en Markdown",
         "copied": "Copié",
         "copyAsMarkdown": "Copier en Markdown",
         "delete": "Supprimer",
-        "noRecentChats": "Aucune conversation récente"
+        "noRecentChats": "Aucun chat récent"
       },
       "sidebar": {
-        "newChat": "Nouvelle conversation",
+        "newChat": "Nouveau chat",
         "search": "Rechercher",
         "skills": "Skills",
         "plugins": "Plugins",
         "projects": "Projets",
         "store": "Boutique",
-        "resizeSidebar": "Redimensionner la barre latérale"
+        "resizeSidebar": "Redimensionner la barre"
       },
       "sidebarFooterMenu": {
         "seshatMenu": "Menu Seshat",
         "seshatos": "SeshatOS",
         "settings": "Réglages",
-        "generativeUi": "Interface générative",
+        "generativeUi": "UI générative",
         "tablesFiguresAndStepsDrawn": "Tableaux, figures et étapes dessinés dans les réponses. À partir du prochain message.",
         "whatSNew": "Nouveautés",
-        "admin": "Administration",
-        "signOut": "Se déconnecter"
+        "admin": "Admin",
+        "signOut": "Déconnexion"
       },
       "taskProgress": {
         "cancel": "Annuler",
@@ -126,7 +126,7 @@
     "componentCard": {
       "alreadyInstalled": "Déjà installé",
       "notInThisVersion": "Absent de cette version",
-      "skippedForNowYouCan": "Ignoré pour l'instant. Vous pourrez l'ajouter plus tard dans la configuration.",
+      "skippedForNowYouCan": "Ignoré. Ajoutable plus tard dans la configuration.",
       "installed": "Installé",
       "recommended": "Recommandé"
     },
@@ -140,8 +140,8 @@
       "ready": "Prêt",
       "notInstalled": "Non installé",
       "bytesOf": "{{received}} sur {{total}}",
-      "timeLeft": "Environ {{time}} restantes",
-      "tryAgainHere": "Vous pouvez réessayer ici, ou plus tard dans la configuration."
+      "timeLeft": "~{{time}} restantes",
+      "tryAgainHere": "Réessayez ici ou plus tard dans la configuration."
     },
     "modelsChoice": {
       "installed": "Installé",
@@ -149,32 +149,32 @@
       "included": "Inclus",
       "notIncluded": "Non inclus",
       "howToSetUp": "Comment configurer",
-      "chooseWhatToInstall": "Choisissez ce qu'il faut installer",
-      "installOverview": "Aperçu de l'installation",
+      "chooseWhatToInstall": "Choisissez quoi installer",
+      "installOverview": "Récapitulatif",
       "nothingWillBeDownloadedNow": "Rien ne sera téléchargé maintenant.",
       "eachOneRunsOnYour": "Chacun s'exécute sur votre ordinateur et ne coûte rien.",
       "everythingBelowRunsOnYour": "Tout ce qui suit s'exécute sur votre ordinateur et ne coûte rien.",
       "totalSize": "Taille totale :",
       "t0Mb": "0 Mo",
       "notEnough": " · insuffisant",
-      "youCanAddChangeOr": "Vous pourrez ajouter, modifier ou retirer n'importe lequel plus tard dans la configuration.",
+      "youCanAddChangeOr": "Vous pourrez tout modifier plus tard dans la configuration.",
       "downloadRecommended": "Télécharger le recommandé",
-      "customize": "Personnaliser mon installation",
-      "skipForNow": "Ignorer pour l'instant",
+      "customize": "Personnaliser l'installation",
+      "skipForNow": "Plus tard",
       "freeSpace": "Espace libre : {{size}}"
     },
     "providerStep": {
       "aProvider": "Un fournisseur",
       "ollamaAddress": "Adresse d'Ollama",
       "theKeyIsStoredEncrypted": "La clé est stockée chiffrée sur cet ordinateur et envoyée uniquement au fournisseur.",
-      "runsOnThisComputerNo": "S'exécute sur cet ordinateur, aucune clé n'est nécessaire.",
+      "runsOnThisComputerNo": "Tourne sur cet ordinateur, sans clé.",
       "checking": "Vérification",
       "connecting": "Connexion",
       "connect": "Se connecter",
       "saveAnyway": "Enregistrer quand même",
       "isConnected": "{{name}} est connecté",
       "apiKeyOf": "Clé d'API {{name}}",
-      "saveAnywayHint": "Vous pouvez quand même l'enregistrer et la vérifier avec votre premier message."
+      "saveAnywayHint": "Vous pouvez l'enregistrer et la tester au premier message."
     },
     "setupRecap": {
       "whatIsLeftToDo": "Ce qu'il reste à faire",
@@ -187,9 +187,9 @@
     "setupWizard": {
       "connectAModel": "Connecter un modèle",
       "seshatosAnswersThroughAModel": "SeshatOS répond grâce à un modèle. Utilisez un fournisseur cloud avec votre propre clé, ou un fournisseur local comme Ollama. Vous pourrez en ajouter d'autres plus tard dans la configuration.",
-      "skipTheSetup": "Ignorer la configuration",
+      "skipTheSetup": "Passer la configuration",
       "continue": "Continuer",
-      "skipForNow": "Ignorer pour l'instant",
+      "skipForNow": "Plus tard",
       "back": "Retour",
       "setUpYourLocalModels": "Configurer vos modèles locaux",
       "downloadWhatSeshatosNeedsTo": "Téléchargez ce dont SeshatOS a besoin pour lire des documents, nommer des conversations et vous écouter. Tout s'exécute sur votre ordinateur.",
@@ -198,16 +198,16 @@
       "youReAllSet": "Tout est prêt",
       "somethingCouldNotBeDownloaded": "Quelque chose n'a pas pu être téléchargé. Vous pouvez réessayer maintenant, ou plus tard dans la configuration. SeshatOS fonctionne sans.",
       "everythingYouChoseIsReady": "Tout ce que vous avez choisi est prêt. Vous pourrez le modifier plus tard dans la configuration.",
-      "tryingAgain": "Nouvelle tentative",
+      "tryingAgain": "Nouvel essai",
       "tryAgain": "Réessayer",
       "openSeshatos": "Ouvrir SeshatOS",
       "downloadAndContinue": "Télécharger et continuer ({{size}})",
       "allAtOnce": "Tout se télécharge en même temps, donc cela dure aussi longtemps que le plus gros.",
       "fewMinutes": "Cela prend quelques minutes, selon votre connexion.",
-      "leaveOpen": "Vous pouvez laisser cette fenêtre ouverte."
+      "leaveOpen": "Laissez cette fenêtre ouverte."
     },
     "componentCards": {
-      "titleTitle": "Titres intelligents",
+      "titleTitle": "Titres auto",
       "titleTagline": "Nomme vos conversations pour vous, avec un petit modèle qui tourne à côté de la réponse.",
       "speechTitle": "Dictée vocale",
       "speechTagline": "Transforme votre voix en texte sur cet ordinateur, dans une centaine de langues.",
@@ -223,7 +223,7 @@
       "seshat": "Seshat",
       "os": "OS",
       "welcomeToSeshatos": "Bienvenue dans SeshatOS",
-      "anAiWorkspaceForResearch": "Un espace de travail IA pour la recherche, la création et l'automatisation.",
+      "anAiWorkspaceForResearch": "Espace IA pour recherche, création et automatisation.",
       "chooseYourAppearance": "Choisissez votre apparence",
       "pickAThemeThatSuits": "Choisissez un thème qui vous convient. Vous pourrez le changer plus tard dans les réglages.",
       "theme": "Thème",
@@ -246,24 +246,24 @@
       "paperasseIsReady": "paperasse est prêt",
       "theInstallationIsDone": "L'installation est terminée.",
       "theAgentHasFinished": "L'agent a terminé",
-      "gradientDescentIllustration": "Illustration de la descente de gradient",
-      "installingStrixFailed": "L'installation de strix a échoué",
+      "gradientDescentIllustration": "Descente de gradient",
+      "installingStrixFailed": "Échec de l'installation de strix",
       "dockerIsNotRunning": "Docker ne fonctionne pas.",
-      "yourAiWorkspace": "Votre espace de travail IA",
+      "yourAiWorkspace": "Votre espace IA",
       "workingOn": "travaillons-nous",
-      "askAnything": "Posez une question...",
-      "generativeUi": "Interface générative",
+      "askAnything": "Votre question…",
+      "generativeUi": "UI générative",
       "appearance": "Apparence",
-      "startSession": "Démarrer une session"
+      "startSession": "Nouvelle session"
     },
     "whatsNewHost": {
       "close": "Fermer",
-      "changes": "Modifications",
+      "changes": "Changements",
       "back": "Retour",
       "next": "Suivant",
       "gotIt": "Compris",
       "title": "Nouveautés de SeshatOS {{version}}",
-      "newIn": "Nouveau dans {{version}}"
+      "newIn": "Nouveau en {{version}}"
     }
   },
   "auth": {
@@ -292,25 +292,25 @@
           "backToProjects": "Retour aux projets",
           "project": "Projet",
           "comingBackSoon": "Bientôt de retour",
-          "chooseAFileToRead": "Choisissez un fichier à lire",
+          "chooseAFileToRead": "Choisissez un fichier",
           "markdownCodeNotebooksTablesAnd": "Markdown, code, notebooks, tableaux et images s'affichent ici. Rien dans cette vue ne modifie un fichier.",
           "projectFiles": "Fichiers du projet"
         },
         "infoColumn": {
           "viewAll": "Tout voir",
-          "projectInfo": "Informations du projet",
+          "projectInfo": "Infos du projet",
           "path": "Chemin",
           "copyThePath": "Copier le chemin",
           "files": "Fichiers",
           "lastActive": "Dernière activité",
-          "noActivityYet": "Aucune activité pour l'instant",
+          "noActivityYet": "Aucune activité",
           "created": "Création",
           "size": "Taille",
           "recentFiles": "Fichiers récents",
           "readingTheFolder": "Lecture du dossier...",
-          "noFilesYet": "Aucun fichier pour l'instant.",
+          "noFilesYet": "Aucun fichier.",
           "recentSessions": "Sessions récentes",
-          "noConversationsYet": "Aucune conversation pour l'instant.",
+          "noConversationsYet": "Aucune conversation.",
           "projectTools": "Outils du projet",
           "openInVsCode": "Ouvrir dans VS Code",
           "openFolder": "Ouvrir le dossier"
@@ -328,14 +328,14 @@
           "cancel": "Annuler",
           "delete": "Supprimer",
           "deleteTheNote": "Supprimer la note",
-          "nothingToShowYet": "Rien à afficher pour l'instant.",
+          "nothingToShowYet": "Rien à afficher.",
           "writeANoteInMarkdown": "Écrivez une note en Markdown : à quoi sert le projet, les décisions, ce qu'il faut retenir...",
           "writeInMarkdown": "Écrivez en Markdown...",
           "textOfTheNote": "Texte de la note"
         },
         "overviewTab": {
-          "askAboutThisProject": "Poser une question sur ce projet",
-          "askAboutThisProject2": "Posez une question sur ce projet...",
+          "askAboutThisProject": "Interroger ce projet",
+          "askAboutThisProject2": "Interrogez ce projet...",
           "about": "À propos",
           "edit": "Modifier",
           "whatYouAsked": "Vos questions",
@@ -348,7 +348,7 @@
           "projects": "Projets",
           "unpinTheProject": "Désépingler le projet",
           "pinTheProject": "Épingler le projet",
-          "unpin": "Désépingler",
+          "unpin": "Détacher",
           "pinToTheTopOf": "Épingler en haut de la liste",
           "openInVsCode": "Ouvrir dans VS Code",
           "moreWaysToOpenThe": "Autres façons d'ouvrir le projet",
@@ -356,11 +356,11 @@
           "copyThePath": "Copier le chemin",
           "projectSettings": "Réglages du projet",
           "actionsOfTheProject": "Actions du projet",
-          "newChatInThisProject": "Nouvelle conversation dans ce projet"
+          "newChatInThisProject": "Nouveau chat du projet"
         },
         "sessionsTab": {
-          "newChatInThisProject": "Nouvelle conversation dans ce projet",
-          "noConversationsYet": "Aucune conversation pour l'instant",
+          "newChatInThisProject": "Nouveau chat du projet",
+          "noConversationsYet": "Aucune conversation",
           "startAChatInThis": "Démarrez une conversation dans ce projet et elle apparaîtra ici.",
           "nameOfTheConversation": "Nom de la conversation",
           "cancel": "Annuler",
@@ -380,7 +380,7 @@
         "name": "Nom",
         "whatThisProjectIsFor": "À quoi sert ce projet",
         "takenFromTheReadmeOf": "Tiré du README du dossier. Modifiez-le s'il n'est pas juste.",
-        "tags": "Étiquettes",
+        "tags": "Tags",
         "dataAnalysisMarket": "données, analyse, marché",
         "colour": "Couleur",
         "colourOfTheProject": "Couleur du projet",
@@ -393,17 +393,17 @@
         "openOrganizeAndWorkWith": "Ouvrez, organisez et travaillez avec vos projets locaux. Démarrez une session, explorez les fichiers ou reprenez là où vous vous étiez arrêté.",
         "newProject": "Nouveau projet",
         "searchProjectsByNameFolder": "Rechercher des projets par nom, dossier, description ou étiquette...",
-        "searchProjects": "Rechercher des projets",
+        "searchProjects": "Chercher un projet",
         "view": "Affichage",
         "gridView": "Vue en grille",
         "listView": "Vue en liste",
         "sortProjects": "Trier les projets",
         "show": "Afficher",
-        "noProjectsYet": "Aucun projet pour l'instant",
+        "noProjectsYet": "Aucun projet",
         "noProjectsHere": "Aucun projet ici",
         "addAFolderOrPick": "Ajoutez un dossier, ou choisissez-en un dans la zone de saisie la prochaine fois que vous démarrez une conversation.",
         "tryADifferentSearch": "Essayez une autre recherche.",
-        "nothingInThisTabYet": "Rien dans cet onglet pour l'instant.",
+        "nothingInThisTabYet": "Onglet vide.",
         "removeTheProject": "Retirer le projet",
         "remove": "Retirer",
         "removeMessage": "{{name}} est retiré de cette liste. Le dossier et ses fichiers ne sont pas modifiés."
@@ -411,16 +411,16 @@
       "projectCard": {
         "aConversationOfThisProject": "Une conversation de ce projet rédige une réponse",
         "working": "En cours",
-        "noDescriptionYet": "Aucune description pour l'instant.",
-        "noActivityYet": "Aucune activité pour l'instant",
-        "startSession": "Démarrer une session",
-        "moreWaysToStart": "Autres façons de démarrer",
-        "newChatInThisProject": "Nouvelle conversation dans ce projet",
+        "noDescriptionYet": "Aucune description.",
+        "noActivityYet": "Aucune activité",
+        "startSession": "Nouvelle session",
+        "moreWaysToStart": "Démarrer autrement",
+        "newChatInThisProject": "Nouveau chat du projet",
         "continueTheLastConversation": "Reprendre la dernière conversation",
-        "moreWaysToStartA": "Autres façons de démarrer une session",
+        "moreWaysToStartA": "Démarrer une session autrement",
         "openFolder": "Ouvrir le dossier",
-        "editDetails": "Modifier les détails",
-        "unpin": "Désépingler",
+        "editDetails": "Modifier",
+        "unpin": "Détacher",
         "pinTop": "Épingler en haut",
         "openFolderItem": "Ouvrir le dossier",
         "restore": "Restaurer depuis l'archive",
@@ -432,24 +432,24 @@
         "openFolderOf": "Ouvrir le dossier de {{name}}"
       },
       "projectRow": {
-        "noActivityYet": "Aucune activité pour l'instant",
-        "startSession": "Démarrer une session",
+        "noActivityYet": "Aucune activité",
+        "startSession": "Nouvelle session",
         "openFolder": "Ouvrir le dossier",
         "active": "Actif {{when}}"
       }
     },
     "home": {
       "summarizeAFile": "Résumer un fichier",
-      "analyzeData": "Analyser des données",
-      "searchTheWeb": "Rechercher sur le web",
+      "analyzeData": "Analyser données",
+      "searchTheWeb": "Chercher sur le web",
       "brainstormIdeas": "Trouver des idées",
       "writeCode": "Écrire du code",
-      "loadingModels": "Chargement des modèles...",
-      "noModelIsAvailableYet": "Aucun modèle n'est disponible pour l'instant.",
+      "loadingModels": "Chargement…",
+      "noModelIsAvailableYet": "Aucun modèle disponible.",
       "creatingConversation": "Création de la conversation..."
     },
     "homeStage": {
-      "yourAiWorkspace": "Votre espace de travail IA",
+      "yourAiWorkspace": "Votre espace IA",
       "workingOn": "travaillons-nous",
       "researchCreateAnalyzeAndAutomate": "Recherchez, créez, analysez et automatisez avec l'IA, le tout dans un seul espace de travail.",
       "whatSetsSeshatosApart": "Ce qui distingue SeshatOS",
@@ -457,12 +457,12 @@
       "os": "OS",
       "aUnifiedEnvironmentForKnowledge": "Un environnement unifié pour les connaissances, les documents, les agents IA et l'automatisation.",
       "chatTitle": "Chat",
-      "chatText": "Posez des questions, analysez et résolvez des problèmes complexes.",
-      "filesTitle": "Travailler avec des fichiers",
+      "chatText": "Questions, analyses, problèmes complexes.",
+      "filesTitle": "Gérer des fichiers",
       "filesText": "Résumez, extrayez et transformez vos documents.",
-      "dataTitle": "Analyser des données",
+      "dataTitle": "Analyser données",
       "dataText": "Explorez, visualisez et tirez des enseignements de vos données.",
-      "webTitle": "Rechercher sur le web",
+      "webTitle": "Chercher sur le web",
       "webText": "Obtenez des informations à jour auprès de sources fiables.",
       "codeTitle": "Écrire du code",
       "codeText": "Générez, expliquez et améliorez du code dans tous les langages.",
@@ -480,15 +480,15 @@
       "os": "OS",
       "letSGetYouStarted": "Commençons",
       "workOnThisComputerRight": "Travaillez tout de suite sur cet ordinateur, ou apportez votre compte.",
-      "startingYourWorkspace": "Démarrage de votre espace de travail...",
+      "startingYourWorkspace": "Démarrage de votre espace…",
       "continueOnThisComputer": "Continuer sur cet ordinateur",
-      "noAccountNeededYourChats": "Aucun compte nécessaire. Vos conversations, vos fichiers et votre mémoire restent ici.",
-      "logIn": "Se connecter",
-      "approveACodeInYour": "Approuvez un code dans votre navigateur. Aucun mot de passe n'est saisi ici.",
+      "noAccountNeededYourChats": "Sans compte. Chats, fichiers et mémoire restent ici.",
+      "logIn": "Connexion",
+      "approveACodeInYour": "Approuvez un code dans le navigateur. Aucun mot de passe ici.",
       "createAnAccount": "Créer un compte",
-      "syncYourWorkspaceAcrossDevices": "Synchronisez votre espace de travail entre vos appareils.",
+      "syncYourWorkspaceAcrossDevices": "Synchronisez votre espace entre appareils.",
       "cloudAccountsArenTAvailable": "Les comptes cloud ne sont pas encore disponibles dans cette version. Utilisez « Continuer sur cet ordinateur » pour l'instant.",
-      "contactUsForEnterpriseUse": "Contactez-nous pour un usage en entreprise"
+      "contactUsForEnterpriseUse": "Contactez-nous pour l'entreprise"
     }
   },
   "app": {

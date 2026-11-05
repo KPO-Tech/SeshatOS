@@ -1,10 +1,12 @@
+import type { TFunction } from 'i18next'
+import { i18n } from '@renderer/i18n'
 import { isTaskActive, type TaskInfo, type TaskStatus } from './tasks'
 
 /** Where a task is, in words: its step and which one it is out of how many, or that it waits for a place. */
-export function stepLabel(task: TaskInfo): string {
-  if (task.status === 'queued') return 'Waiting for its turn'
-  if (!task.step) return 'Starting'
-  return task.step_index && task.step_count ? `${task.step} (${task.step_index} of ${task.step_count})` : task.step
+export function stepLabel(task: TaskInfo, t: TFunction = i18n.t.bind(i18n)): string {
+  if (task.status === 'queued') return t('tasks:waiting')
+  if (!task.step) return t('tasks:starting')
+  return task.step_index && task.step_count ? t('tasks:stepOf', { step: task.step, index: task.step_index, count: task.step_count }) : task.step
 }
 
 /** How far a task is, from 0 to 1. A step that has started counts for half: the programs say nothing about how far they are inside it. */
@@ -38,17 +40,17 @@ export function routeOfTask(task: TaskInfo): string {
 }
 
 /** What a task that ended says: shown in the sidebar and in the notification of the system. */
-export function finishedMessage(task: TaskInfo): { title: string; body: string; route: string; failed: boolean } {
+export function finishedMessage(task: TaskInfo, t: TFunction = i18n.t.bind(i18n)): { title: string; body: string; route: string; failed: boolean } {
   const route = routeOfTask(task)
   if (task.kind === 'skill.clone') {
-    if (task.status === 'succeeded') return { title: `${task.subject} is downloaded`, body: 'Check what it needs to finish the installation.', route, failed: false }
-    if (task.status === 'cancelled') return { title: `The download of ${task.subject} was cancelled`, body: 'The download was stopped.', route, failed: false }
-    return { title: `Downloading ${task.subject} failed`, body: (task.error || 'It did not finish.').split('\n')[0], route, failed: true }
+    if (task.status === 'succeeded') return { title: t('tasks:cloneDone', { subject: task.subject }), body: t('tasks:cloneDoneBody'), route, failed: false }
+    if (task.status === 'cancelled') return { title: t('tasks:cloneCancelled', { subject: task.subject }), body: t('tasks:cloneCancelledBody'), route, failed: false }
+    return { title: t('tasks:cloneFailed', { subject: task.subject }), body: (task.error || t('tasks:didNotFinish')).split('\n')[0], route, failed: true }
   }
-  if (task.status === 'succeeded') return { title: `${task.subject} is ready`, body: 'The installation is done.', route, failed: false }
-  if (task.status === 'cancelled') return { title: `${task.subject} was cancelled`, body: 'The installation was stopped.', route, failed: false }
-  const reason = (task.error || 'It did not finish.').split('\n')[0]
-  return { title: `Installing ${task.subject} failed`, body: reason, route, failed: true }
+  if (task.status === 'succeeded') return { title: t('tasks:installReady', { subject: task.subject }), body: t('tasks:installDone'), route, failed: false }
+  if (task.status === 'cancelled') return { title: t('tasks:installCancelled', { subject: task.subject }), body: t('tasks:installStopped'), route, failed: false }
+  const reason = (task.error || t('tasks:didNotFinish')).split('\n')[0]
+  return { title: t('tasks:installFailed', { subject: task.subject }), body: reason, route, failed: true }
 }
 
 const GIT_PHASES: Record<string, string> = {
