@@ -17,6 +17,9 @@ type GradientWallpaper = { kind: 'gradient'; angle: number; stops: string[] }
 type ImageWallpaper = { kind: 'image'; dataUrl: string; dim: number }
 export type Wallpaper = GradientWallpaper | ImageWallpaper
 
+/** The colours of code, by kind of token. */
+type SyntaxPalette = Record<'keyword' | 'string' | 'number' | 'function' | 'type' | 'variable' | 'tag', string>
+
 export type ThemeSeed = {
   id: string
   label: string
@@ -30,6 +33,8 @@ export type ThemeSeed = {
   panel: string
   text: string
   accent: string
+  /** Code colours the theme brings itself. Without them the base palette of its scheme is used, pulled toward the accent. */
+  syntax?: SyntaxPalette
 }
 
 type ThemeTokens = Record<`--${string}`, string>
@@ -53,6 +58,10 @@ const PRESETS: ThemeSeed[] = [
   { id: 'mirage', label: 'Mirage', scheme: 'dark', bg: '#1f2430', panel: '#2a3040', text: '#d9dce4', accent: '#c7762a' },
   { id: 'tide', label: 'Tide', scheme: 'dark', bg: '#14232b', panel: '#1b303a', text: '#dbe9ee', accent: '#2a93b5' },
   { id: 'violet-hour', label: 'Violet hour', scheme: 'dark', bg: '#1f1a2e', panel: '#2b2440', text: '#e8e1f5', accent: '#9b6dff' },
+  // One Dark Pro for VS Code (github.com/Binaryify/OneDark-Pro): its editor background, raised line and code colours, with Seshat's orange
+  // as the accent instead of its blue. The text is a step lighter than its #abb2bf, which falls under the contrast the tests ask of every
+  // theme (7 for the main text, 4.5 for the secondary).
+  { id: 'one-dark', label: 'One Dark', scheme: 'dark', bg: '#282c34', panel: '#2c313a', text: '#bdc3ce', accent: '#e26d1f', syntax: { keyword: '#c678dd', string: '#98c379', number: '#d19a66', function: '#61afef', type: '#e5c07b', variable: '#e06c75', tag: '#e06c75' } },
   { id: 'dusk', label: 'Dusk', scheme: 'dark', bg: '#251a28', panel: '#352636', text: '#ecdfe3', accent: '#d9684a', wallpaper: { kind: 'gradient', angle: 160, stops: ['#7d3552', '#3a1c3a', '#231424'] } },
   // Light
   { id: 'paper', label: 'Paper', scheme: 'light', bg: '#f6f3ec', panel: '#fffefb', text: '#25221d', accent: '#8a5a2b' },
@@ -161,7 +170,7 @@ const STATUS: Record<ColorScheme, { success: string; warning: string; danger: st
 
 // The base syntax palettes (in the spirit of VS Code's Dark+ and Light+), pulled a little toward each theme's accent so
 // code looks at home in it, then pushed toward the text colour until it reads on the code background.
-const SYNTAX: Record<ColorScheme, Record<'keyword' | 'string' | 'number' | 'function' | 'type' | 'variable' | 'tag', string>> = {
+const SYNTAX: Record<ColorScheme, SyntaxPalette> = {
   dark: { keyword: '#c586c0', string: '#ce9178', number: '#b5cea8', function: '#dcdcaa', type: '#4ec9b0', variable: '#9cdcfe', tag: '#569cd6' },
   light: { keyword: '#af00db', string: '#a31515', number: '#098658', function: '#795e26', type: '#267f99', variable: '#001080', tag: '#800000' }
 }
@@ -182,8 +191,10 @@ function codeBackground(seed: ThemeSeed): string {
 
 export function codeTokens(seed: ThemeSeed): ThemeTokens {
   const bg = codeBackground(seed)
-  const base = SYNTAX[seed.scheme]
-  const tone = (color: string, flavour = 0.18) => ensureContrast(mix(color, seed.accent, flavour), bg, seed.text, CODE_MIN_CONTRAST)
+  const base = seed.syntax ?? SYNTAX[seed.scheme]
+  // A theme with its own code colours keeps them as they are; the others are pulled toward their accent.
+  const flavoured = seed.syntax === undefined
+  const tone = (color: string, flavour = 0.18) => ensureContrast(flavoured ? mix(color, seed.accent, flavour) : color, bg, seed.text, CODE_MIN_CONTRAST)
   return {
     '--code-bg': bg,
     '--code-fg': ensureContrast(seed.text, bg, seed.text, CODE_MIN_CONTRAST),

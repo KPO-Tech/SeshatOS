@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { CODE_MIN_CONTRAST, REPLACED, THEMES, buildTokens, codeTokens, contrastRatio, effectiveSurfaces, ensureContrast, isThemeId, mix, presetsCss, themeById } from './themes'
 
 describe('theme registry', () => {
-  it('has unique ids and the 14 chosen appearances', () => {
+  it('has unique ids and the 15 chosen appearances', () => {
     const ids = THEMES.map((theme) => theme.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toHaveLength(14)
-    expect(ids).toEqual(expect.arrayContaining(['dark', 'light', 'seshat-night', 'shine', 'carbon', 'graphite', 'mirage', 'dusk']))
+    expect(ids).toHaveLength(15)
+    expect(ids).toEqual(expect.arrayContaining(['dark', 'light', 'seshat-night', 'shine', 'carbon', 'graphite', 'mirage', 'dusk', 'one-dark']))
   })
 
   it('replaces every preset taken out by one of the same scheme that is kept', () => {
@@ -74,9 +74,20 @@ describe('code colours', () => {
 
   it('includes the code colours in every preset and in the two Seshat themes', () => {
     const css = presetsCss()
-    // The 12 presets, Seshat Dark, Seshat Light, and Seshat Light again for a system set to light.
-    expect(css.match(/--code-keyword:/g)).toHaveLength(15)
+    // The 13 presets, Seshat Dark, Seshat Light, and Seshat Light again for a system set to light.
+    expect(css.match(/--code-keyword:/g)).toHaveLength(16)
     expect(css).toContain('@media (prefers-color-scheme: light)')
+  })
+
+  it('keeps the code colours One Dark brings, without pulling them toward its accent', () => {
+    const one = themeById('one-dark')
+    expect(one?.syntax).toBeDefined()
+    const tokens = codeTokens(one!)
+    expect(tokens['--code-keyword']).toBe('#c678dd')
+    expect(tokens['--code-string']).toBe('#98c379')
+    expect(tokens['--code-function']).toBe('#61afef')
+    // A theme without its own colours still has them pulled toward the accent.
+    expect(codeTokens(themeById('mirage')!)['--code-keyword']).not.toBe('#c586c0')
   })
 })
 
@@ -93,10 +104,11 @@ describe('tokens', () => {
     expect(mix('#102030', '#102030', 0.7)).toBe('#102030')
   })
 
-  it('writes every token for the 12 presets, and only the code colours for the two Seshat themes', () => {
+  it('writes every token for the 13 presets, and only the code colours for the two Seshat themes', () => {
     const css = presetsCss()
     expect(css).toContain(':root[data-theme="mirage"]')
-    expect(css.match(/--surface-root:/g)).toHaveLength(12)
-    expect(css.match(/--text-primary:/g)).toHaveLength(12)
+    expect(css).toContain(':root[data-theme="one-dark"]')
+    expect(css.match(/--surface-root:/g)).toHaveLength(13)
+    expect(css.match(/--text-primary:/g)).toHaveLength(13)
   })
 })
