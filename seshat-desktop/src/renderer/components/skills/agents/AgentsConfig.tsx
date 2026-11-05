@@ -5,6 +5,7 @@ import { AgentCard, isReadOnly } from './AgentCard'
 import { AgentCreateForm } from './AgentCreateForm'
 import { createAgent, deleteAgent, fetchAgents, updateAgent } from './agentsApi'
 import type { AgentConfigEntry, AgentCreatePayload } from './agentTypes'
+import { useTranslation } from 'react-i18next'
 
 /** Which agents are listed, by where they come from. */
 export type AgentSource = 'all' | 'built-in' | 'organization' | 'custom'
@@ -29,6 +30,7 @@ function Banner({ message }: { message: Message }) {
 
 /** The agents the assistant can be, as cards like the skills. The page owns the search, the sort and the filter. */
 export function AgentsConfig({ query, sort, source, enabledOnly, onSources }: Props) {
+  const { t } = useTranslation('skills')
   const [agents, setAgents] = useState<AgentConfigEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -73,7 +75,7 @@ export function AgentsConfig({ query, sort, source, enabledOnly, onSources }: Pr
 
   async function toggleAgent(agent: AgentConfigEntry, enabled: boolean) {
     if (isReadOnly(agent)) {
-      setMessage({ tone: 'error', text: 'Built-in and organization agents are read-only here.' })
+      setMessage({ tone: 'error', text: t('skills.agents.agentsConfig.builtInAndOrganizationAgents') })
       return
     }
     setBusySlug(agent.slug)
@@ -95,7 +97,7 @@ export function AgentsConfig({ query, sort, source, enabledOnly, onSources }: Pr
       const created = await createAgent(payload)
       setAgents((current) => [...current, created])
       setCreating(false)
-      setMessage({ tone: 'ok', text: 'Agent created.' })
+      setMessage({ tone: 'ok', text: t('skills.agents.agentsConfig.agentCreated') })
     } catch (err) {
       setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to create agent.' })
     } finally {
@@ -146,26 +148,26 @@ export function AgentsConfig({ query, sort, source, enabledOnly, onSources }: Pr
     <div>
       {message && <div className="mt-4"><Banner message={message} /></div>}
       {loading ? (
-        <div className="mt-6"><ProviderEmptyState label="Loading agents..." /></div>
+        <div className="mt-6"><ProviderEmptyState label={t('skills.agents.agentsConfig.loadingAgents')} /></div>
       ) : (
         <>
           {(own.length > 0 || !filtering) && (
             <section className="mt-6">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
-                  Your agents
+                  {t('skills.agents.agentsConfig.yourAgents')}
                   <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] leading-none text-[var(--text-muted)]">{own.length}</span>
                 </h2>
                 <button type="button" onClick={() => setCreating(true)} className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
                   <Plus theme="outline" size={15} />
-                  New agent
+                  {t('skills.agents.agentsConfig.newAgent')}
                 </button>
               </div>
               {own.length > 0 ? (
                 grid(own)
               ) : (
                 <div className="rounded-2xl border border-dashed border-[var(--border-strong)] px-5 py-6 text-center text-[12.5px] text-[var(--text-muted)]">
-                  You have not made an agent yet. Create one with its own instructions, tools and limits.
+                  {t('skills.agents.agentsConfig.youHaveNotMadeAn')}
                 </div>
               )}
             </section>
@@ -173,13 +175,13 @@ export function AgentsConfig({ query, sort, source, enabledOnly, onSources }: Pr
           {platform.length > 0 && (
             <section className="mt-6">
               <h2 className="m-0 mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--text-primary)]">
-                Platform agents
+                {t('skills.agents.agentsConfig.platformAgents')}
                 <span className="rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] leading-none text-[var(--text-muted)]">{platform.length}</span>
               </h2>
               {grid(platform)}
             </section>
           )}
-          {own.length === 0 && platform.length === 0 && filtering && <div className="mt-6"><ProviderEmptyState label="No agents match your filters." /></div>}
+          {own.length === 0 && platform.length === 0 && filtering && <div className="mt-6"><ProviderEmptyState label={t('skills.agents.agentsConfig.noAgentsMatchYourFilters')} /></div>}
         </>
       )}
     </div>

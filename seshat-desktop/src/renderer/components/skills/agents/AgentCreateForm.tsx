@@ -3,31 +3,32 @@ import { Left } from '@icon-park/react'
 import { CustomSelect, Field, TextInput } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { AgentAvatar } from './AgentAvatar'
 import type { AgentConfigEntry, AgentCreatePayload } from './agentTypes'
+import { useTranslation } from 'react-i18next'
 
 const permissionOptions = [
-  { value: 'default', label: 'Default', description: 'Use the workspace approval mode' },
-  { value: 'suggest', label: 'Suggest', description: 'Ask before sensitive actions' },
-  { value: 'auto', label: 'Auto', description: 'Run trusted actions directly' },
-  { value: 'manual', label: 'Manual', description: 'Require explicit confirmation' }
+  { value: 'default', label: 'skills:skills.agents.agentCreateForm.permission.default.label', description: 'skills:skills.agents.agentCreateForm.permission.default.description' },
+  { value: 'suggest', label: 'skills:skills.agents.agentCreateForm.permission.suggest.label', description: 'skills:skills.agents.agentCreateForm.permission.suggest.description' },
+  { value: 'auto', label: 'skills:skills.agents.agentCreateForm.permission.auto.label', description: 'skills:skills.agents.agentCreateForm.permission.auto.description' },
+  { value: 'manual', label: 'skills:skills.agents.agentCreateForm.permission.manual.label', description: 'skills:skills.agents.agentCreateForm.permission.manual.description' }
 ]
 
 const isolationOptions = [
-  { value: '', label: 'Workspace default', description: 'Use the runtime default isolation' },
-  { value: 'workspace', label: 'Workspace', description: 'Share the current workspace context' },
-  { value: 'ephemeral', label: 'Ephemeral', description: 'Prefer short-lived execution context' }
+  { value: '', label: 'skills:skills.agents.agentCreateForm.isolationDefault.label', description: 'skills:skills.agents.agentCreateForm.isolationDefault.description' },
+  { value: 'workspace', label: 'skills:skills.agents.agentCreateForm.isolationWorkspace.label', description: 'skills:skills.agents.agentCreateForm.isolationWorkspace.description' },
+  { value: 'ephemeral', label: 'skills:skills.agents.agentCreateForm.isolationEphemeral.label', description: 'skills:skills.agents.agentCreateForm.isolationEphemeral.description' }
 ]
 
 const starterPrompts = [
   {
-    label: 'Research',
+    label: 'skills:skills.agents.agentCreateForm.starter.research',
     prompt: 'You are a careful research agent. Break down the request, search or inspect sources when needed, compare evidence, and return a concise synthesis with clear uncertainty.'
   },
   {
-    label: 'Builder',
+    label: 'skills:skills.agents.agentCreateForm.starter.builder',
     prompt: 'You are a product builder agent. Clarify the intended outcome, inspect the existing project, propose small implementation steps, and keep changes scoped and verifiable.'
   },
   {
-    label: 'Ops',
+    label: 'skills:skills.agents.agentCreateForm.starter.ops',
     prompt: 'You are an operations agent. Monitor recurring tasks, identify blockers, produce reliable checklists, and prefer reversible actions with clear status updates.'
   }
 ]
@@ -94,6 +95,7 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
   onCancel: () => void
   onSubmit: (payload: AgentCreatePayload) => void
 }) {
+  const { t } = useTranslation('skills')
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [whenToUse, setWhenToUse] = useState('')
@@ -151,10 +153,10 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
     <div>
       <button type="button" onClick={onCancel} className="mb-3 flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] text-[var(--text-muted)] hover:text-[var(--text-primary)]">
         <Left theme="outline" size={13} />
-        Agents
+        {t('skills.agents.agentCreateForm.agents')}
       </button>
-      <h2 className="m-0 text-[18px] font-semibold text-[var(--text-primary)]">New agent</h2>
-      <p className="m-0 mt-0.5 text-[12.5px] text-[var(--text-muted)]">Give it an identity, tell it how to behave, and choose what it may use.</p>
+      <h2 className="m-0 text-[18px] font-semibold text-[var(--text-primary)]">{t('skills.agents.agentCreateForm.newAgent')}</h2>
+      <p className="m-0 mt-0.5 text-[12.5px] text-[var(--text-muted)]">{t('skills.agents.agentCreateForm.giveItAnIdentityTell')}</p>
 
       <div className="mt-4 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-4">
         <aside className="sticky top-0 flex flex-col gap-3">
@@ -165,15 +167,15 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
               <div className="mt-0.5 max-w-full truncate font-mono text-[11.5px] text-[var(--text-muted)]">/{previewAgent.slug}</div>
             </div>
             <div className="mt-4 divide-y divide-[var(--border-soft)] border-t border-[var(--border-soft)] pt-2">
-              <Fact label="Status" value={enabled ? 'Enabled' : 'Off'} ok={enabled} />
-              <Fact label="Tools" value={toolsMode === 'all' ? 'All tools' : `${previewAgent.tools?.length ?? 0} selected`} />
-              <Fact label="MCP servers" value={previewAgent.mcp_servers?.length ? String(previewAgent.mcp_servers.length) : 'Default'} />
-              <Fact label="Turns" value={String(maxTurns)} />
+              <Fact label={t('skills.agents.agentCreateForm.status')} value={enabled ? 'Enabled' : 'Off'} ok={enabled} />
+              <Fact label={t('skills.agents.agentCreateForm.tools')} value={toolsMode === 'all' ? 'All tools' : `${previewAgent.tools?.length ?? 0} selected`} />
+              <Fact label={t('skills.agents.agentCreateForm.mcpServers')} value={previewAgent.mcp_servers?.length ? String(previewAgent.mcp_servers.length) : 'Default'} />
+              <Fact label={t('skills.agents.agentCreateForm.turns')} value={String(maxTurns)} />
             </div>
           </div>
 
           <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
-            <h3 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">Start from</h3>
+            <h3 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.agents.agentCreateForm.startFrom')}</h3>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {starterPrompts.map((starter) => (
                 <button
@@ -182,7 +184,7 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
                   onClick={() => setPrompt(starter.prompt)}
                   className="h-8 cursor-pointer rounded-full border border-[var(--border-soft)] bg-transparent px-3.5 text-[12.5px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                 >
-                  {starter.label}
+                  {t(starter.label)}
                 </button>
               ))}
             </div>
@@ -190,12 +192,12 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
         </aside>
 
         <main className="grid gap-4">
-          <Card title="Identity">
+          <Card title={t('skills.agents.agentCreateForm.identity')}>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Display name">
-                <TextInput className={INPUT} value={name} onChange={(event) => setName(event.target.value)} placeholder="Research companion" />
+              <Field label={t('skills.agents.agentCreateForm.displayName')}>
+                <TextInput className={INPUT} value={name} onChange={(event) => setName(event.target.value)} placeholder={t('skills.agents.agentCreateForm.researchCompanion')} />
               </Field>
-              <Field label="Slug">
+              <Field label={t('skills.agents.agentCreateForm.slug')}>
                 <TextInput
                   className={`${INPUT} font-mono`}
                   value={slug}
@@ -204,19 +206,19 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
                 />
               </Field>
             </div>
-            <Field label="When to use">
+            <Field label={t('skills.agents.agentCreateForm.whenToUse')}>
               <textarea
                 value={whenToUse}
                 onChange={(event) => setWhenToUse(event.target.value)}
                 rows={3}
                 className={`${AREA} resize-none`}
-                placeholder="Use this agent for source-backed research, synthesis, and careful comparison."
+                placeholder={t('skills.agents.agentCreateForm.useThisAgentForSource')}
               />
             </Field>
           </Card>
 
-          <Card title="Instructions" hint="What the agent is told every time it starts.">
-            <Field label="System prompt">
+          <Card title={t('skills.agents.agentCreateForm.instructions')} hint={t('skills.agents.agentCreateForm.whatTheAgentIsTold')}>
+            <Field label={t('skills.agents.agentCreateForm.systemPrompt')}>
               <textarea
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
@@ -227,59 +229,59 @@ export function AgentCreateForm({ saving, onCancel, onSubmit }: {
             </Field>
           </Card>
 
-          <Card title="Capabilities">
+          <Card title={t('skills.agents.agentCreateForm.capabilities')}>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Model override">
-                <TextInput className={`${INPUT} font-mono`} value={model} onChange={(event) => setModel(event.target.value)} placeholder="provider:model, optional" />
+              <Field label={t('skills.agents.agentCreateForm.modelOverride')}>
+                <TextInput className={`${INPUT} font-mono`} value={model} onChange={(event) => setModel(event.target.value)} placeholder={t('skills.agents.agentCreateForm.providerModelOptional')} />
               </Field>
-              <Field label="Max turns">
+              <Field label={t('skills.agents.agentCreateForm.maxTurns')}>
                 <TextInput className={INPUT} type="number" min={1} max={500} value={maxTurns} onChange={(event) => setMaxTurns(Number.parseInt(event.target.value, 10) || 50)} />
               </Field>
-              <Field label="Permission mode">
-                <CustomSelect value={permissionMode} options={permissionOptions} onChange={setPermissionMode} />
+              <Field label={t('skills.agents.agentCreateForm.permissionMode')}>
+                <CustomSelect value={permissionMode} options={permissionOptions.map((option) => ({ ...option, label: t(option.label), description: t(option.description) }))} onChange={setPermissionMode} />
               </Field>
-              <Field label="Isolation">
-                <CustomSelect value={isolation} options={isolationOptions} onChange={setIsolation} />
+              <Field label={t('skills.agents.agentCreateForm.isolation')}>
+                <CustomSelect value={isolation} options={isolationOptions.map((option) => ({ ...option, label: t(option.label), description: t(option.description) }))} onChange={setIsolation} />
               </Field>
             </div>
 
             <div className="rounded-xl border border-[var(--border-soft)] p-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">Tools</div>
-                  <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">Every tool, or only a list you give.</div>
+                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.agents.agentCreateForm.tools')}</div>
+                  <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">{t('skills.agents.agentCreateForm.everyToolOrOnlyA')}</div>
                 </div>
-                <Pills value={toolsMode} options={[{ id: 'all', label: 'All' }, { id: 'custom', label: 'Custom' }]} onChange={(id) => setToolsMode(id as 'all' | 'custom')} />
+                <Pills value={toolsMode} options={[{ id: 'all', label: t('skills.agents.agentCreateForm.all') }, { id: 'custom', label: t('skills.agents.agentCreateForm.custom') }]} onChange={(id) => setToolsMode(id as 'all' | 'custom')} />
               </div>
-              {toolsMode === 'custom' && <TextInput className={`${INPUT} mt-3 w-full font-mono`} value={toolsCustom} onChange={(event) => setToolsCustom(event.target.value)} placeholder="web_search, read_file, terminal" />}
+              {toolsMode === 'custom' && <TextInput className={`${INPUT} mt-3 w-full font-mono`} value={toolsCustom} onChange={(event) => setToolsCustom(event.target.value)} placeholder={t('skills.agents.agentCreateForm.webSearchReadFileTerminal')} />}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Disallowed tools">
-                <TextInput className={`${INPUT} font-mono`} value={disallowedTools} onChange={(event) => setDisallowedTools(event.target.value)} placeholder="delete_file, shell" />
+              <Field label={t('skills.agents.agentCreateForm.disallowedTools')}>
+                <TextInput className={`${INPUT} font-mono`} value={disallowedTools} onChange={(event) => setDisallowedTools(event.target.value)} placeholder={t('skills.agents.agentCreateForm.deleteFileShell')} />
               </Field>
-              <Field label="MCP servers">
-                <TextInput className={`${INPUT} font-mono`} value={mcpServers} onChange={(event) => setMcpServers(event.target.value)} placeholder="filesystem, github" />
+              <Field label={t('skills.agents.agentCreateForm.mcpServers')}>
+                <TextInput className={`${INPUT} font-mono`} value={mcpServers} onChange={(event) => setMcpServers(event.target.value)} placeholder={t('skills.agents.agentCreateForm.filesystemGithub')} />
               </Field>
             </div>
 
             <div className="flex items-center justify-between rounded-xl border border-[var(--border-soft)] px-3 py-2.5">
               <div>
-                <div className="text-[13px] font-semibold text-[var(--text-primary)]">Enabled</div>
-                <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">Available in the agent pickers as soon as it is created.</div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.agents.agentCreateForm.enabled')}</div>
+                <div className="mt-0.5 text-[12px] text-[var(--text-muted)]">{t('skills.agents.agentCreateForm.availableInTheAgentPickers')}</div>
               </div>
-              <Switch enabled={enabled} label="Enabled" onChange={setEnabled} />
+              <Switch enabled={enabled} label={t('skills.agents.agentCreateForm.enabled')} onChange={setEnabled} />
             </div>
           </Card>
 
           <div className="flex items-center justify-between gap-4 pb-2">
-            <span className="text-[12px] text-[var(--text-muted)]">The slug cannot be changed after creation.</span>
+            <span className="text-[12px] text-[var(--text-muted)]">{t('skills.agents.agentCreateForm.theSlugCannotBeChanged')}</span>
             <div className="flex gap-2">
               <button type="button" disabled={saving} onClick={onCancel} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
-                Cancel
+                {t('skills.agents.agentCreateForm.cancel')}
               </button>
               <button type="button" disabled={!canCreate} onClick={submit} className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-5 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-50">
-                {saving ? 'Creating...' : 'Create agent'}
+                {saving ? t('skills.agents.agentCreateForm.creating') : t('skills.agents.agentCreateForm.createAgent')}
               </button>
             </div>
           </div>

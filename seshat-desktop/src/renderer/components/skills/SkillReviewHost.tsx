@@ -1,3 +1,4 @@
+import { i18n } from '@renderer/i18n'
 import { useEffect, useState } from 'react'
 import { TASK_FINISHED_EVENT } from '@renderer/hooks/useTaskSync'
 import type { TaskInfo } from '@renderer/lib/tasks'
@@ -25,7 +26,7 @@ export function SkillReviewHost() {
         const result = await fetchSkillPlan(task.subject)
         if (result.needs_environment) setReviewing({ name: result.name, plan: result.plan })
         // Nothing to agree to: the repository is ready as it is downloaded, and the bell says so.
-        else notify('task', { title: `${result.name} is ready`, body: 'The installation is done.', route: '/skills' })
+        else notify('task', { title: i18n.t('skills:skills.skillReviewHost.ready', { name: result.name }), body: i18n.t('skills:skills.skillReviewHost.done'), route: '/skills' })
       } catch {
         // The repository was removed in the meantime: there is nothing to review.
       }

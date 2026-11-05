@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { InstallPlan } from './skillsTypes'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   name: string
@@ -13,11 +14,12 @@ type Props = {
 const SHOWN = 14
 
 function PackageList({ packages }: { packages: string[] }) {
+  const { t } = useTranslation('skills')
   const shown = packages.slice(0, SHOWN)
   return (
     <p className="m-0 mt-1.5 text-[12px] leading-5 text-[var(--text-secondary)]">
       {shown.join(', ')}
-      {packages.length > SHOWN ? ` and ${packages.length - SHOWN} more` : ''}
+      {packages.length > SHOWN ? t('skills.skillInstallDialog.andMore', { count: packages.length - SHOWN }) : ''}
     </p>
   )
 }
@@ -39,6 +41,7 @@ function Block({ title, status, ok, children }: { title: string; status: string;
  * packages come from the internet: the person sees what, and where, and agrees.
  */
 export function SkillInstallDialog({ name, plan, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation('skills')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const ready = (plan.python?.found ?? true) && (plan.node?.found ?? true)
@@ -62,22 +65,22 @@ export function SkillInstallDialog({ name, plan, onConfirm, onCancel }: Props) {
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-[rgba(0,0,0,0.45)] px-6" onMouseDown={(event) => event.target === event.currentTarget && !busy && onCancel()}>
-      <div role="dialog" aria-modal="true" aria-label={`Install ${name}`} className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
-        <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">Install {name}</h2>
+      <div role="dialog" aria-modal="true" aria-label={t('skills.skillInstallDialog.installName', { name })} className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
+        <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">{t('skills.skillInstallDialog.installName', { name })}</h2>
         <p className="m-0 mt-1.5 text-[12.5px] leading-5 text-[var(--text-muted)]">
-          These skills need packages to work. They are installed in a private environment made for {name} only, downloaded from the official package sources, and removed with it when you uninstall.
+          {t('skills.skillInstallDialog.explain', { name })}
         </p>
 
         <div className="no-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
           {plan.python && (
-            <Block title={`Python ${plan.python.minimum}+, ${plan.python.packages.length} packages`} status={plan.python.found ? `Found ${plan.python.version ?? ''}` : 'Not found'} ok={plan.python.found}>
+            <Block title={t('skills.skillInstallDialog.pythonTitle', { minimum: plan.python.minimum, count: plan.python.packages.length })} status={plan.python.found ? t('skills.skillInstallDialog.found', { version: plan.python.version ?? '' }) : t('skills.skillInstallDialog.notFound')} ok={plan.python.found}>
               <PackageList packages={plan.python.packages} />
             </Block>
           )}
           {plan.node && (
-            <Block title={`Node.js, ${plan.node.packages.length} packages`} status={plan.node.found ? `Found ${plan.node.version ?? ''}` : 'Not found'} ok={plan.node.found}>
+            <Block title={t('skills.skillInstallDialog.nodeTitle', { count: plan.node.packages.length })} status={plan.node.found ? t('skills.skillInstallDialog.found', { version: plan.node.version ?? '' }) : t('skills.skillInstallDialog.notFound')} ok={plan.node.found}>
               <PackageList packages={plan.node.packages} />
-              <p className="m-0 mt-1.5 text-[11.5px] text-[var(--text-muted)]">Install scripts of the packages are not run.</p>
+              <p className="m-0 mt-1.5 text-[11.5px] text-[var(--text-muted)]">{t('skills.skillInstallDialog.installScriptsOfThePackages')}</p>
             </Block>
           )}
           {plan.notes?.map((note) => (
@@ -94,13 +97,13 @@ export function SkillInstallDialog({ name, plan, onConfirm, onCancel }: Props) {
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="text-[11.5px] text-[var(--text-muted)]">{busy ? 'Starting...' : 'It goes on in the background: you can leave this page.'}</span>
+          <span className="text-[11.5px] text-[var(--text-muted)]">{busy ? t('skills.skillInstallDialog.starting') : t('skills.skillInstallDialog.itGoesOnInThe')}</span>
           <div className="flex gap-2">
             <button type="button" disabled={busy} onClick={onCancel} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
-              Cancel
+              {t('skills.skillInstallDialog.cancel')}
             </button>
             <button type="button" disabled={busy || !ready} onClick={() => void confirm()} className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-50">
-              {error ? 'Try again' : 'Install'}
+              {error ? t('skills.skillInstallDialog.tryAgain') : t('skills.skillInstallDialog.install')}
             </button>
           </div>
         </div>

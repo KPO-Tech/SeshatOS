@@ -3,6 +3,7 @@ import { Chip, More, Time, Tool } from '@icon-park/react'
 import { Dropdown, type DropdownItem } from '@renderer/components/ui/Dropdown'
 import { AgentAvatar } from './AgentAvatar'
 import type { AgentConfigEntry } from './agentTypes'
+import { useTranslation } from 'react-i18next'
 
 const READ_ONLY_SOURCES = ['built-in', 'organization']
 
@@ -19,6 +20,7 @@ export function sourceLabel(source: string): string {
 }
 
 function Switch({ enabled, disabled, label, onChange }: { enabled: boolean; disabled: boolean; label: string; onChange: (enabled: boolean) => void }) {
+  const { t } = useTranslation('skills')
   return (
     <button
       type="button"
@@ -26,7 +28,7 @@ function Switch({ enabled, disabled, label, onChange }: { enabled: boolean; disa
       aria-checked={enabled}
       aria-label={label}
       disabled={disabled}
-      title={disabled ? 'Built-in and organization agents are read-only' : undefined}
+      title={disabled ? t('skills.agents.agentCard.builtInAndOrganizationAgents') : undefined}
       onClick={() => onChange(!enabled)}
       className={`flex h-5 w-9 shrink-0 items-center rounded-full border-0 p-0.5 transition-colors ${enabled ? 'justify-end bg-[var(--accent-primary)]' : 'justify-start bg-[var(--surface-muted)]'} ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
     >
@@ -61,10 +63,11 @@ type Props = {
 
 /** An agent as a card, laid out like a skill: who it is, what it is for, what it can use, and whether it is on. */
 export function AgentCard({ agent, busy, onToggle, onDelete }: Props) {
+  const { t } = useTranslation('skills')
   const readOnly = isReadOnly(agent)
   const editable = agent.source === 'user' || agent.source === 'workflow'
   const allTools = !agent.tools?.length || (agent.tools.length === 1 && agent.tools[0] === '*')
-  const menu: DropdownItem[] = editable ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => onDelete(agent) }] : []
+  const menu: DropdownItem[] = editable ? [{ id: 'delete', label: t('skills.agents.agentCard.delete'), danger: true, onSelect: () => onDelete(agent) }] : []
 
   return (
     <article className="flex min-w-0 flex-col rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
@@ -73,16 +76,16 @@ export function AgentCard({ agent, busy, onToggle, onDelete }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <h3 className="m-0 max-w-full truncate text-[14px] font-semibold text-[var(--text-primary)]">{agent.name || agent.slug}</h3>
-            <Badge tone={agent.enabled ? 'ok' : 'muted'}>{agent.enabled ? 'Enabled' : 'Off'}</Badge>
+            <Badge tone={agent.enabled ? 'ok' : 'muted'}>{agent.enabled ? t('skills.agents.agentCard.enabled') : t('skills.agents.agentCard.off')}</Badge>
             <Badge tone="muted">{sourceLabel(agent.source)}</Badge>
           </div>
         </div>
         {menu.length > 0 && (
           <Dropdown
-            label="More about this agent"
+            label={t('skills.agents.agentCard.moreAboutThisAgent')}
             items={menu}
             trigger={({ toggle }) => (
-              <button type="button" aria-label="More about this agent" disabled={busy} onClick={toggle} className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+              <button type="button" aria-label={t('skills.agents.agentCard.moreAboutThisAgent')} disabled={busy} onClick={toggle} className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
                 <More theme="outline" size={14} />
               </button>
             )}
@@ -90,16 +93,16 @@ export function AgentCard({ agent, busy, onToggle, onDelete }: Props) {
         )}
       </div>
 
-      <p className="m-0 mt-3 line-clamp-3 min-h-[57px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{agent.when_to_use || agent.system_prompt || 'No usage description yet.'}</p>
+      <p className="m-0 mt-3 line-clamp-3 min-h-[57px] text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{agent.when_to_use || agent.system_prompt || t('skills.agents.agentCard.noUsageDescriptionYet')}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        <Fact icon={<Chip theme="outline" size={13} />}>{agent.model || 'Default'}</Fact>
-        <Fact icon={<Tool theme="outline" size={13} />}>{allTools ? 'All tools' : `${agent.tools?.length ?? 0} tools`}</Fact>
-        {agent.max_turns && agent.max_turns > 0 ? <Fact icon={<Time theme="outline" size={13} />}>{`${agent.max_turns} turns`}</Fact> : null}
+        <Fact icon={<Chip theme="outline" size={13} />}>{agent.model || t('skills.agents.agentCard.default')}</Fact>
+        <Fact icon={<Tool theme="outline" size={13} />}>{allTools ? t('skills.agents.agentCard.allTools') : t('skills.agents.agentCard.tools', { count: agent.tools?.length ?? 0 })}</Fact>
+        {agent.max_turns && agent.max_turns > 0 ? <Fact icon={<Time theme="outline" size={13} />}>{t('skills.agents.agentCard.turns', { count: agent.max_turns })}</Fact> : null}
       </div>
 
       <div className="mt-3 flex justify-end">
-        <Switch enabled={agent.enabled} disabled={readOnly || busy} label={`Turn ${agent.name || agent.slug} ${agent.enabled ? 'off' : 'on'}`} onChange={(enabled) => onToggle(agent, enabled)} />
+        <Switch enabled={agent.enabled} disabled={readOnly || busy} label={agent.enabled ? t('skills.agents.agentCard.turnOff', { name: agent.name || agent.slug }) : t('skills.agents.agentCard.turnOn', { name: agent.name || agent.slug })} onChange={(enabled) => onToggle(agent, enabled)} />
       </div>
     </article>
   )

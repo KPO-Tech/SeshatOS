@@ -20,6 +20,7 @@ import { MAIN_FILE, useSkillFiles } from './useSkillFiles'
 import { useSkillIcons } from './useSkillIcons'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkills } from './useSkills'
+import { useTranslation } from 'react-i18next'
 
 const SOURCE_LABEL: Record<string, string> = { bundled: 'Built-in', userSettings: 'Yours', managed: 'Managed', plugin: 'Plugin', mcp: 'MCP' }
 
@@ -49,6 +50,7 @@ const ACTION = 'flex h-8 w-full cursor-pointer items-center justify-center gap-2
 
 /** A skill opened on its own page: its files as a tree, the file read beside it, and what the skill is in a column. */
 export function SkillDetailPage() {
+  const { t } = useTranslation('skills')
   const { name = '' } = useParams()
   const navigate = useNavigate()
   const { skills, loading, reload } = useSkills()
@@ -61,10 +63,10 @@ export function SkillDetailPage() {
   if (!skill) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{loading ? 'Loading...' : 'Skill not found'}</h2>
+        <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{loading ? t('skills.skillDetailPage.loading') : t('skills.skillDetailPage.skillNotFound')}</h2>
         {!loading && (
           <button type="button" onClick={() => navigate('/skills')} className="mt-2 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-3 py-1.5 text-[13px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
-            Back to Skills
+            {t('skills.skillDetailPage.backToSkills')}
           </button>
         )}
       </div>
@@ -81,7 +83,7 @@ export function SkillDetailPage() {
   }
 
   async function remove(target: Skill) {
-    if (!window.confirm(`Delete "${target.display_name || target.name}"? This cannot be undone.`)) return
+    if (!window.confirm(t('skills.skillDetailPage.confirmDelete', { name: target.display_name || target.name }))) return
     try {
       await deleteSkill(target.name)
       navigate('/skills')
@@ -112,6 +114,7 @@ type BodyProps = {
 }
 
 function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChangeIcon, onBack }: BodyProps) {
+  const { t } = useTranslation('skills')
   const { tree, selected, setSelected, content, loading } = useSkillFiles(skill.name)
   const [source, setSource] = useState(false)
   const tags = useMemo(() => tagsFor(skill, 6), [skill])
@@ -124,10 +127,10 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
   const fileName = selected?.split('/').pop() ?? ''
 
   const menu: DropdownItem[] = [
-    { id: 'icon', label: 'Change icon', onSelect: onChangeIcon },
-    ...(repoUrl ? [openItem('source', 'Open the source', repoUrl)] : []),
-    copyItem('copy', 'Copy the name', skill.name, onNotice),
-    ...(owned ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: onRemove }] : [])
+    { id: 'icon', label: t('skills.skillDetailPage.changeIcon'), onSelect: onChangeIcon },
+    ...(repoUrl ? [openItem('source', t('skills.skillDetailPage.openSource'), repoUrl)] : []),
+    copyItem('copy', t('skills.skillDetailPage.copyName'), skill.name, onNotice),
+    ...(owned ? [{ id: 'delete', label: t('skills.skillDetailPage.delete'), danger: true, onSelect: onRemove }] : [])
   ]
 
   return (
@@ -135,7 +138,7 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
       <header className="shrink-0 px-6 pt-4">
         <button type="button" onClick={onBack} className="mb-2 flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] text-[var(--text-muted)] hover:text-[var(--text-primary)]">
           <Left theme="outline" size={13} />
-          Skills
+          {t('skills.skillDetailPage.skills')}
         </button>
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3.5">
@@ -144,7 +147,7 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
               <div className="flex items-center gap-2">
                 <h1 className="m-0 truncate text-[20px] font-semibold text-[var(--text-primary)]">{title}</h1>
                 {!owned && (
-                  <span className="shrink-0 text-[var(--accent-primary)]" title="Official">
+                  <span className="shrink-0 text-[var(--accent-primary)]" title={t('skills.skillDetailPage.official')}>
                     <CheckOne theme="filled" size={16} fill="currentColor" />
                   </span>
                 )}
@@ -164,13 +167,13 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
               onClick={onToggle}
               className={`h-9 cursor-pointer rounded-lg px-4 text-[13px] font-semibold ${skill.enabled ? 'border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]' : 'border-0 bg-[var(--accent-primary)] text-white hover:opacity-90'}`}
             >
-              {skill.enabled ? 'Turn off' : 'Turn on'}
+              {skill.enabled ? t('skills.skillDetailPage.turnOff') : t('skills.skillDetailPage.turnOn')}
             </button>
             <Dropdown
-              label="More about this skill"
+              label={t('skills.skillDetailPage.moreAboutThisSkill')}
               items={menu}
               trigger={({ toggle }) => (
-                <button type="button" aria-label="More about this skill" onClick={toggle} className="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+                <button type="button" aria-label={t('skills.skillDetailPage.moreAboutThisSkill')} onClick={toggle} className="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
                   <More theme="outline" size={16} />
                 </button>
               )}
@@ -181,9 +184,9 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
 
       <div className="mt-3 flex min-h-0 flex-1 gap-3 px-6 pb-3">
         <aside className="flex w-[250px] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-          <h2 className="m-0 shrink-0 px-3.5 pb-1 pt-3 text-[13px] font-semibold text-[var(--text-primary)]">Skill files</h2>
+          <h2 className="m-0 shrink-0 px-3.5 pb-1 pt-3 text-[13px] font-semibold text-[var(--text-primary)]">{t('skills.skillDetailPage.skillFiles')}</h2>
           <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
-            {tree.length > 0 ? <SkillFileTree nodes={tree} selected={selected ?? ''} onSelect={setSelected} /> : <p className="m-0 px-2 py-1 text-[12px] text-[var(--text-muted)]">{loading ? 'Loading...' : 'No files.'}</p>}
+            {tree.length > 0 ? <SkillFileTree nodes={tree} selected={selected ?? ''} onSelect={setSelected} /> : <p className="m-0 px-2 py-1 text-[12px] text-[var(--text-muted)]">{loading ? t('skills.skillDetailPage.loading') : t('skills.skillDetailPage.noFiles')}</p>}
           </div>
         </aside>
 
@@ -194,7 +197,7 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
               <div className="truncate font-mono text-[10.5px] text-[var(--text-muted)]">{selected ?? ''}</div>
             </div>
             {isMarkdown && !loading && (
-              <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label="View">
+              <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label={t('skills.skillDetailPage.view')}>
                 {([false, true] as const).map((value) => (
                   <button
                     key={String(value)}
@@ -203,7 +206,7 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
                     onClick={() => setSource(value)}
                     className={`cursor-pointer rounded-md border-0 px-2 py-0.5 ${source === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
                   >
-                    {value ? 'Source' : 'Preview'}
+                    {value ? t('skills.skillDetailPage.source') : t('skills.skillDetailPage.preview')}
                   </button>
                 ))}
               </div>
@@ -211,7 +214,7 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
           </div>
           <div className="no-scrollbar min-h-0 flex-1 overflow-auto">
             {loading ? (
-              <p className="m-0 p-6 text-[13px] text-[var(--text-muted)]">Loading...</p>
+              <p className="m-0 p-6 text-[13px] text-[var(--text-muted)]">{t('skills.skillDetailPage.loading')}</p>
             ) : isMarkdown && !source ? (
               <div className="mx-auto max-w-[860px] px-6 py-5">
                 {frontmatter && <pre className="mb-5 whitespace-pre-wrap break-words rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-4 py-3 font-mono text-[12px] leading-5 text-[var(--text-secondary)]">{frontmatter}</pre>}
@@ -224,30 +227,30 @@ function Body({ skill, icon, logo, repoUrl, onNotice, onToggle, onRemove, onChan
         </main>
 
         <aside className="no-scrollbar flex w-[290px] shrink-0 flex-col gap-3 overflow-y-auto">
-          <Card title="Overview">
-            <Row label="Type">{SOURCE_LABEL[skill.source] ?? skill.source}</Row>
-            {skill.version && <Row label="Version">{skill.version}</Row>}
-            {skill.collection && <Row label="Collection">{skill.collection}</Row>}
-            <Row label="Status">{skill.enabled ? 'On' : 'Off'}</Row>
-            <Row label="Files">{countFiles(tree)}</Row>
+          <Card title={t('skills.skillDetailPage.overview')}>
+            <Row label={t('skills.skillDetailPage.type')}>{SOURCE_LABEL[skill.source] ?? skill.source}</Row>
+            {skill.version && <Row label={t('skills.skillDetailPage.version')}>{skill.version}</Row>}
+            {skill.collection && <Row label={t('skills.skillDetailPage.collection')}>{skill.collection}</Row>}
+            <Row label={t('skills.skillDetailPage.status')}>{skill.enabled ? t('skills.skillDetailPage.on') : t('skills.skillDetailPage.off')}</Row>
+            <Row label={t('skills.skillDetailPage.files')}>{countFiles(tree)}</Row>
           </Card>
-          <Card title="Quick actions">
+          <Card title={t('skills.skillDetailPage.quickActions')}>
             <div className="flex flex-col gap-2">
               <button type="button" onClick={onToggle} className={ACTION}>
-                {skill.enabled ? 'Turn off' : 'Turn on'}
+                {skill.enabled ? t('skills.skillDetailPage.turnOff') : t('skills.skillDetailPage.turnOn')}
               </button>
               <button type="button" onClick={onChangeIcon} className={ACTION}>
-                Change icon
+                {t('skills.skillDetailPage.changeIcon')}
               </button>
               {owned && (
                 <button type="button" onClick={onRemove} className={`${ACTION} text-[var(--accent-danger)]`}>
-                  Delete
+                  {t('skills.skillDetailPage.delete')}
                 </button>
               )}
             </div>
           </Card>
           {tags.length > 0 && (
-            <Card title="Tags">
+            <Card title={t('skills.skillDetailPage.tags')}>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag) => (
                   <span key={tag} className="rounded-md bg-[var(--surface-muted)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">
