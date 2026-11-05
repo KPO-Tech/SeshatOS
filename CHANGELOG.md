@@ -11,6 +11,12 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.16] - 2026-11-05
+
+### Highlights
+
+- **FreeLLMAPI joins the providers.**
+
 ### Added
 
 - **FreeLLMAPI in the list of providers.** [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) is a router you install and run yourself that puts the free tiers of many providers behind one address. It is offered with its logo in Settings > Providers: give its unified key and its address (the one of its desktop app by default, port 31415), and its models are read from it (only those it can serve, `auto` first). SeshatOS installs and starts nothing of it. For personal use, under the terms of each provider.
