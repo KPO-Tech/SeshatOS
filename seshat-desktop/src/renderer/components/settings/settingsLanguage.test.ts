@@ -17,8 +17,8 @@ describe('a page of Settings in each language', () => {
   it('draws the shortcuts in French, from the keys of its table', async () => {
     const html = await draw('fr', () => createElement(ShortcutsSettings))
     expect(html).toContain('Raccourcis')
-    expect(html).toContain('Afficher ou masquer la barre latérale')
-    expect(html).toContain('Envoyer le message')
+    expect(html).toContain('Basculer la barre latérale')
+    expect(html).toContain('Envoyer')
     expect(html).not.toContain('Toggle sidebar')
     expect(html).not.toContain('settings:')
   })
@@ -38,7 +38,7 @@ describe('a page of Settings in each language', () => {
 
   it('draws a page with a count in French', async () => {
     const html = await draw('fr', () => createElement(DataControlsSettings))
-    expect(html).toContain('Autorisations d&#x27;outils mémorisées')
+    expect(html).toContain('Autorisations mémorisées')
     expect(html).toContain('Aucune mémorisée.')
     expect(html).toContain('Prochainement')
   })

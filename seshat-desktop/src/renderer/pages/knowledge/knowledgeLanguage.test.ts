@@ -27,7 +27,7 @@ describe('Knowledge in each language', () => {
   it('translates what a function hands back as a key, and counts in the plural of the language', async () => {
     const fr = await instanceIn('fr')
     const stop = askStop({ loading: false, collectionsFailed: false, collectionCount: 0, mode: 'standalone', canManage: true, embedder: null })
-    expect(fr.t(stop?.title ?? '')).toBe('Pas encore de documents sur lesquels poser des questions')
+    expect(fr.t(stop?.title ?? '')).toBe('Aucun document à interroger')
     expect(formatSize(12_345, fr.t)).toBe('12.3 Ko')
     expect(fr.t('knowledge/collections:pages.knowledge.collections.counts.document', { count: 1 })).toBe('1 document')
     expect(fr.t('knowledge/collections:pages.knowledge.collections.counts.failedDocument', { count: 2 })).toBe('2 documents en échec')

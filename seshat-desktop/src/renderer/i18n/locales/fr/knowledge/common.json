@@ -2,7 +2,7 @@
   "pages": {
     "knowledge": {
       "nav": {
-        "groupAsk": "Interroger",
+        "groupAsk": "Ask",
         "ask": "Demander",
         "search": "Rechercher",
         "groupBrowse": "Parcourir",

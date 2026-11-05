@@ -17,7 +17,7 @@ describe('the start page in each language', () => {
     const html = await draw('fr')
     expect(html).toContain('Sur quoi')
     expect(html).toContain('travaillons-nous')
-    expect(html).toContain('Travailler avec des fichiers')
+    expect(html).toContain('Gérer des fichiers')
     expect(html).toContain('Privé et local')
     expect(html).not.toContain('Work with files')
     expect(html).not.toContain('shell:')

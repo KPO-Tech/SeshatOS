@@ -24,7 +24,7 @@ describe('the chat in French', () => {
     const { t } = await french()
     expect(errorPresentation('x', 'auth', t).title).toBe('Clé du fournisseur refusée')
     expect(errorPresentation('x', 'auth', t).hint).toContain('Fournisseurs')
-    expect(errorPresentation('boom', undefined, t).title).toBe('Erreur du fournisseur')
+    expect(errorPresentation('boom', undefined, t).title).toBe('Erreur fournisseur')
     const markdown = errorMarkdown('invalid key', 'quota', t)
     expect(markdown).toContain('> Crédit du fournisseur épuisé')
     expect(markdown).toContain('invalid key')
