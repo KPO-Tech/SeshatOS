@@ -11,6 +11,7 @@ import { finite, readPoints, text } from '../charts/readers'
 import { formatTick, linear, niceTicks } from '../charts/scale'
 import { seriesAccent } from '../charts/seriesTone'
 import { TONES, toneOrNull } from '../tones'
+import { useTranslation } from 'react-i18next'
 
 const NEUTRAL = TONES.neutral.accent
 const kind = (node: UiNode) => node.name
@@ -27,12 +28,13 @@ function describeCurve(node: UiNode): string {
 }
 
 function Plot({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const xmin = finite(props.xmin)
   const xmax = finite(props.xmax)
   const layers = (Array.isArray(props.layers) ? props.layers : []).filter(isNode)
   const clipId = `clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
   if (xmin === undefined || xmax === undefined || xmax <= xmin) {
-    return <div className="my-3 rounded-lg border border-dashed border-app-border-subtle px-3 py-2 text-xs text-app-text-muted">A plot needs xmin below xmax.</div>
+    return <div className="my-3 rounded-lg border border-dashed border-app-border-subtle px-3 py-2 text-xs text-app-text-muted">{t('chat.richblocks.view.components.plot.aPlotNeedsXminBelow')}</div>
   }
 
   return (
@@ -127,7 +129,7 @@ function Plot({ props }: ComponentProps) {
                 ))}
               </ul>
             )}
-            <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? 'Plot'}>
+            <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? t('chat.richblocks.view.components.plot.plot')}>
               <defs>
                 <clipPath id={clipId}>
                   <rect x={area.left} y={area.top} width={area.width} height={area.height} />

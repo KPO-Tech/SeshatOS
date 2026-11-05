@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionButton, ProgressRow, SettingRow } from '../../settings/kit'
 import { getReembedStatus, startReembed, stopReembed } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { EmbedderConfig, ReembedStatus } from '@renderer/components/config/knowledge/knowledgeTypes'
+import { useTranslation } from 'react-i18next'
 
 const number = (value: number) => value.toLocaleString('en-US')
 
 // Making the vectors of the collections again with the model now in use. The documents are not read or cut again: only the vectors change,
 // so it takes minutes, and it can be stopped and started again without losing what was done.
 export function ReembedPanel({ config, unsaved, onDone }: { config: EmbedderConfig | null; unsaved: boolean; onDone: () => void }) {
+  const { t } = useTranslation('config')
   const [status, setStatus] = useState<ReembedStatus>({ state: 'idle', done: 0, total: 0 })
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
@@ -67,27 +69,27 @@ export function ReembedPanel({ config, unsaved, onDone }: { config: EmbedderConf
 
   const percent = status.total > 0 ? Math.min(100, Math.round((status.done / status.total) * 100)) : 0
 
-  let title = 'Make the vectors again'
-  let hint = 'The model changed after the documents were indexed.'
+  let title = t('search.reembedPanel.makeAgain')
+  let hint = t('search.reembedPanel.changedAfter')
   if (stale) {
-    title = 'Indexed with another model'
-    hint = 'Search by meaning is wrong until the vectors are made again. Search by words still works.'
+    title = t('search.reembedPanel.staleTitle')
+    hint = t('search.reembedPanel.staleHint')
   }
   if (running) {
-    title = 'Making the vectors again'
-    hint = `${number(status.done)} of ${number(status.total)} passages. You can close this window.`
+    title = t('search.reembedPanel.runningTitle')
+    hint = t('search.reembedPanel.runningHint', { done: number(status.done), total: number(status.total) })
   }
   if (status.state === 'failed') {
-    title = 'Stopped before the end'
-    hint = `${status.error ?? 'The embedding service refused.'} Starting again continues from there.`
+    title = t('search.reembedPanel.failedTitle')
+    hint = t('search.reembedPanel.failedHint', { error: status.error ?? t('search.reembedPanel.refused') })
   }
   if (status.state === 'cancelled') {
-    title = 'Stopped'
-    hint = `${number(status.done)} of ${number(status.total)} passages done.`
+    title = t('search.reembedPanel.cancelledTitle')
+    hint = t('search.reembedPanel.cancelledHint', { done: number(status.done), total: number(status.total) })
   }
   if (finished) {
-    title = 'Vectors up to date'
-    hint = `${number(status.total)} passages match ${config.model}.`
+    title = t('search.reembedPanel.doneTitle')
+    hint = t('search.reembedPanel.doneHint', { total: number(status.total), model: config.model })
   }
 
   return (
@@ -95,15 +97,15 @@ export function ReembedPanel({ config, unsaved, onDone }: { config: EmbedderConf
       <SettingRow title={title} hint={hint}>
         {running ? (
           <ActionButton type="button" onClick={() => void stop()}>
-            Stop
+            {t('search.reembedPanel.stop')}
           </ActionButton>
         ) : !finished ? (
-          <ActionButton type="button" tone="primary" disabled={starting || unsaved} onClick={() => void start()} title={unsaved ? 'Save the model first' : undefined}>
-            {starting ? 'Starting...' : status.state === 'failed' || status.state === 'cancelled' ? 'Continue' : 'Re-embed'}
+          <ActionButton type="button" tone="primary" disabled={starting || unsaved} onClick={() => void start()} title={unsaved ? t('search.reembedPanel.saveTheModelFirst') : undefined}>
+            {starting ? t('search.reembedPanel.starting') : status.state === 'failed' || status.state === 'cancelled' ? t('search.reembedPanel.continue') : t('search.reembedPanel.reEmbed')}
           </ActionButton>
         ) : null}
       </SettingRow>
-      {running && <ProgressRow label="Vectors" percent={percent} />}
+      {running && <ProgressRow label={t('search.reembedPanel.vectors')} percent={percent} />}
       {error && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-danger)]">{error}</div>}
     </>
   )

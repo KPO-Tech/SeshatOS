@@ -1,5 +1,6 @@
 import { Attention } from '@icon-park/react'
 import type { AskAction, AskNotice } from './askReadiness'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   notices: AskNotice[]
@@ -8,6 +9,7 @@ type Props = {
 
 // What will make the answers worse without stopping them, as a slim line above the input.
 export function AskNotices({ notices, onAction }: Props) {
+  const { t } = useTranslation('knowledge/ask')
   if (notices.length === 0) return null
   return (
     <div className="mb-2 flex flex-col gap-1.5">
@@ -21,7 +23,7 @@ export function AskNotices({ notices, onAction }: Props) {
             <Attention size={15} />
           </span>
           <p className="m-0 min-w-0 flex-1 text-[12.5px] leading-[18px] text-[var(--text-secondary)]">
-            <span className="font-semibold text-[var(--text-primary)]">{notice.title}.</span> {notice.text}
+            <span className="font-semibold text-[var(--text-primary)]">{t(notice.title)}.</span> {t(notice.text)}
           </p>
           {notice.action && (
             <button
@@ -29,7 +31,7 @@ export function AskNotices({ notices, onAction }: Props) {
               onClick={() => onAction(notice.action!.id)}
               className="shrink-0 cursor-pointer whitespace-nowrap border-0 bg-transparent p-0 text-[12.5px] font-semibold text-[var(--accent-primary)] hover:underline"
             >
-              {notice.action.label}
+              {t(notice.action.label)}
             </button>
           )}
         </div>

@@ -5,6 +5,7 @@ import { api } from '@renderer/api/client'
 import type { SessionSearchResult } from '@renderer/api/types'
 import type { ChatSession } from '@renderer/stores/session'
 import { UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -64,6 +65,7 @@ type Props = {
 }
 
 export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
+  const { t } = useTranslation('shell')
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(0)
   const [remoteResults, setRemoteResults] = useState<SearchRow[]>([])
@@ -182,14 +184,14 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
         className="flex max-h-[70vh] w-full max-w-[560px] animate-[fade-in_0.15s_ease-out] flex-col overflow-hidden rounded-app-xl border border-app-border bg-app-bg shadow-[0_24px_64px_rgba(0,0,0,0.32)]"
         role="dialog"
         aria-modal="true"
-        aria-label="Search conversations"
+        aria-label={t('layout.searchModal.searchConversations')}
       >
         <div className="flex shrink-0 items-center gap-2.5 border-b border-app-border-subtle px-3 py-2.5">
           <Search size={15} className="shrink-0 text-app-text-muted" />
           <input
             ref={inputRef}
             className="min-w-0 flex-1 border-0 bg-transparent font-app-sans text-[var(--font-size-md)] font-medium text-app-text outline-none placeholder:text-app-text-muted"
-            placeholder="Search conversations..."
+            placeholder={t('layout.searchModal.searchConversations2')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoComplete="off"
@@ -209,18 +211,18 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
         <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-1" ref={listRef}>
           {results.length === 0 ? (
             <div className="flex min-h-40 items-center justify-center text-[var(--font-size-2xs)] text-app-text-muted">
-              {loading ? 'Searching...' : searchFailed ? (
+              {loading ? t('layout.searchModal.searching') : searchFailed ? (
                 <span className="flex flex-col items-center gap-2">
-                  <span className="text-app-error">Could not search conversations</span>
+                  <span className="text-app-error">{t('layout.searchModal.couldNotSearchConversations')}</span>
                   <button
                     className="cursor-pointer rounded-[5px] border border-app-border bg-app-surface px-2 py-[3px] text-app-text-secondary transition-colors duration-75 hover:bg-[var(--surface-hover)]"
                     onClick={() => setRetryCount((count) => count + 1)}
                     type="button"
                   >
-                    Try again
+                    {t('layout.searchModal.tryAgain')}
                   </button>
                 </span>
-              ) : 'No conversations found'}
+              ) : t('layout.searchModal.noConversationsFound')}
             </div>
           ) : results.map((result, idx) => {
             const date = relativeDate(result.updatedAt || result.createdAt)
@@ -253,9 +255,9 @@ export function SearchModal({ open, sessions, onClose, onSelect }: Props) {
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-app-border-subtle px-3 py-2 text-[10px] text-app-text-muted">
-          <span><kbd className="rounded-[5px] border border-app-border bg-app-surface px-1 py-0.5 font-mono">up/down</kbd> navigate</span>
-          <span><kbd className="rounded-[5px] border border-app-border bg-app-surface px-1 py-0.5 font-mono">Enter</kbd> open</span>
-          <span><kbd className="rounded-[5px] border border-app-border bg-app-surface px-1 py-0.5 font-mono">Esc</kbd> close</span>
+          <span><kbd className="rounded-[5px] border border-app-border bg-app-surface px-1 py-0.5 font-mono">{t('layout.searchModal.upDown')}</kbd> {t('layout.searchModal.navigate')}</span>
+          <span><kbd className="rounded-[5px] border border-app-border bg-app-surface px-1 py-0.5 font-mono">{t('layout.searchModal.enter')}</kbd> {t('layout.searchModal.open')}</span>
+          <span><kbd className="rounded-[5px] border border-app-border bg-app-surface px-1 py-0.5 font-mono">{t('layout.searchModal.esc')}</kbd> {t('layout.searchModal.close')}</span>
         </div>
       </div>
     </div>

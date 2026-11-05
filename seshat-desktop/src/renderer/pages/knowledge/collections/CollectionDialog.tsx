@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   title: string
@@ -13,6 +14,7 @@ const FIELD = 'w-full rounded-[10px] border border-app-border-subtle bg-[var(--s
 
 /** Creates a collection, or renames one. */
 export function CollectionDialog({ title, submitLabel, initialName = '', initialDescription = '', onSubmit, onClose }: Props) {
+  const { t } = useTranslation('knowledge/collections')
   const [name, setName] = useState(initialName)
   const [description, setDescription] = useState(initialDescription)
   const [busy, setBusy] = useState(false)
@@ -51,11 +53,11 @@ export function CollectionDialog({ title, submitLabel, initialName = '', initial
       >
         <h2 className="m-0 text-[17px] font-medium text-[var(--text-primary)]">{title}</h2>
         <label className="mt-4 block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="collection-name">
-          Name
+          {t('pages.knowledge.collections.collectionDialog.name')}
         </label>
-        <input id="collection-name" ref={nameField} value={name} maxLength={255} onChange={(event) => setName(event.target.value)} placeholder="Contracts" className={`${FIELD} mt-1.5`} />
+        <input id="collection-name" ref={nameField} value={name} maxLength={255} onChange={(event) => setName(event.target.value)} placeholder={t('pages.knowledge.collections.collectionDialog.contracts')} className={`${FIELD} mt-1.5`} />
         <label className="mt-3.5 block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="collection-description">
-          Description <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          {t('pages.knowledge.collections.collectionDialog.description')} <span className="font-normal text-[var(--text-muted)]">{t('pages.knowledge.collections.collectionDialog.optional')}</span>
         </label>
         <textarea
           id="collection-description"
@@ -63,7 +65,7 @@ export function CollectionDialog({ title, submitLabel, initialName = '', initial
           maxLength={1024}
           rows={3}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="What these documents are about"
+          placeholder={t('pages.knowledge.collections.collectionDialog.whatTheseDocumentsAreAbout')}
           className={`${FIELD} mt-1.5 resize-none leading-[1.5]`}
         />
         {error && (
@@ -73,7 +75,7 @@ export function CollectionDialog({ title, submitLabel, initialName = '', initial
         )}
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="cursor-pointer rounded-[9px] border border-app-border-subtle bg-transparent px-3.5 py-1.5 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-            Cancel
+            {t('pages.knowledge.collections.collectionDialog.cancel')}
           </button>
           <button
             type="submit"

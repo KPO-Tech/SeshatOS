@@ -1,0 +1,37 @@
+{
+  "pages": {
+    "knowledge": {
+      "components": {
+        "knowledgeNav": {
+          "knowledge": "Knowledge"
+        },
+        "passageDrawer": {
+          "closePassage": "Fermer le passage",
+          "close": "Fermer",
+          "defaultNote": "Voici le passage sur lequel la réponse repose, tel que l'agent l'a lu."
+        },
+        "scopeSelect": {
+          "allCollections": "Toutes les collections"
+        },
+        "comingNext": {
+          "searchTitle": "Retrouver un document par mot-clé",
+          "searchText": "Un moteur de recherche pour les données propres à votre organisation. Aucun modèle n'intervient : les mêmes mots donnent les mêmes résultats, filtrés par collection, source, type et date.",
+          "collectionsTitle": "Parcourir ce qu’il y a dedans",
+          "collectionsText": "Chaque collection avec ses documents, leur source et leur dernière mise à jour, et un moyen d'ouvrir chacun d'eux.",
+          "sourcesTitle": "Connecter et suivre vos sources",
+          "sourcesText": "Connectez Drive, SharePoint, Confluence et d'autres, voyez où en est chaque synchronisation, et comprenez pourquoi un document manque.",
+          "settingsTitle": "Choisir les modèles et les accès",
+          "settingsText": "Les modèles d'embedding et de reclassement de l'organisation, et qui peut lire quelle collection.",
+          "designedNotBuilt": "· conçu, pas encore construit"
+        },
+        "citationChip": {
+          "openThePassage": "Ouvrir le passage"
+        },
+        "modelSelect": {
+          "loadingModels": "Chargement des modèles",
+          "noModel": "Aucun modèle"
+        }
+      }
+    }
+  }
+}

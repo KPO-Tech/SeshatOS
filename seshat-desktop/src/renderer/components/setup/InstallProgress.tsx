@@ -1,13 +1,15 @@
 import { formatBytes, formatDuration, formatRate, remainingSeconds } from './setupFormat'
 import { useTransferRate } from './useTransferRate'
 import type { Progress } from './useSetup'
+import { useTranslation } from 'react-i18next'
 
-const LABELS = { title: 'Smart titles', speech: 'Voice dictation', ocr: 'Scanned documents' } as const
+const LABELS = { title: 'shell:setup.componentCards.titleTitle', speech: 'shell:setup.componentCards.speechTitle', ocr: 'shell:setup.componentCards.ocrTitle' } as const
 
 function Status({ status }: { status: 'waiting' | 'running' | 'done' | 'error' }) {
+  const { t } = useTranslation('shell')
   if (status === 'done') {
     return (
-      <span className="flex size-6 items-center justify-center rounded-full bg-[var(--accent-success)]" aria-label="Done">
+      <span className="flex size-6 items-center justify-center rounded-full bg-[var(--accent-success)]" aria-label={t('setup.installProgress.done')}>
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <path d="m3.5 8.5 3 3 6-7" />
         </svg>
@@ -16,15 +18,15 @@ function Status({ status }: { status: 'waiting' | 'running' | 'done' | 'error' }
   }
   if (status === 'error') {
     return (
-      <span className="flex size-6 items-center justify-center rounded-full bg-[var(--accent-danger)] text-[13px] font-bold text-white" aria-label="Failed">
+      <span className="flex size-6 items-center justify-center rounded-full bg-[var(--accent-danger)] text-[13px] font-bold text-white" aria-label={t('setup.installProgress.failed')}>
         !
       </span>
     )
   }
   if (status === 'running') {
-    return <span className="size-6 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent-primary)]" aria-label="Downloading" />
+    return <span className="size-6 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent-primary)]" aria-label={t('setup.installProgress.downloading')} />
   }
-  return <span className="size-6 rounded-full border-2 border-dashed border-[var(--border-strong)]" aria-label="Waiting" />
+  return <span className="size-6 rounded-full border-2 border-dashed border-[var(--border-strong)]" aria-label={t('setup.installProgress.waiting')} />
 }
 
 type Overall = { receivedBytes: number; totalBytes: number; percent: number }
@@ -32,6 +34,7 @@ type Overall = { receivedBytes: number; totalBytes: number; percent: number }
 // The items being downloaded, one line each, with how far each one is. They download at the same time: when the plan is given, a bar above
 // shows how far all of it is.
 export function InstallProgress({ progress, overall }: { progress: Progress; overall?: Overall }) {
+  const { t } = useTranslation('shell')
   const rate = useTransferRate(overall?.receivedBytes ?? 0)
   const left = overall ? remainingSeconds(overall.receivedBytes, overall.totalBytes, rate) : null
   const items = (Object.keys(LABELS) as Array<keyof typeof LABELS>).filter((id) => progress[id])
@@ -42,7 +45,7 @@ export function InstallProgress({ progress, overall }: { progress: Progress; ove
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[15px] font-semibold text-[var(--text-primary)]">{overall.percent}%</span>
             <span className="text-[12.5px] text-[var(--text-muted)]">
-              {formatBytes(overall.receivedBytes)} of {formatBytes(overall.totalBytes)}
+              {t('setup.installProgress.bytesOf', { received: formatBytes(overall.receivedBytes), total: formatBytes(overall.totalBytes) })}
             </span>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-muted)]">
@@ -50,7 +53,7 @@ export function InstallProgress({ progress, overall }: { progress: Progress; ove
           </div>
           {left !== null && (
             <p className="m-0 mt-2.5 text-[12.5px] text-[var(--text-muted)]">
-              {formatRate(rate)} · {left < 10 ? 'Almost done' : `About ${formatDuration(left)} left`}
+              {formatRate(rate)} · {left < 10 ? t('setup.installProgress.almostDone') : t('setup.installProgress.timeLeft', { time: formatDuration(left) })}
             </p>
           )}
         </div>
@@ -63,12 +66,12 @@ export function InstallProgress({ progress, overall }: { progress: Progress; ove
             <li key={id} className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-5 py-4">
               <div className="flex items-center gap-3">
                 <Status status={item.status} />
-                <span className="flex-1 text-[15px] font-semibold text-[var(--text-primary)]">{LABELS[id]}</span>
+                <span className="flex-1 text-[15px] font-semibold text-[var(--text-primary)]">{t(LABELS[id])}</span>
                 <span className="text-[12.5px] text-[var(--text-muted)]">
-                  {item.status === 'running' && item.totalBytes > 0 && `${formatBytes(item.receivedBytes)} of ${formatBytes(item.totalBytes)}`}
-                  {item.status === 'waiting' && 'Waiting'}
-                  {item.status === 'done' && (item.message === 'Skipped' ? 'Skipped' : 'Ready')}
-                  {item.status === 'error' && 'Not installed'}
+                  {item.status === 'running' && item.totalBytes > 0 && t('setup.installProgress.bytesOf', { received: formatBytes(item.receivedBytes), total: formatBytes(item.totalBytes) })}
+                  {item.status === 'waiting' && t('setup.installProgress.waiting')}
+                  {item.status === 'done' && (item.message === t('setup.installProgress.skipped') ? t('setup.installProgress.skipped') : t('setup.installProgress.ready'))}
+                  {item.status === 'error' && t('setup.installProgress.notInstalled')}
                 </span>
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
@@ -79,7 +82,7 @@ export function InstallProgress({ progress, overall }: { progress: Progress; ove
               </div>
               {item.status === 'error' && item.message && (
                 <p className="m-0 mt-2.5 text-[12.5px] leading-[1.5] text-[var(--text-muted)]">
-                  {item.message} You can try again here, or later in Config.
+                  {item.message} {t('setup.installProgress.tryAgainHere')}
                 </p>
               )}
             </li>

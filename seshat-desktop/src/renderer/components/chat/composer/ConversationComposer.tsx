@@ -5,6 +5,7 @@ import type { ChatAttachment } from '@renderer/components/chat/attachments/attac
 import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { modelAlias } from '@renderer/lib/modelAlias'
+import { useTranslation } from 'react-i18next'
 
 type SendMessageOptions = {
   corpusId?: string | null
@@ -84,6 +85,7 @@ export function ConversationComposer({
   executionMode,
   onExecutionModeChange,
 }: ConversationComposerProps) {
+  const { t } = useTranslation('chat')
   return (
     <div className="conv-input-area">
       <div className="conv-input-inner">
@@ -108,7 +110,7 @@ export function ConversationComposer({
             })
           }}
           onStop={() => { void stopMessage() }}
-          placeholder="Message SeshatOS..."
+          placeholder={t('chat.composer.conversationComposer.messageSeshatos')}
           isStreaming={isStreaming}
           showInlineStatus={false}
           selectedCorpusId={selectedCorpusId}
@@ -126,7 +128,7 @@ export function ConversationComposer({
             // that succeeded - only claim "unavailable" when there's
             // genuinely nothing to choose from.
             allModelChoices.length === 0 && modelLoadError
-              ? 'Models unavailable'
+              ? t('chat.composer.conversationComposer.modelsUnavailable')
               : modelAlias(selectedModelChoice?.model.display_name || selectedModelChoice?.model.model_id || sessionModelLabel || 'Model')
           }
           modelIcon={

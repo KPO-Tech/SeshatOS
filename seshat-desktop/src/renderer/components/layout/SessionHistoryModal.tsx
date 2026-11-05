@@ -5,6 +5,7 @@ import { deleteSession } from '@renderer/lib/deleteSession'
 import { isUntitledSessionTitle, UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { useOverlayStore } from '@renderer/stores/overlay'
 import type { ChatSession } from '@renderer/stores/session'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -56,6 +57,7 @@ function formatTime(session: ChatSession): string {
 }
 
 export function SessionHistoryModal({ open, sessions, scopeLabel, onClose, onOpenSession, onDeleted }: Props) {
+  const { t } = useTranslation('shell')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [confirming, setConfirming] = useState(false)
@@ -134,14 +136,14 @@ export function SessionHistoryModal({ open, sessions, scopeLabel, onClose, onOpe
         className="flex max-h-[76vh] w-full max-w-[620px] animate-[fade-in_0.15s_ease-out] flex-col overflow-hidden rounded-app-xl border border-app-border bg-app-bg shadow-[0_24px_64px_rgba(0,0,0,0.32)]"
         role="dialog"
         aria-modal="true"
-        aria-label="Conversation history"
+        aria-label={t('layout.sessionHistoryModal.conversationHistory')}
       >
         <div className="flex shrink-0 items-center gap-2.5 border-b border-app-border-subtle px-3 py-2.5">
           <Search size={15} className="shrink-0 text-app-text-muted" />
           <input
             ref={inputRef}
             className="min-w-0 flex-1 border-0 bg-transparent font-app-sans text-[var(--font-size-md)] font-medium text-app-text outline-none placeholder:text-app-text-muted"
-            placeholder={`Filter ${scopeLabel} conversations...`}
+            placeholder={t('layout.sessionHistoryModal.filter', { scope: scopeLabel })}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             autoComplete="off"
@@ -152,7 +154,7 @@ export function SessionHistoryModal({ open, sessions, scopeLabel, onClose, onOpe
             onClick={onClose}
             tabIndex={-1}
             type="button"
-            aria-label="Close history"
+            aria-label={t('layout.sessionHistoryModal.closeHistory')}
           >
             <WindowCloseIcon />
           </button>
@@ -166,16 +168,16 @@ export function SessionHistoryModal({ open, sessions, scopeLabel, onClose, onOpe
           {selected.size > 0 && (
             confirming ? (
               <div className="flex items-center gap-2">
-                <span className="text-app-text-muted">Delete {selected.size}? This cannot be undone.</span>
-                <button className="cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-app-text-secondary hover:bg-[var(--surface-hover)]" type="button" onClick={() => setConfirming(false)} disabled={deleting}>Cancel</button>
+                <span className="text-app-text-muted">{t('layout.sessionHistoryModal.confirmDelete', { count: selected.size })}</span>
+                <button className="cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-app-text-secondary hover:bg-[var(--surface-hover)]" type="button" onClick={() => setConfirming(false)} disabled={deleting}>{t('layout.sessionHistoryModal.cancel')}</button>
                 <button className="cursor-pointer rounded-md border-0 bg-[var(--accent-danger)] px-2.5 py-1 font-semibold text-white disabled:opacity-60" type="button" onClick={() => void deleteSelected()} disabled={deleting}>
-                  {deleting ? 'Deleting...' : 'Delete'}
+                  {deleting ? t('layout.sessionHistoryModal.deleting') : t('layout.sessionHistoryModal.delete')}
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <button className="cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-app-text-secondary hover:bg-[var(--surface-hover)]" type="button" onClick={() => setSelected(new Set())}>Clear</button>
-                <button className="cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 font-semibold text-[var(--accent-danger)] hover:bg-[var(--surface-hover)]" type="button" onClick={() => setConfirming(true)}>Delete</button>
+                <button className="cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 text-app-text-secondary hover:bg-[var(--surface-hover)]" type="button" onClick={() => setSelected(new Set())}>{t('layout.sessionHistoryModal.clear')}</button>
+                <button className="cursor-pointer rounded-md border-0 bg-transparent px-2 py-1 font-semibold text-[var(--accent-danger)] hover:bg-[var(--surface-hover)]" type="button" onClick={() => setConfirming(true)}>{t('layout.sessionHistoryModal.delete')}</button>
               </div>
             )
           )}
@@ -184,7 +186,7 @@ export function SessionHistoryModal({ open, sessions, scopeLabel, onClose, onOpe
         <div className="flex flex-1 flex-col overflow-y-auto p-1.5">
           {filtered.length === 0 ? (
             <div className="flex min-h-40 items-center justify-center text-[var(--font-size-2xs)] text-app-text-muted">
-              {query.trim() ? 'No conversations found' : 'No conversations yet'}
+              {query.trim() ? t('layout.sessionHistoryModal.noConversationsFound') : t('layout.sessionHistoryModal.noConversationsYet')}
             </div>
           ) : groups.map((group) => (
             <div key={group.label} className="mb-1.5">
@@ -193,7 +195,7 @@ export function SessionHistoryModal({ open, sessions, scopeLabel, onClose, onOpe
                 const checked = selected.has(session.id)
                 return (
                   <div key={session.id} className={cx('group flex items-center gap-2 rounded-app-md px-2 hover:bg-app-surface', checked && 'bg-app-surface')}>
-                    <input type="checkbox" className="size-3.5 shrink-0 cursor-pointer accent-[var(--accent-primary)]" checked={checked} onChange={() => toggle(session.id)} aria-label={`Select ${session.title || UNTITLED_SESSION_TITLE}`} />
+                    <input type="checkbox" className="size-3.5 shrink-0 cursor-pointer accent-[var(--accent-primary)]" checked={checked} onChange={() => toggle(session.id)} aria-label={t('layout.sessionHistoryModal.select', { title: session.title || UNTITLED_SESSION_TITLE })} />
                     <button
                       className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 border-0 bg-transparent py-[7px] text-left"
                       type="button"

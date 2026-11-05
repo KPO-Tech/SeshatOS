@@ -11,6 +11,7 @@ import { SelectorPill, SelectorMenu } from '@renderer/components/ui/SelectorPill
 import { WindowCloseIcon } from '@renderer/components/ui/WindowControlIcon'
 import { edition } from '@renderer/lib/edition'
 import { MENU_ROW_HEIGHT, MENU_VISIBLE_ROWS, useMenuPlacement } from './useMenuPlacement'
+import { useTranslation } from 'react-i18next'
 
 type SkillOption = { Name: string; DisplayName: string; Description: string; Source: string; UserInvocable?: boolean; IsHidden?: boolean }
 
@@ -58,6 +59,7 @@ export function ChatInput({
   executionMode,
   onExecutionModeChange,
 }: ChatInputProps) {
+  const { t } = useTranslation('chat')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const selectorsRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -300,7 +302,7 @@ export function ChatInput({
           <button
             className="flex items-center rounded-[3px] border-0 bg-none p-px text-inherit opacity-70 hover:opacity-100"
             onMouseDown={e => { e.preventDefault(); onCorpusChange(null) }}
-            aria-label="Remove knowledge base"
+            aria-label={t('chat.composer.chatInput.removeKnowledgeBase')}
           >
             <WindowCloseIcon />
           </button>
@@ -328,7 +330,7 @@ export function ChatInput({
                   className="ml-auto shrink-0 cursor-pointer rounded-app-sm border border-[rgba(var(--color-error-rgb),0.2)] bg-transparent px-[7px] py-0.5 font-bold text-app-error [font-family:inherit] [font-size:inherit] [line-height:inherit] hover:bg-[rgba(var(--color-error-rgb),0.08)]"
                   onClick={onModelRetry}
                 >
-                  Retry
+                  {t('chat.composer.chatInput.retry')}
                 </button>
               )}
             </div>
@@ -353,7 +355,7 @@ export function ChatInput({
           <button
             className="flex size-7 items-center justify-center rounded-[7px] border-0 bg-transparent p-0 text-app-text-muted transition-[color,transform] duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text-secondary disabled:cursor-progress disabled:opacity-55"
             type="button"
-            aria-label="Attach files"
+            aria-label={t('chat.composer.chatInput.attachFiles')}
             disabled={isUploadingAttachments}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -373,7 +375,7 @@ export function ChatInput({
           <div className="flex min-w-0 max-w-[180px] items-center gap-1">
             <button
               className={cx(TOOL_ICON_CSS, projectPath && '!text-[var(--accent-primary)]')}
-              aria-label={projectPath ? `Project: ${projectPath}` : 'Set project folder'}
+              aria-label={projectPath ? t('chat.composer.chatInput.project', { path: projectPath }) : t('chat.composer.chatInput.setProjectFolder')}
               disabled={projectLocked}
               onClick={async () => {
                 const result = await window.seshat?.dialog?.openDirectory?.()
@@ -390,7 +392,7 @@ export function ChatInput({
                 {!projectLocked && (
                   <button
                     className="flex items-center border-0 bg-transparent p-0.5 text-app-text-muted hover:text-app-text-secondary"
-                    aria-label="Clear project folder"
+                    aria-label={t('chat.composer.chatInput.clearProjectFolder')}
                     onMouseDown={(e) => { e.preventDefault(); onProjectChange?.('') }}
                   >
                     <WindowCloseIcon />
@@ -402,23 +404,23 @@ export function ChatInput({
           {edition.knowledge && <div className="relative" ref={corpusDropdownRef}>
             <button
               className={cx(TOOL_ICON_CSS, selectedCorpusId && '!text-[var(--accent-primary)]')}
-              aria-label="Attach knowledge base"
+              aria-label={t('chat.composer.chatInput.attachKnowledgeBase')}
               onClick={() => setCorpusDropdownOpen(v => !v)}
             >
               <AtSign size={13} />
             </button>
             {corpusDropdownOpen && (
               <div className={cx('absolute left-0 z-[200] flex max-w-[280px] min-w-[220px] flex-col overflow-hidden rounded-[10px] border border-[var(--border-strong)] bg-app-bg shadow-[0_8px_28px_rgba(0,0,0,0.18)]', corpusPlacement === 'up' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]')}>
-                <div className="border-b border-app-border-subtle px-3.5 pb-1.5 pt-2 text-[11px] font-extrabold uppercase tracking-[0.06em] text-app-text-muted">Knowledge bases</div>
+                <div className="border-b border-app-border-subtle px-3.5 pb-1.5 pt-2 text-[11px] font-extrabold uppercase tracking-[0.06em] text-app-text-muted">{t('chat.composer.chatInput.knowledgeBases')}</div>
                 {corpusLoadError ? (
                   <div className="flex flex-col items-start gap-1.5 p-3.5 text-[13px] text-app-text-muted">
-                    <span>Couldn't load knowledge bases.</span>
+                    <span>{t('chat.composer.chatInput.couldnTLoadKnowledgeBases')}</span>
                     <button type="button" onClick={loadCorpora} className="font-semibold text-[var(--accent-primary)] hover:underline">
-                      Retry
+                      {t('chat.composer.chatInput.retry')}
                     </button>
                   </div>
                 ) : corpora.length === 0 ? (
-                  <div className="p-3.5 text-[13px] text-app-text-muted">No knowledge bases found</div>
+                  <div className="p-3.5 text-[13px] text-app-text-muted">{t('chat.composer.chatInput.noKnowledgeBasesFound')}</div>
                 ) : (
                   <div className="overflow-y-auto" style={{ maxHeight: MENU_VISIBLE_ROWS * MENU_ROW_HEIGHT }}>
                 {corpora.map(c => {
@@ -437,7 +439,7 @@ export function ChatInput({
                       }}
                     >
                       <span className={cx('min-w-0 truncate', selected && 'font-bold text-[var(--accent-primary)]')}>{c.name}</span>
-                      {c.chunk_count > 0 && <span className="whitespace-nowrap text-[11px] text-app-text-muted">{c.chunk_count} chunks</span>}
+                      {c.chunk_count > 0 && <span className="whitespace-nowrap text-[11px] text-app-text-muted">{t('chat.composer.chatInput.chunks', { count: c.chunk_count })}</span>}
                     </button>
                   )
                 })}
@@ -489,7 +491,7 @@ export function ChatInput({
           {showInlineStatus && isStreaming && (
             <div className="flex min-w-0 max-w-[320px] items-center gap-[7px] text-[12px] text-app-text-secondary" aria-live="polite">
               <LoadingOne size={14} className="animate-[spin_0.9s_linear_infinite]" />
-              <span className="truncate">{statusText || 'Running...'}</span>
+              <span className="truncate">{statusText || t('chat.composer.chatInput.running')}</span>
             </div>
           )}
         </div>
@@ -525,10 +527,10 @@ export function ChatInput({
             type="button"
             aria-label={
               recordingState === 'recording'
-                ? 'Stop recording'
+                ? t('chat.composer.chatInput.stopRecording')
                 : recordingState === 'transcribing'
-                  ? 'Transcribing...'
-                  : 'Record a voice message'
+                  ? t('chat.composer.chatInput.transcribing')
+                  : t('chat.composer.chatInput.recordAVoiceMessage')
             }
             disabled={recordingState === 'transcribing'}
             onClick={() => void handleMicClick()}
@@ -542,7 +544,7 @@ export function ChatInput({
               className="flex size-[30px] items-center justify-center rounded-[9px] border border-[var(--accent-hover)] bg-[var(--accent-subtle)] text-[var(--accent-primary)] transition-all duration-200 hover:bg-[var(--accent-hover)]"
               onClick={onStop}
               type="button"
-              aria-label="Stop"
+              aria-label={t('chat.composer.chatInput.stop')}
             >
               <WindowCloseIcon size={14} />
             </button>

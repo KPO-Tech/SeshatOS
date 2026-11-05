@@ -9,6 +9,7 @@ import { QuietToolGroup } from '../tools/QuietToolGroup'
 import { groupBlocks } from '../messages/MessageItem'
 import type { ToolStatus } from '@renderer/api/types'
 import type { ToolActivity } from '@renderer/stores/session'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -43,6 +44,7 @@ type Props = {
 }
 
 export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId }: Props) {
+  const { t } = useTranslation('chat')
   const subagent = useSessionStore((s) => s.getSubagent(sessionId, toolUseId))
   const [tab, setTab] = useState<Tab>('activity')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -92,9 +94,9 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
     }
   }, [hasResult, result])
 
-  const handleTabClick = (t: Tab) => {
-    setTab(t)
-    if (t === 'output') setOutputReady(false)
+  const handleTabClick = (next: Tab) => {
+    setTab(next)
+    if (next === 'output') setOutputReady(false)
   }
 
   if (!subagent) {
@@ -102,7 +104,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
       <div className="flex h-full flex-col overflow-hidden">
         <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
           <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
-          <span className="text-[11px]">Waiting for sub-agent…</span>
+          <span className="text-[11px]">{t('chat.panels.subagentPanel.waitingForSubAgent')}</span>
         </div>
       </div>
     )
@@ -128,7 +130,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
               onClick={handleCancel}
             >
               <CloseOne size={12} />
-              {cancelling ? 'Cancelling…' : 'Cancel'}
+              {cancelling ? t('chat.panels.subagentPanel.cancelling') : t('chat.panels.subagentPanel.cancel')}
             </button>
           )}
         </div>
@@ -144,14 +146,14 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
           {subagent.turnNumber > 0 && (
             <>
               <span className="opacity-30">·</span>
-              <span>{subagent.turnNumber} turn{subagent.turnNumber > 1 ? 's' : ''}</span>
+              <span>{t('chat.panels.subagentPanel.turns', { count: subagent.turnNumber })}</span>
             </>
           )}
           {subagent.inputTokens > 0 && (
             <>
               <span className="opacity-30">·</span>
               <span>
-                {subagent.inputTokens.toLocaleString()} in / {subagent.outputTokens.toLocaleString()} out
+                {t('chat.panels.subagentPanel.tokensInOut', { input: subagent.inputTokens.toLocaleString(), output: subagent.outputTokens.toLocaleString() })}
               </span>
             </>
           )}
@@ -166,7 +168,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
             type="button"
             onClick={() => handleTabClick('activity')}
           >
-            Activity
+            {t('chat.panels.subagentPanel.activity')}
           </button>
           <button
             className={cx(
@@ -191,7 +193,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
             {streaming.length === 0 && subagent.status === 'running' && (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
                 <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
-                <span className="text-[11px]">Agent is starting…</span>
+                <span className="text-[11px]">{t('chat.panels.subagentPanel.agentIsStarting')}</span>
               </div>
             )}
             {groupBlocks(streaming, toolUseId).map((item, i) => {
@@ -201,7 +203,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
                     key={`${toolUseId}-agents-${i}`}
                     tools={item.tools}
                     sessionId={sessionId}
-                    getStatus={(t) => (t._status ?? (t._result ? (t._result.isError ? 'failed' : 'completed') : 'running')) as ToolStatus}
+                    getStatus={(item) => (item._status ?? (item._result ? (item._result.isError ? 'failed' : 'completed') : 'running')) as ToolStatus}
                   />
                 )
               }
@@ -228,7 +230,7 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
             )}
             {subagent.activityLog.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold uppercase text-app-text-muted">Tool log</span>
+                <span className="text-[10px] font-bold uppercase text-app-text-muted">{t('chat.panels.subagentPanel.toolLog')}</span>
                 {subagent.activityLog.slice(-10).reverse().map((entry, index) => (
                   <div key={`${entry.toolName}-${entry.startedAt}-${index}`} className="grid grid-cols-[8px_minmax(0,1fr)_auto] items-start gap-[7px] py-1">
                     <span className={cx('mt-[5px] size-1.5 rounded-full', ACTIVITY_DOT_CSS[entry.stage] ?? 'bg-[var(--border-strong)]')} />
@@ -259,8 +261,8 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
               : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-center text-[11px] text-app-text-muted">
                   <span className="inline-flex items-center gap-1.5">
-                    {subagent.status === 'failed' && <span className="text-[9px] font-bold leading-none text-app-error">failed</span>}
-                    <span>{subagent.status === 'running' ? 'Output will appear here once the agent finishes.' : 'No final output was captured.'}</span>
+                    {subagent.status === 'failed' && <span className="text-[9px] font-bold leading-none text-app-error">{t('chat.panels.subagentPanel.failed')}</span>}
+                    <span>{subagent.status === 'running' ? t('chat.panels.subagentPanel.outputWillAppearHereOnce') : t('chat.panels.subagentPanel.noFinalOutputWasCaptured')}</span>
                   </span>
                 </div>
               )
@@ -273,12 +275,13 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
 })
 
 function FinalOutputSummary({ status, result, sessionId }: { status: 'running' | 'completed' | 'failed'; result?: string; sessionId?: string }) {
+  const { t } = useTranslation('chat')
   const hasResult = Boolean(result?.trim())
   return (
     <div className="mt-0.5 flex flex-col gap-1.5 border-t border-app-border-subtle pt-[9px]">
       <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-app-text-muted">
-        {status === 'failed' && <span className="text-[9px] font-bold leading-none text-app-error">failed</span>}
-        <span>Agent output</span>
+        {status === 'failed' && <span className="text-[9px] font-bold leading-none text-app-error">{t('chat.panels.subagentPanel.failed')}</span>}
+        <span>{t('chat.panels.subagentPanel.agentOutput')}</span>
       </div>
       {hasResult
         ? (
@@ -287,7 +290,7 @@ function FinalOutputSummary({ status, result, sessionId }: { status: 'running' |
           </div>
         )
         : (
-          <div className="text-[11px] text-app-text-muted">No final output was captured.</div>
+          <div className="text-[11px] text-app-text-muted">{t('chat.panels.subagentPanel.noFinalOutputWasCaptured')}</div>
         )
       }
     </div>

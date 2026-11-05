@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import type { TFunction } from 'i18next'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { englishT } from '@renderer/i18n/testing'
 import { askNotices, askStop, type AskReadinessInput } from './askReadiness'
+
+let t: TFunction
+beforeAll(async () => {
+  t = await englishT()
+})
 
 const ready: AskReadinessInput = { loading: false, collectionsFailed: false, collectionCount: 3, mode: 'standalone', canManage: true, embedder: { enabled: true, is_configured: true } }
 
@@ -13,8 +20,8 @@ describe('askStop', () => {
     const alone = askStop({ ...ready, collectionsFailed: true })
     expect(alone).toMatchObject({ kind: 'unavailable', action: { id: 'retry' } })
     const connected = askStop({ ...ready, collectionsFailed: true, mode: 'connected' })
-    expect(connected?.title).toContain('SeshatCloud')
-    expect(alone?.title).not.toContain('SeshatCloud')
+    expect(t(connected?.title ?? '')).toContain('SeshatCloud')
+    expect(t(alone?.title ?? '')).not.toContain('SeshatCloud')
   })
 
   it('a failure wins over an empty list', () => {
@@ -26,7 +33,7 @@ describe('askStop', () => {
     const member = askStop({ ...ready, collectionCount: 0, mode: 'connected', canManage: false })
     expect(member?.kind).toBe('empty')
     expect(member?.action).toBeUndefined()
-    expect(member?.text).toContain('administrator')
+    expect(t(member?.text ?? '')).toContain('administrator')
   })
 })
 

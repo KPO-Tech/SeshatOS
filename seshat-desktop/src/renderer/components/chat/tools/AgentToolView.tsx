@@ -3,6 +3,7 @@ import { Robot, CheckOne, CloseOne, LoadingOne } from '@icon-park/react'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 import type { ToolUseBlock, ToolStatus } from '@renderer/api/types'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -62,6 +63,7 @@ type AgentToolCardProps = {
 }
 
 function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
+  const { t } = useTranslation('chat')
   const subagent = useSessionStore((s) => s.getSubagent(sessionId, tool.id))
   const openRightPanel = useUIStore((s) => s.openRightPanel)
 
@@ -154,12 +156,12 @@ function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
               </span>
             )}
             {derivedStatus === 'completed'
-              ? 'Completed'
+              ? t('chat.tools.agentToolView.completed')
               : derivedStatus === 'failed'
-                ? 'Failed'
+                ? t('chat.tools.agentToolView.failed')
                 : isUntrackedBackgroundDispatch
-                  ? 'Running in background…'
-                  : 'Running…'
+                  ? t('chat.tools.agentToolView.runningInBackground')
+                  : t('chat.tools.agentToolView.running')
             }
           </span>
         </div>
@@ -175,7 +177,7 @@ function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
       </div>
 
       <div className="flex items-center justify-between border-t border-app-border-subtle px-[9px] py-1.5">
-        <span className="flex items-center gap-[3px] text-[10px] font-[650] text-[var(--accent-primary)]">View activity →</span>
+        <span className="flex items-center gap-[3px] text-[10px] font-[650] text-[var(--accent-primary)]">{t('chat.tools.agentToolView.viewActivity')}</span>
         <div className="flex items-center gap-1.5">
           {tokens > 0 && (
             <span className="text-[10px] text-app-text-muted">{fmtTokens(tokens)}</span>

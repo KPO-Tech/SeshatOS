@@ -9,14 +9,15 @@ import { themeById } from '@renderer/lib/themes'
 import { AccentSwatches } from './AccentSwatches'
 import { IntroBackdrop } from './IntroBackdrop'
 import { IntroSteps } from './IntroSteps'
+import { useTranslation } from 'react-i18next'
 
 // Four of the themes, one per mood; the others are in Settings > Appearance. A dark one becomes the main dark theme and a light one the
 // main light theme (see lib/theme.ts), so the button of the title bar switches between it and the default of the other scheme.
 const CHOICES = [
-  { id: 'dark', label: 'Seshat Dark', hint: 'The default theme' },
-  { id: 'carbon', label: 'Carbon', hint: 'Black, quiet' },
-  { id: 'dusk', label: 'Dusk', hint: 'A warm evening glow' },
-  { id: 'shine', label: 'Shine', hint: 'Light and warm' }
+  { id: 'dark', label: 'Seshat Dark', hint: 'shell:onboarding.appearanceIntro.hintDark' },
+  { id: 'carbon', label: 'Carbon', hint: 'shell:onboarding.appearanceIntro.hintCarbon' },
+  { id: 'dusk', label: 'Dusk', hint: 'shell:onboarding.appearanceIntro.hintDusk' },
+  { id: 'shine', label: 'Shine', hint: 'shell:onboarding.appearanceIntro.hintShine' }
 ] as const
 
 /**
@@ -24,6 +25,7 @@ const CHOICES = [
  * the same choices are in Settings > Appearance afterwards.
  */
 export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
+  const { t } = useTranslation('shell')
   const [shown, setShown] = useState(() => shownThemeId())
   const [accent, setAccent] = useState<string | null>(() => getStoredAccent())
   // The accent that is on screen: the one chosen, or the one of the theme.
@@ -54,10 +56,10 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
         <div className="flex flex-col items-center text-center">
           <SeshatLogo size={52} />
           <div className="text-[34px] font-semibold leading-tight tracking-[-0.01em]">
-            Seshat<span className="text-[var(--accent-primary)]">OS</span>
+            {t('onboarding.appearanceIntro.seshat')}<span className="text-[var(--accent-primary)]">{t('onboarding.appearanceIntro.os')}</span>
           </div>
-          <h1 className="m-0 mt-4 text-[30px] font-semibold leading-tight">Welcome to SeshatOS</h1>
-          <p className="m-0 mt-2 text-[15px] text-[var(--text-secondary)]">An AI workspace for research, creation and automation.</p>
+          <h1 className="m-0 mt-4 text-[30px] font-semibold leading-tight">{t('onboarding.appearanceIntro.welcomeToSeshatos')}</h1>
+          <p className="m-0 mt-2 text-[15px] text-[var(--text-secondary)]">{t('onboarding.appearanceIntro.anAiWorkspaceForResearch')}</p>
         </div>
 
         <div className="mt-5">
@@ -70,12 +72,12 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
               <Platte theme="outline" size={30} />
             </span>
             <div>
-              <h2 className="m-0 text-[20px] font-semibold">Choose your appearance</h2>
-              <p className="m-0 mt-1 text-[14px] text-[var(--text-secondary)]">Pick a theme that suits you. You can change it later in Settings.</p>
+              <h2 className="m-0 text-[20px] font-semibold">{t('onboarding.appearanceIntro.chooseYourAppearance')}</h2>
+              <p className="m-0 mt-1 text-[14px] text-[var(--text-secondary)]">{t('onboarding.appearanceIntro.pickAThemeThatSuits')}</p>
             </div>
           </div>
 
-          <div role="radiogroup" aria-label="Theme" className="mt-5 grid grid-cols-4 gap-5">
+          <div role="radiogroup" aria-label={t('onboarding.appearanceIntro.theme')} className="mt-5 grid grid-cols-4 gap-5">
             {CHOICES.map((choice) => {
               const seed = themeById(choice.id)
               const selected = shown === choice.id
@@ -100,7 +102,7 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
                   </span>
                   <span>
                     <span className="block text-[16px] font-semibold">{choice.label}</span>
-                    <span className="block text-[13px] text-[var(--text-muted)]">{choice.hint}</span>
+                    <span className="block text-[13px] text-[var(--text-muted)]">{t(choice.hint)}</span>
                   </span>
                 </button>
               )
@@ -108,7 +110,7 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
           </div>
 
           <div className="mt-5 flex items-center gap-6 border-t border-[var(--border-soft)] pt-5">
-            <span className="text-[16px] font-medium">Accent color</span>
+            <span className="text-[16px] font-medium">{t('onboarding.appearanceIntro.accentColor')}</span>
             <AccentSwatches current={current} onPick={pickAccent} size={36} />
           </div>
         </section>
@@ -118,7 +120,7 @@ export function AppearanceIntro({ onContinue }: { onContinue: () => void }) {
           onClick={onContinue}
           className="mt-6 flex h-[48px] cursor-pointer items-center gap-2.5 rounded-2xl border-0 bg-[var(--accent-primary)] px-9 text-[17px] font-semibold text-white shadow-[0_14px_34px_-14px_var(--accent-primary)] transition-[filter,transform] hover:brightness-110 active:scale-[0.99]"
         >
-          Continue
+          {t('onboarding.appearanceIntro.continue')}
           <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 8h10M9 4l4 4-4 4" />
           </svg>

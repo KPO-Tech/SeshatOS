@@ -9,6 +9,7 @@ import { ActionButton, Notice, SelectField, SettingRow, SettingsCard, StatusBadg
 import { api } from '@renderer/api/client'
 import { addRerankerSetup, detectRerankerModel, listRerankerModels, saveRerankerConfig, testRerankerConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { RerankerConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
+import { useTranslation } from 'react-i18next'
 
 const RERANKER_PRESETS = [
   { id: 'tei', label: 'TEI local', base_url: 'http://localhost:8083/rerank', model: 'BAAI/bge-reranker-v2-m3' },
@@ -17,7 +18,7 @@ const RERANKER_PRESETS = [
   { id: 'cohere', label: 'Cohere', base_url: 'https://api.cohere.com/v2/rerank', model: 'rerank-v3.5' },
   { id: 'voyage', label: 'Voyage AI', base_url: 'https://api.voyageai.com/v1/rerank', model: 'rerank-2.5' },
   { id: 'jina', label: 'Jina AI', base_url: 'https://api.jina.ai/v1/rerank', model: 'jina-reranker-v3.5' },
-  { id: 'custom', label: 'Custom endpoint', base_url: '', model: '' }
+  { id: 'custom', label: 'config:search.rerankerCard.customEndpoint', base_url: '', model: '' }
 ]
 
 // The kinds of provider of Config > Providers whose key a rerank service can use, and what the service is called where the person is
@@ -29,6 +30,7 @@ const MISSING_NAMES: Record<string, string> = { openrouter: 'OpenRouter', cohere
 const LISTED = ['openrouter', 'cohere', 'voyage', 'jina']
 
 export function RerankerCard({ config, providers, onSaved }: { config: RerankerConfig | null; providers: ProviderSetting[]; onSaved: (config: RerankerConfig) => void }) {
+  const { t } = useTranslation('config')
   const [preset, setPreset] = useState('tei')
   const [form, setForm] = useState({
     base_url: config?.base_url || RERANKER_PRESETS[0].base_url,
@@ -159,31 +161,31 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
 
   const presetOptions: SelectOption[] = RERANKER_PRESETS.map((item) => ({
     value: item.id,
-    label: item.label,
+    label: item.label.startsWith('config:') ? t(item.label) : item.label,
     icon: <RerankerIcon name={item.id} />
   }))
 
   return (
     <>
-      {testing === 'ok' && <Notice tone="ok">{`Connected in ${latency ?? 0} ms`}</Notice>}
-      {testing === 'error' && <Notice tone="error">{testError ?? 'Connection failed.'}</Notice>}
+      {testing === 'ok' && <Notice tone="ok">{t('search.rerankerCard.connectedIn', { ms: latency ?? 0 })}</Notice>}
+      {testing === 'error' && <Notice tone="error">{testError ?? t('search.rerankerCard.connectionFailed')}</Notice>}
       <RerankerModels version={`${config?.base_url}|${config?.model}|${config?.enabled}`} onChanged={() => void api.get<RerankerConfig>('/settings/reranker').then(onSaved)} />
       <SettingsCard
-        title="Reranker"
-        badge={<StatusBadge tone={config?.is_configured ? 'ok' : 'muted'}>{config?.is_configured ? 'Ready' : 'Optional'}</StatusBadge>}
-        action={<Toggle label="Use a reranker" enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
+        title={t('search.rerankerCard.reranker')}
+        badge={<StatusBadge tone={config?.is_configured ? 'ok' : 'muted'}>{config?.is_configured ? t('search.rerankerCard.ready') : t('search.rerankerCard.optional')}</StatusBadge>}
+        action={<Toggle label={t('search.rerankerCard.useAReranker')} enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
       >
-        <SettingRow title="Service">
+        <SettingRow title={t('search.rerankerCard.service')}>
           <div className="w-[230px]">
             <SelectField value={preset} options={presetOptions} onChange={choosePreset} />
           </div>
         </SettingRow>
-        <SettingRow title="Address">
-          <TextField label="Base URL" value={form.base_url} onChange={(value) => update('base_url', value)} placeholder="http://localhost:8083/rerank" mono width={300} />
+        <SettingRow title={t('search.rerankerCard.address')}>
+          <TextField label={t('search.rerankerCard.baseUrl')} value={form.base_url} onChange={(value) => update('base_url', value)} placeholder="http://localhost:8083/rerank" mono width={300} />
         </SettingRow>
-        <SettingRow title="Model">
+        <SettingRow title={t('search.rerankerCard.model')}>
           <div className="w-[300px]">
-            <ModelCombobox value={form.model} options={models} onChange={(model) => update('model', model)} placeholder="BAAI/bge-reranker-v2-m3" />
+            <ModelCombobox value={form.model} options={models} onChange={(model) => update('model', model)} placeholder={t('search.rerankerCard.baaiBgeRerankerV2M3')} />
           </div>
         </SettingRow>
         <ProviderKeyField
@@ -204,14 +206,14 @@ export function RerankerCard({ config, providers, onSaved }: { config: RerankerC
         <SettingRow title=" ">
           {preset === 'tei' && (
             <ActionButton type="button" onClick={() => void detectModel()} disabled={detecting || !form.base_url}>
-              {detecting ? 'Detecting...' : 'Detect model'}
+              {detecting ? t('search.rerankerCard.detecting') : t('search.rerankerCard.detectModel')}
             </ActionButton>
           )}
           <ActionButton type="button" onClick={() => void test()} disabled={!form.base_url || testing === 'running'}>
-            {testing === 'running' ? 'Testing...' : 'Test'}
+            {testing === 'running' ? t('search.rerankerCard.testing') : t('search.rerankerCard.test')}
           </ActionButton>
           <ActionButton type="button" tone={dirty ? 'primary' : 'default'} onClick={() => void save()} disabled={!dirty || saving}>
-            {saving ? 'Saving...' : dirty ? (form.enabled ? 'Save and use' : 'Save changes') : 'Saved'}
+            {saving ? t('search.rerankerCard.saving') : dirty ? (form.enabled ? t('search.rerankerCard.saveAndUse') : t('search.rerankerCard.saveChanges')) : t('search.rerankerCard.saved')}
           </ActionButton>
         </SettingRow>
       </SettingsCard>

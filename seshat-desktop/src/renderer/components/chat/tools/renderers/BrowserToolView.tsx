@@ -1,5 +1,6 @@
 import { CodeBox, ErrorPre, Section } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 const TARGET_CSS = 'flex items-center gap-1.5 overflow-hidden text-[11px] text-app-text'
 const TARGET_URL_CSS = 'truncate font-mono'
@@ -45,6 +46,7 @@ function browserTarget(tool: ToolViewProps['tool']): string | null {
 }
 
 export function BrowserToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const target = browserTarget(tool)
   const pageId = typeof tool.input.page_id === 'string' ? tool.input.page_id : ''
 
@@ -58,7 +60,7 @@ export function BrowserToolView({ tool, result }: ToolViewProps) {
           </div>
         )}
         {result?.isError && result.content && (
-          <Section label="Error"><ErrorPre content={result.content} /></Section>
+          <Section label={t('chat.tools.renderers.browserToolView.error')}><ErrorPre content={result.content} /></Section>
         )}
       </>
     )
@@ -76,13 +78,13 @@ export function BrowserToolView({ tool, result }: ToolViewProps) {
           {parsed?.page?.id && <span className={TARGET_PAGE_CSS}>{parsed.page.id}</span>}
         </div>
         {src ? (
-          <Section label={parsed?.full_page ? 'Full page' : 'Viewport'}>
+          <Section label={parsed?.full_page ? t('chat.tools.renderers.browserToolView.fullPage') : t('chat.tools.renderers.browserToolView.viewport')}>
             <div className={IMG_WRAP_CSS}>
-              <img className="block h-auto max-h-[480px] w-full object-contain" src={src} alt={parsed?.page?.url ?? 'Browser screenshot'} loading="lazy" />
+              <img className="block h-auto max-h-[480px] w-full object-contain" src={src} alt={parsed?.page?.url ?? t('chat.tools.renderers.browserToolView.browserScreenshot')} loading="lazy" />
             </div>
           </Section>
         ) : (
-          <Section label="Result"><CodeBox content={result.content} /></Section>
+          <Section label={t('chat.tools.renderers.browserToolView.result')}><CodeBox content={result.content} /></Section>
         )}
       </>
     )
@@ -97,7 +99,7 @@ export function BrowserToolView({ tool, result }: ToolViewProps) {
         </div>
       )}
       {result.content && (
-        <Section label="Result">
+        <Section label={t('chat.tools.renderers.browserToolView.result')}>
           <CodeBox content={result.content} copyable />
         </Section>
       )}

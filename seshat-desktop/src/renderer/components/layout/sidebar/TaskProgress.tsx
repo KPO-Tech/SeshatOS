@@ -4,6 +4,7 @@ import { elapsedLabel, finishedMessage, progressOf, shortDetail, stepLabel } fro
 import { cancelTask, isTaskActive, type TaskInfo } from '@renderer/lib/tasks'
 import { nudgeTasks, useTasksStore } from '@renderer/stores/tasks'
 import { useUIStore } from '@renderer/stores/ui'
+import { useTranslation } from 'react-i18next'
 
 /** How long a task that went well stays in the sidebar; one that failed stays until it is dismissed. */
 const GOOD_NEWS_MS = 8000
@@ -27,6 +28,7 @@ function Bar({ value }: { value: number }) {
 }
 
 function ActiveTask({ task, now }: { task: TaskInfo; now: number }) {
+  const { t } = useTranslation('shell')
   async function stop() {
     try {
       await cancelTask(task.id)
@@ -43,8 +45,8 @@ function ActiveTask({ task, now }: { task: TaskInfo; now: number }) {
         <button
           type="button"
           onClick={() => void stop()}
-          aria-label={`Cancel ${task.title}`}
-          title="Cancel"
+          aria-label={t('layout.sidebar.taskProgress.cancelTask', { title: task.title })}
+          title={t('layout.sidebar.taskProgress.cancel')}
           className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-danger)]"
         >
           <CloseOne theme="outline" size={13} />
@@ -67,6 +69,7 @@ function ActiveTask({ task, now }: { task: TaskInfo; now: number }) {
 }
 
 function Finished({ task }: { task: TaskInfo }) {
+  const { t } = useTranslation('shell')
   const dismiss = useTasksStore((state) => state.dismiss)
   const message = finishedMessage(task)
   return (
@@ -84,7 +87,7 @@ function Finished({ task }: { task: TaskInfo }) {
           </div>
         )}
       </div>
-      <button type="button" aria-label="Dismiss" onClick={() => dismiss(task.id)} className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+      <button type="button" aria-label={t('layout.sidebar.taskProgress.dismiss')} onClick={() => dismiss(task.id)} className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
         <CloseOne theme="outline" size={13} />
       </button>
     </div>
@@ -93,8 +96,9 @@ function Finished({ task }: { task: TaskInfo }) {
 
 /** The numbers that stand for the tasks when there are several: a click shows that one. */
 function Numbers({ items, selected, onSelect }: { items: TaskInfo[]; selected: string; onSelect: (id: string) => void }) {
+  const { t } = useTranslation('shell')
   return (
-    <div className="flex min-w-0 items-center gap-1" role="tablist" aria-label="Tasks">
+    <div className="flex min-w-0 items-center gap-1" role="tablist" aria-label={t('layout.sidebar.taskProgress.tasks')}>
       {items.map((task, index) => {
         const active = isTaskActive(task)
         const failed = !active && finishedMessage(task).failed
@@ -129,6 +133,7 @@ function Numbers({ items, selected, onSelect }: { items: TaskInfo[]; selected: s
  * card shows the one that was picked, and the numbers keep it short however many tasks there are.
  */
 export function TaskProgress({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation('shell')
   const tasks = useTasksStore((state) => state.tasks)
   const recent = useTasksStore((state) => state.recent)
   const dismiss = useTasksStore((state) => state.dismiss)
@@ -153,7 +158,7 @@ export function TaskProgress({ collapsed }: { collapsed: boolean }) {
       <button
         type="button"
         onClick={toggleSidebar}
-        title={active.length > 0 ? `${active.length} task${active.length > 1 ? 's' : ''} running` : finishedMessage(shown).title}
+        title={active.length > 0 ? t('layout.sidebar.taskProgress.running', { count: active.length }) : finishedMessage(shown).title}
         className="mx-auto mb-2 flex size-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--accent-primary)]"
       >
         {active.length > 0 ? <Loading theme="outline" size={15} className="animate-spin" /> : <CheckOne theme="filled" size={15} fill="currentColor" />}

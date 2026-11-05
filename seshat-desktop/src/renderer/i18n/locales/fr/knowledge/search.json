@@ -1,0 +1,84 @@
+{
+  "pages": {
+    "knowledge": {
+      "search": {
+        "resultRow": {
+          "openTheDocument": "Ouvrir le document",
+          "bestMatch": "Meilleure correspondance",
+          "otherMatches": "Autres correspondances",
+          "openThisPassage": "Ouvrir ce passage",
+          "fewer": "Moins",
+          "passageMatched_one": "{{count}} passage correspond",
+          "passageMatched_other": "{{count}} passages correspondent",
+          "passageCount_one": "{{count}} passage",
+          "passageCount_other": "{{count}} passages",
+          "match": "Correspondance {{score}}",
+          "openAtPage": "Ouvrir à la page {{page}}",
+          "added": "Ajouté {{when}}",
+          "passageWord": "passage"
+        },
+        "searchBar": {
+          "search": "Rechercher",
+          "clearTheSearch": "Effacer la recherche",
+          "ctrlK": "Ctrl K",
+          "placeholder": "Recherchez dans vos documents : une question, un sujet, un nombre ou un code"
+        },
+        "searchPage": {
+          "search": "Rechercher",
+          "answerThisQuestionFromYour": "Répondre à cette question à partir de vos documents, avec ses sources",
+          "askSeshat": "Demander à Seshat",
+          "theCollectionsCouldNotBe": "Les collections n'ont pas pu être lues.",
+          "collections": "Collections",
+          "allCollections": "Toutes les collections",
+          "results": "Résultats",
+          "documents": "Documents",
+          "askAQuestionAboutThis": "Poser une question sur cette recherche",
+          "ask": "Demander",
+          "aQuestionAboutThis": "une question à ce sujet",
+          "type": "Type",
+          "sort": "Tri",
+          "view": "Affichage",
+          "list": "Liste",
+          "grid": "Grille",
+          "searching": "Recherche en cours",
+          "theSearchCouldNotBe": "La recherche n'a pas pu être faite. Vérifiez que le backend fonctionne et réessayez.",
+          "readingYourDocuments": "Lecture de vos documents",
+          "theDocumentsCouldNotBe": "Les documents n'ont pas pu être listés.",
+          "noDocumentIsLeftWith": "Aucun document ne reste avec ces filtres.",
+          "noDocumentIsIndexedYet": "Aucun document n'est encore indexé. Ajoutez une source et indexez-la depuis Collections, puis revenez.",
+          "nothingAnswersThis": "Rien ne répond à cela.",
+          "loadingMoreDocuments": "Chargement de plus de documents",
+          "noPreview": "Il n'y a pas encore d'aperçu pour ce type de fichier : {{name}}",
+          "couldNotOpen": "{{name}} n'a pas pu être ouvert.",
+          "mostRelevant": "Les plus pertinents",
+          "recentlyAdded": "Ajoutés récemment",
+          "nameSort": "Nom",
+          "subtitleScoped": "Retrouvez les documents et les passages qui vous répondent, dans {{name}}.",
+          "subtitleAll": "Retrouvez les documents et les passages qui vous répondent, dans toutes vos collections.",
+          "placeholderScoped": "Rechercher dans {{name}} : une question, un sujet, un nombre ou un code",
+          "allTypes": "Tous les types ({{count}})",
+          "nothingIn": "Rien dans {{name}} ne répond à cela.",
+          "tryWording": "Essayez une autre formulation, ou un mot que le document est susceptible d’employer.",
+          "bestShown": "Les {{count}} meilleurs passages sont affichés. Ajoutez des mots, ou choisissez une collection, pour affiner la recherche."
+        },
+        "searchModel": {
+          "kind": {
+            "pdf": "PDF",
+            "docx": "Word",
+            "xlsx": "Excel",
+            "pptx": "Présentation",
+            "md": "Texte",
+            "other": "Autre"
+          },
+          "justNow": "à l'instant",
+          "minutesAgo_one": "il y a {{count}} minute",
+          "minutesAgo_other": "il y a {{count}} minutes",
+          "hoursAgo_one": "il y a {{count}} heure",
+          "hoursAgo_other": "il y a {{count}} heures",
+          "daysAgo_one": "il y a {{count}} jour",
+          "daysAgo_other": "il y a {{count}} jours"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CollectionFile, IndexingJob } from './collectionsApi'
-import { fileState, isInProgress, plural, quotaPause, timeLeft } from './fileStatus'
+import { fileState, isInProgress, quotaPause, timeLeft } from './fileStatus'
 
 const file = (status: CollectionFile['status'], keywordsOnly = false): CollectionFile => ({
   fileId: 'f1',
@@ -15,7 +15,7 @@ const job = (status: string, lastError = '', nextRunAt = 0): IndexingJob => ({ i
 
 describe('fileState', () => {
   it('says indexed for an ingested file', () => {
-    expect(fileState(file('ingested'), undefined)).toEqual({ tone: 'ready', label: 'Indexed' })
+    expect(fileState(file('ingested'), undefined)).toEqual({ tone: 'ready', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexed' })
   })
 
   it('gives the reason of a failure', () => {
@@ -24,14 +24,14 @@ describe('fileState', () => {
   })
 
   it('tells a file with no job apart from one being indexed', () => {
-    expect(fileState(file('pending'), undefined)).toMatchObject({ tone: 'waiting', label: 'Not indexed' })
-    expect(fileState(file('pending'), job('running'))).toEqual({ tone: 'working', label: 'Indexing' })
-    expect(fileState(file('pending'), job('queued'))).toEqual({ tone: 'queued', label: 'Waiting' })
+    expect(fileState(file('pending'), undefined)).toMatchObject({ tone: 'waiting', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.notIndexed' })
+    expect(fileState(file('pending'), job('running'))).toEqual({ tone: 'working', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexing' })
+    expect(fileState(file('pending'), job('queued'))).toEqual({ tone: 'queued', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.waiting' })
   })
 
   it('shows a file as being indexed when a new attempt runs after a failed one', () => {
-    expect(fileState(file('failed'), job('running'))).toEqual({ tone: 'working', label: 'Indexing' })
-    expect(fileState(file('failed'), job('pending'))).toEqual({ tone: 'queued', label: 'Waiting' })
+    expect(fileState(file('failed'), job('running'))).toEqual({ tone: 'working', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexing' })
+    expect(fileState(file('failed'), job('pending'))).toEqual({ tone: 'queued', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.waiting' })
     expect(isInProgress(file('failed'), fileState(file('failed'), job('running')))).toBe(true)
   })
 
@@ -46,14 +46,14 @@ describe('a document kept for keywords only', () => {
   it('is indexed, with a note and the reason', () => {
     expect(fileState(file('ingested', true), undefined)).toEqual({
       tone: 'ready',
-      label: 'Indexed',
-      note: 'keywords only',
+      label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexed',
+      note: 'knowledge/collections:pages.knowledge.collections.fileStatus.keywordsOnly',
       detail: 'the embedding provider refused: bad key'
     })
   })
 
   it('is plainly indexed when its vectors were made', () => {
-    expect(fileState(file('ingested', false), undefined)).toEqual({ tone: 'ready', label: 'Indexed' })
+    expect(fileState(file('ingested', false), undefined)).toEqual({ tone: 'ready', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.indexed' })
   })
 })
 
@@ -61,7 +61,7 @@ describe('a job held back by the quota of the embedding provider', () => {
   const held = job('pending', 'Paused: the quota of the embedding provider is used up. Indexing goes on by itself.', 5000)
 
   it('is waiting, not failed, and says why', () => {
-    expect(fileState(file('pending'), held)).toMatchObject({ tone: 'queued', label: 'Waiting', detail: held.lastError })
+    expect(fileState(file('pending'), held)).toMatchObject({ tone: 'queued', label: 'knowledge/collections:pages.knowledge.collections.fileStatus.waiting', detail: held.lastError })
     expect(fileState(file('failed'), held).tone).toBe('queued')
     expect(isInProgress(file('pending'), fileState(file('pending'), held))).toBe(true)
   })
@@ -79,9 +79,3 @@ describe('a job held back by the quota of the embedding provider', () => {
   })
 })
 
-describe('plural', () => {
-  it('counts', () => {
-    expect(plural(1, 'document', 'documents')).toBe('1 document')
-    expect(plural(0, 'document', 'documents')).toBe('0 documents')
-  })
-})

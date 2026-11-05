@@ -1,0 +1,524 @@
+{
+  "layout": {
+    "imageLightbox": {
+      "download": "Download",
+      "close": "Close",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in"
+    },
+    "notificationBell": {
+      "notifications": "Notifications",
+      "markAllAsRead": "Mark all as read",
+      "clear": "Clear",
+      "nothingYetWhatFinishesIn": "Nothing yet. What finishes in the background, and what goes wrong, is kept here.",
+      "unread": "Unread",
+      "remove": "Remove",
+      "unreadCount": "Notifications, {{unread}} unread"
+    },
+    "rightPanelHost": {
+      "dragToResize": "Drag to resize",
+      "backToTheDocument": "Back to the document",
+      "thePassagesThisDocumentWas": "The passages this document was indexed as",
+      "document": "Document",
+      "index": "Index",
+      "restore": "Restore",
+      "maximize": "Maximize"
+    },
+    "searchModal": {
+      "searchConversations": "Search conversations",
+      "searchConversations2": "Search conversations...",
+      "searching": "Searching...",
+      "couldNotSearchConversations": "Could not search conversations",
+      "tryAgain": "Try again",
+      "noConversationsFound": "No conversations found",
+      "upDown": "up/down",
+      "navigate": "navigate",
+      "enter": "Enter",
+      "open": "open",
+      "esc": "Esc",
+      "close": "close"
+    },
+    "sessionHistoryModal": {
+      "conversationHistory": "Conversation history",
+      "closeHistory": "Close history",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "delete": "Delete",
+      "clear": "Clear",
+      "noConversationsFound": "No conversations found",
+      "noConversationsYet": "No conversations yet",
+      "filter": "Filter {{scope}} conversations...",
+      "confirmDelete": "Delete {{count}}? This cannot be undone.",
+      "select": "Select {{title}}"
+    },
+    "shell": {
+      "toggleSidebar": "Toggle sidebar"
+    },
+    "sidebar": {
+      "recentSessions": {
+        "tasks": "Tasks",
+        "history": "History",
+        "running": "Running",
+        "chatOptions": "Chat options",
+        "rename": "Rename",
+        "exportAsMarkdown": "Export as Markdown",
+        "copied": "Copied",
+        "copyAsMarkdown": "Copy as Markdown",
+        "delete": "Delete",
+        "noRecentChats": "No recent chats"
+      },
+      "sidebar": {
+        "newChat": "New Chat",
+        "search": "Search",
+        "skills": "Skills",
+        "plugins": "Plugins",
+        "projects": "Projects",
+        "store": "Store",
+        "resizeSidebar": "Resize sidebar"
+      },
+      "sidebarFooterMenu": {
+        "seshatMenu": "Seshat menu",
+        "seshatos": "SeshatOS",
+        "settings": "Settings",
+        "generativeUi": "Generative UI",
+        "tablesFiguresAndStepsDrawn": "Tables, figures and steps drawn in answers. From the next message.",
+        "whatSNew": "What's new",
+        "admin": "Admin",
+        "signOut": "Sign out"
+      },
+      "taskProgress": {
+        "cancel": "Cancel",
+        "dismiss": "Dismiss",
+        "tasks": "Tasks",
+        "cancelTask": "Cancel {{title}}",
+        "running_one": "{{count}} task running",
+        "running_other": "{{count}} tasks running"
+      }
+    },
+    "titlebar": {
+      "navigation": "Navigation",
+      "home": "Home",
+      "back": "Back",
+      "forward": "Forward",
+      "minimize": "Minimize",
+      "maximizeOrRestore": "Maximize or restore",
+      "close": "Close"
+    },
+    "titlebarSessionControls": {
+      "session": "Session",
+      "browser": "Browser",
+      "terminal": "Terminal",
+      "smart": "Smart",
+      "auto": "Auto"
+    },
+    "updateBanner": {
+      "restarting": "Restarting…",
+      "restartAndInstall": "Restart and install",
+      "later": "Later",
+      "ready": "SeshatOS {{version}} is ready. Restart to install it."
+    },
+    "errorBoundary": {
+      "somethingWentWrong": "Something went wrong",
+      "tryAgain": "Try again"
+    }
+  },
+  "setup": {
+    "componentCard": {
+      "alreadyInstalled": "Already installed",
+      "notInThisVersion": "Not in this version",
+      "skippedForNowYouCan": "Skipped for now. You can add it later in Config.",
+      "installed": "Installed",
+      "recommended": "Recommended"
+    },
+    "installProgress": {
+      "done": "Done",
+      "failed": "Failed",
+      "downloading": "Downloading",
+      "waiting": "Waiting",
+      "almostDone": "Almost done",
+      "skipped": "Skipped",
+      "ready": "Ready",
+      "notInstalled": "Not installed",
+      "bytesOf": "{{received}} of {{total}}",
+      "timeLeft": "About {{time}} left",
+      "tryAgainHere": "You can try again here, or later in Config."
+    },
+    "modelsChoice": {
+      "installed": "Installed",
+      "notInThisVersion": "Not in this version",
+      "included": "Included",
+      "notIncluded": "Not included",
+      "howToSetUp": "How to set up",
+      "chooseWhatToInstall": "Choose what to install",
+      "installOverview": "Install overview",
+      "nothingWillBeDownloadedNow": "Nothing will be downloaded now.",
+      "eachOneRunsOnYour": "Each one runs on your computer and costs nothing.",
+      "everythingBelowRunsOnYour": "Everything below runs on your computer and costs nothing.",
+      "totalSize": "Total size:",
+      "t0Mb": "0 MB",
+      "notEnough": " · not enough",
+      "youCanAddChangeOr": "You can add, change or remove any of it later in Config.",
+      "downloadRecommended": "Download recommended",
+      "customize": "Customize my install",
+      "skipForNow": "Skip for now",
+      "freeSpace": "Free space: {{size}}"
+    },
+    "providerStep": {
+      "aProvider": "A provider",
+      "ollamaAddress": "Ollama address",
+      "theKeyIsStoredEncrypted": "The key is stored encrypted on this computer and only sent to the provider.",
+      "runsOnThisComputerNo": "Runs on this computer, no key needed.",
+      "checking": "Checking",
+      "connecting": "Connecting",
+      "connect": "Connect",
+      "saveAnyway": "Save anyway",
+      "isConnected": "{{name}} is connected",
+      "apiKeyOf": "{{name}} API key",
+      "saveAnywayHint": "You can save it anyway and check it with your first message."
+    },
+    "setupRecap": {
+      "whatIsLeftToDo": "What is left to do",
+      "stillToDo": "Still to do"
+    },
+    "setupShell": {
+      "seshat": "Seshat",
+      "os": "OS"
+    },
+    "setupWizard": {
+      "connectAModel": "Connect a model",
+      "seshatosAnswersThroughAModel": "SeshatOS answers through a model. Use a cloud provider with your own key, or a local one such as Ollama. You can add more later in Config.",
+      "skipTheSetup": "Skip the setup",
+      "continue": "Continue",
+      "skipForNow": "Skip for now",
+      "back": "Back",
+      "setUpYourLocalModels": "Set up your local models",
+      "downloadWhatSeshatosNeedsTo": "Download what SeshatOS needs to read documents, name conversations and listen to you. It all runs on your computer.",
+      "settingThingsUp": "Setting things up",
+      "almostThere": "Almost there",
+      "youReAllSet": "You're all set",
+      "somethingCouldNotBeDownloaded": "Something could not be downloaded. You can try again now, or later in Config. SeshatOS works without it.",
+      "everythingYouChoseIsReady": "Everything you chose is ready. You can change any of it later in Config.",
+      "tryingAgain": "Trying again",
+      "tryAgain": "Try again",
+      "openSeshatos": "Open SeshatOS",
+      "downloadAndContinue": "Download and continue ({{size}})",
+      "allAtOnce": "Everything downloads at the same time, so it takes as long as the biggest one.",
+      "fewMinutes": "This takes a few minutes, depending on your connection.",
+      "leaveOpen": "You can leave this window open."
+    },
+    "componentCards": {
+      "titleTitle": "Smart titles",
+      "titleTagline": "Names your conversations for you, with a small model that runs beside the answer.",
+      "speechTitle": "Voice dictation",
+      "speechTagline": "Turns your voice into text on this computer, in about a hundred languages.",
+      "ocrTitle": "Scanned documents",
+      "ocrTagline": "Reads scanned PDFs and photos of documents on this computer, so you can search them and ask questions about them."
+    }
+  },
+  "onboarding": {
+    "accentSwatches": {
+      "accentColor": "Accent color"
+    },
+    "appearanceIntro": {
+      "seshat": "Seshat",
+      "os": "OS",
+      "welcomeToSeshatos": "Welcome to SeshatOS",
+      "anAiWorkspaceForResearch": "An AI workspace for research, creation and automation.",
+      "chooseYourAppearance": "Choose your appearance",
+      "pickAThemeThatSuits": "Pick a theme that suits you. You can change it later in Settings.",
+      "theme": "Theme",
+      "accentColor": "Accent color",
+      "continue": "Continue",
+      "hintDark": "The default theme",
+      "hintCarbon": "Black, quiet",
+      "hintDusk": "A warm evening glow",
+      "hintShine": "Light and warm"
+    },
+    "introSteps": {
+      "steps": "Steps"
+    }
+  },
+  "whatsnew": {
+    "visuals": {
+      "downloadingPaperasse": "Downloading paperasse",
+      "downloadingTheSkills1Of": "Downloading the skills (1 of 2)",
+      "ro6221Mib": "RO 62% · 2.1 MiB/s",
+      "paperasseIsReady": "paperasse is ready",
+      "theInstallationIsDone": "The installation is done.",
+      "theAgentHasFinished": "The agent has finished",
+      "gradientDescentIllustration": "Gradient descent illustration",
+      "installingStrixFailed": "Installing strix failed",
+      "dockerIsNotRunning": "Docker is not running.",
+      "yourAiWorkspace": "Your AI Workspace",
+      "workingOn": "working on",
+      "askAnything": "Ask anything...",
+      "generativeUi": "Generative UI",
+      "appearance": "Appearance",
+      "startSession": "Start session"
+    },
+    "whatsNewHost": {
+      "close": "Close",
+      "changes": "Changes",
+      "back": "Back",
+      "next": "Next",
+      "gotIt": "Got it",
+      "title": "What's new in SeshatOS {{version}}",
+      "newIn": "New in {{version}}"
+    }
+  },
+  "auth": {
+    "deviceLoginPanel": {
+      "contactingYourOrganization": "Contacting your organization...",
+      "cancel": "Cancel",
+      "tryAgain": "Try again",
+      "back": "Back",
+      "yourBrowserOpenedAPage": "Your browser opened a page of your organization. Check that this code is the one shown there, then approve.",
+      "signInCode": "Sign-in code",
+      "waitingForYourApproval": "Waiting for your approval",
+      "openThePageAgain": "Open the page again"
+    }
+  },
+  "brand": {
+    "seshatLogo": {
+      "seshatos": "SeshatOS"
+    }
+  },
+  "pages": {
+    "projects": {
+      "detail": {
+        "fileTree": {
+          "loading": "Loading...",
+          "thisFolderCannotBeRead": "This folder cannot be read.",
+          "empty": "Empty",
+          "projectFiles": "Project files",
+          "readTheFilesAgain": "Read the files again",
+          "refresh": "Refresh",
+          "searchFiles": "Search files...",
+          "searchTheFilesOfThe": "Search the files of the project",
+          "searching": "Searching...",
+          "noFileOrFolderHas": "No file or folder has this name."
+        },
+        "fileViewer": {
+          "thisFileIsEmpty": "This file is empty.",
+          "view": "View",
+          "source": "Source",
+          "preview": "Preview",
+          "copyThePath": "Copy the path",
+          "open": "Open",
+          "firstRows": "The first {{rows}} rows are shown."
+        },
+        "index": {
+          "projectNotFound": "Project not found",
+          "itMayHaveBeenRemoved": "It may have been removed.",
+          "backToProjects": "Back to Projects",
+          "project": "Project",
+          "comingBackSoon": "Coming back soon",
+          "chooseAFileToRead": "Choose a file to read",
+          "markdownCodeNotebooksTablesAnd": "Markdown, code, notebooks, tables and pictures are shown here. Nothing in this view changes a file."
+        },
+        "infoColumn": {
+          "viewAll": "View all",
+          "projectInfo": "Project info",
+          "path": "Path",
+          "copyThePath": "Copy the path",
+          "files": "Files",
+          "lastActive": "Last active",
+          "noActivityYet": "No activity yet",
+          "created": "Created",
+          "size": "Size",
+          "recentFiles": "Recent files",
+          "readingTheFolder": "Reading the folder...",
+          "noFilesYet": "No files yet.",
+          "recentSessions": "Recent sessions",
+          "noConversationsYet": "No conversations yet.",
+          "projectTools": "Project tools",
+          "openInVsCode": "Open in VS Code",
+          "openFolder": "Open folder"
+        },
+        "notebookView": {
+          "outputOfTheCell": "Output of the cell",
+          "thisNotebookHasNoCells": "This notebook has no cells.",
+          "outputNotShown": "An output of type {{type}} is not shown here."
+        },
+        "notesTab": {
+          "notes": "Notes",
+          "newNote": "New note",
+          "noNotesYetWriteThe": "No notes yet. Write the first one on the right.",
+          "justNow": "just now",
+          "title": "Title",
+          "titleOfTheNote": "Title of the note",
+          "view": "View",
+          "preview": "Preview",
+          "write": "Write",
+          "cancel": "Cancel",
+          "delete": "Delete",
+          "deleteTheNote": "Delete the note",
+          "nothingToShowYet": "Nothing to show yet.",
+          "writeANoteInMarkdown": "Write a note in Markdown: what the project is for, decisions, things to remember...",
+          "writeInMarkdown": "Write in Markdown...",
+          "textOfTheNote": "Text of the note"
+        },
+        "overviewTab": {
+          "askAboutThisProject": "Ask about this project",
+          "askAboutThisProject2": "Ask about this project...",
+          "about": "About",
+          "edit": "Edit",
+          "whatYouAsked": "What you asked",
+          "viewAll": "View all",
+          "nothingYetWhatYouAsk": "Nothing yet. What you ask about this project, and the answers, will be listed here.",
+          "working": "Working",
+          "viewAllTotal": "View all {{total}}"
+        },
+        "projectHeader": {
+          "projects": "Projects",
+          "unpinTheProject": "Unpin the project",
+          "pinTheProject": "Pin the project",
+          "unpin": "Unpin",
+          "pinToTheTopOf": "Pin to the top of the list",
+          "openInVsCode": "Open in VS Code",
+          "moreWaysToOpenThe": "More ways to open the project",
+          "openFolder": "Open folder",
+          "copyThePath": "Copy the path",
+          "projectSettings": "Project settings",
+          "actionsOfTheProject": "Actions of the project",
+          "newChatInThisProject": "New chat in this project"
+        },
+        "sessionsTab": {
+          "newChatInThisProject": "New chat in this project",
+          "noConversationsYet": "No conversations yet",
+          "startAChatInThis": "Start a chat in this project and it will show up here.",
+          "nameOfTheConversation": "Name of the conversation",
+          "cancel": "Cancel",
+          "delete": "Delete",
+          "renameTheConversation": "Rename the conversation",
+          "deleteTheConversation": "Delete the conversation",
+          "conversations_one": "{{count}} conversation",
+          "conversations_other": "{{count}} conversations"
+        },
+        "tabOverview": "Overview",
+        "tabFiles": "Files",
+        "tabSessions": "Sessions",
+        "tabNotes": "Notes"
+      },
+      "editProjectDialog": {
+        "editTheProject": "Edit the project",
+        "name": "Name",
+        "whatThisProjectIsFor": "What this project is for",
+        "takenFromTheReadmeOf": "Taken from the README of the folder. Change it if it is not right.",
+        "tags": "Tags",
+        "dataAnalysisMarket": "data, analysis, market",
+        "colour": "Colour",
+        "colourOfTheProject": "Colour of the project",
+        "cancel": "Cancel",
+        "save": "Save",
+        "description": "Description"
+      },
+      "index": {
+        "projects": "Projects",
+        "openOrganizeAndWorkWith": "Open, organize and work with your local projects. Start a session, explore files, or continue where you left off.",
+        "newProject": "New project",
+        "searchProjectsByNameFolder": "Search projects by name, folder, description or tag...",
+        "searchProjects": "Search projects",
+        "view": "View",
+        "gridView": "Grid view",
+        "listView": "List view",
+        "sortProjects": "Sort projects",
+        "show": "Show",
+        "noProjectsYet": "No projects yet",
+        "noProjectsHere": "No projects here",
+        "addAFolderOrPick": "Add a folder, or pick one from the composer next time you start a chat.",
+        "tryADifferentSearch": "Try a different search.",
+        "nothingInThisTabYet": "Nothing in this tab yet.",
+        "removeTheProject": "Remove the project",
+        "remove": "Remove",
+        "removeMessage": "{{name}} is taken off this list. The folder and its files are not touched."
+      },
+      "projectCard": {
+        "aConversationOfThisProject": "A conversation of this project is writing an answer",
+        "working": "Working",
+        "noDescriptionYet": "No description yet.",
+        "noActivityYet": "No activity yet",
+        "startSession": "Start session",
+        "moreWaysToStart": "More ways to start",
+        "newChatInThisProject": "New chat in this project",
+        "continueTheLastConversation": "Continue the last conversation",
+        "moreWaysToStartA": "More ways to start a session",
+        "openFolder": "Open folder",
+        "editDetails": "Edit details",
+        "unpin": "Unpin",
+        "pinTop": "Pin to the top",
+        "openFolderItem": "Open folder",
+        "restore": "Restore from the archive",
+        "archive": "Archive",
+        "removeFromList": "Remove from the list",
+        "openProject": "Open {{name}}",
+        "actionsOf": "Actions of {{name}}",
+        "lastActive": "Last active {{when}}",
+        "openFolderOf": "Open the folder of {{name}}"
+      },
+      "projectRow": {
+        "noActivityYet": "No activity yet",
+        "startSession": "Start session",
+        "openFolder": "Open folder",
+        "active": "Active {{when}}"
+      }
+    },
+    "home": {
+      "summarizeAFile": "Summarize a file",
+      "analyzeData": "Analyze data",
+      "searchTheWeb": "Search the web",
+      "brainstormIdeas": "Brainstorm ideas",
+      "writeCode": "Write code",
+      "loadingModels": "Loading models...",
+      "noModelIsAvailableYet": "No model is available yet.",
+      "creatingConversation": "Creating conversation..."
+    },
+    "homeStage": {
+      "yourAiWorkspace": "Your AI Workspace",
+      "workingOn": "working on",
+      "researchCreateAnalyzeAndAutomate": "Research, create, analyze and automate with AI, all in one workspace.",
+      "whatSetsSeshatosApart": "What sets SeshatOS apart",
+      "thePowerOfSeshat": "The power of Seshat",
+      "os": "OS",
+      "aUnifiedEnvironmentForKnowledge": "A unified environment for knowledge, documents, AI agents and automation.",
+      "chatTitle": "Chat",
+      "chatText": "Ask, analyze and solve complex problems.",
+      "filesTitle": "Work with files",
+      "filesText": "Summarize, extract and transform your documents.",
+      "dataTitle": "Analyze data",
+      "dataText": "Explore, visualize and draw insights from your data.",
+      "webTitle": "Search the web",
+      "webText": "Get up-to-date information from reliable sources.",
+      "codeTitle": "Write code",
+      "codeText": "Generate, explain and improve code in any language.",
+      "privateTitle": "Private & Local",
+      "privateText": "Your data stays with you.",
+      "modularTitle": "Modular",
+      "modularText": "Extend with skills and plugins.",
+      "openTitle": "Open & Flexible",
+      "openText": "Use the models and tools of your choice.",
+      "whatAreWe": "What are we",
+      "questionMark": "?"
+    },
+    "welcome": {
+      "seshat": "Seshat",
+      "os": "OS",
+      "letSGetYouStarted": "Let's get you started",
+      "workOnThisComputerRight": "Work on this computer right away, or bring your account.",
+      "startingYourWorkspace": "Starting your workspace...",
+      "continueOnThisComputer": "Continue on this computer",
+      "noAccountNeededYourChats": "No account needed. Your chats, files and memory stay here.",
+      "logIn": "Log in",
+      "approveACodeInYour": "Approve a code in your browser. No password is typed here.",
+      "createAnAccount": "Create an account",
+      "syncYourWorkspaceAcrossDevices": "Sync your workspace across devices.",
+      "cloudAccountsArenTAvailable": "Cloud accounts aren't available in this build yet. Use \"Continue on this computer\" for now.",
+      "contactUsForEnterpriseUse": "Contact us for enterprise use"
+    }
+  },
+  "app": {
+    "startingSeshatos": "Starting SeshatOS",
+    "seshatosCouldNotStartIts": "SeshatOS could not start its local engine.",
+    "tryAgain": "Try again"
+  }
+}

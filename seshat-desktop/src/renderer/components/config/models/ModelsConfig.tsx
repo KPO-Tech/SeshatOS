@@ -15,8 +15,10 @@ import type { ProviderModel, ProviderSetting } from '../providers/providerTypes'
 import { AddCustomModelForm } from './AddCustomModelForm'
 import { ProviderModelGroup } from './ProviderModelGroup'
 import { matchesModelSearch } from './modelUtils'
+import { useTranslation } from 'react-i18next'
 
 export function ModelsConfig() {
+  const { t } = useTranslation('config')
   const [settings, setSettings] = useState<ProviderSetting[]>([])
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ProviderModel[]>>({})
   const [loading, setLoading] = useState(true)
@@ -116,18 +118,18 @@ export function ModelsConfig() {
       <section className="flex items-center gap-3 rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_7%,var(--surface-panel))] px-4 py-3">
         {current ? <ProviderIcon provider={current.provider.provider} size={34} className="shrink-0" /> : null}
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Default model</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t('models.modelsConfig.defaultModel')}</div>
           <div className="truncate text-[15px] font-semibold text-[var(--text-primary)]">
-            {loading ? 'Loading...' : current ? current.model.display_name || current.model.model_id : 'None yet'}
+            {loading ? t('models.modelsConfig.loading') : current ? current.model.display_name || current.model.model_id : t('models.modelsConfig.noneYet')}
           </div>
           <div className="truncate text-[12px] text-[var(--text-muted)]">
-            {current ? `${current.provider.name || current.provider.provider}, used by new conversations` : 'Add a provider, then pick a model below.'}
+            {current ? t('models.modelsConfig.usedByNewConversations', { name: current.provider.name || current.provider.provider }) : t('models.modelsConfig.addAProviderThenPick')}
           </div>
         </div>
         <div className="shrink-0 text-right text-[12px] text-[var(--text-muted)]">
-          {configured.length} providers
+          {t('models.modelsConfig.providersCount', { count: configured.length })}
           <br />
-          {modelCount} models
+          {t('models.modelsConfig.modelsCount', { count: modelCount })}
         </div>
       </section>
 
@@ -146,21 +148,21 @@ export function ModelsConfig() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search models or providers"
-            aria-label="Search models"
+            placeholder={t('models.modelsConfig.searchModelsOrProviders')}
+            aria-label={t('models.modelsConfig.searchModels')}
             className="h-9 min-w-0 flex-1 rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)]"
           />
           <button type="button" onClick={() => void load()} disabled={loading} className="h-9 rounded-md border border-[var(--border-soft)] px-3 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-50">
-            {loading ? 'Loading...' : 'Refresh'}
+            {loading ? t('models.modelsConfig.loading') : t('models.modelsConfig.refresh')}
           </button>
         </div>
         <div className="mt-3 grid gap-2">
           {loading ? (
-            <ProviderEmptyState label="Loading model catalogs..." />
+            <ProviderEmptyState label={t('models.modelsConfig.loadingModelCatalogs')} />
           ) : configured.length === 0 ? (
-            <ProviderEmptyState label="Add a provider first, then models will appear here." />
+            <ProviderEmptyState label={t('models.modelsConfig.addAProviderFirstThen')} />
           ) : groups.length === 0 ? (
-            <ProviderEmptyState label={`No model matches "${query.trim()}".`} />
+            <ProviderEmptyState label={t('models.modelsConfig.noModelMatches', { query: query.trim() })} />
           ) : (
             groups.map(({ setting, all, shown }) => (
               <ProviderModelGroup

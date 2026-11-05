@@ -5,6 +5,7 @@ import { packOptions } from '../knowledge/ocrPacks'
 import type { NativeDocDownloadState } from '../knowledge/knowledgeTypes'
 import { ActionButton, ProgressRow, SelectField, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
 import type { DocumentReaderState } from './useDocumentReader'
+import { useTranslation } from 'react-i18next'
 
 function percent(download: NativeDocDownloadState): number {
   const files = download.file_count || 0
@@ -19,43 +20,44 @@ const glyph = (Icon: typeof Power) => <Icon theme="outline" size={16} />
 
 /** The second tab: reading scanned pages on this computer, with the built-in OCR (its models and languages) or the optional Indra reader. */
 export function LocalOcrPanel({ reader }: { reader: DocumentReaderState }) {
+  const { t } = useTranslation('config')
   const native = reader.native
   const download = native.download
   const needsModels = native.canDownload && !native.ready
-  const label = native.ready ? 'Ready' : !native.compiled ? 'Not in this version' : needsModels ? 'Needs models' : 'Not started'
+  const label = native.ready ? t('documents.localOcrPanel.ready') : !native.compiled ? t('documents.localOcrPanel.notInThisVersion') : needsModels ? t('documents.localOcrPanel.needsModels') : t('documents.localOcrPanel.notStarted')
 
   return (
     <>
-      <SettingsCard title="Built-in reader" badge={<StatusBadge tone={native.ready ? 'ok' : 'muted'}>{label}</StatusBadge>}>
+      <SettingsCard title={t('documents.localOcrPanel.builtInReader')} badge={<StatusBadge tone={native.ready ? 'ok' : 'muted'}>{label}</StatusBadge>}>
         {!native.compiled ? (
-          <SettingRow title="Not in this version" hint="Indra, below, can read scanned pages." />
+          <SettingRow title={t('documents.localOcrPanel.notInThisVersion')} hint={t('documents.localOcrPanel.indraBelowCanReadScanned')} />
         ) : (
           <>
             {native.packs.length > 1 && (
-              <SettingRow title="Languages" icon={glyph(Translate)}>
+              <SettingRow title={t('documents.localOcrPanel.languages')} icon={glyph(Translate)}>
                 <div className="w-[240px]">
                   <SelectField value={native.selectedPack ?? ''} options={packOptions(native.packs)} onChange={native.selectPack} disabled={native.downloading} />
                 </div>
               </SettingRow>
             )}
             <SettingRow
-              title={native.ready ? 'Reading scanned pages' : needsModels ? 'Download the models' : 'Start the reader'}
+              title={native.ready ? t('documents.localOcrPanel.readingScannedPages') : needsModels ? t('documents.localOcrPanel.downloadTheModels') : t('documents.localOcrPanel.startTheReader')}
               icon={glyph(native.ready ? Power : needsModels ? Download : Power)}
               hint={native.initError ?? undefined}
             >
               {native.ready ? (
-                <StatusBadge tone="ok">Ready</StatusBadge>
+                <StatusBadge tone="ok">{t('documents.localOcrPanel.ready')}</StatusBadge>
               ) : needsModels ? (
                 <ActionButton type="button" tone="primary" onClick={() => void native.startDownload()} disabled={!native.canDownload}>
                   {native.buttonLabel}
                 </ActionButton>
               ) : (
                 <ActionButton type="button" tone="primary" onClick={() => void native.initialize()} disabled={!native.canInitialize || native.initializing}>
-                  {native.initializing ? 'Starting...' : 'Start'}
+                  {native.initializing ? t('documents.localOcrPanel.starting') : t('documents.localOcrPanel.start')}
                 </ActionButton>
               )}
             </SettingRow>
-            {download?.status === 'running' && <ProgressRow label={download.current_file || 'Downloading models'} percent={percent(download)} />}
+            {download?.status === 'running' && <ProgressRow label={download.current_file || t('documents.localOcrPanel.downloadingModels')} percent={percent(download)} />}
           </>
         )}
       </SettingsCard>

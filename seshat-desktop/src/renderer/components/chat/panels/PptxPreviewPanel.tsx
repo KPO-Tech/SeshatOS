@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from '@renderer/api/client'
 import { clearSlideHighlight, highlightPassageInSlides, slideElement } from '@renderer/lib/slidePassageHighlight'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   fileId: string
@@ -34,6 +35,7 @@ function fitPresentationSize(host: HTMLElement): { width: number; height: number
 // isolated here so we can swap it later without changing attachment routing
 // or right-panel state.
 export function PptxPreviewPanel({ fileId, filename, initialSlide, highlight }: Props) {
+  const { t } = useTranslation('chat')
   const scrollRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -127,10 +129,10 @@ export function PptxPreviewPanel({ fileId, filename, initialSlide, highlight }: 
         <div className="h-full [&>*]:mx-auto" ref={containerRef} />
       </div>
       {status === 'loading' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">Loading {filename}...</div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">{t('chat.panels.pptxPreviewPanel.loading', { name: filename })}</div>
       )}
       {status === 'error' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">Couldn't load this presentation: {errorMessage}</div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">{t('chat.panels.pptxPreviewPanel.couldntLoad', { message: errorMessage })}</div>
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import { SelectorMenu, SelectorPill } from '@renderer/components/ui/SelectorPill
 import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { modelAlias } from '@renderer/lib/modelAlias'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   choices: ModelChoice[]
@@ -14,6 +15,7 @@ type Props = {
 
 // The model that writes the answers: the same pill and menu as the model selector of the chat input, in the input of the Ask view.
 export function ModelSelect({ choices, selectedId, loading, onSelect }: Props) {
+  const { t } = useTranslation('knowledge/components')
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   const current = choices.find((choice) => choice.id === selectedId) ?? null
@@ -34,7 +36,7 @@ export function ModelSelect({ choices, selectedId, loading, onSelect }: Props) {
 
   const options = useMemo(() => modelSelectorOptions(choices), [choices])
 
-  const label = current ? modelAlias(current.model.display_name || current.model.model_id) : loading ? 'Loading models' : 'No model'
+  const label = current ? modelAlias(current.model.display_name || current.model.model_id) : loading ? t('pages.knowledge.components.modelSelect.loadingModels') : t('pages.knowledge.components.modelSelect.noModel')
 
   return (
     <div ref={root} className="relative min-w-0 max-w-[min(240px,32vw)]">

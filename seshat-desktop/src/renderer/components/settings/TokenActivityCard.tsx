@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '@renderer/api/client'
 import { SettingsCard } from './kit'
 import {
@@ -14,10 +15,10 @@ import {
 } from './tokenActivity'
 
 type View = 'daily' | 'weekly' | 'cumulative'
-const VIEWS: { id: View; label: string }[] = [
-  { id: 'daily', label: 'Daily' },
-  { id: 'weekly', label: 'Weekly' },
-  { id: 'cumulative', label: 'Cumulative' }
+const VIEWS: { id: View; labelKey: string }[] = [
+  { id: 'daily', labelKey: 'settings:tokenActivity.views.daily' },
+  { id: 'weekly', labelKey: 'settings:tokenActivity.views.weekly' },
+  { id: 'cumulative', labelKey: 'settings:tokenActivity.views.cumulative' }
 ]
 
 const CHART_HEIGHT = 132
@@ -62,6 +63,7 @@ function MonthAxis({ weeks }: { weeks: ActivityWeek[] }) {
 }
 
 function DailyGrid({ weeks }: { weeks: ActivityWeek[] }) {
+  const { t } = useTranslation('settings')
   const [tip, setTip] = useState<Tip | null>(null)
   return (
     <div className="relative" onMouseLeave={() => setTip(null)}>
@@ -81,7 +83,7 @@ function DailyGrid({ weeks }: { weeks: ActivityWeek[] }) {
                     x: ((column + 0.5) / weeks.length) * 100,
                     y: box.offsetTop,
                     title: formatDay(cell.date),
-                    value: cell.tokens ? `${formatTokens(cell.tokens)} tokens` : 'No tokens'
+                    value: cell.tokens ? t('tokenActivity.tokens', { value: formatTokens(cell.tokens) }) : t('tokenActivity.noTokens')
                   })
                 }}
               />
@@ -94,6 +96,7 @@ function DailyGrid({ weeks }: { weeks: ActivityWeek[] }) {
 }
 
 function WeeklyBars({ weeks }: { weeks: ActivityWeek[] }) {
+  const { t } = useTranslation('settings')
   const [tip, setTip] = useState<Tip | null>(null)
   const peak = Math.max(1, ...weeks.map((week) => week.tokens))
   return (
@@ -111,8 +114,8 @@ function WeeklyBars({ weeks }: { weeks: ActivityWeek[] }) {
                 setTip({
                   x: ((column + 0.5) / weeks.length) * 100,
                   y: CHART_HEIGHT - height,
-                  title: `Week of ${formatDay(week.start)}`,
-                  value: week.tokens ? `${formatTokens(week.tokens)} tokens` : 'No tokens'
+                  title: t('tokenActivity.weekOf', { date: formatDay(week.start) }),
+                  value: week.tokens ? t('tokenActivity.tokens', { value: formatTokens(week.tokens) }) : t('tokenActivity.noTokens')
                 })
               }
             >
@@ -126,6 +129,7 @@ function WeeklyBars({ weeks }: { weeks: ActivityWeek[] }) {
 }
 
 function CumulativeLine({ weeks }: { weeks: ActivityWeek[] }) {
+  const { t } = useTranslation('settings')
   const [hovered, setHovered] = useState<number | null>(null)
   const running = useMemo(() => cumulative(weeks), [weeks])
   const peak = Math.max(1, running[running.length - 1] ?? 1)
@@ -138,8 +142,8 @@ function CumulativeLine({ weeks }: { weeks: ActivityWeek[] }) {
       : {
           x: xOf(hovered),
           y: yOf(running[hovered]),
-          title: `Through the week of ${formatDay(weeks[hovered].start)}`,
-          value: `${formatTokens(running[hovered])} tokens`
+          title: t('tokenActivity.throughWeekOf', { date: formatDay(weeks[hovered].start) }),
+          value: t('tokenActivity.tokens', { value: formatTokens(running[hovered]) })
         }
 
   return (
@@ -167,8 +171,9 @@ function CumulativeLine({ weeks }: { weeks: ActivityWeek[] }) {
 }
 
 function ViewTabs({ view, onChange }: { view: View; onChange: (view: View) => void }) {
+  const { t } = useTranslation('settings')
   return (
-    <div className="flex items-center gap-3" role="tablist" aria-label="Token activity view">
+    <div className="flex items-center gap-3" role="tablist" aria-label={t('tokenActivity.viewLabel')}>
       {VIEWS.map((item) => (
         <button
           key={item.id}
@@ -178,7 +183,7 @@ function ViewTabs({ view, onChange }: { view: View; onChange: (view: View) => vo
           onClick={() => onChange(item.id)}
           className={`cursor-pointer border-0 bg-transparent p-0 text-[13px] ${view === item.id ? 'font-medium text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
         >
-          {item.label}
+          {t(item.labelKey)}
         </button>
       ))}
     </div>
@@ -186,26 +191,28 @@ function ViewTabs({ view, onChange }: { view: View; onChange: (view: View) => vo
 }
 
 function LevelLegend() {
+  const { t } = useTranslation('settings')
   return (
     <div className="flex items-center gap-1 text-[11px] text-[var(--text-muted)]" aria-hidden>
-      <span className="mr-0.5">Less</span>
+      <span className="mr-0.5">{t('tokenActivity.less')}</span>
       {([0, 1, 2, 3, 4] as const).map((level) => (
         <span key={level} className="size-2.5 rounded-[2px]" style={{ background: LEVEL_FILL[level] }} />
       ))}
-      <span className="ml-0.5">More</span>
+      <span className="ml-0.5">{t('tokenActivity.more')}</span>
     </div>
   )
 }
 
 /** The same numbers for a screen reader, week by week: the charts above are drawn for the eye. */
 function WeeksTable({ weeks }: { weeks: ActivityWeek[] }) {
+  const { t } = useTranslation('settings')
   return (
     <table className="sr-only">
-      <caption>Tokens used per week</caption>
+      <caption>{t('tokenActivity.tableCaption')}</caption>
       <thead>
         <tr>
-          <th>Week of</th>
-          <th>Tokens</th>
+          <th>{t('tokenActivity.tableWeek')}</th>
+          <th>{t('tokenActivity.tableTokens')}</th>
         </tr>
       </thead>
       <tbody>
@@ -222,6 +229,7 @@ function WeeksTable({ weeks }: { weeks: ActivityWeek[] }) {
 
 /** How many tokens this person used, day by day, over the last year. */
 export function TokenActivityCard() {
+  const { t } = useTranslation('settings')
   const [activity, setActivity] = useState<TokenActivity | null>(null)
   const [failed, setFailed] = useState(false)
   const [view, setView] = useState<View>('daily')
@@ -241,7 +249,7 @@ export function TokenActivityCard() {
 
   let body: ReactNode
   if (failed) {
-    body = <p className="m-0 text-[13px] text-[var(--text-muted)]">Token activity could not be loaded.</p>
+    body = <p className="m-0 text-[13px] text-[var(--text-muted)]">{t('tokenActivity.failed')}</p>
   } else if (!weeks) {
     body = <div style={{ height: CHART_HEIGHT }} aria-busy />
   } else {
@@ -254,9 +262,7 @@ export function TokenActivityCard() {
         <MonthAxis weeks={weeks} />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="m-0 text-[12px] text-[var(--text-secondary)]">
-            {total
-              ? `${formatTokens(total)} tokens over ${activeDays} active ${activeDays === 1 ? 'day' : 'days'} in the last year`
-              : 'No tokens used yet. Activity shows here once you chat with an agent.'}
+            {total ? t('tokenActivity.summary', { tokens: formatTokens(total), count: activeDays }) : t('tokenActivity.empty')}
           </p>
           {view === 'daily' && <LevelLegend />}
         </div>
@@ -266,7 +272,7 @@ export function TokenActivityCard() {
   }
 
   return (
-    <SettingsCard title="Token activity" padded action={<ViewTabs view={view} onChange={setView} />}>
+    <SettingsCard title={t('tokenActivity.card')} padded action={<ViewTabs view={view} onChange={setView} />}>
       {body}
     </SettingsCard>
   )

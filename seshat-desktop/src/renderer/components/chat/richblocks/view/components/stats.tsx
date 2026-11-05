@@ -6,6 +6,7 @@ import { Expandable } from '../expand/Expandable'
 import { finite, numbers, strings, text } from '../charts/readers'
 import { formatTick, linear, niceDomain, niceTicks } from '../charts/scale'
 import { seriesAccent } from '../charts/seriesTone'
+import { useTranslation } from 'react-i18next'
 
 function Empty({ what }: { what: string }) {
   return <div className="my-3 rounded-lg border border-dashed border-app-border-subtle px-3 py-2 text-xs text-app-text-muted">{what}</div>
@@ -28,6 +29,7 @@ export function histogramBins(values: number[], asked?: number): Bin[] {
 }
 
 function Histogram({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const values = numbers(props.values)
   const bins = histogramBins(values, finite(props.bins))
   if (bins.length === 0) return <Empty what="A histogram needs numbers." />
@@ -42,11 +44,11 @@ function Histogram({ props }: ComponentProps) {
         const x = linear([bins[0].from, bins[bins.length - 1].to], [area.left, area.left + area.width])
         const y = linear([yLow, yHigh], [area.top + area.height, area.top])
         return (
-          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? 'Histogram'}>
+          <svg width={size.width} height={size.height} role="img" aria-label={text(props.title) ?? t('chat.richblocks.view.components.stats.histogram')}>
             <Axes area={area} size={size} xLabel={text(props.xLabel)} yLabel="Count" x={{ scale: x, ticks: niceTicks(bins[0].from, bins[bins.length - 1].to, 8) }} y={{ scale: y, ticks: niceTicks(yLow, yHigh, 5) }} />
             {bins.map((bin, i) => (
               <rect key={i} x={x(bin.from) + 0.5} y={y(bin.count)} width={Math.max(0, x(bin.to) - x(bin.from) - 1)} height={Math.max(0, y(0) - y(bin.count))} fill="currentColor" className={accent} opacity="0.85">
-                <title>{`${formatTick(Number(bin.from.toPrecision(4)))} to ${formatTick(Number(bin.to.toPrecision(4)))}: ${bin.count}`}</title>
+                <title>{t('chat.richblocks.view.components.stats.binTitle', { from: formatTick(Number(bin.from.toPrecision(4))), to: formatTick(Number(bin.to.toPrecision(4))), count: bin.count })}</title>
               </rect>
             ))}
           </svg>
@@ -64,6 +66,7 @@ export function shadeOf(value: number, min: number, max: number): number {
 }
 
 function Heatmap({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const rows = strings(props.rows)
   const cols = strings(props.cols)
   const values = (Array.isArray(props.values) ? props.values : []).map((row) => numbers(row))
@@ -75,7 +78,7 @@ function Heatmap({ props }: ComponentProps) {
   const accent = seriesAccent(0, props.tone)
 
   return (
-    <Expandable label={text(props.title) ?? 'Heatmap'} mode="download" className="my-3">
+    <Expandable label={text(props.title) ?? t('chat.richblocks.view.components.stats.heatmap')} mode="download" className="my-3">
     <figure className="m-0 overflow-x-auto rounded-lg border border-app-border-subtle bg-app-surface p-3">
       {text(props.title) && <figcaption className="mb-2 text-[13px] font-semibold text-app-text">{text(props.title)}</figcaption>}
       <div className="grid w-fit min-w-full gap-1" style={{ gridTemplateColumns: `auto repeat(${cols.length}, minmax(3.2rem, 1fr))` }}>

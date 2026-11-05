@@ -7,6 +7,7 @@ import { Expandable, useExpanded } from '../expand/Expandable'
 import { hasMarkdown, MarkdownText } from '../text/MarkdownText'
 import { buildTableModel, type Align, type BodyCell, type BodyRow, type HeaderCell } from '../table/tableModel'
 import { TONES, toneOrNull } from '../tones'
+import { useTranslation } from 'react-i18next'
 
 function formatCell(value: unknown, kind: string): string {
   if (typeof value === 'number') {
@@ -107,6 +108,7 @@ function BodyRowView({ row, padding, striped }: { row: BodyRow; padding: string;
 }
 
 function Table({ props }: ComponentProps) {
+  const { t } = useTranslation('chat')
   const model = useMemo(() => buildTableModel(props.columns, props.rows), [props.columns, props.rows])
   const sortable = props.sortable === true && !model.complex
   const [sort, setSort] = useState<{ index: number; down: boolean } | null>(null)
@@ -126,7 +128,7 @@ function Table({ props }: ComponentProps) {
   const onSort = (index: number) => setSort((current) => (current?.index === index ? { index, down: !current.down } : { index, down: false }))
 
   return (
-    <Expandable label={typeof props.caption === 'string' ? props.caption : 'Table'} force={model.rows.length > LONG_TABLE || model.leaves.length > WIDE_TABLE} scrollX className="my-3 overflow-hidden rounded-lg border border-app-border-subtle">
+    <Expandable label={typeof props.caption === 'string' ? props.caption : t('chat.richblocks.view.components.data.table')} force={model.rows.length > LONG_TABLE || model.leaves.length > WIDE_TABLE} scrollX className="my-3 overflow-hidden rounded-lg border border-app-border-subtle">
       <table className={`w-full border-collapse ${expanded || props.compact !== true ? 'text-[13px]' : 'text-[12px]'}`}>
         {typeof props.caption === 'string' && <caption className="px-3 py-2 text-left text-xs text-app-text-muted">{props.caption}</caption>}
         <thead>

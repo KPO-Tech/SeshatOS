@@ -19,6 +19,7 @@ import { compactionNote, connectorRows, environmentRows, formatTokens, liveConte
 import { formatDuration } from '@renderer/lib/turnTiming'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -45,6 +46,7 @@ type Props = {
  * context, what is connected, which files came out, how much happened). A card with nothing to show is not drawn.
  */
 export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onOpenTools, variant = 'panel' }: Props) {
+  const { t } = useTranslation('chat')
   const agentState = useSessionStore((s) => s.getAgentState(sessionId))
   const session = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId))
   const openRightPanel = useUIStore((s) => s.openRightPanel)
@@ -60,7 +62,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     void currentSandbox()
       .then(({ mode, directConfined }) => {
         if (cancelled) return
-        const view = confinementView(mode, directConfined)
+        const view = confinementView(mode, directConfined, t)
         setConfinement({ label: view.label, confined: view.confined })
       })
       .catch(() => undefined)
@@ -122,7 +124,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   if (environment.length > 0) {
     cards.push(
-      <OverviewCard key="environment" title="Environment">
+      <OverviewCard key="environment" title={t('chat.panels.sessionOverview.environment')}>
         <dl className="m-0 grid gap-1.5">
           {environment.map((row) => (
             <div key={row.label} className="grid grid-cols-[72px_minmax(0,1fr)] items-baseline gap-2">
@@ -140,9 +142,9 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   if (context) {
     const high = (context.percent ?? 0) >= 85
     cards.push(
-      <OverviewCard key="context" title="Context">
+      <OverviewCard key="context" title={t('chat.panels.sessionOverview.context')}>
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-[13px] font-semibold text-[var(--text-primary)]">{context.percent !== null ? `${context.percent}% used` : `${formatTokens(context.used)} tokens`}</span>
+          <span className="text-[13px] font-semibold text-[var(--text-primary)]">{context.percent !== null ? t('chat.panels.sessionOverview.percentUsed', { percent: context.percent }) : t('chat.panels.sessionOverview.tokensUsed', { value: formatTokens(context.used) })}</span>
           {context.window !== null && (
             <span className="text-[11px] tabular-nums text-[var(--text-muted)]">{formatTokens(context.used)} / {formatTokens(context.window)}</span>
           )}
@@ -157,14 +159,14 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
               <span
                 className="absolute inset-y-0 w-px bg-[var(--text-muted)] opacity-70"
                 style={{ left: `${context.compactAtPercent}%` }}
-                title={`The conversation is compacted by itself at ${context.compactAtPercent}%`}
+                title={t('chat.panels.sessionOverview.compactsAt', { percent: context.compactAtPercent })}
               />
             )}
           </div>
         )}
         <div className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] text-[var(--text-muted)]">
-          <span>Sent <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatTokens(agentState.inputTokens)}</b></span>
-          <span>Replied <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatTokens(agentState.outputTokens)}</b></span>
+          <span>{t('chat.panels.sessionOverview.sent')} <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatTokens(agentState.inputTokens)}</b></span>
+          <span>{t('chat.panels.sessionOverview.replied')} <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatTokens(agentState.outputTokens)}</b></span>
         </div>
         <div className="mt-2 flex items-center gap-2">
           <button
@@ -172,9 +174,9 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
             className="cursor-pointer rounded border border-[var(--border-subtle)] bg-transparent px-2 py-0.5 text-[11px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50"
             disabled={compacting || agentState.isThinking}
             onClick={() => { void compactNow() }}
-            title="Summarize the older part of the conversation now, instead of waiting for the automatic threshold"
+            title={t('chat.panels.sessionOverview.summarizeTheOlderPartOf')}
           >
-            {compacting ? 'Compacting…' : 'Compact now'}
+            {compacting ? t('chat.panels.sessionOverview.compacting') : t('chat.panels.sessionOverview.compactNow')}
           </button>
           {compactNote && (
             <span className={cx('min-w-0 flex-1 text-[11px]', compactNote.failed ? 'text-[var(--accent-warning)]' : 'text-[var(--text-muted)]')} role="status">
@@ -188,7 +190,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   if (pullResult && pullResult.pulls.length > 0) {
     cards.push(
-      <OverviewCard key="changes" title="Changes">
+      <OverviewCard key="changes" title={t('chat.panels.sessionOverview.changes')}>
         <ChangesList
           pulls={pullResult.pulls}
           onRefresh={() => { void refreshPulls() }}
@@ -202,7 +204,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   if (connectors.total > 0) {
     cards.push(
-      <OverviewCard key="connectors" title="Connectors" count={connectors.total}>
+      <OverviewCard key="connectors" title={t('chat.panels.sessionOverview.connectors')} count={connectors.total}>
         <ul className="m-0 grid list-none gap-1.5 p-0">
           {connectors.shown.map((row) => (
             <li key={row.id} className="flex items-center gap-2 text-[12px] text-[var(--text-primary)]">
@@ -212,21 +214,21 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
             </li>
           ))}
         </ul>
-        {connectors.hidden > 0 && <div className="mt-1.5 text-[11px] text-[var(--text-muted)]">and {connectors.hidden} more</div>}
+        {connectors.hidden > 0 && <div className="mt-1.5 text-[11px] text-[var(--text-muted)]">{t('chat.panels.sessionOverview.andMore', { total: connectors.hidden })}</div>}
       </OverviewCard>
     )
   }
 
   if (outputs.length > 0) {
     cards.push(
-      <OverviewCard key="outputs" title="Outputs" count={outputs.length}>
+      <OverviewCard key="outputs" title={t('chat.panels.sessionOverview.outputs')} count={outputs.length}>
         <ul className="m-0 grid list-none gap-0.5 p-0">
           {outputs.map((file) => (
             <li key={file.path}>
               <button
                 type="button"
                 title={file.path}
-                onClick={() => openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: file.toolId })}
+                onClick={() => openRightPanel({ kind: 'files', title: t('chat.panels.sessionOverview.files'), sessionId, focusToolId: file.toolId })}
                 className="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-1 py-1 text-left hover:bg-[var(--surface-hover)]"
               >
                 <FileIcon path={file.path} size={16} className="shrink-0" />
@@ -242,22 +244,22 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   if (hasActivity) {
     cards.push(
-      <OverviewCard key="activity" title="Activity">
+      <OverviewCard key="activity" title={t('chat.panels.sessionOverview.activity')}>
         <div className="grid grid-cols-3 gap-2 text-center">
-          <Figure label="Turns" value={agentState.turnNumber > 0 ? String(agentState.turnNumber) : '-'} />
-          <Figure label="Tools" value={String(toolCount)} />
-          <Figure label="Sites" value={String(webCount)} />
+          <Figure label={t('chat.panels.sessionOverview.turns')} value={agentState.turnNumber > 0 ? String(agentState.turnNumber) : '-'} />
+          <Figure label={t('chat.panels.sessionOverview.tools')} value={String(toolCount)} />
+          <Figure label={t('chat.panels.sessionOverview.sites')} value={String(webCount)} />
         </div>
         {agentState.lastTurnTiming && (
           <div className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] text-[var(--text-muted)]">
-            <span title="From sending to the first thing the model wrote">First token <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{agentState.lastTurnTiming.ttftMs === null ? '-' : formatDuration(agentState.lastTurnTiming.ttftMs)}</b></span>
-            <span>Last turn <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatDuration(agentState.lastTurnTiming.durationMs)}</b></span>
+            <span title={t('chat.panels.sessionOverview.fromSendingToTheFirst')}>{t('chat.panels.sessionOverview.firstToken')} <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{agentState.lastTurnTiming.ttftMs === null ? '-' : formatDuration(agentState.lastTurnTiming.ttftMs)}</b></span>
+            <span>{t('chat.panels.sessionOverview.lastTurn')} <b className="font-semibold tabular-nums text-[var(--text-secondary)]">{formatDuration(agentState.lastTurnTiming.durationMs)}</b></span>
           </div>
         )}
         {((toolCount > 0 && onOpenTools) || (webCount > 0 && onOpenWeb)) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {toolCount > 0 && onOpenTools && <PageLink onClick={onOpenTools}>All tools</PageLink>}
-            {webCount > 0 && onOpenWeb && <PageLink onClick={onOpenWeb}>Sites visited</PageLink>}
+            {toolCount > 0 && onOpenTools && <PageLink onClick={onOpenTools}>{t('chat.panels.sessionOverview.allTools')}</PageLink>}
+            {webCount > 0 && onOpenWeb && <PageLink onClick={onOpenWeb}>{t('chat.panels.sessionOverview.sitesVisited')}</PageLink>}
           </div>
         )}
       </OverviewCard>
@@ -265,7 +267,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   }
 
   if (cards.length === 0) {
-    return <p className="m-0 p-1 text-[12px] italic text-[var(--text-muted)]">Nothing to show yet. This fills in as the conversation goes on.</p>
+    return <p className="m-0 p-1 text-[12px] italic text-[var(--text-muted)]">{t('chat.panels.sessionOverview.nothingToShowYetThis')}</p>
   }
   return (
     <VariantContext.Provider value={variant}>

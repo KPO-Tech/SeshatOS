@@ -4,6 +4,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
 import { useSessionStore } from '@renderer/stores/session'
 import { EmptyState } from './EmptyState'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -18,6 +19,7 @@ type ShellStatus = 'idle' | 'starting' | 'running' | 'exited'
 // they do in a normal terminal. What the renderer sends back is the raw
 // keystroke stream, which is why there is no input field here.
 export function ShellPanel({ sessionId }: { sessionId?: string }) {
+  const { t } = useTranslation('chat')
   const session = useSessionStore((s) => (sessionId ? s.sessions.find((item) => item.id === sessionId) : undefined))
   const cwd = session?.workspacePath
   const [status, setStatus] = useState<ShellStatus>('idle')
@@ -45,7 +47,7 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
     const bridge = window.seshat?.shell
     if (!sessionId || !cwd) return
     if (!bridge) {
-      setError('This build has no shell bridge.')
+      setError(t('chat.panels.shellPanel.thisBuildHasNoShell'))
       return
     }
 
@@ -140,8 +142,8 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
   if (!cwd) {
     return (
       <EmptyState
-        title="No project folder"
-        description="This conversation has no workspace folder yet, so there is nowhere to open a shell."
+        title={t('chat.panels.shellPanel.noProjectFolder')}
+        description={t('chat.panels.shellPanel.thisConversationHasNoWorkspace')}
       />
     )
   }
@@ -150,7 +152,7 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-bg">
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-app-border-subtle px-3 py-2">
         <div className="flex min-w-0 items-baseline gap-2">
-          <span className="text-[11px] font-semibold text-app-text-muted">Shell</span>
+          <span className="text-[11px] font-semibold text-app-text-muted">{t('chat.panels.shellPanel.shell')}</span>
           {shellLabel && <span className="truncate text-[10.5px] text-app-text-muted">{shellLabel}</span>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -163,7 +165,7 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
             onClick={() => termRef.current?.clear()}
             type="button"
           >
-            Clear
+            {t('chat.panels.shellPanel.clear')}
           </button>
           <button
             className="cursor-pointer rounded-[5px] border border-app-border-subtle bg-transparent px-1.5 py-[2px] text-[10.5px] text-app-text-secondary hover:bg-[var(--surface-hover)] hover:text-app-text"
@@ -173,7 +175,7 @@ export function ShellPanel({ sessionId }: { sessionId?: string }) {
             }}
             type="button"
           >
-            Restart
+            {t('chat.panels.shellPanel.restart')}
           </button>
         </div>
       </div>

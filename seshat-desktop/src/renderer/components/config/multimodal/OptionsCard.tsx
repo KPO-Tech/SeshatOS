@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { ActionButton, Notice, SelectField, SettingRow, SettingsCard } from '../../settings/kit'
 import type { CapabilityOptionValues } from './capabilityOptions'
+import { useTranslation } from 'react-i18next'
 
 export type OptionDefinition = {
   name: string
@@ -29,6 +30,7 @@ export function OptionsCard({
   loading: boolean
   onSave: (all: CapabilityOptionValues) => Promise<void>
 }) {
+  const { t } = useTranslation('config')
   const [form, setForm] = useState<Record<string, string>>({})
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -68,7 +70,7 @@ export function OptionsCard({
         title={title}
         action={
           <ActionButton type="button" tone={dirty ? 'primary' : 'default'} onClick={() => void submit()} disabled={!dirty || saving}>
-            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+            {saving ? t('multimodal.optionsCard.saving') : dirty ? t('multimodal.optionsCard.saveChanges') : t('multimodal.optionsCard.saved')}
           </ActionButton>
         }
       >
@@ -78,7 +80,7 @@ export function OptionsCard({
               <div className="w-[210px]">
                 <SelectField
                   value={form[option.name] || DEFAULT_CHOICE}
-                  options={[{ value: DEFAULT_CHOICE, label: 'Provider default' }, ...option.choices]}
+                  options={[{ value: DEFAULT_CHOICE, label: t('multimodal.optionsCard.providerDefault') }, ...option.choices]}
                   onChange={(value) => update(option.name, value === DEFAULT_CHOICE ? '' : value)}
                 />
               </div>

@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { SandboxMode } from './sandboxApi'
 
 interface ConfinementView {
@@ -7,16 +8,16 @@ interface ConfinementView {
 }
 
 /** What to tell the user about command confinement. "Not confined" is said as plainly as the others. */
-export function confinementView(mode: SandboxMode, directConfined: boolean): ConfinementView {
+export function confinementView(mode: SandboxMode, directConfined: boolean, t: TFunction): ConfinementView {
   if (mode === 'project') {
     return {
-      label: 'Sandbox',
+      label: t('config:environment.confinementView.sandbox'),
       confined: true,
-      text: "Commands can write only in the session's folder and cannot read what is listed below. They can still read other files and use the network. The agent's own file edits are not confined: they follow your permission settings."
+      text: t('config:environment.confinementView.sandboxText')
     }
   }
   if (directConfined) {
-    return { label: 'Landlock', confined: true, text: 'Commands are confined by the Linux kernel (Landlock): they can write only inside the project folder.' }
+    return { label: t('config:environment.confinementView.landlock'), confined: true, text: t('config:environment.confinementView.landlockText') }
   }
-  return { label: 'Not confined', confined: false, text: 'Commands run with your full user rights.' }
+  return { label: t('config:environment.confinementView.notConfined'), confined: false, text: t('config:environment.confinementView.notConfinedText') }
 }

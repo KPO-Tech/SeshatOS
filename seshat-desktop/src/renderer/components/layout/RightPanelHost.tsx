@@ -22,6 +22,7 @@ import { flattenRightPanels } from '@renderer/stores/ui'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 import { FLOATING_PANEL_WIDTH, isFloatingColumn } from './floatingColumn'
 import type { RightPanelInstance, RightPanelKind, RightPanelColumn } from '@renderer/stores/ui'
+import { useTranslation } from 'react-i18next'
 
 export function RightPanelHost() {
   const rightColumns = useUIStore((s) => s.rightColumns)
@@ -60,6 +61,7 @@ export function RightPanelHost() {
 }
 
 function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
+  const { t } = useTranslation('shell')
   const closeRightPanel = useUIStore((s) => s.closeRightPanel)
   const setRightPanelWidth = useUIStore((s) => s.setRightPanelWidth)
   const setRightPanelSplit = useUIStore((s) => s.setRightPanelSplit)
@@ -108,7 +110,7 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
       className={floating ? 'relative flex h-full min-w-0 flex-col bg-[var(--chat-bg)]' : 'relative flex h-full min-w-0 flex-col border-l border-app-border-subtle bg-app-bg shadow-[var(--shadow-medium)]'}
       style={{ width: `${floating ? FLOATING_PANEL_WIDTH : column.width}px` }}
     >
-      {!floating && <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label="Drag to resize" />}
+      {!floating && <div className="absolute bottom-0 left-[-4px] top-0 z-10 w-2 cursor-col-resize" onMouseDown={onWidthDragStart} aria-label={t('layout.rightPanelHost.dragToResize')} />}
       {column.panels.map((panel, index) => (
         <div
           key={panel.id}
@@ -125,7 +127,7 @@ function RightPanelColumnView({ column }: { column: RightPanelColumn }) {
             <div
               className="absolute bottom-[-4px] left-0 right-0 z-20 h-2 cursor-row-resize"
               onMouseDown={(e) => onSplitDragStart(e, e.currentTarget.parentElement?.parentElement?.clientHeight ?? 600)}
-              aria-label="Drag to resize"
+              aria-label={t('layout.rightPanelHost.dragToResize')}
             />
           )}
         </div>
@@ -196,6 +198,7 @@ function PanelFrame({
 // The frame of a panel that has no header of its own. A document opened from a collection also gets a button that swaps the viewer for the
 // passages the document was indexed as.
 function GenericPanelFrame({ panel, isMaximized, onClose, onToggleMaximize }: { panel: RightPanelInstance; isMaximized: boolean; onClose: () => void; onToggleMaximize: () => void }) {
+  const { t } = useTranslation('shell')
   const [showIndex, setShowIndex] = useState(false)
   const indexSource = panel.indexSource
   return (
@@ -218,13 +221,13 @@ function GenericPanelFrame({ panel, isMaximized, onClose, onToggleMaximize }: { 
               type="button"
               onClick={() => setShowIndex((shown) => !shown)}
               aria-pressed={showIndex}
-              title={showIndex ? 'Back to the document' : 'The passages this document was indexed as'}
+              title={showIndex ? t('layout.rightPanelHost.backToTheDocument') : t('layout.rightPanelHost.thePassagesThisDocumentWas')}
             >
               <ListView size={13} />
-              {showIndex ? 'Document' : 'Index'}
+              {showIndex ? t('layout.rightPanelHost.document') : t('layout.rightPanelHost.index')}
             </button>
           )}
-          <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" type="button" onClick={onToggleMaximize} aria-label={isMaximized ? 'Restore' : 'Maximize'}>
+          <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" type="button" onClick={onToggleMaximize} aria-label={isMaximized ? t('layout.rightPanelHost.restore') : t('layout.rightPanelHost.maximize')}>
             <WindowMaximizeIcon />
           </button>
           <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text" type="button" onClick={onClose}>

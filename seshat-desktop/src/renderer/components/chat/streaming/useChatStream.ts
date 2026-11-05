@@ -23,6 +23,7 @@ import {
 import { isUntitledSessionTitle } from '@renderer/lib/sessionTitle'
 import type { RAGSearchResult } from '@renderer/api/types'
 import type { ToolActivity } from '@renderer/stores/session'
+import { useTranslation } from 'react-i18next'
 
 const MAX_RETRIES = 3
 const RETRY_BASE_MS = 1000
@@ -46,6 +47,7 @@ type UseChatStreamOptions = {
 }
 
 export function useChatStream(sessionId: string, options?: UseChatStreamOptions) {
+  const { t } = useTranslation('chat')
   const isStreaming = useSessionStore((s) => Boolean(s.isStreamingBySession[sessionId]))
   // Tracks a pending requestAnimationFrame for batching assistant-message syncs.
   // Without batching, every SSE token triggers a full store.updateMessage call.
@@ -295,7 +297,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
           const delay = RETRY_BASE_MS * (2 ** (retryAttempt - 1)) // 1s, 2s, 4s
           store.updateMessage(sessionId, assistantMessageId, (msg) => ({
             ...msg,
-            content: [{ type: 'text' as const, text: `> Connection lost. Reconnecting (attempt ${retryAttempt}/${MAX_RETRIES})…` }],
+            content: [{ type: 'text' as const, text: t('chat.streaming.useChatStream.reconnecting', { attempt: retryAttempt, max: MAX_RETRIES }) }],
           }))
           await new Promise<void>((resolve) => setTimeout(resolve, delay))
           if (isStopRequested(sessionId)) break
@@ -314,7 +316,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
         const content = streamingToContentBlocks(useSessionStore.getState().getStreaming(sessionId))
         store.updateMessage(sessionId, assistantMessageId, (message) => ({
           ...message,
-          content: content.length > 0 ? content : [{ type: 'text', text: '(empty response)' }],
+          content: content.length > 0 ? content : [{ type: 'text', text: t('chat.streaming.useChatStream.emptyResponse') }],
         }))
         store.clearStreaming(sessionId)
       }
@@ -340,7 +342,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
         : error instanceof Error ? error.message : 'Unable to reach the backend.'
       flushPresenter()
       const partial = streamingToContentBlocks(useSessionStore.getState().getStreaming(sessionId))
-      const content = [...partial, { type: 'text' as const, text: errorMarkdown(errMsg, errorKind) }]
+      const content = [...partial, { type: 'text' as const, text: errorMarkdown(errMsg, errorKind, t) }]
       store.updateMessage(sessionId, assistantMessageId, (message) => ({ ...message, content }))
       store.updateMessage(sessionId, userMessageId, (message) => ({ ...message, status: 'error' }))
       store.clearStreaming(sessionId)

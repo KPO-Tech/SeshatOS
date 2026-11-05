@@ -15,6 +15,7 @@ import {
 import { parseAskUserAnswers, resolveAskUserQuestions } from '../helpers'
 import type { ToolViewProps } from '../types'
 import { GenericToolView } from './GenericToolView'
+import { useTranslation } from 'react-i18next'
 
 // Read-only: answering an ask_user_question call happens in AskUserPanel,
 // docked above the message box (see Conversation.tsx's pendingAskUser).
@@ -22,6 +23,7 @@ import { GenericToolView } from './GenericToolView'
 // actively pending, and (b) once answered, be the permanent Q&A record in
 // the transcript - it never renders its own inputs.
 export function AskUserToolView({ tool, result, status }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const prompt = tool._prompt
   const questions = useMemo(() => resolveAskUserQuestions(tool.input, prompt), [prompt, tool.input])
   const answers = parseAskUserAnswers(result?.content)
@@ -33,7 +35,7 @@ export function AskUserToolView({ tool, result, status }: ToolViewProps) {
   if (status === 'running' && prompt) {
     return (
       <div className={ASK_CARD_PENDING_CSS}>
-        <span className={ASK_PENDING_NOTE_CSS}>Waiting for your answer above the message box.</span>
+        <span className={ASK_PENDING_NOTE_CSS}>{t('chat.tools.renderers.askUserToolView.waitingForYourAnswerAbove')}</span>
       </div>
     )
   }
@@ -51,7 +53,7 @@ export function AskUserToolView({ tool, result, status }: ToolViewProps) {
               {answer ? (
                 <div className={ASK_ANSWER_VALUE_CSS}>{answer}</div>
               ) : (
-                <div className={ASK_NOTE_CSS}>No answer recorded yet.</div>
+                <div className={ASK_NOTE_CSS}>{t('chat.tools.renderers.askUserToolView.noAnswerRecordedYet')}</div>
               )}
             </div>
           </div>
@@ -59,11 +61,11 @@ export function AskUserToolView({ tool, result, status }: ToolViewProps) {
       })}
 
       {status === 'running' && !result?.content && !prompt && (
-        <div className={ASK_NOTE_CSS}>Waiting for the user response.</div>
+        <div className={ASK_NOTE_CSS}>{t('chat.tools.renderers.askUserToolView.waitingForTheUserResponse')}</div>
       )}
 
       {status === 'failed' && result?.content && (
-        <Section label="Error">
+        <Section label={t('chat.tools.renderers.askUserToolView.error')}>
           <CodeBox content={result.content} variant="error" copyable />
         </Section>
       )}

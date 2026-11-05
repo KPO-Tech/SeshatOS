@@ -1,0 +1,134 @@
+{
+  "pages": {
+    "knowledge": {
+      "ask": {
+        "askComposer": {
+          "yourQuestion": "Votre question",
+          "attachingAFileIsNot": "Joindre un fichier n'est pas encore disponible",
+          "attachAFile": "Joindre un fichier",
+          "searchingTheWebIsNot": "La recherche sur le web n'est pas encore disponible",
+          "web": "Web",
+          "stop": "Arrêter",
+          "ask": "Demander",
+          "askAboutYourDocuments": "Posez une question sur vos documents"
+        },
+        "askExtras": {
+          "noPassageMatchedTryOther": "Aucun passage ne correspond. Essayez d'autres mots, ou cherchez le document par mot-clé.",
+          "noPassageIn": "Aucun passage de {{name}} ne correspond. Essayez une autre collection ou d'autres mots.",
+          "basedOnAmong": "Basé sur {{documents}} parmi {{collections}} que vous pouvez lire",
+          "basedOn": "Basé sur {{documents}}",
+          "documentCount_one": "{{count}} document",
+          "documentCount_other": "{{count}} documents",
+          "collectionCount_one": "{{count}} collection",
+          "collectionCount_other": "{{count}} collections"
+        },
+        "askHeader": {
+          "historyOfQuestions": "Historique des questions",
+          "askSeshat": "Demander à Seshat",
+          "getAnswersFromYourDocuments": "Obtenez des réponses à partir de vos documents, de vos données et de vos sources connectées.",
+          "newQuestion": "Nouvelle question"
+        },
+        "askHero": {
+          "askAnythingAboutYourKnowledge": "Demandez ce que vous voulez à propos de vos connaissances",
+          "seshatReadsYourDocumentsAnd": "Seshat lit vos documents et vos sources connectées pour vous donner des réponses précises, contextualisées et exploitables.",
+          "notAvailableYet": "Pas encore disponible",
+          "soon": "Bientôt"
+        },
+        "askHistory": {
+          "historyOfQuestions": "Historique des questions",
+          "history": "Historique",
+          "newQuestion": "Nouvelle question",
+          "noQuestionYetWhatYou": "Aucune question pour le moment. Ce que vous demandez ici est conservé ici.",
+          "couldNotDeleteIt": "Impossible de la supprimer.",
+          "deleteThisConversation": "Supprimer cette conversation ?",
+          "delete": "Supprimer",
+          "keep": "Garder",
+          "deleteSession": "Supprimer {{title}}"
+        },
+        "askIllustration": {
+          "pdf": "PDF"
+        },
+        "askPage": {
+          "askAFollowUp": "Poser une question de suivi",
+          "askAboutYourDocuments": "Interrogez vos documents",
+          "openTheChat": "Ouvrir le chat",
+          "removedNote": "Ce document n'est plus dans la collection. Voici le passage sur lequel la réponse reposait, tel que l'agent l'a lu.",
+          "configureProvider": "Configurez un fournisseur dans les Paramètres avant de poser une question."
+        },
+        "askSessionSidebar": {
+          "thisConversation": "Cette conversation"
+        },
+        "askSidebar": {
+          "helpToAsk": "Aide pour demander",
+          "askWithYourSources": "Demandez avec vos sources",
+          "seshatCanUseYourCollections": "Seshat peut utiliser vos collections et vos documents pour donner des réponses contextualisées.",
+          "exampleQuestions": "Exemples de questions",
+          "tips": "Conseils"
+        },
+        "howItWorks": {
+          "howItWorks": "Comment ça marche",
+          "howAskWorks": "Comment fonctionne Ask",
+          "gotIt": "Compris"
+        },
+        "askContent": {
+          "answerTitle": "Répondre aux questions",
+          "answerDescription": "Obtenez des informations précises à partir de vos documents",
+          "summarizeTitle": "Résumer",
+          "summarizeDescription": "Transformez de longs documents en résumés clairs",
+          "analyzeTitle": "Analyser",
+          "analyzeDescription": "Dégagez des enseignements et comparez des informations",
+          "generateTitle": "Générer du contenu",
+          "generateDescription": "Créez des textes, des rapports ou des explications",
+          "dataTitle": "Utiliser vos données",
+          "dataDescription": "Interrogez des tableaux, des extraits de code et des jeux de données",
+          "sourcesTitle": "Travailler avec des sources",
+          "sourcesDescription": "Combinez plusieurs fichiers et sources de données",
+          "tip1": "Soyez précis dans votre question",
+          "tip2": "Citez un fichier ou une collection si besoin",
+          "tip3": "Posez des questions de suivi",
+          "tip4": "Utilisez un langage naturel",
+          "tip5": "Combinez les informations de plusieurs sources",
+          "step1Title": "Vous demandez",
+          "step1Text": "Écrivez une question avec vos propres mots, et choisissez où chercher : toutes les collections ou une seule.",
+          "step2Title": "Seshat cherche",
+          "step2Text": "Il cherche les passages de vos documents qui répondent, par le sens, et par les mots quand votre question contient un code ou un nombre.",
+          "step3Title": "Il répond à partir de ces passages",
+          "step3Text": "La réponse n'est écrite qu'à partir de ces passages, et chaque affirmation renvoie au passage dont elle provient.",
+          "step4Title": "Vous vérifiez",
+          "step4Text": "Ouvrez un passage pour le lire dans son document, à la bonne page. Rien ne quitte votre ordinateur, sauf ce dont le modèle que vous avez choisi a besoin pour écrire la réponse."
+        },
+        "askReadiness": {
+          "cloudUnreachable": "SeshatCloud est injoignable",
+          "notAnswering": "Knowledge ne répond pas",
+          "orgCollectionsFailed": "Les collections de votre organisation n'ont pas pu être lues. Vérifiez votre connexion, puis réessayez.",
+          "localCollectionsFailed": "Les collections de cet ordinateur n'ont pas pu être lues. Réessayez ; si cela continue, redémarrez l'application.",
+          "tryAgain": "Réessayer",
+          "noDocuments": "Pas encore de documents sur lesquels poser des questions",
+          "addSourceText": "Ajoutez une source et Seshat lira ses documents. Une fois indexés, vous pourrez les interroger ici.",
+          "noneShared": "Aucune collection n'est encore partagée avec vous. Demandez l'accès à un administrateur de votre organisation.",
+          "addSource": "Ajouter une source",
+          "openSearchSettings": "Ouvrir les réglages de la recherche",
+          "meaningOff": "La recherche par le sens est désactivée",
+          "meaningOffText": "Ask ne trouve les passages que par leurs mots : une question qui n'emploie pas les mots des documents peut ne rien trouver.",
+          "staleTitle": "Les documents ont été indexés avec un autre modèle",
+          "staleText": "La recherche par le sens est faussée tant que les documents ne sont pas indexés de nouveau avec le modèle actuellement utilisé.",
+          "indexAgain": "Indexer de nouveau"
+        },
+        "historyList": {
+          "justNow": "à l'instant",
+          "yesterday": "hier",
+          "minutesAgo_one": "il y a {{count}} min",
+          "minutesAgo_other": "il y a {{count}} min",
+          "hoursAgo_one": "il y a {{count}} h",
+          "hoursAgo_other": "il y a {{count}} h",
+          "daysAgo_one": "il y a {{count}} jour",
+          "daysAgo_other": "il y a {{count}} jours"
+        },
+        "useKnowledgeConversation": {
+          "noModel": "Aucun modèle n'est encore disponible.",
+          "couldNotStart": "La conversation n'a pas pu démarrer."
+        }
+      }
+    }
+  }
+}

@@ -12,12 +12,14 @@ import { TaskProgress } from './TaskProgress'
 import { KnowledgeNav } from '@renderer/pages/knowledge/components/KnowledgeNav'
 import { SidebarItem } from './SidebarItem'
 import { listProjects, normalizeProjectPath, resolveProjectContextPath, selectRecentSessions } from '@renderer/lib/projects'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
 export function Sidebar() {
+  const { t } = useTranslation('shell')
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
   const setSidebarWidth = useUIStore((state) => state.setSidebarWidth)
   const sessions = useSessionStore((state) => state.sessions)
@@ -106,12 +108,12 @@ export function Sidebar() {
           <KnowledgeNav collapsed={collapsed} />
         ) : (
         <div className={cx('flex flex-col gap-px px-2 pb-1 pt-3.5', collapsed && 'items-center')}>
-          <SidebarItem icon={<Plus theme="outline" size={16} />} label="New Chat" collapsed={collapsed} active={pathname === '/' && !activeId} onClick={startNewChat} />
-          <SidebarItem icon={<Search theme="outline" size={16} />} label="Search" shortcut="Ctrl K" collapsed={collapsed} onClick={() => setSearchOpen(true)} />
+          <SidebarItem icon={<Plus theme="outline" size={16} />} label={t('layout.sidebar.sidebar.newChat')} collapsed={collapsed} active={pathname === '/' && !activeId} onClick={startNewChat} />
+          <SidebarItem icon={<Search theme="outline" size={16} />} label={t('layout.sidebar.sidebar.search')} shortcut="Ctrl K" collapsed={collapsed} onClick={() => setSearchOpen(true)} />
           {/* The same entries everywhere: what a project changes is the list of tasks below, not the way around the app. */}
-          <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label="Skills" collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
-          <SidebarItem icon={<Puzzle theme="outline" size={16} />} label="Plugins" collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
-          <SidebarItem icon={<Workbench theme="outline" size={16} />} label="Projects" collapsed={collapsed} active={pathname === '/projects'} onClick={() => navigate('/projects')} />
+          <SidebarItem icon={<ApplicationOne theme="outline" size={16} />} label={t('layout.sidebar.sidebar.skills')} collapsed={collapsed} active={item('/skills')} onClick={() => navigate('/skills')} />
+          <SidebarItem icon={<Puzzle theme="outline" size={16} />} label={t('layout.sidebar.sidebar.plugins')} collapsed={collapsed} active={item('/plugins')} onClick={() => navigate('/plugins')} />
+          <SidebarItem icon={<Workbench theme="outline" size={16} />} label={t('layout.sidebar.sidebar.projects')} collapsed={collapsed} active={pathname === '/projects'} onClick={() => navigate('/projects')} />
           {currentProject && (
             <SidebarItem
               nested
@@ -134,7 +136,7 @@ export function Sidebar() {
 
         {edition.store && (
           <div className={cx('mt-1 flex flex-col px-2', collapsed && 'items-center')}>
-            <SidebarItem icon={<Browser theme="outline" size={16} />} label="Store" collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />
+            <SidebarItem icon={<Browser theme="outline" size={16} />} label={t('layout.sidebar.sidebar.store')} collapsed={collapsed} active={item('/store')} onClick={() => navigate('/store')} />
           </div>
         )}
 
@@ -145,7 +147,7 @@ export function Sidebar() {
             className="absolute inset-y-0 right-0 z-10 w-1.5 cursor-col-resize"
             role="separator"
             aria-orientation="vertical"
-            aria-label="Resize sidebar"
+            aria-label={t('layout.sidebar.sidebar.resizeSidebar')}
             onPointerDown={startResize}
             onDoubleClick={() => setSidebarWidth(SIDEBAR_DEFAULT_WIDTH)}
           />

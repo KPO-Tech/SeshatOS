@@ -5,6 +5,7 @@ import { ModelSelect } from '../components/ModelSelect'
 import { ScopeSelect } from '../components/ScopeSelect'
 import type { ModelChoice } from '@renderer/components/chat/conversation/useConversationModels'
 import type { AskScope, KnowledgeCollection } from '../chat/useCollections'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -30,7 +31,8 @@ type Props = {
 }
 
 // The input of the Ask view, made like the chat input: the same card, text size, selector pill and send button.
-export function AskComposer({ collections, scope, busy, models, placeholder = 'Ask about your documents', blocked, initialValue = '', autoFocus, prefill, onScopeChange, onSubmit, onStop }: Props) {
+export function AskComposer({ collections, scope, busy, models, placeholder, blocked, initialValue = '', autoFocus, prefill, onScopeChange, onSubmit, onStop }: Props) {
+  const { t } = useTranslation('knowledge/ask')
   const [value, setValue] = useState(initialValue)
   const field = useRef<HTMLTextAreaElement>(null)
   const canSend = value.trim() !== '' && !busy && !blocked
@@ -72,9 +74,9 @@ export function AskComposer({ collections, scope, busy, models, placeholder = 'A
         rows={1}
         value={value}
         autoFocus={autoFocus}
-        placeholder={blocked ?? placeholder}
+        placeholder={blocked ?? placeholder ?? t('pages.knowledge.ask.askComposer.askAboutYourDocuments')}
         disabled={Boolean(blocked)}
-        aria-label="Your question"
+        aria-label={t('pages.knowledge.ask.askComposer.yourQuestion')}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={onKeyDown}
         className="min-h-5 w-full resize-none border-0 bg-transparent text-[13px] disabled:cursor-not-allowed leading-[1.55] text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted"
@@ -85,8 +87,8 @@ export function AskComposer({ collections, scope, busy, models, placeholder = 'A
           <button
             type="button"
             disabled
-            title="Attaching a file is not available yet"
-            aria-label="Attach a file"
+            title={t('pages.knowledge.ask.askComposer.attachingAFileIsNot')}
+            aria-label={t('pages.knowledge.ask.askComposer.attachAFile')}
             className="flex size-7 shrink-0 cursor-not-allowed items-center justify-center rounded-[9px] border-0 bg-transparent text-app-text-muted opacity-60"
           >
             <Paperclip size={15} />
@@ -96,8 +98,8 @@ export function AskComposer({ collections, scope, busy, models, placeholder = 'A
 
         <div className="flex min-w-0 shrink-0 items-center gap-2">
           <ModelSelect choices={models.choices} selectedId={models.selectedId} loading={models.loading} onSelect={models.select} />
-          <span className="flex items-center gap-1.5 text-[12px] text-app-text-muted opacity-60" title="Searching the web is not available yet">
-            Web
+          <span className="flex items-center gap-1.5 text-[12px] text-app-text-muted opacity-60" title={t('pages.knowledge.ask.askComposer.searchingTheWebIsNot')}>
+            {t('pages.knowledge.ask.askComposer.web')}
             <span aria-hidden="true" className="flex h-[18px] w-8 items-center rounded-full bg-[var(--surface-hover)] p-0.5">
               <span className="size-3.5 rounded-full bg-app-text-muted" />
             </span>
@@ -107,7 +109,7 @@ export function AskComposer({ collections, scope, busy, models, placeholder = 'A
               className="flex size-[30px] items-center justify-center rounded-[9px] border border-[var(--accent-hover)] bg-[var(--accent-subtle)] text-[var(--accent-primary)] transition-all duration-200 hover:bg-[var(--accent-hover)]"
               onClick={onStop}
               type="button"
-              aria-label="Stop"
+              aria-label={t('pages.knowledge.ask.askComposer.stop')}
             >
               <WindowCloseIcon size={14} />
             </button>
@@ -121,7 +123,7 @@ export function AskComposer({ collections, scope, busy, models, placeholder = 'A
               )}
               onClick={send}
               type="button"
-              aria-label="Ask"
+              aria-label={t('pages.knowledge.ask.askComposer.ask')}
             >
               <Send size={14} theme={canSend ? 'filled' : 'outline'} />
             </button>

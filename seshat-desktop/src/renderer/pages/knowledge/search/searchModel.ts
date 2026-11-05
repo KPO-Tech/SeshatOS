@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { kindOfFile, type FileKind } from '../chat/passageSources'
 
 // One passage a search brought back, with what is needed to open its document.
@@ -99,7 +100,7 @@ export function groupDocs(hits: readonly Hit[]): Doc[] {
   return docs
 }
 
-export const KIND_LABEL: Record<FileKind, string> = { pdf: 'PDF', docx: 'Word', xlsx: 'Excel', pptx: 'Slides', md: 'Text', other: 'Other' }
+export const KIND_LABEL: Record<FileKind, string> = { pdf: 'knowledge/search:pages.knowledge.search.searchModel.kind.pdf', docx: 'knowledge/search:pages.knowledge.search.searchModel.kind.docx', xlsx: 'knowledge/search:pages.knowledge.search.searchModel.kind.xlsx', pptx: 'knowledge/search:pages.knowledge.search.searchModel.kind.pptx', md: 'knowledge/search:pages.knowledge.search.searchModel.kind.md', other: 'knowledge/search:pages.knowledge.search.searchModel.kind.other' }
 export const KIND_ORDER: FileKind[] = ['pdf', 'docx', 'xlsx', 'pptx', 'md', 'other']
 
 export type Facets = {
@@ -133,11 +134,6 @@ export function sortDocs(docs: readonly Doc[], key: SortKey): Doc[] {
   return [...docs].sort((a, b) => b.score - a.score)
 }
 
-/** "2 passages", "1 passage". */
-export function countLabel(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`
-}
-
 /** A document of a collection as it is listed, before any search. */
 export function docOfFile(collection: { id: string; name: string }, file: { fileId: string; name: string; chunkCount: number; createdAt: number; preview?: string }): Doc {
   return {
@@ -168,13 +164,12 @@ export function withListing(docs: readonly Doc[], listing: readonly Doc[]): Doc[
 }
 
 /** "just now", "5 minutes ago", "2 hours ago", "3 days ago", or a date for what is older than a month. */
-export function ago(seconds: number, now: number = Date.now()): string {
+export function ago(seconds: number, t: TFunction, locale = 'en-GB', now: number = Date.now()): string {
   if (!seconds) return ''
   const diff = Math.max(0, Math.round(now / 1000 - seconds))
-  const unit = (value: number, name: string) => `${value} ${name}${value === 1 ? '' : 's'} ago`
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return unit(Math.floor(diff / 60), 'minute')
-  if (diff < 86400) return unit(Math.floor(diff / 3600), 'hour')
-  if (diff < 30 * 86400) return unit(Math.floor(diff / 86400), 'day')
-  return new Date(seconds * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  if (diff < 60) return t('knowledge/search:pages.knowledge.search.searchModel.justNow')
+  if (diff < 3600) return t('knowledge/search:pages.knowledge.search.searchModel.minutesAgo', { count: Math.floor(diff / 60) })
+  if (diff < 86400) return t('knowledge/search:pages.knowledge.search.searchModel.hoursAgo', { count: Math.floor(diff / 3600) })
+  if (diff < 30 * 86400) return t('knowledge/search:pages.knowledge.search.searchModel.daysAgo', { count: Math.floor(diff / 86400) })
+  return new Date(seconds * 1000).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 }

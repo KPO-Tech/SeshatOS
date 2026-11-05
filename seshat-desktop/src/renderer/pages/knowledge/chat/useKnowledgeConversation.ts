@@ -10,6 +10,7 @@ import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { useProvidersStore } from '@renderer/stores/providers'
 import { useConversationSessionLoad } from '@renderer/components/chat/conversation/useConversationSessionLoad'
 import { deriveTurns } from './askTurns'
+import { i18n } from '@renderer/i18n'
 
 // The agent the Ask view talks to: built into seshat-backend (internal/knowledge/agent), with its own prompt and one read-only tool.
 export const KNOWLEDGE_AGENT_SLUG = 'knowledge'
@@ -72,7 +73,7 @@ export function useKnowledgeConversation() {
         return
       }
       if (!choice) {
-        setStartError(configured ? 'No model is available yet.' : 'Configure a provider in Settings before asking.')
+        setStartError(configured ? i18n.t('knowledge/ask:pages.knowledge.ask.useKnowledgeConversation.noModel') : i18n.t('knowledge/ask:pages.knowledge.ask.askPage.configureProvider'))
         return
       }
       try {
@@ -99,7 +100,7 @@ export function useKnowledgeConversation() {
         waiting.current = { question: text, collectionId }
         setSessionId(response.session_id)
       } catch (error) {
-        setStartError((error as { message?: string })?.message ?? 'The conversation could not be started.')
+        setStartError((error as { message?: string })?.message ?? i18n.t('knowledge/ask:pages.knowledge.ask.useKnowledgeConversation.couldNotStart'))
       }
     },
     [addSession, choice, configured, permissionMode, sendMessage, sessionId]

@@ -3,11 +3,13 @@ import { SettingsCard } from '../../../settings/kit'
 import { AudioFieldRows } from './AudioFieldRows'
 import { VOICE_FIELDS } from './audioFields'
 import type { AudioDraft } from './useAudioDraft'
+import { useTranslation } from 'react-i18next'
 
 /** Speech synthesis: how the agent speaks when it reads a text aloud. */
 export function VoiceTab({ draft }: { draft: AudioDraft }) {
+  const { t } = useTranslation('config')
   return (
-    <SettingsCard title="Reading aloud" icon={<VolumeNotice theme="outline" size={16} />}>
+    <SettingsCard title={t('multimodal.audio.voiceTab.readingAloud')} icon={<VolumeNotice theme="outline" size={16} />}>
       <AudioFieldRows fields={VOICE_FIELDS} draft={draft} />
     </SettingsCard>
   )

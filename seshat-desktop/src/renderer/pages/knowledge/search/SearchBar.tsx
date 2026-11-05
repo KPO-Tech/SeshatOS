@@ -1,5 +1,6 @@
 import { useEffect, useRef, type FormEvent } from 'react'
 import { CloseSmall, Search } from '@icon-park/react'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   value: string
@@ -12,7 +13,8 @@ type Props = {
 
 // The search bar of the page: a magnifier, the query, a button to clear it, and the button that searches. Ctrl+K from anywhere in the
 // page puts the cursor in it.
-export function SearchBar({ value, busy, autoFocus, placeholder = 'Search your documents: a question, a topic, a number or a code', onChange, onSubmit }: Props) {
+export function SearchBar({ value, busy, autoFocus, placeholder, onChange, onSubmit }: Props) {
+  const { t } = useTranslation('knowledge/search')
   const field = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -47,8 +49,8 @@ export function SearchBar({ value, busy, autoFocus, placeholder = 'Search your d
         ref={field}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        aria-label="Search"
+        placeholder={placeholder ?? t('pages.knowledge.search.searchBar.placeholder')}
+        aria-label={t('pages.knowledge.search.searchBar.search')}
         className="min-w-0 flex-1 border-0 bg-transparent py-1 text-[14.5px] text-app-text outline-none [font-family:inherit] placeholder:text-app-text-muted"
       />
       {value && (
@@ -58,17 +60,17 @@ export function SearchBar({ value, busy, autoFocus, placeholder = 'Search your d
             onChange('')
             field.current?.focus()
           }}
-          aria-label="Clear the search"
+          aria-label={t('pages.knowledge.search.searchBar.clearTheSearch')}
           className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[8px] border-0 bg-transparent text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text"
         >
           <CloseSmall size={16} />
         </button>
       )}
-      {!value && <kbd className="hidden shrink-0 rounded-[7px] border border-app-border-subtle px-2 py-0.5 text-[11px] text-app-text-muted sm:block">Ctrl K</kbd>}
+      {!value && <kbd className="hidden shrink-0 rounded-[7px] border border-app-border-subtle px-2 py-0.5 text-[11px] text-app-text-muted sm:block">{t('pages.knowledge.search.searchBar.ctrlK')}</kbd>}
       <button
         type="submit"
         disabled={!value.trim() || busy}
-        aria-label="Search"
+        aria-label={t('pages.knowledge.search.searchBar.search')}
         className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border-0 bg-[var(--accent-primary)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[color-mix(in_srgb,var(--surface-panel)_82%,var(--surface-root))] disabled:text-app-text-muted"
       >
         <Search size={15} />

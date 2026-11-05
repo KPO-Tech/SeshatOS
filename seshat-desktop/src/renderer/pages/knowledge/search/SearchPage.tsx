@@ -17,10 +17,12 @@ import { facetsOf, filterDocs, groupDocs, KIND_LABEL, KIND_ORDER, NO_FILTERS, so
 import { useLibrary } from './useLibrary'
 import { useLibraryTotals } from './useLibraryTotals'
 import { useSearch } from './useSearch'
+import { useTranslation } from 'react-i18next'
 
 const ALL = '__all__'
 
 export function SearchPage() {
+  const { t } = useTranslation('knowledge/search')
   const navigate = useNavigate()
   const { collections, failed: collectionsFailed } = useCollections()
   const { state, run, reset } = useSearch()
@@ -125,29 +127,29 @@ export function SearchPage() {
     setOpenError(null)
     try {
       const target = hit ? passageTarget(hit.text, hit.pages) : undefined
-      if (!(await openDocument({ fileId: doc.fileId, name: doc.path }, doc.corpusId, target?.page, target?.highlight))) setOpenError(`There is no preview for this kind of file yet: ${doc.name}`)
+      if (!(await openDocument({ fileId: doc.fileId, name: doc.path }, doc.corpusId, target?.page, target?.highlight))) setOpenError(t('pages.knowledge.search.searchPage.noPreview', { name: doc.name }))
     } catch {
-      setOpenError(`${doc.name} could not be opened.`)
+      setOpenError(t('pages.knowledge.search.searchPage.couldNotOpen', { name: doc.name }))
     }
   }
 
   const sortOptions: [SortKey, string][] = done
     ? [
-        ['relevance', 'Most relevant'],
-        ['recent', 'Recently added'],
-        ['name', 'Name']
+        ['relevance', t('pages.knowledge.search.searchPage.mostRelevant')],
+        ['recent', t('pages.knowledge.search.searchPage.recentlyAdded')],
+        ['name', t('pages.knowledge.search.searchPage.nameSort')]
       ]
     : [
-        ['recent', 'Recently added'],
-        ['name', 'Name']
+        ['recent', t('pages.knowledge.search.searchPage.recentlyAdded')],
+        ['name', t('pages.knowledge.search.searchPage.nameSort')]
       ]
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pb-4 pt-5">
       <PageHeader
         icon={<SearchIcon theme="filled" size={24} fill="currentColor" />}
-        title="Search"
-        text={`Find the documents and the passages that answer you, ${scopeName ? `in ${scopeName}.` : 'across all your collections.'}`}
+        title={t('pages.knowledge.search.searchPage.search')}
+        text={scopeName ? t('pages.knowledge.search.searchPage.subtitleScoped', { name: scopeName }) : t('pages.knowledge.search.searchPage.subtitleAll')}
       />
       <section className="mt-5 shrink-0">
         <div className="flex items-center gap-3">
@@ -156,7 +158,7 @@ export function SearchPage() {
               value={query}
               busy={state.phase === 'loading'}
               autoFocus
-              placeholder={scopeName ? `Search in ${scopeName}: a question, a topic, a number or a code` : undefined}
+              placeholder={scopeName ? t('pages.knowledge.search.searchPage.placeholderScoped', { name: scopeName }) : undefined}
               onChange={setQuery}
               onSubmit={submit}
             />
@@ -165,18 +167,18 @@ export function SearchPage() {
             <button
               type="button"
               onClick={ask}
-              title="Answer this question from your documents, with its sources"
+              title={t('pages.knowledge.search.searchPage.answerThisQuestionFromYour')}
               className="flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-soft))] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-3.5 text-[13px] font-semibold text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)]"
             >
               <Message size={15} />
-              Ask Seshat
+              {t('pages.knowledge.search.searchPage.askSeshat')}
             </button>
           )}
         </div>
 
         {collectionsFailed && (
           <p className="mb-0 mt-2 text-[12.5px] text-[var(--accent-danger)]" role="alert">
-            The collections could not be read.
+            {t('pages.knowledge.search.searchPage.theCollectionsCouldNotBe')}
           </p>
         )}
       </section>
@@ -184,11 +186,11 @@ export function SearchPage() {
       {openFileId === null && (done ? found.length > 0 : library.total > 0 || facets.collections.length > 0) && (
         <div className="mt-4 shrink-0">
           <Pills
-            label="Collections"
+            label={t('pages.knowledge.search.searchPage.collections')}
             value={filters.collectionIds.size === 0 ? new Set([ALL]) : filters.collectionIds}
             onChange={(id) => (id === ALL ? setFilters({ ...filters, collectionIds: new Set() }) : toggleCollection(id))}
             items={[
-              { id: ALL, label: 'All collections', count: collectionsTotal },
+              { id: ALL, label: t('pages.knowledge.search.searchPage.allCollections'), count: collectionsTotal },
               ...facets.collections.map((collection) => ({ id: collection.id, label: collection.name, count: collection.count }))
             ]}
           />
@@ -199,7 +201,7 @@ export function SearchPage() {
         <section className="@container flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="mb-2.5 flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <h2 className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-[var(--text-primary)]">
-              {done ? 'Results' : 'Documents'}
+              {done ? t('pages.knowledge.search.searchPage.results') : t('pages.knowledge.search.searchPage.documents')}
               {(done || library.total > 0) && <span className="text-[12.5px] font-normal text-[var(--text-muted)]">{resultCount}</span>}
             </h2>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -207,25 +209,25 @@ export function SearchPage() {
                 <button
                   type="button"
                   onClick={ask}
-                  title="Ask a question about this search"
+                  title={t('pages.knowledge.search.searchPage.askAQuestionAboutThis')}
                   className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-0 bg-transparent p-0 text-[12px] text-[var(--accent-primary)] hover:underline"
                 >
                   <Message size={12} />
                   <span>
-                    Ask<span className="hidden @2xl:inline"> a question about this</span>
+                    {t('pages.knowledge.search.searchPage.ask')}<span className="hidden @2xl:inline"> {t('pages.knowledge.search.searchPage.aQuestionAboutThis')}</span>
                   </span>
                 </button>
               )}
               {kinds.length > 0 && (
                 <ChoiceSelect
-                  label="Type"
-                  choices={[['', `All types (${kindsTotal})`], ...kinds.map(({ kind, count }) => [kind, `${KIND_LABEL[kind]} (${count})`] as const)]}
+                  label={t('pages.knowledge.search.searchPage.type')}
+                  choices={[['', t('pages.knowledge.search.searchPage.allTypes', { count: kindsTotal })], ...kinds.map(({ kind, count }) => [kind, `${t(KIND_LABEL[kind])} (${count})`] as const)]}
                   value={filters.kind ?? ''}
                   onChange={(value) => setFilters({ ...filters, kind: value === '' ? null : (value as NonNullable<Filters['kind']>) })}
                 />
               )}
-              <ChoiceSelect label="Sort" icon={<Sort size={12} />} choices={sortOptions} value={sortKey} onChange={setSort} />
-              <div className="flex overflow-hidden rounded-[9px] border border-app-border-subtle" role="group" aria-label="View">
+              <ChoiceSelect label={t('pages.knowledge.search.searchPage.sort')} icon={<Sort size={12} />} choices={sortOptions} value={sortKey} onChange={setSort} />
+              <div className="flex overflow-hidden rounded-[9px] border border-app-border-subtle" role="group" aria-label={t('pages.knowledge.search.searchPage.view')}>
                 {(['list', 'grid'] as const).map((mode) => (
                   <button
                     key={mode}
@@ -234,7 +236,7 @@ export function SearchPage() {
                     onClick={() => setView(mode)}
                     className={['h-8 w-11 cursor-pointer border-0 text-[12px] font-medium', view === mode ? 'bg-[var(--surface-hover)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'].join(' ')}
                   >
-                    {mode === 'list' ? 'List' : 'Grid'}
+                    {mode === 'list' ? t('pages.knowledge.search.searchPage.list') : t('pages.knowledge.search.searchPage.grid')}
                   </button>
                 ))}
               </div>
@@ -242,11 +244,11 @@ export function SearchPage() {
           </div>
 
           <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-            {state.phase === 'loading' && <p className="m-0 text-[13px] text-[var(--text-muted)]">Searching</p>}
+            {state.phase === 'loading' && <p className="m-0 text-[13px] text-[var(--text-muted)]">{t('pages.knowledge.search.searchPage.searching')}</p>}
 
             {state.phase === 'failed' && (
               <p className="m-0 text-[13px] text-[var(--accent-danger)]" role="alert">
-                The search could not be done. Check that the backend is running and try again.
+                {t('pages.knowledge.search.searchPage.theSearchCouldNotBe')}
               </p>
             )}
 
@@ -258,23 +260,23 @@ export function SearchPage() {
 
             {state.phase !== 'loading' && state.phase !== 'failed' && (
               <>
-                {!done && library.loading && library.docs.length === 0 && <p className="m-0 text-[13px] text-[var(--text-muted)]">Reading your documents</p>}
+                {!done && library.loading && library.docs.length === 0 && <p className="m-0 text-[13px] text-[var(--text-muted)]">{t('pages.knowledge.search.searchPage.readingYourDocuments')}</p>}
                 {!done && !library.loading && library.failed && library.docs.length === 0 && (
                   <p className="m-0 text-[13px] text-[var(--accent-danger)]" role="alert">
-                    The documents could not be listed.
+                    {t('pages.knowledge.search.searchPage.theDocumentsCouldNotBe')}
                   </p>
                 )}
                 {!done && !library.loading && !library.failed && library.total === 0 && (
                   <p className="m-0 text-[13px] leading-[20px] text-[var(--text-secondary)]">
-                    {filters.collectionIds.size > 0 || filters.kind ? 'No document is left with these filters.' : 'No document is indexed yet. Add a source and index it from Collections, then come back.'}
+                    {filters.collectionIds.size > 0 || filters.kind ? t('pages.knowledge.search.searchPage.noDocumentIsLeftWith') : t('pages.knowledge.search.searchPage.noDocumentIsIndexedYet')}
                   </p>
                 )}
                 {done && found.length === 0 && (
                   <p className="m-0 rounded-xl border border-app-border-subtle px-4 py-3.5 text-[13px] leading-[20px] text-[var(--text-secondary)]">
-                    {scopeName ? `Nothing in ${scopeName} answers this.` : 'Nothing answers this.'} Try another wording, or a word the document is likely to use.
+                    {scopeName ? t('pages.knowledge.search.searchPage.nothingIn', { name: scopeName }) : t('pages.knowledge.search.searchPage.nothingAnswersThis')} {t('pages.knowledge.search.searchPage.tryWording')}
                   </p>
                 )}
-                {done && found.length > 0 && shown.length === 0 && <p className="m-0 text-[13px] text-[var(--text-secondary)]">No document is left with these filters.</p>}
+                {done && found.length > 0 && shown.length === 0 && <p className="m-0 text-[13px] text-[var(--text-secondary)]">{t('pages.knowledge.search.searchPage.noDocumentIsLeftWith')}</p>}
                 {shown.length > 0 && (
                   <ul className={['m-0 list-none gap-2.5 p-0', view === 'grid' ? 'grid grid-cols-1 @2xl:grid-cols-2 @6xl:grid-cols-3' : 'flex flex-col'].join(' ')}>
                     {shown.map((doc, index) => (
@@ -292,8 +294,8 @@ export function SearchPage() {
                   </ul>
                 )}
                 {!done && <div ref={sentinel} className="h-px" aria-hidden="true" />}
-                {!done && library.hasMore && <p className="m-0 py-3 text-center text-[12px] text-[var(--text-muted)]">Loading more documents</p>}
-                {done && state.hits.length >= MAX_PASSAGES && <p className="m-0 mt-3 text-center text-[12px] text-[var(--text-muted)]">The {MAX_PASSAGES} best passages are shown. Add words, or choose a collection, to narrow the search.</p>}
+                {!done && library.hasMore && <p className="m-0 py-3 text-center text-[12px] text-[var(--text-muted)]">{t('pages.knowledge.search.searchPage.loadingMoreDocuments')}</p>}
+                {done && state.hits.length >= MAX_PASSAGES && <p className="m-0 mt-3 text-center text-[12px] text-[var(--text-muted)]">{t('pages.knowledge.search.searchPage.bestShown', { count: MAX_PASSAGES })}</p>}
               </>
             )}
           </div>

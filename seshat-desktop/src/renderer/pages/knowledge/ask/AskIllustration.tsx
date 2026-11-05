@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 // The picture of the Ask screen, drawn here with the colors of the app: a card of text with the kinds of document floating around it.
 // It is decoration, so it is hidden from assistive technology.
 export function AskIllustration() {
+  const { t } = useTranslation('knowledge/ask')
   return (
     <svg viewBox="0 0 520 250" role="presentation" aria-hidden="true" className="h-auto w-full max-w-[520px]">
       <defs>
@@ -47,7 +49,7 @@ export function AskIllustration() {
         <rect x="104" y="96" width="62" height="62" rx="12" fill="var(--surface-panel)" stroke="var(--border-soft)" />
       </g>
       <path d="M122 114 h16 l8 8 v22 h-24 z" fill="none" stroke="var(--accent-danger)" strokeWidth="2.4" strokeLinejoin="round" />
-      <text x="135" y="140" textAnchor="middle" fontSize="8" fontWeight="700" fill="var(--accent-danger)">PDF</text>
+      <text x="135" y="140" textAnchor="middle" fontSize="8" fontWeight="700" fill="var(--accent-danger)">{t('pages.knowledge.ask.askIllustration.pdf')}</text>
 
       {/* Word */}
       <g filter="url(#ask-shadow)">

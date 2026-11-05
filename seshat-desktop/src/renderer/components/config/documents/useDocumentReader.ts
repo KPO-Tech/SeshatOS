@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { downloadNativeDocumentReaderModels, fetchNativeDocumentReaderStatus, initializeNativeDocumentReader, saveDocumentReaderConfig, testDocumentReaderConfig } from '../knowledge/knowledgeApi'
 import type { DocumentReaderConfig, NativeDocDownloadState, NativeDocModelStatus, NativeDocPack, SystemStatus, TestState } from '../knowledge/knowledgeTypes'
 
@@ -22,6 +23,7 @@ export type ReaderTest = {
  * scanned pages on this computer (its models, the languages, their download and the start of the OCR).
  */
 export function useDocumentReader({ config, system, onSaved, onSystemChanged }: Options) {
+  const { t } = useTranslation('config')
   const [form, setForm] = useState({ base_url: config?.base_url || '', enabled: config?.enabled ?? true, prefer_external: config?.prefer_external ?? false })
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -207,21 +209,21 @@ export function useDocumentReader({ config, system, onSaved, onSystemChanged }: 
       ready: nativeDocReady,
       hasModels: nativeDocModels,
       initialized: nativeDocInitialized,
-      detail: nativeDocReady ? 'Ready' : !nativeDocCompiled ? 'Not in this version' : !nativeDocModels ? 'Needs models' : !nativeDocInitialized ? 'Needs runtime' : 'Unavailable',
+      detail: nativeDocReady ? t('documents.localOcrPanel.ready') : !nativeDocCompiled ? t('documents.localOcrPanel.notInThisVersion') : !nativeDocModels ? t('documents.localOcrPanel.needsModels') : !nativeDocInitialized ? t('documents.useDocumentReader.needsRuntime') : t('documents.useDocumentReader.unavailable'),
       message: nativeDocReady
-        ? 'Native OCR is ready for local scanned PDFs.'
+        ? t('documents.useDocumentReader.nativeReady')
         : !nativeDocCompiled
-          ? 'This version of SeshatOS has no built-in reader for scanned documents (the macOS version does not have it yet). The optional Indra reader can read them.'
+          ? t('documents.useDocumentReader.noBuiltInReader')
           : !nativeDocModels
-            ? 'Download the models before starting native OCR.'
-            : 'The models are present. Start native OCR to read scanned PDFs on this computer.',
+            ? t('documents.useDocumentReader.downloadFirst')
+            : t('documents.useDocumentReader.modelsPresent'),
       canInitialize: nativeDocCompiled && nativeDocModels && !nativeDocReady,
       initializing: initializingNative,
       initError: nativeInitError,
       initialize: initializeNative,
       downloading: downloadingNative,
       canDownload: !chosenPackReady && !downloadingNative,
-      buttonLabel: downloadingNative ? 'Downloading...' : chosenPackReady ? 'Models detected' : chosenPack?.installed ? 'Use this recognizer' : 'Download models',
+      buttonLabel: downloadingNative ? t('documents.useDocumentReader.downloading') : chosenPackReady ? t('documents.useDocumentReader.modelsDetected') : chosenPack?.installed ? t('documents.useDocumentReader.useRecognizer') : t('documents.useDocumentReader.downloadModels'),
       download: nativeDownload,
       startDownload: downloadNativeModels,
       modelDir: nativeModelDir,

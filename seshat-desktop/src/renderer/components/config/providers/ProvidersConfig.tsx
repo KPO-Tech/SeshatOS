@@ -16,9 +16,11 @@ import {
 } from './providerApi'
 import type { ProviderChoice, ProviderModel, ProviderSetting } from './providerTypes'
 import { buildProviderRows, isCodexProvider, upsertProviderSetting } from './providerUtils'
+import { useTranslation } from 'react-i18next'
 
 /** The providers of the assistant: each one as a card with its key, its state, a test and its default model. */
 export function ProvidersConfig() {
+  const { t } = useTranslation('config')
   const [catalog, setCatalog] = useState<ProviderChoice[]>([])
   const [settings, setSettings] = useState<ProviderSetting[]>([])
   const [systemMode, setSystemMode] = useState<'standalone' | 'connected' | null>(null)
@@ -96,16 +98,16 @@ export function ProvidersConfig() {
       badge={<StatusBadge tone={active > 0 ? 'ok' : 'muted'}>{`${active} connected`}</StatusBadge>}
       actions={
         <>
-          <ActionButton type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh">
+          <ActionButton type="button" onClick={() => void load()} disabled={loading} aria-label={t('providers.providersConfig.refresh')}>
             <Refresh theme="outline" size={14} />
-            Refresh
+            {t('providers.providersConfig.refresh')}
           </ActionButton>
           <ActionButton type="button" onClick={() => void testAll()} disabled={settings.length === 0}>
-            Test all
+            {t('providers.providersConfig.testAll')}
           </ActionButton>
           <ActionButton type="button" tone="primary" onClick={() => setAdding({})}>
             <Plus theme="outline" size={14} />
-            Add provider
+            {t('providers.providersConfig.addProvider')}
           </ActionButton>
         </>
       }
@@ -114,9 +116,9 @@ export function ProvidersConfig() {
 
       <div className="grid min-w-0 gap-3">
           {loading && rows.length === 0 ? (
-            <ProviderEmptyState label="Loading providers..." />
+            <ProviderEmptyState label={t('providers.providersConfig.loadingProviders')} />
           ) : ordered.length === 0 ? (
-            <ProviderEmptyState label="No providers yet." />
+            <ProviderEmptyState label={t('providers.providersConfig.noProvidersYet')} />
           ) : (
             ordered.map((row) => (
               <ProviderCard
@@ -134,7 +136,7 @@ export function ProvidersConfig() {
                   }, 'Failed to set the default provider.')
                 }
                 onRemove={(setting) => {
-                  if (!window.confirm(`Remove ${row.name}? Its key is forgotten.`)) return
+                  if (!window.confirm(t('providers.providersConfig.confirmRemove', { name: row.name }))) return
                   void run(setting.id, async () => {
                     await deleteProviderSetting(setting.id)
                     setSettings((current) => current.filter((item) => item.id !== setting.id))

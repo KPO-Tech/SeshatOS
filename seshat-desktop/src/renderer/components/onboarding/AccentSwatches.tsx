@@ -1,9 +1,11 @@
 import { ACCENTS } from '@renderer/lib/accent'
+import { useTranslation } from 'react-i18next'
 
 /** The colours an accent can take, as round swatches; the one in use is ticked. */
 export function AccentSwatches({ current, onPick, size = 36 }: { current: string; onPick: (hex: string) => void; size?: number }) {
+  const { t } = useTranslation('shell')
   return (
-    <div role="radiogroup" aria-label="Accent color" className="flex items-center gap-4">
+    <div role="radiogroup" aria-label={t('onboarding.accentSwatches.accentColor')} className="flex items-center gap-4">
       {ACCENTS.map((choice) => {
         const selected = current.toLowerCase() === choice.hex
         return (

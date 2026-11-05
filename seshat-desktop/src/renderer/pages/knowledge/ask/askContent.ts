@@ -14,12 +14,12 @@ export type Capability = {
 }
 
 export const CAPABILITIES: Capability[] = [
-  { id: 'answer', title: 'Answer questions', description: 'Get precise information from your documents', prompt: 'What do my documents say about ' },
-  { id: 'summarize', title: 'Summarize', description: 'Turn long documents into clear summaries', prompt: 'Summarize the main points of ' },
-  { id: 'analyze', title: 'Analyze', description: 'Extract insights and compare information', prompt: 'Compare and analyze what my documents say about ' },
-  { id: 'generate', title: 'Generate content', description: 'Create text, reports, or explanations', prompt: 'Write a short report on ' },
-  { id: 'data', title: 'Use your data', description: 'Query tables, code snippets and datasets', prompt: '', soon: true },
-  { id: 'sources', title: 'Work with sources', description: 'Combine multiple files and data sources', prompt: '', soon: true }
+  { id: 'answer', title: 'knowledge/ask:pages.knowledge.ask.askContent.answerTitle', description: 'knowledge/ask:pages.knowledge.ask.askContent.answerDescription', prompt: 'What do my documents say about ' },
+  { id: 'summarize', title: 'knowledge/ask:pages.knowledge.ask.askContent.summarizeTitle', description: 'knowledge/ask:pages.knowledge.ask.askContent.summarizeDescription', prompt: 'Summarize the main points of ' },
+  { id: 'analyze', title: 'knowledge/ask:pages.knowledge.ask.askContent.analyzeTitle', description: 'knowledge/ask:pages.knowledge.ask.askContent.analyzeDescription', prompt: 'Compare and analyze what my documents say about ' },
+  { id: 'generate', title: 'knowledge/ask:pages.knowledge.ask.askContent.generateTitle', description: 'knowledge/ask:pages.knowledge.ask.askContent.generateDescription', prompt: 'Write a short report on ' },
+  { id: 'data', title: 'knowledge/ask:pages.knowledge.ask.askContent.dataTitle', description: 'knowledge/ask:pages.knowledge.ask.askContent.dataDescription', prompt: '', soon: true },
+  { id: 'sources', title: 'knowledge/ask:pages.knowledge.ask.askContent.sourcesTitle', description: 'knowledge/ask:pages.knowledge.ask.askContent.sourcesDescription', prompt: '', soon: true }
 ]
 
 export type Example = { id: string; label: string; prompt: string }
@@ -34,16 +34,16 @@ export const EXAMPLES: Example[] = [
 ]
 
 export const TIPS: string[] = [
-  'Be specific in your question',
-  'Reference a file or collection if needed',
-  'Ask follow-up questions',
-  'Use natural language',
-  'Combine information from multiple sources'
+  'knowledge/ask:pages.knowledge.ask.askContent.tip1',
+  'knowledge/ask:pages.knowledge.ask.askContent.tip2',
+  'knowledge/ask:pages.knowledge.ask.askContent.tip3',
+  'knowledge/ask:pages.knowledge.ask.askContent.tip4',
+  'knowledge/ask:pages.knowledge.ask.askContent.tip5'
 ]
 
 export const STEPS: { title: string; text: string }[] = [
-  { title: 'You ask', text: 'Write a question in your own words, and choose where to look: every collection or one.' },
-  { title: 'Seshat searches', text: 'It looks for the passages of your documents that answer, by meaning, and by words when your question holds a code or a number.' },
-  { title: 'It answers from them', text: 'The answer is written only from those passages, and each claim points to the passage it comes from.' },
-  { title: 'You check', text: 'Open a passage to read it in its document, at the right page. Nothing leaves your computer except what the model you chose needs to write the answer.' }
+  { title: 'knowledge/ask:pages.knowledge.ask.askContent.step1Title', text: 'knowledge/ask:pages.knowledge.ask.askContent.step1Text' },
+  { title: 'knowledge/ask:pages.knowledge.ask.askContent.step2Title', text: 'knowledge/ask:pages.knowledge.ask.askContent.step2Text' },
+  { title: 'knowledge/ask:pages.knowledge.ask.askContent.step3Title', text: 'knowledge/ask:pages.knowledge.ask.askContent.step3Text' },
+  { title: 'knowledge/ask:pages.knowledge.ask.askContent.step4Title', text: 'knowledge/ask:pages.knowledge.ask.askContent.step4Text' }
 ]

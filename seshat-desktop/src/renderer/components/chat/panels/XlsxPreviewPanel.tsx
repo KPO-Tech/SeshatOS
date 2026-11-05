@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ExcelJS from 'exceljs'
 import { api, ApiError } from '@renderer/api/client'
 import { locatePassageInSheets } from '@renderer/lib/sheetPassageLocator'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -33,7 +34,7 @@ function cellText(cell: ExcelJS.Cell): string {
   if (v === null || v === undefined) return ''
   if (v instanceof Date) return v.toLocaleDateString()
   if (typeof v === 'object') {
-    if ('richText' in v) return (v.richText as { text: string }[]).map((t) => t.text).join('')
+    if ('richText' in v) return (v.richText as { text: string }[]).map((part) => part.text).join('')
     if ('result' in v) return String((v as { result?: unknown }).result ?? '')
     if ('text' in v) return String((v as { text?: unknown }).text ?? '')
     if ('error' in v) return String((v as { error?: unknown }).error ?? '#ERROR')
@@ -46,6 +47,7 @@ function cellText(cell: ExcelJS.Cell): string {
 // parses the workbook client-side, then this panel exposes the sheets as
 // scrollable HTML tables.
 export function XlsxPreviewPanel({ fileId, filename, highlight }: Props) {
+  const { t } = useTranslation('chat')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [sheets, setSheets] = useState<SheetData[] | null>(null)
   const [activeSheet, setActiveSheet] = useState(0)
@@ -153,17 +155,17 @@ export function XlsxPreviewPanel({ fileId, filename, highlight }: Props) {
                 ))}
               </tbody>
             </table>
-            {truncated && <div className="px-3.5 py-2.5 text-[11px] text-app-text-muted">Showing the first {MAX_PREVIEW_ROWS} rows.</div>}
+            {truncated && <div className="px-3.5 py-2.5 text-[11px] text-app-text-muted">{t('chat.panels.xlsxPreviewPanel.showingFirst', { rows: MAX_PREVIEW_ROWS })}</div>}
           </>
         ) : current ? (
-          <div className="px-3.5 py-2.5 text-[11px] text-app-text-muted">This sheet is empty.</div>
+          <div className="px-3.5 py-2.5 text-[11px] text-app-text-muted">{t('chat.panels.xlsxPreviewPanel.thisSheetIsEmpty')}</div>
         ) : null}
       </div>
       {status === 'loading' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">Loading {filename}…</div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-text-muted">{t('chat.panels.xlsxPreviewPanel.loading', { name: filename })}</div>
       )}
       {status === 'error' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">Couldn't load this spreadsheet: {errorMessage}</div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-app-surface px-5 text-center text-[12px] text-app-error">{t('chat.panels.xlsxPreviewPanel.couldntLoad', { message: errorMessage })}</div>
       )}
     </div>
   )

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { edition } from '@renderer/lib/edition'
 import { findSection, type SettingsSectionId } from '../page/sections'
 
@@ -12,6 +13,7 @@ type Props = {
 
 /** The frame every page of Settings shares: icon tile, title, one line, an optional state badge, tabs, then the cards. */
 export function SettingsPage({ id, badge, actions, tabs, children }: Props) {
+  const { t } = useTranslation('settings')
   const def = findSection(id, edition)
   const Icon = def.icon
   return (
@@ -22,10 +24,10 @@ export function SettingsPage({ id, badge, actions, tabs, children }: Props) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{def.label}</h1>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{t(def.labelKey)}</h1>
             {badge}
           </div>
-          {def.description && <p className="m-0 mt-1 text-[13px] leading-5 text-[var(--text-muted)]">{def.description}</p>}
+          <p className="m-0 mt-1 text-[13px] leading-5 text-[var(--text-muted)]">{t(def.descriptionKey)}</p>
         </div>
         {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
       </header>

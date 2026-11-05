@@ -8,6 +8,7 @@ import { MarkdownText } from '../text/MarkdownText'
 import type { ComponentProps } from '../NodeView'
 import { NodeList } from '../NodeView'
 import { Expandable } from '../expand/Expandable'
+import { useTranslation } from 'react-i18next'
 
 function Panel({ props, id }: ComponentProps) {
   const hue = TONES[toneOf(props.tone)]
@@ -123,8 +124,9 @@ function ArchitectureFrame({ props }: ComponentProps) {
 const TALL_DRAWING = 560
 
 function Architecture({ props, id }: ComponentProps) {
+  const { t } = useTranslation('chat')
   return (
-    <Expandable label={typeof props.title === 'string' ? props.title : 'Architecture'} maxHeight={TALL_DRAWING} className="my-3">
+    <Expandable label={typeof props.title === 'string' ? props.title : t('chat.richblocks.view.components.architecture.architecture')} maxHeight={TALL_DRAWING} className="my-3">
       <ArchitectureFrame props={props} id={id} />
     </Expandable>
   )

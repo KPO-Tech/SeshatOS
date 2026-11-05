@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { buildTokens, wallpaperCss, type ThemeSeed } from '@renderer/lib/themes'
 
 /** A miniature of the app in a theme: sidebar, a message, a composer with its accent button, over the wallpaper if any. */
@@ -41,12 +42,13 @@ function cardClass(selected: boolean): string {
 }
 
 function CardLabel({ label, selected, hint }: { label: string; selected: boolean; hint?: ReactNode }) {
+  const { t } = useTranslation('settings')
   return (
     <span className="flex items-center justify-between gap-2 px-0.5 text-[12px] font-semibold text-[var(--text-primary)]">
       <span className="truncate">{label}</span>
       {hint}
       {selected && (
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-label="Selected">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-label={t('themeCards.selected')}>
           <path d="m3.5 8.5 3 3 6-7" />
         </svg>
       )}
@@ -56,13 +58,14 @@ function CardLabel({ label, selected, hint }: { label: string; selected: boolean
 
 /** A theme to pick. `main` marks it as the main theme of its scheme, the one the button of the title bar switches to. */
 export function ThemeCard({ seed, selected, main = false, onSelect }: { seed: ThemeSeed; selected: boolean; main?: boolean; onSelect: () => void }) {
+  const { t } = useTranslation('settings')
   return (
     <button type="button" onClick={onSelect} aria-pressed={selected} className={cardClass(selected)}>
       <ThemePreview seed={seed} />
       <CardLabel
         label={seed.label}
         selected={selected}
-        hint={main && !selected ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{seed.scheme}</span> : undefined}
+        hint={main && !selected ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{seed.scheme === 'dark' ? t('appearance.mainThemes.mode.dark') : t('appearance.mainThemes.mode.light')}</span> : undefined}
       />
     </button>
   )

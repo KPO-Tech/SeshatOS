@@ -1,5 +1,5 @@
 import { Info } from '@icon-park/react'
-import { plural } from './fileStatus'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   count: number
@@ -11,6 +11,7 @@ type Props = {
 
 /** Pinned at the top of a collection while some documents are found by their words only: the reading worked, the embedding did not. */
 export function KeywordsOnlyNotice({ count, reason, busy, onIndexAgain }: Props) {
+  const { t } = useTranslation('knowledge/collections')
   return (
     <div
       role="status"
@@ -19,7 +20,7 @@ export function KeywordsOnlyNotice({ count, reason, busy, onIndexAgain }: Props)
     >
       <Info size={15} className="mt-px shrink-0 text-[var(--accent-primary)]" />
       <span className="min-w-0 flex-1">
-        {plural(count, 'document is', 'documents are')} indexed for keywords only: the embedding failed, so a question finds the words of {count === 1 ? 'it' : 'them'}, not the meaning. Choose an embedding model with more quota in the settings of Knowledge, then index {count === 1 ? 'it' : 'them'} again.
+        {t('pages.knowledge.collections.keywordsOnlyNotice.text', { count })}
       </span>
       <button
         type="button"
@@ -27,7 +28,7 @@ export function KeywordsOnlyNotice({ count, reason, busy, onIndexAgain }: Props)
         disabled={busy}
         className="shrink-0 cursor-pointer rounded-lg border border-app-border-subtle bg-transparent px-2.5 py-1 text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {busy ? 'Starting...' : 'Index again'}
+        {busy ? t('pages.knowledge.collections.keywordsOnlyNotice.starting') : t('pages.knowledge.collections.keywordsOnlyNotice.indexAgain')}
       </button>
     </div>
   )

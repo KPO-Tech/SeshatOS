@@ -1,5 +1,6 @@
 import { CodeBox, HeaderCard } from '../common'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 function str(tool: ToolViewProps['tool'], key: string): string {
   return typeof tool.input[key] === 'string' ? (tool.input[key] as string) : ''
@@ -11,10 +12,11 @@ function str(tool: ToolViewProps['tool'], key: string): string {
 // that pair beats GenericToolView's full raw-args JSON dump for what's
 // usually a one-line question and answer.
 export function MathToolView({ tool, result }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const expression = str(tool, 'expression') || str(tool, 'operation')
   if (!result?.content) return null
   return (
-    <HeaderCard header={<span title={expression}>{expression || 'Result'}</span>}>
+    <HeaderCard header={<span title={expression}>{expression || t('chat.tools.renderers.mathToolView.result')}</span>}>
       <CodeBox content={result.content} copyable bare variant={result.isError ? 'error' : undefined} />
     </HeaderCard>
   )

@@ -5,12 +5,14 @@ import { fmtDuration, parseWebSearchHits } from '../helpers'
 import type { ToolViewProps } from '../types'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
 import { SiteIcon } from '@renderer/components/sources/SiteIcon'
+import { useTranslation } from 'react-i18next'
 
 const LINKS_CSS = '[scrollbar-width:thin] [scrollbar-color:var(--border-soft)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-app-border-subtle flex flex-col overflow-y-auto'
 const LINKS_CSS_CAPPED = `${LINKS_CSS} max-h-[220px]`
 const LINK_ITEM_CSS = 'flex items-center gap-2.5 border-0 border-b border-app-border-subtle px-2.5 py-2 no-underline transition-colors duration-150 last:border-b-0 hover:bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)]'
 
 export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const query = typeof tool.input.query === 'string' ? tool.input.query : ''
   const hits = parseWebSearchHits(result?.content)
   const provider = result?.metadata?.provider != null ? String(result.metadata.provider) : ''
@@ -30,7 +32,7 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
 
   if (result?.isError) {
     return (
-      <HeaderCard header={<span>{query || 'Web Search'}</span>}>
+      <HeaderCard header={<span>{query || t('chat.tools.renderers.webSearchToolView.webSearch')}</span>}>
         {result.content && <CodeBox content={result.content} variant="error" bare />}
       </HeaderCard>
     )
@@ -40,7 +42,7 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
     <HeaderCard
       header={
         <>
-          <span>{selectedCount || 'No'} selected result{selectedCount === 1 ? '' : 's'}</span>
+          <span>{selectedCount ? t('chat.tools.renderers.webSearchToolView.selectedResults', { count: selectedCount }) : t('chat.tools.renderers.webSearchToolView.noSelectedResults')}</span>
           {stat && <span className={HCARD_HEADER_STAT_CSS}>{stat}</span>}
         </>
       }
@@ -78,14 +80,14 @@ export function WebSearchToolView({ tool, result, sessionId, expanded }: ToolVie
               className="flex w-full items-center border-0 border-t border-app-border-subtle bg-transparent pb-[9px] pl-[38px] pr-2.5 pt-2 text-left text-[11px] text-app-text-muted transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--accent-primary)_7%,transparent)] hover:text-app-text-secondary"
               onClick={() => setShowAll((value) => !value)}
             >
-              {showAll ? 'Show fewer sources' : `View all sources (${hits.length})`}
+              {showAll ? t('chat.tools.renderers.webSearchToolView.showFewerSources') : t('chat.tools.renderers.webSearchToolView.viewAllSources', { total: hits.length })}
             </button>
           )}
         </>
       ) : (
         <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-app-text-muted">
           <Search size={16} />
-          <span className="text-[11.5px]">No results for this search.</span>
+          <span className="text-[11.5px]">{t('chat.tools.renderers.webSearchToolView.noResultsForThisSearch')}</span>
         </div>
       )}
     </HeaderCard>

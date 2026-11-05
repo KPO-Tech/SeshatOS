@@ -3,6 +3,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { languageForPath } from './helpers'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -215,6 +216,7 @@ export function DiffView({
   // the one thing that row said the host doesn't already) and its 360px cap.
   expanded?: boolean
 }) {
+  const { t } = useTranslation('chat')
   const language = filePath ? languageForPath(filePath) : undefined
   const showFilenameRow = Boolean(filePath) && !expanded
 
@@ -250,7 +252,7 @@ export function DiffView({
         <button
           className="absolute right-1.5 top-1.5 z-[2] flex size-[26px] items-center justify-center rounded-md border border-app-border-subtle bg-[rgba(0,0,0,0.4)] text-app-text-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-app-text"
           type="button"
-          aria-label="Copy diff"
+          aria-label={t('chat.tools.diffView.copyDiff')}
           onClick={() => void navigator.clipboard.writeText(copyText)}
         >
           <Copy size={10} />

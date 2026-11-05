@@ -1,5 +1,6 @@
 import type { ProviderSetting } from '@renderer/api/types'
 import { ActionButton, SettingRow, TextField } from '../../settings/kit'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   // The provider of Config > Providers whose key this service can use, when the person has set it up.
@@ -17,21 +18,22 @@ type Props = {
 // The key of an embedding or rerank service. A provider already set up in Config > Providers is used as it is, with nothing to type;
 // the person can still give another key. Without that provider the key is typed here, and the screen says where to add the provider.
 export function ProviderKeyField({ ownProvider, missingProviderName, useOwnKey, onUseOwnKey, apiKey, onApiKey, hasStoredKey, emptyPlaceholder }: Props) {
+  const { t } = useTranslation('config')
   if (ownProvider && useOwnKey) {
     return (
-      <SettingRow title="API key" hint={`Uses the key of ${ownProvider.name}`}>
+      <SettingRow title={t('search.providerKeyField.apiKey')} hint={t('search.providerKeyField.usesKeyOf', { name: ownProvider.name })}>
         <ActionButton type="button" onClick={() => onUseOwnKey(false)}>
-          Use another
+          {t('search.providerKeyField.useAnother')}
         </ActionButton>
       </SettingRow>
     )
   }
   return (
-    <SettingRow title="API key" hint={!ownProvider && missingProviderName ? `Add ${missingProviderName} in Providers to reuse its key.` : undefined}>
-      <TextField label="API key" type="password" value={apiKey} onChange={onApiKey} placeholder={hasStoredKey ? 'Keep current key' : emptyPlaceholder} width={220} />
+    <SettingRow title={t('search.providerKeyField.apiKey')} hint={!ownProvider && missingProviderName ? t('search.providerKeyField.addToReuse', { name: missingProviderName }) : undefined}>
+      <TextField label={t('search.providerKeyField.apiKey')} type="password" value={apiKey} onChange={onApiKey} placeholder={hasStoredKey ? t('search.providerKeyField.keepCurrentKey') : emptyPlaceholder} width={220} />
       {ownProvider && (
         <ActionButton type="button" onClick={() => onUseOwnKey(true)}>
-          {`Use ${ownProvider.name}`}
+          {t('search.providerKeyField.use', { name: ownProvider.name })}
         </ActionButton>
       )}
     </SettingRow>

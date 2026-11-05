@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ActionButton, SettingRow, SettingsCard, TextField } from '../../settings/kit'
+import { useTranslation } from 'react-i18next'
 
 /**
  * What the project sandbox keeps from commands. The list is the user's to change, so it is shown in full.
@@ -14,6 +15,7 @@ export function ProtectedFolders({
   busy: boolean
   onChange: (next: string[]) => void
 }) {
+  const { t } = useTranslation('config')
   const [draft, setDraft] = useState('')
 
   function add() {
@@ -24,12 +26,12 @@ export function ProtectedFolders({
   }
 
   return (
-    <SettingsCard title="Kept from commands">
-      <SettingRow title="Add a file or folder" hint="Commands cannot read what is listed here. A path this computer does not have is skipped.">
+    <SettingsCard title={t('environment.protectedFolders.keptFromCommands')}>
+      <SettingRow title={t('environment.protectedFolders.addAFileOrFolder')} hint={t('environment.protectedFolders.commandsCannotReadWhatIs')}>
         <div className="flex items-center gap-2">
-          <TextField label="Path to protect" value={draft} onChange={setDraft} placeholder="C:\Users\you\secrets" mono />
+          <TextField label={t('environment.protectedFolders.pathToProtect')} value={draft} onChange={setDraft} placeholder={t('environment.protectedFolders.cUsersYouSecrets')} mono />
           <ActionButton type="button" onClick={add} disabled={busy || !draft.trim()}>
-            Add
+            {t('environment.protectedFolders.add')}
           </ActionButton>
         </div>
       </SettingRow>
@@ -39,7 +41,7 @@ export function ProtectedFolders({
             {path}
           </span>
           <ActionButton type="button" onClick={() => onChange(paths.filter((item) => item !== path))} disabled={busy}>
-            Remove
+            {t('environment.protectedFolders.remove')}
           </ActionButton>
         </div>
       ))}

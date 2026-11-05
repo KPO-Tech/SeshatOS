@@ -5,10 +5,11 @@ import { IconButton } from '@renderer/components/ui/IconButton'
 import { SelectorMenu, type SelectorOption } from '@renderer/components/ui/SelectorPill'
 import { useSessionPanelToggles } from '@renderer/hooks/useSessionPanelToggles'
 import { useUIStore, type UIPermissionMode } from '@renderer/stores/ui'
+import { useTranslation } from 'react-i18next'
 
 const PERMISSION_OPTIONS: SelectorOption[] = [
-  { id: 'auto', label: 'Smart' },
-  { id: 'bypass', label: 'Auto' },
+  { id: 'auto', label: 'shell:layout.titlebarSessionControls.smart' },
+  { id: 'bypass', label: 'shell:layout.titlebarSessionControls.auto' },
 ]
 
 function permissionModeTitle(mode: UIPermissionMode): string {
@@ -31,6 +32,7 @@ function permissionModeColor(mode: UIPermissionMode): 'green' | 'orange' | 'red'
 // In the Ask view only the browser is offered: the cards of the session are already beside the conversation, its agent has no shell, and its
 // permissions are not the person's to set.
 export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { conversationId: string | null; variant?: 'chat' | 'knowledge' }) {
+  const { t } = useTranslation('shell')
   const permissionMode = useUIStore((s) => s.permissionMode)
   const setPermissionMode = useUIStore((s) => s.setPermissionMode)
   const { computerOpen, browserOpen, terminalOpen, toggleComputer, toggleBrowser, toggleTerminal } =
@@ -57,9 +59,9 @@ export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { 
     <div className="flex items-center gap-0.5" ref={rootRef}>
       {conversationId && (
         <>
-          {variant === 'chat' && <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title="Session" active={computerOpen} onClick={toggleComputer} />}
-          <IconButton icon={<Globe size={14} />} variant="ghost" size={26} title="Browser" active={browserOpen} onClick={toggleBrowser} />
-          {variant === 'chat' && <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title="Terminal" active={terminalOpen} onClick={toggleTerminal} />}
+          {variant === 'chat' && <IconButton icon={<Computer size={14} />} variant="ghost" size={26} title={t('layout.titlebarSessionControls.session')} active={computerOpen} onClick={toggleComputer} />}
+          <IconButton icon={<Globe size={14} />} variant="ghost" size={26} title={t('layout.titlebarSessionControls.browser')} active={browserOpen} onClick={toggleBrowser} />
+          {variant === 'chat' && <IconButton icon={<Terminal size={14} />} variant="ghost" size={26} title={t('layout.titlebarSessionControls.terminal')} active={terminalOpen} onClick={toggleTerminal} />}
         </>
       )}
       {variant === 'chat' && (
@@ -75,7 +77,7 @@ export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { 
         />
         {permissionOpen && (
           <SelectorMenu
-            options={PERMISSION_OPTIONS}
+            options={PERMISSION_OPTIONS.map((option) => ({ ...option, label: t(option.label) }))}
             selectedId={permissionMode}
             onSelect={(id) => selectPermissionMode(id as UIPermissionMode)}
           />

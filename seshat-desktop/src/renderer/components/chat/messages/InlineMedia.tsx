@@ -4,6 +4,7 @@ import { useUIStore } from '@renderer/stores/ui'
 import { ArtifactMedia } from './ArtifactMedia'
 import { MediaDownload } from './MediaDownload'
 import { extensionFor, parsePayload, type MediaPayload } from './mediaPayload'
+import { useTranslation } from 'react-i18next'
 
 // What the person is shown in the conversation itself, the way a chat product shows a picture or a clip: no tool row, no prompt, the
 // media. The tools that produce one are listed here; a call that failed, or one whose answer has no media, keeps its ordinary tool block
@@ -36,12 +37,13 @@ export function isInlineMedia(tool: ToolUseBlock): boolean {
 }
 
 export function InlineMedia({ tool, sessionId }: { tool: ToolUseBlock; sessionId?: string }) {
+  const { t } = useTranslation('chat')
   const openLightbox = useUIStore((s) => s.openLightbox)
   const payload = useMemo(() => parsePayload(tool._result?.content), [tool._result?.content])
   const finished = tool._status === 'completed'
 
   if (tool.name === 'present_artifact') {
-    if (!finished || !payload) return <div className="animate-pulse text-[13px] text-app-text-muted">Preparing the file...</div>
+    if (!finished || !payload) return <div className="animate-pulse text-[13px] text-app-text-muted">{t('chat.messages.inlineMedia.preparingTheFile')}</div>
     return <ArtifactMedia sessionId={sessionId} payload={payload} />
   }
 
@@ -50,7 +52,7 @@ export function InlineMedia({ tool, sessionId }: { tool: ToolUseBlock; sessionId
     if (!src) {
       return (
         <div className="flex aspect-square w-full max-w-[420px] animate-pulse items-center justify-center rounded-[14px] border border-app-border-subtle bg-app-surface text-[13px] text-app-text-muted">
-          Creating image...
+          {t('chat.messages.inlineMedia.creatingImage')}
         </div>
       )
     }
@@ -61,7 +63,7 @@ export function InlineMedia({ tool, sessionId }: { tool: ToolUseBlock; sessionId
           className="block max-h-[560px] max-w-full cursor-zoom-in rounded-[14px] border border-app-border-subtle object-contain"
           style={{ maxWidth: 'min(100%, 520px)' }}
           src={src}
-          alt={payload?.revised_prompt ?? 'Generated image'}
+          alt={payload?.revised_prompt ?? t('chat.messages.inlineMedia.generatedImage')}
           onClick={() => openLightbox({ url: src, filename })}
         />
         <div className="absolute right-2 bottom-2 flex gap-1.5 opacity-0 transition-opacity duration-150 group-hover/media:opacity-100">
@@ -73,7 +75,7 @@ export function InlineMedia({ tool, sessionId }: { tool: ToolUseBlock; sessionId
 
   const audio = finished ? audioSource(payload) : null
   if (!audio) {
-    return <div className="animate-pulse text-[13px] text-app-text-muted">Generating audio...</div>
+    return <div className="animate-pulse text-[13px] text-app-text-muted">{t('chat.messages.inlineMedia.generatingAudio')}</div>
   }
   return (
     <div className="flex w-full max-w-[420px] items-center gap-2">

@@ -1,5 +1,6 @@
 import type { ProviderModel } from '../providers/providerTypes'
 import { formatModelSource, formatTokens } from './modelUtils'
+import { useTranslation } from 'react-i18next'
 
 type ModelRowProps = {
   model: ProviderModel
@@ -10,6 +11,7 @@ type ModelRowProps = {
 
 // One model of a provider, on one line: click it to make it the model the app starts with.
 export function ModelRow({ model, isDefault, busy, onChoose }: ModelRowProps) {
+  const { t } = useTranslation('config')
   return (
     <button
       type="button"
@@ -37,15 +39,15 @@ export function ModelRow({ model, isDefault, busy, onChoose }: ModelRowProps) {
         )}
       </span>
       <span className="hidden shrink-0 text-[11.5px] text-[var(--text-muted)] sm:block">
-        {formatTokens(model.context_window)} ctx · {formatTokens(model.max_output)} out
+        {t('models.modelRow.contextAndOutput', { context: formatTokens(model.context_window), output: formatTokens(model.max_output) })}
       </span>
       {model.source === 'user' && (
         <span className="shrink-0 rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[var(--text-muted)]">{formatModelSource(model.source)}</span>
       )}
       {isDefault ? (
-        <span className="shrink-0 rounded-md bg-[var(--accent-primary)] px-2 py-0.5 text-[11px] font-semibold text-white">Default</span>
+        <span className="shrink-0 rounded-md bg-[var(--accent-primary)] px-2 py-0.5 text-[11px] font-semibold text-white">{t('models.modelRow.default')}</span>
       ) : (
-        <span className="shrink-0 text-[11.5px] font-semibold text-[var(--text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">Use as default</span>
+        <span className="shrink-0 text-[11.5px] font-semibold text-[var(--text-muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">{t('models.modelRow.useAsDefault')}</span>
       )}
     </button>
   )

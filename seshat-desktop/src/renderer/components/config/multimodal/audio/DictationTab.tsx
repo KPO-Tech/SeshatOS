@@ -10,6 +10,7 @@ import { AudioFieldRows } from './AudioFieldRows'
 import { CLOUD_TRANSCRIPTION_FIELDS } from './audioFields'
 import type { AudioDraft } from './useAudioDraft'
 import { WhisperModelList } from './WhisperModelList'
+import { useTranslation } from 'react-i18next'
 
 const AUTOMATIC = 'auto'
 const icon = (Glyph: typeof Computer) => <Glyph theme="outline" size={16} />
@@ -24,6 +25,7 @@ type Props = {
 
 /** Speech to text: the engine on this computer first, then the cloud provider as the fallback. */
 export function DictationTab({ whisper, config, draft, onSaved, onError }: Props) {
+  const { t } = useTranslation('config')
   const [language, setLanguage] = useState(config?.language || AUTO_LANGUAGE)
   const [address, setAddress] = useState(config?.base_url || '')
   const [addressDirty, setAddressDirty] = useState(false)
@@ -52,26 +54,26 @@ export function DictationTab({ whisper, config, draft, onSaved, onError }: Props
 
   return (
     <>
-      <SettingsCard title="On this computer" icon={icon(Computer)} badge={<StatusBadge tone={running ? 'ok' : 'muted'}>{running ? 'Running' : 'Off'}</StatusBadge>}>
+      <SettingsCard title={t('multimodal.audio.dictationTab.onThisComputer')} icon={icon(Computer)} badge={<StatusBadge tone={running ? 'ok' : 'muted'}>{running ? t('multimodal.audio.dictationTab.running') : t('multimodal.audio.dictationTab.off')}</StatusBadge>}>
         {engineReady ? (
-          <SettingRow title="Transcribe on this computer" hint={firstDownload ? 'The first time, about 640 MB is downloaded.' : undefined}>
-            <Toggle label="Transcribe on this computer" enabled={running} onChange={(next) => void (next ? whisper.turnOn() : whisper.turnOff())} />
+          <SettingRow title={t('multimodal.audio.dictationTab.transcribeOnThisComputer')} hint={firstDownload ? t('multimodal.audio.dictationTab.theFirstTimeAbout640') : undefined}>
+            <Toggle label={t('multimodal.audio.dictationTab.transcribeOnThisComputer')} enabled={running} onChange={(next) => void (next ? whisper.turnOn() : whisper.turnOff())} />
           </SettingRow>
         ) : (
-          <SettingRow title="Local engine" hint="Not available on this system. Use a provider or your own server." />
+          <SettingRow title={t('multimodal.audio.dictationTab.localEngine')} hint={t('multimodal.audio.dictationTab.notAvailableOnThisSystem')} />
         )}
         {whisper.busy && whisper.progress && !whisper.progress.modelId && (
           <SettingRow
-            title="Downloading the speech engine"
+            title={t('multimodal.audio.dictationTab.downloadingTheSpeechEngine')}
             hint={whisper.progress.totalBytes > 0 ? `${Math.round((whisper.progress.receivedBytes / whisper.progress.totalBytes) * 100)}%` : undefined}
           />
         )}
-        <SettingRow title="Spoken language">
+        <SettingRow title={t('multimodal.audio.dictationTab.spokenLanguage')}>
           <div className="w-[200px]">
             <SelectField
               compact
               value={language}
-              options={languageOptions()}
+              options={languageOptions(t)}
               onChange={(next) => {
                 setLanguage(next)
                 void save({ language: next })
@@ -80,7 +82,7 @@ export function DictationTab({ whisper, config, draft, onSaved, onError }: Props
           </div>
         </SettingRow>
         {engineReady && whisper.settings && (
-          <SettingRow title="Processor threads" hint={`Automatic uses ${whisper.settings.automaticThreads} of ${whisper.settings.cores}.`}>
+          <SettingRow title={t('multimodal.audio.dictationTab.processorThreads')} hint={t('multimodal.audio.dictationTab.automaticUses', { used: whisper.settings.automaticThreads, cores: whisper.settings.cores })}>
             <div className="w-[200px]">
               <SelectField
                 compact
@@ -94,7 +96,7 @@ export function DictationTab({ whisper, config, draft, onSaved, onError }: Props
       </SettingsCard>
 
       {engineReady && whisper.state && whisper.models.length > 0 && (
-        <SettingsCard title="Models">
+        <SettingsCard title={t('multimodal.audio.dictationTab.models')}>
           <WhisperModelList
             models={whisper.models}
             state={whisper.state}
@@ -107,12 +109,12 @@ export function DictationTab({ whisper, config, draft, onSaved, onError }: Props
         </SettingsCard>
       )}
 
-      <SettingsCard title="Cloud transcription" icon={icon(CloudStorage)}>
+      <SettingsCard title={t('multimodal.audio.dictationTab.cloudTranscription')} icon={icon(CloudStorage)}>
         <AudioFieldRows fields={CLOUD_TRANSCRIPTION_FIELDS} draft={draft} />
       </SettingsCard>
 
-      <SettingsCard title="Your own Whisper server" icon={icon(Server)}>
-        <SettingRow title="Server address">
+      <SettingsCard title={t('multimodal.audio.dictationTab.yourOwnWhisperServer')} icon={icon(Server)}>
+        <SettingRow title={t('multimodal.audio.dictationTab.serverAddress')}>
           <TextInput
             className="h-9 w-[260px]"
             value={address}
@@ -131,7 +133,7 @@ export function DictationTab({ whisper, config, draft, onSaved, onError }: Props
               setAddressDirty(false)
             }}
           >
-            Save
+            {t('multimodal.audio.dictationTab.save')}
           </ActionButton>
         </SettingRow>
       </SettingsCard>

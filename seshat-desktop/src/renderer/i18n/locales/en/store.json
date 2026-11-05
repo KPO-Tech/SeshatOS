@@ -1,0 +1,42 @@
+{
+  "pages": {
+    "store": {
+      "index": {
+        "store": "Store",
+        "thePlatformsSeshatosCanHost": "The platforms SeshatOS can host. Each one opens in its own page.",
+        "available": "Available",
+        "comingSoon": "Coming soon",
+        "soon": "Soon",
+        "worksOnTheDataOf": "Works on the data of your organization: needs a SeshatCloud connection.",
+        "open": "Open",
+        "notBuiltYet": "Not built yet. They appear here, then in the sidebar, as they are ready."
+      },
+      "apps": {
+        "knowledge": {
+          "tagline": "Search and ask across the documents of your organization.",
+          "description": "Connect your sources, find a document by keyword, or ask a question and read the answer next to the passages it comes from."
+        },
+        "automation": {
+          "tagline": "Agent workflows that run on a schedule or a trigger.",
+          "description": "Build governed workflows where agents use your tools, ask for approval when needed, and leave a trace of what they did."
+        },
+        "data": {
+          "tagline": "Explore and transform structured data.",
+          "description": "Work on tables and files with an agent at your side."
+        },
+        "inbox": {
+          "tagline": "A connected mailbox with agent triage.",
+          "description": "Sort and answer mail with an agent that knows your context."
+        },
+        "companion": {
+          "tagline": "A roster of agent personas.",
+          "description": "Keep agents with their own role, tone and memory."
+        },
+        "team": {
+          "tagline": "Agents and people working together.",
+          "description": "Share agents and follow multi-agent work as a team."
+        }
+      }
+    }
+  }
+}

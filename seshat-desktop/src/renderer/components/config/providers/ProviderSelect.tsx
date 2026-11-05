@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import type { ProviderChoice } from './providerTypes'
 import { authTypeLabel, providerMenuItems } from './providerUtils'
+import { useTranslation } from 'react-i18next'
 
 type ProviderSelectProps = {
   choices: ProviderChoice[]
@@ -16,6 +17,7 @@ const ROW_HEIGHT = 44
 const MAX_LIST_HEIGHT = 278
 
 export function ProviderSelect({ choices, value, open, onOpenChange, onChange }: ProviderSelectProps) {
+  const { t } = useTranslation('config')
   const selected = choices.find((entry) => entry.id === value)
   const [query, setQuery] = useState('')
   const [moreExpanded, setMoreExpanded] = useState(false)
@@ -34,7 +36,7 @@ export function ProviderSelect({ choices, value, open, onOpenChange, onChange }:
 
   return (
     <div className="relative grid gap-1.5">
-      <span className="text-[12px] font-semibold text-[var(--text-muted)]">Provider</span>
+      <span className="text-[12px] font-semibold text-[var(--text-muted)]">{t('providers.providerSelect.provider')}</span>
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
@@ -44,7 +46,7 @@ export function ProviderSelect({ choices, value, open, onOpenChange, onChange }:
       >
         <span className="flex min-w-0 items-center gap-2.5">
           <ProviderIcon provider={selected?.id || 'provider'} size={26} className="shrink-0" />
-          <span className="truncate">{selected?.name || 'Select provider'}</span>
+          <span className="truncate">{selected?.name || t('providers.providerSelect.selectProvider')}</span>
         </span>
         <ChevronDownIcon />
       </button>
@@ -56,13 +58,13 @@ export function ProviderSelect({ choices, value, open, onOpenChange, onChange }:
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search providers"
-              aria-label="Search providers"
+              placeholder={t('providers.providerSelect.searchProviders')}
+              aria-label={t('providers.providerSelect.searchProviders')}
               className="h-8 w-full rounded-md bg-[var(--surface-muted)] px-2.5 text-[13px] text-[var(--text-primary)] outline-none"
             />
           </div>
           {items.length === 0 ? (
-            <div className="px-3 py-4 text-[12px] text-[var(--text-muted)]">No provider matches this search.</div>
+            <div className="px-3 py-4 text-[12px] text-[var(--text-muted)]">{t('providers.providerSelect.noProviderMatchesThisSearch')}</div>
           ) : (
             <div
               ref={scrollRef}
@@ -85,7 +87,7 @@ export function ProviderSelect({ choices, value, open, onOpenChange, onChange }:
                           className="flex h-full w-full items-center justify-between gap-2.5 rounded-md px-2.5 text-left text-[12px] font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
                           aria-expanded={item.expanded}
                         >
-                          <span>More providers ({item.count})</span>
+                          <span>{t('providers.providerSelect.moreProviders', { total: item.count })}</span>
                           <span className={item.expanded ? 'rotate-180' : ''}><ChevronDownIcon /></span>
                         </button>
                       ) : (
@@ -104,6 +106,7 @@ export function ProviderSelect({ choices, value, open, onOpenChange, onChange }:
 }
 
 function ChoiceOption({ choice, selected, onSelect }: { choice: ProviderChoice; selected: boolean; onSelect: (id: string) => void }) {
+  const { t } = useTranslation('config')
   return (
     <button
       type="button"
@@ -121,8 +124,8 @@ function ChoiceOption({ choice, selected, onSelect }: { choice: ProviderChoice; 
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold">{choice.name}</span>
         <span className="block truncate text-[11px] text-[var(--text-muted)]">
-          {authTypeLabel(choice.auth_type)}
-          {choice.main ? '' : ` - ${choice.model_count} models, not tested with a real key`}
+          {t(authTypeLabel(choice.auth_type))}
+          {choice.main ? '' : t('providers.providerSelect.notTested', { total: choice.model_count })}
         </span>
       </span>
       {selected && <CheckIcon />}

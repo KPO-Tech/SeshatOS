@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Close } from '@icon-park/react'
 import { getSeenVersion, OPEN_WHATS_NEW_EVENT, RELEASES, releaseToShow, setSeenVersion, type ReleaseNotes } from '@renderer/lib/whatsNew'
 import { WhatsNewVisual } from './visuals'
+import { useTranslation } from 'react-i18next'
 
 /** Opens the card of what changed once after an update, and whenever the person asks for it from the menu of the sidebar. */
 export function WhatsNewHost() {
@@ -41,6 +42,7 @@ export function WhatsNewHost() {
 }
 
 function WhatsNewCard({ release, onClose }: { release: ReleaseNotes; onClose: () => void }) {
+  const { t } = useTranslation('shell')
   const [index, setIndex] = useState(0)
   const last = release.highlights.length - 1
   const highlight = release.highlights[index]
@@ -57,13 +59,13 @@ function WhatsNewCard({ release, onClose }: { release: ReleaseNotes; onClose: ()
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 p-6" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label={`What's new in SeshatOS ${release.version}`} className="flex max-h-full w-full max-w-[720px] flex-col overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+      <div role="dialog" aria-modal="true" aria-label={t('whatsnew.whatsNewHost.title', { version: release.version })} className="flex max-h-full w-full max-w-[720px] flex-col overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
         <header className="flex items-start justify-between gap-4 px-6 pb-3 pt-5">
           <div className="min-w-0">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">New in {release.version}</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">{t('whatsnew.whatsNewHost.newIn', { version: release.version })}</span>
             <h2 className="m-0 mt-1 text-[19px] font-semibold leading-tight text-[var(--text-primary)]">{release.headline}</h2>
           </div>
-          <button type="button" aria-label="Close" onClick={onClose} className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+          <button type="button" aria-label={t('whatsnew.whatsNewHost.close')} onClick={onClose} className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
             <Close theme="outline" size={15} />
           </button>
         </header>
@@ -77,7 +79,7 @@ function WhatsNewCard({ release, onClose }: { release: ReleaseNotes; onClose: ()
         </div>
 
         <footer className="flex items-center justify-between gap-4 border-t border-[var(--border-soft)] px-6 py-3.5">
-          <div className="flex items-center gap-1.5" role="tablist" aria-label="Changes">
+          <div className="flex items-center gap-1.5" role="tablist" aria-label={t('whatsnew.whatsNewHost.changes')}>
             {release.highlights.map((item, position) => (
               <button
                 key={item.id}
@@ -93,16 +95,16 @@ function WhatsNewCard({ release, onClose }: { release: ReleaseNotes; onClose: ()
           <div className="flex items-center gap-2">
             {index > 0 && (
               <button type="button" onClick={() => setIndex(index - 1)} className="h-9 cursor-pointer rounded-xl border border-[var(--border-soft)] bg-transparent px-4 text-[13px] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]">
-                Back
+                {t('whatsnew.whatsNewHost.back')}
               </button>
             )}
             {index < last ? (
               <button type="button" onClick={() => setIndex(index + 1)} className="h-9 cursor-pointer rounded-xl border-0 bg-[var(--accent-primary)] px-5 text-[13px] font-semibold text-white hover:brightness-110">
-                Next
+                {t('whatsnew.whatsNewHost.next')}
               </button>
             ) : (
               <button type="button" onClick={onClose} className="h-9 cursor-pointer rounded-xl border-0 bg-[var(--accent-primary)] px-5 text-[13px] font-semibold text-white hover:brightness-110">
-                Got it
+                {t('whatsnew.whatsNewHost.gotIt')}
               </button>
             )}
           </div>

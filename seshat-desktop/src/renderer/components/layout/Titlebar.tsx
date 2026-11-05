@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Home, Left, Right } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { WindowCloseIcon, WindowMaximizeIcon, WindowMinimizeIcon } from '@renderer/components/ui/WindowControlIcon'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   left?: ReactNode
@@ -28,6 +29,7 @@ const systemButtonClass = 'flex h-[34px] w-[42px] cursor-pointer items-center ju
 // The app runs frameless, so every screen needs its own drag region and
 // minimize / maximize / close.
 export function Titlebar({ left, afterNav, center = 'SeshatOS', right, onHome, onBack, onForward, bare = false }: Props) {
+  const { t } = useTranslation('shell')
   const hasNavigation = Boolean(onHome || onBack || onForward)
 
   return (
@@ -38,10 +40,10 @@ export function Titlebar({ left, afterNav, center = 'SeshatOS', right, onHome, o
       <div className="flex items-center gap-1" style={noDragStyle}>
         {left}
         {hasNavigation && (
-          <div className="flex items-center gap-0.5" aria-label="Navigation">
-            <button className={navButtonClass} onClick={onHome} aria-label="Home" type="button"><Home size={14} /></button>
-            <button className={navButtonClass} onClick={onBack} aria-label="Back" type="button"><Left size={14} /></button>
-            <button className={navButtonClass} onClick={onForward} aria-label="Forward" type="button"><Right size={14} /></button>
+          <div className="flex items-center gap-0.5" aria-label={t('layout.titlebar.navigation')}>
+            <button className={navButtonClass} onClick={onHome} aria-label={t('layout.titlebar.home')} type="button"><Home size={14} /></button>
+            <button className={navButtonClass} onClick={onBack} aria-label={t('layout.titlebar.back')} type="button"><Left size={14} /></button>
+            <button className={navButtonClass} onClick={onForward} aria-label={t('layout.titlebar.forward')} type="button"><Right size={14} /></button>
           </div>
         )}
         {afterNav}
@@ -56,13 +58,13 @@ export function Titlebar({ left, afterNav, center = 'SeshatOS', right, onHome, o
 
       <div className="flex items-center gap-1" style={noDragStyle}>
         {right && <div className="flex items-center">{right}</div>}
-        <button className={systemButtonClass} onClick={() => void window.seshat?.window.minimize()} aria-label="Minimize" type="button">
+        <button className={systemButtonClass} onClick={() => void window.seshat?.window.minimize()} aria-label={t('layout.titlebar.minimize')} type="button">
           <WindowMinimizeIcon />
         </button>
-        <button className={systemButtonClass} onClick={() => void window.seshat?.window.maximize()} aria-label="Maximize or restore" type="button">
+        <button className={systemButtonClass} onClick={() => void window.seshat?.window.maximize()} aria-label={t('layout.titlebar.maximizeOrRestore')} type="button">
           <WindowMaximizeIcon />
         </button>
-        <button className={`${systemButtonClass} hover:bg-[var(--accent-danger)] hover:text-white`} onClick={() => void window.seshat?.window.close()} aria-label="Close" type="button">
+        <button className={`${systemButtonClass} hover:bg-[var(--accent-danger)] hover:text-white`} onClick={() => void window.seshat?.window.close()} aria-label={t('layout.titlebar.close')} type="button">
           <WindowCloseIcon />
         </button>
       </div>

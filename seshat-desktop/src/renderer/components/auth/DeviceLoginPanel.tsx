@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Alert, LinkButton, PrimaryButton, SecondaryButton } from '@renderer/components/auth/FormPrimitives'
 import { useAuth } from '@renderer/hooks/useAuth'
 import { waitForDeviceApproval } from '@renderer/lib/deviceLogin'
+import { useTranslation } from 'react-i18next'
 
 type Phase =
   | { kind: 'starting' }
@@ -12,6 +13,7 @@ type Phase =
 // person approves it in their browser, where they are already signed in (with their second factor, if they
 // have one). No password is typed here. On success useAuth stores the session and the app moves on by itself.
 export function DeviceLoginPanel({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('shell')
   const { deviceStart, devicePoll, deviceCancel } = useAuth()
   const [phase, setPhase] = useState<Phase>({ kind: 'starting' })
   const [attempt, setAttempt] = useState(0)
@@ -60,8 +62,8 @@ export function DeviceLoginPanel({ onClose }: { onClose: () => void }) {
   if (phase.kind === 'starting') {
     return (
       <Panel>
-        <p className="m-0 text-[14px] text-[var(--text-secondary)]">Contacting your organization...</p>
-        <SecondaryButton onClick={onClose}>Cancel</SecondaryButton>
+        <p className="m-0 text-[14px] text-[var(--text-secondary)]">{t('auth.deviceLoginPanel.contactingYourOrganization')}</p>
+        <SecondaryButton onClick={onClose}>{t('auth.deviceLoginPanel.cancel')}</SecondaryButton>
       </Panel>
     )
   }
@@ -71,9 +73,9 @@ export function DeviceLoginPanel({ onClose }: { onClose: () => void }) {
       <Panel>
         <Alert>{phase.message}</Alert>
         <PrimaryButton type="button" onClick={() => setAttempt((value) => value + 1)}>
-          Try again
+          {t('auth.deviceLoginPanel.tryAgain')}
         </PrimaryButton>
-        <SecondaryButton onClick={onClose}>Back</SecondaryButton>
+        <SecondaryButton onClick={onClose}>{t('auth.deviceLoginPanel.back')}</SecondaryButton>
       </Panel>
     )
   }
@@ -81,21 +83,21 @@ export function DeviceLoginPanel({ onClose }: { onClose: () => void }) {
   return (
     <Panel>
       <p className="m-0 text-[14px] text-[var(--text-secondary)]">
-        Your browser opened a page of your organization. Check that this code is the one shown there, then approve.
+        {t('auth.deviceLoginPanel.yourBrowserOpenedAPage')}
       </p>
       <div
-        aria-label="Sign-in code"
+        aria-label={t('auth.deviceLoginPanel.signInCode')}
         className="rounded-2xl border border-[var(--border-strong)] py-4 text-center font-mono text-[30px] font-semibold tracking-[0.18em]"
       >
         {phase.userCode}
       </div>
       <p className="m-0 flex items-center justify-center gap-2 text-[13px] text-[var(--text-muted)]">
         <span className="size-3.5 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent-primary)]" />
-        Waiting for your approval
+        {t('auth.deviceLoginPanel.waitingForYourApproval')}
       </p>
-      <SecondaryButton onClick={() => void window.seshat?.openExternal(phase.link)}>Open the page again</SecondaryButton>
+      <SecondaryButton onClick={() => void window.seshat?.openExternal(phase.link)}>{t('auth.deviceLoginPanel.openThePageAgain')}</SecondaryButton>
       <div className="text-center">
-        <LinkButton onClick={onClose}>Cancel</LinkButton>
+        <LinkButton onClick={onClose}>{t('auth.deviceLoginPanel.cancel')}</LinkButton>
       </div>
     </Panel>
   )

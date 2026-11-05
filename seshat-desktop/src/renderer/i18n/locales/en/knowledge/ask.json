@@ -1,0 +1,134 @@
+{
+  "pages": {
+    "knowledge": {
+      "ask": {
+        "askComposer": {
+          "yourQuestion": "Your question",
+          "attachingAFileIsNot": "Attaching a file is not available yet",
+          "attachAFile": "Attach a file",
+          "searchingTheWebIsNot": "Searching the web is not available yet",
+          "web": "Web",
+          "stop": "Stop",
+          "ask": "Ask",
+          "askAboutYourDocuments": "Ask about your documents"
+        },
+        "askExtras": {
+          "noPassageMatchedTryOther": "No passage matched. Try other words, or look for the document by keyword.",
+          "noPassageIn": "No passage in {{name}} matched. Try another collection or other words.",
+          "basedOnAmong": "Based on {{documents}} among {{collections}} you can read",
+          "basedOn": "Based on {{documents}}",
+          "documentCount_one": "{{count}} document",
+          "documentCount_other": "{{count}} documents",
+          "collectionCount_one": "{{count}} collection",
+          "collectionCount_other": "{{count}} collections"
+        },
+        "askHeader": {
+          "historyOfQuestions": "History of questions",
+          "askSeshat": "Ask Seshat",
+          "getAnswersFromYourDocuments": "Get answers from your documents, data and connected sources.",
+          "newQuestion": "New question"
+        },
+        "askHero": {
+          "askAnythingAboutYourKnowledge": "Ask anything about your knowledge",
+          "seshatReadsYourDocumentsAnd": "Seshat reads your documents and connected sources to give you accurate, contextual and actionable answers.",
+          "notAvailableYet": "Not available yet",
+          "soon": "Soon"
+        },
+        "askHistory": {
+          "historyOfQuestions": "History of questions",
+          "history": "History",
+          "newQuestion": "New question",
+          "noQuestionYetWhatYou": "No question yet. What you ask here is kept here.",
+          "couldNotDeleteIt": "Could not delete it.",
+          "deleteThisConversation": "Delete this conversation?",
+          "delete": "Delete",
+          "keep": "Keep",
+          "deleteSession": "Delete {{title}}"
+        },
+        "askIllustration": {
+          "pdf": "PDF"
+        },
+        "askPage": {
+          "askAFollowUp": "Ask a follow-up",
+          "askAboutYourDocuments": "Ask about your documents",
+          "openTheChat": "Open the chat",
+          "removedNote": "This document is no longer in the collection. This is the passage the answer rested on, as the agent read it.",
+          "configureProvider": "Configure a provider in Settings before asking."
+        },
+        "askSessionSidebar": {
+          "thisConversation": "This conversation"
+        },
+        "askSidebar": {
+          "helpToAsk": "Help to ask",
+          "askWithYourSources": "Ask with your sources",
+          "seshatCanUseYourCollections": "Seshat can use your collections and documents to give contextual answers.",
+          "exampleQuestions": "Example questions",
+          "tips": "Tips"
+        },
+        "howItWorks": {
+          "howItWorks": "How it works",
+          "howAskWorks": "How Ask works",
+          "gotIt": "Got it"
+        },
+        "askContent": {
+          "answerTitle": "Answer questions",
+          "answerDescription": "Get precise information from your documents",
+          "summarizeTitle": "Summarize",
+          "summarizeDescription": "Turn long documents into clear summaries",
+          "analyzeTitle": "Analyze",
+          "analyzeDescription": "Extract insights and compare information",
+          "generateTitle": "Generate content",
+          "generateDescription": "Create text, reports, or explanations",
+          "dataTitle": "Use your data",
+          "dataDescription": "Query tables, code snippets and datasets",
+          "sourcesTitle": "Work with sources",
+          "sourcesDescription": "Combine multiple files and data sources",
+          "tip1": "Be specific in your question",
+          "tip2": "Reference a file or collection if needed",
+          "tip3": "Ask follow-up questions",
+          "tip4": "Use natural language",
+          "tip5": "Combine information from multiple sources",
+          "step1Title": "You ask",
+          "step1Text": "Write a question in your own words, and choose where to look: every collection or one.",
+          "step2Title": "Seshat searches",
+          "step2Text": "It looks for the passages of your documents that answer, by meaning, and by words when your question holds a code or a number.",
+          "step3Title": "It answers from them",
+          "step3Text": "The answer is written only from those passages, and each claim points to the passage it comes from.",
+          "step4Title": "You check",
+          "step4Text": "Open a passage to read it in its document, at the right page. Nothing leaves your computer except what the model you chose needs to write the answer."
+        },
+        "askReadiness": {
+          "cloudUnreachable": "SeshatCloud can't be reached",
+          "notAnswering": "Knowledge isn't answering",
+          "orgCollectionsFailed": "The collections of your organization could not be read. Check your connection, then try again.",
+          "localCollectionsFailed": "The collections of this computer could not be read. Try again; if it keeps happening, restart the app.",
+          "tryAgain": "Try again",
+          "noDocuments": "No documents to ask about yet",
+          "addSourceText": "Add a source and Seshat will read its documents. Once they are indexed, you can ask about them here.",
+          "noneShared": "No collection is shared with you yet. Ask an administrator of your organization to give you access.",
+          "addSource": "Add a source",
+          "openSearchSettings": "Open Search settings",
+          "meaningOff": "Search by meaning is off",
+          "meaningOffText": "Ask finds passages by their words only, so a question that does not use the words of the documents can find nothing.",
+          "staleTitle": "The documents were indexed with another model",
+          "staleText": "The search by meaning is wrong until the documents are indexed again with the model now in use.",
+          "indexAgain": "Index again"
+        },
+        "historyList": {
+          "justNow": "just now",
+          "yesterday": "yesterday",
+          "minutesAgo_one": "{{count}} min ago",
+          "minutesAgo_other": "{{count}} min ago",
+          "hoursAgo_one": "{{count}} h ago",
+          "hoursAgo_other": "{{count}} h ago",
+          "daysAgo_one": "{{count}} day ago",
+          "daysAgo_other": "{{count}} days ago"
+        },
+        "useKnowledgeConversation": {
+          "noModel": "No model is available yet.",
+          "couldNotStart": "The conversation could not be started."
+        }
+      }
+    }
+  }
+}

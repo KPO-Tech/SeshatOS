@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { CodeBox, HCARD_HEADER_STAT_CSS, HeaderCard, ProseBox } from '../common'
 import type { ToolViewProps } from '../types'
 import { openInAppBrowser, shouldOpenInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { useTranslation } from 'react-i18next'
 
 const FAVICON_CSS = 'inline-flex size-[15px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-panel)_74%,var(--surface-root))]'
 const HOSTNAME_LINK_CSS = 'min-w-0 shrink truncate text-app-text no-underline hover:text-[var(--accent-primary)] hover:underline'
 
 export function WebFetchToolView({ tool, result, sessionId, expanded }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const url = (tool.input.url as string) ?? ''
   const prompt = (tool.input.prompt as string) ?? ''
   const hostname = domainLabel(url)
@@ -23,7 +25,7 @@ export function WebFetchToolView({ tool, result, sessionId, expanded }: ToolView
       <HeaderCard
         header={
           <>
-            <span className="truncate">{hostname || 'Web Fetch'}</span>
+            <span className="truncate">{hostname || t('chat.tools.renderers.webFetchToolView.webFetch')}</span>
             {stat && <span className={HCARD_HEADER_STAT_CSS}>{stat}</span>}
           </>
         }
@@ -57,7 +59,7 @@ export function WebFetchToolView({ tool, result, sessionId, expanded }: ToolView
               {hostname || sourceUrl}
             </a>
           ) : (
-            <span className="truncate">Web Fetch</span>
+            <span className="truncate">{t('chat.tools.renderers.webFetchToolView.webFetch')}</span>
           )}
           {stat && <span className={HCARD_HEADER_STAT_CSS}>{stat}</span>}
         </>
@@ -69,7 +71,7 @@ export function WebFetchToolView({ tool, result, sessionId, expanded }: ToolView
           <ProseBox content={parsed.content} copyable bare expanded={expanded} />
         ) : (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-app-text-muted">
-            <span className="text-[11.5px]">No content extracted.</span>
+            <span className="text-[11.5px]">{t('chat.tools.renderers.webFetchToolView.noContentExtracted')}</span>
           </div>
         )}
       </div>

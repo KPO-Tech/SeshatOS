@@ -3,6 +3,7 @@ import { Notice, SelectField, SettingRow, SettingsCard, StatusBadge, type Select
 import { linkCapability } from './multimodalApi'
 import { SourceIcon } from './MultimodalIcons'
 import type { CapabilityName, CapabilityStatus } from './multimodalTypes'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   capability: Extract<CapabilityName, 'image' | 'audio'>
@@ -16,6 +17,7 @@ const NO_PROVIDER = '__none__'
 
 /** Which provider a capability goes through. It reuses the key saved in Providers. */
 export function CapabilitySourceCard({ capability, title, configured, status, onChanged }: Props) {
+  const { t } = useTranslation('config')
   const [source, setSource] = useState(NO_PROVIDER)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +28,7 @@ export function CapabilitySourceCard({ capability, title, configured, status, on
 
   const options: SelectOption[] = useMemo(
     () => [
-      { value: NO_PROVIDER, label: 'None', icon: <SourceIcon provider="custom" /> },
+      { value: NO_PROVIDER, label: t('multimodal.capabilitySourceCard.none'), icon: <SourceIcon provider="custom" /> },
       ...(status?.candidates ?? []).map((candidate) => ({ value: candidate.id, label: candidate.name, icon: <SourceIcon provider={candidate.provider} /> }))
     ],
     [status?.candidates]
@@ -53,15 +55,15 @@ export function CapabilitySourceCard({ capability, title, configured, status, on
   return (
     <>
       {error && <Notice tone="error">{error}</Notice>}
-      <SettingsCard title={title} badge={<StatusBadge tone={configured || linked ? 'ok' : 'muted'}>{configured || linked ? 'Linked' : 'Not linked'}</StatusBadge>}>
+      <SettingsCard title={title} badge={<StatusBadge tone={configured || linked ? 'ok' : 'muted'}>{configured || linked ? t('multimodal.capabilitySourceCard.linked') : t('multimodal.capabilitySourceCard.notLinked')}</StatusBadge>}>
         {hasProviders ? (
-          <SettingRow title="Provider" hint={saving ? 'Saving...' : undefined}>
+          <SettingRow title={t('multimodal.capabilitySourceCard.provider')} hint={saving ? t('multimodal.capabilitySourceCard.saving') : undefined}>
             <div className="w-[240px]">
               <SelectField value={source} options={options} onChange={(value) => void handleSourceChange(value)} />
             </div>
           </SettingRow>
         ) : (
-          <SettingRow title="No provider yet" hint={`Add ${capability === 'image' ? 'OpenAI, Gemini or OpenRouter' : 'OpenAI'} in Providers.`} />
+          <SettingRow title={t('multimodal.capabilitySourceCard.noProviderYet')} hint={capability === 'image' ? t('multimodal.capabilitySourceCard.addImageProviders') : t('multimodal.capabilitySourceCard.addOpenAi')} />
         )}
       </SettingsCard>
     </>

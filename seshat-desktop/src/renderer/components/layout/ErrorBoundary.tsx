@@ -1,3 +1,4 @@
+import { i18n } from '@renderer/i18n'
 import { Component, type ReactNode } from 'react'
 
 interface Props {
@@ -29,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex flex-1 items-center justify-center bg-[var(--surface-root)] p-5">
           <div className="flex max-w-[480px] flex-col items-center gap-3 text-center">
-            <p className="m-0 text-[14px] font-semibold text-[var(--text-primary)]">Something went wrong</p>
+            <p className="m-0 text-[14px] font-semibold text-[var(--text-primary)]">{i18n.t('shell:layout.errorBoundary.somethingWentWrong')}</p>
             <pre className="m-0 w-full whitespace-pre-wrap break-words rounded-[5px] border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-[10px] text-[var(--text-muted)]">
               {import.meta.env.DEV && error.stack ? error.stack.split('\n').slice(0, 8).join('\n') : error.message}
             </pre>
@@ -38,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={this.reset}
               type="button"
             >
-              Try again
+              {i18n.t('shell:layout.errorBoundary.tryAgain')}
             </button>
           </div>
         </div>

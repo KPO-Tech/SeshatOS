@@ -2,6 +2,7 @@ import { Right, Search } from '@icon-park/react'
 import { useState } from 'react'
 import { filterTools, hasToolDetails, toolSummary, toolTextBlocks } from './mcpToolText'
 import type { MCPToolEntry } from './mcpTypes'
+import { useTranslation } from 'react-i18next'
 
 // Past this many tools the list can be searched.
 const SEARCH_FROM = 6
@@ -52,9 +53,10 @@ function ToolRow({ tool }: { tool: MCPToolEntry }) {
 
 /** The tools of a server, one line each: a description is written for the model, and opens on demand. */
 export function MCPToolList({ tools }: { tools?: MCPToolEntry[] }) {
+  const { t } = useTranslation('config')
   const [query, setQuery] = useState('')
   if (!tools || tools.length === 0) {
-    return <div className="px-4 py-3 text-[12px] text-[var(--text-muted)]">No tools yet. Apply and reload.</div>
+    return <div className="px-4 py-3 text-[12px] text-[var(--text-muted)]">{t('mcp.mCPToolList.noToolsYetApplyAnd')}</div>
   }
   const shown = filterTools(tools, query)
   return (
@@ -65,8 +67,8 @@ export function MCPToolList({ tools }: { tools?: MCPToolEntry[] }) {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={`Search ${tools.length} tools`}
-            aria-label="Search the tools"
+            placeholder={t('mcp.mcpToolList.search', { count: tools.length })}
+            aria-label={t('mcp.mCPToolList.searchTheTools')}
             className="min-w-0 flex-1 bg-transparent text-[12px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
           />
         </label>
@@ -78,7 +80,7 @@ export function MCPToolList({ tools }: { tools?: MCPToolEntry[] }) {
           ))}
         </ul>
       ) : (
-        <div className="px-1 text-[12px] text-[var(--text-muted)]">No tool matches this search.</div>
+        <div className="px-1 text-[12px] text-[var(--text-muted)]">{t('mcp.mCPToolList.noToolMatchesThisSearch')}</div>
       )}
     </div>
   )

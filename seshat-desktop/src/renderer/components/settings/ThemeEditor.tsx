@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { isHexColor, paletteOf, readabilityWarning, seedFromPalette, type Palette } from '@renderer/lib/customThemes'
 import { fileToWallpaperDataUrl } from '@renderer/lib/wallpaperImage'
 import type { ThemeSeed, Wallpaper } from '@renderer/lib/themes'
@@ -15,6 +16,7 @@ const DEFAULT_GRADIENT = { kind: 'gradient', angle: 135, stops: ['#2b2370', '#0b
 
 /** Editing a custom theme: its name, three colours, and a wallpaper (none, a gradient, or a picture). */
 export function ThemeEditor({ theme, onChange, onDelete }: Props) {
+  const { t } = useTranslation('settings')
   const palette = paletteOf(theme)
   const warning = readabilityWarning(palette)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +40,7 @@ export function ThemeEditor({ theme, onChange, onDelete }: Props) {
     try {
       withWallpaper({ kind: 'image', dataUrl: await fileToWallpaperDataUrl(file), dim: theme.wallpaper?.kind === 'image' ? theme.wallpaper.dim : 0.45 })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'This picture could not be used.')
+      setError(err instanceof Error ? err.message : t('themeEditor.pictureFailed'))
     }
   }
 
@@ -48,35 +50,35 @@ export function ThemeEditor({ theme, onChange, onDelete }: Props) {
   return (
     <div className="grid gap-3 rounded-lg border border-[var(--border-soft)] p-4">
       <label className="grid gap-1">
-        <span className="text-[12px] font-semibold text-[var(--text-secondary)]">Name</span>
+        <span className="text-[12px] font-semibold text-[var(--text-secondary)]">{t('themeEditor.name')}</span>
         <input
           value={theme.label}
           maxLength={40}
-          onChange={(event) => onChange({ ...theme, label: event.target.value || 'My theme' })}
+          onChange={(event) => onChange({ ...theme, label: event.target.value || t('themeEditor.defaultName') })}
           className="h-9 w-[260px] rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-[13px] text-[var(--text-primary)]"
         />
       </label>
 
       <div>
-        <div className="mb-2 text-[13px] font-semibold text-[var(--text-primary)]">Palette</div>
+        <div className="mb-2 text-[13px] font-semibold text-[var(--text-primary)]">{t('themeEditor.palette')}</div>
         <div className="grid grid-cols-3 gap-4">
-          <ColorField label="Surface" value={palette.surface} onChange={(surface) => withPalette({ surface })} />
-          <ColorField label="Accent" value={palette.accent} onChange={(accent) => withPalette({ accent })} />
-          <ColorField label="Text" value={palette.text} onChange={(text) => withPalette({ text })} />
+          <ColorField label={t('themeEditor.surface')} value={palette.surface} onChange={(surface) => withPalette({ surface })} />
+          <ColorField label={t('themeEditor.accent')} value={palette.accent} onChange={(accent) => withPalette({ accent })} />
+          <ColorField label={t('themeEditor.text')} value={palette.text} onChange={(text) => withPalette({ text })} />
         </div>
         {warning && <p className="mt-2 text-[12px] text-[var(--accent-warning)]">{warning}</p>}
       </div>
 
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-[13px] font-semibold text-[var(--text-primary)]">Wallpaper</div>
+          <div className="text-[13px] font-semibold text-[var(--text-primary)]">{t('themeEditor.wallpaper')}</div>
           <Segmented
-            label="Wallpaper"
+            label={t('themeEditor.wallpaper')}
             value={wallpaperKind}
             options={[
-              { value: 'none', label: 'None' },
-              { value: 'gradient', label: 'Gradient' },
-              { value: 'image', label: 'Image' }
+              { value: 'none', label: t('themeEditor.wallpaperNone') },
+              { value: 'gradient', label: t('themeEditor.wallpaperGradient') },
+              { value: 'image', label: t('themeEditor.wallpaperImage') }
             ]}
             onChange={chooseKind}
           />
@@ -89,43 +91,43 @@ export function ThemeEditor({ theme, onChange, onDelete }: Props) {
               {gradient.stops.map((stop, index) => (
                 <ColorField
                   key={index}
-                  label={`Colour ${index + 1}`}
+                  label={t('themeEditor.colourN', { n: index + 1 })}
                   value={stop}
                   onChange={(value) => withWallpaper({ ...gradient, stops: gradient.stops.map((s, i) => (i === index ? value : s)) })}
                 />
               ))}
               {gradient.stops.length < 4 && (
                 <button type="button" className="self-end rounded-md px-2 py-1 text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]" onClick={() => withWallpaper({ ...gradient, stops: [...gradient.stops, gradient.stops[gradient.stops.length - 1]] })}>
-                  + Colour
+                  {t('themeEditor.addColour')}
                 </button>
               )}
               {gradient.stops.length > 2 && (
                 <button type="button" className="self-end rounded-md px-2 py-1 text-[12px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]" onClick={() => withWallpaper({ ...gradient, stops: gradient.stops.slice(0, -1) })}>
-                  − Colour
+                  {t('themeEditor.removeColour')}
                 </button>
               )}
             </div>
-            <Slider label="Angle" suffix="°" min={0} max={360} value={gradient.angle} onChange={(angle) => withWallpaper({ ...gradient, angle })} />
+            <Slider label={t('themeEditor.angle')} suffix="°" min={0} max={360} value={gradient.angle} onChange={(angle) => withWallpaper({ ...gradient, angle })} />
           </div>
         )}
 
         {image && (
           <div className="grid gap-3">
-            <Slider label="Veil" suffix="%" min={0} max={80} value={Math.round(image.dim * 100)} onChange={(value) => withWallpaper({ ...image, dim: value / 100 })} />
+            <Slider label={t('themeEditor.veil')} suffix="%" min={0} max={80} value={Math.round(image.dim * 100)} onChange={(value) => withWallpaper({ ...image, dim: value / 100 })} />
             <button type="button" className="w-fit rounded-md border border-[var(--border-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]" onClick={() => fileRef.current?.click()}>
-              Choose another picture
+              {t('themeEditor.chooseAnother')}
             </button>
           </div>
         )}
         {error && <p className="mt-2 text-[12px] text-[var(--accent-danger)]">{error}</p>}
         {wallpaperKind !== 'none' && (
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">Panels become slightly translucent so the wallpaper shows through. Pick a surface close to the wallpaper to keep text readable.</p>
+          <p className="mt-2 text-[11px] text-[var(--text-muted)]">{t('themeEditor.translucent')}</p>
         )}
       </div>
 
       <div>
         <button type="button" onClick={onDelete} className="rounded-md px-2.5 py-1 text-[12px] font-semibold text-[var(--accent-danger)] hover:bg-[var(--surface-muted)]">
-          Delete this theme
+          {t('themeEditor.delete')}
         </button>
       </div>
     </div>
@@ -133,6 +135,7 @@ export function ThemeEditor({ theme, onChange, onDelete }: Props) {
 }
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const { t } = useTranslation('settings')
   const [text, setText] = useState(value)
   const [shown, setShown] = useState(value)
   // Follow the colour when it changes from outside (the picker, another field).
@@ -148,7 +151,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
           type="color"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          aria-label={`${label} colour`}
+          aria-label={t('themeEditor.colourAria', { label })}
           className="size-9 cursor-pointer rounded-md border border-[var(--border-soft)] bg-transparent p-0.5"
         />
         <input
@@ -160,7 +163,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
             setText(next)
             if (isHexColor(next)) onChange(next.toLowerCase())
           }}
-          aria-label={`${label} hex value`}
+          aria-label={t('themeEditor.hexAria', { label })}
           className={[
             'h-9 w-[92px] rounded-md border bg-[var(--surface-panel)] px-2 font-mono text-[12px] text-[var(--text-primary)]',
             isHexColor(text) ? 'border-[var(--border-soft)]' : 'border-[var(--accent-danger)]'

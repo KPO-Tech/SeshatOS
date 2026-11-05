@@ -16,18 +16,19 @@ import { ImportSkillsDialog } from './ImportSkillsDialog'
 import { repoLogo } from './skillLogos'
 import { SkillIconPicker } from './SkillIconPicker'
 import { SKILLS_CHANGED_EVENT } from './SkillReviewHost'
-import { categoryOf, tagsFor } from './skillIcons'
+import { categoryLabel, categoryOf, tagsFor } from './skillIcons'
 import { deleteSkill, installSkillRepo, setSkillEnabled } from './skillsApi'
 import type { CatalogEntry, Skill } from './skillsTypes'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkillIcons } from './useSkillIcons'
 import { filterSkills, useSkills } from './useSkills'
+import { useTranslation } from 'react-i18next'
 
 type Tab = 'all' | 'builtin' | 'installed' | 'available' | 'agents'
 type Sort = 'name' | 'status'
 
 const PREVIEW = 4
-const AGENT_SOURCE_LABEL: Record<AgentSource, string> = { all: 'All categories', 'built-in': 'Built-in', organization: 'Organization', custom: 'Custom' }
+const AGENT_SOURCE_LABEL: Record<AgentSource, string> = { all: 'skills:skills.skillsPage.allCategories', 'built-in': 'skills:skills.skillsPage.sourceBuiltIn', organization: 'skills:skills.skillsPage.sourceOrganization', custom: 'skills:skills.skillsPage.sourceCustom' }
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3'
 
 const matches = (entry: CatalogEntry, query: string) => `${entry.name} ${entry.description}`.toLowerCase().includes(query.trim().toLowerCase())
@@ -68,6 +69,7 @@ function Pick({ label, value, items }: { label: string; value: string; items: Dr
 
 // What the agent knows how to do (skills) and who it can be (agents): two lists of the same kind, one page.
 export function SkillsPage() {
+  const { t } = useTranslation('skills')
   const { skills, loading, error, reload } = useSkills()
   const { available, reload: reloadCatalog, sourceOf } = useSkillCatalog()
   const { iconOf, isChosen, choose } = useSkillIcons()
@@ -109,7 +111,7 @@ export function SkillsPage() {
   }
 
   async function remove(skill: Skill) {
-    if (!window.confirm(`Delete "${skill.display_name || skill.name}"? This cannot be undone.`)) return
+    if (!window.confirm(t('skills.skillsPage.confirmDelete', { name: skill.display_name || skill.name }))) return
     try {
       await deleteSkill(skill.name)
       await reload()
@@ -166,7 +168,7 @@ export function SkillsPage() {
     nudgeTasks()
   }
 
-  const changeIcon = (target: { name: string; description: string }): DropdownItem => ({ id: 'icon', label: 'Change icon', onSelect: () => setPickingFor(target) })
+  const changeIcon = (target: { name: string; description: string }): DropdownItem => ({ id: 'icon', label: t('skills.skillsPage.changeIcon'), onSelect: () => setPickingFor(target) })
 
   const installedCard = (skill: Skill) => (
     <SkillCard
@@ -179,13 +181,13 @@ export function SkillsPage() {
       source={sourceOf(skill.collection)}
       moreItems={[
         changeIcon(skill),
-        ...(sourceOf(skill.collection) ? [openItem('source', 'Open the source', sourceOf(skill.collection) ?? '')] : []),
-        copyItem('copy', 'Copy the name', skill.name, (message) => show(message)),
-        ...(skill.source === 'userSettings' ? [{ id: 'delete', label: 'Delete', danger: true, onSelect: () => void remove(skill) }] : [])
+        ...(sourceOf(skill.collection) ? [openItem('source', t('skills.skillsPage.openSource'), sourceOf(skill.collection) ?? '')] : []),
+        copyItem('copy', t('skills.skillsPage.copyName'), skill.name, (message) => show(message)),
+        ...(skill.source === 'userSettings' ? [{ id: 'delete', label: t('skills.skillsPage.delete'), danger: true, onSelect: () => void remove(skill) }] : [])
       ]}
       useItems={[
-        { id: 'toggle', label: skill.enabled ? 'Turn off' : 'Turn on', onSelect: () => void toggle(skill) },
-        { id: 'details', label: 'View files', onSelect: () => openSkill(skill) }
+        { id: 'toggle', label: skill.enabled ? t('skills.skillsPage.turnOff') : t('skills.skillsPage.turnOn'), onSelect: () => void toggle(skill) },
+        { id: 'details', label: t('skills.skillsPage.viewFiles'), onSelect: () => openSkill(skill) }
       ]}
     />
   )
@@ -206,10 +208,10 @@ export function SkillsPage() {
       installTask={installTasks.get(entry.name)}
       onCancelInstall={installTasks.get(entry.name) ? () => void stopInstall(installTasks.get(entry.name) as TaskInfo) : undefined}
       moreItems={[
-        { id: 'install', label: 'Install', onSelect: () => void install(entry) },
-        openItem('source', 'Open the source', entry.url),
+        { id: 'install', label: t('skills.skillsPage.install'), onSelect: () => void install(entry) },
+        openItem('source', t('skills.skillsPage.openSource'), entry.url),
         changeIcon(entry),
-        copyItem('copy', 'Copy the repository address', entry.url, (message) => show(message))
+        copyItem('copy', t('skills.skillsPage.copyRepoAddress'), entry.url, (message) => show(message))
       ]}
       onInstall={() => void install(entry)}
     />
@@ -217,36 +219,36 @@ export function SkillsPage() {
 
   const seeAll = (to: Tab) => (
     <button type="button" onClick={() => setTab(to)} className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[12.5px] font-medium text-[var(--accent-primary)] hover:underline">
-      See all
+      {t('skills.skillsPage.seeAll')}
       <Right theme="outline" size={13} />
     </button>
   )
 
   const categoryPick = (
     <Pick
-      label="Category"
-      value={category === 'all' ? 'All categories' : category}
-      items={[{ id: 'all', label: 'All categories', checked: category === 'all', onSelect: () => setCategory('all') }, ...categories.map((name) => ({ id: name, label: name, checked: category === name, onSelect: () => setCategory(name) }))]}
+      label={t('skills.skillsPage.category')}
+      value={category === 'all' ? t('skills.skillsPage.allCategories') : categoryLabel(category, t)}
+      items={[{ id: 'all', label: t('skills.skillsPage.allCategories'), checked: category === 'all', onSelect: () => setCategory('all') }, ...categories.map((name) => ({ id: name, label: categoryLabel(name, t), checked: category === name, onSelect: () => setCategory(name) }))]}
     />
   )
 
   const tabs: Array<{ id: Tab; label: string; count?: number }> = [
-    { id: 'all', label: 'All skills', count: skills.length + available.length },
-    { id: 'builtin', label: 'Built-in', count: skills.filter((skill) => skill.source === 'bundled').length },
-    { id: 'installed', label: 'Installed', count: skills.filter((skill) => skill.source !== 'bundled').length },
-    { id: 'available', label: 'Available', count: available.length }
+    { id: 'all', label: t('skills.skillsPage.allSkills'), count: skills.length + available.length },
+    { id: 'builtin', label: t('skills.skillsPage.builtIn'), count: skills.filter((skill) => skill.source === 'bundled').length },
+    { id: 'installed', label: t('skills.skillsPage.installed'), count: skills.filter((skill) => skill.source !== 'bundled').length },
+    { id: 'available', label: t('skills.skillsPage.available'), count: available.length }
   ]
 
-  const nothing = <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{skills.length + available.length === 0 ? 'No skills yet - add a repository to get started.' : 'No skills match your filters.'}</div>
+  const nothing = <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{skills.length + available.length === 0 ? t('skills.skillsPage.noSkillsYetAddA') : t('skills.skillsPage.noSkillsMatchYourFilters')}</div>
 
   function content() {
     if (tab === 'agents') return <AgentsConfig query={query} sort={sort} source={agentSource} enabledOnly={enabledOnly} onSources={setAgentSources} />
-    if (loading) return <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">Loading...</div>
+    if (loading) return <div className="flex flex-1 items-center justify-center py-16 text-[13px] font-semibold text-[var(--text-muted)]">{t('skills.skillsPage.loading')}</div>
     if (tab === 'builtin') return builtIn.length === 0 ? nothing : <div className={`${GRID} mt-4`}>{builtIn.map(installedCard)}</div>
     if (tab === 'installed') return installed.length === 0 ? nothing : <div className={`${GRID} mt-4`}>{installed.map(installedCard)}</div>
     if (tab === 'available') {
       return offered.length === 0 ? nothing : (
-        <Section title="Available skills" count={offered.length} action={categoryPick}>
+        <Section title={t('skills.skillsPage.availableSkills')} count={offered.length} action={categoryPick}>
           <div className={GRID}>{offered.map(availableCard)}</div>
         </Section>
       )
@@ -255,17 +257,17 @@ export function SkillsPage() {
     return (
       <>
         {installed.length > 0 && (
-          <Section title="Installed skills" count={installed.length} action={installed.length > PREVIEW ? seeAll('installed') : undefined}>
+          <Section title={t('skills.skillsPage.installedSkills')} count={installed.length} action={installed.length > PREVIEW ? seeAll('installed') : undefined}>
             <div className={GRID}>{installed.slice(0, PREVIEW).map(installedCard)}</div>
           </Section>
         )}
         {builtIn.length > 0 && (
-          <Section title="Built-in skills" count={builtIn.length} action={builtIn.length > PREVIEW ? seeAll('builtin') : undefined}>
+          <Section title={t('skills.skillsPage.builtInSkills')} count={builtIn.length} action={builtIn.length > PREVIEW ? seeAll('builtin') : undefined}>
             <div className={GRID}>{builtIn.slice(0, PREVIEW).map(installedCard)}</div>
           </Section>
         )}
         {offered.length > 0 && (
-          <Section title="Available skills" count={offered.length} action={categoryPick}>
+          <Section title={t('skills.skillsPage.availableSkills')} count={offered.length} action={categoryPick}>
             <div className={GRID}>{offered.map(availableCard)}</div>
           </Section>
         )}
@@ -281,9 +283,9 @@ export function SkillsPage() {
             <ApplicationOne theme="filled" size={24} fill="currentColor" />
           </span>
           <div className="min-w-0">
-            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">Skills</h1>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-[var(--text-primary)]">{t('skills.skillsPage.skills')}</h1>
             <p className="m-0 mt-0.5 text-[13px] text-[var(--text-muted)]">
-              Extend SeshatOS with specialized skills and agents. Each skill can help with a specific task, workflow or domain.
+              {t('skills.skillsPage.extendSeshatosWithSpecializedSkills')}
             </p>
           </div>
         </div>
@@ -295,15 +297,15 @@ export function SkillsPage() {
               onClick={() => setEnabledOnly((value) => !value)}
               className={`h-9 cursor-pointer rounded-lg border px-3.5 text-[13px] font-semibold ${enabledOnly ? 'border-[var(--accent-primary)] bg-[var(--accent-subtle)] text-[var(--accent-primary)]' : 'border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
             >
-              My skills
+              {t('skills.skillsPage.mySkills')}
             </button>
-            <button type="button" onClick={() => setImporting(true)} title="Use the skills of Claude Code, Codex or a folder" className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+            <button type="button" onClick={() => setImporting(true)} title={t('skills.skillsPage.useTheSkillsOfClaude')} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
               <Scan theme="outline" size={15} />
-              Scan
+              {t('skills.skillsPage.scan')}
             </button>
             <button type="button" onClick={() => openConfig('skills')} className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
               <Plus theme="outline" size={15} />
-              Add skills
+              {t('skills.skillsPage.addSkills')}
             </button>
           </div>
         )}
@@ -317,7 +319,7 @@ export function SkillsPage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={tab === 'agents' ? 'Search skills, agents, or keywords...' : 'Search skills by name, description or tag...'}
+            placeholder={tab === 'agents' ? t('skills.skillsPage.searchSkillsAgentsOrKeywords') : t('skills.skillsPage.searchSkillsByNameDescription')}
             className="h-10 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
           />
         </div>
@@ -346,30 +348,30 @@ export function SkillsPage() {
             onClick={() => setTab('agents')}
             className={`h-9 cursor-pointer rounded-full border px-4 text-[13px] font-medium ${tab === 'agents' ? 'border-transparent bg-[var(--accent-primary)] text-white' : 'border-[var(--border-soft)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'}`}
           >
-            Agents
+            {t('skills.skillsPage.agents')}
           </button>
         </div>
         {(
           <div className="flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
             <SortThree theme="outline" size={14} />
-            Sort by
+            {t('skills.skillsPage.sortBy')}
             <Pick
-              label="Sort by"
-              value={sort === 'name' ? 'Name' : 'Status'}
+              label={t('skills.skillsPage.sortBy')}
+              value={sort === 'name' ? t('skills.skillsPage.name') : t('skills.skillsPage.status')}
               items={[
-                { id: 'name', label: 'Name', checked: sort === 'name', onSelect: () => setSort('name') },
-                { id: 'status', label: 'Status', checked: sort === 'status', onSelect: () => setSort('status') }
+                { id: 'name', label: t('skills.skillsPage.name'), checked: sort === 'name', onSelect: () => setSort('name') },
+                { id: 'status', label: t('skills.skillsPage.status'), checked: sort === 'status', onSelect: () => setSort('status') }
               ]}
             />
             {tab === 'agents' && (
               <>
                 <span className="mx-1 h-5 w-px bg-[var(--border-soft)]" aria-hidden="true" />
                 <Pick
-                  label="Category"
-                  value={agentSource === 'all' ? 'All categories' : AGENT_SOURCE_LABEL[agentSource]}
+                  label={t('skills.skillsPage.category')}
+                  value={t(AGENT_SOURCE_LABEL[agentSource])}
                   items={[
-                    { id: 'all', label: 'All categories', checked: agentSource === 'all', onSelect: () => setAgentSource('all') },
-                    ...agentSources.map((id) => ({ id, label: AGENT_SOURCE_LABEL[id], checked: agentSource === id, onSelect: () => setAgentSource(id) }))
+                    { id: 'all', label: t('skills.skillsPage.allCategories'), checked: agentSource === 'all', onSelect: () => setAgentSource('all') },
+                    ...agentSources.map((id) => ({ id, label: t(AGENT_SOURCE_LABEL[id]), checked: agentSource === id, onSelect: () => setAgentSource(id) }))
                   ]}
                 />
               </>

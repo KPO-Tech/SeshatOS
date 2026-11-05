@@ -5,13 +5,14 @@ import type { SystemStatus } from '../knowledge/knowledgeTypes'
 import { DocumentsOverview } from './DocumentsOverview'
 import { LocalOcrPanel } from './LocalOcrPanel'
 import { useDocumentReader } from './useDocumentReader'
+import { useTranslation } from 'react-i18next'
 
 const emptySnapshot: DocumentsSnapshot = { documentReader: null, system: null }
 
 type Tab = 'overview' | 'ocr'
 const TABS: Array<SettingsTab<Tab>> = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'ocr', label: 'Scanned pages' }
+  { id: 'overview', label: 'config:documents.documentsConfig.overview' },
+  { id: 'ocr', label: 'config:documents.documentsConfig.scannedPages' }
 ]
 
 /** How SeshatOS reads documents: which reader goes first and what each can do, and the reading of scanned pages on this computer. */
@@ -53,6 +54,7 @@ export function DocumentsConfig() {
 }
 
 function Loaded({ snapshot, error, onSaved, onSystemChanged }: { snapshot: DocumentsSnapshot; error: string | null; onSaved: Parameters<typeof useDocumentReader>[0]['onSaved']; onSystemChanged: (system: Partial<SystemStatus>) => void }) {
+  const { t } = useTranslation('config')
   const [tab, setTab] = useState<Tab>('overview')
   const reader = useDocumentReader({ config: snapshot.documentReader, system: snapshot.system, onSaved, onSystemChanged })
   const message = error || reader.saveError
@@ -60,13 +62,13 @@ function Loaded({ snapshot, error, onSaved, onSystemChanged }: { snapshot: Docum
   return (
     <SettingsPage
       id="documents"
-      badge={reader.form.enabled ? <StatusBadge tone="ok">On</StatusBadge> : <StatusBadge tone="muted">Off</StatusBadge>}
-      tabs={<SettingsTabs tabs={TABS} value={tab} onChange={setTab} />}
+      badge={reader.form.enabled ? <StatusBadge tone="ok">{t('documents.documentsConfig.on')}</StatusBadge> : <StatusBadge tone="muted">{t('documents.documentsConfig.off')}</StatusBadge>}
+      tabs={<SettingsTabs tabs={TABS.map((tab) => ({ ...tab, label: t(tab.label) }))} value={tab} onChange={setTab} />}
       actions={
         <>
-          {reader.dirty && <span className="text-[12px] text-[var(--text-muted)]">Unsaved changes</span>}
+          {reader.dirty && <span className="text-[12px] text-[var(--text-muted)]">{t('documents.documentsConfig.unsavedChanges')}</span>}
           <ActionButton type="button" tone={reader.dirty ? 'primary' : 'default'} disabled={!reader.dirty || reader.saving} onClick={() => void reader.save()}>
-            {reader.saving ? 'Saving...' : reader.dirty ? 'Save changes' : 'Saved'}
+            {reader.saving ? t('documents.documentsConfig.saving') : reader.dirty ? t('documents.documentsConfig.saveChanges') : t('documents.documentsConfig.saved')}
           </ActionButton>
         </>
       }

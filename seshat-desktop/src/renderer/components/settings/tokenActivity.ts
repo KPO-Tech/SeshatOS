@@ -1,3 +1,5 @@
+import { currentLanguage } from '@renderer/i18n'
+
 export type TokenActivityDay = {
   date: string
   input_tokens: number
@@ -17,8 +19,9 @@ export type MonthLabel = { column: number; label: string }
 const WEEKS = 53
 const DAY_MS = 86_400_000
 
-const MONTH = new Intl.DateTimeFormat('en', { month: 'short', timeZone: 'UTC' })
-const MONTH_DAY = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+// The names of the months follow the language of the interface, read when a date is drawn so that a change of language shows at once.
+const month = () => new Intl.DateTimeFormat(currentLanguage(), { month: 'short', timeZone: 'UTC' })
+const monthDay = () => new Intl.DateTimeFormat(currentLanguage(), { month: 'short', day: 'numeric', timeZone: 'UTC' })
 
 /** Dates stay in UTC here: they are calendar days, and a local zone would move them across midnight. */
 function toUTC(date: string): number {
@@ -47,7 +50,7 @@ export function formatTokens(tokens: number): string {
 }
 
 export function formatDay(date: string): string {
-  return MONTH_DAY.format(toUTC(date))
+  return monthDay().format(toUTC(date))
 }
 
 /**
@@ -104,12 +107,12 @@ export function monthLabels(weeks: ActivityWeek[]): MonthLabel[] {
   let previousMonth = -1
   weeks.forEach((week, column) => {
     const start = new Date(toUTC(week.start))
-    const month = start.getUTCMonth()
-    if (month === previousMonth) return
-    previousMonth = month
+    const monthIndex = start.getUTCMonth()
+    if (monthIndex === previousMonth) return
+    previousMonth = monthIndex
     // The first column can start at the very end of a month: its label would sit on top of the next.
     if (column === 0 && start.getUTCDate() > 21) return
-    labels.push({ column, label: MONTH.format(start) })
+    labels.push({ column, label: month().format(start) })
   })
   return labels
 }

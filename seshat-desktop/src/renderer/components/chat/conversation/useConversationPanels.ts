@@ -5,6 +5,7 @@ import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
 import { isAgentTool, isFileTool } from '@renderer/components/chat/tools/toolDisplay'
 import { isWebTool } from '@renderer/components/chat/tools/webTools'
 import { htmlArtifactPanel, presentedPages } from '@renderer/lib/htmlArtifact'
+import { useTranslation } from 'react-i18next'
 
 type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'browser' | 'files'>
 
@@ -54,6 +55,7 @@ export function useConversationPanels({
   pendingPlan,
   openRightPanel,
 }: UseConversationPanelsArgs) {
+  const { t } = useTranslation('chat')
   const browserToolNavigationRef = useRef<string | null>(null)
   const prevCategoryRef = useRef<ToolPanelCategory | null>(null)
   const openedPagesRef = useRef(new Set<string>())
@@ -83,7 +85,7 @@ export function useConversationPanels({
     if (!sessionId || !filesOpen || !isFileToolActive || !activeToolName) return
     const toolBlock = [...streaming].reverse().find((block) => block.type === 'tool_use' && block.name === activeToolName)
     if (toolBlock?.type !== 'tool_use') return
-    openRightPanel({ kind: 'files', title: 'Files', sessionId, focusToolId: toolBlock.id })
+    openRightPanel({ kind: 'files', title: t('chat.conversation.useConversationPanels.files'), sessionId, focusToolId: toolBlock.id })
   }, [activeToolName, isFileToolActive, filesOpen, openRightPanel, sessionId, streaming])
 
   useEffect(() => {
@@ -124,7 +126,7 @@ export function useConversationPanels({
   // without a structured PlanDocument.
   useEffect(() => {
     if (!sessionId || !isPlanPending || pendingPlan) return
-    openRightPanel({ kind: 'plan', title: 'Implementation Plan', sessionId })
+    openRightPanel({ kind: 'plan', title: t('chat.conversation.useConversationPanels.implementationPlan'), sessionId })
   }, [isPlanPending, openRightPanel, pendingPlan, sessionId])
 
   // Same auto-open for the structured/document-backed path - keyed on the
@@ -133,6 +135,6 @@ export function useConversationPanels({
   // showing something else, matching the raw-plan behavior above.
   useEffect(() => {
     if (!sessionId || !pendingPlan) return
-    openRightPanel({ kind: 'plan', title: 'Implementation Plan', sessionId, planId: pendingPlan.id })
+    openRightPanel({ kind: 'plan', title: t('chat.conversation.useConversationPanels.implementationPlan'), sessionId, planId: pendingPlan.id })
   }, [openRightPanel, pendingPlan?.id, sessionId])
 }

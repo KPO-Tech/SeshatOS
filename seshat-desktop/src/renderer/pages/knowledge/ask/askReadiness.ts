@@ -44,34 +44,34 @@ export function askStop({ loading, collectionsFailed, collectionCount, mode, can
     const connected = mode === 'connected'
     return {
       kind: 'unavailable',
-      title: connected ? "SeshatCloud can't be reached" : "Knowledge isn't answering",
+      title: connected ? 'knowledge/ask:pages.knowledge.ask.askReadiness.cloudUnreachable' : 'knowledge/ask:pages.knowledge.ask.askReadiness.notAnswering',
       text: connected
-        ? "The collections of your organization could not be read. Check your connection, then try again."
-        : 'The collections of this computer could not be read. Try again; if it keeps happening, restart the app.',
-      action: { id: 'retry', label: 'Try again' }
+        ? 'knowledge/ask:pages.knowledge.ask.askReadiness.orgCollectionsFailed'
+        : 'knowledge/ask:pages.knowledge.ask.askReadiness.localCollectionsFailed',
+      action: { id: 'retry', label: 'knowledge/ask:pages.knowledge.ask.askReadiness.tryAgain' }
     }
   }
   if (collectionCount > 0) return null
   return {
     kind: 'empty',
-    title: 'No documents to ask about yet',
+    title: 'knowledge/ask:pages.knowledge.ask.askReadiness.noDocuments',
     text: canManage
-      ? 'Add a source and Seshat will read its documents. Once they are indexed, you can ask about them here.'
-      : 'No collection is shared with you yet. Ask an administrator of your organization to give you access.',
-    action: canManage ? { id: 'add-source', label: 'Add a source' } : undefined
+      ? 'knowledge/ask:pages.knowledge.ask.askReadiness.addSourceText'
+      : 'knowledge/ask:pages.knowledge.ask.askReadiness.noneShared',
+    action: canManage ? { id: 'add-source', label: 'knowledge/ask:pages.knowledge.ask.askReadiness.addSource' } : undefined
   }
 }
 
 /** What will make the answers worse without stopping them, from the embedding settings. */
 export function askNotices({ embedder, canManage }: Pick<AskReadinessInput, 'embedder' | 'canManage'>): AskNotice[] {
   if (!embedder) return []
-  const action = canManage ? { id: 'setup-search' as const, label: 'Open Search settings' } : undefined
+  const action = canManage ? { id: 'setup-search' as const, label: 'knowledge/ask:pages.knowledge.ask.askReadiness.openSearchSettings' } : undefined
   if (!embedder.enabled || !embedder.is_configured) {
     return [
       {
         id: 'no-embedder',
-        title: 'Search by meaning is off',
-        text: 'Ask finds passages by their words only, so a question that does not use the words of the documents can find nothing.',
+        title: 'knowledge/ask:pages.knowledge.ask.askReadiness.meaningOff',
+        text: 'knowledge/ask:pages.knowledge.ask.askReadiness.meaningOffText',
         action
       }
     ]
@@ -80,9 +80,9 @@ export function askNotices({ embedder, canManage }: Pick<AskReadinessInput, 'emb
     return [
       {
         id: 'vectors-stale',
-        title: 'The documents were indexed with another model',
-        text: 'The search by meaning is wrong until the documents are indexed again with the model now in use.',
-        action: canManage ? { id: 'setup-search', label: 'Index again' } : undefined
+        title: 'knowledge/ask:pages.knowledge.ask.askReadiness.staleTitle',
+        text: 'knowledge/ask:pages.knowledge.ask.askReadiness.staleText',
+        action: canManage ? { id: 'setup-search', label: 'knowledge/ask:pages.knowledge.ask.askReadiness.indexAgain' } : undefined
       }
     ]
   }

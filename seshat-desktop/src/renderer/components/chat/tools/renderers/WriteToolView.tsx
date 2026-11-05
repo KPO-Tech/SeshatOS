@@ -1,6 +1,7 @@
 import { ErrorPre, Section } from '../common'
 import { DiffView, resolveDiffRows } from '../DiffView'
 import type { ToolViewProps } from '../types'
+import { useTranslation } from 'react-i18next'
 
 // Note: for write_file/edit_file specifically, ToolLineItem.tsx renders its
 // own DiffContent instead of dispatching here (isDiffTool skips
@@ -9,6 +10,7 @@ import type { ToolViewProps } from '../types'
 // renderToolBody (e.g. a future non-diff surface), so it's kept correct on
 // its own rather than deleted.
 export function WriteToolView({ tool, result, expanded }: ToolViewProps) {
+  const { t } = useTranslation('chat')
   const filePath = (tool.input.file_path as string) ?? ''
   const diff = resolveDiffRows(tool)
 
@@ -19,7 +21,7 @@ export function WriteToolView({ tool, result, expanded }: ToolViewProps) {
       )}
 
       {result?.isError && result.content && (
-        <Section label="Error">
+        <Section label={t('chat.tools.renderers.writeToolView.error')}>
           <ErrorPre content={result.content} />
         </Section>
       )}

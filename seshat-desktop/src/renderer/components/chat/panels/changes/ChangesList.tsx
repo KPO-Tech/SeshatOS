@@ -1,5 +1,6 @@
 import { Dropdown } from '@renderer/components/ui/Dropdown'
 import { pullStatus, pullStatusLabel, pullSubtitle, type PullRequest, type PullState, type PullStatus } from '@renderer/lib/pullRequests'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_COLOR: Record<PullStatus, string> = {
   running: 'text-[var(--accent-warning)] animate-pulse',
@@ -26,6 +27,7 @@ type Props = {
  * merged as soon as it is ready.
  */
 export function ChangesList({ pulls, onRefresh, onMerge, armed = [], onToggleArmed }: Props) {
+  const { t } = useTranslation('chat')
   return (
     // grid-cols-1 is minmax(0, 1fr): an auto column grows to the longest title and pushes the row out of the card, so truncate never cuts.
     <ul className="m-0 grid min-w-0 list-none grid-cols-1 gap-0.5 p-0">
@@ -48,7 +50,7 @@ export function ChangesList({ pulls, onRefresh, onMerge, armed = [], onToggleArm
               <span className="block truncate text-[12px] font-semibold text-[var(--text-primary)]">{pull.title}</span>
               <span className="block truncate text-[11px] text-[var(--text-muted)]">
                 {pullSubtitle(pull)}
-                {isArmed && status !== 'merged' && status !== 'closed' && ' · merges when ready'}
+                {isArmed && status !== 'merged' && status !== 'closed' && t('chat.panels.changes.changesList.mergesWhenReady')}
               </span>
             </button>
             {(pull.additions > 0 || pull.deletions > 0) && (
@@ -60,26 +62,26 @@ export function ChangesList({ pulls, onRefresh, onMerge, armed = [], onToggleArm
               <button
                 type="button"
                 onClick={() => onMerge(pull)}
-                title="Ask the agent to merge this pull request"
+                title={t('chat.panels.changes.changesList.askTheAgentToMerge')}
                 className="shrink-0 cursor-pointer rounded-md border border-[var(--accent-success)] bg-transparent px-1.5 py-0.5 text-[10.5px] font-semibold text-[var(--accent-success)] hover:bg-[color-mix(in_srgb,var(--accent-success)_12%,transparent)]"
               >
-                Merge
+                {t('chat.panels.changes.changesList.merge')}
               </button>
             )}
             <Dropdown
-              label={`Actions for pull request ${pull.number}`}
+              label={t('chat.panels.changes.changesList.actionsFor', { number: pull.number })}
               trigger={({ toggle }) => (
-                <button type="button" onClick={toggle} aria-label="More" className="cursor-pointer rounded border-0 bg-transparent px-1 text-[14px] leading-none text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                <button type="button" onClick={toggle} aria-label={t('chat.panels.changes.changesList.more')} className="cursor-pointer rounded border-0 bg-transparent px-1 text-[14px] leading-none text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                   &#8943;
                 </button>
               )}
               items={[
-                { id: 'open', label: 'Open on GitHub', onSelect: () => void window.seshat?.openExternal?.(pull.url) },
-                { id: 'copy', label: 'Copy link', onSelect: () => void navigator.clipboard.writeText(pull.url) },
+                { id: 'open', label: t('chat.panels.changes.changesList.openOnGithub'), onSelect: () => void window.seshat?.openExternal?.(pull.url) },
+                { id: 'copy', label: t('chat.panels.changes.changesList.copyLink'), onSelect: () => void navigator.clipboard.writeText(pull.url) },
                 ...(canArm
-                  ? [{ id: 'arm', label: isArmed ? 'Do not merge when ready' : 'Merge when ready', onSelect: () => onToggleArmed(pull) }]
+                  ? [{ id: 'arm', label: isArmed ? t('chat.panels.changes.changesList.dontMergeWhenReady') : t('chat.panels.changes.changesList.mergeWhenReady'), onSelect: () => onToggleArmed(pull) }]
                   : []),
-                { id: 'refresh', label: 'Refresh', onSelect: onRefresh }
+                { id: 'refresh', label: t('chat.panels.changes.changesList.refresh'), onSelect: onRefresh }
               ]}
             />
           </li>

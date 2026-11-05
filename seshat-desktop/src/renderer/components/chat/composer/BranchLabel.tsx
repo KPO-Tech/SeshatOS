@@ -1,12 +1,14 @@
 import { useGitState } from '@renderer/hooks/useGitState'
+import { useTranslation } from 'react-i18next'
 
 /** The git branch of the folder the session works in, under the composer, so it is always in view. Nothing outside a repository. */
 export function BranchLabel({ folder }: { folder: string | undefined }) {
+  const { t } = useTranslation('chat')
   const git = useGitState(folder)
   if (!git?.repo || !git.branch) return null
 
-  const name = git.detached ? `${git.branch} (detached)` : git.branch
-  const title = `Git branch ${name}${git.dirty ? ', with changes not committed' : ''}`
+  const name = git.detached ? t('chat.composer.branchLabel.detached', { branch: git.branch }) : git.branch
+  const title = t('chat.composer.branchLabel.title', { name }) + (git.dirty ? t('chat.composer.branchLabel.dirty') : '')
 
   return (
     <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--text-muted)]" title={title} role="status" aria-label={title}>

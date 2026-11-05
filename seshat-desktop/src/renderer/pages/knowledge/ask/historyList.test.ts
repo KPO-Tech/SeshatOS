@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import type { TFunction } from 'i18next'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { englishT } from '@renderer/i18n/testing'
 import type { ChatSession } from '@renderer/stores/session'
 import { ago, askSessions } from './historyList'
 
@@ -17,16 +19,20 @@ describe('askSessions', () => {
 })
 
 describe('ago', () => {
+  let t: TFunction
+  beforeAll(async () => {
+    t = await englishT()
+  })
   const now = Date.parse('2026-10-28T12:00:00Z')
   it('says how long ago in the unit that fits', () => {
-    expect(ago('2026-10-28T11:59:40Z', now)).toBe('just now')
-    expect(ago('2026-10-28T11:55:00Z', now)).toBe('5 min ago')
-    expect(ago('2026-10-28T09:00:00Z', now)).toBe('3 h ago')
-    expect(ago('2026-10-27T09:00:00Z', now)).toBe('yesterday')
-    expect(ago('2026-10-24T12:00:00Z', now)).toBe('4 days ago')
+    expect(ago('2026-10-28T11:59:40Z', t, 'en-GB', now)).toBe('just now')
+    expect(ago('2026-10-28T11:55:00Z', t, 'en-GB', now)).toBe('5 min ago')
+    expect(ago('2026-10-28T09:00:00Z', t, 'en-GB', now)).toBe('3 h ago')
+    expect(ago('2026-10-27T09:00:00Z', t, 'en-GB', now)).toBe('yesterday')
+    expect(ago('2026-10-24T12:00:00Z', t, 'en-GB', now)).toBe('4 days ago')
   })
   it('says nothing for a date that is not one', () => {
-    expect(ago(undefined, now)).toBe('')
-    expect(ago('nope', now)).toBe('')
+    expect(ago(undefined, t, 'en-GB', now)).toBe('')
+    expect(ago('nope', t, 'en-GB', now)).toBe('')
   })
 })

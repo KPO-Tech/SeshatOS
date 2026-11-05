@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { VisualId } from '@renderer/lib/whatsNew'
+import { useTranslation } from 'react-i18next'
 
 // Small drawings of what changed, made of the same colours as the app, so that they follow the theme and the accent.
 
@@ -51,6 +52,7 @@ function Look() {
 
 /** The card of the sidebar with two tasks, and a bar going. */
 function Tasks() {
+  const { t } = useTranslation('shell')
   return (
     <div className={`${card} w-[280px] p-3.5 shadow-lg`}>
       <div className="mb-2.5 flex gap-1.5">
@@ -58,27 +60,28 @@ function Tasks() {
         <span className="flex size-5 items-center justify-center rounded-md border border-[var(--border-soft)] text-[11px] font-semibold text-[var(--accent-primary)]">2</span>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium text-[var(--text-primary)]">Downloading paperasse</span>
+        <span className="text-[13px] font-medium text-[var(--text-primary)]">{t('whatsnew.visuals.downloadingPaperasse')}</span>
         <span className="text-[12px] text-[var(--text-muted)]">×</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-soft)]">
         <div className={`h-full w-[62%] rounded-full ${accent}`} />
       </div>
       <div className="mt-2 flex justify-between text-[11px] text-[var(--text-muted)]">
-        <span>Downloading the skills (1 of 2)</span>
+        <span>{t('whatsnew.visuals.downloadingTheSkills1Of')}</span>
         <span>12 s</span>
       </div>
-      <div className="mt-1 font-mono text-[10.5px] text-[var(--text-faint)]">RO 62% · 2.1 MiB/s</div>
+      <div className="mt-1 font-mono text-[10.5px] text-[var(--text-faint)]">{t('whatsnew.visuals.ro6221Mib')}</div>
     </div>
   )
 }
 
 /** The bell with its count, and what it keeps. */
 function Bell() {
+  const { t } = useTranslation('shell')
   const items = [
-    { title: 'paperasse is ready', text: 'The installation is done.', ok: true },
-    { title: 'The agent has finished', text: 'Gradient descent illustration', ok: true },
-    { title: 'Installing strix failed', text: 'Docker is not running.', ok: false }
+    { title: t('whatsnew.visuals.paperasseIsReady'), text: t('whatsnew.visuals.theInstallationIsDone'), ok: true },
+    { title: t('whatsnew.visuals.theAgentHasFinished'), text: t('whatsnew.visuals.gradientDescentIllustration'), ok: true },
+    { title: t('whatsnew.visuals.installingStrixFailed'), text: t('whatsnew.visuals.dockerIsNotRunning'), ok: false }
   ]
   return (
     <div className="relative w-[300px]">
@@ -108,13 +111,14 @@ function Bell() {
 
 /** The start page: a greeting, five cards, and the input at the bottom. */
 function Home() {
+  const { t } = useTranslation('shell')
   const colors = ['var(--accent-primary)', '#8b5cf6', '#22a55b', '#3b82f6', '#ec4899']
   return (
     <div className={`${card} flex h-[190px] w-[360px] flex-col justify-between p-3.5 shadow-lg`}>
       <div>
-        <span className="inline-block rounded-full border border-[var(--accent-primary)] px-2 py-px text-[9px] font-semibold text-[var(--accent-primary)]">Your AI Workspace</span>
+        <span className="inline-block rounded-full border border-[var(--accent-primary)] px-2 py-px text-[9px] font-semibold text-[var(--accent-primary)]">{t('whatsnew.visuals.yourAiWorkspace')}</span>
         <div className="mt-1.5 text-[16px] font-bold text-[var(--text-primary)]">
-          What are we <span className="text-[var(--accent-primary)]">working on</span>?
+          {t('shell:pages.homeStage.whatAreWe')} <span className="text-[var(--accent-primary)]">{t('whatsnew.visuals.workingOn')}</span>{t('shell:pages.homeStage.questionMark')}
         </div>
         <div className="mt-2.5 grid grid-cols-5 gap-1.5">
           {colors.map((color) => (
@@ -127,9 +131,9 @@ function Home() {
         </div>
       </div>
       <div className="flex items-center justify-between rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-2.5 py-2">
-        <span className="text-[10px] text-[var(--text-muted)]">Ask anything...</span>
+        <span className="text-[10px] text-[var(--text-muted)]">{t('whatsnew.visuals.askAnything')}</span>
         <span className="flex items-center gap-1.5 text-[9px] text-[var(--text-secondary)]">
-          Generative UI
+          {t('whatsnew.visuals.generativeUi')}
           <span className={`relative h-2.5 w-[18px] rounded-full ${accent}`}>
             <span className="absolute left-[9px] top-[1.5px] size-[7px] rounded-full bg-white" />
           </span>
@@ -141,6 +145,7 @@ function Home() {
 
 /** One window of Settings: the list of pages, and cards that all look alike. */
 function Settings() {
+  const { t } = useTranslation('shell')
   const pages = ['General', 'Appearance', 'Providers', 'Skills']
   return (
     <div className={`${card} flex h-[190px] w-[360px] overflow-hidden shadow-lg`}>
@@ -152,7 +157,7 @@ function Settings() {
         ))}
       </div>
       <div className="flex-1 p-3">
-        <div className="text-[12px] font-semibold text-[var(--text-primary)]">Appearance</div>
+        <div className="text-[12px] font-semibold text-[var(--text-primary)]">{t('whatsnew.visuals.appearance')}</div>
         <div className="mt-2 space-y-2">
           {['Theme', 'Accent colour', 'Density'].map((name) => (
             <div key={name} className="flex items-center justify-between rounded-lg border border-[var(--border-soft)] px-2.5 py-2">
@@ -168,6 +173,7 @@ function Settings() {
 
 /** Project cards: a coloured folder, a name, a line, and tags. */
 function Projects() {
+  const { t } = useTranslation('shell')
   const projects = [
     { name: 'paperasse', color: '#f59e0b', tags: ['docs', 'fr'] },
     { name: 'seshat-os', color: 'var(--accent-primary)', tags: ['app'] }
@@ -191,7 +197,7 @@ function Projects() {
               </span>
             ))}
           </div>
-          <div className={`mt-3 flex h-6 items-center justify-center rounded-md ${accent} text-[10px] font-semibold text-white`}>Start session</div>
+          <div className={`mt-3 flex h-6 items-center justify-center rounded-md ${accent} text-[10px] font-semibold text-white`}>{t('whatsnew.visuals.startSession')}</div>
         </div>
       ))}
     </div>
