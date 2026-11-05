@@ -11,6 +11,22 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.13] - 2026-11-05
+
+### Highlights
+
+- **The files of a skill look like the files of a project, and a skill has its own Overview.**
+
+### Added
+
+- **Overview and Files tabs on a skill.** The description moves out of the header into an Overview that reads well: what the skill is about, its tags, its details, and what it asks for (license, compatibility, allowed tools, read from its SKILL.md). Files takes the whole width.
+- **Colour icons, search, tables and notebooks in the files of a skill.** They use the same tree and the same viewer as the files of a project.
+
+### Fixed
+
+- **The tabs of a project showed their keys in French.** "shell:pages.projects.detail.tabFiles" appeared instead of Files; the titles are drawn again.
+- **The type of a skill (Built-in, Yours...) is translated.**
+
 ## [0.3.12] - 2026-11-05
 
 ### Highlights
