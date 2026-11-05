@@ -11,6 +11,24 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.14] - 2026-11-05
+
+### Highlights
+
+- **The French fits the screens, and the icon near the clock, the dialogs and the Windows installer speak your language.**
+
+### Added
+
+- **The tray menu, the notice of a hidden window and the dialogs of the system follow the language of the app.** Open / Quit, "still working" and the question when you quit during a task are in English or French, and the choice is kept for the next start.
+- **The Windows installer speaks French as well as English,** following the language of the system: welcome and finish pages, and the question asked when the app is removed.
+- **The notifications list scrolls after five.**
+- **The messages of the backend that a person may meet are translated** (session expired, device not connected, request too large, rate limit...), and so are the messages about the downloads and installations in progress.
+
+### Changed
+
+- **Shorter French labels.** About 560 labels were tightened, so that buttons, tabs and titles are not stretched (the French text is 13% longer than the English now, against 24% before).
+- **Updated dependencies:** chart.js, simple-icons, electron-updater, electron-builder and oxlint.
+
 ## [0.3.13] - 2026-11-05
 
 ### Highlights

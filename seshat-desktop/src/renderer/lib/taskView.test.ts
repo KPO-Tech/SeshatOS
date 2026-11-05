@@ -1,6 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import i18next from 'i18next'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { catalogLoader, i18n, i18nOptions } from '@renderer/i18n'
 import { elapsedLabel, finishedMessage, newlyFinished, progressOf, stepLabel } from './taskView'
 import type { TaskInfo, TaskStatus } from './tasks'
+
+// The messages are told in the language of the app, here English.
+beforeAll(async () => {
+  await i18n.use(catalogLoader).init(i18nOptions('en'))
+})
 
 const task = (extra: Partial<TaskInfo> = {}): TaskInfo => ({ id: 't1', kind: 'skill.install', subject: 'paperasse', title: 'Installing paperasse', status: 'running', started_at: 1000, ...extra })
 
@@ -66,5 +73,16 @@ describe('finishedMessage', () => {
       title: 'Downloading paperasse failed',
       failed: true
     })
+  })
+})
+
+describe('the messages of a task in French', () => {
+  it('tell a task that ended and where it is, in the language of the app', async () => {
+    const fr = i18next.createInstance()
+    await fr.use(catalogLoader).init(i18nOptions('fr'))
+    expect(finishedMessage(task({ status: 'succeeded' }), fr.t)).toMatchObject({ title: 'paperasse est prêt', body: 'Installation terminée.' })
+    expect(finishedMessage(task({ status: 'failed', error: '' }), fr.t).title).toBe("Échec de l'installation de paperasse")
+    expect(stepLabel(task({ status: 'queued' }), fr.t)).toBe('En attente de son tour')
+    expect(stepLabel(task({ step: 'Création', step_index: 2, step_count: 4 }), fr.t)).toBe('Création (2/4)')
   })
 })

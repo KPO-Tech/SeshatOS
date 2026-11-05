@@ -5,10 +5,10 @@
     "empty": "Vide",
     "readTheFilesAgain": "Relire les fichiers",
     "refresh": "Actualiser",
-    "searchFiles": "Rechercher des fichiers...",
+    "searchFiles": "Chercher un fichier…",
     "searching": "Recherche...",
     "noFileOrFolderHas": "Aucun fichier ni dossier ne porte ce nom.",
-    "searchTheFiles": "Rechercher dans les fichiers"
+    "searchTheFiles": "Chercher dans les fichiers"
   },
   "fileViewer": {
     "thisFileIsEmpty": "Ce fichier est vide.",
@@ -17,11 +17,11 @@
     "preview": "Aperçu",
     "copyThePath": "Copier le chemin",
     "open": "Ouvrir",
-    "firstRows": "Les {{rows}} premières lignes sont affichées.",
+    "firstRows": "Les {{rows}} premières lignes.",
     "loading": "Chargement...",
-    "tooLarge": "Ce fichier est trop volumineux pour être affiché ici (2 Mo au maximum).",
-    "notText": "Ce fichier n'est pas du texte, il ne peut donc pas être affiché ici.",
-    "pictureTooLarge": "Cette image est trop volumineuse pour être affichée ici (10 Mo au maximum).",
+    "tooLarge": "Fichier trop gros (2 Mo max).",
+    "notText": "Fichier non textuel, affichage impossible.",
+    "pictureTooLarge": "Image trop grande (10 Mo max).",
     "couldNotRead": "Ce fichier n'a pas pu être lu.",
     "notebookUnreadable": "Ce notebook n'a pas pu être lu.",
     "notDrawnOpen": "Les fichiers {{type}} ne sont pas encore affichés dans cette vue. Ouvrez-le avec le programme de votre système.",

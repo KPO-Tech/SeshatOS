@@ -2,12 +2,12 @@
   "skills": {
     "agents": {
       "agentCard": {
-        "builtInAndOrganizationAgents": "Les agents intégrés et ceux de l'organisation sont en lecture seule",
+        "builtInAndOrganizationAgents": "Agents intégrés et d'organisation : lecture seule",
         "delete": "Supprimer",
         "enabled": "Activé",
-        "off": "Désactivé",
-        "moreAboutThisAgent": "Plus d'options pour cet agent",
-        "noUsageDescriptionYet": "Pas encore de description d'usage.",
+        "off": "Inactif",
+        "moreAboutThisAgent": "Options de l'agent",
+        "noUsageDescriptionYet": "Aucune description d'usage.",
         "default": "Par défaut",
         "allTools": "Tous les outils",
         "tools_one": "{{count}} outil",
@@ -38,10 +38,10 @@
         "capabilities": "Capacités",
         "modelOverride": "Modèle imposé",
         "providerModelOptional": "fournisseur:modèle, facultatif",
-        "maxTurns": "Nombre de tours max",
+        "maxTurns": "Tours max",
         "permissionMode": "Mode d'autorisation",
         "isolation": "Isolation",
-        "everyToolOrOnlyA": "Tous les outils, ou seulement une liste que vous donnez.",
+        "everyToolOrOnlyA": "Tous les outils, ou une liste choisie.",
         "all": "Tous",
         "custom": "Personnalisé",
         "webSearchReadFileTerminal": "web_search, read_file, terminal",
@@ -57,7 +57,7 @@
         "permission": {
           "default": {
             "label": "Par défaut",
-            "description": "Utiliser le mode d'approbation de l'espace de travail"
+            "description": "Mode d'approbation de l'espace"
           },
           "suggest": {
             "label": "Suggérer",
@@ -65,7 +65,7 @@
           },
           "auto": {
             "label": "Auto",
-            "description": "Exécuter directement les actions de confiance"
+            "description": "Exécuter directement les actions sûres"
           },
           "manual": {
             "label": "Manuel",
@@ -73,32 +73,32 @@
           }
         },
         "isolationDefault": {
-          "label": "Valeur par défaut de l'espace de travail",
+          "label": "Défaut de l'espace",
           "description": "Utiliser l'isolation par défaut du runtime"
         },
         "isolationWorkspace": {
-          "label": "Espace de travail",
-          "description": "Partager le contexte de l'espace de travail actuel"
+          "label": "Espace",
+          "description": "Partager le contexte de l'espace actuel"
         },
         "isolationEphemeral": {
           "label": "Éphémère",
-          "description": "Privilégier un contexte d'exécution de courte durée"
+          "description": "Contexte d'exécution éphémère"
         },
         "starter": {
           "research": "Recherche",
           "builder": "Concepteur",
-          "ops": "Exploitation"
+          "ops": "Ops"
         }
       },
       "agentsConfig": {
-        "builtInAndOrganizationAgents": "Les agents intégrés et ceux de l'organisation sont en lecture seule ici.",
+        "builtInAndOrganizationAgents": "Agents intégrés et d'organisation : lecture seule ici.",
         "agentCreated": "Agent créé.",
-        "loadingAgents": "Chargement des agents...",
+        "loadingAgents": "Chargement…",
         "yourAgents": "Vos agents",
         "newAgent": "Nouvel agent",
         "youHaveNotMadeAn": "Vous n'avez pas encore d'agent. Créez-en un avec ses propres instructions, outils et limites.",
         "platformAgents": "Agents de la plateforme",
-        "noAgentsMatchYourFilters": "Aucun agent ne correspond à vos filtres."
+        "noAgentsMatchYourFilters": "Aucun agent trouvé."
       }
     },
     "importSkillsDialog": {
@@ -108,8 +108,8 @@
       "uncheckAll": "Tout décocher",
       "cancel": "Annuler",
       "validating": "Validation...",
-      "stopUsingThisSource": "Ne plus utiliser cette source",
-      "importSkillsFromOtherTools": "Importer des skills depuis d'autres outils",
+      "stopUsingThisSource": "Ne plus utiliser",
+      "importSkillsFromOtherTools": "Importer des skills d'autres outils",
       "useTheSkillsYouAlready": "Utilisez les skills que vous avez déjà dans Claude Code ou Codex, ou dans un dossier à vous. Rien n'est importé tant que vous n'avez pas regardé et validé. Les skills restent où ils sont : rien n'est copié.",
       "lookingForSkills": "Recherche de skills...",
       "remove": "Retirer",
@@ -134,8 +134,8 @@
     "skillCard": {
       "official": "Officiel",
       "builtIn": "Intégré",
-      "off": "Désactivé",
-      "moreAboutThisSkill": "Plus d'options pour ce skill",
+      "off": "Inactif",
+      "moreAboutThisSkill": "Options du skill",
       "open": "Ouvrir",
       "useThisSkill": "Utiliser ce skill",
       "cancel": "Annuler",
@@ -156,7 +156,7 @@
       "official": "Officiel",
       "turnOff": "Désactiver",
       "turnOn": "Activer",
-      "moreAboutThisSkill": "Plus d'options pour ce skill",
+      "moreAboutThisSkill": "Options du skill",
       "skillFiles": "Fichiers du skill",
       "noFiles": "Aucun fichier.",
       "overview": "Vue d'ensemble",
@@ -165,10 +165,10 @@
       "collection": "Collection",
       "status": "Statut",
       "on": "Activé",
-      "off": "Désactivé",
+      "off": "Inactif",
       "files": "Fichiers",
       "quickActions": "Actions rapides",
-      "confirmDelete": "Supprimer « {{name}} » ? Cette action est irréversible.",
+      "confirmDelete": "Supprimer « {{name}} » ? Irréversible.",
       "openSource": "Ouvrir la source",
       "copyName": "Copier le nom",
       "about": "À propos de ce skill",
@@ -178,7 +178,7 @@
       "compatibility": "Compatibilité",
       "allowedTools": "Outils autorisés",
       "details": "Détails",
-      "browseFiles": "Parcourir les fichiers",
+      "browseFiles": "Voir les fichiers",
       "sourceBundled": "Intégré",
       "sourceYours": "Le vôtre",
       "sourceManaged": "Géré",
@@ -192,7 +192,7 @@
       "iconFor": "Icône pour {{name}}"
     },
     "skillInstallDialog": {
-      "installScriptsOfThePackages": "Les scripts d'installation des paquets ne sont pas exécutés.",
+      "installScriptsOfThePackages": "Les scripts d'installation des paquets ne tournent pas.",
       "starting": "Démarrage...",
       "itGoesOnInThe": "Cela continue en arrière-plan : vous pouvez quitter cette page.",
       "cancel": "Annuler",
@@ -215,13 +215,13 @@
       "install": "Installer",
       "seeAll": "Tout voir",
       "category": "Catégorie",
-      "allCategories": "Toutes les catégories",
+      "allCategories": "Toutes catégories",
       "allSkills": "Tous les skills",
       "builtIn": "Intégrés",
       "installed": "Installés",
       "available": "Disponibles",
       "noSkillsYetAddA": "Pas encore de skills : ajoutez un dépôt pour commencer.",
-      "noSkillsMatchYourFilters": "Aucun skill ne correspond à vos filtres.",
+      "noSkillsMatchYourFilters": "Aucun skill trouvé.",
       "loading": "Chargement...",
       "availableSkills": "Skills disponibles",
       "installedSkills": "Skills installés",
@@ -232,16 +232,16 @@
       "useTheSkillsOfClaude": "Utiliser les skills de Claude Code, de Codex ou d'un dossier",
       "scan": "Analyser",
       "addSkills": "Ajouter des skills",
-      "searchSkillsAgentsOrKeywords": "Rechercher des skills, des agents ou des mots-clés...",
-      "searchSkillsByNameDescription": "Rechercher des skills par nom, description ou étiquette...",
+      "searchSkillsAgentsOrKeywords": "Chercher skills, agents, mots-clés…",
+      "searchSkillsByNameDescription": "Chercher un skill (nom, description, tag)…",
       "agents": "Agents",
       "sortBy": "Trier par",
       "name": "Nom",
       "status": "Statut",
       "sourceBuiltIn": "Intégré",
       "sourceOrganization": "Organisation",
-      "sourceCustom": "Personnalisé",
-      "confirmDelete": "Supprimer « {{name}} » ? Cette action est irréversible.",
+      "sourceCustom": "Perso",
+      "confirmDelete": "Supprimer « {{name}} » ? Irréversible.",
       "openSource": "Ouvrir la source",
       "copyName": "Copier le nom",
       "turnOff": "Désactiver",

@@ -1,0 +1,16 @@
+{
+  "api": {
+    "sessionExpired": "Session expired. Sign in again.",
+    "signInRequired": "Sign in to continue.",
+    "notConnected": "This device is not connected to an organization server.",
+    "tooLarge": "The request is too large (4 MB at most).",
+    "rateLimit": "Too many requests. Try again in a moment.",
+    "settingsLocked": "Your organization does not allow changing settings on this device.",
+    "analysisExpired": "This analysis expired. Analyse the folder again.",
+    "promptTooLong": "The message is too long (128 KiB at most).",
+    "notFound": "Not found.",
+    "fileNotFound": "File not found.",
+    "accountNotFound": "Connector account not found.",
+    "uploadUnreadable": "The uploaded file could not be read."
+  }
+}

@@ -49,7 +49,10 @@ export function i18nOptions(language: LanguageCode): InitOptions {
 }
 
 function applyDocumentLanguage(language: string | undefined) {
-  if (typeof document !== 'undefined') document.documentElement.lang = normalizeLanguage(language) ?? FALLBACK_LANGUAGE
+  const code = normalizeLanguage(language) ?? FALLBACK_LANGUAGE
+  if (typeof document !== 'undefined') document.documentElement.lang = code
+  // The main process shows a few texts of its own (the menu of the icon near the clock, the dialogs of the system): it is told the language.
+  if (typeof window !== 'undefined') void window.seshat?.setLanguage?.(code)?.catch(() => undefined)
 }
 
 let ready: Promise<void> | null = null

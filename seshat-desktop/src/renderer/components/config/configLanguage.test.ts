@@ -20,7 +20,7 @@ describe('the pages of Config in French', () => {
     const html = renderToStaticMarkup(createElement(I18nextProvider, { i18n: instance }, createElement(ConfinementCard, { mode: 'local', directConfined: false })))
     expect(html).toContain('Confinement des commandes')
     expect(html).toContain('Non confiné')
-    expect(html).toContain('tous les droits de votre compte utilisateur')
+    expect(html).toContain('tous vos droits d&#x27;utilisateur')
     expect(html).not.toContain('Not confined')
     expect(html).not.toContain('config:')
   })

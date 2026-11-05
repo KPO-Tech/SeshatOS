@@ -1,3 +1,4 @@
+import { i18n } from '@renderer/i18n'
 import { useAuthStore } from '@renderer/stores/auth'
 
 const SESHAT_BASE = 'http://127.0.0.1:8090/api/v1'
@@ -15,18 +16,45 @@ type BridgeResponse = {
   text?: string
 }
 
+// The messages the backend writes in English (api.writeJSONError) that a person may meet, told in the language of the app. The others are
+// for the developer who made the request (a missing field, an unknown route): they stay as the backend wrote them.
+const KNOWN_MESSAGES: Record<string, string> = {
+  unauthorized: 'errors:api.signInRequired',
+  'authentication required': 'errors:api.signInRequired',
+  'this device is not connected to an organization server': 'errors:api.notConnected',
+  'request body too large (max 4 MB)': 'errors:api.tooLarge',
+  'rate limit exceeded': 'errors:api.rateLimit',
+  'your organization does not allow modifying settings on this device': 'errors:api.settingsLocked',
+  'no such analysis: it may have expired, analyse the folder again': 'errors:api.analysisExpired',
+  'prompt exceeds maximum length (128 KiB)': 'errors:api.promptTooLong',
+  'not found': 'errors:api.notFound',
+  'file not found': 'errors:api.fileNotFound',
+  'connector account not found': 'errors:api.accountNotFound',
+  'failed to read uploaded file': 'errors:api.uploadUnreadable'
+}
+
+/** The message of the backend in the language of the app when it is one a person may meet, as it came otherwise. */
+export function localizeApiMessage(message: string): string {
+  const key = KNOWN_MESSAGES[message.trim().toLowerCase()]
+  return key && i18n.isInitialized ? i18n.t(key) : message
+}
+
+function sessionExpiredMessage(): string {
+  return i18n.isInitialized ? i18n.t('errors:api.sessionExpired') : 'Session expired. Sign in again.'
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
     message: string
   ) {
-    super(message)
+    super(localizeApiMessage(message))
     this.name = 'ApiError'
   }
 }
 
 function extractErrorMessage(text: string, status: number): string {
-  if (status === 401) return 'Session expirée. Reconnectez-vous.'
+  if (status === 401) return sessionExpiredMessage()
   try {
     const json = JSON.parse(text)
     // seshat-server's standard error shape is {"error":{"message":"..."}}
@@ -41,7 +69,7 @@ function extractErrorMessage(text: string, status: number): string {
 }
 
 function bridgeErrorMessage(payload: BridgeResponse): string {
-  if (payload.status === 401) return 'Session expirée. Reconnectez-vous.'
+  if (payload.status === 401) return sessionExpiredMessage()
   if (payload.data && typeof payload.data === 'object') {
     const data = payload.data as { error?: string | { message?: string }; message?: string }
     // Same {"error":{"message":"..."}} shape as extractErrorMessage above -

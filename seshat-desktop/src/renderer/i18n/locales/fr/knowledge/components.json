@@ -16,7 +16,7 @@
         "comingNext": {
           "searchTitle": "Retrouver un document par mot-clé",
           "searchText": "Un moteur de recherche pour les données propres à votre organisation. Aucun modèle n'intervient : les mêmes mots donnent les mêmes résultats, filtrés par collection, source, type et date.",
-          "collectionsTitle": "Parcourir ce qu’il y a dedans",
+          "collectionsTitle": "Parcourir le contenu",
           "collectionsText": "Chaque collection avec ses documents, leur source et leur dernière mise à jour, et un moyen d'ouvrir chacun d'eux.",
           "sourcesTitle": "Connecter et suivre vos sources",
           "sourcesText": "Connectez Drive, SharePoint, Confluence et d'autres, voyez où en est chaque synchronisation, et comprenez pourquoi un document manque.",
@@ -28,7 +28,7 @@
           "openThePassage": "Ouvrir le passage"
         },
         "modelSelect": {
-          "loadingModels": "Chargement des modèles",
+          "loadingModels": "Chargement…",
           "noModel": "Aucun modèle"
         }
       }

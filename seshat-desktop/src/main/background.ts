@@ -1,4 +1,6 @@
 import { app, BrowserWindow, Menu, Notification, Tray, dialog, nativeImage, type IpcMain } from 'electron'
+import { isMainLanguage, mainT, saveLanguage, setMainLanguage } from './language'
+import { assertTrustedSender } from './ipc/trusted-sender'
 
 // A task of the backend (an installation, a download) goes on while the person does something else, and it should survive the window being
 // closed: closing a window that has work in progress hides it, and an icon near the clock brings it back or quits.
@@ -10,8 +12,8 @@ export function shouldKeepRunning(state: { busy: number; quitting: boolean; plat
 
 /** What the person is told when the window is hidden. */
 export function keepRunningMessage(busy: number): { title: string; body: string } {
-  const what = busy === 1 ? '1 task is still running' : `${busy} tasks are still running`
-  return { title: 'SeshatOS is still working', body: `${what}. Open SeshatOS from the icon near the clock, or quit it from there.` }
+  const what = busy === 1 ? mainT('hidden.oneTask') : mainT('hidden.manyTasks', { count: busy })
+  return { title: mainT('hidden.title'), body: mainT('hidden.body', { what }) }
 }
 
 const MAX_TITLE = 120
@@ -55,11 +57,11 @@ export function createBackground({ getWindow, iconPath }: Deps) {
     if (busy > 0) {
       const answer = await dialog.showMessageBox({
         type: 'question',
-        buttons: ['Keep running', 'Quit'],
+        buttons: [mainT('quit.keepRunning'), mainT('quit.confirm')],
         defaultId: 0,
         cancelId: 0,
-        message: busy === 1 ? 'A task is still running' : `${busy} tasks are still running`,
-        detail: 'Quitting stops them.'
+        message: busy === 1 ? mainT('quit.oneTask') : mainT('quit.manyTasks', { count: busy }),
+        detail: mainT('quit.detail')
       })
       if (answer.response !== 1) return
     }
@@ -72,14 +74,19 @@ export function createBackground({ getWindow, iconPath }: Deps) {
     const icon = nativeImage.createFromPath(iconPath())
     tray = new Tray(icon.isEmpty() ? icon : icon.resize({ width: 16, height: 16 }))
     tray.setToolTip('SeshatOS')
-    tray.setContextMenu(
+    setTrayMenu()
+    tray.on('click', showWindow)
+  }
+
+  /** The menu of the icon, in the language of the app (drawn again when the person changes it). */
+  function setTrayMenu() {
+    tray?.setContextMenu(
       Menu.buildFromTemplate([
-        { label: 'Open SeshatOS', click: showWindow },
+        { label: mainT('tray.open'), click: showWindow },
         { type: 'separator' },
-        { label: 'Quit', click: () => void quitFromTray() }
+        { label: mainT('tray.quit'), click: () => void quitFromTray() }
       ])
     )
-    tray.on('click', showWindow)
   }
 
   function notify(payload: NoticePayload) {
@@ -106,7 +113,14 @@ export function createBackground({ getWindow, iconPath }: Deps) {
       quitting = true
       destroyTray()
     },
-    register(ipcMain: IpcMain) {
+    register(ipcMain: IpcMain, languageFile?: string) {
+      ipcMain.handle('app:set-language', (event, code: unknown) => {
+        assertTrustedSender(event)
+        if (!isMainLanguage(code)) return
+        setMainLanguage(code)
+        if (languageFile) saveLanguage(languageFile, code)
+        setTrayMenu()
+      })
       ipcMain.handle('background:set-busy', (event, count: unknown) => {
         busy = typeof count === 'number' && Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
         // A hidden window gets its timers slowed down, which would delay the end of a task being noticed: not while work is in progress.

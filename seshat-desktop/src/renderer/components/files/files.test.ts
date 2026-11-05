@@ -57,7 +57,7 @@ describe('the shared views of files in each language', () => {
       createElement(I18nextProvider, { i18n: instance }, createElement(FileTreeView, { source: treeFileSource(nodes, 'my-skill'), title: 'Fichiers du skill', selectedPath: null, onOpenFile: () => undefined }))
     )
     expect(html).toContain('Fichiers du skill')
-    expect(html).toContain('Rechercher des fichiers...')
+    expect(html).toContain('Chercher un fichier…')
     expect(html).toContain('my-skill')
     expect(html).not.toContain('files:')
   })
