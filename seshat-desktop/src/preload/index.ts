@@ -119,6 +119,8 @@ const seshatBridge = {
     readImage: (filePath: string): Promise<string> => ipcRenderer.invoke('fs:read-image', filePath),
   },
   openExternal: (url: string) => ipcRenderer.invoke('system:open-external', url),
+  /** Tells the main process the language of the interface, for its menu and its dialogs. */
+  setLanguage: (code: string): Promise<void> => ipcRenderer.invoke('app:set-language', code),
   selectFile: (opts?: Electron.OpenDialogOptions) => ipcRenderer.invoke('system:select-file', opts),
   saveFile: (defaultName: string, content: string): Promise<{ canceled: boolean; filePath?: string }> =>
     ipcRenderer.invoke('system:save-file', defaultName, content),

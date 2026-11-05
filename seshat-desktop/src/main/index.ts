@@ -27,6 +27,7 @@ import { createBrowserPanel } from './browser-panel'
 import { createBrowserBridgeServer } from './browser-bridge'
 import { registerShellHandlers, stopAllShellSessions } from './ipc/shell'
 import { createBackground } from './background'
+import { languageFromLocale, loadLanguage, mainT, setMainLanguage } from './language'
 
 /** How long after the window has loaded the local title model starts. */
 const LLAMA_START_DELAY_MS = 10_000
@@ -217,6 +218,9 @@ app.whenReady().then(async () => {
   // icon of the window.
   if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId(APP_USER_MODEL_ID)
   Menu.setApplicationMenu(null)
+  // The texts of this process follow the language the person chose (kept by the last run), else the one of the system.
+  const languageFile = join(app.getPath('userData'), 'language.json')
+  setMainLanguage(loadLanguage(languageFile) ?? languageFromLocale(app.getLocale()) ?? 'en')
   applyContentSecurityPolicy()
   registerSystemHandlers(ipcMain)
   registerFilesystemHandlers(ipcMain)
@@ -229,7 +233,7 @@ app.whenReady().then(async () => {
   browserPanel.registerIpc(ipcMain)
   browserBridge.start()
   registerShellHandlers(ipcMain)
-  background.register(ipcMain)
+  background.register(ipcMain, languageFile)
 
   // Packaged Electron apps deny every permission request by default when no
   // handler is registered. The voice-input control needs the renderer's
@@ -250,7 +254,7 @@ app.whenReady().then(async () => {
     await startBackendSidecar()
   } catch (error) {
     dialog.showErrorBox(
-      'SeshatOS backend failed to start',
+      mainT('backend.failed'),
       error instanceof Error ? error.message : String(error)
     )
     app.quit()
