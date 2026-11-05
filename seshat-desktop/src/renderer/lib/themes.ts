@@ -58,9 +58,10 @@ const PRESETS: ThemeSeed[] = [
   { id: 'mirage', label: 'Mirage', scheme: 'dark', bg: '#1f2430', panel: '#2a3040', text: '#d9dce4', accent: '#c7762a' },
   { id: 'tide', label: 'Tide', scheme: 'dark', bg: '#14232b', panel: '#1b303a', text: '#dbe9ee', accent: '#2a93b5' },
   { id: 'violet-hour', label: 'Violet hour', scheme: 'dark', bg: '#1f1a2e', panel: '#2b2440', text: '#e8e1f5', accent: '#9b6dff' },
-  // One Dark Pro for VS Code (github.com/Binaryify/OneDark-Pro): its editor background, raised line and blue badge, and its code colours.
-  // The text is a step lighter than its #abb2bf, which falls under the contrast the tests ask of every theme (7 for the main text, 4.5 for the secondary).
-  { id: 'one-dark', label: 'One Dark', scheme: 'dark', bg: '#282c34', panel: '#2c313a', text: '#bdc3ce', accent: '#4d78cc', syntax: { keyword: '#c678dd', string: '#98c379', number: '#d19a66', function: '#61afef', type: '#e5c07b', variable: '#e06c75', tag: '#e06c75' } },
+  // One Dark Pro for VS Code (github.com/Binaryify/OneDark-Pro): its editor background, raised line and code colours, with Seshat's orange
+  // as the accent instead of its blue. The text is a step lighter than its #abb2bf, which falls under the contrast the tests ask of every
+  // theme (7 for the main text, 4.5 for the secondary).
+  { id: 'one-dark', label: 'One Dark', scheme: 'dark', bg: '#282c34', panel: '#2c313a', text: '#bdc3ce', accent: '#e26d1f', syntax: { keyword: '#c678dd', string: '#98c379', number: '#d19a66', function: '#61afef', type: '#e5c07b', variable: '#e06c75', tag: '#e06c75' } },
   { id: 'dusk', label: 'Dusk', scheme: 'dark', bg: '#251a28', panel: '#352636', text: '#ecdfe3', accent: '#d9684a', wallpaper: { kind: 'gradient', angle: 160, stops: ['#7d3552', '#3a1c3a', '#231424'] } },
   // Light
   { id: 'paper', label: 'Paper', scheme: 'light', bg: '#f6f3ec', panel: '#fffefb', text: '#25221d', accent: '#8a5a2b' },
