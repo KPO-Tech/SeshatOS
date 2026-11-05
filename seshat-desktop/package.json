@@ -47,7 +47,7 @@
     "@xterm/xterm": "^6.0.0",
     "chart.js": "^4.5.1",
     "docx-preview": "^0.4.0",
-    "electron-updater": "^6.6.2",
+    "electron-updater": "^6.8.11",
     "exceljs": "^4.4.0",
     "i18next": "^26.7.1",
     "jszip": "^3.10.2",
