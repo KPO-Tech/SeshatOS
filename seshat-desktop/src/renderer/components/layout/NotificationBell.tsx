@@ -73,7 +73,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div role="dialog" aria-label={t('layout.notificationBell.notifications')} className="absolute right-0 top-[34px] z-[60] flex max-h-[420px] w-[340px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-xl">
+        <div role="dialog" aria-label={t('layout.notificationBell.notifications')} className="absolute right-0 top-[34px] z-[60] flex max-h-[520px] w-[340px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-xl">
           <div className="flex items-center justify-between gap-2 border-b border-[var(--border-soft)] px-3.5 py-2.5">
             <span className="text-[13px] font-semibold text-[var(--text-primary)]">{t('layout.notificationBell.notifications')}</span>
             <div className="flex items-center gap-3 text-[11.5px]">
@@ -86,10 +86,11 @@ export function NotificationBell() {
             </div>
           </div>
 
+          {/* Five notifications fit in the list; the sixth is reached by scrolling. */}
           {items.length === 0 ? (
             <p className="m-0 px-4 py-8 text-center text-[12.5px] leading-5 text-[var(--text-muted)]">{t('layout.notificationBell.nothingYetWhatFinishesIn')}</p>
           ) : (
-            <ul className="m-0 min-h-0 list-none overflow-y-auto p-1.5">
+            <ul className="m-0 max-h-[440px] min-h-0 list-none overflow-y-auto p-1.5">
               {items.map((item) => (
                 <li key={item.id} className="group relative">
                   <button
