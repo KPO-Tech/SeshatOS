@@ -274,6 +274,12 @@ func (a *App) seedModelsForNewProvider(settingID, providerName, baseURL string) 
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
 
+	// FreeLLMAPI has no static list: the runtime would answer with the models of Anthropic. Its models are read from the router when the
+	// list is first asked for (see handleProviderModels).
+	if bksettings.IsFreeLLMAPI(providerName) {
+		return
+	}
+
 	// Start with the static registry — always fast, works offline
 	staticParams := providers.StaticModels(providerName)
 	if len(staticParams) > 0 {

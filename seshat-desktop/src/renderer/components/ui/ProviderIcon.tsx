@@ -173,6 +173,17 @@ function SimpleProviderIcon({ provider, size = 36, className }: Props & { provid
   )
 }
 
+// FreeLLMAPI (github.com/tashfeenahmed/freellmapi, MIT): a ring with a gap and a dot, on a dark tile.
+function FreeLLMAPIIcon({ size = 36, className }: Props) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={className}>
+      <rect width="36" height="36" rx="9" fill="#0A0A0B" />
+      <path d="M18.8 7.9A10.9 10.9 0 1 0 28.2 17" stroke="#6B6B6E" strokeWidth="2" />
+      <circle cx="18" cy="18" r="4.3" fill="#FAFAFA" />
+    </svg>
+  )
+}
+
 const ICON_MAP: Record<string, (props: Props) => ReactElement> = {
   anthropic: AnthropicIcon,
   openai: OpenAIIcon,
@@ -195,7 +206,8 @@ const ICON_MAP: Record<string, (props: Props) => ReactElement> = {
   'workers-ai': WorkersAIIcon,
   workersai: WorkersAIIcon,
   bedrock: BedrockIcon,
-  vertex: VertexIcon
+  vertex: VertexIcon,
+  freellmapi: FreeLLMAPIIcon
 }
 
 export function ProviderIcon({ provider, size = 36, className }: Props & { provider: string }) {
