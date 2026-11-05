@@ -11,6 +11,12 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.15] - 2026-11-05
+
+### Fixed
+
+- **One word for each thing in French.** Settings is always "Réglages" (it was also "Paramètres" in Knowledge) and the Changes tab is always "Modifications".
+
 ## [0.3.14] - 2026-11-05
 
 ### Highlights
