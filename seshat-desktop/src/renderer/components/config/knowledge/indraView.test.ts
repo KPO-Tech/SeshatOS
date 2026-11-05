@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import type { TFunction } from 'i18next'
+import { englishT } from '@renderer/i18n/testing'
 import { indraPhase, indraPill, indraSizeText, indraStepText, INDRA_LICENSE_POINTS } from './indraView'
 import type { IndraInstallState, IndraStatus } from './knowledgeTypes'
 
@@ -41,25 +43,30 @@ describe('indraPhase', () => {
 })
 
 describe('Indra texts', () => {
+  let t: TFunction
+  beforeAll(async () => {
+    t = await englishT()
+  })
+
   it('labels each phase with a pill', () => {
-    expect(indraPill('on')).toEqual({ tone: 'ok', label: 'On' })
-    expect(indraPill('available').label).toBe('Not installed')
-    expect(indraPill('relicense').tone).toBe('warn')
+    expect(indraPill('on', t)).toEqual({ tone: 'ok', label: 'On' })
+    expect(indraPill('available', t).label).toBe('Not installed')
+    expect(indraPill('relicense', t).tone).toBe('warn')
   })
 
   it('numbers the installation steps', () => {
-    expect(indraStepText({ status: 'running', step: 'Creating the environment', step_index: 2, step_count: 4 })).toBe('Step 2 of 4 · Creating the environment')
-    expect(indraStepText({ status: 'running' })).toBe('Starting')
-    expect(indraStepText(idle)).toBe('')
+    expect(indraStepText({ status: 'running', step: 'Creating the environment', step_index: 2, step_count: 4 }, t)).toBe('Step 2 of 4 · Creating the environment')
+    expect(indraStepText({ status: 'running' }, t)).toBe('Starting')
+    expect(indraStepText(idle, t)).toBe('')
   })
 
   it('states the weight and the Python requirement before the install', () => {
-    expect(indraSizeText(fresh)).toContain('350 MB')
-    expect(indraSizeText(fresh)).toContain('Python 3.10')
+    expect(indraSizeText(fresh, t)).toContain('350 MB')
+    expect(indraSizeText(fresh, t)).toContain('Python 3.10')
   })
 
   it('keeps the points of the licence that decide who may use the weights', () => {
-    const text = INDRA_LICENSE_POINTS.join(' ')
+    const text = INDRA_LICENSE_POINTS.map((key) => t(key)).join(' ')
     expect(text).toContain('$20 million')
     expect(text).toContain('competing')
     expect(text).toContain('commercial licence')

@@ -10,8 +10,10 @@ import {
 } from './webSearchApi'
 import type { DomainCategory, SearchProviderConfig, WebSearchForm, WebSearchSettings } from './webSearchTypes'
 import { allCatalogDomains, domainsToAllowedList, initialActiveDomains, settingsToForm } from './webSearchUtils'
+import { useTranslation } from 'react-i18next'
 
 export function WebSearchConfig() {
+  const { t } = useTranslation('config')
   const [settings, setSettings] = useState<WebSearchSettings | null>(null)
   const [providers, setProviders] = useState<SearchProviderConfig[]>([])
   const [catalog, setCatalog] = useState<DomainCategory[]>([])
@@ -109,12 +111,12 @@ export function WebSearchConfig() {
   return (
     <SettingsPage
       id="web-search"
-      badge={<StatusBadge tone={form.enabled && readyProviders.length > 0 ? 'ok' : 'muted'}>{!form.enabled ? 'Off' : `${readyProviders.length} ready`}</StatusBadge>}
+      badge={<StatusBadge tone={form.enabled && readyProviders.length > 0 ? 'ok' : 'muted'}>{!form.enabled ? t('webSearch.webSearchConfig.off') : `${readyProviders.length} ready`}</StatusBadge>}
       actions={
         <>
-          {dirty && <span className="text-[12px] text-[var(--text-muted)]">Unsaved changes</span>}
+          {dirty && <span className="text-[12px] text-[var(--text-muted)]">{t('webSearch.webSearchConfig.unsavedChanges')}</span>}
           <ActionButton type="button" tone={dirty ? 'primary' : 'default'} disabled={!dirty || saving} onClick={() => void save()}>
-            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+            {saving ? t('webSearch.webSearchConfig.saving') : dirty ? t('webSearch.webSearchConfig.saveChanges') : t('webSearch.webSearchConfig.saved')}
           </ActionButton>
         </>
       }
@@ -124,14 +126,14 @@ export function WebSearchConfig() {
       {!loading && (
         <>
           <SettingsCard>
-            <SettingRow title="Search the web">
-              <Toggle label="Search the web" enabled={form.enabled} onChange={(enabled) => updateForm('enabled', enabled)} />
+            <SettingRow title={t('webSearch.webSearchConfig.searchTheWeb')}>
+              <Toggle label={t('webSearch.webSearchConfig.searchTheWeb')} enabled={form.enabled} onChange={(enabled) => updateForm('enabled', enabled)} />
             </SettingRow>
-            <SettingRow title="Use keys from the environment" hint="When no key is saved here.">
-              <Toggle label="Use keys from the environment" enabled={form.allow_env_fallback} onChange={(enabled) => updateForm('allow_env_fallback', enabled)} />
+            <SettingRow title={t('webSearch.webSearchConfig.useKeysFromTheEnvironment')} hint={t('webSearch.webSearchConfig.whenNoKeyIsSaved')}>
+              <Toggle label={t('webSearch.webSearchConfig.useKeysFromTheEnvironment')} enabled={form.allow_env_fallback} onChange={(enabled) => updateForm('allow_env_fallback', enabled)} />
             </SettingRow>
-            <SettingRow title="Queries per day" hint="0 is unlimited.">
-              <TextField label="Queries per day" value={String(form.max_queries_per_day)} onChange={(value) => updateForm('max_queries_per_day', Math.max(0, Number.parseInt(value, 10) || 0))} width={100} />
+            <SettingRow title={t('webSearch.webSearchConfig.queriesPerDay')} hint={t('webSearch.webSearchConfig.t0IsUnlimited')}>
+              <TextField label={t('webSearch.webSearchConfig.queriesPerDay')} value={String(form.max_queries_per_day)} onChange={(value) => updateForm('max_queries_per_day', Math.max(0, Number.parseInt(value, 10) || 0))} width={100} />
             </SettingRow>
           </SettingsCard>
 
@@ -143,7 +145,7 @@ export function WebSearchConfig() {
 
           {researchProviders.length > 0 && (
             <>
-              <h2 className="m-0 mt-2 text-[13px] font-semibold text-[var(--text-secondary)]">Research sources</h2>
+              <h2 className="m-0 mt-2 text-[13px] font-semibold text-[var(--text-secondary)]">{t('webSearch.webSearchConfig.researchSources')}</h2>
               <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
                 {researchProviders.map((provider) => (
                   <SearchProviderCard key={provider.provider} provider={provider} onSaved={updateProvider} />

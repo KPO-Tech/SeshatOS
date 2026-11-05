@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { MCPServer, MCPServerFormValues } from './mcpTypes'
 
 export function valuesFromServer(server?: MCPServer): MCPServerFormValues {
@@ -33,10 +34,10 @@ export function formValuesToPayload(values: MCPServerFormValues, server?: MCPSer
   }
 }
 
-export function validateMCPForm(values: MCPServerFormValues) {
-  if (!values.name.trim()) return 'Name is required.'
-  if (values.server_type === 'stdio' && !values.command.trim()) return 'Command is required for stdio servers.'
-  if (values.server_type !== 'stdio' && !values.url.trim()) return 'URL is required for network servers.'
+export function validateMCPForm(values: MCPServerFormValues, t: TFunction) {
+  if (!values.name.trim()) return t('config:mcp.mcpUtils.nameRequired')
+  if (values.server_type === 'stdio' && !values.command.trim()) return t('config:mcp.mcpUtils.commandRequired')
+  if (values.server_type !== 'stdio' && !values.url.trim()) return t('config:mcp.mcpUtils.urlRequired')
   return null
 }
 

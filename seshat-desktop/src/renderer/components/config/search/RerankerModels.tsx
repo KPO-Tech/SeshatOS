@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ActionButton, SettingRow, SettingsCard, StatusBadge } from '../../settings/kit'
 import { listRerankerSetups, removeRerankerSetup, useRerankerSetup } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { RerankerModel } from '@renderer/components/config/knowledge/knowledgeTypes'
+import { useTranslation } from 'react-i18next'
 
 function hostOf(url: string): string {
   try {
@@ -13,6 +14,7 @@ function hostOf(url: string): string {
 
 // The rerank models the person has set up, to pick the one the search uses. Nothing shows until there is one.
 export function RerankerModels({ version, onChanged }: { version: string; onChanged: () => void }) {
+  const { t } = useTranslation('config')
   const [models, setModels] = useState<RerankerModel[]>([])
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -42,19 +44,19 @@ export function RerankerModels({ version, onChanged }: { version: string; onChan
   if (models.length === 0) return null
 
   return (
-    <SettingsCard title="Your rerank models">
+    <SettingsCard title={t('search.rerankerModels.yourRerankModels')}>
       {error && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-danger)]">{error}</div>}
       {models.map((item) => (
-        <SettingRow key={item.id} title={item.model || 'Default model'} hint={hostOf(item.base_url)}>
+        <SettingRow key={item.id} title={item.model || t('search.rerankerModels.defaultModel')} hint={hostOf(item.base_url)}>
           {item.active ? (
-            <StatusBadge tone="ok">In use</StatusBadge>
+            <StatusBadge tone="ok">{t('search.rerankerModels.inUse')}</StatusBadge>
           ) : (
             <ActionButton type="button" disabled={busy === item.id} onClick={() => void run(item.id, () => useRerankerSetup(item.id))}>
-              Use
+              {t('search.rerankerModels.use')}
             </ActionButton>
           )}
-          <ActionButton type="button" tone="danger" disabled={busy === item.id} aria-label={`Forget ${item.model}`} onClick={() => void run(item.id, () => removeRerankerSetup(item.id))}>
-            Forget
+          <ActionButton type="button" tone="danger" disabled={busy === item.id} aria-label={t('search.rerankerModels.forgetModel', { model: item.model })} onClick={() => void run(item.id, () => removeRerankerSetup(item.id))}>
+            {t('search.rerankerModels.forget')}
           </ActionButton>
         </SettingRow>
       ))}

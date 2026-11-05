@@ -3,6 +3,8 @@ import { createProviderSetting } from './providerApi'
 import { ProviderSelect } from './ProviderSelect'
 import type { ProviderChoice, ProviderForm, ProviderSetting } from './providerTypes'
 import { initialProviderForm, isCodexProvider, plainText } from './providerUtils'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   choices: ProviderChoice[]
@@ -12,17 +14,18 @@ type Props = {
   onClose: () => void
 }
 
-function providerHint(entry?: ProviderChoice) {
-  if (!entry) return 'Pick a provider to set up.'
-  if (entry.main) return plainText(entry.description || 'Built into the Seshat runtime.')
-  const untested = `Generic provider from the public models.dev catalog (${entry.model_count} models), not tested with a real key by Seshat.`
-  return entry.unverified ? `${untested} Its address comes from a downloaded catalog and was not reviewed.` : untested
+function providerHint(t: TFunction, entry?: ProviderChoice) {
+  if (!entry) return t('config:providers.addProviderDialog.pickOne')
+  if (entry.main) return plainText(entry.description || t('config:providers.addProviderDialog.builtIn'))
+  const untested = t('config:providers.addProviderDialog.genericUntested', { total: entry.model_count })
+  return entry.unverified ? t('config:providers.addProviderDialog.unverifiedAddress', { text: untested }) : untested
 }
 
 const FIELD = 'h-10 w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]'
 
 /** Connects a provider: which one, how to call it, and the key. The key is saved encrypted by the backend. */
 export function AddProviderDialog({ choices, initialProvider, onAdded, onClose }: Props) {
+  const { t } = useTranslation('config')
   const [form, setForm] = useState<ProviderForm>(() => initialProviderForm(choices.find((entry) => entry.id === initialProvider) ?? choices[0]))
   const [menuOpen, setMenuOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -63,9 +66,9 @@ export function AddProviderDialog({ choices, initialProvider, onAdded, onClose }
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-[rgba(0,0,0,0.45)] px-6" onMouseDown={(event) => event.target === event.currentTarget && !saving && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label="Add a provider" className="w-full max-w-[560px] rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
-        <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">Add a provider</h2>
-        <p className="m-0 mt-1 text-[12.5px] text-[var(--text-muted)]">Connect a local or cloud model provider for chat, tools and capabilities.</p>
+      <div role="dialog" aria-modal="true" aria-label={t('providers.addProviderDialog.addAProvider')} className="w-full max-w-[560px] rounded-2xl border border-app-border-subtle bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-medium)]">
+        <h2 className="m-0 text-[16px] font-semibold text-[var(--text-primary)]">{t('providers.addProviderDialog.addAProvider')}</h2>
+        <p className="m-0 mt-1 text-[12.5px] text-[var(--text-muted)]">{t('providers.addProviderDialog.connectALocalOrCloud')}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <ProviderSelect
@@ -79,34 +82,34 @@ export function AddProviderDialog({ choices, initialProvider, onAdded, onClose }
             }}
           />
           <label className="grid gap-1.5">
-            <span className="text-[12px] font-semibold text-[var(--text-muted)]">Name</span>
+            <span className="text-[12px] font-semibold text-[var(--text-muted)]">{t('providers.addProviderDialog.name')}</span>
             <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} className={FIELD} />
           </label>
           {!codex && form.provider !== 'ollama' && (
             <label className="grid gap-1.5">
-              <span className="text-[12px] font-semibold text-[var(--text-muted)]">API key</span>
-              <input value={form.api_key} onChange={(event) => setForm((current) => ({ ...current, api_key: event.target.value }))} type="password" autoComplete="off" placeholder="Saved encrypted by the backend" className={FIELD} />
+              <span className="text-[12px] font-semibold text-[var(--text-muted)]">{t('providers.addProviderDialog.apiKey')}</span>
+              <input value={form.api_key} onChange={(event) => setForm((current) => ({ ...current, api_key: event.target.value }))} type="password" autoComplete="off" placeholder={t('providers.addProviderDialog.savedEncryptedByTheBackend')} className={FIELD} />
             </label>
           )}
           {!codex && (
             <label className="grid gap-1.5">
-              <span className="text-[12px] font-semibold text-[var(--text-muted)]">{needsBaseUrl ? 'Base URL (check it, your key is sent there)' : 'Base URL'}</span>
-              <input value={form.base_url} onChange={(event) => setForm((current) => ({ ...current, base_url: event.target.value }))} placeholder={form.provider === 'ollama' ? 'http://localhost:11434' : selected?.base_url || 'Provider default'} className={FIELD} />
+              <span className="text-[12px] font-semibold text-[var(--text-muted)]">{needsBaseUrl ? t('providers.addProviderDialog.baseUrlCheckItYour') : t('providers.addProviderDialog.baseUrl')}</span>
+              <input value={form.base_url} onChange={(event) => setForm((current) => ({ ...current, base_url: event.target.value }))} placeholder={form.provider === 'ollama' ? 'http://localhost:11434' : selected?.base_url || t('providers.addProviderDialog.providerDefault')} className={FIELD} />
             </label>
           )}
         </div>
 
         <p className="m-0 mt-3 text-[12px] leading-5 text-[var(--text-muted)]">
-          {codex ? 'Codex uses a browser sign-in with your ChatGPT account. It is only available for local desktop accounts.' : providerHint(selected)}
+          {codex ? t('providers.addProviderDialog.codexUsesABrowserSign') : providerHint(t, selected)}
         </p>
         {error && <p className="m-0 mt-2 text-[12.5px] font-semibold text-[var(--accent-danger)]">{error}</p>}
 
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" disabled={saving} onClick={onClose} className="h-9 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-4 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50">
-            Cancel
+            {t('providers.addProviderDialog.cancel')}
           </button>
           <button type="button" disabled={!canSave || saving} onClick={() => void add()} className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-50">
-            {saving ? 'Adding...' : codex ? 'Add OAuth provider' : 'Add provider'}
+            {saving ? t('providers.addProviderDialog.adding') : codex ? t('providers.addProviderDialog.addOauthProvider') : t('providers.addProviderDialog.addProvider')}
           </button>
         </div>
       </div>

@@ -6,19 +6,21 @@ import type { EnvVarDef } from './environmentTypes'
 import { groupEnvVars } from './environmentUtils'
 import { ProtectedFolders } from './ProtectedFolders'
 import { fetchSandboxConfig, invalidateSandboxModeCache, saveProtectedPaths, saveSandboxMode, type SandboxMode } from './sandboxApi'
+import { useTranslation } from 'react-i18next'
 
 const SANDBOX_OPTIONS = [
-  { value: 'local', label: 'Direct (this computer)' },
-  { value: 'project', label: 'Sandbox (this computer)' }
+  { value: 'local', label: 'config:environment.environmentConfig.directThisComputer' },
+  { value: 'project', label: 'config:environment.environmentConfig.sandboxThisComputer' }
 ]
 
 const SANDBOX_HINTS: Record<SandboxMode, string> = {
-  local: 'On this computer, with your files and tools.',
-  project: "On this computer, confined to the session's folder."
+  local: 'config:environment.environmentConfig.hintLocal',
+  project: 'config:environment.environmentConfig.hintProject'
 }
 
 /** Where the agent's commands run, what confines them, and the secrets the backend reads at startup. */
 export function EnvironmentConfig() {
+  const { t } = useTranslation('config')
   const [catalog, setCatalog] = useState<EnvVarDef[]>([])
   const [status, setStatus] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
@@ -93,7 +95,7 @@ export function EnvironmentConfig() {
     }
   }
 
-  const sandboxOptions = SANDBOX_OPTIONS.filter((option) => option.value !== 'project' || projectAvailable || sandboxMode === 'project')
+  const sandboxOptions = SANDBOX_OPTIONS.filter((option) => option.value !== 'project' || projectAvailable || sandboxMode === 'project').map((option) => ({ ...option, label: t(option.label) }))
 
   const groups = useMemo(() => groupEnvVars(catalog), [catalog])
 
@@ -106,7 +108,7 @@ export function EnvironmentConfig() {
     setNotice(null)
     try {
       const result = await window.seshat?.envVars?.restartBackend()
-      setNotice(result?.ok ? { tone: 'ok', text: 'Backend restarted. The changes are active.' } : { tone: 'error', text: result?.error ?? 'Backend restart is not available.' })
+      setNotice(result?.ok ? { tone: 'ok', text: t('environment.environmentConfig.backendRestartedTheChangesAre') } : { tone: 'error', text: result?.error ?? 'Backend restart is not available.' })
     } catch (err) {
       setNotice({ tone: 'error', text: err instanceof Error ? err.message : 'Backend restart failed.' })
     } finally {
@@ -117,22 +119,22 @@ export function EnvironmentConfig() {
   return (
     <SettingsPage
       id="environment"
-      badge={<StatusBadge tone={sandboxMode === 'local' ? 'warn' : 'ok'}>{sandboxMode === 'local' ? 'Direct' : 'Sandbox'}</StatusBadge>}
+      badge={<StatusBadge tone={sandboxMode === 'local' ? 'warn' : 'ok'}>{sandboxMode === 'local' ? t('environment.environmentConfig.direct') : t('environment.environmentConfig.sandbox')}</StatusBadge>}
       actions={
         <ActionButton type="button" onClick={() => void applyRestart()} disabled={restarting}>
-          {restarting ? 'Restarting...' : 'Restart backend'}
+          {restarting ? t('environment.environmentConfig.restarting') : t('environment.environmentConfig.restartBackend')}
         </ActionButton>
       }
     >
       {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
       {dockerRemoved && (
-        <Notice tone="error">The Docker mode you had chosen no longer exists, so commands now run directly on this computer. Choose where they should run below.</Notice>
+        <Notice tone="error">{t('environment.environmentConfig.theDockerModeYouHad')}</Notice>
       )}
 
-      <SettingsCard title="Commands">
+      <SettingsCard title={t('environment.environmentConfig.commands')}>
         <SettingRow
-          title="Where commands run"
-          hint={applying ? 'Applying, this can take a moment on large folders...' : (sandboxMode === 'project' && !projectAvailable && projectReason) || SANDBOX_HINTS[sandboxMode]}
+          title={t('environment.environmentConfig.whereCommandsRun')}
+          hint={applying ? t('environment.environmentConfig.applyingThisCanTakeA') : (sandboxMode === 'project' && !projectAvailable && projectReason) || t(SANDBOX_HINTS[sandboxMode])}
         >
           <div className="w-[210px]">
             <SelectField value={sandboxMode} options={sandboxOptions} onChange={(value) => void changeSandboxMode(value)} />

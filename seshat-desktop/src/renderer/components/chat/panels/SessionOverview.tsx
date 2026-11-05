@@ -19,6 +19,7 @@ import { compactionNote, connectorRows, environmentRows, formatTokens, liveConte
 import { formatDuration } from '@renderer/lib/turnTiming'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -45,6 +46,7 @@ type Props = {
  * context, what is connected, which files came out, how much happened). A card with nothing to show is not drawn.
  */
 export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onOpenTools, variant = 'panel' }: Props) {
+  const { t } = useTranslation()
   const agentState = useSessionStore((s) => s.getAgentState(sessionId))
   const session = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId))
   const openRightPanel = useUIStore((s) => s.openRightPanel)
@@ -60,7 +62,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     void currentSandbox()
       .then(({ mode, directConfined }) => {
         if (cancelled) return
-        const view = confinementView(mode, directConfined)
+        const view = confinementView(mode, directConfined, t)
         setConfinement({ label: view.label, confined: view.confined })
       })
       .catch(() => undefined)

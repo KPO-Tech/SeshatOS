@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ActionButton, Notice, ProgressRow, SettingRow, SettingsCard, SettingsPage, StatusBadge, TextField, Toggle, type Tone } from '../../settings/kit'
 import { fetchLocalTitleConfig, formatBytes, type LocalTitleConfig } from './titlesApi'
+import { useTranslation } from 'react-i18next'
 
 type Progress = { phase: 'binary' | 'model'; modelId?: string; receivedBytes: number; totalBytes: number }
 
@@ -10,6 +11,7 @@ function errorMessage(error: unknown): string {
 }
 
 export function TitlesConfig() {
+  const { t } = useTranslation('config')
   const llama = window.seshat?.llama
   const [status, setStatus] = useState<LlamaStatus | null>(null)
   const [backend, setBackend] = useState<LocalTitleConfig | null>(null)
@@ -57,7 +59,7 @@ export function TitlesConfig() {
 
   if (!llama) {
     return (
-      <SettingsPage id="titles" badge={<StatusBadge tone="muted">Desktop only</StatusBadge>}>
+      <SettingsPage id="titles" badge={<StatusBadge tone="muted">{t('titles.titlesConfig.desktopOnly')}</StatusBadge>}>
         {null}
       </SettingsPage>
     )
@@ -65,14 +67,14 @@ export function TitlesConfig() {
 
   const serving = Boolean(status?.running && backend?.enabled)
   const state: { tone: Tone; label: string } = !status
-    ? { tone: 'muted', label: 'Loading' }
+    ? { tone: 'muted', label: t('titles.titlesConfig.loading') }
     : !status.supported
-      ? { tone: 'muted', label: 'Not available' }
+      ? { tone: 'muted', label: t('titles.titlesConfig.notAvailable') }
       : serving
-        ? { tone: 'ok', label: 'Running' }
+        ? { tone: 'ok', label: t('titles.titlesConfig.running') }
         : status.enabled
           ? { tone: 'warn', label: busy || !status.provisioned ? 'Installing' : 'Starting' }
-          : { tone: 'muted', label: 'Off' }
+          : { tone: 'muted', label: t('titles.titlesConfig.off') }
   const percent = progress && progress.totalBytes > 0 ? Math.min(100, (progress.receivedBytes / progress.totalBytes) * 100) : 5
 
   return (
@@ -80,20 +82,20 @@ export function TitlesConfig() {
       {error && <Notice tone="error">{error}</Notice>}
 
       <SettingsCard>
-        <SettingRow title="Name chats on this computer" hint="Off: titles come from your chat model.">
-          <Toggle label="Name chats on this computer" enabled={Boolean(status?.enabled)} onChange={(enabled) => void run(() => (enabled ? llama.enable() : llama.disable()))} />
+        <SettingRow title={t('titles.titlesConfig.nameChatsOnThisComputer')} hint={t('titles.titlesConfig.offTitlesComeFromYour')}>
+          <Toggle label={t('titles.titlesConfig.nameChatsOnThisComputer')} enabled={Boolean(status?.enabled)} onChange={(enabled) => void run(() => (enabled ? llama.enable() : llama.disable()))} />
         </SettingRow>
-        {progress && <ProgressRow label={progress.phase === 'binary' ? 'Downloading llama.cpp' : 'Downloading the title model'} percent={percent} />}
+        {progress && <ProgressRow label={progress.phase === 'binary' ? t('titles.titlesConfig.downloadingLlamaCpp') : t('titles.titlesConfig.downloadingTheTitleModel')} percent={percent} />}
         {status && !status.provisioned && status.supported && !busy && (
-          <SettingRow title="Runtime and model">
+          <SettingRow title={t('titles.titlesConfig.runtimeAndModel')}>
             <ActionButton type="button" tone="primary" onClick={() => void run(() => llama.provision())}>
-              Install now
+              {t('titles.titlesConfig.installNow')}
             </ActionButton>
           </SettingRow>
         )}
       </SettingsCard>
 
-      <SettingsCard title="Model">
+      <SettingsCard title={t('titles.titlesConfig.model')}>
         {status?.models.map((model) => {
           const downloaded = status.downloadedModelIds.includes(model.id)
           const active = status.activeModelId === model.id
@@ -101,32 +103,32 @@ export function TitlesConfig() {
             <SettingRow key={model.id} title={model.label} hint={model.description}>
               <span className="text-[12px] text-[var(--text-faint)]">{formatBytes(model.approxSizeBytes)}</span>
               {active ? (
-                <StatusBadge tone="ok">In use</StatusBadge>
+                <StatusBadge tone="ok">{t('titles.titlesConfig.inUse')}</StatusBadge>
               ) : (
                 <ActionButton type="button" tone={downloaded ? 'primary' : 'default'} disabled={busy || !status.supported} onClick={() => void run(() => llama.activateModel(model.id))}>
-                  {downloaded ? 'Use' : 'Download'}
+                  {downloaded ? t('titles.titlesConfig.use') : t('titles.titlesConfig.download')}
                 </ActionButton>
               )}
               {downloaded && !active && (
                 <ActionButton type="button" tone="danger" disabled={busy} onClick={() => void run(() => llama.deleteModel(model.id))}>
-                  Delete
+                  {t('titles.titlesConfig.delete')}
                 </ActionButton>
               )}
             </SettingRow>
           )
         })}
-        <SettingRow title="Your own model" hint="Any instruct GGUF from Hugging Face. Reasoning models are refused.">
+        <SettingRow title={t('titles.titlesConfig.yourOwnModel')} hint={t('titles.titlesConfig.anyInstructGgufFromHugging')}>
           <ActionButton type="button" onClick={() => setShowCustom((current) => !current)}>
-            {showCustom ? 'Close' : 'Add'}
+            {showCustom ? t('titles.titlesConfig.close') : t('titles.titlesConfig.add')}
           </ActionButton>
         </SettingRow>
         {showCustom && (
           <>
-            <SettingRow title="Repository">
-              <TextField label="Repository" value={customRepo} onChange={setCustomRepo} placeholder="owner/model-GGUF" />
+            <SettingRow title={t('titles.titlesConfig.repository')}>
+              <TextField label={t('titles.titlesConfig.repository')} value={customRepo} onChange={setCustomRepo} placeholder="owner/model-GGUF" />
             </SettingRow>
-            <SettingRow title="File">
-              <TextField label="File" value={customFile} onChange={setCustomFile} placeholder="model-q4_k_m.gguf" />
+            <SettingRow title={t('titles.titlesConfig.file')}>
+              <TextField label={t('titles.titlesConfig.file')} value={customFile} onChange={setCustomFile} placeholder="model-q4_k_m.gguf" />
               <ActionButton
                 type="button"
                 tone="primary"
@@ -144,7 +146,7 @@ export function TitlesConfig() {
                   })
                 }
               >
-                Add and use
+                {t('titles.titlesConfig.addAndUse')}
               </ActionButton>
             </SettingRow>
           </>

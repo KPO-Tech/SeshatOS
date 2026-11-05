@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { SettingsCard } from '../../settings/kit'
 import type { DomainCategory } from './webSearchTypes'
+import { useTranslation } from 'react-i18next'
 
 type DomainCatalogProps = {
   categories: DomainCategory[]
@@ -12,6 +13,7 @@ type DomainCatalogProps = {
 
 /** The domains an agent may use while searching, in groups that open on demand. */
 export function DomainCatalog({ categories, activeDomains, orgBlockedCount, onToggle, onToggleCategory }: DomainCatalogProps) {
+  const { t } = useTranslation('config')
   const [openIds, setOpenIds] = useState<Set<string>>(new Set())
 
   function toggleOpen(id: string) {
@@ -24,7 +26,7 @@ export function DomainCatalog({ categories, activeDomains, orgBlockedCount, onTo
   }
 
   return (
-    <SettingsCard title="Allowed domains" badge={orgBlockedCount > 0 ? <span className="text-[11px] font-semibold text-[var(--accent-primary)]">{orgBlockedCount} blocked by your organization</span> : undefined}>
+    <SettingsCard title={t('webSearch.domainCatalog.allowedDomains')} badge={orgBlockedCount > 0 ? <span className="text-[11px] font-semibold text-[var(--accent-primary)]">{t('webSearch.domainCatalog.blockedByOrganization', { count: orgBlockedCount })}</span> : undefined}>
       {categories.map((category) => {
         const open = openIds.has(category.id)
         const activeCount = category.domains.filter((domain) => activeDomains.has(domain)).length
@@ -36,7 +38,7 @@ export function DomainCatalog({ categories, activeDomains, orgBlockedCount, onTo
                 type="button"
                 onClick={() => onToggleCategory(category.domains)}
                 className={`flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors ${all ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]' : activeCount > 0 ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/25' : 'border-[var(--border-strong)] bg-transparent'}`}
-                aria-label={`Toggle all ${category.label} domains`}
+                aria-label={t('webSearch.domainCatalog.toggleAll', { category: category.label })}
               >
                 {activeCount > 0 && <span className="size-1.5 rounded-full bg-white" />}
               </button>

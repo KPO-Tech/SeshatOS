@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function ConfigCard({ title, description, status, children, action }: { title: string; description: string; status?: ReactNode; children: ReactNode; action?: ReactNode }) {
   return (
@@ -74,6 +75,7 @@ export function CustomSelect({
   compact?: boolean
   disabled?: boolean
 }) {
+  const { t } = useTranslation('config')
   const [open, setOpen] = useState(false)
   const selected = options.find((option) => option.value === value) ?? options[0]
 
@@ -92,7 +94,7 @@ export function CustomSelect({
       >
         <span className="flex min-w-0 items-center gap-2.5">
           {selected?.icon}
-          <span className="truncate">{selected?.label ?? 'Select'}</span>
+          <span className="truncate">{selected?.label ?? t('knowledge.knowledgePrimitives.select')}</span>
         </span>
         <ChevronDownIcon />
       </button>
@@ -167,11 +169,12 @@ export function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange
 }
 
 export function ResultMessage({ state, error, latency }: { state: 'idle' | 'running' | 'ok' | 'error'; error: string | null; latency: number | null }) {
+  const { t } = useTranslation('config')
   if (state === 'idle' || state === 'running') return null
   if (state === 'ok') {
-    return <div className="rounded-md border border-[var(--accent-success)]/30 bg-[var(--accent-success)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-success)]">Connected in {latency ?? 0}ms.</div>
+    return <div className="rounded-md border border-[var(--accent-success)]/30 bg-[var(--accent-success)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-success)]">{t('knowledge.knowledgePrimitives.connectedIn', { ms: latency ?? 0 })}</div>
   }
-  return <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">{error ?? 'Connection failed.'}</div>
+  return <div className="rounded-md border border-[var(--accent-danger)]/35 bg-[var(--accent-danger)]/10 px-3 py-2 text-[12px] font-semibold text-[var(--accent-danger)]">{error ?? t('knowledge.knowledgePrimitives.connectionFailed')}</div>
 }
 
 function ChevronDownIcon() {

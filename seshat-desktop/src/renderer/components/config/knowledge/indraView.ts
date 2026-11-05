@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { IndraInstallState, IndraStatus } from './knowledgeTypes'
 
 // What the Indra OCR card shows, from what the backend reports. Indra is optional and its weights have a licence, so every state says what
@@ -22,38 +23,39 @@ export function indraPhase(status: IndraStatus, install: IndraInstallState): Ind
   return install.status === 'failed' ? 'failed' : 'available'
 }
 
+/** The points of the licence, as keys of the catalogue: the panel translates them. */
 export const INDRA_LICENSE_POINTS = [
-  'The code is Apache 2.0. The model weights, which are downloaded from Hugging Face, are under a modified OpenRAIL-M licence from Datalab.',
-  'The weights are free for personal use and research, and for organizations that made less than $20 million in revenue last year and raised less than $20 million in funding.',
-  "Whatever the size, they may not be used by an organization that offers a product or service competing with Datalab's.",
-  'Larger organizations need a commercial licence from Datalab.',
-  "The licence applies to the text the model produces too (section 8), and asks that this notice go with copies of the model."
+  'config:knowledge.indraView.licensePoint1',
+  'config:knowledge.indraView.licensePoint2',
+  'config:knowledge.indraView.licensePoint3',
+  'config:knowledge.indraView.licensePoint4',
+  'config:knowledge.indraView.licensePoint5'
 ]
 
 /** The label of the pill: what Indra is now. */
-export function indraPill(phase: IndraPhase): { tone: 'ok' | 'muted' | 'warn'; label: string } {
+export function indraPill(phase: IndraPhase, t: TFunction): { tone: 'ok' | 'muted' | 'warn'; label: string } {
   switch (phase) {
     case 'on':
-      return { tone: 'ok', label: 'On' }
+      return { tone: 'ok', label: t('config:knowledge.indraView.on') }
     case 'off':
-      return { tone: 'muted', label: 'Off' }
+      return { tone: 'muted', label: t('config:knowledge.indraView.off') }
     case 'installing':
-      return { tone: 'warn', label: 'Installing' }
+      return { tone: 'warn', label: t('config:knowledge.indraView.installing') }
     case 'relicense':
-      return { tone: 'warn', label: 'Licence to accept' }
+      return { tone: 'warn', label: t('config:knowledge.indraView.licenceToAccept') }
     default:
-      return { tone: 'muted', label: 'Not installed' }
+      return { tone: 'muted', label: t('config:knowledge.indraView.notInstalled') }
   }
 }
 
 /** The line under the install progress: "Step 2 of 4 · Creating the environment". */
-export function indraStepText(install: IndraInstallState): string {
+export function indraStepText(install: IndraInstallState, t: TFunction): string {
   if (install.status !== 'running') return ''
-  const step = install.step ?? 'Starting'
-  return install.step_index && install.step_count ? `Step ${install.step_index} of ${install.step_count} · ${step}` : step
+  const step = install.step ?? t('config:knowledge.indraView.starting')
+  return install.step_index && install.step_count ? t('config:knowledge.indraView.stepOf', { index: install.step_index, total: install.step_count, step }) : step
 }
 
 /** The installation can take minutes; the numbers a person should know before they start. */
-export function indraSizeText(status: IndraStatus): string {
-  return `About ${status.size_mb} MB on disk, downloaded once. Needs Python 3.10 or newer.`
+export function indraSizeText(status: IndraStatus, t: TFunction): string {
+  return t('config:knowledge.indraView.sizeText', { size: status.size_mb })
 }

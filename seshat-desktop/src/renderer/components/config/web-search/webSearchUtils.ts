@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { DomainCategory, SearchProviderConfig, WebSearchForm, WebSearchSettings } from './webSearchTypes'
 
 export function settingsToForm(settings: WebSearchSettings): WebSearchForm {
@@ -24,10 +25,10 @@ export function domainsToAllowedList(activeDomains: Set<string>, catalogDomains:
   return activeDomains.size >= catalogDomains.size ? [] : Array.from(activeDomains).sort()
 }
 
-export function providerStatus(provider: SearchProviderConfig) {
-  if (!provider.enabled) return { label: 'Disabled', tone: 'muted' as const }
-  if (provider.requires_api_key && !provider.has_api_key) return { label: 'Missing key', tone: 'warn' as const }
-  if (provider.requires_base_url && !provider.base_url && !provider.default_base_url) return { label: 'Missing URL', tone: 'warn' as const }
-  return { label: 'Ready', tone: 'success' as const }
+export function providerStatus(provider: SearchProviderConfig, t: TFunction) {
+  if (!provider.enabled) return { label: t('config:webSearch.webSearchUtils.disabled'), tone: 'muted' as const }
+  if (provider.requires_api_key && !provider.has_api_key) return { label: t('config:webSearch.webSearchUtils.missingKey'), tone: 'warn' as const }
+  if (provider.requires_base_url && !provider.base_url && !provider.default_base_url) return { label: t('config:webSearch.webSearchUtils.missingUrl'), tone: 'warn' as const }
+  return { label: t('config:webSearch.webSearchUtils.ready'), tone: 'success' as const }
 }
 

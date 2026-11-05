@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { SoftButton, StatusPill } from '../knowledge/KnowledgePrimitives'
 import { disconnectProviderOAuth, pollProviderOAuth, startProviderOAuth } from './providerApi'
 import type { ProviderOAuthChallenge, ProviderSetting } from './providerTypes'
+import { useTranslation } from 'react-i18next'
 
 export function ProviderOAuthControls({
   setting,
@@ -14,6 +15,7 @@ export function ProviderOAuthControls({
   onChanged: (setting?: ProviderSetting) => void
   onError: (message: string) => void
 }) {
+  const { t } = useTranslation('config')
   const [challenge, setChallenge] = useState<ProviderOAuthChallenge | null>(null)
   const [working, setWorking] = useState<'start' | 'poll' | 'disconnect' | null>(null)
 
@@ -76,20 +78,20 @@ export function ProviderOAuthControls({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-[var(--text-primary)]">ChatGPT account</span>
-            <StatusPill tone={connected ? 'ok' : 'muted'}>{connected ? 'Connected' : setting.connection_status || 'Not connected'}</StatusPill>
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">{t('providers.providerOAuthControls.chatgptAccount')}</span>
+            <StatusPill tone={connected ? 'ok' : 'muted'}>{connected ? t('providers.providerOAuthControls.connected') : setting.connection_status || t('providers.providerOAuthControls.notConnected')}</StatusPill>
           </div>
           <p className="mt-1 text-[12px] leading-[var(--leading-copy)] text-[var(--text-muted)]">
             {setting.oauth_account_email
-              ? `Connected as ${setting.oauth_account_email}.`
-              : 'Sign in through the browser with the OpenAI account that has Codex access.'}
+              ? t('providers.providerOAuthControls.connectedAs', { email: setting.oauth_account_email })
+              : t('providers.providerOAuthControls.signInThroughTheBrowser')}
           </p>
           {challenge?.user_code && (
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-[var(--text-secondary)]">
-              <span>Code</span>
+              <span>{t('providers.providerOAuthControls.code')}</span>
               <code className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-2 py-1 text-[13px] font-semibold text-[var(--text-primary)]">{challenge.user_code}</code>
               <button type="button" onClick={() => void openExternal(challenge.verification_url)} className="font-semibold text-[var(--accent-primary)] hover:underline">
-                Open browser
+                {t('providers.providerOAuthControls.openBrowser')}
               </button>
             </div>
           )}
@@ -97,15 +99,15 @@ export function ProviderOAuthControls({
         <div className="flex shrink-0 items-center gap-2">
           {connected ? (
             <SoftButton tone="danger" onClick={() => void disconnect()} disabled={busy || working === 'disconnect'}>
-              {working === 'disconnect' ? 'Disconnecting...' : 'Disconnect'}
+              {working === 'disconnect' ? t('providers.providerOAuthControls.disconnecting') : t('providers.providerOAuthControls.disconnect')}
             </SoftButton>
           ) : (
             <>
               <SoftButton tone="primary" onClick={() => void start()} disabled={busy || working === 'start'}>
-                {working === 'start' ? 'Opening...' : 'Connect'}
+                {working === 'start' ? t('providers.providerOAuthControls.opening') : t('providers.providerOAuthControls.connect')}
               </SoftButton>
               <SoftButton onClick={() => void poll()} disabled={busy || working === 'poll'}>
-                {working === 'poll' ? 'Checking...' : 'I finished'}
+                {working === 'poll' ? t('providers.providerOAuthControls.checking') : t('providers.providerOAuthControls.iFinished')}
               </SoftButton>
             </>
           )}

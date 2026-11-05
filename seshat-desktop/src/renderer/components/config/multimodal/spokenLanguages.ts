@@ -1,42 +1,20 @@
+import type { TFunction } from 'i18next'
+import { currentLanguage } from '@renderer/i18n'
+
 export const AUTO_LANGUAGE = 'auto'
 
 // Languages Whisper transcribes well, most spoken first. The tag is what the server expects.
-export const SPOKEN_LANGUAGES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: 'fr', label: 'French' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'nl', label: 'Dutch' },
-  { value: 'ar', label: 'Arabic' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'hi', label: 'Hindi' },
-  { value: 'ru', label: 'Russian' },
-  { value: 'uk', label: 'Ukrainian' },
-  { value: 'pl', label: 'Polish' },
-  { value: 'tr', label: 'Turkish' },
-  { value: 'sv', label: 'Swedish' },
-  { value: 'da', label: 'Danish' },
-  { value: 'no', label: 'Norwegian' },
-  { value: 'fi', label: 'Finnish' },
-  { value: 'cs', label: 'Czech' },
-  { value: 'el', label: 'Greek' },
-  { value: 'he', label: 'Hebrew' },
-  { value: 'hu', label: 'Hungarian' },
-  { value: 'ro', label: 'Romanian' },
-  { value: 'id', label: 'Indonesian' },
-  { value: 'vi', label: 'Vietnamese' },
-  { value: 'th', label: 'Thai' },
-  { value: 'sw', label: 'Swahili' },
-  { value: 'yo', label: 'Yoruba' }
-]
+export const SPOKEN_LANGUAGES: readonly string[] = ['fr', 'en', 'es', 'de', 'it', 'pt', 'nl', 'ar', 'zh', 'ja', 'ko', 'hi', 'ru', 'uk', 'pl', 'tr', 'sv', 'da', 'no', 'fi', 'cs', 'el', 'he', 'hu', 'ro', 'id', 'vi', 'th', 'sw', 'yo']
 
-export function languageOptions() {
+/** The name of a language in the language of the interface ("Français" or "French"), written by the browser. */
+function languageName(code: string, language: string): string {
+  const name = new Intl.DisplayNames([language], { type: 'language' }).of(code) ?? code
+  return name.charAt(0).toLocaleUpperCase(language) + name.slice(1)
+}
+
+export function languageOptions(t: TFunction, language: string = currentLanguage()) {
   return [
-    { value: AUTO_LANGUAGE, label: 'Detect the language', description: 'Works for any language, but takes about twice as long' },
-    ...SPOKEN_LANGUAGES.map((language) => ({ value: language.value, label: language.label }))
+    { value: AUTO_LANGUAGE, label: t('config:multimodal.spokenLanguages.detect'), description: t('config:multimodal.spokenLanguages.detectDescription') },
+    ...SPOKEN_LANGUAGES.map((code) => ({ value: code, label: languageName(code, language) }))
   ]
 }

@@ -9,6 +9,7 @@ import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import { ActionButton, Notice, SelectField, SettingRow, SettingsCard, StatusBadge, TextField, Toggle, type SelectOption } from '../../settings/kit'
 import { detectEmbedderModels, saveEmbedderConfig, testEmbedderConfig } from '@renderer/components/config/knowledge/knowledgeApi'
 import type { EmbedderConfig, TestState } from '@renderer/components/config/knowledge/knowledgeTypes'
+import { useTranslation } from 'react-i18next'
 
 const BASE_URLS: Record<string, string> = {
   openai: 'https://api.openai.com/v1',
@@ -39,6 +40,7 @@ const PROVIDER_KINDS: Record<string, string[]> = { openai: ['openai'], mistral: 
 const MISSING_NAMES: Record<string, string> = { openai: 'OpenAI', mistral: 'Mistral', gemini: 'Google Gemini', openrouter: 'OpenRouter' }
 
 export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderConfig | null; providers: ProviderSetting[]; onSaved: (config: EmbedderConfig) => void }) {
+  const { t } = useTranslation('config')
   const [form, setForm] = useState({
     provider: config?.provider || 'tei',
     base_url: config?.base_url || BASE_URLS.tei,
@@ -161,34 +163,34 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
   const changesModel = Boolean(config?.is_configured && config.model && (form.model !== config.model || form.provider !== config.provider))
   const suggestions = detectedModels.length > 0 ? detectedModels : MODEL_HINTS[form.provider] ?? []
   const providerOptions: SelectOption[] = [
-    { value: 'tei', label: 'TEI local', icon: <ProviderIcon provider="tei" size={24} /> },
-    { value: 'ollama', label: 'Ollama local', icon: <ProviderIcon provider="ollama" size={24} /> },
-    { value: 'openai', label: 'OpenAI', icon: <ProviderIcon provider="openai" size={24} /> },
-    { value: 'mistral', label: 'Mistral', icon: <ProviderIcon provider="mistral" size={24} /> },
-    { value: 'gemini', label: 'Google Gemini', icon: <ProviderIcon provider="gemini" size={24} /> },
-    { value: 'voyage', label: 'Voyage AI', icon: <ProviderIcon provider="voyage" size={24} /> },
-    { value: 'jina', label: 'Jina AI', icon: <ProviderIcon provider="jina" size={24} /> },
-    { value: 'openrouter', label: 'OpenRouter', icon: <ProviderIcon provider="openrouter" size={24} /> }
+    { value: 'tei', label: t('search.embedderCard.teiLocal'), icon: <ProviderIcon provider="tei" size={24} /> },
+    { value: 'ollama', label: t('search.embedderCard.ollamaLocal'), icon: <ProviderIcon provider="ollama" size={24} /> },
+    { value: 'openai', label: t('search.embedderCard.openai'), icon: <ProviderIcon provider="openai" size={24} /> },
+    { value: 'mistral', label: t('search.embedderCard.mistral'), icon: <ProviderIcon provider="mistral" size={24} /> },
+    { value: 'gemini', label: t('search.embedderCard.googleGemini'), icon: <ProviderIcon provider="gemini" size={24} /> },
+    { value: 'voyage', label: t('search.embedderCard.voyageAi'), icon: <ProviderIcon provider="voyage" size={24} /> },
+    { value: 'jina', label: t('search.embedderCard.jinaAi'), icon: <ProviderIcon provider="jina" size={24} /> },
+    { value: 'openrouter', label: t('search.embedderCard.openrouter'), icon: <ProviderIcon provider="openrouter" size={24} /> }
   ]
 
   return (
     <>
-      {testing === 'ok' && <Notice tone="ok">{`Connected in ${latency ?? 0} ms`}</Notice>}
-      {testing === 'error' && <Notice tone="error">{testError ?? 'Connection failed.'}</Notice>}
+      {testing === 'ok' && <Notice tone="ok">{t('search.embedderCard.connectedIn', { ms: latency ?? 0 })}</Notice>}
+      {testing === 'error' && <Notice tone="error">{testError ?? t('search.embedderCard.connectionFailed')}</Notice>}
       <SettingsCard
-        title="Embeddings"
-        badge={<StatusBadge tone={config?.is_configured ? 'ok' : 'warn'}>{config?.is_configured ? 'Ready' : 'Review'}</StatusBadge>}
-        action={<Toggle label="Use embeddings" enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
+        title={t('search.embedderCard.embeddings')}
+        badge={<StatusBadge tone={config?.is_configured ? 'ok' : 'warn'}>{config?.is_configured ? t('search.embedderCard.ready') : t('search.embedderCard.review')}</StatusBadge>}
+        action={<Toggle label={t('search.embedderCard.useEmbeddings')} enabled={form.enabled} onChange={(enabled) => update('enabled', enabled)} />}
       >
-        <SettingRow title="Provider">
+        <SettingRow title={t('search.embedderCard.provider')}>
           <div className="w-[230px]">
             <SelectField value={form.provider} options={providerOptions} onChange={chooseProvider} />
           </div>
         </SettingRow>
-        <SettingRow title="Address">
-          <TextField label="Base URL" value={form.base_url} onChange={(value) => update('base_url', value)} placeholder="http://localhost:8082/v1" mono width={300} />
+        <SettingRow title={t('search.embedderCard.address')}>
+          <TextField label={t('search.embedderCard.baseUrl')} value={form.base_url} onChange={(value) => update('base_url', value)} placeholder="http://localhost:8082/v1" mono width={300} />
         </SettingRow>
-        <SettingRow title="Model">
+        <SettingRow title={t('search.embedderCard.model')}>
           <div className="w-[300px]">
             <ModelCombobox value={form.model} options={suggestions} onChange={(model) => update('model', model)} placeholder="text-embedding-3-small" />
           </div>
@@ -207,20 +209,20 @@ export function EmbedderCard({ config, providers, onSaved }: { config: EmbedderC
           hasStoredKey={Boolean(config?.has_api_key)}
           emptyPlaceholder="Optional"
         />
-        {changesModel && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-primary)]">Indexed documents use {config?.model}. After saving, make their vectors again.</div>}
+        {changesModel && <div className="px-4 py-3 text-[12px] font-semibold text-[var(--accent-primary)]">{t('search.embedderCard.changesModel', { model: config?.model })}</div>}
         {isFreeModel(form.model) && <FreeModelNote what="embedding" />}
         <ReembedPanel config={config} unsaved={dirty} onDone={refreshConfig} />
         <SettingRow title=" ">
           {(form.provider === 'tei' || form.provider === 'ollama') && (
             <ActionButton type="button" onClick={() => void detectModels()} disabled={detecting || !form.base_url}>
-              {detecting ? 'Detecting...' : 'Detect models'}
+              {detecting ? t('search.embedderCard.detecting') : t('search.embedderCard.detectModels')}
             </ActionButton>
           )}
           <ActionButton type="button" onClick={() => void test()} disabled={!form.base_url || !form.model || testing === 'running'}>
-            {testing === 'running' ? 'Testing...' : 'Test'}
+            {testing === 'running' ? t('search.embedderCard.testing') : t('search.embedderCard.test')}
           </ActionButton>
           <ActionButton type="button" tone={dirty ? 'primary' : 'default'} onClick={() => void save()} disabled={!dirty || saving}>
-            {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+            {saving ? t('search.embedderCard.saving') : dirty ? t('search.embedderCard.saveChanges') : t('search.embedderCard.saved')}
           </ActionButton>
         </SettingRow>
       </SettingsCard>

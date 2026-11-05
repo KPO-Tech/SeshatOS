@@ -1,0 +1,732 @@
+{
+  "answers": {
+    "answersConfig": {
+      "richAnswers": "Rich answers",
+      "tablesFiguresAndStepsDrawn": "Tables, figures and steps drawn as components. From the next message."
+    }
+  },
+  "cloud": {
+    "cloudConfig": {
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "thisDevice": "This device",
+      "server": "Server",
+      "seshatcloud": "SeshatCloud",
+      "device": "Device",
+      "unknown": "Unknown",
+      "connectedSince": "Connected since",
+      "policies": "Policies",
+      "disconnectThisDevice": "Disconnect this device",
+      "disconnecting": "Disconnecting...",
+      "disconnect": "Disconnect",
+      "connectToSeshatcloud": "Connect to SeshatCloud",
+      "signInOnThisComputer": "Sign in on this computer",
+      "whenItIsAlreadySigned": "When it is already signed in to your organization.",
+      "registering": "Registering...",
+      "registerDevice": "Register device",
+      "serverUrl": "Server URL",
+      "deviceToken": "Device token",
+      "pasteToken": "Paste token",
+      "connecting": "Connecting...",
+      "connect": "Connect",
+      "organizationRules": "Organization rules"
+    }
+  },
+  "documents": {
+    "documentsConfig": {
+      "on": "On",
+      "off": "Off",
+      "unsavedChanges": "Unsaved changes",
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "saved": "Saved",
+      "overview": "Overview",
+      "scannedPages": "Scanned pages"
+    },
+    "documentsOverview": {
+      "readDocuments": "Read documents",
+      "theAgentsOnlySeeThe": "The agents only see the text you type.",
+      "reader": "Reader",
+      "readerFirst": "Reader first",
+      "server": "Server",
+      "documentServerAddress": "Document server address",
+      "testing": "Testing...",
+      "test": "Test",
+      "theServerDidNotAnswer": "The server did not answer.",
+      "conversion": "Conversion",
+      "chunking": "Chunking",
+      "onThisComputer": "On this computer",
+      "builtInReaders": "Built-in readers",
+      "pdfPages": "PDF pages",
+      "scannedPages": "Scanned pages",
+      "visionFallback": "Vision fallback",
+      "connectedIn": "Connected in {{ms}} ms",
+      "scannedPagesDetail": "Scanned pages: {{detail}}",
+      "documentServer": "Document server",
+      "reachable": "Reachable",
+      "notReachable": "Not reachable",
+      "configured": "Configured",
+      "notSet": "Not set"
+    },
+    "localOcrPanel": {
+      "builtInReader": "Built-in reader",
+      "notInThisVersion": "Not in this version",
+      "indraBelowCanReadScanned": "Indra, below, can read scanned pages.",
+      "languages": "Languages",
+      "readingScannedPages": "Reading scanned pages",
+      "downloadTheModels": "Download the models",
+      "startTheReader": "Start the reader",
+      "ready": "Ready",
+      "starting": "Starting...",
+      "start": "Start",
+      "downloadingModels": "Downloading models",
+      "needsModels": "Needs models",
+      "notStarted": "Not started"
+    },
+    "useDocumentReader": {
+      "needsRuntime": "Needs runtime",
+      "unavailable": "Unavailable",
+      "nativeReady": "Native OCR is ready for local scanned PDFs.",
+      "noBuiltInReader": "This version of SeshatOS has no built-in reader for scanned documents (the macOS version does not have it yet). The optional Indra reader can read them.",
+      "downloadFirst": "Download the models before starting native OCR.",
+      "modelsPresent": "The models are present. Start native OCR to read scanned PDFs on this computer.",
+      "downloading": "Downloading...",
+      "modelsDetected": "Models detected",
+      "useRecognizer": "Use this recognizer",
+      "downloadModels": "Download models"
+    }
+  },
+  "environment": {
+    "confinementCard": {
+      "commandConfinement": "Command confinement"
+    },
+    "environmentConfig": {
+      "backendRestartedTheChangesAre": "Backend restarted. The changes are active.",
+      "direct": "Direct",
+      "sandbox": "Sandbox",
+      "restarting": "Restarting...",
+      "restartBackend": "Restart backend",
+      "theDockerModeYouHad": "The Docker mode you had chosen no longer exists, so commands now run directly on this computer. Choose where they should run below.",
+      "commands": "Commands",
+      "whereCommandsRun": "Where commands run",
+      "applyingThisCanTakeA": "Applying, this can take a moment on large folders...",
+      "directThisComputer": "Direct (this computer)",
+      "sandboxThisComputer": "Sandbox (this computer)",
+      "hintLocal": "On this computer, with your files and tools.",
+      "hintProject": "On this computer, confined to the session's folder."
+    },
+    "envVarRow": {
+      "set": "Set",
+      "change": "Change",
+      "remove": "Remove",
+      "getOne": "Get one",
+      "value": "Value",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "protectedFolders": {
+      "keptFromCommands": "Kept from commands",
+      "addAFileOrFolder": "Add a file or folder",
+      "commandsCannotReadWhatIs": "Commands cannot read what is listed here. A path this computer does not have is skipped.",
+      "pathToProtect": "Path to protect",
+      "cUsersYouSecrets": "C:\\Users\\you\\secrets",
+      "add": "Add",
+      "remove": "Remove"
+    },
+    "confinementView": {
+      "sandbox": "Sandbox",
+      "sandboxText": "Commands can write only in the session's folder and cannot read what is listed below. They can still read other files and use the network. The agent's own file edits are not confined: they follow your permission settings.",
+      "landlock": "Landlock",
+      "landlockText": "Commands are confined by the Linux kernel (Landlock): they can write only inside the project folder.",
+      "notConfined": "Not confined",
+      "notConfinedText": "Commands run with your full user rights."
+    }
+  },
+  "knowledge": {
+    "indraPanel": {
+      "indraOcr": "Indra OCR",
+      "python310OrNewer": "Python 3.10 or newer is needed",
+      "checkAgain": "Check again",
+      "theLicenceChangedAcceptIt": "The licence changed. Accept it again to keep using Indra.",
+      "readTheLicence": "Read the licence",
+      "iAcceptTheLicenceOf": "I accept the licence of the weights",
+      "accept": "Accept",
+      "install": "Install",
+      "aFewMinutes": "A few minutes",
+      "licence": "Licence",
+      "delete": "Delete",
+      "keep": "Keep",
+      "remove": "Remove",
+      "installationFailed": "Installation failed: {{error}}",
+      "version": "Version {{version}}"
+    },
+    "knowledgePrimitives": {
+      "select": "Select",
+      "connectionFailed": "Connection failed.",
+      "connectedIn": "Connected in {{ms}}ms."
+    },
+    "nativeModelsPanel": {
+      "models": "Models",
+      "hide": "Hide",
+      "show": "Show",
+      "installed": "Installed",
+      "missing": "Missing",
+      "notInstalled": "Not installed",
+      "layoutTextDetectionRecognitionAnd": "Layout, text detection, recognition and tables.",
+      "installedCount": "{{installed}} of {{total}} installed",
+      "pageLayout": "Page layout",
+      "textDetection": "Text detection",
+      "textRecognition": "Text recognition",
+      "characterList": "Character list",
+      "tableStructure": "Table structure"
+    },
+    "indraView": {
+      "licensePoint1": "The code is Apache 2.0. The model weights, which are downloaded from Hugging Face, are under a modified OpenRAIL-M licence from Datalab.",
+      "licensePoint2": "The weights are free for personal use and research, and for organizations that made less than $20 million in revenue last year and raised less than $20 million in funding.",
+      "licensePoint3": "Whatever the size, they may not be used by an organization that offers a product or service competing with Datalab's.",
+      "licensePoint4": "Larger organizations need a commercial licence from Datalab.",
+      "licensePoint5": "The licence applies to the text the model produces too (section 8), and asks that this notice go with copies of the model.",
+      "on": "On",
+      "off": "Off",
+      "installing": "Installing",
+      "licenceToAccept": "Licence to accept",
+      "notInstalled": "Not installed",
+      "starting": "Starting",
+      "stepOf": "Step {{index}} of {{total}} · {{step}}",
+      "sizeText": "About {{size}} MB on disk, downloaded once. Needs Python 3.10 or newer."
+    }
+  },
+  "mcp": {
+    "mCPConfig": {
+      "importMcpJson": "Import mcp.json",
+      "reloading": "Reloading...",
+      "applyChanges": "Apply changes",
+      "reload": "Reload",
+      "addServer": "Add server",
+      "servers": "Servers",
+      "noServerYet": "No server yet",
+      "addOneOrImportYour": "Add one or import your mcp.json."
+    },
+    "mCPOrgCatalog": {
+      "organizationCatalog": "Organization catalog",
+      "approved": "Approved",
+      "pending": "Pending",
+      "revoke": "Revoke",
+      "approve": "Approve"
+    },
+    "mCPServerCard": {
+      "error": "Error",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "mCPServerForm": {
+      "editServer": "Edit server",
+      "newServer": "New server",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save",
+      "name": "Name",
+      "displayName": "Display name",
+      "filesystem": "Filesystem",
+      "transport": "Transport",
+      "timeoutSeconds": "Timeout (seconds)",
+      "timeout": "Timeout",
+      "command": "Command",
+      "arguments": "Arguments",
+      "yModelcontextprotocolServerFilesystem": "-y\n@modelcontextprotocol/server-filesystem",
+      "environment": "Environment",
+      "token": "TOKEN=...",
+      "headers": "Headers",
+      "authorizationBearer": "Authorization=Bearer ..."
+    },
+    "mCPToolList": {
+      "noToolsYetApplyAnd": "No tools yet. Apply and reload.",
+      "searchTheTools": "Search the tools",
+      "noToolMatchesThisSearch": "No tool matches this search."
+    },
+    "mcpConfig": {
+      "summary": "{{enabled}} on · {{tools}} tools"
+    },
+    "mcpServerCard": {
+      "tools_one": "{{count}} tool",
+      "tools_other": "{{count}} tools",
+      "enable": "Enable {{name}}"
+    },
+    "mcpToolList": {
+      "search_one": "Search {{count}} tool",
+      "search_other": "Search {{count}} tools"
+    },
+    "mcpUtils": {
+      "nameRequired": "Name is required.",
+      "commandRequired": "Command is required for stdio servers.",
+      "urlRequired": "URL is required for network servers."
+    }
+  },
+  "models": {
+    "addCustomModelForm": {
+      "addCustomModel": "Add custom model",
+      "cancel": "Cancel",
+      "modelId": "Model ID",
+      "displayName": "Display name",
+      "optionalLabel": "Optional label",
+      "contextWindow": "Context window",
+      "maxOutput": "Max output",
+      "adding": "Adding...",
+      "addModel": "Add model"
+    },
+    "modelRow": {
+      "default": "Default",
+      "useAsDefault": "Use as default",
+      "contextAndOutput": "{{context}} ctx · {{output}} out"
+    },
+    "modelsConfig": {
+      "defaultModel": "Default model",
+      "loading": "Loading...",
+      "noneYet": "None yet",
+      "addAProviderThenPick": "Add a provider, then pick a model below.",
+      "searchModelsOrProviders": "Search models or providers",
+      "searchModels": "Search models",
+      "refresh": "Refresh",
+      "loadingModelCatalogs": "Loading model catalogs...",
+      "addAProviderFirstThen": "Add a provider first, then models will appear here.",
+      "providersCount_one": "{{count}} provider",
+      "providersCount_other": "{{count}} providers",
+      "modelsCount_one": "{{count}} model",
+      "modelsCount_other": "{{count}} models",
+      "usedByNewConversations": "{{name}}, used by new conversations",
+      "noModelMatches": "No model matches \"{{query}}\"."
+    },
+    "providerModelGroup": {
+      "defaultProvider": "Default provider",
+      "loadingModels": "Loading models...",
+      "custom": "Custom",
+      "syncing": "Syncing...",
+      "sync": "Sync",
+      "noModelsYetUseSync": "No models yet. Use Sync to load the catalog.",
+      "noModelMatchesTheSearch": "No model matches the search."
+    }
+  },
+  "multimodal": {
+    "audio": {
+      "audioFieldRows": {
+        "providerDefault": "Provider default"
+      },
+      "dictationTab": {
+        "onThisComputer": "On this computer",
+        "running": "Running",
+        "off": "Off",
+        "transcribeOnThisComputer": "Transcribe on this computer",
+        "theFirstTimeAbout640": "The first time, about 640 MB is downloaded.",
+        "localEngine": "Local engine",
+        "notAvailableOnThisSystem": "Not available on this system. Use a provider or your own server.",
+        "downloadingTheSpeechEngine": "Downloading the speech engine",
+        "spokenLanguage": "Spoken language",
+        "processorThreads": "Processor threads",
+        "models": "Models",
+        "cloudTranscription": "Cloud transcription",
+        "yourOwnWhisperServer": "Your own Whisper server",
+        "serverAddress": "Server address",
+        "save": "Save",
+        "automaticUses": "Automatic uses {{used}} of {{cores}}."
+      },
+      "providerTab": {
+        "none": "None",
+        "audioProvider": "Audio provider",
+        "linked": "Linked",
+        "notLinked": "Not linked",
+        "provider": "Provider",
+        "noProviderYet": "No provider yet",
+        "addAnOpenaiProviderIn": "Add an OpenAI provider in Providers, then pick it here."
+      },
+      "voiceTab": {
+        "readingAloud": "Reading aloud"
+      },
+      "whisperModelList": {
+        "inUse": "In use",
+        "onThisComputer": "On this computer",
+        "download": "Download",
+        "use": "Use",
+        "delete": "Delete",
+        "downloadingPercent": "Downloading {{percent}}%",
+        "downloading": "Downloading..."
+      },
+      "audioFields": {
+        "transcriptionModel": "Transcription model",
+        "voiceModel": "Voice model",
+        "voice": "Voice",
+        "audioFormat": "Audio format"
+      }
+    },
+    "audioConfig": {
+      "onThisComputer": "On this computer",
+      "cloud": "Cloud",
+      "notSetUp": "Not set up",
+      "unsavedChanges": "Unsaved changes",
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "saved": "Saved",
+      "dictation": "Dictation",
+      "voice": "Voice",
+      "provider": "Provider"
+    },
+    "capabilitySourceCard": {
+      "none": "None",
+      "linked": "Linked",
+      "notLinked": "Not linked",
+      "provider": "Provider",
+      "saving": "Saving...",
+      "noProviderYet": "No provider yet",
+      "addImageProviders": "Add OpenAI, Gemini or OpenRouter in Providers.",
+      "addOpenAi": "Add OpenAI in Providers."
+    },
+    "imageConfig": {
+      "model": "Model",
+      "shape": "Shape",
+      "theProportionsOfTheImages": "The proportions of the images.",
+      "size": "Size",
+      "inPixelsOrAuto": "In pixels, or auto.",
+      "providerDefault": "Provider default",
+      "quality": "Quality",
+      "higherCostsMoreAndTakes": "Higher costs more and takes longer.",
+      "ready": "Ready",
+      "noProvider": "No provider",
+      "provider": "Provider",
+      "generation": "Generation",
+      "square": "Square (1:1)",
+      "landscape": "Landscape (4:3)",
+      "wide": "Wide (16:9)",
+      "portrait": "Portrait (3:4)",
+      "tall": "Tall (9:16)",
+      "emptyModel": "Empty: {{model}}",
+      "emptyDefault": "Empty: the provider default."
+    },
+    "optionsCard": {
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "saved": "Saved",
+      "providerDefault": "Provider default"
+    },
+    "spokenLanguages": {
+      "detect": "Detect the language",
+      "detectDescription": "Works for any language, but takes about twice as long"
+    }
+  },
+  "providers": {
+    "addProviderDialog": {
+      "addAProvider": "Add a provider",
+      "connectALocalOrCloud": "Connect a local or cloud model provider for chat, tools and capabilities.",
+      "name": "Name",
+      "apiKey": "API key",
+      "savedEncryptedByTheBackend": "Saved encrypted by the backend",
+      "baseUrlCheckItYour": "Base URL (check it, your key is sent there)",
+      "baseUrl": "Base URL",
+      "providerDefault": "Provider default",
+      "codexUsesABrowserSign": "Codex uses a browser sign-in with your ChatGPT account. It is only available for local desktop accounts.",
+      "cancel": "Cancel",
+      "adding": "Adding...",
+      "addOauthProvider": "Add OAuth provider",
+      "addProvider": "Add provider",
+      "pickOne": "Pick a provider to set up.",
+      "builtIn": "Built into the Seshat runtime.",
+      "genericUntested": "Generic provider from the public models.dev catalog ({{total}} models), not tested with a real key by Seshat.",
+      "unverifiedAddress": "{{text}} Its address comes from a downloaded catalog and was not reviewed."
+    },
+    "providerCard": {
+      "setAsDefaultProvider": "Set as default provider",
+      "changeTheApiKey": "Change the API key",
+      "changeTheAddress": "Change the address",
+      "manageTheModels": "Manage the models",
+      "remove": "Remove",
+      "default": "Default",
+      "active": "Active",
+      "notConfigured": "Not configured",
+      "newApiKey": "New API key",
+      "save": "Save",
+      "cancel": "Cancel",
+      "signIn": "Sign-in",
+      "address": "Address",
+      "apiKey": "API key",
+      "chatgptAccount": "ChatGPT account",
+      "testing": "Testing...",
+      "test": "Test",
+      "moreAboutThisProvider": "More about this provider",
+      "defaultModel": "Default model",
+      "noModelsYet": "No models yet",
+      "chooseAModel": "Choose a model",
+      "setUp": "Set up",
+      "syncing": "Syncing...",
+      "syncTheList": "Sync the list",
+      "noModelsLoadedYet": "No models loaded yet.",
+      "reachedProvider_one": "Reached the provider: {{count}} model.",
+      "reachedProvider_other": "Reached the provider: {{count}} models.",
+      "modelsTotal": "Models ({{total}})"
+    },
+    "providerOAuthControls": {
+      "chatgptAccount": "ChatGPT account",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "signInThroughTheBrowser": "Sign in through the browser with the OpenAI account that has Codex access.",
+      "code": "Code",
+      "openBrowser": "Open browser",
+      "disconnecting": "Disconnecting...",
+      "disconnect": "Disconnect",
+      "opening": "Opening...",
+      "connect": "Connect",
+      "checking": "Checking...",
+      "iFinished": "I finished",
+      "connectedAs": "Connected as {{email}}."
+    },
+    "providersConfig": {
+      "refresh": "Refresh",
+      "testAll": "Test all",
+      "addProvider": "Add provider",
+      "loadingProviders": "Loading providers...",
+      "noProvidersYet": "No providers yet.",
+      "confirmRemove": "Remove {{name}}? Its key is forgotten."
+    },
+    "providerSelect": {
+      "provider": "Provider",
+      "selectProvider": "Select provider",
+      "searchProviders": "Search providers",
+      "noProviderMatchesThisSearch": "No provider matches this search.",
+      "moreProviders": "More providers ({{total}})",
+      "notTested": " - {{total}} models, not tested with a real key"
+    },
+    "providerUtils": {
+      "local": "Local",
+      "connected": "Connected",
+      "oauthPending": "OAuth pending",
+      "missingKey": "Missing key",
+      "contextTokens": "{{value}} ctx",
+      "contextUnknown": "context unknown",
+      "outputMax": "{{value}} max",
+      "outputUnknown": "output unknown",
+      "catalog": "catalog",
+      "noKey": "No key",
+      "oauth": "OAuth",
+      "apiKey": "API key"
+    }
+  },
+  "search": {
+    "embedderCard": {
+      "teiLocal": "TEI local",
+      "ollamaLocal": "Ollama local",
+      "openai": "OpenAI",
+      "mistral": "Mistral",
+      "googleGemini": "Google Gemini",
+      "voyageAi": "Voyage AI",
+      "jinaAi": "Jina AI",
+      "openrouter": "OpenRouter",
+      "connectionFailed": "Connection failed.",
+      "embeddings": "Embeddings",
+      "ready": "Ready",
+      "review": "Review",
+      "useEmbeddings": "Use embeddings",
+      "provider": "Provider",
+      "address": "Address",
+      "baseUrl": "Base URL",
+      "model": "Model",
+      "detecting": "Detecting...",
+      "detectModels": "Detect models",
+      "testing": "Testing...",
+      "test": "Test",
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "saved": "Saved",
+      "connectedIn": "Connected in {{ms}} ms",
+      "changesModel": "Indexed documents use {{model}}. After saving, make their vectors again."
+    },
+    "freeModelNote": {
+      "fineToTryNotTo": "Fine to try, not to index a collection.",
+      "eachSearchUsesOnePick": "Each search uses one: pick a paid model for daily use.",
+      "limited": "Free models are limited to 50 requests a day."
+    },
+    "modelCombobox": {
+      "closeTheListOfModels": "Close the list of models",
+      "showTheModels": "Show the models",
+      "noModelOfTheList": "No model of the list matches. The text is used as it is.",
+      "free": "Free",
+      "total": "{{total}} models",
+      "shownOfTotal": "{{shown}} of {{total}} models"
+    },
+    "providerKeyField": {
+      "apiKey": "API key",
+      "useAnother": "Use another",
+      "keepCurrentKey": "Keep current key",
+      "usesKeyOf": "Uses the key of {{name}}",
+      "addToReuse": "Add {{name}} in Providers to reuse its key.",
+      "use": "Use {{name}}"
+    },
+    "reembedPanel": {
+      "stop": "Stop",
+      "saveTheModelFirst": "Save the model first",
+      "starting": "Starting...",
+      "continue": "Continue",
+      "reEmbed": "Re-embed",
+      "vectors": "Vectors",
+      "makeAgain": "Make the vectors again",
+      "changedAfter": "The model changed after the documents were indexed.",
+      "staleTitle": "Indexed with another model",
+      "staleHint": "Search by meaning is wrong until the vectors are made again. Search by words still works.",
+      "runningTitle": "Making the vectors again",
+      "runningHint": "{{done}} of {{total}} passages. You can close this window.",
+      "failedTitle": "Stopped before the end",
+      "failedHint": "{{error}} Starting again continues from there.",
+      "refused": "The embedding service refused.",
+      "cancelledTitle": "Stopped",
+      "cancelledHint": "{{done}} of {{total}} passages done.",
+      "doneTitle": "Vectors up to date",
+      "doneHint": "{{total}} passages match {{model}}."
+    },
+    "rerankerCard": {
+      "connectionFailed": "Connection failed.",
+      "reranker": "Reranker",
+      "ready": "Ready",
+      "optional": "Optional",
+      "useAReranker": "Use a reranker",
+      "service": "Service",
+      "address": "Address",
+      "baseUrl": "Base URL",
+      "model": "Model",
+      "baaiBgeRerankerV2M3": "BAAI/bge-reranker-v2-m3",
+      "detecting": "Detecting...",
+      "detectModel": "Detect model",
+      "testing": "Testing...",
+      "test": "Test",
+      "saving": "Saving...",
+      "saveAndUse": "Save and use",
+      "saveChanges": "Save changes",
+      "saved": "Saved",
+      "connectedIn": "Connected in {{ms}} ms",
+      "customEndpoint": "Custom endpoint"
+    },
+    "rerankerModels": {
+      "yourRerankModels": "Your rerank models",
+      "defaultModel": "Default model",
+      "inUse": "In use",
+      "use": "Use",
+      "forget": "Forget",
+      "forgetModel": "Forget {{model}}"
+    }
+  },
+  "skills": {
+    "skillsConfig": {
+      "allRepositoriesRemoved": "All repositories removed.",
+      "loading": "Loading...",
+      "addARepository": "Add a repository",
+      "gitUrl": "Git URL",
+      "installing": "Installing...",
+      "install": "Install",
+      "installed": "Installed",
+      "removing": "Removing...",
+      "removeAll": "Remove all",
+      "noRepositoriesInstalled": "No repositories installed",
+      "remove": "Remove",
+      "removeFailed_one": "{{count}} repository could not be removed.",
+      "removeFailed_other": "{{count}} repositories could not be removed.",
+      "downloadingInBackground": "{{name}} is downloading in the background.",
+      "confirmRemoveRepo_one": "Remove the \"{{name}}\" repository and its {{count}} skill?",
+      "confirmRemoveRepo_other": "Remove the \"{{name}}\" repository and its {{count}} skills?",
+      "confirmRemoveAll_one": "Remove the {{count}} installed repository and its skills? This cannot be undone.",
+      "confirmRemoveAll_other": "Remove all {{count}} installed repositories and their skills? This cannot be undone."
+    }
+  },
+  "storage": {
+    "storageConfig": {
+      "restartRequired": "Restart required",
+      "localDisk": "Local disk",
+      "saving": "Saving...",
+      "save": "Save",
+      "filesAndAttachments": "Files and attachments",
+      "provider": "Provider",
+      "s3Compatible": "S3 compatible",
+      "savedRestart": "Saved. Restart the backend to apply it.",
+      "saved": "Saved.",
+      "folder": "Folder",
+      "defaultFolder": "Default folder",
+      "endpoint": "Endpoint",
+      "bucket": "Bucket",
+      "region": "Region",
+      "keyPrefix": "Key prefix",
+      "optional": "Optional",
+      "accessKey": "Access key",
+      "keepCurrentKey": "Keep current key",
+      "required": "Required",
+      "secretKey": "Secret key",
+      "keepCurrentSecret": "Keep current secret"
+    }
+  },
+  "titles": {
+    "titlesConfig": {
+      "desktopOnly": "Desktop only",
+      "loading": "Loading",
+      "notAvailable": "Not available",
+      "running": "Running",
+      "off": "Off",
+      "nameChatsOnThisComputer": "Name chats on this computer",
+      "offTitlesComeFromYour": "Off: titles come from your chat model.",
+      "downloadingLlamaCpp": "Downloading llama.cpp",
+      "downloadingTheTitleModel": "Downloading the title model",
+      "runtimeAndModel": "Runtime and model",
+      "installNow": "Install now",
+      "model": "Model",
+      "inUse": "In use",
+      "use": "Use",
+      "download": "Download",
+      "delete": "Delete",
+      "yourOwnModel": "Your own model",
+      "anyInstructGgufFromHugging": "Any instruct GGUF from Hugging Face. Reasoning models are refused.",
+      "close": "Close",
+      "add": "Add",
+      "repository": "Repository",
+      "file": "File",
+      "addAndUse": "Add and use"
+    }
+  },
+  "webSearch": {
+    "domainCatalog": {
+      "allowedDomains": "Allowed domains",
+      "blockedByOrganization_one": "{{count}} blocked by your organization",
+      "blockedByOrganization_other": "{{count}} blocked by your organization",
+      "toggleAll": "Toggle all {{category}} domains"
+    },
+    "searchProviderCard": {
+      "saved": "Saved",
+      "required": "Required",
+      "clientId": "Client ID",
+      "redditAppClientId": "Reddit app client id",
+      "username": "Username",
+      "optional": "Optional",
+      "baseUrl": "Base URL",
+      "testing": "Testing...",
+      "test": "Test",
+      "saving": "Saving...",
+      "save": "Save",
+      "enable": "Enable {{name}}",
+      "connectedIn": "Connected in {{ms}} ms",
+      "password": "Password",
+      "clientSecret": "Client secret",
+      "apiKey": "API key"
+    },
+    "webSearchConfig": {
+      "off": "Off",
+      "unsavedChanges": "Unsaved changes",
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "saved": "Saved",
+      "searchTheWeb": "Search the web",
+      "useKeysFromTheEnvironment": "Use keys from the environment",
+      "whenNoKeyIsSaved": "When no key is saved here.",
+      "queriesPerDay": "Queries per day",
+      "t0IsUnlimited": "0 is unlimited.",
+      "researchSources": "Research sources"
+    },
+    "webSearchUtils": {
+      "disabled": "Disabled",
+      "missingKey": "Missing key",
+      "missingUrl": "Missing URL",
+      "ready": "Ready"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { ProviderLogo } from './ProviderLogo'
 import { ProviderOAuthControls } from './ProviderOAuthControls'
 import type { ProviderModel, ProviderRowModel, ProviderSetting } from './providerTypes'
 import { formatModelMeta, getProviderConnection, isCodexProvider, plainText } from './providerUtils'
+import { useTranslation } from 'react-i18next'
 
 export type TestResult = { state: 'testing' } | { state: 'ok'; models: number } | { state: 'failed'; message: string }
 
@@ -52,12 +53,13 @@ function ModelChips({ models }: { models: ProviderModel[] }) {
 
 /** A provider: who it is and what it offers on the left; its key, its state, a test and its default model on the right. */
 export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDefault, onRemove, onChangeDefaultModel, onChangeSecret, onProviderChanged, onError }: Props) {
+  const { t } = useTranslation('config')
   const setting = row.setting
   const [editing, setEditing] = useState<'api_key' | 'base_url' | null>(null)
   const [draft, setDraft] = useState('')
   const [managing, setManaging] = useState(false)
   const [saving, setSaving] = useState(false)
-  const connection = setting ? getProviderConnection(setting) : null
+  const connection = setting ? getProviderConnection(setting, t) : null
   const codex = isCodexProvider(row.provider)
   const local = row.provider === 'ollama'
   const defaultModel = models.find((model) => model.model_id === setting?.model_id) ?? models.find((model) => model.is_default)
@@ -76,11 +78,11 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
 
   const menu: DropdownItem[] = setting
     ? [
-        { id: 'default', label: 'Set as default provider', onSelect: () => onSetDefault(setting) },
-        ...(!codex && !local ? [{ id: 'key', label: 'Change the API key', onSelect: () => { setEditing('api_key'); setDraft('') } }] : []),
-        ...(!codex ? [{ id: 'url', label: 'Change the address', onSelect: () => { setEditing('base_url'); setDraft(setting.base_url ?? '') } }] : []),
-        { id: 'models', label: 'Manage the models', onSelect: () => setManaging(true) },
-        { id: 'remove', label: 'Remove', danger: true, onSelect: () => onRemove(setting) }
+        { id: 'default', label: t('providers.providerCard.setAsDefaultProvider'), onSelect: () => onSetDefault(setting) },
+        ...(!codex && !local ? [{ id: 'key', label: t('providers.providerCard.changeTheApiKey'), onSelect: () => { setEditing('api_key'); setDraft('') } }] : []),
+        ...(!codex ? [{ id: 'url', label: t('providers.providerCard.changeTheAddress'), onSelect: () => { setEditing('base_url'); setDraft(setting.base_url ?? '') } }] : []),
+        { id: 'models', label: t('providers.providerCard.manageTheModels'), onSelect: () => setManaging(true) },
+        { id: 'remove', label: t('providers.providerCard.remove'), danger: true, onSelect: () => onRemove(setting) }
       ]
     : []
 
@@ -92,7 +94,7 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{row.name}</h3>
-              {setting ? <Pill tone={setting.is_default ? 'accent' : 'ok'}>{setting.is_default ? 'Default' : 'Active'}</Pill> : <Pill tone="muted">Not configured</Pill>}
+              {setting ? <Pill tone={setting.is_default ? 'accent' : 'ok'}>{setting.is_default ? t('providers.providerCard.default') : t('providers.providerCard.active')}</Pill> : <Pill tone="muted">{t('providers.providerCard.notConfigured')}</Pill>}
             </div>
             <p className="m-0 mt-1 line-clamp-2 text-[12.5px] leading-[19px] text-[var(--text-secondary)]">{plainText(row.description || setting?.base_url || row.provider)}</p>
             <ModelChips models={models} />
@@ -111,33 +113,33 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     onKeyDown={(event) => event.key === 'Enter' && void save()}
-                    placeholder={editing === 'api_key' ? 'New API key' : 'https://...'}
+                    placeholder={editing === 'api_key' ? t('providers.providerCard.newApiKey') : 'https://...'}
                     className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 font-mono text-[12px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]"
                   />
                   <button type="button" disabled={saving || !draft.trim()} onClick={() => void save()} className="h-8 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-3 text-[12.5px] font-semibold text-white hover:opacity-90 disabled:cursor-default disabled:opacity-50">
-                    Save
+                    {t('providers.providerCard.save')}
                   </button>
                   <button type="button" disabled={saving} onClick={() => setEditing(null)} className={GHOST}>
-                    Cancel
+                    {t('providers.providerCard.cancel')}
                   </button>
                 </>
               ) : (
                 <>
                   <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3">
-                    <span className="shrink-0 text-[11px] text-[var(--text-muted)]">{codex ? 'Sign-in' : local ? 'Address' : 'API key'}</span>
+                    <span className="shrink-0 text-[11px] text-[var(--text-muted)]">{codex ? t('providers.providerCard.signIn') : local ? t('providers.providerCard.address') : t('providers.providerCard.apiKey')}</span>
                     <span className="truncate font-mono text-[12px] text-[var(--text-secondary)]">
-                      {codex ? setting.oauth_account_email || 'ChatGPT account' : local ? setting.base_url || 'http://localhost:11434' : setting.has_api_key ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : 'Not configured'}
+                      {codex ? setting.oauth_account_email || t('providers.providerCard.chatgptAccount') : local ? setting.base_url || 'http://localhost:11434' : setting.has_api_key ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : t('providers.providerCard.notConfigured')}
                     </span>
                   </div>
                   {connection && <Pill tone={connection.tone === 'success' ? 'ok' : 'muted'}>{connection.label}</Pill>}
                   <button type="button" disabled={busy || test?.state === 'testing'} onClick={() => onTest(setting)} className={GHOST}>
-                    {test?.state === 'testing' ? 'Testing...' : 'Test'}
+                    {test?.state === 'testing' ? t('providers.providerCard.testing') : t('providers.providerCard.test')}
                   </button>
                   <Dropdown
-                    label="More about this provider"
+                    label={t('providers.providerCard.moreAboutThisProvider')}
                     items={menu}
                     trigger={({ toggle }) => (
-                      <button type="button" aria-label="More about this provider" onClick={toggle} className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
+                      <button type="button" aria-label={t('providers.providerCard.moreAboutThisProvider')} onClick={toggle} className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
                         <More theme="outline" size={15} />
                       </button>
                     )}
@@ -147,31 +149,31 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-[88px] shrink-0 text-[12px] text-[var(--text-muted)]">Default model</span>
+              <span className="w-[88px] shrink-0 text-[12px] text-[var(--text-muted)]">{t('providers.providerCard.defaultModel')}</span>
               <Dropdown
-                label="Default model"
+                label={t('providers.providerCard.defaultModel')}
                 align="left"
                 items={models.slice(0, 40).map((model) => ({ id: model.model_id, label: model.display_name || model.model_id, checked: model.model_id === (defaultModel?.model_id ?? ''), onSelect: () => onChangeDefaultModel(setting, model.model_id) }))}
                 trigger={({ toggle }) => (
                   <button type="button" disabled={models.length === 0} onClick={toggle} className="flex h-8 min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-root)] px-3 text-[12.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-60">
-                    <span className="truncate">{defaultModel ? defaultModel.display_name || defaultModel.model_id : models.length === 0 ? 'No models yet' : 'Choose a model'}</span>
+                    <span className="truncate">{defaultModel ? defaultModel.display_name || defaultModel.model_id : models.length === 0 ? t('providers.providerCard.noModelsYet') : t('providers.providerCard.chooseAModel')}</span>
                     <Down theme="outline" size={12} />
                   </button>
                 )}
               />
-              <button type="button" aria-label="Manage the models" title="Manage the models" onClick={() => setManaging((value) => !value)} className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
+              <button type="button" aria-label={t('providers.providerCard.manageTheModels')} title={t('providers.providerCard.manageTheModels')} onClick={() => setManaging((value) => !value)} className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-soft)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
                 <SettingTwo theme="outline" size={15} />
               </button>
             </div>
 
-            {test?.state === 'ok' && <p className="m-0 text-[11.5px] text-[var(--accent-success)]">Reached the provider: {test.models} models.</p>}
+            {test?.state === 'ok' && <p className="m-0 text-[11.5px] text-[var(--accent-success)]">{t('providers.providerCard.reachedProvider', { count: test.models })}</p>}
             {test?.state === 'failed' && <p className="m-0 text-[11.5px] text-[var(--accent-danger)]">{test.message}</p>}
           </div>
         ) : (
           <div className="flex shrink-0 items-center gap-3 self-center">
-            <span className="text-[12px] text-[var(--text-muted)]">{row.authTypeLabel}</span>
+            <span className="text-[12px] text-[var(--text-muted)]">{t(row.authTypeLabel)}</span>
             <button type="button" onClick={onSetUp} className="h-9 cursor-pointer rounded-lg border-0 bg-[var(--accent-primary)] px-4 text-[13px] font-semibold text-white hover:opacity-90">
-              Set up
+              {t('providers.providerCard.setUp')}
             </button>
           </div>
         )}
@@ -186,22 +188,22 @@ export function ProviderCard({ row, models, busy, test, onSetUp, onTest, onSetDe
       {setting && managing && (
         <div className="mt-3 border-t border-[var(--border-soft)] pt-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-[var(--text-primary)]">Models ({models.length})</span>
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">{t('providers.providerCard.modelsTotal', { total: models.length })}</span>
             <button type="button" disabled={busy} onClick={() => onTest(setting)} className={GHOST}>
-              {busy ? 'Syncing...' : 'Sync the list'}
+              {busy ? t('providers.providerCard.syncing') : t('providers.providerCard.syncTheList')}
             </button>
           </div>
           {models.length === 0 ? (
-            <p className="m-0 text-[12px] text-[var(--text-muted)]">No models loaded yet.</p>
+            <p className="m-0 text-[12px] text-[var(--text-muted)]">{t('providers.providerCard.noModelsLoadedYet')}</p>
           ) : (
             <div className="grid max-h-60 gap-1 overflow-y-auto">
               {models.slice(0, 40).map((model) => (
                 <div key={model.id || model.model_id} className="flex items-center justify-between gap-4 rounded-lg bg-[var(--surface-muted)] px-3 py-2">
                   <div className="min-w-0">
                     <div className="truncate text-[12.5px] font-medium text-[var(--text-primary)]">{model.display_name || model.model_id}</div>
-                    <div className="truncate text-[11px] text-[var(--text-muted)]">{formatModelMeta(model)}</div>
+                    <div className="truncate text-[11px] text-[var(--text-muted)]">{formatModelMeta(model, t)}</div>
                   </div>
-                  {model.model_id === defaultModel?.model_id && <Pill tone="accent">Default</Pill>}
+                  {model.model_id === defaultModel?.model_id && <Pill tone="accent">{t('providers.providerCard.default')}</Pill>}
                 </div>
               ))}
             </div>
