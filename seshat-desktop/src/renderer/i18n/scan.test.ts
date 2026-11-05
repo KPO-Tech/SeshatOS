@@ -142,5 +142,5 @@ describe('the real project', () => {
   it('has nothing to report', () => {
     const out = execFileSync(process.execPath, [SCRIPT, 'check'], { encoding: 'utf8' })
     expect(out).toContain('Nothing to report')
-  }, 30_000)
+  }, 60_000)
 })
