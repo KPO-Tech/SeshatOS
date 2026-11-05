@@ -6,6 +6,7 @@ import { parseNotebook, type Notebook } from '@renderer/lib/notebook'
 import { extensionOf, fileKindOf, parseDelimited, resolveRelativePath } from '@renderer/lib/projectFiles'
 import { Copy, FolderOpen } from '../icons'
 import { NotebookView } from './NotebookView'
+import { useTranslation } from 'react-i18next'
 
 type Loaded =
   | { state: 'loading' }
@@ -33,8 +34,9 @@ function explain(error: unknown): string {
 }
 
 function Table({ text, delimiter }: { text: string; delimiter: string }) {
+  const { t } = useTranslation('shell')
   const { rows, truncated } = useMemo(() => parseDelimited(text, delimiter), [text, delimiter])
-  if (rows.length === 0) return <div className="p-6 text-[13px] text-[var(--text-muted)]">This file is empty.</div>
+  if (rows.length === 0) return <div className="p-6 text-[13px] text-[var(--text-muted)]">{t('pages.projects.detail.fileViewer.thisFileIsEmpty')}</div>
   const [head, ...body] = rows
   return (
     <div className="px-4 py-3">
@@ -62,13 +64,14 @@ function Table({ text, delimiter }: { text: string; delimiter: string }) {
           </tbody>
         </table>
       </div>
-      {truncated && <p className="m-0 mt-2 text-[11.5px] text-[var(--text-muted)]">The first {rows.length} rows are shown.</p>}
+      {truncated && <p className="m-0 mt-2 text-[11.5px] text-[var(--text-muted)]">{t('pages.projects.detail.fileViewer.firstRows', { rows: rows.length })}</p>}
     </div>
   )
 }
 
 /** A file of the project, to read: Markdown drawn, code highlighted, notebooks laid out, tables and pictures. Nothing here changes a file. */
 export function FileViewer({ path, relativePath, onOpenSystem }: Props) {
+  const { t } = useTranslation('shell')
   const kind = fileKindOf(path)
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [source, setSource] = useState(false)
@@ -140,7 +143,7 @@ export function FileViewer({ path, relativePath, onOpenSystem }: Props) {
           </div>
         </div>
         {kind === 'markdown' && loaded.state === 'text' && (
-          <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label="View">
+          <div className="flex rounded-lg border border-[var(--border-soft)] p-0.5 text-[11.5px]" role="group" aria-label={t('pages.projects.detail.fileViewer.view')}>
             {([false, true] as const).map((value) => (
               <button
                 key={String(value)}
@@ -149,17 +152,17 @@ export function FileViewer({ path, relativePath, onOpenSystem }: Props) {
                 onClick={() => setSource(value)}
                 className={`cursor-pointer rounded-md border-0 px-2 py-0.5 ${source === value ? 'bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] text-[var(--accent-primary)]' : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
               >
-                {value ? 'Source' : 'Preview'}
+                {value ? t('pages.projects.detail.fileViewer.source') : t('pages.projects.detail.fileViewer.preview')}
               </button>
             ))}
           </div>
         )}
-        <button type="button" onClick={() => void navigator.clipboard.writeText(path)} aria-label="Copy the path" title="Copy the path" className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+        <button type="button" onClick={() => void navigator.clipboard.writeText(path)} aria-label={t('pages.projects.detail.fileViewer.copyThePath')} title={t('pages.projects.detail.fileViewer.copyThePath')} className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
           <Copy size={13} />
         </button>
         <button type="button" onClick={() => onOpenSystem(path)} className="flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-[var(--border-soft)] bg-transparent px-2 text-[11.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
           <FolderOpen size={13} />
-          Open
+          {t('pages.projects.detail.fileViewer.open')}
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">{body()}</div>

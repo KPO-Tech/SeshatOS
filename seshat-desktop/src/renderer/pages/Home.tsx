@@ -18,6 +18,7 @@ import { isChatProviderUsable } from '@renderer/lib/chatProviders'
 import { pickDefaultChoiceWhenSettled } from '@renderer/lib/defaultModel'
 import { HomeStage } from './HomeStage'
 import './Home.css'
+import { useTranslation } from 'react-i18next'
 
 type ModelChoice = {
   id: string
@@ -64,6 +65,7 @@ type NewChatProps = {
 
 /** The start of a conversation: the input with its model, attachments and folder, which creates the conversation and opens it. */
 export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask anything...', suggestions, autoFocus }: NewChatProps) {
+  const { t } = useTranslation('shell')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { loading: providersLoading } = useProviders()
@@ -410,11 +412,11 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
     suggestions ??
     (variant === 'home'
       ? [
-          { icon: <FileTextOne size={14} />, label: 'Summarize a file', prompt: 'Summarize the file at ' },
-          { icon: <ChartHistogram size={14} />, label: 'Analyze data', prompt: 'Analyze the data in ' },
-          { icon: <Globe size={14} />, label: 'Search the web', prompt: 'Search the web for ' },
-          { icon: <LightMember size={14} />, label: 'Brainstorm ideas', prompt: 'Help me brainstorm ideas for ' },
-          { icon: <Code size={14} />, label: 'Write code', prompt: 'Write code that ' }
+          { icon: <FileTextOne size={14} />, label: t('pages.home.summarizeAFile'), prompt: 'Summarize the file at ' },
+          { icon: <ChartHistogram size={14} />, label: t('pages.home.analyzeData'), prompt: 'Analyze the data in ' },
+          { icon: <Globe size={14} />, label: t('pages.home.searchTheWeb'), prompt: 'Search the web for ' },
+          { icon: <LightMember size={14} />, label: t('pages.home.brainstormIdeas'), prompt: 'Help me brainstorm ideas for ' },
+          { icon: <Code size={14} />, label: t('pages.home.writeCode'), prompt: 'Write code that ' }
         ]
       : [])
 
@@ -460,7 +462,7 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
           />
           {errorMessage && <div className="home-input-status error">{errorMessage}</div>}
           {!errorMessage && loadingModelProviderIds.length > 0 && allModelChoices.length === 0 && (
-            <div className="home-input-status">Loading models...</div>
+            <div className="home-input-status">{t('pages.home.loadingModels')}</div>
           )}
           {!errorMessage &&
             !providersLoading &&
@@ -468,11 +470,11 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
             loadingModelProviderIds.length === 0 &&
             allModelChoices.length === 0 && (
               <div className="home-input-status">
-                No model is available yet.
+                {t('pages.home.noModelIsAvailableYet')}
               </div>
             )}
           {!errorMessage && isCreatingSession && (
-            <div className="home-input-status">Creating conversation...</div>
+            <div className="home-input-status">{t('pages.home.creatingConversation')}</div>
           )}
         </div>
 

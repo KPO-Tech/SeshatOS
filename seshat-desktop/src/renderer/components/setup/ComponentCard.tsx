@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatBytes, type Choice } from './setupFormat'
+import { useTranslation } from 'react-i18next'
 
 type Option = { id: string; label: string; sizeBytes: number; description: string; recommended: boolean; installed?: boolean }
 
@@ -36,6 +37,7 @@ function Check({ checked }: { checked: boolean }) {
 
 // One thing the person can have installed: a switch, a line on what it does, and the model to pick when it is on.
 export function ComponentCard({ title, tagline, icon, available, unavailableReason, note, options, choice, onChange }: Props) {
+  const { t } = useTranslation('shell')
   const on = available && Boolean(choice?.install)
   const selected = options.find((option) => option.id === choice?.modelId) ?? options[0]
 
@@ -62,15 +64,15 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
         </span>
         {available && selected && on && (
           <span className={['shrink-0 pt-0.5 text-[12.5px] font-medium', selected.installed ? 'text-[var(--accent-success)]' : 'text-[var(--text-muted)]'].join(' ')}>
-            {selected.installed ? 'Already installed' : formatBytes(selected.sizeBytes)}
+            {selected.installed ? t('setup.componentCard.alreadyInstalled') : formatBytes(selected.sizeBytes)}
           </span>
         )}
         {!available && (
-          <span className="shrink-0 rounded-full border border-[var(--border-soft)] px-2.5 py-0.5 text-[11.5px] font-medium text-[var(--text-muted)]">Not in this version</span>
+          <span className="shrink-0 rounded-full border border-[var(--border-soft)] px-2.5 py-0.5 text-[11.5px] font-medium text-[var(--text-muted)]">{t('setup.componentCard.notInThisVersion')}</span>
         )}
       </button>
 
-      {available && !on && !note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">Skipped for now. You can add it later in Config.</p>}
+      {available && !on && !note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">{t('setup.componentCard.skippedForNowYouCan')}</p>}
       {available && !on && note && <p className="m-0 mt-3 ml-[54px] text-[12.5px] leading-[1.5] text-[var(--text-muted)]">{note}</p>}
 
       {on && choice && options.length > 0 && (
@@ -94,12 +96,12 @@ export function ComponentCard({ title, tagline, icon, available, unavailableReas
                 >
                   {option.label}
                   {option.installed ? (
-                    <span className="rounded-full border border-[var(--accent-success)] px-2 py-px text-[10.5px] font-semibold uppercase tracking-wide text-[var(--accent-success)]">Installed</span>
+                    <span className="rounded-full border border-[var(--accent-success)] px-2 py-px text-[10.5px] font-semibold uppercase tracking-wide text-[var(--accent-success)]">{t('setup.componentCard.installed')}</span>
                   ) : (
                     <span className="text-[12px] text-[var(--text-muted)]">{formatBytes(option.sizeBytes)}</span>
                   )}
                   {option.recommended && (
-                    <span className="rounded-full bg-[var(--accent-primary)] px-2 py-px text-[10.5px] font-semibold uppercase tracking-wide text-white">Recommended</span>
+                    <span className="rounded-full bg-[var(--accent-primary)] px-2 py-px text-[10.5px] font-semibold uppercase tracking-wide text-white">{t('setup.componentCard.recommended')}</span>
                   )}
                 </button>
               )

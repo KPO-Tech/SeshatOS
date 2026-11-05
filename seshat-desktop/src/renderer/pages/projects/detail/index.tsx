@@ -12,14 +12,15 @@ import { InfoColumn } from './InfoColumn'
 import { ProjectHeader } from './ProjectHeader'
 import { SessionsTab } from './SessionsTab'
 import { useProjectScan } from './useProjectScan'
+import { useTranslation } from 'react-i18next'
 
 type Tab = 'overview' | 'files' | 'sessions' | 'notes'
 const TABS: ReadonlyArray<{ id: Tab; label: string; icon: typeof FileText; soon?: boolean }> = [
-  { id: 'overview', label: 'Overview', icon: Folder },
-  { id: 'files', label: 'Files', icon: FileText },
-  { id: 'sessions', label: 'Sessions', icon: Time },
+  { id: 'overview', label: 'shell:pages.projects.detail.tabOverview', icon: Folder },
+  { id: 'files', label: 'shell:pages.projects.detail.tabFiles', icon: FileText },
+  { id: 'sessions', label: 'shell:pages.projects.detail.tabSessions', icon: Time },
   // Greyed until the notes are thought over again: the page is kept, its tab cannot be opened.
-  { id: 'notes', label: 'Notes', icon: Notes, soon: true }
+  { id: 'notes', label: 'shell:pages.projects.detail.tabNotes', icon: Notes, soon: true }
 ]
 
 function relativeToRoot(root: string, path: string): string {
@@ -29,6 +30,7 @@ function relativeToRoot(root: string, path: string): string {
 // A project is a local folder (see lib/projects.ts). Its page reads the folder (the files, shown to be read and not changed), lists the
 // conversations had in it, and keeps the person's notes about it.
 export function ProjectDetailPage() {
+  const { t } = useTranslation('shell')
   const { projectId = '' } = useParams()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -67,10 +69,10 @@ export function ProjectDetailPage() {
         <span className="text-[var(--text-muted)]">
           <Folder size={22} />
         </span>
-        <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">Project not found</h2>
-        <p className="m-0 text-[13px] text-[var(--text-muted)]">It may have been removed.</p>
+        <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{t('pages.projects.detail.index.projectNotFound')}</h2>
+        <p className="m-0 text-[13px] text-[var(--text-muted)]">{t('pages.projects.detail.index.itMayHaveBeenRemoved')}</p>
         <button type="button" onClick={() => navigate('/projects')} className="mt-2 cursor-pointer rounded-lg border border-[var(--border-soft)] bg-transparent px-3 py-1.5 text-[13px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
-          Back to Projects
+          {t('pages.projects.detail.index.backToProjects')}
         </button>
       </div>
     )
@@ -124,7 +126,7 @@ export function ProjectDetailPage() {
         }}
       />
 
-      <nav className="mt-3 flex shrink-0 gap-1 border-b border-[var(--border-soft)] px-6" role="tablist" aria-label="Project">
+      <nav className="mt-3 flex shrink-0 gap-1 border-b border-[var(--border-soft)] px-6" role="tablist" aria-label={t('pages.projects.detail.index.project')}>
         {TABS.map((item) => {
           const Icon = item.icon
           const selected = tab === item.id
@@ -135,7 +137,7 @@ export function ProjectDetailPage() {
               role="tab"
               aria-selected={selected}
               disabled={item.soon}
-              title={item.soon ? 'Coming back soon' : undefined}
+              title={item.soon ? t('pages.projects.detail.index.comingBackSoon') : undefined}
               onClick={() => goTo(item.id)}
               className={`-mb-px flex items-center gap-1.5 border-0 border-b-2 bg-transparent px-3 py-2 text-[13px] font-medium ${item.soon ? 'cursor-not-allowed border-transparent text-[var(--text-muted)] opacity-40' : selected ? 'cursor-pointer border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'cursor-pointer border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
@@ -178,8 +180,8 @@ export function ProjectDetailPage() {
                     <span className="text-[var(--text-muted)]">
                       <FileText size={26} />
                     </span>
-                    <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">Choose a file to read</h2>
-                    <p className="m-0 max-w-[340px] text-[12.5px] leading-[1.6] text-[var(--text-muted)]">Markdown, code, notebooks, tables and pictures are shown here. Nothing in this view changes a file.</p>
+                    <h2 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">{t('pages.projects.detail.index.chooseAFileToRead')}</h2>
+                    <p className="m-0 max-w-[340px] text-[12.5px] leading-[1.6] text-[var(--text-muted)]">{t('pages.projects.detail.index.markdownCodeNotebooksTablesAnd')}</p>
                   </div>
                 )}
               </div>

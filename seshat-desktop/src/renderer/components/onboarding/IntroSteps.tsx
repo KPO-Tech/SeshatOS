@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 const STEPS = ['Appearance', 'Get started', 'Models']
 
 /** Where the person is in the first screens: the ones passed are filled, the current one is named in orange, the others wait. */
 export function IntroSteps({ current }: { current: number }) {
+  const { t } = useTranslation('shell')
   return (
-    <ol className="m-0 flex list-none items-center gap-3 p-0" aria-label="Steps">
+    <ol className="m-0 flex list-none items-center gap-3 p-0" aria-label={t('onboarding.introSteps.steps')}>
       {STEPS.map((label, index) => {
         const done = index < current
         const active = index === current

@@ -7,6 +7,7 @@ import type { ChatSession } from '@renderer/stores/session'
 import { Copy, FolderOpen, Time } from '../icons'
 import type { Scan } from './useProjectScan'
 import { VsCodeIcon } from '../VsCodeIcon'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   project: ProjectSummary
@@ -43,9 +44,10 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function ViewAll({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation('shell')
   return (
     <button type="button" onClick={onClick} className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-medium text-[var(--accent-primary)] hover:underline">
-      View all
+      {t('pages.projects.detail.infoColumn.viewAll')}
     </button>
   )
 }
@@ -56,32 +58,33 @@ function dateOf(ms: number): string {
 
 /** The column beside a project's page: what its folder holds, the files and conversations changed last, and the tools to go further. */
 export function InfoColumn({ project, scan, sessions, now, onOpenFile, onOpenSession, onViewAllSessions, onOpenInEditor, onOpenFolder, onCopyPath }: Props) {
+  const { t } = useTranslation('shell')
   const root = project.rootPath
   const recentSessions = sessions.slice(0, 4)
   return (
     <div className="flex flex-col gap-3">
-      <Card title="Project info">
-        <Row label="Path">
+      <Card title={t('pages.projects.detail.infoColumn.projectInfo')}>
+        <Row label={t('pages.projects.detail.infoColumn.path')}>
           <span className="flex items-center justify-end gap-1.5">
             <span className="truncate font-mono text-[11px]" title={root}>
               {root}
             </span>
-            <button type="button" onClick={onCopyPath} aria-label="Copy the path" title="Copy the path" className="flex shrink-0 cursor-pointer items-center border-0 bg-transparent p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+            <button type="button" onClick={onCopyPath} aria-label={t('pages.projects.detail.infoColumn.copyThePath')} title={t('pages.projects.detail.infoColumn.copyThePath')} className="flex shrink-0 cursor-pointer items-center border-0 bg-transparent p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
               <Copy size={12} />
             </button>
           </span>
         </Row>
-        <Row label="Files">{scan ? `${scan.count}${scan.capped ? '+' : ''}` : '-'}</Row>
-        <Row label="Last active">{relativeTime(project.lastActiveAt, now) || 'No activity yet'}</Row>
-        <Row label="Created">{scan ? dateOf(scan.createdMs) : '-'}</Row>
-        <Row label="Size">{scan ? `${scan.capped ? '> ' : ''}${formatBytes(scan.bytes)}` : '-'}</Row>
+        <Row label={t('pages.projects.detail.infoColumn.files')}>{scan ? `${scan.count}${scan.capped ? '+' : ''}` : '-'}</Row>
+        <Row label={t('pages.projects.detail.infoColumn.lastActive')}>{relativeTime(project.lastActiveAt, now) || t('pages.projects.detail.infoColumn.noActivityYet')}</Row>
+        <Row label={t('pages.projects.detail.infoColumn.created')}>{scan ? dateOf(scan.createdMs) : '-'}</Row>
+        <Row label={t('pages.projects.detail.infoColumn.size')}>{scan ? `${scan.capped ? '> ' : ''}${formatBytes(scan.bytes)}` : '-'}</Row>
       </Card>
 
-      <Card title="Recent files">
+      <Card title={t('pages.projects.detail.infoColumn.recentFiles')}>
         {!scan ? (
-          <p className="m-0 text-[12px] text-[var(--text-muted)]">Reading the folder...</p>
+          <p className="m-0 text-[12px] text-[var(--text-muted)]">{t('pages.projects.detail.infoColumn.readingTheFolder')}</p>
         ) : scan.recent.length === 0 ? (
-          <p className="m-0 text-[12px] text-[var(--text-muted)]">No files yet.</p>
+          <p className="m-0 text-[12px] text-[var(--text-muted)]">{t('pages.projects.detail.infoColumn.noFilesYet')}</p>
         ) : (
           scan.recent.map((file) => (
             <button key={file.path} type="button" onClick={() => onOpenFile(file.path)} title={file.path} className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border-0 bg-transparent px-1 py-1 text-left hover:bg-[var(--surface-hover)]">
@@ -92,9 +95,9 @@ export function InfoColumn({ project, scan, sessions, now, onOpenFile, onOpenSes
         )}
       </Card>
 
-      <Card title="Recent sessions" action={sessions.length > recentSessions.length ? <ViewAll onClick={onViewAllSessions} /> : undefined}>
+      <Card title={t('pages.projects.detail.infoColumn.recentSessions')} action={sessions.length > recentSessions.length ? <ViewAll onClick={onViewAllSessions} /> : undefined}>
         {recentSessions.length === 0 ? (
-          <p className="m-0 text-[12px] text-[var(--text-muted)]">No conversations yet.</p>
+          <p className="m-0 text-[12px] text-[var(--text-muted)]">{t('pages.projects.detail.infoColumn.noConversationsYet')}</p>
         ) : (
           recentSessions.map((session) => (
             <button key={session.id} type="button" onClick={() => onOpenSession(session.id)} className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border-0 bg-transparent px-1 py-1 text-left hover:bg-[var(--surface-hover)]">
@@ -110,15 +113,15 @@ export function InfoColumn({ project, scan, sessions, now, onOpenFile, onOpenSes
         )}
       </Card>
 
-      <Card title="Project tools">
+      <Card title={t('pages.projects.detail.infoColumn.projectTools')}>
         <div className="flex gap-2">
           <button type="button" onClick={onOpenInEditor} className="flex min-w-0 flex-[1.6] cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-transparent px-2 py-1.5 text-[12px] font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--surface-hover)]">
             <VsCodeIcon size={14} />
-            <span className="truncate">Open in VS Code</span>
+            <span className="truncate">{t('pages.projects.detail.infoColumn.openInVsCode')}</span>
           </button>
           <button type="button" onClick={onOpenFolder} className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-soft)] bg-transparent px-2 py-1.5 text-[12px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
             <FolderOpen size={13} />
-            <span className="truncate">Open folder</span>
+            <span className="truncate">{t('pages.projects.detail.infoColumn.openFolder')}</span>
           </button>
         </div>
       </Card>

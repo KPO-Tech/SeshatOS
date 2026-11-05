@@ -8,6 +8,7 @@ import { Titlebar } from '@renderer/components/layout/Titlebar'
 import { IntroBackdrop } from '@renderer/components/onboarding/IntroBackdrop'
 import { IntroSteps } from '@renderer/components/onboarding/IntroSteps'
 import { useAuth } from '@renderer/hooks/useAuth'
+import { useTranslation } from 'react-i18next'
 
 // Cloud accounts (individual or enterprise) are served by Seshat's cloud
 // identity provider, which isn't deployed yet - Log in/Create account/
@@ -20,6 +21,7 @@ import { useAuth } from '@renderer/hooks/useAuth'
 // provisioned identity, no email or password involved - see
 // internal/auth/local_provider.go's EnsureImplicitSession on the backend.
 export function Welcome() {
+  const { t } = useTranslation('shell')
   const [cloudNotice, setCloudNotice] = useState(false)
   const [deviceLogin, setDeviceLogin] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -47,10 +49,10 @@ export function Welcome() {
         <div className="flex flex-col items-center text-center">
           <SeshatLogo size={52} />
           <div className="text-[34px] font-semibold leading-tight tracking-[-0.01em]">
-            Seshat<span className="text-[var(--accent-primary)]">OS</span>
+            {t('pages.welcome.seshat')}<span className="text-[var(--accent-primary)]">{t('pages.welcome.os')}</span>
           </div>
-          <h1 className="m-0 mt-4 text-[30px] font-semibold leading-tight">Let's get you started</h1>
-          <p className="m-0 mt-2 text-[15px] text-[var(--text-secondary)]">Work on this computer right away, or bring your account.</p>
+          <h1 className="m-0 mt-4 text-[30px] font-semibold leading-tight">{t('pages.welcome.letSGetYouStarted')}</h1>
+          <p className="m-0 mt-2 text-[15px] text-[var(--text-secondary)]">{t('pages.welcome.workOnThisComputerRight')}</p>
         </div>
 
         <div className="mt-5">
@@ -61,20 +63,20 @@ export function Welcome() {
           <Choice
             primary
             icon={<Computer theme="outline" size={26} />}
-            title={loading ? 'Starting your workspace...' : 'Continue on this computer'}
-            hint="No account needed. Your chats, files and memory stay here."
+            title={loading ? t('pages.welcome.startingYourWorkspace') : t('pages.welcome.continueOnThisComputer')}
+            hint={t('pages.welcome.noAccountNeededYourChats')}
             badge="Recommended"
             onClick={handleContinueWithoutAccount}
           />
-          <Choice icon={<Login theme="outline" size={26} />} title="Log in" hint="Approve a code in your browser. No password is typed here." onClick={() => setDeviceLogin(true)} />
-          <Choice icon={<AddUser theme="outline" size={26} />} title="Create an account" hint="Sync your workspace across devices." onClick={() => setCloudNotice(true)} />
+          <Choice icon={<Login theme="outline" size={26} />} title={t('pages.welcome.logIn')} hint={t('pages.welcome.approveACodeInYour')} onClick={() => setDeviceLogin(true)} />
+          <Choice icon={<AddUser theme="outline" size={26} />} title={t('pages.welcome.createAnAccount')} hint={t('pages.welcome.syncYourWorkspaceAcrossDevices')} onClick={() => setCloudNotice(true)} />
 
           {deviceLogin && <DeviceLoginPanel onClose={() => setDeviceLogin(false)} />}
-          {cloudNotice && <Alert>Cloud accounts aren't available in this build yet. Use "Continue on this computer" for now.</Alert>}
+          {cloudNotice && <Alert>{t('pages.welcome.cloudAccountsArenTAvailable')}</Alert>}
           {error && <Alert>{error}</Alert>}
 
           <div className="mt-1 text-center">
-            <LinkButton onClick={() => setCloudNotice(true)}>Contact us for enterprise use</LinkButton>
+            <LinkButton onClick={() => setCloudNotice(true)}>{t('pages.welcome.contactUsForEnterpriseUse')}</LinkButton>
           </div>
         </section>
       </main>

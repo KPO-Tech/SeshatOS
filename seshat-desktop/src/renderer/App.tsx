@@ -10,6 +10,7 @@ import { SetupWizard } from '@renderer/components/setup/SetupWizard'
 import { useSetup } from '@renderer/components/setup/useSetup'
 import { Welcome } from '@renderer/pages/Welcome'
 import { router } from '@renderer/router'
+import { useTranslation } from 'react-i18next'
 
 const MAX_START_ATTEMPTS = 8
 
@@ -60,6 +61,7 @@ function useLocalSession(enabled: boolean) {
 }
 
 export function App() {
+  const { t } = useTranslation('shell')
   const { isAuthenticated, restoring, restoreSession } = useAuth()
   // A new install opens on the choice of the appearance, before the sign-in screen (see AppearanceIntro).
   const [introDone, setIntroDone] = useState(() => hasSeenIntro())
@@ -81,7 +83,7 @@ export function App() {
     }
   }, [isAuthenticated, introDone])
 
-  if (restoring) return <Splash>Starting SeshatOS</Splash>
+  if (restoring) return <Splash>{t('app.startingSeshatos')}</Splash>
 
   if (!isAuthenticated) {
     if (!introDone) {
@@ -95,24 +97,24 @@ export function App() {
       )
     }
     if (edition.accounts) return <Welcome />
-    if (!local.failed) return <Splash>Starting SeshatOS</Splash>
+    if (!local.failed) return <Splash>{t('app.startingSeshatos')}</Splash>
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--surface-root)] text-[var(--text-primary)]">
         <div className="grid justify-items-center gap-3 text-sm text-[var(--text-secondary)]">
-          <span>SeshatOS could not start its local engine.</span>
+          <span>{t('app.seshatosCouldNotStartIts')}</span>
           <button
             type="button"
             onClick={local.retry}
             className="rounded-md border border-[var(--border-strong)] px-3 py-1.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
           >
-            Try again
+            {t('app.tryAgain')}
           </button>
         </div>
       </main>
     )
   }
 
-  if (setup.checking) return <Splash>Starting SeshatOS</Splash>
+  if (setup.checking) return <Splash>{t('app.startingSeshatos')}</Splash>
   if (setup.needed) return <SetupWizard setup={setup} />
 
   return <RouterProvider router={router} />

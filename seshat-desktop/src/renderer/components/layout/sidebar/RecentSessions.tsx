@@ -6,6 +6,7 @@ import { deleteSession } from '@renderer/lib/deleteSession'
 import { conversationFileName, serializeConversationMarkdown } from '@renderer/lib/conversationExport'
 import { isUntitledSessionTitle, UNTITLED_SESSION_TITLE } from '@renderer/lib/sessionTitle'
 import { useSessionStore, type ChatSession } from '@renderer/stores/session'
+import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -23,6 +24,7 @@ type Props = {
 // the open project) with a per-chat rename / export / delete menu. Browsing
 // everything and bulk operations live in the history modal.
 export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props) {
+  const { t } = useTranslation('shell')
   const activeId = useSessionStore((state) => state.activeId)
   const updateSession = useSessionStore((state) => state.updateSession)
   const agentStates = useSessionStore((state) => state.agentStates)
@@ -99,14 +101,14 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
           onClick={() => setOpen(!open)}
           type="button"
         >
-          <span>Tasks</span>
+          <span>{t('layout.sidebar.recentSessions.tasks')}</span>
           {open ? <Down size={12} /> : <Right size={12} />}
         </button>
         <button
           className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-[var(--text-muted)] transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
           type="button"
-          aria-label="History"
-          title="History"
+          aria-label={t('layout.sidebar.recentSessions.history')}
+          title={t('layout.sidebar.recentSessions.history')}
           onClick={onOpenHistory}
         >
           <History size={13} />
@@ -155,7 +157,7 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
                     </button>
                     <div className="sb-recent-menu-wrap relative flex size-5 shrink-0 items-center justify-center">
                       {isBusy && !menuOpen && (
-                        <span className="size-[6px] animate-pulse rounded-full bg-[var(--accent-primary)] group-hover:hidden" title="Running" aria-label="Running" />
+                        <span className="size-[6px] animate-pulse rounded-full bg-[var(--accent-primary)] group-hover:hidden" title={t('layout.sidebar.recentSessions.running')} aria-label={t('layout.sidebar.recentSessions.running')} />
                       )}
                       <button
                         className={cx(
@@ -163,7 +165,7 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
                           menuOpen && 'text-[var(--text-primary)] opacity-100'
                         )}
                         type="button"
-                        aria-label="Chat options"
+                        aria-label={t('layout.sidebar.recentSessions.chatOptions')}
                         onClick={(event) => {
                           event.stopPropagation()
                           setMenuSessionId((current) => (current === session.id ? null : session.id))
@@ -175,19 +177,19 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
                         <div className="absolute right-0 top-[calc(100%+6px)] z-30 flex min-w-[156px] flex-col gap-0.5 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-menu)] p-1.5 shadow-[0_14px_28px_rgba(0,0,0,0.24)]">
                           <button className={cx(menuButtonClass, 'text-[var(--text-primary)]')} type="button" onClick={() => startRename(session.id, session.title)}>
                             <Edit size={12} />
-                            <span>Rename</span>
+                            <span>{t('layout.sidebar.recentSessions.rename')}</span>
                           </button>
                           <button className={cx(menuButtonClass, 'text-[var(--text-primary)]')} type="button" onClick={() => { void handleExport(session) }}>
                             <FileTextOne size={12} />
-                            <span>Export as Markdown</span>
+                            <span>{t('layout.sidebar.recentSessions.exportAsMarkdown')}</span>
                           </button>
                           <button className={cx(menuButtonClass, 'text-[var(--text-primary)]')} type="button" onClick={() => { void handleShare(session) }}>
                             {copiedId === session.id ? <CheckOne size={12} className="text-app-success" /> : <Share size={12} />}
-                            <span>{copiedId === session.id ? 'Copied' : 'Copy as Markdown'}</span>
+                            <span>{copiedId === session.id ? t('layout.sidebar.recentSessions.copied') : t('layout.sidebar.recentSessions.copyAsMarkdown')}</span>
                           </button>
                           <button className={cx(menuButtonClass, 'text-[var(--accent-danger)]')} type="button" onClick={() => { void handleDelete(session) }}>
                             <Delete size={12} />
-                            <span>Delete</span>
+                            <span>{t('layout.sidebar.recentSessions.delete')}</span>
                           </button>
                         </div>
                       )}
@@ -198,7 +200,7 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
             )
           })}
           {sessions.length === 0 && (
-            <div className="px-4 pb-2 pt-1 text-[10px] italic text-[var(--text-muted)]">No recent chats</div>
+            <div className="px-4 pb-2 pt-1 text-[10px] italic text-[var(--text-muted)]">{t('layout.sidebar.recentSessions.noRecentChats')}</div>
           )}
         </div>
       )}

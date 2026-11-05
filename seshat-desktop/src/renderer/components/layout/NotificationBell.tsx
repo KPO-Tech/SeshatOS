@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { CheckOne, CloseOne, Remind, Up } from '@icon-park/react'
 import { ago, type AppNotification } from '@renderer/lib/notifications'
 import { selectUnread, useNotificationsStore } from '@renderer/stores/notifications'
+import { useTranslation } from 'react-i18next'
 
 const noDragStyle = { WebkitAppRegion: 'no-drag' } as CSSProperties & { WebkitAppRegion: string }
 
@@ -25,6 +26,7 @@ function useNow(active: boolean) {
 
 /** The bell of the title bar: what the app told the person while they were elsewhere, kept until they clear it. */
 export function NotificationBell() {
+  const { t } = useTranslation('shell')
   const items = useNotificationsStore((state) => state.items)
   const unread = useNotificationsStore(selectUnread)
   const { markRead, markAllRead, remove, clear } = useNotificationsStore.getState()
@@ -60,7 +62,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+        aria-label={unread > 0 ? t('layout.notificationBell.unreadCount', { unread }) : t('layout.notificationBell.notifications')}
         aria-expanded={open}
         className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent text-[var(--text-muted)] transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
       >
@@ -71,21 +73,21 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div role="dialog" aria-label="Notifications" className="absolute right-0 top-[34px] z-[60] flex max-h-[420px] w-[340px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-xl">
+        <div role="dialog" aria-label={t('layout.notificationBell.notifications')} className="absolute right-0 top-[34px] z-[60] flex max-h-[420px] w-[340px] flex-col overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-xl">
           <div className="flex items-center justify-between gap-2 border-b border-[var(--border-soft)] px-3.5 py-2.5">
-            <span className="text-[13px] font-semibold text-[var(--text-primary)]">Notifications</span>
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">{t('layout.notificationBell.notifications')}</span>
             <div className="flex items-center gap-3 text-[11.5px]">
               <button type="button" disabled={unread === 0} onClick={markAllRead} className="cursor-pointer border-0 bg-transparent p-0 text-[var(--accent-primary)] disabled:cursor-default disabled:text-[var(--text-faint)]">
-                Mark all as read
+                {t('layout.notificationBell.markAllAsRead')}
               </button>
               <button type="button" disabled={items.length === 0} onClick={clear} className="cursor-pointer border-0 bg-transparent p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:text-[var(--text-faint)]">
-                Clear
+                {t('layout.notificationBell.clear')}
               </button>
             </div>
           </div>
 
           {items.length === 0 ? (
-            <p className="m-0 px-4 py-8 text-center text-[12.5px] leading-5 text-[var(--text-muted)]">Nothing yet. What finishes in the background, and what goes wrong, is kept here.</p>
+            <p className="m-0 px-4 py-8 text-center text-[12.5px] leading-5 text-[var(--text-muted)]">{t('layout.notificationBell.nothingYetWhatFinishesIn')}</p>
           ) : (
             <ul className="m-0 min-h-0 list-none overflow-y-auto p-1.5">
               {items.map((item) => (
@@ -103,11 +105,11 @@ export function NotificationBell() {
                       {item.body && <span className="line-clamp-2 block text-[11.5px] leading-[1.4] text-[var(--text-muted)]">{item.body}</span>}
                       <span className="mt-0.5 block text-[10.5px] text-[var(--text-faint)]">{ago(item.at, now)}</span>
                     </span>
-                    {!item.read && <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--accent-primary)]" aria-label="Unread" />}
+                    {!item.read && <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--accent-primary)]" aria-label={t('layout.notificationBell.unread')} />}
                   </button>
                   <button
                     type="button"
-                    aria-label="Remove"
+                    aria-label={t('layout.notificationBell.remove')}
                     onClick={() => remove(item.id)}
                     className="absolute right-2 top-2 hidden size-5 cursor-pointer items-center justify-center rounded-md border-0 bg-[var(--surface-panel)] p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] group-hover:flex"
                   >

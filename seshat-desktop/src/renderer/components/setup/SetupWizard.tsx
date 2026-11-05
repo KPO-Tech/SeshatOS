@@ -7,6 +7,7 @@ import { SetupShell } from './SetupShell'
 import { defaultChoices, fitsOnDisk, formatBytes, overallProgress, totalDownloadBytes, type SetupComponentId } from './setupFormat'
 import { useProviderStep } from './useProviderStep'
 import type { useSetup } from './useSetup'
+import { useTranslation } from 'react-i18next'
 
 type Step = 'provider' | 'choose' | 'installing' | 'done'
 type Setup = ReturnType<typeof useSetup>
@@ -36,6 +37,7 @@ function QuietButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
 }
 
 export function SetupWizard({ setup }: { setup: Setup }) {
+  const { t } = useTranslation('shell')
   const { plan, choices, setChoices, progress, running } = setup
   const [step, setStep] = useState<Step>('provider')
   const [mode, setMode] = useState<SetupMode>('recommended')
@@ -77,20 +79,20 @@ export function SetupWizard({ setup }: { setup: Setup }) {
       {step === 'provider' && (
         <SetupShell
           pageKey="provider"
-          title="Connect a model"
-          subtitle="SeshatOS answers through a model. Use a cloud provider with your own key, or a local one such as Ollama. You can add more later in Config."
+          title={t('setup.setupWizard.connectAModel')}
+          subtitle={t('setup.setupWizard.seshatosAnswersThroughAModel')}
         >
           <div className="w-full max-w-[680px]">
             <ProviderStep provider={provider} />
           </div>
           <div className="flex gap-3">
             <QuietButton onClick={() => void skip()} disabled={running}>
-              Skip the setup
+              {t('setup.setupWizard.skipTheSetup')}
             </QuietButton>
             {provider.status === 'connected' ? (
-              <PrimaryButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Continue</PrimaryButton>
+              <PrimaryButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>{t('setup.setupWizard.continue')}</PrimaryButton>
             ) : (
-              <QuietButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>Skip for now</QuietButton>
+              <QuietButton onClick={() => setStep(anyAvailable ? 'choose' : 'done')}>{t('setup.setupWizard.skipForNow')}</QuietButton>
             )}
           </div>
         </SetupShell>
@@ -102,14 +104,14 @@ export function SetupWizard({ setup }: { setup: Setup }) {
           wide
           footer={
             <div className="flex w-full items-center justify-between">
-              <QuietButton onClick={() => setStep('provider')}>Back</QuietButton>
+              <QuietButton onClick={() => setStep('provider')}>{t('setup.setupWizard.back')}</QuietButton>
               <PrimaryButton disabled={mode !== 'skip' && !fits} onClick={() => void (mode === 'skip' ? skip() : install())}>
-                {mode === 'skip' ? 'Continue' : total > 0 ? `Download and continue (${formatBytes(total)})` : 'Continue'}
+                {mode === 'skip' ? t('setup.setupWizard.continue') : total > 0 ? t('setup.setupWizard.downloadAndContinue', { size: formatBytes(total) }) : t('setup.setupWizard.continue')}
               </PrimaryButton>
             </div>
           }
-          title="Set up your local models"
-          subtitle="Download what SeshatOS needs to read documents, name conversations and listen to you. It all runs on your computer."
+          title={t('setup.setupWizard.setUpYourLocalModels')}
+          subtitle={t('setup.setupWizard.downloadWhatSeshatosNeedsTo')}
         >
           <ModelsChoice
             components={plan.components}
@@ -127,8 +129,8 @@ export function SetupWizard({ setup }: { setup: Setup }) {
       {step === 'installing' && (
         <SetupShell
           pageKey="installing"
-          title="Setting things up"
-          subtitle={`${chosenCount > 1 ? 'Everything downloads at the same time, so it takes as long as the biggest one.' : 'This takes a few minutes, depending on your connection.'} You can leave this window open.`}
+          title={t('setup.setupWizard.settingThingsUp')}
+          subtitle={`${chosenCount > 1 ? t('setup.setupWizard.allAtOnce') : t('setup.setupWizard.fewMinutes')} ${t('setup.setupWizard.leaveOpen')}`}
         >
           <div className="w-full">
             <InstallProgress progress={progress} overall={overall} />
@@ -139,11 +141,11 @@ export function SetupWizard({ setup }: { setup: Setup }) {
       {step === 'done' && (
         <SetupShell
           pageKey="done"
-          title={hadError ? 'Almost there' : "You're all set"}
+          title={hadError ? t('setup.setupWizard.almostThere') : t('setup.setupWizard.youReAllSet')}
           subtitle={
             hadError
-              ? 'Something could not be downloaded. You can try again now, or later in Config. SeshatOS works without it.'
-              : 'Everything you chose is ready. You can change any of it later in Config.'
+              ? t('setup.setupWizard.somethingCouldNotBeDownloaded')
+              : t('setup.setupWizard.everythingYouChoseIsReady')
           }
         >
           {Object.keys(progress).length > 0 && (
@@ -155,11 +157,11 @@ export function SetupWizard({ setup }: { setup: Setup }) {
           <div className="flex gap-3">
             {hadError && (
               <QuietButton disabled={running} onClick={() => void retry()}>
-                {running ? 'Trying again' : 'Try again'}
+                {running ? t('setup.setupWizard.tryingAgain') : t('setup.setupWizard.tryAgain')}
               </QuietButton>
             )}
             <PrimaryButton disabled={running} onClick={() => void setup.finish()}>
-              Open SeshatOS
+              {t('setup.setupWizard.openSeshatos')}
             </PrimaryButton>
           </div>
         </SetupShell>

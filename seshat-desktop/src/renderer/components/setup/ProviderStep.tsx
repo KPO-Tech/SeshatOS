@@ -1,5 +1,6 @@
 import { ProviderIcon } from '@renderer/components/ui/ProviderIcon'
 import type { useProviderStep } from './useProviderStep'
+import { useTranslation } from 'react-i18next'
 
 type Provider = ReturnType<typeof useProviderStep>
 
@@ -8,6 +9,7 @@ const FIELD =
 
 // The first thing the app needs to answer: a model to talk to. A cloud key, or a local server such as Ollama.
 export function ProviderStep({ provider }: { provider: Provider }) {
+  const { t } = useTranslation('shell')
   const { choices, selected, selectedId, select, apiKey, setApiKey, baseUrl, setBaseUrl, needsKey, canConnect, status, connectedName, error, unverified, connect } = provider
 
   const busy = status === 'checking' || status === 'saving'
@@ -20,7 +22,7 @@ export function ProviderStep({ provider }: { provider: Provider }) {
             <path d="m3.5 8.5 3 3 6-7" />
           </svg>
         </span>
-        <span className="text-[15px] font-semibold text-[var(--text-primary)]">{connectedName ?? 'A provider'} is connected</span>
+        <span className="text-[15px] font-semibold text-[var(--text-primary)]">{t('setup.providerStep.isConnected', { name: connectedName ?? t('setup.providerStep.aProvider') })}</span>
       </div>
     )
   }
@@ -60,17 +62,17 @@ export function ProviderStep({ provider }: { provider: Provider }) {
               onKeyDown={(event) => event.key === 'Enter' && void connect()}
               type="password"
               autoComplete="off"
-              placeholder={`${selected.name} API key`}
-              aria-label={`${selected.name} API key`}
+              placeholder={t('setup.providerStep.apiKeyOf', { name: selected.name })}
+              aria-label={t('setup.providerStep.apiKeyOf', { name: selected.name })}
               className={FIELD}
             />
           )}
-          {selected.id === 'ollama' && <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} placeholder="http://localhost:11434" aria-label="Ollama address" className={FIELD} />}
+          {selected.id === 'ollama' && <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} placeholder="http://localhost:11434" aria-label={t('setup.providerStep.ollamaAddress')} className={FIELD} />}
           <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--text-muted)]">
-            {needsKey ? 'The key is stored encrypted on this computer and only sent to the provider.' : selected.description || 'Runs on this computer, no key needed.'}
+            {needsKey ? t('setup.providerStep.theKeyIsStoredEncrypted') : selected.description || t('setup.providerStep.runsOnThisComputerNo')}
           </p>
           {error && <p className="m-0 text-[13px] font-semibold text-[var(--accent-danger)]">{error}</p>}
-          {unverified && <p className="m-0 text-[13px] leading-[1.5] text-[var(--text-secondary)]">{unverified} You can save it anyway and check it with your first message.</p>}
+          {unverified && <p className="m-0 text-[13px] leading-[1.5] text-[var(--text-secondary)]">{unverified} {t('setup.providerStep.saveAnywayHint')}</p>}
           <div className="flex gap-3">
             <button
               type="button"
@@ -78,7 +80,7 @@ export function ProviderStep({ provider }: { provider: Provider }) {
               onClick={() => void connect()}
               className="h-11 cursor-pointer rounded-full border-0 bg-[var(--accent-primary)] px-7 text-[14px] font-semibold text-white transition-[filter] duration-150 hover:brightness-110 disabled:cursor-default disabled:opacity-45"
             >
-              {status === 'checking' ? 'Checking' : status === 'saving' ? 'Connecting' : 'Connect'}
+              {status === 'checking' ? t('setup.providerStep.checking') : status === 'saving' ? t('setup.providerStep.connecting') : t('setup.providerStep.connect')}
             </button>
             {unverified && (
               <button
@@ -87,7 +89,7 @@ export function ProviderStep({ provider }: { provider: Provider }) {
                 onClick={() => void connect(true)}
                 className="h-11 cursor-pointer rounded-full border border-[var(--border-soft)] bg-transparent px-6 text-[14px] text-[var(--text-secondary)] transition-colors duration-150 hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-45"
               >
-                Save anyway
+                {t('setup.providerStep.saveAnyway')}
               </button>
             )}
           </div>
