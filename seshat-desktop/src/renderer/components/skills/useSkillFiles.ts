@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { treeFileSource } from '@renderer/components/files/fileSource'
 import { fetchSkillContent, fetchSkillFile, fetchSkillTree } from './skillsApi'
 import type { TreeNode } from './skillsTypes'
 
 export const MAIN_FILE = /^skill\.md$/i
 
-// Loads a skill's file tree and the content of the selected file.
+// Loads a skill's file tree, and gives the way to read one of its files.
 //
 // The main SKILL.md goes through the file endpoint, not /content: /content only
 // resolves skills in the user's own directory, so repo-installed skills would
@@ -14,11 +15,11 @@ export function useSkillFiles(skillName: string) {
   const [tree, setTree] = useState<TreeNode[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [treeFailed, setTreeFailed] = useState(false)
-  const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
     fetchSkillTree(skillName)
       .then((nodes) => {
         if (cancelled) return
@@ -32,20 +33,19 @@ export function useSkillFiles(skillName: string) {
         setTreeFailed(true)
         setSelected('SKILL.md')
       })
-    return () => { cancelled = true }
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [skillName])
 
-  useEffect(() => {
-    if (selected === null) return
-    let cancelled = false
-    setLoading(true)
-    const load = treeFailed ? fetchSkillContent(skillName) : fetchSkillFile(skillName, selected)
-    load
-      .then((text) => { if (!cancelled) setContent(text) })
-      .catch((err) => { if (!cancelled) setContent(err instanceof Error ? `Could not load this file: ${err.message}` : 'Could not load this file.') })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [skillName, selected, treeFailed])
+  // The files of the skill, as the shared tree of files reads them.
+  const source = useMemo(() => treeFileSource(tree, skillName.replace(/^[a-z]+:/, '')), [tree, skillName])
+  // The SKILL.md that tells what the skill is.
+  const mainPath = useMemo(() => tree.find((node) => !node.is_dir && MAIN_FILE.test(node.name))?.path ?? 'SKILL.md', [tree])
+  const readText = useCallback((path: string) => (treeFailed ? fetchSkillContent(skillName) : fetchSkillFile(skillName, path)), [skillName, treeFailed])
 
-  return { tree, selected, setSelected, content, loading }
+  return { tree, source, selected, setSelected, loading, readText, mainPath }
 }

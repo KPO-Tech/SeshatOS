@@ -286,27 +286,6 @@
   "pages": {
     "projects": {
       "detail": {
-        "fileTree": {
-          "loading": "Loading...",
-          "thisFolderCannotBeRead": "This folder cannot be read.",
-          "empty": "Empty",
-          "projectFiles": "Project files",
-          "readTheFilesAgain": "Read the files again",
-          "refresh": "Refresh",
-          "searchFiles": "Search files...",
-          "searchTheFilesOfThe": "Search the files of the project",
-          "searching": "Searching...",
-          "noFileOrFolderHas": "No file or folder has this name."
-        },
-        "fileViewer": {
-          "thisFileIsEmpty": "This file is empty.",
-          "view": "View",
-          "source": "Source",
-          "preview": "Preview",
-          "copyThePath": "Copy the path",
-          "open": "Open",
-          "firstRows": "The first {{rows}} rows are shown."
-        },
         "index": {
           "projectNotFound": "Project not found",
           "itMayHaveBeenRemoved": "It may have been removed.",
@@ -314,7 +293,8 @@
           "project": "Project",
           "comingBackSoon": "Coming back soon",
           "chooseAFileToRead": "Choose a file to read",
-          "markdownCodeNotebooksTablesAnd": "Markdown, code, notebooks, tables and pictures are shown here. Nothing in this view changes a file."
+          "markdownCodeNotebooksTablesAnd": "Markdown, code, notebooks, tables and pictures are shown here. Nothing in this view changes a file.",
+          "projectFiles": "Project files"
         },
         "infoColumn": {
           "viewAll": "View all",
@@ -334,11 +314,6 @@
           "projectTools": "Project tools",
           "openInVsCode": "Open in VS Code",
           "openFolder": "Open folder"
-        },
-        "notebookView": {
-          "outputOfTheCell": "Output of the cell",
-          "thisNotebookHasNoCells": "This notebook has no cells.",
-          "outputNotShown": "An output of type {{type}} is not shown here."
         },
         "notesTab": {
           "notes": "Notes",
