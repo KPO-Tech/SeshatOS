@@ -17,7 +17,8 @@ import { dirname, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const ts = require('typescript')
+// TypeScript 7 has no JavaScript API, so the scan reads the code with a pinned copy of TypeScript 5 (the alias typescript-api).
+const ts = require('typescript-api')
 
 const SOURCE_LANGUAGE = 'en'
 const DEFAULT_NAMESPACE = 'common'
