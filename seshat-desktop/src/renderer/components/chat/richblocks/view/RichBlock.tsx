@@ -1,5 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 import { parseUi } from '../lang/parseUi'
+import { RichBlockKeyContext } from './forms/FormContext'
+import { blockHash } from './forms/formStorage'
 import { NodeView } from './NodeView'
 import { RichLinkProvider, type LinkRenderer } from './links/richLinks'
 
@@ -14,6 +16,8 @@ type Props = {
 
 export function RichBlock({ code, streaming, fallback, renderLink }: Props) {
   const result = useMemo(() => parseUi(code, { streaming }), [code, streaming])
+  // What a reader types in a form is kept under the text of the block, once it is complete.
+  const blockKey = useMemo(() => (streaming ? undefined : blockHash(code)), [code, streaming])
 
   if (!result.root) {
     if (streaming) return <div aria-hidden="true" className="my-3 h-16 animate-pulse rounded-lg bg-app-surface" />
@@ -21,9 +25,11 @@ export function RichBlock({ code, streaming, fallback, renderLink }: Props) {
   }
   return (
     <div className="seshat-ui my-4" data-ui-errors={result.errors.length > 0 ? result.errors.length : undefined}>
-      <RichLinkProvider render={renderLink}>
-        <NodeView node={result.root} />
-      </RichLinkProvider>
+      <RichBlockKeyContext.Provider value={blockKey}>
+        <RichLinkProvider render={renderLink}>
+          <NodeView node={result.root} />
+        </RichLinkProvider>
+      </RichBlockKeyContext.Provider>
     </div>
   )
 }

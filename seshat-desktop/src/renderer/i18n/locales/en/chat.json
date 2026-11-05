@@ -358,6 +358,19 @@
             "histogram": "Histogram",
             "heatmap": "Heatmap",
             "binTitle": "{{from}} to {{to}}: {{count}}"
+          },
+          "forms": {
+            "sent": "Sent",
+            "words": "words",
+            "fillIn": "Fill in the fields to continue.",
+            "needsConversation": "Open the conversation to send.",
+            "wait": "Wait for the answer to finish.",
+            "willSend": "Sends: {{text}}",
+            "copy": "Copy",
+            "copied": "Copied",
+            "to": "To",
+            "subject": "Subject",
+            "draft": "Draft"
           }
         },
         "expand": {

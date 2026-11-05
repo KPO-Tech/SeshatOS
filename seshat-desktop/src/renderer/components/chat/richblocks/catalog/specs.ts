@@ -148,7 +148,26 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
   { name: 'Choices', group: 'Interaction', description: 'Suggested follow-ups under the answer. At most one per answer.',
     args: [req('options', list(node('Choice'))), opt('title', str)] },
   { name: 'Choice', group: 'Interaction', description: 'One follow-up of Choices; a description makes it a card.',
-    args: [req('label', str), req('action', action), opt('description', str), opt('icon', icon)] }
+    args: [req('label', str), req('action', action), opt('description', str), opt('icon', icon)] },
+
+  { name: 'Form', group: 'Forms', description: 'Lets the reader answer inside the answer: fields, a Counter, then one Submit that sends their text back to you as their next message. For an exercise, a quiz, a text to correct. One per answer; never ask for a secret.',
+    args: [req('children', list(anyNode)), req('submit', node('Submit')), opt('title', str)] },
+  { name: 'TextArea', group: 'Forms', description: 'A box for a longer text, inside a Form. name is how a template refers to it; value is the text it starts with.',
+    args: [req('name', str), opt('placeholder', str), opt('rows', num), opt('value', str)] },
+  { name: 'Field', group: 'Forms', description: 'A single line to fill in, inside a Form.',
+    args: [req('name', str), opt('label', str), opt('placeholder', str), opt('value', str)] },
+  { name: 'Counter', group: 'Forms', description: 'Counts the words of a field (of is its name); min and max colour it. unit is the word for the count, in the language of the reader.',
+    args: [req('of', str), opt('unit', str), opt('min', num), opt('max', num)] },
+  { name: 'Submit', group: 'Forms', description: 'The button of a Form. template is the message you will receive, written as the reader would, with {{name}} where the text of a field goes. Disabled until the fields in requires (all by default) are filled.',
+    args: [req('label', str), req('template', str), opt('requires', list(str))] },
+  { name: 'Draft', group: 'Forms', description: 'A text the reader can edit and copy: an email, a letter. subject and to are optional lines above the body.',
+    args: [req('body', str), opt('subject', str), opt('to', str), opt('title', str)] },
+  { name: 'ProgressBar', group: 'Forms', description: 'A bar filled to value out of max (100 by default): a score, a level, a completion.',
+    args: [req('value', num), opt('max', num), opt('label', str), opt('tone', tone)] },
+  { name: 'SegmentBar', group: 'Forms', description: 'A bar cut in parts in proportion to their value: how a session or a budget is shared. unit follows each figure (min, h, EUR).',
+    args: [req('segments', list(node('Segment'))), opt('unit', str), opt('title', str)] },
+  { name: 'Segment', group: 'Forms', description: 'One part of SegmentBar: its label (what it is) and its value (the figure, in the unit of the bar).',
+    args: [req('label', str), req('value', num), opt('tone', tone)] }
 ]
 
 // What a table cell may hold besides text and numbers.
