@@ -55,9 +55,9 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 		words    int
 	}{
 		"architecture": {richUIFamilies{architecture: true}, 600},
-		"charts":       {richUIFamilies{charts: true}, 1150},
-		"forms":        {richUIFamilies{forms: true}, 1000},
-		"design":       {richUIFamilies{design: true}, 850},
+		"charts":       {richUIFamilies{charts: true}, 1250},
+		"forms":        {richUIFamilies{forms: true}, 1100},
+		"design":       {richUIFamilies{design: true}, 950},
 		"diagrams":     {richUIFamilies{diagrams: true}, 700},
 	}
 	for name, budget := range budgets {

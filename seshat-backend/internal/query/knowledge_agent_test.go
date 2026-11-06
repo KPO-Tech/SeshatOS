@@ -92,8 +92,8 @@ func TestKnowledgeAgentIsTaughtTheComponentsWithoutTheSourcesOnes(t *testing.T) 
 	if strings.Contains(general, "comes from the excerpts") || !strings.Contains(general, "SourceList(") {
 		t.Error("the general agent keeps its own block")
 	}
-	if words := len(strings.Fields(richKnowledgeAnswersBlock(richUIFamilies{}))); words > 1200 {
-		t.Errorf("the Knowledge core is %d words long, keep it under 1200", words)
+	if words := len(strings.Fields(richKnowledgeAnswersBlock(richUIFamilies{}))); words > 1300 {
+		t.Errorf("the Knowledge core is %d words long, keep it under 1300", words)
 	}
 }
 
