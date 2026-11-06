@@ -46,14 +46,19 @@ export function questionsOf(quiz: Pick<UiNode, 'props'>): QuestionSpec[] {
   return questions
 }
 
-export type CardSpec = { front: string; back: string }
+export type CardSpec = { front: string; back: string; tag?: string; note?: string }
 
 /** The cards a Flashcards holds. */
 export function cardsOf(deck: Pick<UiNode, 'props'>): CardSpec[] {
   return nodesOf(deck.props.cards)
     .slice(0, QUIZ_LIMITS.cards)
     .filter((node) => typeof node.props.front === 'string' && typeof node.props.back === 'string')
-    .map((node) => ({ front: String(node.props.front), back: String(node.props.back) }))
+    .map((node) => ({
+      front: String(node.props.front),
+      back: String(node.props.back),
+      tag: typeof node.props.tag === 'string' && node.props.tag !== '' ? node.props.tag : undefined,
+      note: typeof node.props.note === 'string' && node.props.note !== '' ? node.props.note : undefined
+    }))
 }
 
 export function checkQuiz(root: UiNode): UiError[] {
@@ -101,6 +106,7 @@ export function checkQuiz(root: UiNode): UiError[] {
     cards.forEach((card, index) => {
       checkLength(`The front of card ${index + 1}`, card.props.front)
       checkLength(`The back of card ${index + 1}`, card.props.back)
+      checkLength(`The note of card ${index + 1}`, card.props.note)
     })
   }
 

@@ -49,3 +49,13 @@ describe('switches and choices, drawn', () => {
     expect(html).not.toContain('>cosine<')
   })
 })
+
+describe('a hidden guide, drawn', () => {
+  it('leaves out a guide while its switch is off and keeps the curve', async () => {
+    const html = await draw('root = Stack([Toggle("grid", "Grid", false), Plot([Curve("x", "line"), HLine(1, "unit line", null, "grid")], -2, 2)])')
+    expect(html).toContain('line')
+    expect(html).not.toContain('unit line')
+    const shown = await draw('root = Stack([Toggle("grid", "Grid", true), Plot([Curve("x", "line"), HLine(1, "unit line", null, "grid")], -2, 2)])')
+    expect(shown).toContain('unit line')
+  })
+})

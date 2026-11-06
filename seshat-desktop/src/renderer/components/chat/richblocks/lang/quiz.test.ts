@@ -18,6 +18,9 @@ describe('a quiz and flashcards in an answer', () => {
     const cards = parseUi(CARDS, { streaming: false })
     expect(cards.errors).toEqual([])
     expect(cardsOf(cards.root!).map((card) => card.front)).toEqual(['goroutine', 'channel'])
+    const tagged = parseUi('root = Flashcards([Flash("a", "b", "Travel", "an example")])', { streaming: false })
+    expect(tagged.errors).toEqual([])
+    expect(cardsOf(tagged.root!)[0]).toMatchObject({ tag: 'Travel', note: 'an example' })
   })
 
   it('are refused when an answer is no choice, or a question has a single choice', () => {

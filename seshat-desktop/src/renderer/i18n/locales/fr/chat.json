@@ -383,7 +383,10 @@
             "again": "À revoir",
             "knew": "Je savais",
             "cardOf": "Carte {{n}} sur {{total}}",
-            "cardsDone": "{{known}} connues sur {{total}}"
+            "cardsDone": "{{known}} connues sur {{total}}",
+            "cards": "Cartes mémoire",
+            "shuffle": "Mélanger",
+            "keys": "Espace retourne · K connue · U à revoir"
           }
         },
         "expand": {

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cardsOf, fillReport, QUIZ_LIMITS, questionsOf } from '../../lang/quiz'
 import type { UiNode } from '../../lang/types'
@@ -122,36 +122,75 @@ function ReadByParent() {
   return null
 }
 
+const FACE = 'absolute inset-0 flex flex-col items-center justify-center gap-2 overflow-auto rounded-2xl border px-6 py-5 text-center [backface-visibility:hidden]'
+
 function Flashcards({ props }: ComponentProps) {
   const { t } = useTranslation('chat')
   const node = useMemo<Pick<UiNode, 'props'>>(() => ({ props }), [props])
   const cards = useMemo(() => cardsOf(node), [node])
+  const [order, setOrder] = useState<number[]>([])
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [knew, setKnew] = useState<boolean[]>([])
+  const [knew, setKnew] = useState<Record<number, boolean>>({})
   if (cards.length === 0) return null
 
+  // The order of the cards: the one written, until the reader shuffles.
+  const sequence = order.length === cards.length ? order : cards.map((_, at) => at)
   const done = index >= cards.length
-  const known = knew.filter(Boolean).length
+  const current = done ? undefined : cards[sequence[index]]
+  const known = Object.values(knew).filter(Boolean).length
+  const review = Object.values(knew).filter((value) => !value).length
   const again = cards.flatMap((card, at) => (knew[at] === false ? [card.front] : []))
   const template = typeof props.report === 'string' ? props.report.slice(0, QUIZ_LIMITS.report) : ''
   const report = template ? fillReport(template, { known: String(known), total: String(cards.length), again: again.join(', ') || '-' }) : ''
+
   const answer = (didKnow: boolean) => {
-    setKnew((current) => Object.assign([...current], { [index]: didKnow }))
+    if (!current) return
+    setKnew((previous) => ({ ...previous, [sequence[index]]: didKnow }))
     setFlipped(false)
     setIndex((value) => value + 1)
   }
   const restart = () => {
     setIndex(0)
     setFlipped(false)
-    setKnew([])
+    setKnew({})
+  }
+  const shuffle = () => {
+    const next = cards.map((_, at) => at)
+    for (let at = next.length - 1; at > 0; at--) {
+      const other = Math.floor(Math.random() * (at + 1))
+      ;[next[at], next[other]] = [next[other], next[at]]
+    }
+    setOrder(next)
+    restart()
+  }
+  // Keys, when the deck itself has the focus: Space turns the card, K marks it known, U to review, the left arrow goes back one card.
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || done) return
+    const key = event.key.toLowerCase()
+    if (key === ' ' || key === 'enter') setFlipped((value) => !value)
+    else if (key === 'k' && flipped) answer(true)
+    else if (key === 'u' && flipped) answer(false)
+    else if (key === 'arrowleft' && index > 0) {
+      setIndex((value) => value - 1)
+      setFlipped(false)
+    } else return
+    event.preventDefault()
   }
 
   return (
-    <div className={BOX}>
-      {text(props.title) && <div className="mb-3 text-[14px] font-semibold text-app-text">{text(props.title)}</div>}
+    <div className={BOX} tabIndex={0} onKeyDown={onKeyDown} aria-label={text(props.title) ?? t('chat.richblocks.view.components.quiz.cards')}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-[14px] font-semibold text-app-text">{text(props.title)}</div>
+        <button type="button" className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] text-app-text-muted hover:text-app-text" onClick={shuffle}>
+          {t('chat.richblocks.view.components.quiz.shuffle')}
+        </button>
+      </div>
+      <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-app-border-subtle" role="progressbar" aria-valuemin={0} aria-valuemax={cards.length} aria-valuenow={Math.min(index, cards.length)}>
+        <div className="h-full rounded-full bg-[var(--accent-primary)] transition-[width] duration-300" style={{ width: `${(Math.min(index, cards.length) / cards.length) * 100}%` }} />
+      </div>
       {done ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 py-2">
           <span className="text-[14px] font-semibold text-app-text">{t('chat.richblocks.view.components.quiz.cardsDone', { known, total: cards.length })}</span>
           <span className="flex items-center gap-2">
             <button type="button" className={BUTTON} onClick={restart}>
@@ -161,33 +200,51 @@ function Flashcards({ props }: ComponentProps) {
           </span>
         </div>
       ) : (
-        <>
-          <div className="mb-2 text-[12px] text-app-text-muted">{t('chat.richblocks.view.components.quiz.cardOf', { n: index + 1, total: cards.length })}</div>
-          <button
-            type="button"
-            onClick={() => setFlipped((value) => !value)}
-            aria-label={flipped ? t('chat.richblocks.view.components.quiz.showFront') : t('chat.richblocks.view.components.quiz.flip')}
-            className="flex min-h-36 w-full cursor-pointer items-center justify-center rounded-2xl border border-app-border-subtle bg-app-surface-elevated px-6 py-5 text-center text-[16px] text-app-text transition-colors hover:bg-[var(--surface-hover)]"
-          >
-            <MarkdownText text={flipped ? cards[index].back : cards[index].front} className="text-app-text" />
-          </button>
-          <div className="mt-3 flex items-center justify-center gap-2">
-            {flipped ? (
-              <>
-                <button type="button" className={BUTTON} onClick={() => answer(false)}>
-                  {t('chat.richblocks.view.components.quiz.again')}
-                </button>
-                <button type="button" className={BUTTON} onClick={() => answer(true)}>
-                  {t('chat.richblocks.view.components.quiz.knew')}
-                </button>
-              </>
-            ) : (
-              <button type="button" className={BUTTON} onClick={() => setFlipped(true)}>
-                {t('chat.richblocks.view.components.quiz.flip')}
+        current && (
+          <>
+            <div className="mb-2 flex items-center justify-between text-[12px] text-app-text-muted">
+              <span>{t('chat.richblocks.view.components.quiz.cardOf', { n: index + 1, total: cards.length })}</span>
+              <span>
+                <span className="text-app-success">{known}</span> · <span className="text-app-error">{review}</span>
+              </span>
+            </div>
+            <div className="[perspective:1200px]">
+              <button
+                type="button"
+                onClick={() => setFlipped((value) => !value)}
+                aria-label={flipped ? t('chat.richblocks.view.components.quiz.showFront') : t('chat.richblocks.view.components.quiz.flip')}
+                className="relative block h-52 w-full cursor-pointer border-0 bg-transparent p-0 transition-transform duration-500 [transform-style:preserve-3d]"
+                style={{ transform: flipped ? 'rotateY(180deg)' : undefined }}
+              >
+                <span aria-hidden={flipped} className={`${FACE} border-app-border-subtle bg-app-surface-elevated`}>
+                  {current.tag && <span className="rounded-full border border-app-border-subtle px-2 py-px text-[11px] font-medium text-app-text-muted">{current.tag}</span>}
+                  <MarkdownText text={current.front} className="text-[22px] font-semibold text-app-text" />
+                </span>
+                <span aria-hidden={!flipped} className={`${FACE} border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 [transform:rotateY(180deg)]`}>
+                  <MarkdownText text={current.back} className="text-[18px] text-app-text" />
+                  {current.note && <MarkdownText text={current.note} className="text-[13px] text-app-text-secondary" />}
+                </span>
               </button>
-            )}
-          </div>
-        </>
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-2">
+              {flipped ? (
+                <>
+                  <button type="button" className={`${BUTTON} !border-app-error text-app-error`} onClick={() => answer(false)}>
+                    {t('chat.richblocks.view.components.quiz.again')}
+                  </button>
+                  <button type="button" className={`${BUTTON} !border-app-success text-app-success`} onClick={() => answer(true)}>
+                    {t('chat.richblocks.view.components.quiz.knew')}
+                  </button>
+                </>
+              ) : (
+                <button type="button" className={BUTTON} onClick={() => setFlipped(true)}>
+                  {t('chat.richblocks.view.components.quiz.flip')}
+                </button>
+              )}
+            </div>
+            <div className="mt-2 text-center text-[11.5px] text-app-text-muted">{t('chat.richblocks.view.components.quiz.keys')}</div>
+          </>
+        )
       )}
     </div>
   )

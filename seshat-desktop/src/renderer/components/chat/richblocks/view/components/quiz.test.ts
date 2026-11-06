@@ -23,7 +23,9 @@ describe('the quiz and the flashcards of an answer, drawn', () => {
     expect(html).not.toContain('Paris.')
     expect(html).toContain('Card 1 of 1')
     expect(html).toContain('chat')
-    expect(html).not.toContain('>cat<')
+    // Both sides are drawn, so that the card can turn; the one that is not facing is hidden from readers of the screen.
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain('role="progressbar"')
     expect(html).toContain('Show the answer')
   })
 

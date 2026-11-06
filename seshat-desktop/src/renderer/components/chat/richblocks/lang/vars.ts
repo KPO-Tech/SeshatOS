@@ -22,7 +22,7 @@ export const VAR_LIMITS = {
 export const VAR_NAME = /^[A-Za-z][A-Za-z0-9_]*$/
 
 // The arguments of a mark of a Plot that may be a formula in the variables.
-const MARK_ARGS: Record<string, string[]> = { Curve: ['show'], Dot: ['x', 'y'], VLine: ['x'], HLine: ['y'], Shade: ['from', 'to'] }
+const MARK_ARGS: Record<string, string[]> = { Curve: ['show'], Dot: ['x', 'y', 'show'], VLine: ['x', 'show'], HLine: ['y', 'show'], Shade: ['from', 'to', 'show'] }
 
 const EXPRESSION = /\{\{\s*([^{}]+?)\s*\}\}/g
 
