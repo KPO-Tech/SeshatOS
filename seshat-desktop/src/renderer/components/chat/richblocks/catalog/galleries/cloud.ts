@@ -8,6 +8,57 @@ export const CLOUD: Gallery = {
   icon: 'cloud',
   examples: [
     {
+      title: 'A data fabric',
+      about: 'A poster: sources, a lakehouse in three stages, consumption.',
+      code: `root = Architecture([main, meta, catalog], [f1, f2, f3, f4], "Data fabric architecture", "column", true)
+main = Panel([sources, lake, use], null, "neutral", null, false, "row")
+sources = Panel([erp, crm, hr, mdm], "Source systems", "teal", null, false, "column")
+erp = Item("ERP system", null, null, true, "teal", "cylinder")
+crm = Item("CRM system", null, null, true, "teal", "cylinder")
+hr = Item("HR system", null, null, true, "teal", "cylinder")
+mdm = Item("MDM system", null, null, true, "teal", "cylinder")
+lake = Panel([staging, core, delivery], "Data lakehouse", "violet", null, false, "row")
+staging = Panel([stage], "Staging", "neutral", null, false, "column")
+stage = Item("Data lake", "cloud", null, true)
+core = Panel([warehouse], "Enterprise data warehouse", "neutral", null, false, "column")
+warehouse = Item("Core", "database", null, true)
+delivery = Panel([m1, m2, m3, m4], "Information delivery", "neutral", null, false, "column")
+m1 = Item("Information marts", null, null, true, "violet", "cylinder")
+m2 = Item("Data marts", null, null, true, "violet", "cylinder")
+m3 = Item("AI marts", null, null, true, "violet", "cylinder")
+m4 = Item("User marts", null, null, true, "violet", "cylinder")
+use = Panel([app, dash, cube], "Data consumption", "green", null, false, "column")
+app = Item("Application", "phone", null, true)
+dash = Item("Dashboard", "dashboard", null, true)
+cube = Item("OLAP cube", null, null, true, "violet", "cylinder")
+meta = Panel([mi], null, "orange", null, true, "column")
+mi = Item("Metadata management to drive automation", "setting")
+catalog = Panel([ci], null, "orange", null, true, "column")
+ci = Item("Data catalog, AI augmented", "ai")
+f1 = Flow("sources", "staging", null, false, "block")
+f2 = Flow("staging", "core", null, false, "block")
+f3 = Flow("core", "delivery", null, false, "block")
+f4 = Flow("lake", "use", null, false, "block")`
+    },
+    {
+      title: 'An ETL pipeline',
+      about: 'Stages in a row with big arrows between them.',
+      code: `root = Architecture([src, etl, wh, bi], [f1, f2, f3], "Orders pipeline", "row")
+src = Panel([a, b], "Sources", "blue", null, false, "column")
+a = Item("Orders", null, "PostgreSQL", true, "blue", "cylinder")
+b = Item("Payments", null, "Stripe", true, "blue", "cylinder")
+etl = Panel([clean, join], "Transform", "orange", "workflow", false, "column")
+clean = Item("Clean", "filter", "Types, duplicates", true)
+join = Item("Join", "transform", "Orders and payments", true)
+wh = Panel([store], "Warehouse", "violet", null, false, "column")
+store = Item("Facts", null, "Snowflake", true, "violet", "cylinder")
+bi = Panel([dash], "Reports", "green", "chart", false, "column")
+dash = Item("Dashboards", "dashboard", "Grafana", true)
+f1 = Flow("src", "etl", null, false, "block")
+f2 = Flow("etl", "wh", null, false, "block")
+f3 = Flow("wh", "bi", null, false, "block")`
+    },
+    {
       title: 'A RAG chatbot on AWS',
       about: 'Documents in S3, a Lambda that indexes, a vector database.',
       code: `root = Architecture([users, app, knowledge], [f1, f2, f3, f4, f5], "RAG chatbot on AWS")
