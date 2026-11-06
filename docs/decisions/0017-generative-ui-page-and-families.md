@@ -10,12 +10,14 @@ to see what the agent can draw, to try it, or to decide which families it may us
 
 ## Decision
 
-- **A page, opened from the menu** (`/generative-ui`, in place of the switch), with two tabs.
+- **A window over the app, opened from the menu** in place of the switch, built like Settings (a blurred backdrop, a raised window, the pages
+  on the left); it opens through the same dialogs store and closes on Escape or a click outside.
   - **Overview:** the general switch (the same preference as Settings > Answers, `rich_answers_enabled`), the choice of families, and eight
     requests to try, each of which opens a new chat with its text in the input, not sent.
-  - **Gallery:** every example of the catalogue (the ones the agent is taught from) drawn as in the chat, with filters by family, the source
-    and a line that shows what a click on a form, a quiz or a button would send. Nothing leaves the page. `npm run gallery` shows the same
-    component for the people who write components, with the parser errors.
+  - **Gallery:** one page, a grid of cards, each with a small live picture of an example (the ones the agent is taught from), its title and
+    its families; a click opens the example large, with Preview, Code or Both, the colour-coded source and a line that shows what a click
+    on a form, a quiz or a button would send. Nothing leaves the window. `npm run gallery` shows the same pieces for the people who write
+    components, with the parser errors.
 - **Each family has three modes**, stored per person in `user_preferences.rich_families` (a JSON text, empty when all are automatic):
   - **automatic** (the default): taught when the request calls for it, or when the conversation already drew it;
   - **always** (`on`): taught to every request, whatever it says, at the cost of its words in every prompt;

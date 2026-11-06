@@ -33,7 +33,7 @@ describe('the gallery of examples, drawn', () => {
     expect(html).toContain('What the chat would receive (0)')
     expect(html).toContain('Nothing yet')
     expect(html).toContain('seshat-ui')
-    expect((html.match(/<details/g) ?? []).length).toBe(PROMPT_EXAMPLES.length)
+    expect((html.match(/role="tablist"/g) ?? []).length).toBe(PROMPT_EXAMPLES.length)
   })
 
   it('can start from a family, and says in French what it shows', async () => {
@@ -42,6 +42,6 @@ describe('the gallery of examples, drawn', () => {
     expect(html).toContain('Ce que le chat recevrait (0)')
     expect(html).not.toContain('gallery.families')
     const design = PROMPT_EXAMPLES.filter((code) => familiesOf(code).includes('design')).length
-    expect((html.match(/<details/g) ?? []).length).toBe(design)
+    expect((html.match(/role="tablist"/g) ?? []).length).toBe(design)
   })
 })

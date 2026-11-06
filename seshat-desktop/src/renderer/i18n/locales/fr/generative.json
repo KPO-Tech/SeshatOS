@@ -1,21 +1,76 @@
 {
   "page": {
     "title": "UI générative",
-    "subtitle": "Ce que l'agent peut dessiner dans ses réponses : tableaux, graphiques, formulaires, quiz, maquettes de page.",
-    "tabs": {
-      "overview": "Aperçu",
-      "gallery": "Galerie"
+    "close": "Fermer",
+    "pages": "Pages"
+  },
+  "nav": {
+    "general": "Général"
+  },
+  "sections": {
+    "overview": {
+      "label": "Aperçu",
+      "description": "Ce que l'agent peut dessiner dans ses réponses, et l'interrupteur qui l'autorise."
     },
+    "families": {
+      "label": "Familles",
+      "description": "Choisissez les types de dessin que l'agent peut utiliser, et leur coût."
+    },
+    "try": {
+      "label": "Essayer",
+      "description": "Des demandes qui font ressortir chaque type de dessin."
+    },
+    "gallery": {
+      "label": "Galerie",
+      "description": "Des collections d'exemples : ouvrez-en une, puis une carte pour la voir en grand avec sa source."
+    }
+  },
+  "overview": {
     "switch": {
       "title": "Réponses riches",
       "on": "Activé : l'agent peut répondre avec des tableaux, graphiques, formulaires et maquettes.",
       "off": "Désactivé : l'agent répond en texte seulement."
+    },
+    "safety": {
+      "title": "Pourquoi c'est sûr",
+      "pieces": {
+        "title": "Pièces fixes seulement",
+        "hint": "L'agent choisit dans un catalogue de pièces. Il n'écrit jamais de code ni de page."
+      },
+      "click": {
+        "title": "Rien sans votre clic",
+        "hint": "Un formulaire ou un quiz n'envoie un message que lorsque vous appuyez sur son bouton, et vous le voyez avant."
+      },
+      "local": {
+        "title": "Tout reste ici",
+        "hint": "Ce que vous saisissez dans un bloc reste sur cet ordinateur jusqu'à l'envoi."
+      }
+    }
+  },
+  "families": {
+    "hint": "Automatique : une famille n'est enseignée à l'agent que si la demande s'y prête. Toujours : elle l'est à chaque demande, ce qui coûte plus. Jamais : elle n'est pas utilisée.",
+    "cost": "environ {{words}} mots",
+    "modes": {
+      "auto": "Automatique",
+      "on": "Toujours",
+      "off": "Jamais"
+    },
+    "charts": {
+      "hint": "Courbes de formules, curseurs, histogrammes, cartes de chaleur."
+    },
+    "forms": {
+      "hint": "Exercices, quiz, flashcards, brouillons à modifier."
+    },
+    "design": {
+      "hint": "Maquettes de site ou d'application, palettes de couleurs."
+    },
+    "architecture": {
+      "hint": "Schémas de systèmes, avec les logos des technologies."
     }
   },
   "tryIt": {
-    "title": "Essayer",
     "hint": "Chaque demande ouvre un nouveau chat, texte prêt à envoyer.",
-    "disabled": "Activez d'abord les réponses riches.",
+    "disabled": "Activez les réponses riches.",
     "items": {
       "quiz": {
         "label": "Un quiz",
@@ -52,12 +107,22 @@
     }
   },
   "gallery": {
-    "intro": "Tous les exemples dont l'agent s'inspire, dessinés comme dans le chat. Cliquez sur un bouton ou remplissez un formulaire : le message qui serait envoyé s'affiche en bas, rien n'est envoyé.",
     "filter": "Filtrer par composant",
     "none": "Aucun résultat.",
-    "source": "source",
+    "view": {
+      "preview": "Aperçu",
+      "code": "Code",
+      "both": "Les deux",
+      "open": "Voir"
+    },
+    "code": {
+      "lines": "Lignes : {{count}}",
+      "copy": "Copier",
+      "copied": "Copié"
+    },
+    "clear": "Effacer",
     "wouldReceive": "Ce que le chat recevrait ({{count}})",
-    "nothingSent": "Rien pour l'instant : cliquez sur un bouton, un choix, un résultat de quiz ou un formulaire.",
+    "nothingSent": "Rien pour l'instant : appuyez sur un bouton, un choix, un résultat de quiz ou un formulaire.",
     "families": {
       "all": "Tout",
       "basics": "Bases",
@@ -65,32 +130,56 @@
       "forms": "Formulaires",
       "design": "Design",
       "architecture": "Architecture"
+    },
+    "hub": {
+      "back": "Toutes les galeries",
+      "count": "Exemples : {{count}}"
     }
   },
-  "families": {
-    "title": "Familles de composants",
-    "hint": "Automatique : une famille n'est enseignée à l'agent que si la demande s'y prête. Toujours : elle l'est à chaque demande, ce qui coûte plus. Jamais : elle n'est pas utilisée.",
-    "cost": "environ {{words}} mots",
-    "modes": {
-      "auto": "Automatique",
-      "on": "Toujours",
-      "off": "Jamais"
+  "collections": {
+    "landing": {
+      "title": "Pages d'accueil",
+      "description": "Maquettes de la page d'accueil d'un site, par métier : une couleur, une police et une ambiance chacune."
     },
-    "charts": {
-      "label": "Graphiques et maths",
-      "hint": "Courbes de formules, curseurs, histogrammes, cartes de chaleur."
+    "mobile": {
+      "title": "Applications mobiles",
+      "description": "Écrans d'application dans un téléphone : chiffres, courbes, listes et un bouton clair."
     },
-    "forms": {
-      "label": "Formulaires et quiz",
-      "hint": "Exercices, quiz, cartes mémoire, brouillons à modifier."
+    "dashboards": {
+      "title": "Tableaux de bord",
+      "description": "Barre latérale, chiffres clés, courbes et tableaux : l'allure d'un produit pour chaque métier."
     },
-    "design": {
-      "label": "Design",
-      "hint": "Maquettes de site ou d'application, palettes de couleurs."
+    "brand": {
+      "title": "Chartes graphiques",
+      "description": "Palettes, boutons, images et ambiances : la même page dans d'autres couleurs, polices et arrondis."
     },
-    "architecture": {
-      "label": "Architecture",
-      "hint": "Schémas de systèmes, avec les logos des technologies."
+    "math": {
+      "title": "Labo de maths",
+      "description": "Des fonctions à explorer : bougez un curseur, la courbe, les marques et l'équation suivent."
+    },
+    "calculators": {
+      "title": "Calculatrices",
+      "description": "Petits outils qui répondent quand on bouge un curseur : argent, mouvement, unités et santé."
+    },
+    "data": {
+      "title": "Science des données",
+      "description": "Les images d'un modèle : courbes d'apprentissage, erreurs, corrélations et classification."
+    },
+    "cloud": {
+      "title": "Architectures cloud",
+      "description": "Des systèmes dessinés avec les logos des services utilisés : AWS, Kubernetes, Kafka et autres."
+    },
+    "learning": {
+      "title": "Apprendre et s'exercer",
+      "description": "Quiz, cartes, exercices d'écriture et plans de révision, pour répondre dans la conversation."
+    },
+    "work": {
+      "title": "Décisions et rapports",
+      "description": "Les documents d'une semaine de travail : bilan, feuille de route, comparaisons, décisions, listes et e-mails."
+    },
+    "core": {
+      "title": "Exemples de l'agent",
+      "description": "Les courts exemples dont l'agent s'inspire : tableaux, étapes, graphiques, formulaires et une première maquette."
     }
   }
 }
