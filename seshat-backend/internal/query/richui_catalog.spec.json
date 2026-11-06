@@ -602,6 +602,12 @@
       "description": "A node of a Tree: a label, its children (Branch), a short text, a color."
     },
     {
+      "name": "Sheet",
+      "group": "Forms",
+      "signature": "Sheet(columns: [text], rows?: [[text]], title?: text, report?: text)",
+      "description": "A table the reader fills in. report is the message they may send, with {{table}} and {{rows}}."
+    },
+    {
       "name": "Draft",
       "group": "Forms",
       "signature": "Draft(body: text, subject?: text, to?: text, title?: text)",

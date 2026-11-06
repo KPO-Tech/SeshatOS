@@ -370,7 +370,15 @@
             "copied": "Copied",
             "to": "To",
             "subject": "Subject",
-            "draft": "Draft"
+            "draft": "Draft",
+            "mail": "Open in mail",
+            "mailTo": "Open your mail app with a message to {{to}}?",
+            "mailNoRecipient": "Open your mail app with this message, to nobody yet?",
+            "mailOpen": "Open",
+            "mailCancel": "Cancel",
+            "sheetAdd": "Add a row",
+            "sheetRemove": "Remove row {{n}}",
+            "sheetSend": "Send my table"
           },
           "quiz": {
             "send": "Send my result",

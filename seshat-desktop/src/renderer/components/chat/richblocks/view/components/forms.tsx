@@ -166,12 +166,20 @@ function Draft({ props }: ComponentProps) {
   const storeKey = blockKey ? `${blockKey}.draft.${blockHash(initial.body)}` : undefined
   const [edited, setEdited] = useState<Record<string, string>>(() => (storeKey ? loadForm(storeKey)?.values ?? {} : {}))
   const [copied, setCopied] = useState(false)
+  // Opening the mail application is a thing the person decides twice: the button, then a line that says to whom.
+  const [asking, setAsking] = useState(false)
+  const canMail = typeof window !== 'undefined' && typeof window.seshat?.openMail === 'function'
   useEffect(() => {
     if (storeKey) saveForm(storeKey, { values: edited, sent: false })
   }, [storeKey, edited])
   const value = (name: 'to' | 'subject' | 'body') => edited[name] ?? initial[name]
   const change = (name: string, next: string) => setEdited((current) => ({ ...current, [name]: next.slice(0, FORM_LIMITS.typed) }))
   const rows = Math.min(20, Math.max(6, value('body').split('\n').length + 1))
+
+  function openMail() {
+    setAsking(false)
+    void window.seshat?.openMail?.({ to: value('to'), subject: value('subject'), body: value('body') }).catch(() => undefined)
+  }
 
   async function copy() {
     const subject = value('subject').trim()
@@ -196,6 +204,27 @@ function Draft({ props }: ComponentProps) {
           {copied ? t('chat.richblocks.view.components.forms.copied') : t('chat.richblocks.view.components.forms.copy')}
         </button>
       </div>
+      {canMail && (
+        <div className="mb-3 flex flex-wrap items-center gap-2.5">
+          {asking ? (
+            <>
+              <span className="text-[12.5px] text-app-text-secondary">
+                {value('to').trim() ? t('chat.richblocks.view.components.forms.mailTo', { to: value('to').trim() }) : t('chat.richblocks.view.components.forms.mailNoRecipient')}
+              </span>
+              <button type="button" onClick={openMail} className="cursor-pointer rounded-lg border border-app-border-subtle bg-app-surface-elevated px-2.5 py-1 text-[12.5px] font-medium text-app-text hover:bg-[var(--surface-hover)]">
+                {t('chat.richblocks.view.components.forms.mailOpen')}
+              </button>
+              <button type="button" onClick={() => setAsking(false)} className="cursor-pointer rounded-lg border-0 bg-transparent px-2 py-1 text-[12.5px] text-app-text-muted hover:text-app-text">
+                {t('chat.richblocks.view.components.forms.mailCancel')}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setAsking(true)} className="inline-flex cursor-pointer items-center rounded-lg border border-app-border-subtle bg-transparent px-2.5 py-1 text-[12.5px] text-app-text-secondary transition-colors hover:bg-[var(--surface-hover)] hover:text-app-text">
+              {t('chat.richblocks.view.components.forms.mail')}
+            </button>
+          )}
+        </div>
+      )}
       <div className="flex flex-col gap-2.5">
         {props.to !== undefined && (
           <label className="flex items-center gap-3 border-0 border-b border-solid border-app-border-subtle pb-2">

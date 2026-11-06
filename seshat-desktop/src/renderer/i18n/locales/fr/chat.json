@@ -370,7 +370,15 @@
             "copied": "Copié",
             "to": "À",
             "subject": "Objet",
-            "draft": "Brouillon"
+            "draft": "Brouillon",
+            "mail": "Ouvrir le mail",
+            "mailTo": "Ouvrir votre messagerie avec un message à {{to}} ?",
+            "mailNoRecipient": "Ouvrir votre messagerie avec ce message, sans destinataire ?",
+            "mailOpen": "Ouvrir",
+            "mailCancel": "Annuler",
+            "sheetAdd": "Ajouter une ligne",
+            "sheetRemove": "Retirer la ligne {{n}}",
+            "sheetSend": "Envoyer mon tableau"
           },
           "quiz": {
             "send": "Envoyer mon résultat",

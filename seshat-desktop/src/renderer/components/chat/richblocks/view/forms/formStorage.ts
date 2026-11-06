@@ -59,3 +59,26 @@ export function saveVars(key: string, values: Record<string, number>): void {
     // Storage may be full, blocked or absent: the sliders keep working.
   }
 }
+
+// The same for the rows of a Sheet (ADR 0020): what the reader typed in the cells of a table.
+const SHEET_PREFIX = 'seshat.sheet.'
+
+export function loadSheet(key: string, columns: number): string[][] | null {
+  try {
+    const raw = window.localStorage.getItem(SHEET_PREFIX + key)
+    if (!raw) return null
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed) || parsed.length === 0 || parsed.length > 30) return null
+    return parsed.map((row) => Array.from({ length: columns }, (_, at) => (Array.isArray(row) && typeof row[at] === 'string' ? (row[at] as string).slice(0, 120) : '')))
+  } catch {
+    return null
+  }
+}
+
+export function saveSheet(key: string, rows: string[][]): void {
+  try {
+    window.localStorage.setItem(SHEET_PREFIX + key, JSON.stringify(rows))
+  } catch {
+    // Storage may be full, blocked or absent: the table keeps working.
+  }
+}

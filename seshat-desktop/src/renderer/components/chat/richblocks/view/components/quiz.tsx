@@ -16,7 +16,7 @@ const BUTTON =
   'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-app-border-subtle bg-app-surface-elevated px-4 py-2 text-[13px] font-medium text-app-text transition-colors enabled:hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:text-app-text-muted'
 
 /** The button that sends the report, with the reasons it may wait. */
-function SendReport({ message }: { message: string }) {
+export function SendReport({ message, label }: { message: string; label?: string }) {
   const { t } = useTranslation('chat')
   const bridge = useRichActionBridge()
   const [sent, setSent] = useState(false)
@@ -39,7 +39,7 @@ function SendReport({ message }: { message: string }) {
       }}
       className={BUTTON}
     >
-      {sent ? t('chat.richblocks.view.components.forms.sent') : t('chat.richblocks.view.components.quiz.send')}
+      {sent ? t('chat.richblocks.view.components.forms.sent') : (label ?? t('chat.richblocks.view.components.quiz.send'))}
     </button>
   )
 }

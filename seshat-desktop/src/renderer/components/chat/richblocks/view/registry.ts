@@ -8,6 +8,7 @@ import { interactionComponents } from './components/interaction'
 import { designComponents } from './components/design'
 import { diagramComponents } from './components/diagrams'
 import { quizComponents } from './components/quiz'
+import { sheetComponents } from './components/sheet'
 import { varsComponents } from './components/vars'
 import { layoutComponents } from './components/layout'
 import { plotComponents } from './components/plot'
@@ -27,6 +28,7 @@ export const REGISTRY: Record<string, ComponentType<ComponentProps>> = {
   ...interactionComponents,
   ...varsComponents,
   ...quizComponents,
+  ...sheetComponents,
   ...designComponents,
   ...diagramComponents,
   ...formComponents

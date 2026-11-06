@@ -18,6 +18,7 @@ interface Window {
       readImage: (filePath: string) => Promise<string>
     }
     openExternal: (url: string) => Promise<void>
+    openMail?: (draft: { to?: string; subject?: string; body?: string }) => Promise<void>
     setLanguage?: (code: string) => Promise<void>
     selectFile: (opts?: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>
     saveFile: (defaultName: string, content: string) => Promise<{ canceled: boolean; filePath?: string }>

@@ -5,6 +5,7 @@ import { spawn } from 'child_process'
 import { extname, join } from 'path'
 import { assertTrustedSender } from './trusted-sender'
 import { isExternalOpenAllowed } from '../url-safety'
+import { buildMailto, type MailDraft } from '../mailto'
 import { assertLocalFilePath, assertNotRunnable, assertPathWithinRuntimeRoot, sanitizeSaveFileInput } from './validation'
 
 // Mirrors the seshat engine's own candidateInstructionFiles (seshat SDK,
@@ -116,6 +117,15 @@ export function registerSystemHandlers(ipcMain: IpcMain) {
       throw new Error(`Refusing to open non-http(s) URL: ${url}`)
     }
     return shell.openExternal(url)
+  })
+
+  // A mail application is opened only from a draft, through a link that is built here from checked parts: openExternal above stays closed to
+  // every scheme but http and https.
+  ipcMain.handle('system:open-mail', (event, draft: MailDraft) => {
+    assertTrustedSender(event)
+    const link = buildMailto(draft ?? {})
+    if (link === null) throw new Error('Refusing to open a mail draft with an address that is not one')
+    return shell.openExternal(link)
   })
 
   ipcMain.handle('system:select-file', async (event, options?: Electron.OpenDialogOptions) => {

@@ -119,6 +119,8 @@ const seshatBridge = {
     readImage: (filePath: string): Promise<string> => ipcRenderer.invoke('fs:read-image', filePath),
   },
   openExternal: (url: string) => ipcRenderer.invoke('system:open-external', url),
+  /** Opens the mail application with a draft: recipients, subject and body, as text. The link is built by the main process. */
+  openMail: (draft: { to?: string; subject?: string; body?: string }): Promise<void> => ipcRenderer.invoke('system:open-mail', draft),
   /** Tells the main process the language of the interface, for its menu and its dialogs. */
   setLanguage: (code: string): Promise<void> => ipcRenderer.invoke('app:set-language', code),
   selectFile: (opts?: Electron.OpenDialogOptions) => ipcRenderer.invoke('system:select-file', opts),

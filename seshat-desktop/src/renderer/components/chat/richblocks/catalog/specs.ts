@@ -258,6 +258,8 @@ export const COMPONENT_SPECS: ComponentSpec[] = [
     args: [req('root', node('Branch')), opt('title', str)] },
   { name: 'Branch', group: 'Diagrams', description: 'A node of a Tree: a label, its children (Branch), a short text, a color.',
     args: [req('label', str), opt('children', list(node('Branch'))), opt('text', str), opt('color', str)] },
+  { name: 'Sheet', group: 'Forms', description: 'A table the reader fills in. report is the message they may send, with {{table}} and {{rows}}.',
+    args: [req('columns', list(str)), opt('rows', list(list(str))), opt('title', str), opt('report', str)] },
   { name: 'Draft', group: 'Forms', description: 'A text the reader can edit and copy: an email, a letter. subject and to are optional lines above the body.',
     args: [req('body', str), opt('subject', str), opt('to', str), opt('title', str)] },
   { name: 'ProgressBar', group: 'Forms', description: 'A bar filled to value out of max (100 by default): a score, a level, a completion.',

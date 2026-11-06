@@ -51,6 +51,11 @@ progress = ProgressBar(6, 9, "Items done", "green")
 list = Checklist([CheckItem("Backups tested", true), CheckItem("Alerts routed to on call", true), CheckItem("Load test at 2x traffic", true), CheckItem("Privacy policy published", true), CheckItem("Rollback rehearsed", true), CheckItem("Status page ready", true), CheckItem("Support macros written", false), CheckItem("Press kit sent", false), CheckItem("Pricing page reviewed", false)])`
     },
     {
+      title: 'A table to fill in',
+      about: 'A budget the reader completes, then sends.',
+      code: `root = Sheet(["Item", "Amount (EUR)", "Paid by"], [["Venue", "1200", "Company"], ["Catering", "", ""], ["Speakers", "", ""]], "Event budget", "Here is my budget, {{rows}} lines:\\n\\n{{table}}\\n\\nCheck the total and tell me what is missing.")`
+    },
+    {
       title: 'An email draft',
       about: 'A subject, a recipient, a text to edit and copy.',
       code: `root = Draft("Hello Mr Ba,\\n\\nI am writing to confirm that I will leave the flat on 31 December, as agreed in the lease. I would like to book the inventory for Monday 29 December in the morning.\\n\\nPlease tell me which time suits you.\\n\\nBest regards,\\nAmina Diallo", "Notice of departure, flat 4B", "agency@example.com", "Your draft")`
