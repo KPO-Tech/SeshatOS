@@ -4,6 +4,7 @@ import { fillCss, readableOn, safeFill, type Fill } from '../../lang/design'
 import { isNode } from '../../lang/parseUi'
 import type { UiNode } from '../../lang/types'
 import { text } from '../charts/readers'
+import { Expandable } from '../expand/Expandable'
 import type { ComponentProps } from '../NodeView'
 
 // The diagrams of an answer (ADR 0018): a honeycomb, a process of chevrons, a cycle, a pyramid or a funnel, a matrix, a stack of layers. The
@@ -40,7 +41,7 @@ function Hive({ props }: ComponentProps) {
   const left = text(props.left)
   const right = text(props.right)
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       {(left || right) && (
         <div className="mb-1.5 flex justify-between gap-4 text-[11.5px] font-semibold uppercase tracking-wide text-app-text-muted">
@@ -84,7 +85,7 @@ function Chevrons({ props }: ComponentProps) {
   const items = partsOf({ props }, 'items').slice(0, DIAGRAM_LIMITS.chevrons)
   if (items.length === 0) return null
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <div className="flex">
         {items.map((item, index) => {
@@ -143,7 +144,7 @@ function Cycle({ props }: ComponentProps) {
   }
   const center = text(props.center)
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <svg viewBox={`0 0 ${size} ${size}`} className="mx-auto block w-full max-w-[460px]" role="img" aria-label={text(props.title) ?? 'cycle'}>
         <defs>
@@ -244,7 +245,7 @@ function Hub({ props }: ComponentProps) {
   }
   const coreFill = fillOf(core, 1)
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block w-full max-w-[760px]" role="img" aria-label={text(props.title) ?? 'hub'}>
         <defs>
@@ -293,7 +294,7 @@ function Pyramid({ props }: ComponentProps) {
   if (n === 0) return null
   const funnel = props.funnel === true
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <div className="mx-auto flex w-full max-w-[560px] flex-col gap-1">
         {levels.map((level, index) => {
@@ -325,7 +326,7 @@ function Quadrant({ props }: ComponentProps) {
   const xLabel = text(props.xLabel)
   const yLabel = text(props.yLabel)
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <div className="flex gap-2">
         {yLabel && <div className="flex w-5 shrink-0 items-center justify-center text-[11.5px] font-semibold uppercase tracking-wide text-app-text-muted [writing-mode:vertical-rl] rotate-180">{yLabel}</div>}
@@ -356,7 +357,7 @@ function Layers({ props }: ComponentProps) {
   const layers = partsOf({ props }, 'layers').slice(0, DIAGRAM_LIMITS.layers)
   if (layers.length === 0) return null
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <div className="flex flex-col gap-1.5">
         {layers.map((layer, index) => {
@@ -391,7 +392,7 @@ function Venn({ props }: ComponentProps) {
   const middle = three ? { x: 240, y: 218 } : { x: 240, y: 150 }
   const center = text(props.center)
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto block w-full max-w-[480px]" role="img" aria-label={text(props.title) ?? 'venn'}>
         {sets.map((set, i) => {
@@ -465,7 +466,7 @@ function Tree({ props }: ComponentProps) {
   const root = isNode(props.root) ? props.root : null
   if (!root) return null
   return (
-    <div className="my-3">
+    <div>
       <Title value={text(props.title)} />
       <div className="overflow-x-auto pb-1">
         <div className="mx-auto flex w-max min-w-full justify-center">
@@ -481,7 +482,20 @@ function ReadByParent() {
   return null
 }
 
+/** A diagram can be opened large and saved as an image, like an architecture: a wide tree does not fit the column. */
+function withLargeView(Diagram: ComponentType<ComponentProps>, name: string): ComponentType<ComponentProps> {
+  return function Drawn(componentProps: ComponentProps) {
+    return (
+      <Expandable label={text(componentProps.props.title) ?? name} force className="my-3">
+        <Diagram {...componentProps} />
+      </Expandable>
+    )
+  }
+}
+
 export const diagramComponents: Record<string, ComponentType<ComponentProps>> = {
-  Hub,
-  Hive, Hex: ReadByParent, Chevrons, Chev: ReadByParent, Cycle, Loop: ReadByParent, Pyramid, Level: ReadByParent, Quadrant, Quad: ReadByParent, Layers, Layer: ReadByParent, Venn, VSet: ReadByParent, Tree, Branch: ReadByParent
+  Hub: withLargeView(Hub, 'Hub'),
+  Hive: withLargeView(Hive, 'Hive'), Hex: ReadByParent, Chevrons: withLargeView(Chevrons, 'Chevrons'), Chev: ReadByParent, Cycle: withLargeView(Cycle, 'Cycle'), Loop: ReadByParent,
+  Pyramid: withLargeView(Pyramid, 'Pyramid'), Level: ReadByParent, Quadrant: withLargeView(Quadrant, 'Quadrant'), Quad: ReadByParent, Layers: withLargeView(Layers, 'Layers'), Layer: ReadByParent,
+  Venn: withLargeView(Venn, 'Venn'), VSet: ReadByParent, Tree: withLargeView(Tree, 'Tree'), Branch: ReadByParent
 }

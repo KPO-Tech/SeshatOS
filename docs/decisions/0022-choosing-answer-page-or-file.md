@@ -14,8 +14,9 @@ also asked for web fonts, which the preview blocks, and used a dark blue backgro
   preview only when the reader asks for a page, an app, a game or a site, or the components cannot draw it (3D, animation over time, a
   simulation, a map, a free drawing, an architecture of more than about fifteen boxes or with crossing flows); a real file when the
   reader wants something to open elsewhere. A function to explore is a Plot with Sliders, never a page.
-- A page has no external resource (system fonts), a light background unless the reader asks for dark, a careful design, and icons
-  drawn as inline SVG, not emoji. The always-present note says nothing loads from outside the file.
+- A page uses the libraries the app ships (Chart.js, D3, three.js, ECharts, Mermaid...) from a CDN at an exact version, which the backend
+  serves (see `artifactlibs`); web fonts and remote images do not load, so it uses system fonts. It has a light background unless the
+  reader asks for dark, a careful design, and icons drawn as inline SVG, not emoji.
 - The Knowledge agent is not told: it writes no page and no file. The core ceiling goes from 1200 to 1500 words.
 
 ## Consequences

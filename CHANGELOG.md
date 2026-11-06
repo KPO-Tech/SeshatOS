@@ -26,6 +26,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Drafts that open in your mail app, and tables to fill in.** A draft can be opened as a new mail after you confirm the address; the agent can also give a table with columns and rows you edit, then send it back as a Markdown table (ADR 0020).
 - **Numbers typed in a form move the graph.** A number field in a form works like a slider: the curve and the live formulas follow what you type, and the message you send can carry the sliders' values too (ADR 0021).
 - **A hub diagram, and every component known to the agent.** A centre with what surrounds it (the five forces of Porter, stakeholders, a mind map) can be drawn. The agent now knows all the components on every request, so it no longer falls back to an HTML page for a decision tree; the big arrows of an architecture poster are thinner (ADR 0023).
+- **Diagrams open large and can be saved.** A tree, a cycle, a hub or any other diagram has the same corner button as an architecture: a large view, and a download as an image. The agent is also told that pages can use the libraries the app ships (Chart.js, D3, three.js, Mermaid...).
 
 ## [0.3.16] - 2026-11-05
 
