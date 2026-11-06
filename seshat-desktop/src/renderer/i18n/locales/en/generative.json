@@ -1,0 +1,70 @@
+{
+  "page": {
+    "title": "Generative UI",
+    "subtitle": "What the agent can draw in its answers: tables, graphs, forms, quizzes, sketches of a page.",
+    "tabs": {
+      "overview": "Overview",
+      "gallery": "Gallery"
+    },
+    "switch": {
+      "title": "Draw in answers",
+      "on": "On: the agent may answer with tables, graphs, forms and sketches.",
+      "off": "Off: the agent answers with text only."
+    }
+  },
+  "tryIt": {
+    "title": "Try it",
+    "hint": "Each request opens a new chat with the text ready to send.",
+    "disabled": "Turn on drawing in answers first.",
+    "items": {
+      "quiz": {
+        "label": "A quiz",
+        "prompt": "Make me a quiz of 5 questions on Go goroutines, with explanations, and a button to send you my score."
+      },
+      "cards": {
+        "label": "Flashcards",
+        "prompt": "Create flashcards of English travel vocabulary, with a category and a pronunciation on each."
+      },
+      "essay": {
+        "label": "A writing exercise",
+        "prompt": "Train me to write in English: give me a subject of 100 to 150 words and a box to write my answer in."
+      },
+      "sine": {
+        "label": "A graph to explore",
+        "prompt": "Make an interactive graph of sine, cosine and tangent with sliders for amplitude, frequency, phase and vertical shift, and show the current equation."
+      },
+      "parabola": {
+        "label": "A parabola",
+        "prompt": "Show me the parabola f(x) = a(x - h)^2 + k with sliders for a, h and k, and mark its vertex on the graph."
+      },
+      "site": {
+        "label": "A site sketch",
+        "prompt": "Show me what the site of an artisan bakery could look like, with a colour palette."
+      },
+      "dashboard": {
+        "label": "A dashboard",
+        "prompt": "Sketch a dashboard for a project management tool: side bar, key figures, a trend curve and a table of projects."
+      },
+      "architecture": {
+        "label": "An architecture",
+        "prompt": "Draw the architecture of a RAG chatbot on AWS: documents in S3, a Lambda that indexes them, a vector database and an API."
+      }
+    }
+  },
+  "gallery": {
+    "intro": "Every example the agent is taught from, drawn as in the chat. Click a button or fill in a form: the message it would send is shown at the bottom, and nothing is sent.",
+    "filter": "Filter by component",
+    "none": "No example matches.",
+    "source": "source",
+    "wouldReceive": "What the chat would receive ({{count}})",
+    "nothingSent": "Nothing yet: click a button, a choice, a quiz result or a form.",
+    "families": {
+      "all": "All",
+      "basics": "Basics",
+      "charts": "Graphs",
+      "forms": "Forms",
+      "design": "Design",
+      "architecture": "Architecture"
+    }
+  }
+}

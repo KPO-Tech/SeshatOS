@@ -25,6 +25,7 @@ const projects = () => import('@renderer/pages/projects').then((m) => ({ Compone
 const projectDetail = () => import('@renderer/pages/projects/detail').then((m) => ({ Component: m.ProjectDetailPage }))
 const store = () => import('@renderer/pages/store').then((m) => ({ Component: m.StorePage }))
 const knowledge = () => import('@renderer/pages/knowledge').then((m) => ({ Component: m.KnowledgePage }))
+const generative = () => import('@renderer/pages/generative').then((m) => ({ Component: m.GenerativeUiPage }))
 const admin = () => import('@renderer/pages/admin').then((m) => ({ Component: m.AdminPage }))
 
 // Authentication is handled in App.tsx (this router only mounts once signed
@@ -41,6 +42,7 @@ export const router = createHashRouter([
       { path: 'plugins', lazy: plugins },
       ...(edition.store ? [{ path: 'store', lazy: store }] : []),
       ...(edition.knowledgeApp ? [{ path: 'knowledge/*', lazy: knowledge }] : []),
+      { path: 'generative-ui', lazy: generative },
       { path: 'projects', lazy: projects },
       { path: 'projects/:projectId', lazy: projectDetail },
       ...(edition.cloud ? [{ path: 'admin/*', lazy: admin }] : [])
