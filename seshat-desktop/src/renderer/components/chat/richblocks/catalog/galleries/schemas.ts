@@ -1,0 +1,92 @@
+import type { Gallery } from './types'
+
+export const SCHEMAS: Gallery = {
+  id: 'schemas',
+  title: 'Schemas and strategy',
+  description: 'The shapes of a strategy or a method: a honeycomb, a process, a cycle, a pyramid, a funnel, a matrix and a stack.',
+  tone: 'orange',
+  icon: 'layers',
+  examples: [
+    {
+      title: 'The role of architecture',
+      about: 'A honeycomb in two groups, one hexagon stressed.',
+      code: `root = Hive([[vision], [outcomes, value], [capabilities], [ecosystem, architecture], [delivery]], "The role of architecture within the strategy and the operating model", "Data and analytics strategy", "Operating model")
+vision = Hex("Data-driven vision", "#172554")
+outcomes = Hex("Stakeholder outcomes", "#172554")
+value = Hex("Value propositions", "#172554")
+capabilities = Hex("Capabilities and deficits", "#172554")
+ecosystem = Hex("Ecosystem", "#172554")
+architecture = Hex("Architectures", "#f97316")
+delivery = Hex("Delivery model", "#172554")`
+    },
+    {
+      title: 'A product strategy',
+      about: 'Seven hexagons, seven colours.',
+      code: `root = Hive([[a, b], [c, d, e], [f, g]], "Product strategy")
+a = Hex("Customers", "#2563eb")
+b = Hex("Problem", "#0ea5e9")
+c = Hex("Positioning", "#14b8a6")
+d = Hex("Product", "#8b5cf6")
+e = Hex("Pricing", "#db2777")
+f = Hex("Go to market", "#f97316")
+g = Hex("Metrics", "#65a30d")`
+    },
+    {
+      title: 'Design thinking',
+      about: 'A method in five arrow-shaped steps.',
+      code: `root = Chevrons([c1, c2, c3, c4, c5], "The five steps of design thinking")
+c1 = Chev("Empathise", "Talk to the people who live the problem.", "#2563eb")
+c2 = Chev("Define", "State the problem in one sentence.", "#0ea5e9")
+c3 = Chev("Ideate", "Sketch many answers, judge none.", "#14b8a6")
+c4 = Chev("Prototype", "Make the cheapest version that can be tried.", "#f59e0b")
+c5 = Chev("Test", "Watch someone use it, then change it.", "#f97316")`
+    },
+    {
+      title: 'A continuous loop',
+      about: 'Plan, do, check, act.',
+      code: `root = Cycle([p, d, c, a], "PDCA", "Continuous improvement")
+p = Loop("Plan", "#2563eb")
+d = Loop("Do", "#14b8a6")
+c = Loop("Check", "#f59e0b")
+a = Loop("Act", "#db2777")`
+    },
+    {
+      title: 'A hierarchy of needs',
+      about: 'A pyramid in five levels.',
+      code: `root = Pyramid([l1, l2, l3, l4, l5], "Maslow, in five levels")
+l1 = Level("Self-fulfilment", "Becoming who you can be", "#7c3aed")
+l2 = Level("Esteem", "Respect, recognition", "#2563eb")
+l3 = Level("Belonging", "Friends, family, love", "#0ea5e9")
+l4 = Level("Safety", "Health, work, home", "#14b8a6")
+l5 = Level("Physiological", "Food, water, sleep", "#65a30d")`
+    },
+    {
+      title: 'A sales funnel',
+      about: 'From visitors to customers.',
+      code: `root = Pyramid([v, l, t, c], "From a visit to a customer", true)
+v = Level("Visitors", "12,000", "#2563eb")
+l = Level("Leads", "1,800", "#0ea5e9")
+t = Level("Trials", "420", "#14b8a6")
+c = Level("Customers", "96", "#f97316")`
+    },
+    {
+      title: 'Effort and impact',
+      about: 'What to do first.',
+      code: `root = Quadrant([q1, q2, q3, q4], "Effort", "Impact", "Where to start")
+q1 = Quad("Quick wins", "Do these now.", "#16a34a")
+q2 = Quad("Big bets", "Plan them, then commit.", "#2563eb")
+q3 = Quad("Fill-ins", "Only if there is spare time.", "#64748b")
+q4 = Quad("Money pits", "Say no.", "#dc2626")`
+    },
+    {
+      title: 'A web application stack',
+      about: 'Five layers, from the screen to the machine.',
+      code: `root = Layers([l1, l2, l3, l4, l5], "From the screen to the machine")
+l1 = Layer("Interface", "React, a design system, the pages", "#db2777")
+l2 = Layer("API", "REST and events, authentication", "#8b5cf6")
+l3 = Layer("Services", "Billing, search, notifications", "#2563eb")
+l4 = Layer("Data", "PostgreSQL, Redis, object storage", "#0ea5e9")
+l5 = Layer("Infrastructure", "Kubernetes, networks, backups", "#14b8a6")`
+    }
+  ]
+}

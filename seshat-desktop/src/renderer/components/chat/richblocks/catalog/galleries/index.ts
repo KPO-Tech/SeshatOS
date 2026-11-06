@@ -8,6 +8,7 @@ import { LANDING } from './landing'
 import { LEARNING } from './learning'
 import { MATH } from './math'
 import { MOBILE } from './mobile'
+import { SCHEMAS } from './schemas'
 import type { Gallery } from './types'
 import { WORK } from './work'
 
@@ -24,4 +25,4 @@ const CORE: Gallery = {
 }
 
 /** Every gallery, in the order they are shown. */
-export const GALLERIES: Gallery[] = [LANDING, MOBILE, DASHBOARDS, BRAND, MATH, CALCULATORS, DATA, CLOUD, LEARNING, WORK, CORE]
+export const GALLERIES: Gallery[] = [LANDING, MOBILE, DASHBOARDS, BRAND, MATH, CALCULATORS, DATA, CLOUD, SCHEMAS, LEARNING, WORK, CORE]

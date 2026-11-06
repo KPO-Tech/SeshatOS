@@ -2,6 +2,7 @@ import { CELL_COMPONENTS, SPEC_BY_NAME } from '../catalog/specs'
 import type { ArgType, ComponentSpec } from '../catalog/types'
 import { checkForms } from './forms'
 import { checkDesign } from './design'
+import { checkDiagrams } from './diagrams'
 import { checkQuiz } from './quiz'
 import { checkVars } from './vars'
 import { parseStatements } from './parseStatements'
@@ -58,7 +59,7 @@ export function parseUi(src: string, options: { streaming: boolean }): UiResult 
     return { root: null, errors, unresolved: [...ctx.unresolved] }
   }
   // The forms are checked once the block is complete: while it streams, a Submit may not be written yet.
-  if (!options.streaming) errors.push(...checkForms(root), ...checkVars(root), ...checkQuiz(root), ...checkDesign(root))
+  if (!options.streaming) errors.push(...checkForms(root), ...checkVars(root), ...checkQuiz(root), ...checkDesign(root), ...checkDiagrams(root))
   return { root, errors, unresolved: [...ctx.unresolved] }
 }
 

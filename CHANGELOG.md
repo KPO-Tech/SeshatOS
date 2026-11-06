@@ -20,6 +20,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Site sketches in the chat.** The agent can draw how a page could look: a browser window with a navigation bar, a hero, feature cards, a grid, pictures, a footer, and a colour palette, with colours of its own choosing (ADR 0016).
 - **Logos for architecture drawings.** A technology or a service by its plain name (aws lambda, azure, slack, openai, stripe, react) now shows its logo in colour, from a large set that ships with the app and works offline.
 - **A Generative UI page.** The menu entry opens a page with the switch, a gallery of every example the agent is taught from, eight requests to try (each opens a new chat with the text ready), and the choice of families of components: automatic, always or never, with what each adds to the prompt (ADR 0017).
+- **Diagrams that say an idea.** The agent can draw a honeycomb of parts, a process in arrow-shaped steps, a cycle, a pyramid or a funnel, a matrix of two by two and a stack of layers, in colours of its choosing (ADR 0018). A new family in the Generative UI window, with a gallery.
 
 ## [0.3.16] - 2026-11-05
 

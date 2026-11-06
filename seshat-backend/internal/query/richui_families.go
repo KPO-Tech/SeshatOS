@@ -18,9 +18,10 @@ type richUIFamilies struct {
 	charts       bool
 	forms        bool
 	design       bool
+	diagrams     bool
 }
 
-var richUIAllFamilies = richUIFamilies{architecture: true, charts: true, forms: true, design: true}
+var richUIAllFamilies = richUIFamilies{architecture: true, charts: true, forms: true, design: true, diagrams: true}
 
 // The catalog groups that belong to a family; every other group is core.
 const (
@@ -28,6 +29,7 @@ const (
 	richUIChartsGroup       = "Charts"
 	richUIFormsGroup        = "Forms"
 	richUIDesignGroup       = "Design"
+	richUIDiagramsGroup     = "Diagrams"
 )
 
 // A request is matched on its lower-cased text. A stem must start a word (so "trace" does not match "embrace"); an exact word must
@@ -79,6 +81,14 @@ var richUIDesignWords = richUIWords(
 	[]string{"ui", "ux", "site", "sites"},
 )
 
+// Words of a request for a shape that says an idea: a honeycomb, a process, a cycle, a pyramid, a funnel, a matrix, a stack of layers.
+var richUIDiagramsWords = richUIWords(
+	[]string{"hexagon", "honeycomb", "nid d'abeille", "nid d’abeille", "ruche", "pyramide", "pyramid", "entonnoir", "funnel", "quadrant", "2x2", "swot",
+		"eisenhower", "maslow", "venn", "organigramme", "org chart", "mind map", "carte mentale", "gartner", "mckinsey", "value chain", "chaîne de valeur",
+		"business model", "modèle économique", "diagramme", "diagram", "strategy map", "framework visuel"},
+	[]string{"pdca", "okr", "bmc"},
+)
+
 var richUIFormula = regexp.MustCompile(`\b[fgh]\s*\(\s*x\s*\)|\bx\s*\^\s*\d|\b[a-z]\s*=\s*\d*x\s*[+\-^]`)
 
 // richUIFamiliesFor decides what a request needs. The prompt is built again for every turn, so a follow-up that names nothing
@@ -91,6 +101,7 @@ func richUIFamiliesFor(prompt string) richUIFamilies {
 		charts:       richUIChartWords.MatchString(text) || richUIFormula.MatchString(text),
 		forms:        richUIFormsWords.MatchString(text),
 		design:       richUIDesignWords.MatchString(text),
+		diagrams:     richUIDiagramsWords.MatchString(text),
 	}
 }
 
@@ -115,6 +126,7 @@ func (f richUIFamilies) withModes(modes map[string]string) richUIFamilies {
 	f.charts = force(f.charts, modes["charts"])
 	f.forms = force(f.forms, modes["forms"])
 	f.design = force(f.design, modes["design"])
+	f.diagrams = force(f.diagrams, modes["diagrams"])
 	return f
 }
 
@@ -133,6 +145,7 @@ func RichFamilyWords() map[string]int {
 			"charts":       words(richUIFamilies{charts: true}),
 			"forms":        words(richUIFamilies{forms: true}),
 			"design":       words(richUIFamilies{design: true}),
+			"diagrams":     words(richUIFamilies{diagrams: true}),
 		}
 	})
 	out := make(map[string]int, len(richFamilyWordsCache))
@@ -152,6 +165,8 @@ func (f richUIFamilies) has(group string) bool {
 		return f.forms
 	case richUIDesignGroup:
 		return f.design
+	case richUIDiagramsGroup:
+		return f.diagrams
 	}
 	return true
 }
@@ -194,6 +209,7 @@ func richKnowledgeAnswersBlock(families richUIFamilies) string {
 	// The Knowledge agent answers from documents: it asks nothing of the reader in a form.
 	families.forms = false
 	families.design = false
+	families.diagrams = false
 	return richBlock(families, true)
 }
 
@@ -228,6 +244,9 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge
 	if families.design {
 		b.WriteString(richUIDesignShape)
 	}
+	if families.diagrams {
+		b.WriteString(richUIDiagramsShape)
+	}
 	if knowledge {
 		b.WriteString(richUIKnowledgeInteractionShape)
 	} else {
@@ -245,6 +264,9 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge
 	}
 	if families.design {
 		b.WriteString(richUIDesignNote)
+	}
+	if families.diagrams {
+		b.WriteString(richUIDiagramsNote)
 	}
 	b.WriteString(richUITextNote)
 	if knowledge {
@@ -320,7 +342,7 @@ func usesAny(example string, names []string) bool {
 const richUIHistoryWindow = 12
 
 func (f richUIFamilies) union(other richUIFamilies) richUIFamilies {
-	return richUIFamilies{architecture: f.architecture || other.architecture, charts: f.charts || other.charts, forms: f.forms || other.forms, design: f.design || other.design}
+	return richUIFamilies{architecture: f.architecture || other.architecture, charts: f.charts || other.charts, forms: f.forms || other.forms, design: f.design || other.design, diagrams: f.diagrams || other.diagrams}
 }
 
 var (
@@ -329,16 +351,17 @@ var (
 	richUIUsesCharts       *regexp.Regexp
 	richUIUsesForms        *regexp.Regexp
 	richUIUsesDesign       *regexp.Regexp
+	richUIUsesDiagrams     *regexp.Regexp
 )
 
 // richUIUsesOf matches a call of any component of the three families, whatever the words of the request were.
-func richUIUsesOf() (architecture, charts, forms, design *regexp.Regexp) {
+func richUIUsesOf() (architecture, charts, forms, design, diagrams *regexp.Regexp) {
 	richUIUsesOnce.Do(func() {
 		catalog := richUICatalogLoaded()
 		if catalog == nil {
 			return
 		}
-		var archNames, chartNames, formNames, designNames []string
+		var archNames, chartNames, formNames, designNames, diagramNames []string
 		for _, c := range catalog.Components {
 			switch c.Group {
 			case richUIArchitectureGroup:
@@ -349,6 +372,8 @@ func richUIUsesOf() (architecture, charts, forms, design *regexp.Regexp) {
 				formNames = append(formNames, regexp.QuoteMeta(c.Name))
 			case richUIDesignGroup:
 				designNames = append(designNames, regexp.QuoteMeta(c.Name))
+			case richUIDiagramsGroup:
+				diagramNames = append(diagramNames, regexp.QuoteMeta(c.Name))
 			}
 		}
 		compile := func(names []string) *regexp.Regexp {
@@ -357,15 +382,15 @@ func richUIUsesOf() (architecture, charts, forms, design *regexp.Regexp) {
 			}
 			return regexp.MustCompile(`(?:^|[^A-Za-z])(?:` + strings.Join(names, "|") + `)\(`)
 		}
-		richUIUsesArchitecture, richUIUsesCharts, richUIUsesForms, richUIUsesDesign = compile(archNames), compile(chartNames), compile(formNames), compile(designNames)
+		richUIUsesArchitecture, richUIUsesCharts, richUIUsesForms, richUIUsesDesign, richUIUsesDiagrams = compile(archNames), compile(chartNames), compile(formNames), compile(designNames), compile(diagramNames)
 	})
-	return richUIUsesArchitecture, richUIUsesCharts, richUIUsesForms, richUIUsesDesign
+	return richUIUsesArchitecture, richUIUsesCharts, richUIUsesForms, richUIUsesDesign, richUIUsesDiagrams
 }
 
 // richUIFamiliesInHistory returns the families that the latest answers of a session already drew. A follow-up that names nothing
 // ("and for x squared?", "now the second one") is about what was just shown, so the model keeps what it needs to continue it.
 func richUIFamiliesInHistory(messages []types.Message) richUIFamilies {
-	arch, charts, forms, design := richUIUsesOf()
+	arch, charts, forms, design, diagrams := richUIUsesOf()
 	var found richUIFamilies
 	read := 0
 	for i := len(messages) - 1; i >= 0 && read < richUIHistoryWindow; i-- {
@@ -382,6 +407,7 @@ func richUIFamiliesInHistory(messages []types.Message) richUIFamilies {
 			found.charts = found.charts || (charts != nil && charts.MatchString(text.Text))
 			found.forms = found.forms || (forms != nil && forms.MatchString(text.Text))
 			found.design = found.design || (design != nil && design.MatchString(text.Text))
+			found.diagrams = found.diagrams || (diagrams != nil && diagrams.MatchString(text.Text))
 		}
 		if found == richUIAllFamilies {
 			break

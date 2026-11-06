@@ -17,8 +17,8 @@ async function draw(code: string) {
 const ALL = GALLERIES.flatMap((gallery) => gallery.examples.map((example) => ({ gallery: gallery.id, ...example })))
 
 describe('the galleries', () => {
-  it('are ten themed collections and the examples of the agent, each with a name, a line and a tone', () => {
-    expect(GALLERIES.map((gallery) => gallery.id)).toEqual(['landing', 'mobile', 'dashboards', 'brand', 'math', 'calculators', 'data', 'cloud', 'learning', 'work', 'core'])
+  it('are eleven themed collections and the examples of the agent, each with a name, a line and a tone', () => {
+    expect(GALLERIES.map((gallery) => gallery.id)).toEqual(['landing', 'mobile', 'dashboards', 'brand', 'math', 'calculators', 'data', 'cloud', 'schemas', 'learning', 'work', 'core'])
     for (const gallery of GALLERIES) {
       expect(gallery.title.length).toBeGreaterThan(3)
       expect(gallery.description.length).toBeGreaterThan(20)

@@ -66,6 +66,9 @@
     },
     "architecture": {
       "hint": "Drawings of systems, with the logos of technologies."
+    },
+    "diagrams": {
+      "hint": "Honeycombs, processes, cycles, pyramids, funnels, matrices and stacks."
     }
   },
   "tryIt": {
@@ -103,6 +106,10 @@
       "architecture": {
         "label": "An architecture",
         "prompt": "Draw the architecture of a RAG chatbot on AWS: documents in S3, a Lambda that indexes them, a vector database and an API."
+      },
+      "strategy": {
+        "label": "A strategy diagram",
+        "prompt": "Draw my product strategy as a honeycomb of seven parts: customers, problem, positioning, product, pricing, go to market and metrics, with the positioning in orange."
       }
     }
   },
@@ -129,7 +136,8 @@
       "charts": "Graphs",
       "forms": "Forms",
       "design": "Design",
-      "architecture": "Architecture"
+      "architecture": "Architecture",
+      "diagrams": "Diagrams"
     },
     "hub": {
       "back": "All galleries",
@@ -180,6 +188,10 @@
     "core": {
       "title": "The agent's examples",
       "description": "The short examples the agent is taught from: tables, steps, charts, forms and a first sketch of a page."
+    },
+    "schemas": {
+      "title": "Schemas and strategy",
+      "description": "The shapes of a strategy or a method: a honeycomb, a process, a cycle, a pyramid, a funnel, a matrix and a stack."
     }
   }
 }

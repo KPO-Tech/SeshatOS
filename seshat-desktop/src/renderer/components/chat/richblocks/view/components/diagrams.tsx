@@ -1,0 +1,289 @@
+import type { ComponentType, CSSProperties } from 'react'
+import { DIAGRAM_COLOURS, DIAGRAM_LIMITS, columnsOf, partsOf } from '../../lang/diagrams'
+import { fillCss, readableOn, safeFill, type Fill } from '../../lang/design'
+import type { UiNode } from '../../lang/types'
+import { text } from '../charts/readers'
+import type { ComponentProps } from '../NodeView'
+
+// The diagrams of an answer (ADR 0018): a honeycomb, a process of chevrons, a cycle, a pyramid or a funnel, a matrix, a stack of layers. The
+// model gives the words and the colours; the shape, the spacing and the colour of the text are the app's. A colour is read by safeFill, so only
+// a #rrggbb ever reaches a style.
+
+const SQRT3 = Math.sqrt(3)
+const mix = (color: string, percent: number) => `color-mix(in srgb, ${color} ${percent}%, transparent)`
+
+/** The fill of a part: the colour it names, or the one of its place in the series. */
+function fillOf(node: UiNode, index: number): Fill {
+  return safeFill(node.props.color) ?? { base: DIAGRAM_COLOURS[index % DIAGRAM_COLOURS.length], stops: [DIAGRAM_COLOURS[index % DIAGRAM_COLOURS.length]] }
+}
+
+function Title({ value }: { value?: string }) {
+  return value ? <div className="mb-2.5 text-[14px] font-semibold text-app-text">{value}</div> : null
+}
+
+// ── Hive: a honeycomb ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const HEX_CLIP = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
+
+function Hive({ props }: ComponentProps) {
+  const columns = columnsOf({ props })
+  const n = columns.length
+  const rows = Math.max(1, ...columns.map((column) => column.length))
+  if (n === 0) return null
+  // Flat-topped hexagons of radius 1: a column is 1.5 further than the one before, a hexagon is the square root of three high, and the columns
+  // are centred on each other, so that columns of one and two make a honeycomb by themselves.
+  const width = 1.5 * n + 0.5
+  const height = rows * SQRT3
+  const gap = 0.92
+  const fontSize = `${((200 / width) * 0.075).toFixed(2)}cqw`
+  const left = text(props.left)
+  const right = text(props.right)
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      {(left || right) && (
+        <div className="mb-1.5 flex justify-between gap-4 text-[11.5px] font-semibold uppercase tracking-wide text-app-text-muted">
+          <span>{left}</span>
+          <span>{right}</span>
+        </div>
+      )}
+      <div className="relative mx-auto w-full" style={{ aspectRatio: String(width / height), containerType: 'inline-size', maxWidth: `${Math.round(width * 112)}px` }}>
+        {columns.map((column, i) =>
+          column.map((hex, j) => {
+            const fill = fillOf(hex, 0)
+            const x = i * 1.5
+            const y = (height - column.length * SQRT3) / 2 + j * SQRT3
+            const style: CSSProperties = {
+              left: `${((x + (1 - gap)) / width) * 100}%`,
+              top: `${((y + ((1 - gap) * SQRT3) / 2) / height) * 100}%`,
+              width: `${((2 * gap) / width) * 100}%`,
+              height: `${((SQRT3 * gap) / height) * 100}%`,
+              clipPath: HEX_CLIP,
+              background: fillCss(fill),
+              color: readableOn(fill.base),
+              fontSize,
+              // A percentage of padding is one of the width of the whole honeycomb, not of the hexagon: it is worked out from the hexagon.
+              paddingInline: `${(((200 * gap) / width) * 0.14).toFixed(2)}%`
+            }
+            return (
+              <div key={`${i}-${j}`} className="absolute flex items-center justify-center text-center font-semibold leading-tight" style={style}>
+                {String(hex.props.label ?? '')}
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Chevrons: a process ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function Chevrons({ props }: ComponentProps) {
+  const items = partsOf({ props }, 'items').slice(0, DIAGRAM_LIMITS.chevrons)
+  if (items.length === 0) return null
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <div className="flex">
+        {items.map((item, index) => {
+          const fill = fillOf(item, index)
+          const first = index === 0
+          const point = 'min(22px, 18%)'
+          const clip = first ? `polygon(0 0, calc(100% - ${point}) 0, 100% 50%, calc(100% - ${point}) 100%, 0 100%)` : `polygon(0 0, calc(100% - ${point}) 0, 100% 50%, calc(100% - ${point}) 100%, 0 100%, ${point} 50%)`
+          return (
+            <div key={index} className="min-w-0 flex-1" style={{ marginLeft: first ? 0 : -6 }}>
+              <div className="flex h-16 items-center justify-center px-[18%] text-center text-[13px] font-semibold leading-tight" style={{ clipPath: clip, background: fillCss(fill), color: readableOn(fill.base) }}>
+                {String(item.props.label ?? '')}
+              </div>
+              {text(item.props.text) && <div className="mt-2 px-2 text-center text-[12px] leading-snug text-app-text-secondary">{text(item.props.text)}</div>}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Cycle: steps in a loop ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+/** A label cut into at most two lines, at the space nearest its middle. */
+function twoLines(label: string): string[] {
+  if (label.length <= 14 || !label.includes(' ')) return [label]
+  const middle = label.length / 2
+  let best = -1
+  label.split('').forEach((char, at) => {
+    if (char === ' ' && (best === -1 || Math.abs(at - middle) < Math.abs(best - middle))) best = at
+  })
+  return [label.slice(0, best), label.slice(best + 1)]
+}
+
+function Cycle({ props }: ComponentProps) {
+  const loops = partsOf({ props }, 'loops').slice(0, DIAGRAM_LIMITS.loops)
+  const n = loops.length
+  if (n < 3) return null
+  const size = 460
+  const c = size / 2
+  const radius = 150
+  const boxWidth = Math.min(130, 600 / n)
+  const boxHeight = 48
+  const angle = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n
+  const at = (theta: number) => ({ x: c + radius * Math.cos(theta), y: c + radius * Math.sin(theta) })
+  // An arrow leaves a box and reaches the next one just outside them, whatever their size and place: the angle is searched until the point of
+  // the circle is clear of the box.
+  const clear = (point: { x: number; y: number }, box: { x: number; y: number }) => Math.abs(point.x - box.x) > boxWidth / 2 + 9 || Math.abs(point.y - box.y) > boxHeight / 2 + 9
+  const leave = (i: number) => {
+    for (let d = 0.03; d < Math.PI; d += 0.02) if (clear(at(angle(i) + d), at(angle(i)))) return angle(i) + d
+    return angle(i) + 0.5
+  }
+  const reach = (i: number) => {
+    for (let d = 0.03; d < Math.PI; d += 0.02) if (clear(at(angle(i) - d), at(angle(i)))) return angle(i) - d
+    return angle(i) - 0.5
+  }
+  const center = text(props.center)
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <svg viewBox={`0 0 ${size} ${size}`} className="mx-auto block w-full max-w-[460px]" role="img" aria-label={text(props.title) ?? 'cycle'}>
+        <defs>
+          <marker id="cycle-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" className="text-app-text-muted" />
+          </marker>
+        </defs>
+        {loops.map((_, i) => {
+          const start = leave(i)
+          const end = reach(i + 1)
+          if (end <= start) return null
+          const from = at(start)
+          const to = at(end)
+          return <path key={`arc-${i}`} d={`M${from.x.toFixed(1)} ${from.y.toFixed(1)} A${radius} ${radius} 0 0 1 ${to.x.toFixed(1)} ${to.y.toFixed(1)}`} fill="none" stroke="currentColor" strokeWidth="2.2" className="text-app-text-muted" markerEnd="url(#cycle-head)" opacity="0.7" />
+        })}
+        {center && (
+          <text x={c} y={c} textAnchor="middle" dominantBaseline="middle" fill="currentColor" className="text-app-text" style={{ fontSize: 15, fontWeight: 700 }}>
+            {twoLines(center).map((line, k, all) => (
+              <tspan key={k} x={c} dy={k === 0 ? (all.length === 1 ? 0 : -9) : 18}>
+                {line}
+              </tspan>
+            ))}
+          </text>
+        )}
+        {loops.map((loop, i) => {
+          const fill = fillOf(loop, i)
+          const { x, y } = at(angle(i))
+          const lines = twoLines(String(loop.props.label ?? ''))
+          return (
+            <g key={`node-${i}`}>
+              <rect x={x - boxWidth / 2} y={y - boxHeight / 2} width={boxWidth} height={boxHeight} rx="14" fill={fill.base} />
+              <text x={x} y={y} textAnchor="middle" dominantBaseline="middle" fill={readableOn(fill.base)} style={{ fontSize: n > 6 ? 11 : 12.5, fontWeight: 600 }}>
+                {lines.map((line, k) => (
+                  <tspan key={k} x={x} dy={k === 0 ? (lines.length === 1 ? 0 : -7) : 14}>
+                    {line}
+                  </tspan>
+                ))}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+// ── Pyramid and funnel ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function Pyramid({ props }: ComponentProps) {
+  const levels = partsOf({ props }, 'levels').slice(0, DIAGRAM_LIMITS.levels)
+  const n = levels.length
+  if (n === 0) return null
+  const funnel = props.funnel === true
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-1">
+        {levels.map((level, index) => {
+          const fill = fillOf(level, index)
+          // A pyramid grows from its top, a funnel narrows towards its foot; the narrowest level keeps a third of the width, so that its words fit.
+          const share = (step: number) => 0.3 + (0.7 * step) / n
+          const top = funnel ? share(n - index) : share(index)
+          const bottom = funnel ? share(n - index - 1) : share(index + 1)
+          const clip = `polygon(${50 - (top * 100) / 2}% 0, ${50 + (top * 100) / 2}% 0, ${50 + (bottom * 100) / 2}% 100%, ${50 - (bottom * 100) / 2}% 100%)`
+          return (
+            <div key={index} className="relative flex h-14 items-center justify-center text-center" style={{ clipPath: clip, background: fillCss(fill), color: readableOn(fill.base) }}>
+              <div className="flex flex-col px-[12%] leading-tight">
+                <span className="text-[13px] font-semibold">{String(level.props.label ?? '')}</span>
+                {text(level.props.text) && <span className="text-[11px] opacity-85">{text(level.props.text)}</span>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Quadrant: a matrix of two by two ────────────────────────────────────────────────────────────────────────────────────────────────
+
+function Quadrant({ props }: ComponentProps) {
+  const cells = partsOf({ props }, 'cells').slice(0, DIAGRAM_LIMITS.quads)
+  if (cells.length === 0) return null
+  const xLabel = text(props.xLabel)
+  const yLabel = text(props.yLabel)
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <div className="flex gap-2">
+        {yLabel && <div className="flex w-5 shrink-0 items-center justify-center text-[11.5px] font-semibold uppercase tracking-wide text-app-text-muted [writing-mode:vertical-rl] rotate-180">{yLabel}</div>}
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            {cells.map((cell, index) => {
+              const fill = fillOf(cell, [2, 0, 4, 6][index] ?? index)
+              return (
+                <div key={index} className="flex min-h-[110px] flex-col gap-1 rounded-xl p-3.5" style={{ background: mix(fill.base, 12), border: `1px solid ${mix(fill.base, 42)}` }}>
+                  <div className="text-[13.5px] font-semibold" style={{ color: fill.base }}>
+                    {String(cell.props.title ?? '')}
+                  </div>
+                  {text(cell.props.text) && <div className="text-[12.5px] leading-snug text-app-text-secondary">{text(cell.props.text)}</div>}
+                </div>
+              )
+            })}
+          </div>
+          {xLabel && <div className="text-center text-[11.5px] font-semibold uppercase tracking-wide text-app-text-muted">{xLabel}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Layers: a stack ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function Layers({ props }: ComponentProps) {
+  const layers = partsOf({ props }, 'layers').slice(0, DIAGRAM_LIMITS.layers)
+  if (layers.length === 0) return null
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <div className="flex flex-col gap-1.5">
+        {layers.map((layer, index) => {
+          const fill = fillOf(layer, index)
+          return (
+            <div key={index} className="grid items-stretch overflow-hidden rounded-xl border border-app-border-subtle bg-app-surface" style={{ gridTemplateColumns: 'minmax(7rem, 30%) minmax(0, 1fr)' }}>
+              <div className="flex items-center px-3.5 py-3 text-[13px] font-semibold leading-tight" style={{ background: fillCss(fill), color: readableOn(fill.base) }}>
+                {String(layer.props.label ?? '')}
+              </div>
+              <div className="flex items-center px-3.5 py-3 text-[12.5px] leading-snug text-app-text-secondary">{text(layer.props.text) ?? ' '}</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/** A Hex, a Chev, a Loop, a Level, a Quad or a Layer is read by the shape that holds it. */
+function ReadByParent() {
+  return null
+}
+
+export const diagramComponents: Record<string, ComponentType<ComponentProps>> = {
+  Hive, Hex: ReadByParent, Chevrons, Chev: ReadByParent, Cycle, Loop: ReadByParent, Pyramid, Level: ReadByParent, Quadrant, Quad: ReadByParent, Layers, Layer: ReadByParent
+}
