@@ -226,8 +226,8 @@
     {
       "name": "Item",
       "group": "Architecture",
-      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone, shape?: box|cylinder)",
-      "description": "A line with an icon, a label and a caption; boxed draws it as a card, shape cylinder as a database. Give it its own name to link it with a Flow."
+      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone, shape?: box|cylinder|hexagon|pill)",
+      "description": "A line with an icon, a label and a caption; boxed draws it as a card, shape cylinder as a database, hexagon or pill for a step. Give it its own name to link it with a Flow."
     },
     {
       "name": "Flow",
@@ -576,6 +576,30 @@
       "group": "Diagrams",
       "signature": "Layer(label: text, text?: text, color?: text)",
       "description": "A layer of Layers."
+    },
+    {
+      "name": "Venn",
+      "group": "Diagrams",
+      "signature": "Venn(sets: [VSet], center?: text, title?: text)",
+      "description": "Two or three sets that overlap, each a VSet; center names what they share."
+    },
+    {
+      "name": "VSet",
+      "group": "Diagrams",
+      "signature": "VSet(label: text, text?: text, color?: text)",
+      "description": "A set of a Venn: its label, a short text, a color."
+    },
+    {
+      "name": "Tree",
+      "group": "Diagrams",
+      "signature": "Tree(root: Branch, title?: text)",
+      "description": "A tree or an org chart from one root Branch, its children below, up to four levels."
+    },
+    {
+      "name": "Branch",
+      "group": "Diagrams",
+      "signature": "Branch(label: text, children?: [Branch], text?: text, color?: text)",
+      "description": "A node of a Tree: a label, its children (Branch), a short text, a color."
     },
     {
       "name": "Draft",

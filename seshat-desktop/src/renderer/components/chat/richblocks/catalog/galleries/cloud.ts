@@ -41,6 +41,21 @@ f3 = Flow("core", "delivery", null, false, "block")
 f4 = Flow("lake", "use", null, false, "block")`
     },
     {
+      title: 'Steps as hexagons',
+      about: 'Items as hexagons and pills, a database as a cylinder with its icon.',
+      code: `root = Architecture([a, b, c], [f1, f2], "A release, in shapes", "row")
+a = Panel([s1, s2], "Build", "blue", null, false, "column")
+s1 = Item("Compile", "code", null, false, "blue", "hexagon")
+s2 = Item("Test", "check", null, false, "teal", "hexagon")
+b = Panel([s3, s4], "Ship", "violet", null, false, "column")
+s3 = Item("Image", "box", null, false, "violet", "pill")
+s4 = Item("Rollout", "rocket", null, false, "orange", "pill")
+c = Panel([db], "State", "green", null, false, "column")
+db = Item("Releases", "database", "PostgreSQL", false, "green", "cylinder")
+f1 = Flow("a", "b", null, false, "block")
+f2 = Flow("b", "c", null, false, "block")`
+    },
+    {
       title: 'An ETL pipeline',
       about: 'Stages in a row with big arrows between them.',
       code: `root = Architecture([src, etl, wh, bi], [f1, f2, f3], "Orders pipeline", "row")

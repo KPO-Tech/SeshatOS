@@ -22,6 +22,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **A Generative UI page.** The menu entry opens a page with the switch, a gallery of every example the agent is taught from, eight requests to try (each opens a new chat with the text ready), and the choice of families of components: automatic, always or never, with what each adds to the prompt (ADR 0017).
 - **Diagrams that say an idea.** The agent can draw a honeycomb of parts, a process in arrow-shaped steps, a cycle, a pyramid or a funnel, a matrix of two by two and a stack of layers, in colours of its choosing (ADR 0018). A new family in the Generative UI window, with a gallery.
 - **Architectures as posters.** An architecture can lay its stages in a row, sit in a frame with a large title, draw databases as cylinders and join the stages with big arrows (ADR 0019).
+- **Venn diagrams, org charts and decision trees**, hexagon and pill shapes for the steps of an architecture, and a legend that wraps under the bars of a session or a budget, where short parts overlapped their words.
 
 ## [0.3.16] - 2026-11-05
 

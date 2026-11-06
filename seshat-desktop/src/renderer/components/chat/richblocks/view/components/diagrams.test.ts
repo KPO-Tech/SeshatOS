@@ -49,3 +49,18 @@ describe('the diagrams of an answer, drawn', () => {
     expect(html).not.toContain('url(x)')
   })
 })
+
+describe('a venn and a tree, drawn', () => {
+  it('draws the sets with their words and what they share', async () => {
+    const html = await draw('root = Venn([VSet("Business", "Value", "#2563eb"), VSet("Design", "Needs", "#db2777"), VSet("Tech")], "Product")')
+    for (const word of ['Business', 'Value', 'Design', 'Needs', 'Tech', 'Product']) expect(html).toContain(word)
+    expect((html.match(/<circle/g) ?? []).length).toBe(3)
+  })
+
+  it('draws a tree: every node, and the lines that join them to their parent', async () => {
+    const html = await draw('root = Tree(Branch("CEO", [Branch("CTO", [Branch("Dev")]), Branch("CFO")], "Amina"), "Org")')
+    for (const word of ['CEO', 'Amina', 'CTO', 'Dev', 'CFO', 'Org']) expect(html).toContain(word)
+    // A stem and a line over the children of each node that has some.
+    expect((html.match(/h-px bg-app-border/g) ?? []).length).toBe(3)
+  })
+})

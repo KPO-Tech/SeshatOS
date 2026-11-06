@@ -260,14 +260,18 @@ function SegmentBar({ props }: ComponentProps) {
           <div key={index} className={`h-2 min-w-1.5 rounded-full bg-current ${TONE_TEXT[segment.tone]}`} style={{ flexGrow: weight(segment.value), flexBasis: 0 }} />
         ))}
       </div>
-      <div className="mt-2.5 flex gap-1.5">
+      {/* A legend that wraps, not labels under their segment: a short segment has no room for its words. */}
+      <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-5 gap-y-2 p-0">
         {segments.map((segment, index) => (
-          <div key={index} className="min-w-0 text-left" style={{ flexGrow: weight(segment.value), flexBasis: 0 }}>
-            <div className="text-[15px] font-medium text-app-text">{withUnit(segment.value, unit)}</div>
-            <div className="text-[12px] leading-snug text-app-text-muted">{segment.label}</div>
-          </div>
+          <li key={index} className="flex min-w-0 items-start gap-2">
+            <span className={`mt-[5px] size-2.5 shrink-0 rounded-full bg-current ${TONE_TEXT[segment.tone]}`} aria-hidden="true" />
+            <span className="min-w-0">
+              <span className="block text-[15px] font-medium leading-tight text-app-text">{withUnit(segment.value, unit)}</span>
+              <span className="block text-[12px] leading-snug text-app-text-muted">{segment.label}</span>
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   )
 }

@@ -34,3 +34,24 @@ describe('the diagrams of an answer', () => {
     expect(problems(`root = Hive([[Hex("${'x'.repeat(DIAGRAM_LIMITS.text + 1)}")]])`).some((message) => message.includes('longer than'))).toBe(true)
   })
 })
+
+describe('a venn and a tree', () => {
+  it('are read without a complaint when they are well written', () => {
+    expect(problems('root = Stack([Venn([VSet("a", "x", "blue"), VSet("b")], "both"), Tree(Branch("Top", [Branch("Left"), Branch("Right", [Branch("Leaf")])]), "Chart")])')).toEqual([])
+  })
+
+  it('are refused with one set or four, a tree without a root, and a colour that is none', () => {
+    expect(problems('root = Venn([VSet("a")])').some((message) => message.includes('two or three'))).toBe(true)
+    expect(problems('root = Venn([VSet("a"), VSet("b"), VSet("c"), VSet("d")])').some((message) => message.includes('two or three'))).toBe(true)
+    expect(problems('root = Tree(null)').length).toBeGreaterThan(0)
+    expect(problems('root = Venn([VSet("a", null, "nope"), VSet("b")])').some((message) => message.includes('is not a colour'))).toBe(true)
+  })
+
+  it('are refused when a tree is too deep, too wide or too big', () => {
+    expect(problems('root = Tree(Branch("1", [Branch("2", [Branch("3", [Branch("4", [Branch("5")])])])]))').some((message) => message.includes('levels'))).toBe(true)
+    const kids = Array.from({ length: DIAGRAM_LIMITS.children + 1 }, (_, i) => `Branch("k${i}")`).join(', ')
+    expect(problems(`root = Tree(Branch("r", [${kids}]))`).some((message) => message.includes('children'))).toBe(true)
+    const wide = Array.from({ length: 6 }, (_, i) => `Branch("a${i}", [${Array.from({ length: 5 }, (__, j) => `Branch("b${i}${j}")`).join(', ')}])`).join(', ')
+    expect(problems(`root = Tree(Branch("r", [${wide}]))`).some((message) => message.includes('nodes'))).toBe(true)
+  })
+})

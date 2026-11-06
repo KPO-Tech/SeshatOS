@@ -31,26 +31,50 @@ function Panel({ props, id }: ComponentProps) {
   )
 }
 
-/** A database: a cylinder in the colour of its tone, with its label on it. */
-function Cylinder({ props, id }: ComponentProps) {
-  const hue = TONES[toneOrNull(props.tone) ?? 'blue']
+/** The words of a shape drawn in the colour of a tone: white on it, with the icon above when there is one. */
+function ShapeLabel({ props }: { props: Record<string, unknown> }) {
+  const icon = typeof props.icon === 'string' ? props.icon : undefined
   return (
-    <div data-ui-id={id} data-ui-item className="relative flex min-h-[92px] min-w-[7rem] items-center justify-center px-3 pb-2.5 pt-7 text-center">
-      <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className={`absolute inset-0 size-full ${hue.accent}`}>
-        <path d="M1 15 C1 3 99 3 99 15 L99 85 C99 97 1 97 1 85 Z" fill="currentColor" />
-        <ellipse cx="50" cy="15" rx="49" ry="11" fill="#ffffff" opacity="0.2" />
-        <path d="M1 15 C1 27 99 27 99 15" fill="none" stroke="#000000" strokeOpacity="0.18" />
-      </svg>
-      <div className="relative z-10 min-w-0 text-white">
-        <div className="text-[12.5px] font-bold leading-tight">{String(props.label)}</div>
-        {typeof props.caption === 'string' && <div className="mt-0.5 text-[11px] leading-snug opacity-85">{props.caption}</div>}
+    <div className="relative z-10 flex min-w-0 flex-col items-center gap-0.5 text-white">
+      {icon && <RichIcon name={icon} size={18} />}
+      <div className="text-[12.5px] font-bold leading-tight">{String(props.label)}</div>
+      {typeof props.caption === 'string' && <div className="text-[11px] leading-snug opacity-85">{props.caption}</div>}
+    </div>
+  )
+}
+
+/** A database (a cylinder), a hexagon or a pill, in the colour of the tone of the item, with its label on it. */
+function ShapedItem({ props, id }: ComponentProps) {
+  const hue = TONES[toneOrNull(props.tone) ?? 'blue']
+  const shape = props.shape
+  if (shape === 'pill') {
+    return (
+      <div data-ui-id={id} data-ui-item className={`flex min-h-[48px] min-w-[7rem] items-center justify-center rounded-full bg-current px-5 py-2.5 text-center ${hue.accent}`}>
+        <ShapeLabel props={props} />
       </div>
+    )
+  }
+  const hexagon = shape === 'hexagon'
+  return (
+    <div data-ui-id={id} data-ui-item className={`relative flex min-w-[7rem] items-center justify-center text-center ${hexagon ? 'min-h-[88px] px-7 py-3' : 'min-h-[92px] px-3 pb-2.5 pt-7'}`}>
+      <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className={`absolute inset-0 size-full ${hue.accent}`}>
+        {hexagon ? (
+          <polygon points="25,2 75,2 99,50 75,98 25,98 1,50" fill="currentColor" />
+        ) : (
+          <>
+            <path d="M1 15 C1 3 99 3 99 15 L99 85 C99 97 1 97 1 85 Z" fill="currentColor" />
+            <ellipse cx="50" cy="15" rx="49" ry="11" fill="#ffffff" opacity="0.2" />
+            <path d="M1 15 C1 27 99 27 99 15" fill="none" stroke="#000000" strokeOpacity="0.18" />
+          </>
+        )}
+      </svg>
+      <ShapeLabel props={props} />
     </div>
   )
 }
 
 function Item({ props, id }: ComponentProps) {
-  if (props.shape === 'cylinder') return <Cylinder props={props} id={id} />
+  if (props.shape === 'cylinder' || props.shape === 'hexagon' || props.shape === 'pill') return <ShapedItem props={props} id={id} />
   const boxed = props.boxed === true
   const icon = typeof props.icon === 'string' ? props.icon : undefined
   const tone = toneOrNull(props.tone)

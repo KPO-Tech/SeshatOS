@@ -1,6 +1,7 @@
 import type { ComponentType, CSSProperties } from 'react'
 import { DIAGRAM_COLOURS, DIAGRAM_LIMITS, columnsOf, partsOf } from '../../lang/diagrams'
 import { fillCss, readableOn, safeFill, type Fill } from '../../lang/design'
+import { isNode } from '../../lang/parseUi'
 import type { UiNode } from '../../lang/types'
 import { text } from '../charts/readers'
 import type { ComponentProps } from '../NodeView'
@@ -279,11 +280,112 @@ function Layers({ props }: ComponentProps) {
   )
 }
 
+// ── Venn: sets that overlap ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function Venn({ props }: ComponentProps) {
+  const sets = partsOf({ props }, 'sets').slice(0, 3)
+  const n = sets.length
+  if (n < 2) return null
+  const three = n === 3
+  const width = 480
+  const height = three ? 430 : 300
+  const radius = three ? 108 : 112
+  // The centres of the circles, and where the words of each set sit: away from the others, in the part of the circle that is its own.
+  const centres = three ? [{ x: 240, y: 135 }, { x: 170, y: 255 }, { x: 310, y: 255 }] : [{ x: 172, y: 150 }, { x: 308, y: 150 }]
+  const words = three ? [{ x: 240, y: 78 }, { x: 128, y: 298 }, { x: 352, y: 298 }] : [{ x: 108, y: 150 }, { x: 372, y: 150 }]
+  const middle = three ? { x: 240, y: 218 } : { x: 240, y: 150 }
+  const center = text(props.center)
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto block w-full max-w-[480px]" role="img" aria-label={text(props.title) ?? 'venn'}>
+        {sets.map((set, i) => {
+          const fill = fillOf(set, [2, 5, 6][i] ?? i)
+          return <circle key={`c-${i}`} cx={centres[i].x} cy={centres[i].y} r={radius} fill={fill.base} fillOpacity="0.5" stroke={fill.base} strokeWidth="2" />
+        })}
+        {sets.map((set, i) => {
+          const lines = twoLines(String(set.props.label ?? ''))
+          const note = text(set.props.text)
+          return (
+            <text key={`t-${i}`} x={words[i].x} y={words[i].y} textAnchor="middle" fill="currentColor" className="text-app-text" style={{ fontSize: 14, fontWeight: 700 }}>
+              {lines.map((line, k) => (
+                <tspan key={k} x={words[i].x} dy={k === 0 ? 0 : 17}>
+                  {line}
+                </tspan>
+              ))}
+              {note && (
+                <tspan x={words[i].x} dy={17} style={{ fontSize: 11.5, fontWeight: 400 }} fill="currentColor" className="text-app-text-secondary">
+                  {note}
+                </tspan>
+              )}
+            </text>
+          )
+        })}
+        {center && (
+          <text x={middle.x} y={middle.y} textAnchor="middle" dominantBaseline="middle" fill="currentColor" className="text-app-text" style={{ fontSize: 13, fontWeight: 700 }}>
+            {twoLines(center).map((line, k, all) => (
+              <tspan key={k} x={middle.x} dy={k === 0 ? (all.length === 1 ? 0 : -8) : 16}>
+                {line}
+              </tspan>
+            ))}
+          </text>
+        )}
+      </svg>
+    </div>
+  )
+}
+
+// ── Tree: an org chart ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function Branches({ node, level, index }: { node: UiNode; level: number; index: number }) {
+  const kids = level < DIAGRAM_LIMITS.depth ? partsOf(node, 'children').slice(0, DIAGRAM_LIMITS.children) : []
+  const fill = fillOf(node, level - 1 + index)
+  const note = text(node.props.text)
+  return (
+    <div className="flex flex-col items-center">
+      <div className="max-w-[11rem] rounded-xl px-3.5 py-2 text-center shadow-sm" style={{ background: fillCss(fill), color: readableOn(fill.base) }}>
+        <div className="text-[13px] font-semibold leading-tight">{String(node.props.label ?? '')}</div>
+        {note && <div className="mt-0.5 text-[11px] leading-snug opacity-85">{note}</div>}
+      </div>
+      {kids.length > 0 && (
+        <>
+          <div className="h-4 w-px bg-app-border" />
+          <div className="flex items-start">
+            {kids.map((kid, i) => (
+              <div key={i} className="relative flex flex-col items-center px-2 pt-4">
+                {/* The line over the children: it starts at the middle of the first and stops at the middle of the last. */}
+                <span className="absolute top-0 h-px bg-app-border" style={{ left: i === 0 ? '50%' : 0, right: i === kids.length - 1 ? '50%' : 0 }} />
+                <span className="absolute left-1/2 top-0 h-4 w-px bg-app-border" />
+                <Branches node={kid} level={level + 1} index={i + index} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function Tree({ props }: ComponentProps) {
+  const root = isNode(props.root) ? props.root : null
+  if (!root) return null
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <div className="overflow-x-auto pb-1">
+        <div className="mx-auto flex w-max min-w-full justify-center">
+          <Branches node={root} level={1} index={0} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** A Hex, a Chev, a Loop, a Level, a Quad or a Layer is read by the shape that holds it. */
 function ReadByParent() {
   return null
 }
 
 export const diagramComponents: Record<string, ComponentType<ComponentProps>> = {
-  Hive, Hex: ReadByParent, Chevrons, Chev: ReadByParent, Cycle, Loop: ReadByParent, Pyramid, Level: ReadByParent, Quadrant, Quad: ReadByParent, Layers, Layer: ReadByParent
+  Hive, Hex: ReadByParent, Chevrons, Chev: ReadByParent, Cycle, Loop: ReadByParent, Pyramid, Level: ReadByParent, Quadrant, Quad: ReadByParent, Layers, Layer: ReadByParent, Venn, VSet: ReadByParent, Tree, Branch: ReadByParent
 }
