@@ -18,6 +18,15 @@ k = Slider("k", -5, 5, 1, 0.1, "k (shift up)")
 eq = Live("$f(x) = {{a}}(x - {{h}})^2 + {{k}}$, vertex ({{h}}, {{k}})")`
     },
     {
+      title: 'Type the numbers',
+      about: 'Numbers typed in a form move the graph; the message to the agent carries them.',
+      code: `root = Form([plot, a, b, eq], Submit("Check my line", "My line is y = {{a}}x + {{b}}. Is it right for my data?"), "Fit a line")
+plot = Plot([Curve("a*x + b", "y", "blue"), Points("data", [[1, 2.1], [2, 3.9], [3, 6.2], [4, 7.8]], "orange")], 0, 5, 0, 10, null, "x", "y")
+a = Field("a", "Slope a", "try 2", "1", "number")
+b = Field("b", "Intercept b", "try 0.5", "0", "number")
+eq = Live("At x = 4 the line gives {{4*a + b}}.")`
+    },
+    {
       title: 'Sine, cosine and tangent',
       about: 'Choose the function; amplitude and frequency.',
       code: `root = Card([plot, fn, amp, freq, eq], "Trigonometry")

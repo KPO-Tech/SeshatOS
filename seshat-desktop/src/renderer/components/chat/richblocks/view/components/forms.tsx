@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { isNode } from '../../lang/parseUi'
 import { counterState, FIELD_NAME, FORM_LIMITS, fieldsOf, fillTemplate, wordCount } from '../../lang/forms'
 import type { UiNode } from '../../lang/types'
+import { formatNumber, numberFieldOf, parseTyped } from '../../lang/vars'
 import { useRichActionBridge } from '../actions/richActions'
 import { finite, strings, text, withUnit } from '../charts/readers'
 import { FormContext, useForm, useRichBlockKey, type FormState } from '../forms/FormContext'
@@ -11,6 +12,7 @@ import { blockHash, loadForm, saveForm } from '../forms/formStorage'
 import type { ComponentProps } from '../NodeView'
 import { NodeList } from '../NodeView'
 import { TONE_TEXT, toneOrNull, type Tone } from '../tones'
+import { useVars } from '../vars/VarsContext'
 
 // The forms of an answer (ADR 0013). A Form keeps what the reader types in this component; the only thing that leaves it is the message of
 // its Submit, sent through the same bridge as @Ask: an ordinary message of the reader, written after a click and visible in the chat.
@@ -44,7 +46,9 @@ function Form({ props }: ComponentProps) {
   const template = submit && typeof submit.props.template === 'string' ? submit.props.template.slice(0, FORM_LIMITS.template) : ''
   const required = submit && Array.isArray(submit.props.requires) ? strings(submit.props.requires) : fields.map((field) => field.name)
   const filled = required.every((name) => valueOf(name).trim() !== '')
-  const message = fillTemplate(template, valueOf)
+  // A template may also name a Slider, a Toggle or a Select of the block: it gets the number shown.
+  const vars = useVars()
+  const message = fillTemplate(template, (name) => (name in vars.values && !fields.some((field) => field.name === name) ? formatNumber(vars.values[name]) : valueOf(name)))
   const why = sent
     ? t('chat.richblocks.view.components.forms.sent')
     : !filled
@@ -117,9 +121,11 @@ function TextArea({ props }: ComponentProps) {
 
 function Field({ props }: ComponentProps) {
   const form = useForm()
+  const vars = useVars()
   const name = text(props.name)?.trim() ?? ''
   if (!form || !FIELD_NAME.test(name)) return null
   const label = text(props.label)
+  const numeric = props.kind === 'number'
   return (
     <label className="flex flex-col gap-1">
       {label && <span className="text-[12.5px] font-medium text-app-text-secondary">{label}</span>}
@@ -130,7 +136,14 @@ function Field({ props }: ComponentProps) {
         maxLength={FORM_LIMITS.typed}
         placeholder={text(props.placeholder)}
         aria-label={label ?? text(props.placeholder) ?? name}
-        onChange={(event) => form.setValue(name, event.target.value)}
+        inputMode={numeric ? 'decimal' : undefined}
+        onChange={(event) => {
+          form.setValue(name, event.target.value)
+          // A number Field is a variable: what is typed moves the graphs; text that is not a number leaves them where they were.
+          const spec = numeric ? numberFieldOf({ props }) : null
+          const typed = spec ? parseTyped(event.target.value) : null
+          if (spec && typed !== null) vars.set(name, Math.min(spec.max, Math.max(spec.min, typed)))
+        }}
         className={INPUT}
       />
     </label>

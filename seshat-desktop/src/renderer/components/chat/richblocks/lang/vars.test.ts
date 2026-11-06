@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { tryParseExpression } from '../view/charts/expression'
 import { parseUi } from './parseUi'
-import { checkVars, fillLive, formatNumber, slidersOf, startValues, VAR_LIMITS } from './vars'
+import { checkVars, fillLive, formatNumber, parseTyped, slidersOf, startValues, VAR_LIMITS } from './vars'
 
 const BLOCK = `root = Stack([plot, a, b, eq])
 plot = Plot([Curve("a*sin(b*x)", "wave")], -6, 6)
@@ -118,5 +118,35 @@ describe('a layer that can be hidden', () => {
     const block = 'root = Stack([Toggle("grid", "Grid"), Plot([Curve("x"), HLine(1, null, null, "grid"), VLine(1, null, null, "grid"), Dot(0, 0, null, null, "grid"), Shade("x", 0, 1, null, null, "grid")], -2, 2)])'
     expect(problems(block)).toEqual([])
     expect(problems('root = Plot([HLine(1, null, null, "zz")], -2, 2)').some((message) => message.includes('show "zz"'))).toBe(true)
+  })
+})
+
+describe('a number typed in a Form', () => {
+  const FIT = [
+    'root = Form([plot, a, k], Submit("Send", "Slope {{a}}, k {{k}}"))',
+    'plot = Plot([Curve("a*x", "y")], -5, 5)',
+    'a = Field("a", "Slope", "", "2", "number")',
+    'k = Slider("k", 0, 9, 3)'
+  ].join('\n')
+
+  it('is a variable like a slider, starting at its value', () => {
+    const root = parseUi(FIT, { streaming: false }).root!
+    expect(slidersOf(root).map((slider) => [slider.name, slider.value])).toEqual([['a', 2], ['k', 3]])
+  })
+
+  it('is read as a person writes a number', () => {
+    expect(parseTyped(' 1,5 ')).toBe(1.5)
+    expect(parseTyped('-2e3')).toBe(-2000)
+    expect(parseTyped('abc')).toBeNull()
+    expect(parseTyped('')).toBeNull()
+  })
+
+  it('may be named in the template of the Form, like a Slider, and a name that is nothing is refused', () => {
+    expect(problems(FIT)).toEqual([])
+    expect(problems(FIT.replace('{{k}}', '{{zz}}')).some((message) => message.includes('{{zz}}'))).toBe(true)
+  })
+
+  it('cannot take the name of a formula word', () => {
+    expect(problems(FIT.replace('Field("a"', 'Field("x"')).some((message) => message.includes('"x"'))).toBe(true)
   })
 })
