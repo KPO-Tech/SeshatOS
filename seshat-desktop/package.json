@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@icon-park/react": "^1.4.2",
+    "@iconify-json/logos": "^1.2.19",
     "@seshat/connector-catalog": "file:../shared/connector-catalog",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-virtual": "^3.14.13",

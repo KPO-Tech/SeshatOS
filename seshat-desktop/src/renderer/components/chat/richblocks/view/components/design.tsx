@@ -4,7 +4,6 @@ import { DEFAULT_ACCENT, DESIGN_LIMITS, FONT_STACKS, FONTS, RADII, RADIUS_REM, f
 import { isNode } from '../../lang/parseUi'
 import { finite, strings, text } from '../charts/readers'
 import { RichIcon } from '../icons/RichIcon'
-import { resolveIcon } from '../icons/iconCatalog'
 import type { ComponentProps } from '../NodeView'
 import { NodeList } from '../NodeView'
 
@@ -302,7 +301,7 @@ function Logos({ props }: ComponentProps) {
       <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-[15px] font-semibold" style={{ color: page.muted }}>
         {names.map((name, index): ReactNode => (
           <span key={index} className="inline-flex items-center gap-2">
-            {resolveIcon(name) && <RichIcon name={name} size={20} />}
+            <RichIcon name={name} size={20} />
             {name}
           </span>
         ))}

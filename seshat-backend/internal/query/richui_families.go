@@ -224,7 +224,7 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge
 			b.WriteString("\nIcons, for the icon argument: " + strings.Join(catalog.Icons.Names, ", ") + ".\n")
 		}
 		if len(catalog.Icons.Brands) > 0 {
-			b.WriteString("Technology logos, written si: and a name: " + strings.Join(catalog.Icons.Brands, ", ") + ".\n")
+			b.WriteString("A technology or a service by its plain name (" + strings.Join(catalog.Icons.Brands, ", ") + ", aws lambda, azure, slack, openai, stripe, figma...) draws its logo as an icon when the app has it, and nothing otherwise.\n")
 		}
 	}
 	if len(catalog.Tones) > 0 {

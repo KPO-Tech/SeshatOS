@@ -18,6 +18,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Switches, choices, quizzes and flashcards.** A switch or a list can show or hide curves of a graph. A quiz gives the right answer and its explanation at once, with a score; flashcards flip and are marked known or to review. At the end you may send your result to the agent with one click (ADR 0015).
 - **Flashcards that turn.** Cards flip with an animation, show progress and a count of known and to review, can be shuffled and used with the keyboard, and may carry a category and a note.
 - **Site sketches in the chat.** The agent can draw how a page could look: a browser window with a navigation bar, a hero, feature cards, a grid, pictures, a footer, and a colour palette, with colours of its own choosing (ADR 0016).
+- **Logos for architecture drawings.** A technology or a service by its plain name (aws lambda, azure, slack, openai, stripe, react) now shows its logo in colour, from a large set that ships with the app and works offline.
 
 ## [0.3.16] - 2026-11-05
 

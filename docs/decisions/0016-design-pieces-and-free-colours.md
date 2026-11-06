@@ -28,6 +28,14 @@ quickly in the chat, with colours of its own, without writing HTML or CSS.
   logos come from the icon catalogue, which now holds the logos of about a hundred common technologies and services, found by their plain name
   (`react`, `stripe`, `figma`). A real image will be a file of the project, shown by the app, or a web image after a click; that is
   for a later lot.
+- **Logos by plain name, from files the app carries.** The first lists (generic icons, about a hundred technologies of Simple Icons) are
+  read at once. A name they do not hold (`aws lambda`, `azure`, `slack`, `openai`) is looked up in the larger SVG Logos set (CC0, 2300
+  logos, among them the AWS services), which is a separate file of the app read the first time it is needed and then kept; nothing is
+  fetched from the network. The drawing comes from that package, never from an answer, which only names a logo. A mark alone is
+  preferred (a square), a wide logo is drawn wider, and a logo drawn only in very dark colours takes the colour of the text so that it
+  does not vanish on a dark page; every other logo keeps its own colours: it designates a product in a diagram, it does not sell one. The
+  prompt no longer lists the names, it says a name is enough. The cost is one file of about 8.8 MB in the installer, loaded only by an
+  answer that draws a logo from it.
 - **The text reads by itself.** A piece puts dark or white text on its colour by contrast (`readableOn`), so a model cannot make text
   invisible; a `Browser` or a `Phone` gives its page colours to what it holds.
 - **Limits, checked at parse time:** 8 features, 12 swatches, 8 links, 8 logos, 6 stats, 4 plans of 8 features each, 4 columns, 3

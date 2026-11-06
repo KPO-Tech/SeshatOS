@@ -69,7 +69,7 @@ export function buildPromptSpec(drawn: readonly string[]): PromptSpec {
       signature: signature(spec),
       description: spec.description
     })),
-    icons: { names: genericIconNames(), brands: brandIconNames() },
+    icons: { names: genericIconNames(), brands: brandIconNames().slice(0, 14) },
     tones: [...TONE_NAMES],
     examples: PROMPT_EXAMPLES
   }

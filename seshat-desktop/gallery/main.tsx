@@ -29,7 +29,9 @@ function Gallery({ language }: { language: Language }) {
     void created.use(catalogLoader).init(i18nOptions(language))
     return created
   }, [language])
-  const shown = PROMPT_EXAMPLES.map((code, index) => ({ code, index })).filter(({ code }) => code.toLowerCase().includes(filter.toLowerCase()))
+  const LOGO_CHECK = 'root = Stack([Browser([Logos(["aws", "aws lambda", "aws s3", "azure", "google cloud", "microsoft", "slack", "linkedin"], "Logos found by name")], null, "#ffffff"), Browser([Logos(["aws", "github", "openai", "stripe", "nobody-knows"], "On a dark page")], null, "#111827")])'
+  const examples = filter.toLowerCase().includes('logo') ? [LOGO_CHECK] : PROMPT_EXAMPLES
+  const shown = examples.map((code, index) => ({ code, index })).filter(({ code }) => code.toLowerCase().includes(filter.toLowerCase()))
   return (
     <I18nextProvider i18n={instance}>
       <RichActionProvider ask={(message) => setSent((previous) => [...previous, message])} busy={false}>
