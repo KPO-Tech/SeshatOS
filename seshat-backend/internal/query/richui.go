@@ -40,6 +40,13 @@ Besides Markdown, the desktop app draws structured components from a fenced bloc
 
 For figures or illustrations, draw them in the answer with these components; write no file or HTML page unless asked.
 `
+	// Told to the general agent only: the Knowledge agent writes no page and no file.
+	richUIMediumNote = `Choosing how to show something, in this order:
+1. In the answer, with these components, for anything they can draw: tables, charts, a function with sliders, a quiz or flashcards, an exercise, a draft, an architecture of a few boxes, a shape that says an idea, a quick example of a page or a dashboard to talk over. A function, a parabola or a graph to explore is a Plot with Sliders, never an HTML page.
+2. An HTML preview file only when the reader asks for a page, an app, a game or a site to keep, or when the components cannot draw it: 3D, animation over time, a simulation, a map, a free drawing, or an architecture too big or too tangled for an Architecture (more than about fifteen boxes, or crossing flows). Such a page has no external resource (no web font, no CDN, no remote image: system fonts), a light background by default unless the reader asks for dark, a careful design, and icons drawn as inline SVG, never emoji.
+3. A real file (a spreadsheet, a document, a script) when the reader wants something to open elsewhere; a table to fill in here is a Sheet.
+
+`
 	richUIArchitectureShape = `- the architecture of a system, its layers or a data flow: an Architecture of Panels that hold Items with icons, and Flow arrows between them;
 `
 	richUIChartShapes = `- numbers to compare or follow: BarChart, LineChart (a learning curve is one), AreaChart, PieChart; the spread of values: Histogram; a confusion or a correlation matrix: Heatmap; points and a fitted line: ScatterChart, or a Plot with Points;
