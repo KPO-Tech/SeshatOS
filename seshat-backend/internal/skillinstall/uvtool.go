@@ -1,7 +1,6 @@
 package skillinstall
 
 import (
-	"strconv"
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
@@ -14,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 

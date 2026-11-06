@@ -135,7 +135,9 @@ func TestSkillThatOnlyUsesThePythonLibraryGetsAnEnvironmentAnyway(t *testing.T) 
 func TestWithNoPythonOnTheMachineUvDownloadsOne(t *testing.T) {
 	rec := pretendMachine(t, "uv-tool", nil)
 	old := findPython
-	findPython = func(string) (interpreter, error) { return interpreter{}, errors.New("python 3.10 or newer was not found") }
+	findPython = func(string) (interpreter, error) {
+		return interpreter{}, errors.New("python 3.10 or newer was not found")
+	}
 	t.Cleanup(func() { findPython = old })
 	root := hiddenSkillRepo(t)
 	spec := proSpec()
@@ -162,7 +164,9 @@ func TestWithNoPythonAndNoUvThePersonIsToldToInstallPython(t *testing.T) {
 	pretendMachine(t, "", nil)
 	t.Setenv(EnvUV, "off")
 	old := findPython
-	findPython = func(string) (interpreter, error) { return interpreter{}, errors.New("python 3.10 or newer was not found") }
+	findPython = func(string) (interpreter, error) {
+		return interpreter{}, errors.New("python 3.10 or newer was not found")
+	}
 	t.Cleanup(func() { findPython = old })
 	plan := Detect(t.TempDir(), Spec{PythonRequired: true})
 	if plan.Ready() || len(plan.Warnings) == 0 {
