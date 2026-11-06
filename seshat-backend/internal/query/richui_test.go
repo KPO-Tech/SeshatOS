@@ -47,9 +47,22 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 	if strings.Contains(block, "More components exist") {
 		t.Error("nothing is left out of the full block, so nothing is offered")
 	}
-	// The full block is the ceiling: a catalog that grows past this should be a deliberate choice (3100 with the forms family, 3350 with the sliders, 3700 with quizzes and switches).
-	if words := len(strings.Fields(block)); words > 3700 {
-		t.Errorf("the full block is %d words long, keep it under 3700", words)
+	// A family is paid for only by the requests that ask for it, so the budget is per family: what each adds to the core. A family that
+	// grows past its figure should be a deliberate choice, and the full block is the sum of them.
+	core := len(strings.Fields(richAnswersBlock(richUIFamilies{})))
+	budgets := map[string]struct {
+		families richUIFamilies
+		words    int
+	}{
+		"architecture": {richUIFamilies{architecture: true}, 600},
+		"charts":       {richUIFamilies{charts: true}, 1150},
+		"forms":        {richUIFamilies{forms: true}, 1000},
+		"design":       {richUIFamilies{design: true}, 850},
+	}
+	for name, budget := range budgets {
+		if added := len(strings.Fields(richAnswersBlock(budget.families))) - core; added > budget.words {
+			t.Errorf("the %s family adds %d words to the core, keep it under %d", name, added, budget.words)
+		}
 	}
 }
 
@@ -244,5 +257,34 @@ func TestRichUIQuizzesAreTaughtWithTheForms(t *testing.T) {
 	quiz := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Quiz([Question(\"q\", [\"a\", \"b\"], 0)])\n```")
 	if got := richUIFamiliesInHistory([]types.Message{quiz}); !got.forms {
 		t.Errorf("a quiz brings the forms family back, got %+v", got)
+	}
+}
+
+func TestRichUIDesignIsTaughtForSketchesOfASite(t *testing.T) {
+	for _, prompt := range []string{"montre-moi à quoi pourrait ressembler mon site", "fais une maquette de landing page pour mon app", "sketch a homepage for a bakery", "propose-moi une palette de couleurs"} {
+		if !richUIFamiliesFor(prompt).design {
+			t.Errorf("%q should bring the design family", prompt)
+		}
+	}
+	for _, prompt := range []string{"explique les goroutines", "trace sin et cos"} {
+		if richUIFamiliesFor(prompt).design {
+			t.Errorf("%q should not bring the design family", prompt)
+		}
+	}
+	block := richAnswersBlock(richUIFamilies{design: true})
+	for _, want := range []string{"Browser(", "Hero(", "Features(", "Palette(", "hex codes"} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the design block must mention %q", want)
+		}
+	}
+	if strings.Contains(richAnswersBlock(richUIFamilies{}), "Browser(") {
+		t.Error("the core must not teach design pieces")
+	}
+	if strings.Contains(richKnowledgeAnswersBlock(richUIAllFamilies), "Browser(") {
+		t.Error("the Knowledge agent must not be taught design pieces")
+	}
+	sketch := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Browser([Hero(\"T\")])\n```")
+	if got := richUIFamiliesInHistory([]types.Message{sketch}); !got.design {
+		t.Errorf("a sketch brings the design family back, got %+v", got)
 	}
 }

@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 type HastNode = {
   tagName?: string

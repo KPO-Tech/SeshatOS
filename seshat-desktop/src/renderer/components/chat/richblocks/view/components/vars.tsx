@@ -30,7 +30,7 @@ function Slider({ props }: ComponentProps) {
           if (Number.isFinite(next)) vars.set(spec.name, next)
         }}
         className="h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full accent-[var(--accent-primary)]"
-        style={{ background: `linear-gradient(to right, var(--accent-primary) ${fraction}%, var(--app-border, #3a3a3a) ${fraction}%)` }}
+        style={{ background: `linear-gradient(to right, var(--accent-primary) ${fraction}%, var(--border-strong) ${fraction}%)` }}
       />
       <span className="w-14 shrink-0 text-right tabular-nums text-app-text">{formatNumber(value)}</span>
     </label>

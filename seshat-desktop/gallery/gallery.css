@@ -1,0 +1,4 @@
+@import "../src/renderer/styles/tailwind.css";
+/* Tailwind reads the classes of the sources it is told about: the gallery sits outside src/renderer. */
+@source "../src/renderer";
+@source "./";
