@@ -316,8 +316,8 @@
     {
       "name": "Field",
       "group": "Forms",
-      "signature": "Field(name: text, label?: text, placeholder?: text, value?: text)",
-      "description": "A single line to fill in, inside a Form."
+      "signature": "Field(name: text, label?: text, placeholder?: text, value?: text, kind?: text)",
+      "description": "A line to fill in. kind \"number\": a variable that graphs and Live read by name."
     },
     {
       "name": "Counter",
@@ -605,7 +605,7 @@
       "name": "Sheet",
       "group": "Forms",
       "signature": "Sheet(columns: [text], rows?: [[text]], title?: text, report?: text)",
-      "description": "A table the reader fills in. report is the message they may send, with {{table}} and {{rows}}."
+      "description": "A table to fill in. report: the message they may send, with {{table}}, {{rows}}."
     },
     {
       "name": "Draft",

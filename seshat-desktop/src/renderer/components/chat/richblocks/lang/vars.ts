@@ -93,7 +93,36 @@ export function selectOf(node: Pick<UiNode, 'props'>): SliderSpec | null {
   return { name, min: 0, max: options.length - 1, value: clamp(asked, 0, options.length - 1), step: 1 }
 }
 
+/** A number Field of a Form (kind "number") is a variable too: what the reader types there moves the graphs and the Live texts (ADR 0021). */
+export function isNumberField(node: Pick<UiNode, 'name' | 'props'>): boolean {
+  return node.name === 'Field' && node.props.kind === 'number'
+}
+
+export function isVariableNode(node: Pick<UiNode, 'name' | 'props'>): boolean {
+  return (VAR_COMPONENTS as readonly string[]).includes(node.name) || isNumberField(node)
+}
+
+/** The number a reader typed, read as a person writes it (a comma may be the decimal mark); null when it is not a number. */
+export function parseTyped(text: string): number | null {
+  const cleaned = text.trim().replace(/\s/g, '').replace(',', '.')
+  if (cleaned === '' || !/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(cleaned)) return null
+  const value = Number(cleaned)
+  return Number.isFinite(value) ? value : null
+}
+
+/** The variable a number Field stands for: it starts at its value, and holds what is typed within min and max (a million either way by default). */
+export function numberFieldOf(node: Pick<UiNode, 'props'>): SliderSpec | null {
+  const name = typeof node.props.name === 'string' ? node.props.name.trim() : ''
+  if (!VAR_NAME.test(name) || name.length > VAR_LIMITS.name || isReservedName(name)) return null
+  const min = typeof node.props.min === 'number' && Number.isFinite(node.props.min) ? node.props.min : -1e6
+  const max = typeof node.props.max === 'number' && Number.isFinite(node.props.max) ? node.props.max : 1e6
+  if (max <= min) return null
+  const start = typeof node.props.value === 'string' ? parseTyped(node.props.value) : null
+  return { name, min, max, value: clamp(start ?? 0, min, max), step: 1 }
+}
+
 function variableOf(node: UiNode): SliderSpec | null {
+  if (isNumberField(node)) return numberFieldOf(node)
   return node.name === 'Slider' ? sliderOf(node) : node.name === 'Toggle' ? toggleOf(node) : node.name === 'Select' ? selectOf(node) : null
 }
 
@@ -102,7 +131,7 @@ export function slidersOf(root: UiNode): SliderSpec[] {
   const seen = new Set<string>()
   const sliders: SliderSpec[] = []
   for (const node of allNodes(root)) {
-    if (!(VAR_COMPONENTS as readonly string[]).includes(node.name)) continue
+    if (!isVariableNode(node)) continue
     const spec = variableOf(node)
     if (!spec || seen.has(spec.name)) continue
     seen.add(spec.name)
@@ -153,7 +182,7 @@ export function checkVars(root: UiNode): UiError[] {
   const errors: UiError[] = []
   const problem = (message: string, hint?: string) => errors.push({ code: 'bad-argument', message, hint })
   const nodes = allNodes(root)
-  const sliders = nodes.filter((node) => (VAR_COMPONENTS as readonly string[]).includes(node.name))
+  const sliders = nodes.filter(isVariableNode)
   const names = new Set<string>()
   for (const node of sliders) {
     const name = typeof node.props.name === 'string' ? node.props.name.trim() : ''

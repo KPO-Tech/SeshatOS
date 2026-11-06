@@ -24,6 +24,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Architectures as posters.** An architecture can lay its stages in a row, sit in a frame with a large title, draw databases as cylinders and join the stages with big arrows (ADR 0019).
 - **Venn diagrams, org charts and decision trees**, hexagon and pill shapes for the steps of an architecture, and a legend that wraps under the bars of a session or a budget, where short parts overlapped their words.
 - **Drafts that open in your mail app, and tables to fill in.** A draft can be opened as a new mail after you confirm the address; the agent can also give a table with columns and rows you edit, then send it back as a Markdown table (ADR 0020).
+- **Numbers typed in a form move the graph.** A number field in a form works like a slider: the curve and the live formulas follow what you type, and the message you send can carry the sliders' values too (ADR 0021).
 
 ## [0.3.16] - 2026-11-05
 

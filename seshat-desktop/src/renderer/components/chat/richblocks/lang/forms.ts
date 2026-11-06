@@ -1,4 +1,5 @@
 import type { UiError, UiNode } from './types'
+import { slidersOf } from './vars'
 
 // The pure part of the forms of an answer (ADR 0013): which fields a Form holds, what its Submit sends, and what is refused. Nothing here
 // runs code from the answer: a template is text with {{name}} where the text of a field goes, filled by one pass of replacement.
@@ -105,6 +106,7 @@ export function checkForms(root: UiNode): UiError[] {
   for (const form of forms) {
     const names = new Set<string>()
     const inside = descendants(form)
+    const variables = new Set(slidersOf(root).map((slider) => slider.name))
     if (inside.some((node) => node.name === 'Form')) problem('A Form cannot hold another Form.')
     let fieldCount = 0
     for (const node of inside) {
@@ -126,7 +128,7 @@ export function checkForms(root: UiNode): UiError[] {
       const template = typeof submit.props.template === 'string' ? submit.props.template : ''
       if (template.length > FORM_LIMITS.template) problem(`The template of a Submit is longer than ${FORM_LIMITS.template} characters.`)
       for (const used of new Set(placeholdersOf(template))) {
-        if (!names.has(used)) problem(`The template of the Submit uses {{${used}}}, which is no field of the Form.`)
+        if (!names.has(used) && !variables.has(used)) problem(`The template of the Submit uses {{${used}}}, which is no field of the Form nor a Slider, Toggle or Select.`)
       }
       const requires = Array.isArray(submit.props.requires) ? submit.props.requires : []
       for (const required of requires) {
