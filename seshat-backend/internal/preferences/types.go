@@ -49,7 +49,7 @@ type UpsertParams struct {
 
 // The families of components a person may force, and the modes they may give them.
 var (
-	RichFamilyNames = []string{"architecture", "charts", "forms", "design"}
+	RichFamilyNames = []string{"architecture", "charts", "forms", "design", "diagrams"}
 	richFamilyModes = map[string]bool{"auto": true, "on": true, "off": true}
 )
 

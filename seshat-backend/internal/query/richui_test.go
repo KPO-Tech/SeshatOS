@@ -58,6 +58,7 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 		"charts":       {richUIFamilies{charts: true}, 1150},
 		"forms":        {richUIFamilies{forms: true}, 1000},
 		"design":       {richUIFamilies{design: true}, 850},
+		"diagrams":     {richUIFamilies{diagrams: true}, 600},
 	}
 	for name, budget := range budgets {
 		if added := len(strings.Fields(richAnswersBlock(budget.families))) - core; added > budget.words {
@@ -345,5 +346,34 @@ func TestFamilyWordsAreWhatEachFamilyAddsToThePrompt(t *testing.T) {
 	words["forms"] = 0
 	if RichFamilyWords()["forms"] == 0 {
 		t.Error("the figures given out must be a copy")
+	}
+}
+
+func TestRichUIDiagramsAreTaughtForShapesOfAnIdea(t *testing.T) {
+	for _, prompt := range []string{"fais un schéma en nid d'abeille de mon projet", "draw a pyramid of the needs", "montre un entonnoir de conversion", "make a 2x2 matrix of effort and impact", "un diagramme de Venn"} {
+		if !richUIFamiliesFor(prompt).diagrams {
+			t.Errorf("%q should bring the diagrams family", prompt)
+		}
+	}
+	for _, prompt := range []string{"explique les goroutines", "process this file", "trace sin et cos", "what is the confusion matrix of my model"} {
+		if richUIFamiliesFor(prompt).diagrams {
+			t.Errorf("%q should not bring the diagrams family", prompt)
+		}
+	}
+	block := richAnswersBlock(richUIFamilies{diagrams: true})
+	for _, want := range []string{"Hive(", "Hex(", "Chevrons(", "Cycle(", "Pyramid(", "Quadrant(", "Layers("} {
+		if !strings.Contains(block, want) {
+			t.Errorf("the diagrams block must mention %q", want)
+		}
+	}
+	if strings.Contains(richAnswersBlock(richUIFamilies{}), "Hive(") {
+		t.Error("the core must not teach diagrams")
+	}
+	if strings.Contains(richKnowledgeAnswersBlock(richUIAllFamilies), "Hive(") {
+		t.Error("the Knowledge agent must not be taught diagrams")
+	}
+	hive := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Hive([[a]])\na = Hex(\"x\")\n```")
+	if got := richUIFamiliesInHistory([]types.Message{hive}); !got.diagrams {
+		t.Errorf("a honeycomb brings the diagrams family back, got %+v", got)
 	}
 }

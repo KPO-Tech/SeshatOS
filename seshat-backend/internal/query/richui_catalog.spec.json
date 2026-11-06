@@ -506,6 +506,78 @@
       "description": "The foot of a page: a line of text and a few links."
     },
     {
+      "name": "Hive",
+      "group": "Diagrams",
+      "signature": "Hive(columns: [[Hex]], title?: text, left?: text, right?: text)",
+      "description": "A honeycomb of hexagons, in columns of one, two, one, two...: a strategy or a model whose parts touch. left and right are the headings of the two groups. Colour the one to stress."
+    },
+    {
+      "name": "Hex",
+      "group": "Diagrams",
+      "signature": "Hex(label: text, color?: text)",
+      "description": "A hexagon of a Hive: a short label and a color."
+    },
+    {
+      "name": "Chevrons",
+      "group": "Diagrams",
+      "signature": "Chevrons(items: [Chev], title?: text)",
+      "description": "A process in arrow-shaped steps, each with a short text under it."
+    },
+    {
+      "name": "Chev",
+      "group": "Diagrams",
+      "signature": "Chev(label: text, text?: text, color?: text)",
+      "description": "A step of Chevrons."
+    },
+    {
+      "name": "Cycle",
+      "group": "Diagrams",
+      "signature": "Cycle(loops: [Loop], center?: text, title?: text)",
+      "description": "Three to eight steps in a loop, with arrows from one to the next; center is the word in the middle."
+    },
+    {
+      "name": "Loop",
+      "group": "Diagrams",
+      "signature": "Loop(label: text, color?: text)",
+      "description": "A step of a Cycle."
+    },
+    {
+      "name": "Pyramid",
+      "group": "Diagrams",
+      "signature": "Pyramid(levels: [Level], title?: text, funnel?: true|false)",
+      "description": "Levels from the top down, widening: a hierarchy or a scale. funnel true makes it narrow downwards: a funnel of conversion."
+    },
+    {
+      "name": "Level",
+      "group": "Diagrams",
+      "signature": "Level(label: text, text?: text, color?: text)",
+      "description": "A level of a Pyramid."
+    },
+    {
+      "name": "Quadrant",
+      "group": "Diagrams",
+      "signature": "Quadrant(cells: [Quad], xLabel?: text, yLabel?: text, title?: text)",
+      "description": "A matrix of two by two, four Quad in order: top left, top right, bottom left, bottom right. xLabel and yLabel name the axes."
+    },
+    {
+      "name": "Quad",
+      "group": "Diagrams",
+      "signature": "Quad(title: text, text?: text, color?: text)",
+      "description": "A cell of a Quadrant: a title, a text, a color."
+    },
+    {
+      "name": "Layers",
+      "group": "Diagrams",
+      "signature": "Layers(layers: [Layer], title?: text)",
+      "description": "A stack of layers, the top one first: a label on the left and its text on the right."
+    },
+    {
+      "name": "Layer",
+      "group": "Diagrams",
+      "signature": "Layer(label: text, text?: text, color?: text)",
+      "description": "A layer of Layers."
+    },
+    {
       "name": "Draft",
       "group": "Forms",
       "signature": "Draft(body: text, subject?: text, to?: text, title?: text)",
@@ -695,6 +767,7 @@
     "root = Stack([site, colours])\nsite = Browser([nav, hero, feats, plans, foot], \"https://seshat.app\", \"#ffffff\", \"sans\", \"md\")\nnav = Nav(\"Seshat\", [\"Product\", \"Pricing\"], \"Download\", \"orange\")\nhero = Hero(\"Your agents, on your machine\", \"Chat, projects and tools that stay local.\", \"Get started\", \"See the docs\", \"#f97316 > #ec4899\")\nfeats = Features([Feature(\"Local first\", \"Your files stay here.\", \"lock\", \"orange\"), Feature(\"Any model\", \"Bring your own.\", \"ai\", \"blue\")], 2)\nplans = Plans([Plan(\"Free\", \"0\", [\"Local chat\"], \"Start\", \"slate\"), Plan(\"Team\", \"12 EUR\", [\"Shared knowledge\"], \"Try it\", \"orange\", true)])\nfoot = Footer(\"2026 Seshat\", [\"Privacy\", \"Terms\"])\ncolours = Palette([Swatch(\"orange\", \"Orange\"), Swatch(\"#f97316 > #ec4899\", \"Sunset\"), Swatch(\"hsl(221, 83%, 53%)\", \"Blue\")], \"Colours\")",
     "root = Browser([app], \"https://app.seshat.dev\", \"#ffffff\")\napp = Shell([SideItem(\"Overview\", \"dashboard\"), SideItem(\"Projects\", \"folder\")], [row, trend], \"Seshat\", \"#f97316\")\nrow = Grid([Kpi(\"Projects\", \"24\", \"+12%\", \"orange\"), Kpi(\"Open bugs\", \"7\", \"-3%\", \"red\")], 2)\ntrend = Tile([Spark([4, 6, 5, 8, 11, 14], \"orange\"), DataRows([\"Project\", \"Status\"], [[\"Website\", \"On track\"], [\"Docs\", \"Done\"]])], \"Activity\")",
     "root = Stack([plan, exercise])\nplan = SegmentBar([Segment(\"Discover 2 words\", 2, \"blue\"), Segment(\"Write 100 to 150 words\", 8, \"green\"), Segment(\"Correct and rewrite\", 5, \"orange\")], \"min\", \"A session of 15 minutes\")\nexercise = Form([topic, essay, count], send, \"Day 1: argue\")\ntopic = Markdown(\"**Subject:** is discipline more important than motivation? Write 100 to 150 words: your opinion, two arguments, a conclusion.\")\nessay = TextArea(\"essay\", \"In my opinion, discipline plays an essential part because...\", 7)\ncount = Counter(\"essay\", \"words\", 100, 150)\nsend = Submit(\"Correct my text\", \"Here is my text of the day. Correct it like a teacher: a mark out of 20, the mistakes explained, then ask me to rewrite the weak passages.\\n\\n{{essay}}\")",
-    "root = Stack([score, advice, mail])\nscore = Card([bar, grades], \"Mark of the day: 11.5 / 20\", \"orange\")\nbar = ProgressBar(11.5, 20)\ngrades = Table([Col(\"Criterion\"), Col(\"Mark\", \"text\", \"right\")], [[\"Ideas\", \"4/5\"], [\"Organisation\", \"2/5\"], [\"Grammar and spelling\", \"2.5/5\"], [\"Vocabulary and style\", \"3/5\"]])\nadvice = Callout(\"info\", \"To work on\", \"The construction of sentences and the agreement of words.\")\nmail = Draft(\"Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully\", \"Notice of departure\", \"agency@example.com\")"
+    "root = Stack([score, advice, mail])\nscore = Card([bar, grades], \"Mark of the day: 11.5 / 20\", \"orange\")\nbar = ProgressBar(11.5, 20)\ngrades = Table([Col(\"Criterion\"), Col(\"Mark\", \"text\", \"right\")], [[\"Ideas\", \"4/5\"], [\"Organisation\", \"2/5\"], [\"Grammar and spelling\", \"2.5/5\"], [\"Vocabulary and style\", \"3/5\"]])\nadvice = Callout(\"info\", \"To work on\", \"The construction of sentences and the agreement of words.\")\nmail = Draft(\"Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully\", \"Notice of departure\", \"agency@example.com\")",
+    "root = Hive([[a], [b, c], [d], [e, f], [g]], \"The role of architecture\", \"Strategy\", \"Operating model\")\na = Hex(\"Vision\", \"#1e3a8a\")\nb = Hex(\"Outcomes\", \"#1e3a8a\")\nc = Hex(\"Value\", \"#1e3a8a\")\nd = Hex(\"Capabilities\", \"#1e3a8a\")\ne = Hex(\"Ecosystem\", \"#1e3a8a\")\nf = Hex(\"Architecture\", \"#f97316\")\ng = Hex(\"Delivery\", \"#1e3a8a\")"
   ]
 }

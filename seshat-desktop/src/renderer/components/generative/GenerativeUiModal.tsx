@@ -1,6 +1,6 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import { useNavigate } from 'react-router'
-import { ChartLine, Close, Components, Computer, Edit, LayoutOne, Lock, Magic, NetworkTree, Pic, Rocket, Shield } from '@icon-park/react'
+import { ChartLine, Close, Components, Computer, Edit, LayoutOne, Layers, Lock, Magic, NetworkTree, Pic, Rocket, Shield } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
 import { useOverlayStore } from '@renderer/stores/overlay'
 import { Gallery } from './Gallery'
@@ -23,7 +23,7 @@ const ICONS: Record<SectionId, IconComponent> = {
   gallery: LayoutOne
 }
 
-const FAMILY_ICONS: Record<string, IconComponent> = { charts: ChartLine, forms: Edit, design: Pic, architecture: NetworkTree }
+const FAMILY_ICONS: Record<string, IconComponent> = { charts: ChartLine, forms: Edit, design: Pic, diagrams: Layers, architecture: NetworkTree }
 
 const PAGES: SectionId[] = ['overview', 'families', 'try', 'gallery']
 
@@ -61,6 +61,7 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
     { id: 'charts', label: t('gallery.families.charts'), hint: t('families.charts.hint'), tone: 'bg-blue-500/12 text-blue-500' },
     { id: 'forms', label: t('gallery.families.forms'), hint: t('families.forms.hint'), tone: 'bg-emerald-500/12 text-emerald-500' },
     { id: 'design', label: t('gallery.families.design'), hint: t('families.design.hint'), tone: 'bg-violet-500/12 text-violet-500' },
+    { id: 'diagrams', label: t('gallery.families.diagrams'), hint: t('families.diagrams.hint'), tone: 'bg-rose-500/12 text-rose-500' },
     { id: 'architecture', label: t('gallery.families.architecture'), hint: t('families.architecture.hint'), tone: 'bg-orange-500/12 text-orange-500' }
   ] as const
   const modeLabels: Record<Mode, string> = { auto: t('families.modes.auto'), on: t('families.modes.on'), off: t('families.modes.off') }
@@ -81,10 +82,11 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
     { id: 'parabola', label: t('tryIt.items.parabola.label'), prompt: t('tryIt.items.parabola.prompt'), family: 'charts' },
     { id: 'site', label: t('tryIt.items.site.label'), prompt: t('tryIt.items.site.prompt'), family: 'design' },
     { id: 'dashboard', label: t('tryIt.items.dashboard.label'), prompt: t('tryIt.items.dashboard.prompt'), family: 'design' },
+    { id: 'strategy', label: t('tryIt.items.strategy.label'), prompt: t('tryIt.items.strategy.prompt'), family: 'diagrams' },
     { id: 'architecture', label: t('tryIt.items.architecture.label'), prompt: t('tryIt.items.architecture.prompt'), family: 'architecture' }
   ] as const
-  const TONE: Record<string, string> = { forms: 'bg-emerald-500/12 text-emerald-500', charts: 'bg-blue-500/12 text-blue-500', design: 'bg-violet-500/12 text-violet-500', architecture: 'bg-orange-500/12 text-orange-500' }
-  const TRY_ICON: Record<string, IconComponent> = { forms: Edit, charts: ChartLine, design: Pic, architecture: NetworkTree }
+  const TONE: Record<string, string> = { forms: 'bg-emerald-500/12 text-emerald-500', charts: 'bg-blue-500/12 text-blue-500', design: 'bg-violet-500/12 text-violet-500', diagrams: 'bg-rose-500/12 text-rose-500', architecture: 'bg-orange-500/12 text-orange-500' }
+  const TRY_ICON: Record<string, IconComponent> = { forms: Edit, charts: ChartLine, design: Pic, diagrams: Layers, architecture: NetworkTree }
 
   const navigation: Array<{ heading: string; items: SectionId[] }> = [{ heading: t('nav.general'), items: PAGES }]
 

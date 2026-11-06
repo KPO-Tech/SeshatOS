@@ -81,6 +81,7 @@ export function Gallery({ galleries = GALLERIES, initialCollection, initialExamp
     calculators: { title: t('collections.calculators.title'), description: t('collections.calculators.description') },
     data: { title: t('collections.data.title'), description: t('collections.data.description') },
     cloud: { title: t('collections.cloud.title'), description: t('collections.cloud.description') },
+    schemas: { title: t('collections.schemas.title'), description: t('collections.schemas.description') },
     learning: { title: t('collections.learning.title'), description: t('collections.learning.description') },
     work: { title: t('collections.work.title'), description: t('collections.work.description') },
     core: { title: t('collections.core.title'), description: t('collections.core.description') }
@@ -90,6 +91,7 @@ export function Gallery({ galleries = GALLERIES, initialCollection, initialExamp
     charts: t('gallery.families.charts'),
     forms: t('gallery.families.forms'),
     design: t('gallery.families.design'),
+    diagrams: t('gallery.families.diagrams'),
     architecture: t('gallery.families.architecture')
   }
   const nameOf = (gallery: GalleryData) => words[gallery.id]?.title ?? gallery.title

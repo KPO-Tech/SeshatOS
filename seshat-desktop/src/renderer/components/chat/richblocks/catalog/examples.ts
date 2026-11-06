@@ -81,7 +81,15 @@ score = Card([bar, grades], "Mark of the day: 11.5 / 20", "orange")
 bar = ProgressBar(11.5, 20)
 grades = Table([Col("Criterion"), Col("Mark", "text", "right")], [["Ideas", "4/5"], ["Organisation", "2/5"], ["Grammar and spelling", "2.5/5"], ["Vocabulary and style", "3/5"]])
 advice = Callout("info", "To work on", "The construction of sentences and the agreement of words.")
-mail = Draft("Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully", "Notice of departure", "agency@example.com")`
+mail = Draft("Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully", "Notice of departure", "agency@example.com")`,
+  `root = Hive([[a], [b, c], [d], [e, f], [g]], "The role of architecture", "Strategy", "Operating model")
+a = Hex("Vision", "#1e3a8a")
+b = Hex("Outcomes", "#1e3a8a")
+c = Hex("Value", "#1e3a8a")
+d = Hex("Capabilities", "#1e3a8a")
+e = Hex("Ecosystem", "#1e3a8a")
+f = Hex("Architecture", "#f97316")
+g = Hex("Delivery", "#1e3a8a")`
 ]
 
 /** A name for each example, in the order of PROMPT_EXAMPLES: what the gallery shows over it. */
@@ -98,5 +106,6 @@ export const EXAMPLE_TITLES: string[] = [
   'A site sketch with its palette',
   'A dashboard sketch',
   'A writing exercise',
-  'A score, advice and an email draft'
+  'A score, advice and an email draft',
+  'A honeycomb diagram'
 ]

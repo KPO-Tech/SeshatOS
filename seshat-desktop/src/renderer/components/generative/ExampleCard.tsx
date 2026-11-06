@@ -12,6 +12,7 @@ const FAMILY_TONE: Record<Family, string> = {
   charts: 'bg-blue-500/12 text-blue-500',
   forms: 'bg-emerald-500/12 text-emerald-500',
   design: 'bg-violet-500/12 text-violet-500',
+  diagrams: 'bg-rose-500/12 text-rose-500',
   architecture: 'bg-orange-500/12 text-orange-500'
 }
 

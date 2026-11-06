@@ -39,6 +39,7 @@ export function ExampleGallery({ examples = PROMPT_EXAMPLES, titles = EXAMPLE_TI
     charts: t('gallery.families.charts'),
     forms: t('gallery.families.forms'),
     design: t('gallery.families.design'),
+    diagrams: t('gallery.families.diagrams'),
     architecture: t('gallery.families.architecture')
   }
   const items = useMemo(() => examples.map((code, index) => ({ code, index, families: familiesOf(code) })), [examples])

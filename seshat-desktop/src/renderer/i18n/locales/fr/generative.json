@@ -66,6 +66,9 @@
     },
     "architecture": {
       "hint": "Schémas de systèmes, avec les logos des technologies."
+    },
+    "diagrams": {
+      "hint": "Nids d'abeille, processus, cycles, pyramides, entonnoirs, matrices et piles."
     }
   },
   "tryIt": {
@@ -103,6 +106,10 @@
       "architecture": {
         "label": "Une architecture",
         "prompt": "Dessine l'architecture d'un chatbot RAG sur AWS : des documents dans S3, une Lambda qui les indexe, une base vectorielle et une API."
+      },
+      "strategy": {
+        "label": "Un schéma de stratégie",
+        "prompt": "Dessine ma stratégie produit en nid d'abeille de sept parties : clients, problème, positionnement, produit, prix, mise sur le marché et mesures, avec le positionnement en orange."
       }
     }
   },
@@ -129,7 +136,8 @@
       "charts": "Graphiques",
       "forms": "Formulaires",
       "design": "Design",
-      "architecture": "Architecture"
+      "architecture": "Architecture",
+      "diagrams": "Schémas"
     },
     "hub": {
       "back": "Toutes les galeries",
@@ -180,6 +188,10 @@
     "core": {
       "title": "Exemples de l'agent",
       "description": "Les courts exemples dont l'agent s'inspire : tableaux, étapes, graphiques, formulaires et une première maquette."
+    },
+    "schemas": {
+      "title": "Schémas et stratégie",
+      "description": "Les formes d'une stratégie ou d'une méthode : nid d'abeille, processus, cycle, pyramide, entonnoir, matrice et pile."
     }
   }
 }
