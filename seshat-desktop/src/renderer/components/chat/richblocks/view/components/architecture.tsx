@@ -24,14 +24,33 @@ function Panel({ props, id }: ComponentProps) {
           {title}
         </div>
       )}
-      <div className={row ? `flex flex-row flex-wrap ${holdsPanels ? 'gap-6' : 'gap-2.5'} [&>*]:min-w-[9rem] [&>*]:flex-1` : 'flex flex-col gap-2'}>
+      <div className={row ? `flex flex-row flex-wrap ${holdsPanels ? 'gap-12' : 'gap-2.5'} [&>*]:min-w-[9rem] [&>*]:flex-1` : 'flex flex-col gap-2'}>
         <NodeList nodes={props.children} />
       </div>
     </div>
   )
 }
 
+/** A database: a cylinder in the colour of its tone, with its label on it. */
+function Cylinder({ props, id }: ComponentProps) {
+  const hue = TONES[toneOrNull(props.tone) ?? 'blue']
+  return (
+    <div data-ui-id={id} data-ui-item className="relative flex min-h-[92px] min-w-[7rem] items-center justify-center px-3 pb-2.5 pt-7 text-center">
+      <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className={`absolute inset-0 size-full ${hue.accent}`}>
+        <path d="M1 15 C1 3 99 3 99 15 L99 85 C99 97 1 97 1 85 Z" fill="currentColor" />
+        <ellipse cx="50" cy="15" rx="49" ry="11" fill="#ffffff" opacity="0.2" />
+        <path d="M1 15 C1 27 99 27 99 15" fill="none" stroke="#000000" strokeOpacity="0.18" />
+      </svg>
+      <div className="relative z-10 min-w-0 text-white">
+        <div className="text-[12.5px] font-bold leading-tight">{String(props.label)}</div>
+        {typeof props.caption === 'string' && <div className="mt-0.5 text-[11px] leading-snug opacity-85">{props.caption}</div>}
+      </div>
+    </div>
+  )
+}
+
 function Item({ props, id }: ComponentProps) {
+  if (props.shape === 'cylinder') return <Cylinder props={props} id={id} />
   const boxed = props.boxed === true
   const icon = typeof props.icon === 'string' ? props.icon : undefined
   const tone = toneOrNull(props.tone)
@@ -56,6 +75,9 @@ function ArchitectureFrame({ props }: ComponentProps) {
   const [drawn, setDrawn] = useState<DrawnFlow[]>([])
   const [size, setSize] = useState({ w: 0, h: 0 })
   const markerId = `arrow-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
+  const blockId = `${markerId}-block`
+  const row = props.direction === 'row'
+  const framed = props.framed === true
   const flows = useMemo(() => (Array.isArray(props.flows) ? props.flows.filter(isNode) : []), [props.flows])
 
   const measure = useCallback(() => {
@@ -77,10 +99,12 @@ function ArchitectureFrame({ props }: ComponentProps) {
     return () => observer.disconnect()
   }, [measure])
 
-  return (
+  const drawing = (
     <div ref={frame} className="relative flex flex-col gap-9">
-      {typeof props.title === 'string' && <div className="text-[16px] font-semibold text-app-text">{props.title}</div>}
-      <NodeList nodes={props.children} />
+      {typeof props.title === 'string' && <div className={framed ? 'text-center text-[21px] font-semibold uppercase tracking-wide text-app-text' : 'text-[16px] font-semibold text-app-text'}>{props.title}</div>}
+      <div className={row ? 'flex flex-row flex-wrap items-stretch gap-16 [&>*]:min-w-[11rem] [&>*]:flex-1' : 'flex flex-col gap-9'}>
+        <NodeList nodes={props.children} />
+      </div>
       {drawn.length > 0 && (
         <>
           <svg width={size.w} height={size.h} className="pointer-events-none absolute left-0 top-0 overflow-visible text-app-text-muted" aria-hidden="true">
@@ -88,20 +112,39 @@ function ArchitectureFrame({ props }: ComponentProps) {
               <marker id={markerId} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0 0.5 L9.5 5 L0 9.5 z" fill="currentColor" />
               </marker>
+              {/* The big arrow of a stage to the next: a thick line and a head of its own size, whatever the width of the line. */}
+              <marker id={blockId} viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="26" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" style={{ fill: 'var(--accent-primary)', opacity: 0.85 }} />
+              </marker>
             </defs>
-            {drawn.map((flow) => (
-              <path
-                key={flow.key}
-                d={flow.d}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-                strokeDasharray={flow.dashed ? '5 4' : undefined}
-                markerEnd={`url(#${markerId})`}
-                markerStart={flow.both ? `url(#${markerId})` : undefined}
-              />
-            ))}
+            {drawn.map((flow) =>
+              flow.block ? (
+                <path
+                  key={flow.key}
+                  d={flow.d}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="10"
+                  strokeLinejoin="round"
+                  className="text-[var(--accent-primary)]"
+                  opacity="0.85"
+                  markerEnd={`url(#${blockId})`}
+                  markerStart={flow.both ? `url(#${blockId})` : undefined}
+                />
+              ) : (
+                <path
+                  key={flow.key}
+                  d={flow.d}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  strokeDasharray={flow.dashed ? '5 4' : undefined}
+                  markerEnd={`url(#${markerId})`}
+                  markerStart={flow.both ? `url(#${markerId})` : undefined}
+                />
+              )
+            )}
           </svg>
           {drawn.map(
             (flow) =>
@@ -119,6 +162,9 @@ function ArchitectureFrame({ props }: ComponentProps) {
       )}
     </div>
   )
+
+  // A frame around all of it, like the poster of an architecture: its own box, so that the arrows keep measuring from the drawing inside.
+  return framed ? <div className="rounded-3xl border-2 border-[color-mix(in_srgb,var(--accent-primary)_55%,transparent)] p-5">{drawing}</div> : drawing
 }
 
 const TALL_DRAWING = 560

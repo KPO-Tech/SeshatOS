@@ -2,7 +2,7 @@ import type { UiNode } from '../../lang/types'
 import { chooseRoute, labelSize, lineBoxes, placeLabel, type ScoredRoute } from './avoidRoute'
 import type { Point, Rect } from './routeFlow'
 
-export type DrawnFlow = { key: string; d: string; label?: string; at: Point; both: boolean; dashed: boolean }
+export type DrawnFlow = { key: string; d: string; label?: string; at: Point; both: boolean; dashed: boolean; block: boolean }
 
 /** A box crossed costs more than any detour, an arrow drawn over another nearly as much, and going up to the panel more than a longer path. */
 const HIT_COST = 1000
@@ -79,7 +79,8 @@ export function measureFlows(root: HTMLElement, flows: UiNode[]): DrawnFlow[] {
       label: text,
       at,
       both: flow.props.both === true,
-      dashed: flow.props.style === 'dashed'
+      dashed: flow.props.style === 'dashed',
+      block: flow.props.style === 'block'
     }
   })
 }

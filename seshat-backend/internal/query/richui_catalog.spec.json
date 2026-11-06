@@ -214,8 +214,8 @@
     {
       "name": "Architecture",
       "group": "Architecture",
-      "signature": "Architecture(children: [Component], flows?: [Flow], title?: text)",
-      "description": "The frame of a system drawing: it lays Panels out and draws the Flow arrows over them."
+      "signature": "Architecture(children: [Component], flows?: [Flow], title?: text, direction?: column|row, framed?: true|false)",
+      "description": "The frame of a system drawing: it lays Panels out and draws the Flow arrows over them. direction row puts them side by side, as the stages of a pipeline; framed draws a frame around all, with the title large."
     },
     {
       "name": "Panel",
@@ -226,13 +226,13 @@
     {
       "name": "Item",
       "group": "Architecture",
-      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone)",
-      "description": "A line with an icon, a label and a caption; boxed draws it as a card. Give it its own name to link it with a Flow."
+      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone, shape?: box|cylinder)",
+      "description": "A line with an icon, a label and a caption; boxed draws it as a card, shape cylinder as a database. Give it its own name to link it with a Flow."
     },
     {
       "name": "Flow",
       "group": "Architecture",
-      "signature": "Flow(from: name, to: name, label?: text, both?: true|false, style?: solid|dashed)",
+      "signature": "Flow(from: name, to: name, label?: text, both?: true|false, style?: solid|dashed|block)",
       "description": "An arrow between two Panels or Items, by the names of their statements. Only inside the flows of an Architecture."
     },
     {
