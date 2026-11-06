@@ -5,7 +5,7 @@ import i18next from 'i18next'
 import './gallery.css'
 import { catalogLoader, i18nOptions } from '@renderer/i18n'
 import { applyCurrentTheme, chooseMode, getEffectiveTheme } from '@renderer/lib/theme'
-import { PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
+import { EXAMPLE_TITLES, PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
 import { ExampleGallery } from '@renderer/components/generative/ExampleGallery'
 
 // A page to look at every example of the catalogue as the chat draws it, in both themes and both languages, and to see what a click on a
@@ -26,7 +26,7 @@ function Gallery({ language }: { language: Language }) {
   return (
     <I18nextProvider i18n={instance}>
       <div className="mx-auto max-w-3xl px-4 pb-40 pt-6 text-app-text">
-        <ExampleGallery examples={[LOGO_CHECK, ...PROMPT_EXAMPLES]} showErrors initialFilter={query.get('filter') ?? ''} />
+        <ExampleGallery examples={[LOGO_CHECK, ...PROMPT_EXAMPLES]} titles={['Logos found by name', ...EXAMPLE_TITLES]} showErrors initialFilter={query.get('filter') ?? ''} initialView={(['preview', 'code', 'both'] as const).find((view) => view === query.get('view'))} />
       </div>
     </I18nextProvider>
   )

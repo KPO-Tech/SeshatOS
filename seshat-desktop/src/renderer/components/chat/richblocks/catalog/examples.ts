@@ -83,3 +83,20 @@ grades = Table([Col("Criterion"), Col("Mark", "text", "right")], [["Ideas", "4/5
 advice = Callout("info", "To work on", "The construction of sentences and the agreement of words.")
 mail = Draft("Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully", "Notice of departure", "agency@example.com")`
 ]
+
+/** A name for each example, in the order of PROMPT_EXAMPLES: what the gallery shows over it. */
+export const EXAMPLE_TITLES: string[] = [
+  'A report: figures, a table and a note',
+  'Step by step',
+  'A status card with its plan',
+  'The architecture of a local app',
+  'A comparison table',
+  'A function, its derivative and its area',
+  'Machine learning: loss, matrix and residuals',
+  'A sine wave to explore',
+  'A quiz and flashcards',
+  'A site sketch with its palette',
+  'A dashboard sketch',
+  'A writing exercise',
+  'A score, advice and an email draft'
+]

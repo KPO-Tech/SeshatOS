@@ -1,21 +1,95 @@
 {
   "page": {
-    "title": "UI générative",
-    "subtitle": "Ce que l'agent peut dessiner dans ses réponses : tableaux, graphiques, formulaires, quiz, maquettes de page.",
-    "tabs": {
-      "overview": "Aperçu",
-      "gallery": "Galerie"
+    "title": "UI générative"
+  },
+  "nav": {
+    "general": "Général",
+    "gallery": "Galerie"
+  },
+  "sections": {
+    "overview": {
+      "label": "Aperçu",
+      "description": "Ce que l'agent peut dessiner dans ses réponses, et l'interrupteur qui l'autorise."
     },
+    "families": {
+      "label": "Familles",
+      "description": "Choisissez les types de dessin que l'agent peut utiliser, et leur coût."
+    },
+    "try": {
+      "label": "Essayer",
+      "description": "Des demandes qui font ressortir chaque type de dessin."
+    },
+    "all": {
+      "label": "Tous les exemples",
+      "description": "Tous les exemples dont l'agent s'inspire."
+    },
+    "basics": {
+      "label": "Bases",
+      "description": "Tableaux, chiffres, étapes, cartes et notes."
+    },
+    "charts": {
+      "label": "Graphiques",
+      "description": "Courbes de formules, curseurs, histogrammes et autres graphiques."
+    },
+    "forms": {
+      "label": "Formulaires",
+      "description": "Exercices, quiz, flashcards et brouillons à modifier."
+    },
+    "design": {
+      "label": "Design",
+      "description": "Maquettes de site ou d'application, et palettes de couleurs."
+    },
+    "architecture": {
+      "label": "Architecture",
+      "description": "Schémas de systèmes, avec les logos des technologies."
+    }
+  },
+  "overview": {
     "switch": {
       "title": "Réponses riches",
       "on": "Activé : l'agent peut répondre avec des tableaux, graphiques, formulaires et maquettes.",
       "off": "Désactivé : l'agent répond en texte seulement."
+    },
+    "safety": {
+      "title": "Pourquoi c'est sûr",
+      "pieces": {
+        "title": "Pièces fixes seulement",
+        "hint": "L'agent choisit dans un catalogue de pièces. Il n'écrit jamais de code ni de page."
+      },
+      "click": {
+        "title": "Rien sans votre clic",
+        "hint": "Un formulaire ou un quiz n'envoie un message que lorsque vous appuyez sur son bouton, et vous le voyez avant."
+      },
+      "local": {
+        "title": "Tout reste ici",
+        "hint": "Ce que vous saisissez dans un bloc reste sur cet ordinateur jusqu'à l'envoi."
+      }
+    }
+  },
+  "families": {
+    "hint": "Automatique : une famille n'est enseignée à l'agent que si la demande s'y prête. Toujours : elle l'est à chaque demande, ce qui coûte plus. Jamais : elle n'est pas utilisée.",
+    "cost": "environ {{words}} mots",
+    "modes": {
+      "auto": "Automatique",
+      "on": "Toujours",
+      "off": "Jamais"
+    },
+    "charts": {
+      "hint": "Courbes de formules, curseurs, histogrammes, cartes de chaleur."
+    },
+    "forms": {
+      "hint": "Exercices, quiz, flashcards, brouillons à modifier."
+    },
+    "design": {
+      "hint": "Maquettes de site ou d'application, palettes de couleurs."
+    },
+    "architecture": {
+      "hint": "Schémas de systèmes, avec les logos des technologies."
     }
   },
   "tryIt": {
-    "title": "Essayer",
     "hint": "Chaque demande ouvre un nouveau chat, texte prêt à envoyer.",
-    "disabled": "Activez d'abord les réponses riches.",
+    "disabled": "Activez les réponses riches.",
     "items": {
       "quiz": {
         "label": "Un quiz",
@@ -52,12 +126,22 @@
     }
   },
   "gallery": {
-    "intro": "Tous les exemples dont l'agent s'inspire, dessinés comme dans le chat. Cliquez sur un bouton ou remplissez un formulaire : le message qui serait envoyé s'affiche en bas, rien n'est envoyé.",
+    "intro": "Dessinés comme dans le chat. Appuyez sur un bouton ou remplissez un formulaire : le message qui serait envoyé s'affiche en bas, rien n'est envoyé.",
     "filter": "Filtrer par composant",
     "none": "Aucun résultat.",
-    "source": "source",
+    "view": {
+      "preview": "Aperçu",
+      "code": "Code",
+      "both": "Les deux"
+    },
+    "code": {
+      "lines": "Lignes : {{count}}",
+      "copy": "Copier",
+      "copied": "Copié"
+    },
+    "clear": "Effacer",
     "wouldReceive": "Ce que le chat recevrait ({{count}})",
-    "nothingSent": "Rien pour l'instant : cliquez sur un bouton, un choix, un résultat de quiz ou un formulaire.",
+    "nothingSent": "Rien pour l'instant : appuyez sur un bouton, un choix, un résultat de quiz ou un formulaire.",
     "families": {
       "all": "Tout",
       "basics": "Bases",
@@ -65,32 +149,6 @@
       "forms": "Formulaires",
       "design": "Design",
       "architecture": "Architecture"
-    }
-  },
-  "families": {
-    "title": "Familles de composants",
-    "hint": "Automatique : une famille n'est enseignée à l'agent que si la demande s'y prête. Toujours : elle l'est à chaque demande, ce qui coûte plus. Jamais : elle n'est pas utilisée.",
-    "cost": "environ {{words}} mots",
-    "modes": {
-      "auto": "Automatique",
-      "on": "Toujours",
-      "off": "Jamais"
-    },
-    "charts": {
-      "label": "Graphiques et maths",
-      "hint": "Courbes de formules, curseurs, histogrammes, cartes de chaleur."
-    },
-    "forms": {
-      "label": "Formulaires et quiz",
-      "hint": "Exercices, quiz, cartes mémoire, brouillons à modifier."
-    },
-    "design": {
-      "label": "Design",
-      "hint": "Maquettes de site ou d'application, palettes de couleurs."
-    },
-    "architecture": {
-      "label": "Architecture",
-      "hint": "Schémas de systèmes, avec les logos des technologies."
     }
   }
 }
