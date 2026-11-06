@@ -84,7 +84,7 @@ export function ExampleGallery({ examples = PROMPT_EXAMPLES, titles = EXAMPLE_TI
           />
         ))}
 
-        <section className="sticky bottom-0 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-menu)] shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
+        <section className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]">
           <div className="flex items-center justify-between gap-3 border-0 border-b border-solid border-[var(--border-soft)] px-4 py-2">
             <span className="text-[12.5px] font-semibold text-[var(--text-primary)]">{t('gallery.wouldReceive', { count: sent.length })}</span>
             {sent.length > 0 && (

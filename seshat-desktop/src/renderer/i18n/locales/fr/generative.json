@@ -5,8 +5,7 @@
     "pages": "Pages"
   },
   "nav": {
-    "general": "Général",
-    "gallery": "Galerie"
+    "general": "Général"
   },
   "sections": {
     "overview": {
@@ -21,29 +20,9 @@
       "label": "Essayer",
       "description": "Des demandes qui font ressortir chaque type de dessin."
     },
-    "all": {
-      "label": "Tous les exemples",
-      "description": "Tous les exemples dont l'agent s'inspire."
-    },
-    "basics": {
-      "label": "Bases",
-      "description": "Tableaux, chiffres, étapes, cartes et notes."
-    },
-    "charts": {
-      "label": "Graphiques",
-      "description": "Courbes de formules, curseurs, histogrammes et autres graphiques."
-    },
-    "forms": {
-      "label": "Formulaires",
-      "description": "Exercices, quiz, flashcards et brouillons à modifier."
-    },
-    "design": {
-      "label": "Design",
-      "description": "Maquettes de site ou d'application, et palettes de couleurs."
-    },
-    "architecture": {
-      "label": "Architecture",
-      "description": "Schémas de systèmes, avec les logos des technologies."
+    "gallery": {
+      "label": "Galerie",
+      "description": "Tous les exemples dont l'agent s'inspire : ouvrez-en un pour le voir en grand, avec sa source."
     }
   },
   "overview": {
@@ -128,13 +107,13 @@
     }
   },
   "gallery": {
-    "intro": "Dessinés comme dans le chat. Appuyez sur un bouton ou remplissez un formulaire : le message qui serait envoyé s'affiche en bas, rien n'est envoyé.",
     "filter": "Filtrer par composant",
     "none": "Aucun résultat.",
     "view": {
       "preview": "Aperçu",
       "code": "Code",
-      "both": "Les deux"
+      "both": "Les deux",
+      "open": "Voir"
     },
     "code": {
       "lines": "Lignes : {{count}}",
@@ -151,6 +130,7 @@
       "forms": "Formulaires",
       "design": "Design",
       "architecture": "Architecture"
-    }
+    },
+    "back": "Galerie"
   }
 }

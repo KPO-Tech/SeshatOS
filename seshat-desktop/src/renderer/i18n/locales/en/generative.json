@@ -5,8 +5,7 @@
     "pages": "Pages"
   },
   "nav": {
-    "general": "General",
-    "gallery": "Gallery"
+    "general": "General"
   },
   "sections": {
     "overview": {
@@ -21,29 +20,9 @@
       "label": "Try it",
       "description": "Requests that bring out each kind of drawing."
     },
-    "all": {
-      "label": "All examples",
-      "description": "Every example the agent is taught from."
-    },
-    "basics": {
-      "label": "Basics",
-      "description": "Tables, figures, steps, cards and notes."
-    },
-    "charts": {
-      "label": "Graphs",
-      "description": "Plots of formulas, sliders, histograms and other charts."
-    },
-    "forms": {
-      "label": "Forms",
-      "description": "Exercises, quizzes, flashcards and drafts to edit."
-    },
-    "design": {
-      "label": "Design",
-      "description": "Sketches of a site or an app, and colour palettes."
-    },
-    "architecture": {
-      "label": "Architecture",
-      "description": "Drawings of systems, with the logos of technologies."
+    "gallery": {
+      "label": "Gallery",
+      "description": "Every example the agent is taught from: pick one to see it large, with its source."
     }
   },
   "overview": {
@@ -128,13 +107,13 @@
     }
   },
   "gallery": {
-    "intro": "Drawn as in the chat. Press a button or fill in a form: the message it would send is shown at the bottom, and nothing is sent.",
     "filter": "Filter by component",
     "none": "No result.",
     "view": {
       "preview": "Preview",
       "code": "Code",
-      "both": "Both"
+      "both": "Both",
+      "open": "View"
     },
     "code": {
       "lines": "Lines: {{count}}",
@@ -151,6 +130,7 @@
       "forms": "Forms",
       "design": "Design",
       "architecture": "Architecture"
-    }
+    },
+    "back": "Gallery"
   }
 }

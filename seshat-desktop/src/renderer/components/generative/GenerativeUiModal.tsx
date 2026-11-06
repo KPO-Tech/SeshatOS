@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useState, type ComponentType } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 import { useNavigate } from 'react-router'
-import { ChartLine, Close, Components, Computer, Edit, LayoutOne, Lock, Magic, NetworkTree, Pic, Rocket, Shield, Table } from '@icon-park/react'
+import { ChartLine, Close, Components, Computer, Edit, LayoutOne, Lock, Magic, NetworkTree, Pic, Rocket, Shield } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
-import { PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
 import { useOverlayStore } from '@renderer/stores/overlay'
-import { ExampleGallery } from './ExampleGallery'
-import { familiesOf, type Family } from './families'
+import { Gallery } from './Gallery'
 import { SettingRow, SettingsCard, Toggle } from '@renderer/components/settings/kit'
 import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 
@@ -14,7 +12,7 @@ import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 // Settings: a blurred backdrop, the pages listed on the left, one page on the right with its header and its cards. The switch is the same
 // preference as Settings > Answers.
 
-export type SectionId = 'overview' | 'families' | 'try' | 'all' | Family
+export type SectionId = 'overview' | 'families' | 'try' | 'gallery'
 type Mode = 'auto' | 'on' | 'off'
 type IconComponent = ComponentType<{ theme?: 'outline' | 'filled'; size?: number | string; fill?: string }>
 
@@ -22,16 +20,12 @@ const ICONS: Record<SectionId, IconComponent> = {
   overview: Magic,
   families: Components,
   try: Rocket,
-  all: LayoutOne,
-  basics: Table,
-  charts: ChartLine,
-  forms: Edit,
-  design: Pic,
-  architecture: NetworkTree
+  gallery: LayoutOne
 }
 
-const GENERAL: SectionId[] = ['overview', 'families', 'try']
-const GALLERY: SectionId[] = ['all', 'basics', 'charts', 'forms', 'design', 'architecture']
+const FAMILY_ICONS: Record<string, IconComponent> = { charts: ChartLine, forms: Edit, design: Pic, architecture: NetworkTree }
+
+const PAGES: SectionId[] = ['overview', 'families', 'try', 'gallery']
 
 export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { onClose: () => void; initialSection?: SectionId }) {
   const { t } = useTranslation('generative')
@@ -54,31 +48,20 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
   const modes = prefs?.rich_families ?? {}
   const words = prefs?.rich_family_words ?? {}
 
-  const counts = useMemo(() => {
-    const found: Record<string, number> = { all: PROMPT_EXAMPLES.length }
-    for (const code of PROMPT_EXAMPLES) for (const family of familiesOf(code)) found[family] = (found[family] ?? 0) + 1
-    return found
-  }, [])
-
   // What each page is called and says, written out key by key.
   const meta: Record<SectionId, { label: string; description: string }> = {
     overview: { label: t('sections.overview.label'), description: t('sections.overview.description') },
     families: { label: t('sections.families.label'), description: t('sections.families.description') },
     try: { label: t('sections.try.label'), description: t('sections.try.description') },
-    all: { label: t('sections.all.label'), description: t('sections.all.description') },
-    basics: { label: t('sections.basics.label'), description: t('sections.basics.description') },
-    charts: { label: t('sections.charts.label'), description: t('sections.charts.description') },
-    forms: { label: t('sections.forms.label'), description: t('sections.forms.description') },
-    design: { label: t('sections.design.label'), description: t('sections.design.description') },
-    architecture: { label: t('sections.architecture.label'), description: t('sections.architecture.description') }
+    gallery: { label: t('sections.gallery.label'), description: t('sections.gallery.description') }
   }
   const Icon = ICONS[active]
 
   const families = [
-    { id: 'charts', label: t('sections.charts.label'), hint: t('families.charts.hint'), tone: 'bg-blue-500/12 text-blue-500' },
-    { id: 'forms', label: t('sections.forms.label'), hint: t('families.forms.hint'), tone: 'bg-emerald-500/12 text-emerald-500' },
-    { id: 'design', label: t('sections.design.label'), hint: t('families.design.hint'), tone: 'bg-violet-500/12 text-violet-500' },
-    { id: 'architecture', label: t('sections.architecture.label'), hint: t('families.architecture.hint'), tone: 'bg-orange-500/12 text-orange-500' }
+    { id: 'charts', label: t('gallery.families.charts'), hint: t('families.charts.hint'), tone: 'bg-blue-500/12 text-blue-500' },
+    { id: 'forms', label: t('gallery.families.forms'), hint: t('families.forms.hint'), tone: 'bg-emerald-500/12 text-emerald-500' },
+    { id: 'design', label: t('gallery.families.design'), hint: t('families.design.hint'), tone: 'bg-violet-500/12 text-violet-500' },
+    { id: 'architecture', label: t('gallery.families.architecture'), hint: t('families.architecture.hint'), tone: 'bg-orange-500/12 text-orange-500' }
   ] as const
   const modeLabels: Record<Mode, string> = { auto: t('families.modes.auto'), on: t('families.modes.on'), off: t('families.modes.off') }
   function chooseMode(family: string, mode: Mode) {
@@ -103,10 +86,7 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
   const TONE: Record<string, string> = { forms: 'bg-emerald-500/12 text-emerald-500', charts: 'bg-blue-500/12 text-blue-500', design: 'bg-violet-500/12 text-violet-500', architecture: 'bg-orange-500/12 text-orange-500' }
   const TRY_ICON: Record<string, IconComponent> = { forms: Edit, charts: ChartLine, design: Pic, architecture: NetworkTree }
 
-  const navigation: Array<{ heading: string; items: SectionId[] }> = [
-    { heading: t('nav.general'), items: GENERAL },
-    { heading: t('nav.gallery'), items: GALLERY }
-  ]
+  const navigation: Array<{ heading: string; items: SectionId[] }> = [{ heading: t('nav.general'), items: PAGES }]
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-8 py-8 backdrop-blur-sm" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -143,8 +123,7 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
                         >
                           <ItemIcon theme="outline" size={16} />
                           <span className="min-w-0 flex-1 truncate">{meta[id].label}</span>
-                          {GALLERY.includes(id) && <span className="text-[11px] tabular-nums text-[var(--text-muted)]">{counts[id] ?? 0}</span>}
-                        </button>
+                            </button>
                       )
                     })}
                   </div>
@@ -195,7 +174,7 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
                     <SettingsCard>
                       {families.map(({ id, label, hint, tone }) => {
                         const current: Mode = modes[id] ?? 'auto'
-                        const FamilyIcon = ICONS[id]
+                        const FamilyIcon = FAMILY_ICONS[id]
                         return (
                           <div key={id} className="flex min-h-[64px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
                             <div className="flex min-w-0 items-center gap-3">
@@ -264,12 +243,7 @@ export function GenerativeUiModal({ onClose, initialSection = 'overview' }: { on
                   </>
                 )}
 
-                {GALLERY.includes(active) && (
-                  <>
-                    <p className="m-0 text-[12.5px] leading-5 text-[var(--text-muted)]">{t('gallery.intro')}</p>
-                    <ExampleGallery key={active} family={active === 'all' ? 'all' : (active as Family)} initialFamily="all" />
-                  </>
-                )}
+                {active === 'gallery' && <Gallery />}
               </div>
             </div>
           </div>
