@@ -40,14 +40,11 @@ type FeaturedSkillRepo struct {
 	Commands []skillinstall.CommandNeed `json:"-"`
 }
 
-// DefaultSeshatSkillsRepo is the official Seshat skills collection. Left empty
-// for now: some of its skills (e.g. pdf) shadow the SDK's own better-suited
-// built-in tools (document-reader-backed Read) for tasks the skill's description
-// claims too broadly, causing worse agent behavior than not having it at all.
-// Re-enable once the individual skill descriptions are scoped tightly enough
-// to stop competing with built-in tools. Operators can still opt in with
-// SESHAT_DEFAULT_SKILL_REPO.
-const DefaultSeshatSkillsRepo = ""
+// DefaultSeshatSkillsRepo is the collection of Seshat's own skills, cloned in the background at first start and updated about once an hour.
+// It was left empty while it still held public skills (pdf, docx...) that shadowed the built-in document tools; it now holds only skills
+// written for Seshat (html-page), each limited to one case, and public skills come from the catalog. SESHAT_DEFAULT_SKILL_REPO changes it,
+// "none" turns it off.
+const DefaultSeshatSkillsRepo = "https://github.com/KPO-Tech/seshat-skills"
 
 // defaultAllowedSkillRepoHosts is the curated allowlist of git hosting services accepted
 // when installing a skill repo via the HTTP API. Operators may override with SESHAT_SKILL_REPO_HOSTS.

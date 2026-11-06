@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **Seshat's own skills install at first start.** The collection `seshat-skills` is cloned in the background and kept up to date; it now holds only skills written for Seshat, starting with `html-page` (base page, design rules, snippets and icons for an HTML page shown in the preview). Public skills stay in the catalog.
 - **Forms in chat answers.** The agent can now put an exercise, a quiz or a text to correct in the answer: a text box with a word counter and a button that sends what you wrote as your next message. It can also give a draft (an email, a letter) to edit and copy, a score bar and a bar cut in parts. Nothing is sent without your click (ADR 0013).
 - **Sliders and live formulas.** A graph in an answer can be explored: sliders change the parameters of a curve, and the equation, the marks (a vertex, a root) and the values follow (ADR 0014).
 - **Switches, choices, quizzes and flashcards.** A switch or a list can show or hide curves of a graph. A quiz gives the right answer and its explanation at once, with a score; flashcards flip and are marked known or to review. At the end you may send your result to the agent with one click (ADR 0015).
