@@ -17,6 +17,7 @@ import {
   siLua, siMariadb, siMongodb, siMysql, siNextdotjs, siNginx, siNodedotjs, siOllama, siOpentelemetry, siPandas, siPhp,
   siPostgresql, siPrometheus, siPython, siPytorch, siRabbitmq, siReact, siRedis, siRuby, siRust, siSentry, siSnowflake,
   siSqlite, siSupabase, siSvelte, siSwift, siTailwindcss, siTauri, siTerraform, siTypescript, siVercel, siVite, siVuedotjs,
+  siStripe, siNotion, siFigma, siShopify, siSpotify, siAirbnb, siDiscord, siYoutube, siX, siInstagram, siFacebook, siWhatsapp, siTelegram, siPaypal, siZoom, siDropbox, siTrello, siJira, siAsana, siHubspot, siHuggingface, siGoogle, siLinear, siNpm, siBun, siDeno, siWebpack, siJest, siVitest, siCypress, siPrisma, siBootstrap, siWordpress, siNetlify, siUbuntu, siAndroid, siFirefox, siSafari, siMistralai, siGooglegemini, siPerplexity, siClaude, siTensorflow, siNumpy, siJupyter, siOkta, siMailchimp, siPosthog, siNuxt, siAstro, siObsidian, siBitwarden, siSignal, siMattermost,
   siApple, type SimpleIcon
 } from 'simple-icons'
 import { DatabaseIcon } from './DatabaseIcon'
@@ -81,7 +82,8 @@ export const BRAND_ICONS: Record<string, SimpleIcon> = {
   docker: siDocker, kubernetes: siKubernetes, terraform: siTerraform, linux: siLinux, apple: siApple, nginx: siNginx,
   git: siGit, github: siGithub, gitlab: siGitlab, githubactions: siGithubactions, jenkins: siJenkins,
   prometheus: siPrometheus, grafana: siGrafana, opentelemetry: siOpentelemetry, datadog: siDatadog, sentry: siSentry,
-  googlecloud: siGooglecloud, cloudflare: siCloudflare, vercel: siVercel, firebase: siFirebase, supabase: siSupabase
+  googlecloud: siGooglecloud, cloudflare: siCloudflare, vercel: siVercel, firebase: siFirebase, supabase: siSupabase,
+  stripe: siStripe, notion: siNotion, figma: siFigma, shopify: siShopify, spotify: siSpotify, airbnb: siAirbnb, discord: siDiscord, youtube: siYoutube, x: siX, instagram: siInstagram, facebook: siFacebook, whatsapp: siWhatsapp, telegram: siTelegram, paypal: siPaypal, zoom: siZoom, dropbox: siDropbox, trello: siTrello, jira: siJira, asana: siAsana, hubspot: siHubspot, huggingface: siHuggingface, google: siGoogle, linear: siLinear, npm: siNpm, bun: siBun, deno: siDeno, webpack: siWebpack, jest: siJest, vitest: siVitest, cypress: siCypress, prisma: siPrisma, bootstrap: siBootstrap, wordpress: siWordpress, netlify: siNetlify, ubuntu: siUbuntu, android: siAndroid, firefox: siFirefox, safari: siSafari, mistral: siMistralai, gemini: siGooglegemini, perplexity: siPerplexity, claude: siClaude, tensorflow: siTensorflow, numpy: siNumpy, jupyter: siJupyter, okta: siOkta, mailchimp: siMailchimp, posthog: siPosthog, nuxt: siNuxt, astro: siAstro, obsidian: siObsidian, bitwarden: siBitwarden, signal: siSignal, mattermost: siMattermost
 }
 
 export const BRAND_PREFIX = 'si:'
@@ -103,7 +105,10 @@ export function resolveIcon(name: string | undefined): ResolvedIcon | null {
     return icon ? { kind: 'brand', icon } : null
   }
   const component = GENERIC_ICONS[key] ?? GENERIC_ICONS[ICON_ALIASES[key] ?? '']
-  return component ? { kind: 'generic', component } : null
+  if (component) return { kind: 'generic', component }
+  // A technology written as it is said (react, stripe) has its logo too.
+  const brand = BRAND_ICONS[key.replace(/-/g, '')] ?? BRAND_ICONS[key]
+  return brand ? { kind: 'brand', icon: brand } : null
 }
 
 export function genericIconNames(): string[] {

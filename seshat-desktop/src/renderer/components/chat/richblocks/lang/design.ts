@@ -14,6 +14,11 @@ export const DESIGN_LIMITS = {
   stats: 6,
   plans: 4,
   planFeatures: 8,
+  /** Entries of the side bar of a Shell, points of a Spark, rows and columns of DataRows. */
+  sideItems: 8,
+  points: 60,
+  rows: 12,
+  columns2: 6,
   /** Columns of a Grid. */
   columns: 4,
   /** Stops of a gradient. */
@@ -113,12 +118,12 @@ export const FONT_STACKS: Record<FontName, string> = {
 export const RADIUS_REM: Record<RadiusName, string> = { none: '0', sm: '0.375rem', md: '0.75rem', lg: '1.25rem', full: '999px' }
 
 export const DESIGN_COMPONENTS = [
-  'Browser', 'Phone', 'Nav', 'Hero', 'Features', 'Feature', 'Grid', 'Picture', 'Palette', 'Swatch', 'Footer', 'Cta', 'Plans', 'Plan', 'Stats', 'Stat', 'Testimonial', 'Avatar', 'Logos'
+  'Browser', 'Phone', 'Nav', 'Hero', 'Features', 'Feature', 'Grid', 'Picture', 'Palette', 'Swatch', 'Footer', 'Cta', 'Plans', 'Plan', 'Stats', 'Stat', 'Testimonial', 'Avatar', 'Logos', 'Shell', 'SideItem', 'Tile', 'Kpi', 'Spark', 'DataRows'
 ] as const
 
 // The arguments that hold a colour or a gradient, by component.
 const COLOR_ARGS: Record<string, string[]> = {
-  Browser: ['bg'], Phone: ['bg'], Nav: ['color'], Hero: ['color'], Feature: ['color'], Picture: ['color'], Swatch: ['color'], Cta: ['color'], Plan: ['color'], Testimonial: ['color'], Avatar: ['color']
+  Browser: ['bg'], Phone: ['bg'], Nav: ['color'], Hero: ['color'], Feature: ['color'], Picture: ['color'], Swatch: ['color'], Cta: ['color'], Plan: ['color'], Testimonial: ['color'], Avatar: ['color'], Shell: ['color'], Kpi: ['color'], Spark: ['color']
 }
 
 const count = (node: UiNode, key: string) => (Array.isArray(node.props[key]) ? (node.props[key] as unknown[]).length : 0)
@@ -144,9 +149,12 @@ export function checkDesign(root: UiNode): UiError[] {
     const limits: Array<[string, string, number, string]> = [
       ['Features', 'items', DESIGN_LIMITS.features, 'items'], ['Palette', 'swatches', DESIGN_LIMITS.swatches, 'swatches'], ['Nav', 'links', DESIGN_LIMITS.links, 'links'],
       ['Footer', 'links', DESIGN_LIMITS.links, 'links'], ['Logos', 'names', DESIGN_LIMITS.logos, 'logos'], ['Stats', 'items', DESIGN_LIMITS.stats, 'stats'],
-      ['Plans', 'items', DESIGN_LIMITS.plans, 'plans'], ['Plan', 'features', DESIGN_LIMITS.planFeatures, 'features']
+      ['Plans', 'items', DESIGN_LIMITS.plans, 'plans'], ['Plan', 'features', DESIGN_LIMITS.planFeatures, 'features'],
+      ['Shell', 'items', DESIGN_LIMITS.sideItems, 'entries'], ['Spark', 'values', DESIGN_LIMITS.points, 'points'], ['DataRows', 'rows', DESIGN_LIMITS.rows, 'rows'],
+      ['DataRows', 'columns', DESIGN_LIMITS.columns2, 'columns']
     ]
     for (const [name, key, limit, what] of limits) if (node.name === name && count(node, key) > limit) problem(`${name} holds at most ${limit} ${what}.`)
+    if (node.name === 'Shell' && nodes.some((other) => other !== node && other.name === 'Shell' && isInside(node, other))) problem('A Shell cannot hold another Shell.')
     if ((DESIGN_COMPONENTS as readonly string[]).includes(node.name)) {
       for (const key of ['title', 'subtitle', 'text', 'brand', 'label', 'quote', 'name', 'value']) {
         const value = node.props[key]

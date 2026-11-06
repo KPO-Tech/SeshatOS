@@ -350,7 +350,137 @@ function Footer({ props }: ComponentProps) {
   )
 }
 
-/** A Feature, a Plan, a Stat or a Swatch is read by the piece that holds it. */
+// A dashboard sketch (ADR 0016): a side bar and a main area, tiles, figures with their change, a small curve, rows. It is drawn in the
+// colours of the page it is on, like the other pieces.
+function Shell({ props }: ComponentProps) {
+  const page = useContext(PageContext)
+  const fill = accentOf(props.color)
+  const items = (Array.isArray(props.items) ? props.items : []).filter(isNode).slice(0, DESIGN_LIMITS.sideItems)
+  return (
+    <div className="grid min-h-[16rem]" style={{ gridTemplateColumns: 'minmax(8.5rem, 11rem) minmax(0, 1fr)' }}>
+      <aside className="flex flex-col gap-1 p-3" style={{ background: mix(page.fg, 5), borderRight: `1px solid ${mix(page.fg, 12)}` }}>
+        <div className="mb-2 px-2 py-1 text-[14px] font-bold" style={{ color: page.fg }}>
+          {text(props.title) ?? ' '}
+        </div>
+        {items.map((item, index) => {
+          const active = item.props.active === true || (index === 0 && !items.some((other) => other.props.active === true))
+          return (
+            <span
+              key={index}
+              className="flex items-center gap-2 px-2.5 py-1.5 text-[13px] font-medium"
+              style={{ borderRadius: page.radius, background: active ? mix(fill.base, 16) : undefined, color: active ? fill.base : page.muted }}
+            >
+              {text(item.props.icon) && <RichIcon name={text(item.props.icon)} size={15} />}
+              {String(item.props.label ?? '')}
+            </span>
+          )
+        })}
+      </aside>
+      <div className="flex min-w-0 flex-col gap-3.5 p-4" style={{ color: page.fg }}>
+        <NodeList nodes={props.children} />
+      </div>
+    </div>
+  )
+}
+
+function Tile({ props }: ComponentProps) {
+  const page = useContext(PageContext)
+  return (
+    <div className="flex flex-col gap-2.5 p-3.5" style={{ border: `1px solid ${mix(page.fg, 13)}`, borderRadius: page.radius }}>
+      {text(props.title) && (
+        <div className="text-[13px] font-semibold" style={{ color: page.fg }}>
+          {text(props.title)}
+        </div>
+      )}
+      <NodeList nodes={props.children} />
+    </div>
+  )
+}
+
+function Kpi({ props }: ComponentProps) {
+  const page = useContext(PageContext)
+  const fill = accentOf(props.color)
+  const delta = text(props.delta)
+  const rising = delta?.trim().startsWith('+')
+  const falling = delta?.trim().startsWith('-') || delta?.trim().startsWith('−')
+  return (
+    <div className="flex flex-col gap-1 p-3.5" style={{ border: `1px solid ${mix(fill.base, 26)}`, background: mix(fill.base, 7), borderRadius: page.radius }}>
+      <div className="text-[12px]" style={{ color: page.muted }}>
+        {String(props.label ?? '')}
+      </div>
+      <div className="text-[24px] font-extrabold leading-none tracking-tight" style={{ color: page.fg }}>
+        {String(props.value ?? '')}
+      </div>
+      {delta && (
+        <div className="text-[12px] font-semibold" style={{ color: rising ? '#16a34a' : falling ? '#dc2626' : page.muted }}>
+          {delta}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Spark({ props }: ComponentProps) {
+  const fill = accentOf(props.color)
+  const values = (Array.isArray(props.values) ? props.values : []).map(Number).filter(Number.isFinite).slice(0, DESIGN_LIMITS.points)
+  if (values.length < 2) return null
+  const low = Math.min(...values)
+  const high = Math.max(...values)
+  const span = high - low || 1
+  const width = 200
+  const height = 56
+  const x = (index: number) => (index / (values.length - 1)) * width
+  const y = (value: number) => height - 6 - ((value - low) / span) * (height - 12)
+  const bars = props.kind === 'bars'
+  const line = values.map((value, index) => `${index === 0 ? 'M' : 'L'}${x(index).toFixed(1)} ${y(value).toFixed(1)}`).join(' ')
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="h-14 w-full" role="img" aria-label="trend">
+      {bars ? (
+        values.map((value, index) => {
+          const w = width / values.length
+          return <rect key={index} x={index * w + w * 0.15} y={y(value)} width={w * 0.7} height={height - y(value)} rx="2" fill={fill.base} opacity="0.85" />
+        })
+      ) : (
+        <>
+          <path d={`${line} L${width} ${height} L0 ${height} Z`} fill={fill.base} opacity="0.14" />
+          <path d={line} fill="none" stroke={fill.base} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+function DataRows({ props }: ComponentProps) {
+  const page = useContext(PageContext)
+  const columns = strings(props.columns).slice(0, DESIGN_LIMITS.columns2)
+  const rows = (Array.isArray(props.rows) ? props.rows : []).slice(0, DESIGN_LIMITS.rows).map((row) => (Array.isArray(row) ? row.map(String) : []))
+  return (
+    <table className="w-full border-collapse text-left text-[12.5px]">
+      <thead>
+        <tr>
+          {columns.map((column, index) => (
+            <th key={index} className="px-2 py-1.5 font-semibold" style={{ color: page.muted, borderBottom: `1px solid ${mix(page.fg, 14)}` }}>
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, r) => (
+          <tr key={r}>
+            {columns.map((_, c) => (
+              <td key={c} className="px-2 py-1.5" style={{ color: page.fg, borderBottom: `1px solid ${mix(page.fg, 8)}` }}>
+                {row[c] ?? ''}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+/** A Feature, a Plan, a Stat, a SideItem or a Swatch is read by the piece that holds it. */
 function ReadByParent() {
   return null
 }
@@ -359,5 +489,5 @@ function ReadByParent() {
 void safeColor
 
 export const designComponents: Record<string, ComponentType<ComponentProps>> = {
-  Browser, Phone, Nav, Hero, Features, Feature, Grid, Picture, Palette, Swatch: ReadByParent, Footer, Cta, Plans, Plan, Stats, Stat: ReadByParent, Testimonial, Avatar, Logos
+  Browser, Phone, Nav, Hero, Features, Feature, Grid, Picture, Palette, Swatch: ReadByParent, Footer, Cta, Plans, Plan, Stats, Stat: ReadByParent, Testimonial, Avatar, Logos, Shell, SideItem: ReadByParent, Tile, Kpi, Spark, DataRows
 }

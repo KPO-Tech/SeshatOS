@@ -57,7 +57,7 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 		"architecture": {richUIFamilies{architecture: true}, 600},
 		"charts":       {richUIFamilies{charts: true}, 1150},
 		"forms":        {richUIFamilies{forms: true}, 1000},
-		"design":       {richUIFamilies{design: true}, 700},
+		"design":       {richUIFamilies{design: true}, 850},
 	}
 	for name, budget := range budgets {
 		if added := len(strings.Fields(richAnswersBlock(budget.families))) - core; added > budget.words {

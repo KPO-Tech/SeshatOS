@@ -59,4 +59,19 @@ describe('the pieces of a page, drawn', () => {
     expect(html).toContain('Hello phone')
     expect(html).toContain('#0f172a')
   })
+
+  it('draws a dashboard: the side bar, the figures with their change, the rows, and a curve', async () => {
+    const html = await draw('root = Browser([Shell([SideItem("Overview"), SideItem("Team")], [Kpi("Users", "24", "+12%"), Kpi("Bugs", "7", "-3%"), Tile([Spark([1, 3, 2, 5], "orange"), DataRows(["Name", "State"], [["Website", "Late"]])], "Activity")], "Seshat", "#f97316")])')
+    for (const word of ['Seshat', 'Overview', 'Team', 'Users', '24', '+12%', 'Activity', 'Website', 'Late']) expect(html).toContain(word)
+    expect(html).toContain('#16a34a')
+    expect(html).toContain('#dc2626')
+    expect(html).toContain('<path')
+  })
+
+  it('draws the logo of a technology found by its plain name, and the name alone for the others', async () => {
+    const html = await draw('root = Browser([Logos(["react", "Stripe", "Acme"])])')
+    // A logo is a drawing; Acme has none.
+    expect((html.match(/<svg/g) ?? []).length).toBe(2)
+    for (const word of ['react', 'Stripe', 'Acme']) expect(html).toContain(word)
+  })
 })

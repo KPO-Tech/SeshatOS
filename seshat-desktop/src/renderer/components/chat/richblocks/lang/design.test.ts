@@ -91,3 +91,24 @@ describe('the new pieces of a page', () => {
     expect(problems(`root = Plan("p", "1", [${many(DESIGN_LIMITS.planFeatures + 1, (i) => `"f${i}"`)}])`).some((message) => message.includes('at most'))).toBe(true)
   })
 })
+
+describe('a dashboard sketch', () => {
+  it('is read without a complaint when it is well written', () => {
+    const block = `root = Shell([SideItem("Overview", "dashboard", true), SideItem("Team")], [Kpi("Users", "24", "+12%", "orange"), Tile([Spark([1, 2, 3], "blue", "bars"), DataRows(["A", "B"], [["1", "2"]])], "Activity")], "Seshat", "#f97316")`
+    expect(problems(block)).toEqual([])
+  })
+
+  it('is refused with too many entries, points, rows or columns, and a shell in a shell', () => {
+    const many = (count: number, make: (i: number) => string) => Array.from({ length: count }, (_, i) => make(i)).join(', ')
+    expect(problems(`root = Shell([${many(DESIGN_LIMITS.sideItems + 1, (i) => `SideItem("s${i}")`)}], [])`).some((message) => message.includes('at most'))).toBe(true)
+    expect(problems(`root = Spark([${many(DESIGN_LIMITS.points + 1, (i) => String(i))}])`).some((message) => message.includes('at most'))).toBe(true)
+    expect(problems(`root = DataRows(["a"], [${many(DESIGN_LIMITS.rows + 1, () => '["x"]')}])`).some((message) => message.includes('at most'))).toBe(true)
+    expect(problems(`root = DataRows([${many(DESIGN_LIMITS.columns2 + 1, (i) => `"c${i}"`)}], [])`).some((message) => message.includes('at most'))).toBe(true)
+    expect(problems('root = Shell([SideItem("a")], [Shell([SideItem("b")], [])])').some((message) => message.includes('another Shell'))).toBe(true)
+  })
+
+  it('refuses a colour that is none in a Kpi or a Spark', () => {
+    expect(problems('root = Kpi("a", "1", null, "nope")').some((message) => message.includes('is not a colour'))).toBe(true)
+    expect(problems('root = Spark([1, 2], "url(x)")').some((message) => message.includes('is not a colour'))).toBe(true)
+  })
+})

@@ -11,7 +11,8 @@ quickly in the chat, with colours of its own, without writing HTML or CSS.
 ## Decision
 
 - **A `Design` group of pieces.** Frames: `Browser` (a window with an address bar), `Phone` (a phone screen). Sections: `Nav`, `Hero`,
-  `Logos`, `Features` with `Feature`, `Stats` with `Stat`, `Plans` with `Plan` (prices), `Testimonial`, `Footer`. Parts: `Grid` (1 to 4
+  `Logos`, `Features` with `Feature`, `Stats` with `Stat`, `Plans` with `Plan` (prices), `Testimonial`, `Footer`; and a dashboard: `Shell` with
+  `SideItem` (a side bar and a main area), `Tile`, `Kpi`, `Spark` (a curve or bars), `DataRows`. Parts: `Grid` (1 to 4
   columns), `Picture` (a gradient placeholder), `Cta` (a button), `Avatar` (initials in a circle), `Palette` with `Swatch`. The pieces draw
   themselves; the model chooses what goes in them, the colours, a font and a radius.
 - **A colour is read, then rewritten as `#rrggbb`** (`safeColor` in `lang/design.ts`). It may be written as a hex code, as a name of a fixed
@@ -24,7 +25,8 @@ quickly in the chat, with colours of its own, without writing HTML or CSS.
   downloaded. **A radius is one of five steps** (`none` to `full`). `Browser` and `Phone` carry both and hand them to what they hold.
 - **No image from the web, no `url()`.** An image loaded from an address makes a request as soon as the answer is shown: it tells that
   address who reads, and a page the model was misled by could send data in the address. So a picture is a gradient with a label, and
-  logos come from the icon catalogue. A real image will be a file of the project, shown by the app, or a web image after a click; that is
+  logos come from the icon catalogue, which now holds the logos of about a hundred common technologies and services, found by their plain name
+  (`react`, `stripe`, `figma`). A real image will be a file of the project, shown by the app, or a web image after a click; that is
   for a later lot.
 - **The text reads by itself.** A piece puts dark or white text on its colour by contrast (`readableOn`), so a model cannot make text
   invisible; a `Browser` or a `Phone` gives its page colours to what it holds.
@@ -36,7 +38,7 @@ quickly in the chat, with colours of its own, without writing HTML or CSS.
   example does so.
 - **A `design` family of the prompt**, given when the request is about a site, a mockup, a landing page, a palette or the look of
   something; not to the Knowledge agent. The prompt budget is per family (what each adds to the core): design is the heaviest of the
-  small ones at about 700 words, which the planned work on the size of the prompt will have to look at (loading a family when it is
+  small ones at about 825 words (budget 850), which the planned work on the size of the prompt will have to look at (loading a family when it is
   needed, or describing the pieces once in a tool).
 
 ## Consequences
