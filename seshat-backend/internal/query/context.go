@@ -34,11 +34,13 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--font)}
 
 - Light by default (the page above); dark only if the reader asks, then redefine the variables, never hard-code colours in the elements.
 - One accent colour, the others for meaning (green ok, amber warning, red danger). Spacing in multiples of 8px, one size of radius, headings in the same weight, text never smaller than 13px.
-- Icons are inline SVG (24px grid, stroke 1.75, round caps, currentColor), never emoji and never an icon font.
+- Icons are inline SVG you draw yourself, simple (three to five strokes): 24px grid, stroke 1.75, round caps, no fill, currentColor, sized 20px by CSS. Never an emoji and never an icon font.
 - A diagram or an architecture: boxes in a CSS grid or flex layout, arrows in one SVG layer over it (or Mermaid or D3 for a graph of many nodes), a title, a legend if colours mean something, and room for the labels of the arrows. Group by layer or by stage, not by the order of writing.
 - A chart: Chart.js or ECharts. An interactive 3D scene: three.js. A map: Leaflet.
 - Responsive from 360px wide up; the page is read in a side panel, so it must not need a wide window.
-- System fonts only; images are drawn (SVG, CSS gradients), never linked.`
+- System fonts only; images are drawn (SVG, CSS gradients), never linked.
+- What makes a page look made by a model, so avoid it: an indigo or purple accent, a two-colour gradient behind the title, a card with a coloured stripe on its left edge, invented figures ("10x faster", "99.9%") and filler text (lorem ipsum, "Feature one"), and the same hero-features-pricing skeleton every time. Write real content, take the structure from the subject, and give the page a title and a one-line lead.
+- Write the page in one call of the file tool. If the write is refused (a permission message, a block), say what was refused and ask the user: do not cut the file in pieces or look for another way to write it.`
 
 // narrationGuidanceBlock asks the model to briefly narrate what it's about
 // to do before each tool call, instead of chaining tool calls silently and
