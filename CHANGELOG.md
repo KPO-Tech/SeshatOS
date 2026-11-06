@@ -13,6 +13,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **Public skills that need a copy, a correction or a Python.** The catalog can now install a skill that keeps its files in a hidden folder (copied to a visible one), correct the text that does not suit Seshat (re-applied after each update, reported if it no longer fits), and give a skill that only uses Python's own library an environment too. When the machine has no Python, uv downloads one for Seshat after you agree. ui-ux-pro-max (design help for building a real interface) is the first entry (ADR 0025).
 - **Seshat's own skills install at first start.** The collection `seshat-skills` is cloned in the background and kept up to date; it now holds only skills written for Seshat, starting with `html-page` (base page, design rules, snippets and icons for an HTML page shown in the preview). Public skills stay in the catalog.
 - **Forms in chat answers.** The agent can now put an exercise, a quiz or a text to correct in the answer: a text box with a word counter and a button that sends what you wrote as your next message. It can also give a draft (an email, a letter) to edit and copy, a score bar and a bar cut in parts. Nothing is sent without your click (ADR 0013).
 - **Sliders and live formulas.** A graph in an answer can be explored: sliders change the parameters of a curve, and the equation, the marks (a vertex, a root) and the values follow (ADR 0014).

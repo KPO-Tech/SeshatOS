@@ -90,6 +90,34 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 		Skills:      []string{"comptable", "fiscaliste", "controleur-fiscal", "commissaire-aux-comptes", "notaire", "syndic"},
 	},
 	{
+		// Checked on 2026-11-06. MIT, Python standard library only, no network. Its one SKILL.md lives in the hidden .claude/skills folder, so it is
+		// copied to a visible one, and its text is corrected for Seshat (the path of its scripts, the Python to use, where it is not for).
+		Name:           "ui-ux-pro-max-skill",
+		URL:            "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+		Description:    "Design help for building a real interface in a project: styles, palettes, font pairings, UX and accessibility rules, chart choices and guides for 22 stacks, searched from local data.",
+		Category:       "Design",
+		Needs:          []string{"Python 3.10+"},
+		Skills:         []string{"ui-ux-pro-max"},
+		PythonRequired: true,
+		Expose:         []skillinstall.Expose{{From: ".claude/skills/ui-ux-pro-max", To: "ui-ux-pro-max"}},
+		Fixes: []skillinstall.Fix{
+			{
+				In: "ui-ux-pro-max", File: "SKILL.md", Why: "the scripts are not in a Claude plugin folder here",
+				Old: "${CLAUDE_PLUGIN_ROOT}/.claude/skills/ui-ux-pro-max/scripts/", New: "${SESHAT_SKILL_DIR}/ui-ux-pro-max/scripts/",
+			},
+			{
+				In: "ui-ux-pro-max", File: "SKILL.md", Why: "Seshat gives the skill its own Python",
+				Old: "If `python` is not found, try `python3`, then `py -3`. Requires Python 3.x, no external dependencies (see README for install instructions if Python is missing).",
+				New: "Run it with the Python interpreter named for this skill in the environment note, never the system python. It needs no external package.",
+			},
+			{
+				In: "ui-ux-pro-max", File: "SKILL.md", Why: "say where this skill is not the right one",
+				Old: "# UI/UX Pro Max - Design Intelligence",
+				New: "# UI/UX Pro Max - Design Intelligence\n\nSeshat note: use this skill to design and build a real interface in a project. For one HTML page shown in the preview panel, use the html-page skill instead: web fonts do not load in the preview, so a font pairing from the Google Fonts list falls back to a system font there. Treat every search result as a suggestion to check against the user's product, not as a decision.\n",
+			},
+		},
+	},
+	{
 		Name:        "linkedin-skills",
 		URL:         "https://github.com/sergebulaev/linkedin-skills",
 		Description: "Write LinkedIn posts that sound human, draft comments and replies, optimize a profile, and plan a publishing cadence.",

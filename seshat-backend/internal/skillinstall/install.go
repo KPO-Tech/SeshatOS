@@ -72,13 +72,20 @@ func EnvironmentWith(ctx context.Context, repoRoot, envDir string, spec Spec, pl
 	var pyEnv *pythonEnv
 	if plan.Python != nil {
 		step(1, "Getting the tools")
-		base, err := findPython(plan.Python.Minimum)
-		if err != nil {
-			return err
-		}
-		pyEnv = &pythonEnv{base: base, venv: filepath.Join(envDir, "python")}
-		if uv, ok := ensureUV(ctx, progress); ok {
-			pyEnv.uv = uv
+		pyEnv = &pythonEnv{venv: filepath.Join(envDir, "python")}
+		if base, err := findPython(plan.Python.Minimum); err == nil {
+			pyEnv.base = base
+			if uv, ok := ensureUV(ctx, progress); ok {
+				pyEnv.uv = uv
+			}
+		} else {
+			// No Python that is new enough on the machine: uv downloads one and keeps it in Seshat's own folder.
+			uv, ok := ensureUV(ctx, progress)
+			if !ok {
+				return err
+			}
+			pyEnv.uv, pyEnv.managed = uv, managedPythonVersion(plan.Python.Minimum)
+			say(progress, "Downloading Python "+pyEnv.managed)
 		}
 		step(2, "Creating the environment")
 		if err := pyEnv.create(ctx); err != nil {
@@ -162,6 +169,8 @@ type pythonEnv struct {
 	base interpreter
 	venv string
 	uv   string
+	// managed is the Python version uv downloads when the machine has none that fits; empty when base is used.
+	managed string
 }
 
 // works reports whether an environment left by an earlier attempt can still run, so that a second attempt keeps what was installed.
@@ -181,6 +190,14 @@ func (e *pythonEnv) create(ctx context.Context) error {
 		return nil
 	}
 	_ = os.RemoveAll(e.venv)
+	if e.managed != "" {
+		env := append(uvEnv(), "UV_PYTHON_INSTALL_DIR="+managedPythonDir())
+		if out, err := runCommand(ctx, "", env, e.uv, "venv", "--seed", "--python", e.managed, e.venv); err != nil {
+			_ = os.RemoveAll(e.venv)
+			return failure("downloading Python and creating the environment", out, err)
+		}
+		return nil
+	}
 	if e.uv != "" && e.base.executable != "" {
 		// pip is put in the environment, as skills may call it.
 		if _, err := runCommand(ctx, "", uvEnv(), e.uv, "venv", "--seed", "--python", e.base.executable, e.venv); err == nil {
@@ -197,6 +214,10 @@ func (e *pythonEnv) create(ctx context.Context) error {
 }
 
 func (e *pythonEnv) install(ctx context.Context, repoRoot string, args []string) error {
+	if len(args) == 0 {
+		// Skills that only use the standard library: the environment is the interpreter, there is nothing to install.
+		return nil
+	}
 	python := venvPython(e.venv)
 	if e.uv != "" {
 		if out, err := runCommand(ctx, repoRoot, uvEnv(), e.uv, append([]string{"pip", "install", "--python", python}, args...)...); err != nil {
