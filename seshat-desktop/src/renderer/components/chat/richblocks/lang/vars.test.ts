@@ -112,3 +112,11 @@ describe('switches and choices', () => {
     expect(tryParseExpression('eq(k, 2)', { k: 1 }).formula?.(0)).toBe(0)
   })
 })
+
+describe('a layer that can be hidden', () => {
+  it('takes show on a guide, a dot and a shade, and reads it with the sliders', () => {
+    const block = 'root = Stack([Toggle("grid", "Grid"), Plot([Curve("x"), HLine(1, null, null, "grid"), VLine(1, null, null, "grid"), Dot(0, 0, null, null, "grid"), Shade("x", 0, 1, null, null, "grid")], -2, 2)])'
+    expect(problems(block)).toEqual([])
+    expect(problems('root = Plot([HLine(1, null, null, "zz")], -2, 2)').some((message) => message.includes('show "zz"'))).toBe(true)
+  })
+})

@@ -383,7 +383,10 @@
             "again": "To review",
             "knew": "I knew it",
             "cardOf": "Card {{n}} of {{total}}",
-            "cardsDone": "{{known}} known out of {{total}}"
+            "cardsDone": "{{known}} known out of {{total}}",
+            "cards": "Flashcards",
+            "shuffle": "Shuffle",
+            "keys": "Space turns the card · K known · U to review"
           }
         },
         "expand": {

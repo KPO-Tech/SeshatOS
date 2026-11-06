@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { StreamingBlock } from '@renderer/stores/session'
-import { FOLLOW_DISTANCE, followAfterScroll } from '@renderer/lib/followScroll'
+import { FOLLOW_DISTANCE, followAfterPress, followAfterScroll } from '@renderer/lib/followScroll'
 
 type UseConversationScrollArgs = {
   messageCount: number
@@ -71,7 +71,12 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     }
     // A drag of the scrollbar is a pointer press on the scroller itself, not on a row.
     function onPointerDown(event: PointerEvent) {
-      if (event.target === el) leave()
+      if (!el) return
+      if (event.target === el) {
+        leave()
+        return
+      }
+      if (!followAfterPress(isAtBottomRef.current, el.scrollHeight - el.scrollTop - el.clientHeight)) leave()
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     el.addEventListener('wheel', onWheel, { passive: true })

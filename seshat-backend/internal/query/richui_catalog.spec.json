@@ -154,44 +154,44 @@
     {
       "name": "Shade",
       "group": "Charts",
-      "signature": "Shade(expr: text, from: text|number, to: text|number, label?: text, tone?: tone)",
+      "signature": "Shade(expr: text, from: text|number, to: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "The area between a formula and the x axis from one bound to another; the legend gives its value (the definite integral)."
     },
     {
       "name": "Dot",
       "group": "Charts",
-      "signature": "Dot(x: text|number, y: text|number, label?: text, tone?: tone)",
+      "signature": "Dot(x: text|number, y: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "A marked point of a Plot (a root, an extremum, an inflection point), with its label. x and y may be formulas in the sliders (\"-b/(2*a)\") to follow them; so may the bound of a VLine, HLine or Shade."
     },
     {
       "name": "VLine",
       "group": "Charts",
-      "signature": "VLine(x: text|number, label?: text, tone?: tone)",
+      "signature": "VLine(x: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "A vertical guide of a Plot at x (an asymptote, a bound)."
     },
     {
       "name": "HLine",
       "group": "Charts",
-      "signature": "HLine(y: text|number, label?: text, tone?: tone)",
+      "signature": "HLine(y: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "A horizontal guide of a Plot at y (an asymptote, a threshold, a mean)."
     },
     {
       "name": "Slider",
       "group": "Charts",
       "signature": "Slider(name: text, min: number, max: number, value?: number, step?: number, label?: text)",
-      "description": "A slider the reader moves to change a variable (name: a, b, h, amp; not x, e, pi) that the formulas of Curve, Shade and Live use. Put it next to its Plot."
+      "description": "A slider the reader moves to change a variable (name: a, b, h, amp; not x, e, pi) that the formulas of Curve, Shade and Live use."
     },
     {
       "name": "Toggle",
       "group": "Charts",
       "signature": "Toggle(name: text, label?: text, value?: true|false)",
-      "description": "A switch the reader flips: a variable that is 1 when on and 0 when off (value true starts it on). A Curve with show: \"name\" is drawn only while it is on."
+      "description": "A switch: a variable, 1 when on and 0 when off (value true starts it on)."
     },
     {
       "name": "Select",
       "group": "Charts",
       "signature": "Select(name: text, options: [text], value?: number, label?: text)",
-      "description": "A list of choices: the variable is the number of the choice made, from 0. A Curve with show: \"eq(name, 1)\" is drawn only while the second choice is made; eq(a, b) is 1 when equal."
+      "description": "A list of choices: the variable is the number of the choice made, from 0."
     },
     {
       "name": "Live",
@@ -352,8 +352,8 @@
     {
       "name": "Flash",
       "group": "Forms",
-      "signature": "Flash(front: text, back: text)",
-      "description": "A card of Flashcards: what is on its front (a word, a question) and its back (the answer)."
+      "signature": "Flash(front: text, back: text, tag?: text, note?: text)",
+      "description": "A card: front (a word), back (the answer), tag on the front (a category), note under the back (a pronunciation, an example)."
     },
     {
       "name": "Draft",
