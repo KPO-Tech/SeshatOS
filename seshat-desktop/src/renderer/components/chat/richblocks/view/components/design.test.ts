@@ -30,15 +30,33 @@ describe('the pieces of a page, drawn', () => {
   })
 
   it('draws a palette with the names and the codes, and leaves out a swatch whose colour is not one', async () => {
-    const html = await draw('root = Palette([Swatch("#F97316", "Orange"), Swatch("blue", "Not a hex")], "Colours")')
+    const html = await draw('root = Palette([Swatch("#F97316", "Orange"), Swatch("notacolour", "Not a hex")], "Colours")')
     expect(html).toContain('Orange')
     expect(html).toContain('#f97316')
     expect(html).not.toContain('Not a hex')
   })
 
   it('never lets a colour that is not a hex code reach a style', async () => {
-    const html = await draw('root = Browser([Hero("T", null, null, null, "red; background:url(x)")], null, "expression(1)")')
+    const html = await draw('root = Browser([Hero("T", null, null, null, "red; background:url(x)")], null, "expression(1)", "evil; x", "1px")')
     expect(html).not.toContain('expression')
     expect(html).not.toContain('url(x)')
+  })
+
+  it('draws a gradient from its colours, and a name or rgb() as the code it stands for', async () => {
+    const html = await draw('root = Browser([Hero("T", null, null, null, "orange > rgb(236, 72, 153)")])')
+    expect(html).toContain('linear-gradient(135deg, #f97316, #ec4899)')
+  })
+
+  it('draws the pieces of a landing page: logos, stats, prices, a quote, a button', async () => {
+    const html = await draw('root = Browser([Logos(["react", "Acme"], "Works with"), Stats([Stat("10k+", "users")]), Plans([Plan("Team", "12 EUR", ["Shared"], "Try", "orange", true)]), Testimonial("Great tool", "Awa Diallo", "Dev"), Cta("Join", "blue")], "https://a.example", "#fff", "serif", "lg")')
+    for (const word of ['Works with', 'Acme', '10k+', 'users', 'Team', '12 EUR', 'Shared', 'Great tool', 'Awa Diallo', 'AD', 'Join']) expect(html).toContain(word)
+    expect(html).toContain('Georgia')
+    expect(html).toContain('1.25rem')
+  })
+
+  it('draws a phone around its screen', async () => {
+    const html = await draw('root = Phone([Hero("Hello phone")], "#0f172a")')
+    expect(html).toContain('Hello phone')
+    expect(html).toContain('#0f172a')
   })
 })

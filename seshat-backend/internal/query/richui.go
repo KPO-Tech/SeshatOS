@@ -58,12 +58,12 @@ Format: one statement per line, name = Component(arguments). Arguments are posit
 
 `
 
-	richUIDesignShape = `- a sketch of a site or of a screen: a Browser holding a Nav, a Hero, Features of Feature, a Grid, Pictures and a Footer; the colours of a design: a Palette of Swatches;
+	richUIDesignShape = `- a sketch of a site or of a screen: a Browser (or a Phone) holding a Nav, a Hero, Logos, Features of Feature, Stats, Plans of Plan, a Testimonial, a Grid, Pictures and a Footer; the colours of a design: a Palette of Swatches;
 `
 	richUIFormsNote = `Draw exercises, quizzes and flashcards here, not as a file or HTML page, unless the reader wants a game or an interface these components cannot make. A Form lets the reader answer without typing in the chat. Name every field (letters, digits and _, as essay) and write the Submit template as the message the reader would send you, in their language, with {{name}} where a field's text goes, as in Submit("Correct my text", "Here is my text. Correct it like a teacher: a mark out of 20, the mistakes explained.\n\n{{essay}}"). You receive their next message, so end your turn after the Form. One Form per answer, a few fields, a Counter with min and max when a length is asked, never a password or a secret. A Quiz is checked in the block (answer is the number of the right choice, from 0), so write its explanations; its report, with {{score}}, {{total}} and {{missed}}, is the message the reader may send at the end. Flashcards work the same with {{known}}, {{total}} and {{again}}; a Flash may carry a tag (a category) and a note (a pronunciation, an example). A Draft is a text to edit and copy; an email has a subject.
 
 `
-	richUIDesignNote = `A Browser sketches how a page could look, quickly, to be judged and changed: a few sections, short texts, colours as hex codes (#f97316), one main colour and one or two accents. A Hero colours itself with its color; the texts take a readable colour by themselves. It is a sketch to talk over, not the site: for the real page write the files.
+	richUIDesignNote = `A Browser sketches how a page could look, quickly, to be judged and changed: a few sections, short texts, colours as hex codes, names or rgb() and hsl() (a gradient is "#f97316 > #ec4899"), one main colour and one or two accents, a font and a radius that fit the brand. A Hero colours itself with its color; the texts take a readable colour by themselves. It is a sketch to talk over, not the site: for the real page write the files.
 
 `
 	richUIArchitectureNote = `For an Architecture, write each Panel or Item you want to link as its own named statement, and name it in quotes in a Flow: Flow("api", "storage"). Put linked boxes side by side or one above the other, so that an arrow does not cross a third box. Keep a Panel to a handful of Items and the label of a Flow to a few words.

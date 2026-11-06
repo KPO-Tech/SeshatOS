@@ -22,6 +22,7 @@
     "lint": "oxlint src",
     "artifact-libs": "node scripts/artifact-libs.mjs",
     "ui-catalog": "node scripts/generate-ui-catalog.mjs",
+    "gallery": "vite --config vite.gallery.config.ts",
     "i18n:check": "node scripts/i18n-scan.mjs check",
     "i18n:sync": "node scripts/i18n-scan.mjs sync",
     "i18n:length": "node scripts/i18n-length.mjs",
