@@ -48,7 +48,7 @@
     }
   },
   "families": {
-    "hint": "Automatique : une famille n'est enseignée à l'agent que si la demande s'y prête. Toujours : elle l'est à chaque demande, ce qui coûte plus. Jamais : elle n'est pas utilisée.",
+    "hint": "Automatique et Toujours : la famille est enseignée à l'agent à chaque demande. Jamais : elle n'est pas utilisée.",
     "cost": "environ {{words}} mots",
     "modes": {
       "auto": "Automatique",

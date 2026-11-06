@@ -1734,16 +1734,12 @@ func (s *Service) richAnswersOn(ctx context.Context, p ContextBuildParams) bool 
 	return s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal)
 }
 
-// richFamilies decides which families of components this turn is taught: the ones its request asks for, and the ones the latest answers
-// of the session drew, since a follow-up that names nothing is about what they showed.
+// richFamilies decides which families of components this turn is taught: all of them unless the person turned one off.
 func (s *Service) richFamilies(ctx context.Context, p ContextBuildParams) richUIFamilies {
-	families := richUIFamiliesFor(p.Prompt)
-	if families != richUIAllFamilies && p.SessionID != "" {
-		if messages, err := s.loadSessionMessages(ctx, p.SessionID); err == nil {
-			families = families.union(richUIFamiliesInHistory(messages))
-		}
-	}
-	// What the person forced on or off in the Generative UI page wins over the request and the history.
+	// Every family is taught by default (about 8,000 tokens): a model that is not told a component exists reaches for an HTML page instead
+	// (ADR 0023). The words of a request (richUIFamiliesFor) are kept for a lighter mode.
+	families := richUIAllFamilies
+	// What the person turned off in the Generative UI page wins.
 	if provider, ok := s.preferences.(richFamilyModesProvider); ok && p.Principal != nil {
 		families = families.withModes(provider.RichFamilyModes(ctx, p.Principal))
 	}

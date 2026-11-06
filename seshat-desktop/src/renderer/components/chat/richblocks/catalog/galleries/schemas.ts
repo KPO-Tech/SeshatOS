@@ -70,6 +70,28 @@ t = Level("Trials", "420", "#14b8a6")
 c = Level("Customers", "96", "#f97316")`
     },
     {
+      title: 'The five forces of Porter',
+      about: 'A centre pressed on by four forces.',
+      code: `root = Hub(core, [entrants, suppliers, buyers, substitutes], "The five forces of Porter", "in")
+core = Spoke("Rivalry among competitors", "How hard firms fight for the same customers.", "#1e3a8a")
+entrants = Spoke("New entrants", "Barriers to entry.", "#f97316")
+suppliers = Spoke("Supplier power", "Few suppliers, high prices.", "#8b5cf6")
+buyers = Spoke("Buyer power", "Customers who can bargain.", "#14b8a6")
+substitutes = Spoke("Substitutes", "Another way to do the same job.", "#db2777")`
+    },
+    {
+      title: 'Who is around a project',
+      about: 'Six stakeholders, arrows out from the project.',
+      code: `root = Hub(core, [a, b, c, d, e, f], "Stakeholders", "out")
+core = Spoke("New app", "Launch in March.", "#2563eb")
+a = Spoke("Customers", "Use it daily.", "#14b8a6")
+b = Spoke("Support", "Answers questions.", "#f97316")
+c = Spoke("Sales", "Sells the plans.", "#8b5cf6")
+d = Spoke("Legal", "Reviews the terms.", "#64748b")
+e = Spoke("Finance", "Tracks the budget.", "#65a30d")
+f = Spoke("Partners", "Integrate the API.", "#db2777")`
+    },
+    {
       title: 'Effort and impact',
       about: 'What to do first.',
       code: `root = Quadrant([q1, q2, q3, q4], "Effort", "Impact", "Where to start")

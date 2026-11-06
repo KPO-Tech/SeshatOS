@@ -48,7 +48,7 @@
     }
   },
   "families": {
-    "hint": "Automatic: a family is taught to the agent only when the request calls for it. Always: it is taught to every request, which costs more. Never: it is not used.",
+    "hint": "Automatic and Always: the family is taught to the agent on every request. Never: it is not used.",
     "cost": "about {{words}} words",
     "modes": {
       "auto": "Automatic",

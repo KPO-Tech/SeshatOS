@@ -55,3 +55,13 @@ describe('a venn and a tree', () => {
     expect(problems(`root = Tree(Branch("r", [${wide}]))`).some((message) => message.includes('nodes'))).toBe(true)
   })
 })
+
+describe('a hub', () => {
+  it('is read without a complaint, and refused without a core, with one satellite or with a bad arrows', () => {
+    expect(problems('root = Hub(Spoke("Centre", "x", "red"), [Spoke("a"), Spoke("b")], "T", "out")')).toEqual([])
+    expect(problems('root = Hub(null, [Spoke("a"), Spoke("b")])').some((message) => message.includes('needs "core"'))).toBe(true)
+    expect(problems('root = Hub(Spoke("c"), [Spoke("a")])').some((message) => message.includes('Spokes around'))).toBe(true)
+    expect(problems('root = Hub(Spoke("c"), [Spoke("a"), Spoke("b")], null, "sideways")').some((message) => message.includes('arrows'))).toBe(true)
+    expect(problems('root = Hub(Spoke("c", null, "nope"), [Spoke("a"), Spoke("b")])').some((message) => message.includes('is not a colour'))).toBe(true)
+  })
+})

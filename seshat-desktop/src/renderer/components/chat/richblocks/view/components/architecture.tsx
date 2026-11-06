@@ -136,8 +136,8 @@ function ArchitectureFrame({ props }: ComponentProps) {
               <marker id={markerId} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0 0.5 L9.5 5 L0 9.5 z" fill="currentColor" />
               </marker>
-              {/* The big arrow of a stage to the next: a thick line and a head of its own size, whatever the width of the line. */}
-              <marker id={blockId} viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="26" orient="auto-start-reverse">
+              {/* The arrow of a stage to the next: a line in the accent colour, a little thicker than the others, with a head of its own size. */}
+              <marker id={blockId} viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
                 <path d="M0 0 L10 5 L0 10 z" style={{ fill: 'var(--accent-primary)', opacity: 0.85 }} />
               </marker>
             </defs>
@@ -148,7 +148,7 @@ function ArchitectureFrame({ props }: ComponentProps) {
                   d={flow.d}
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="10"
+                  strokeWidth="3"
                   strokeLinejoin="round"
                   className="text-[var(--accent-primary)]"
                   opacity="0.85"

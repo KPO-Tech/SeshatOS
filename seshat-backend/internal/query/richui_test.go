@@ -58,7 +58,7 @@ func TestRichAnswersBlockTeachesTheCatalogItWasGenerated(t *testing.T) {
 		"charts":       {richUIFamilies{charts: true}, 1150},
 		"forms":        {richUIFamilies{forms: true}, 1000},
 		"design":       {richUIFamilies{design: true}, 850},
-		"diagrams":     {richUIFamilies{diagrams: true}, 600},
+		"diagrams":     {richUIFamilies{diagrams: true}, 700},
 	}
 	for name, budget := range budgets {
 		if added := len(strings.Fields(richAnswersBlock(budget.families))) - core; added > budget.words {
@@ -79,10 +79,10 @@ func TestRichAnswersCoreLeavesOutTheFamilies(t *testing.T) {
 			t.Errorf("the core must not mention %q", unwanted)
 		}
 	}
-	// Most turns pay for the core, so it is the figure to keep small.
+	// Most turns pay for the core, so it is the figure to keep in check. It holds the rule for choosing between the answer, a page and a file (ADR 0022).
 	words := len(strings.Fields(core))
-	if words > 1200 {
-		t.Errorf("the core is %d words long, keep it under 1200", words)
+	if words > 1500 {
+		t.Errorf("the core is %d words long, keep it under 1500", words)
 	}
 	if full := len(strings.Fields(richAnswersBlock(richUIAllFamilies))); words > full*6/10 {
 		t.Errorf("the core (%d words) should be well under the full block (%d)", words, full)
@@ -312,8 +312,8 @@ func promptFor(t *testing.T, prompt string, modes map[string]string) string {
 
 func TestAFamilyForcedOnIsTaughtWhateverTheRequest(t *testing.T) {
 	plain := "compare these two tools"
-	if strings.Contains(promptFor(t, plain, nil), "Quiz(") {
-		t.Fatal("without a choice, a plain request is not taught the forms")
+	if !strings.Contains(promptFor(t, plain, nil), "Quiz(") {
+		t.Fatal("without a choice, every family is taught, the forms too (ADR 0023)")
 	}
 	if !strings.Contains(promptFor(t, plain, map[string]string{"forms": "on"}), "Quiz(") {
 		t.Error("forms forced on must be taught to a plain request")

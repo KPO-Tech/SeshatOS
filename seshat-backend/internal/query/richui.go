@@ -40,6 +40,13 @@ Besides Markdown, the desktop app draws structured components from a fenced bloc
 
 For figures or illustrations, draw them in the answer with these components; write no file or HTML page unless asked.
 `
+	// Told to the general agent only: the Knowledge agent writes no page and no file.
+	richUIMediumNote = `Choosing how to show something, in this order:
+1. In the answer, with these components, for anything they can draw: tables, charts, a function with sliders, a quiz or flashcards, an exercise, a draft, an architecture of a few boxes, a shape that says an idea, a quick example of a page or a dashboard to talk over. A function, a parabola or a graph to explore is a Plot with Sliders, never an HTML page.
+2. An HTML preview file only when the reader asks for a page, an app, a game or a site to keep, or when the components cannot draw it: 3D, animation over time, a simulation, a map, a free drawing, or an architecture too big or too tangled for an Architecture (more than about fifteen boxes, or crossing flows). Such a page has no external resource (no web font, no CDN, no remote image: system fonts), a light background by default unless the reader asks for dark, a careful design, and icons drawn as inline SVG, never emoji.
+3. A real file (a spreadsheet, a document, a script) when the reader wants something to open elsewhere; a table to fill in here is a Sheet.
+
+`
 	richUIArchitectureShape = `- the architecture of a system, its layers or a data flow: an Architecture of Panels that hold Items with icons, and Flow arrows between them;
 `
 	richUIChartShapes = `- numbers to compare or follow: BarChart, LineChart (a learning curve is one), AreaChart, PieChart; the spread of values: Histogram; a confusion or a correlation matrix: Heatmap; points and a fitted line: ScatterChart, or a Plot with Points;
@@ -60,7 +67,7 @@ Format: one statement per line, name = Component(arguments). Arguments are posit
 
 	richUIDesignShape = `- a sketch of a site or of a screen: a Browser (or a Phone) holding a Nav, a Hero, Logos, Features of Feature, Stats, Plans of Plan, a Testimonial, a Grid, Pictures and a Footer; a dashboard: a Shell (side bar of SideItem, main area of Tile, Kpi, Spark, DataRows); the colours of a design: a Palette of Swatches;
 `
-	richUIDiagramsShape = `- a shape that says an idea, a strategy or a method: a Hive of Hex (a honeycomb of parts that touch), Chevrons of Chev (a process), a Cycle of Loop (steps in a loop), a Pyramid of Level (a hierarchy, or a funnel), a Quadrant of four Quad (a matrix of two by two), Layers of Layer (a stack), a Venn of two or three VSet, a Tree of Branch (an org chart, a decision tree);
+	richUIDiagramsShape = `- a shape that says an idea, a strategy or a method: a Hive of Hex (a honeycomb of parts that touch), Chevrons of Chev (a process), a Cycle of Loop (steps in a loop), a Pyramid of Level (a hierarchy, or a funnel), a Quadrant of four Quad (a matrix of two by two), Layers of Layer (a stack), a Venn of two or three VSet, a Tree of Branch (an org chart, a decision tree), a Hub of Spoke (a centre and what surrounds it: the five forces of Porter, stakeholders, a mind map);
 `
 	richUIFormsNote = `Draw exercises, quizzes and flashcards here, not as a file or HTML page, unless the reader wants a game or an interface these components cannot make. A Form lets the reader answer without typing in the chat. Name every field (letters, digits and _, as essay) and write the Submit template as the message the reader would send you, in their language, with {{name}} where a field's text goes, as in Submit("Correct my text", "Here is my text. Correct it like a teacher: a mark out of 20, the mistakes explained.\n\n{{essay}}"). You receive their next message, so end your turn after the Form. One Form per answer, a few fields, a Counter with min and max when a length is asked, never a password or a secret. A Quiz is checked in the block (answer is the number of the right choice, from 0), so write its explanations; its report, with {{score}}, {{total}} and {{missed}}, is the message the reader may send at the end. Flashcards work the same with {{known}}, {{total}} and {{again}}; a Flash may carry a tag (a category) and a note (a pronunciation, an example). A Draft is a text to edit, copy or mail; an email has a subject. A Sheet is a table to fill in: columns, a few rows, a report with {{table}}.
 
@@ -68,7 +75,7 @@ Format: one statement per line, name = Component(arguments). Arguments are posit
 	richUIDesignNote = `A Browser sketches how a page could look, quickly, to be judged and changed: a few sections, short texts, colours as hex codes, names or rgb() and hsl() (a gradient is "#f97316 > #ec4899"), one main colour and one or two accents, a font and a radius that fit the brand. A Hero colours itself with its color; the texts take a readable colour by themselves. It is a sketch to talk over, not the site: for the real page write the files.
 
 `
-	richUIDiagramsNote = `Choose the shape that says the idea, not the one that is easiest: parts that touch, a Hive; steps in order, Chevrons; a loop, a Cycle; a hierarchy or a funnel, a Pyramid; two axes, a Quadrant; levels of a system, Layers. Short labels, four words at most; one colour for the part to stress, and the others calm.
+	richUIDiagramsNote = `Choose the shape that says the idea, not the one that is easiest: parts that touch, a Hive; steps in order, Chevrons; a loop, a Cycle; a hierarchy or a funnel, a Pyramid; two axes, a Quadrant; levels of a system, Layers; a decision tree, a Tree; a centre pressed on by forces (Porter), a Hub, never an Architecture. Short labels, four words at most; one colour for the part to stress, and the others calm.
 
 `
 	richUIArchitectureNote = `For an Architecture, write each Panel or Item you want to link as its own named statement, and name it in quotes in a Flow: Flow("api", "storage"). Put linked boxes side by side or one above the other, so that an arrow does not cross a third box. Keep a Panel to a handful of Items and the label of a Flow to a few words. For a poster of stages (a pipeline, a platform), give the Architecture direction "row", framed true for a frame with a large title, Items of shape cylinder for databases, and Flows of style block for the big arrows between stages.

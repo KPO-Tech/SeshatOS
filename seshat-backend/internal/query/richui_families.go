@@ -232,6 +232,9 @@ func richBlock(families richUIFamilies, knowledge bool) string {
 func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge bool) string {
 	var b strings.Builder
 	b.WriteString(richUIHead)
+	if !knowledge {
+		b.WriteString(richUIMediumNote)
+	}
 	if families.architecture {
 		b.WriteString(richUIArchitectureShape)
 	}

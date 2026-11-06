@@ -197,7 +197,7 @@
       "name": "Live",
       "group": "Charts",
       "signature": "Live(text: text)",
-      "description": "Markdown text where {{formula}} shows its value with the current sliders: \"$f(x) = {{a}}x^2$\", \"vertex ({{h}}, {{k}})\", \"{{2*a+b}}\". Write * between a number and a variable."
+      "description": "Markdown text where {{formula}} shows its value with the current sliders: \"$f(x) = {{a}}x^2$\", \"vertex ({{h}}, {{k}})\", \"{{2*a+b}}\". Write * between a number and a variable. Formulas give numbers: no text, no a > b ? x : y."
     },
     {
       "name": "Histogram",
@@ -554,6 +554,18 @@
       "description": "A level of a Pyramid."
     },
     {
+      "name": "Hub",
+      "group": "Diagrams",
+      "signature": "Hub(core: Spoke, spokes: [Spoke], title?: text, arrows?: text)",
+      "description": "A centre (core, a Spoke) and two to eight Spokes around it, joined to it by arrows: what presses on a subject (the five forces of Porter, with four Spokes around the rivalry), stakeholders, an ecosystem, a mind map. arrows: in (towards the centre, the default), out or none."
+    },
+    {
+      "name": "Spoke",
+      "group": "Diagrams",
+      "signature": "Spoke(label: text, text?: text, color?: text)",
+      "description": "The centre or a satellite of a Hub: a label, a short text, a color."
+    },
+    {
       "name": "Quadrant",
       "group": "Diagrams",
       "signature": "Quadrant(cells: [Quad], xLabel?: text, yLabel?: text, title?: text)",
@@ -563,7 +575,7 @@
       "name": "Quad",
       "group": "Diagrams",
       "signature": "Quad(title: text, text?: text, color?: text)",
-      "description": "A cell of a Quadrant: a title, a text, a color."
+      "description": "A cell of a Quadrant: a title, a text, a color (a hex code or a name such as red, never a tone)."
     },
     {
       "name": "Layers",
