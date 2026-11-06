@@ -62,6 +62,7 @@ func (p *LocalProvider) Upsert(ctx context.Context, principal *backendauth.Princ
 		MaxSubAgentDepth:          maxDepth,
 		MemoryEnabled:             params.MemoryEnabled,
 		RichAnswersDisabled:       params.RichAnswersDisabled,
+		RichFamilies:              EncodeRichFamilies(params.RichFamilies),
 	})
 	if err != nil {
 		return nil, bkerr.Internal(err.Error(), err)
@@ -87,6 +88,7 @@ func fromDB(p *db.UserPreferences) UserPreferences {
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
 		MemoryEnabled:             p.MemoryEnabled,
 		RichAnswersDisabled:       p.RichAnswersDisabled,
+		RichFamilies:              DecodeRichFamilies(p.RichFamilies),
 		UpdatedAt:                 p.UpdatedAt,
 	}
 }

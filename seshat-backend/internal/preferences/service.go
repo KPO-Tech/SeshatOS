@@ -97,6 +97,19 @@ func (s *Service) RichAnswersEnabled(ctx context.Context, principal *backendauth
 	return err != nil || prefs == nil || !prefs.RichAnswersDisabled
 }
 
+// RichFamilyModes returns the families of components the person forced, family -> "on" or "off". A family that is not in the map is
+// automatic. It is empty when preferences cannot be read: the default is automatic.
+func (s *Service) RichFamilyModes(ctx context.Context, principal *backendauth.Principal) map[string]string {
+	if s == nil || s.provider == nil || principal == nil {
+		return nil
+	}
+	prefs, err := s.provider.Get(ctx, principal)
+	if err != nil || prefs == nil {
+		return nil
+	}
+	return prefs.RichFamilies
+}
+
 func (s *Service) ValidatePermissionMode(raw string) bool {
 	if raw == "" {
 		return true

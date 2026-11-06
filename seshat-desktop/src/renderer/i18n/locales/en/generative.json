@@ -7,7 +7,7 @@
       "gallery": "Gallery"
     },
     "switch": {
-      "title": "Draw in answers",
+      "title": "Rich answers",
       "on": "On: the agent may answer with tables, graphs, forms and sketches.",
       "off": "Off: the agent answers with text only."
     }
@@ -15,7 +15,7 @@
   "tryIt": {
     "title": "Try it",
     "hint": "Each request opens a new chat with the text ready to send.",
-    "disabled": "Turn on drawing in answers first.",
+    "disabled": "Turn on rich answers first.",
     "items": {
       "quiz": {
         "label": "A quiz",
@@ -42,7 +42,7 @@
         "prompt": "Show me what the site of an artisan bakery could look like, with a colour palette."
       },
       "dashboard": {
-        "label": "A dashboard",
+        "label": "Dashboard",
         "prompt": "Sketch a dashboard for a project management tool: side bar, key figures, a trend curve and a table of projects."
       },
       "architecture": {
@@ -54,7 +54,7 @@
   "gallery": {
     "intro": "Every example the agent is taught from, drawn as in the chat. Click a button or fill in a form: the message it would send is shown at the bottom, and nothing is sent.",
     "filter": "Filter by component",
-    "none": "No example matches.",
+    "none": "No result.",
     "source": "source",
     "wouldReceive": "What the chat would receive ({{count}})",
     "nothingSent": "Nothing yet: click a button, a choice, a quiz result or a form.",
@@ -65,6 +65,32 @@
       "forms": "Forms",
       "design": "Design",
       "architecture": "Architecture"
+    }
+  },
+  "families": {
+    "title": "Families of components",
+    "hint": "Automatic: a family is taught to the agent only when the request calls for it. Always: it is taught to every request, which costs more. Never: it is not used.",
+    "cost": "about {{words}} words",
+    "modes": {
+      "auto": "Automatic",
+      "on": "Always",
+      "off": "Never"
+    },
+    "charts": {
+      "label": "Graphs and maths",
+      "hint": "Plots of formulas, sliders, histograms, heatmaps."
+    },
+    "forms": {
+      "label": "Forms and quizzes",
+      "hint": "Exercises, quizzes, flashcards, drafts to edit."
+    },
+    "design": {
+      "label": "Design",
+      "hint": "Sketches of a site or an app, colour palettes."
+    },
+    "architecture": {
+      "label": "Architecture",
+      "hint": "Drawings of systems, with the logos of technologies."
     }
   }
 }

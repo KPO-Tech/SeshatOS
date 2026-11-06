@@ -1743,5 +1743,9 @@ func (s *Service) richFamilies(ctx context.Context, p ContextBuildParams) richUI
 			families = families.union(richUIFamiliesInHistory(messages))
 		}
 	}
+	// What the person forced on or off in the Generative UI page wins over the request and the history.
+	if provider, ok := s.preferences.(richFamilyModesProvider); ok && p.Principal != nil {
+		families = families.withModes(provider.RichFamilyModes(ctx, p.Principal))
+	}
 	return families
 }

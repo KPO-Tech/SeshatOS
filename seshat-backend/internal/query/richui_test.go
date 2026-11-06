@@ -288,3 +288,62 @@ func TestRichUIDesignIsTaughtForSketchesOfASite(t *testing.T) {
 		t.Errorf("a sketch brings the design family back, got %+v", got)
 	}
 }
+
+// fakeForcedFamilies is a preferences provider where the person forced some families on or off.
+type fakeForcedFamilies struct {
+	fakePreferences
+	modes map[string]string
+}
+
+func (f fakeForcedFamilies) RichFamilyModes(context.Context, *backendauth.Principal) map[string]string {
+	return f.modes
+}
+
+func promptFor(t *testing.T, prompt string, modes map[string]string) string {
+	t.Helper()
+	svc := &Service{preferences: fakeForcedFamilies{fakePreferences{richAnswers: true}, modes}}
+	input, _ := svc.BuildContextInput(context.Background(), ContextBuildParams{Prompt: prompt, Principal: &backendauth.Principal{}})
+	if input.AppendSystemPrompt == nil {
+		return ""
+	}
+	return *input.AppendSystemPrompt
+}
+
+func TestAFamilyForcedOnIsTaughtWhateverTheRequest(t *testing.T) {
+	plain := "compare these two tools"
+	if strings.Contains(promptFor(t, plain, nil), "Quiz(") {
+		t.Fatal("without a choice, a plain request is not taught the forms")
+	}
+	if !strings.Contains(promptFor(t, plain, map[string]string{"forms": "on"}), "Quiz(") {
+		t.Error("forms forced on must be taught to a plain request")
+	}
+	if !strings.Contains(promptFor(t, plain, map[string]string{"design": "on"}), "Browser(") {
+		t.Error("design forced on must be taught to a plain request")
+	}
+}
+
+func TestAFamilyForcedOffIsNeverTaught(t *testing.T) {
+	quiz := "make me a quiz of five questions on Go"
+	if !strings.Contains(promptFor(t, quiz, nil), "Quiz(") {
+		t.Fatal("automatic: a request for a quiz is taught the forms")
+	}
+	if strings.Contains(promptFor(t, quiz, map[string]string{"forms": "off"}), "Quiz(") {
+		t.Error("forms forced off must not be taught, whatever the request")
+	}
+	if !strings.Contains(promptFor(t, quiz, map[string]string{"charts": "off"}), "Quiz(") {
+		t.Error("forcing another family off must leave the forms alone")
+	}
+}
+
+func TestFamilyWordsAreWhatEachFamilyAddsToThePrompt(t *testing.T) {
+	words := RichFamilyWords()
+	for _, family := range []string{"architecture", "charts", "forms", "design"} {
+		if words[family] < 100 {
+			t.Errorf("the %s family should add more than a hundred words, got %d", family, words[family])
+		}
+	}
+	words["forms"] = 0
+	if RichFamilyWords()["forms"] == 0 {
+		t.Error("the figures given out must be a copy")
+	}
+}

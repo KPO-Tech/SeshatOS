@@ -10,6 +10,7 @@ import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 // every example it is taught from, and requests to try it with. The switch is the same preference as Settings > Answers.
 
 type Tab = 'overview' | 'gallery'
+type Mode = 'auto' | 'on' | 'off'
 
 export function GenerativeUiPage() {
   const { t } = useTranslation('generative')
@@ -28,6 +29,22 @@ export function GenerativeUiPage() {
     { id: 'dashboard', label: t('tryIt.items.dashboard.label'), prompt: t('tryIt.items.dashboard.prompt') },
     { id: 'architecture', label: t('tryIt.items.architecture.label'), prompt: t('tryIt.items.architecture.prompt') }
   ]
+  const modes = prefs?.rich_families ?? {}
+  const words = prefs?.rich_family_words ?? {}
+  const families = [
+    { id: 'charts', label: t('families.charts.label'), hint: t('families.charts.hint') },
+    { id: 'forms', label: t('families.forms.label'), hint: t('families.forms.hint') },
+    { id: 'design', label: t('families.design.label'), hint: t('families.design.hint') },
+    { id: 'architecture', label: t('families.architecture.label'), hint: t('families.architecture.hint') }
+  ]
+  const modeLabels: Record<Mode, string> = { auto: t('families.modes.auto'), on: t('families.modes.on'), off: t('families.modes.off') }
+  function chooseMode(family: string, mode: Mode) {
+    if (busy) return
+    const next: Record<string, 'on' | 'off'> = { ...modes }
+    if (mode === 'auto') delete next[family]
+    else next[family] = mode
+    void save({ rich_families: next })
+  }
   const tabs: Array<TabItem<Tab>> = [
     { id: 'overview', label: t('page.tabs.overview') },
     { id: 'gallery', label: t('page.tabs.gallery') }
@@ -57,6 +74,42 @@ export function GenerativeUiPage() {
                 />
               </SettingRow>
             </SettingsCard>
+
+            <div>
+              <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">{t('families.title')}</h2>
+              <p className="mb-0 mt-0.5 text-[11.5px] text-[var(--text-muted)]">{t('families.hint')}</p>
+              <div className="mt-3 flex flex-col overflow-hidden rounded-xl border border-[var(--border-soft)]">
+                {families.map(({ id, label, hint }) => {
+                  const current: Mode = modes[id] ?? 'auto'
+                  return (
+                    <div key={id} className="flex flex-wrap items-center justify-between gap-3 border-0 border-b border-solid border-[var(--border-soft)] px-3.5 py-2.5 last:border-b-0">
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-[var(--text-primary)]">{label}</div>
+                        <div className="text-[11.5px] text-[var(--text-muted)]">
+                          {hint}
+                          {typeof words[id] === 'number' && ` · ${t('families.cost', { words: words[id] })}`}
+                        </div>
+                      </div>
+                      <div role="radiogroup" aria-label={label} className="flex shrink-0 gap-0.5 rounded-lg bg-[var(--surface-hover)] p-0.5">
+                        {(['auto', 'on', 'off'] as const).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            role="radio"
+                            aria-checked={current === mode}
+                            disabled={!enabled || busy}
+                            onClick={() => chooseMode(id, mode)}
+                            className={`cursor-pointer rounded-md border-0 px-2.5 py-1 text-[12px] font-medium disabled:cursor-not-allowed disabled:opacity-50 ${current === mode ? 'bg-[var(--accent-primary)] text-white' : 'bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                          >
+                            {modeLabels[mode]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
 
             <div>
               <h2 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">{t('tryIt.title')}</h2>

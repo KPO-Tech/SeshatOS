@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
+	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
 	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
@@ -24,13 +25,17 @@ type userPreferencesResponse struct {
 	// MemoryEnabled is the user's opt-in to long-term memory (extraction and recall). Off by default.
 	MemoryEnabled bool `json:"memory_enabled"`
 	// RichAnswersEnabled lets the agent answer with structured components (tables, figures, steps). On by default.
-	RichAnswersEnabled bool  `json:"rich_answers_enabled"`
-	UpdatedAt          int64 `json:"updated_at,omitempty"`
+	RichAnswersEnabled bool `json:"rich_answers_enabled"`
+	// RichFamilies are the families of components the person forced, family -> "on" or "off"; one that is absent is automatic.
+	RichFamilies map[string]string `json:"rich_families"`
+	// RichFamilyWords is what each family adds to the prompt, in words, so that the person can weigh it.
+	RichFamilyWords map[string]int `json:"rich_family_words"`
+	UpdatedAt       int64          `json:"updated_at,omitempty"`
 }
 
 func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
 	if p == nil {
-		return userPreferencesResponse{RichAnswersEnabled: true}
+		return userPreferencesResponse{RichAnswersEnabled: true, RichFamilies: map[string]string{}, RichFamilyWords: backendquery.RichFamilyWords()}
 	}
 	return userPreferencesResponse{
 		UserID:                    p.UserID,
@@ -45,8 +50,17 @@ func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
 		MemoryEnabled:             p.MemoryEnabled,
 		RichAnswersEnabled:        !p.RichAnswersDisabled,
+		RichFamilies:              familiesOrEmpty(p.RichFamilies),
+		RichFamilyWords:           backendquery.RichFamilyWords(),
 		UpdatedAt:                 p.UpdatedAt.Unix(),
 	}
+}
+
+func familiesOrEmpty(in map[string]string) map[string]string {
+	if in == nil {
+		return map[string]string{}
+	}
+	return in
 }
 
 // enrichContextWithAgentPrefs injects per-user agent configuration values into
@@ -104,6 +118,9 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			MemoryEnabled *bool `json:"memory_enabled"`
 			// RichAnswersEnabled is a pointer for the same reason.
 			RichAnswersEnabled *bool `json:"rich_answers_enabled"`
+			// RichFamilies is a map so that a client that does not know the field (nil) leaves the stored choice alone; an empty
+			// map makes every family automatic.
+			RichFamilies map[string]string `json:"rich_families"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
@@ -130,6 +147,15 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 		if body.RichAnswersEnabled != nil {
 			richAnswersEnabled = *body.RichAnswersEnabled
 		}
+		richFamilies := a.backend.Preferences.RichFamilyModes(r.Context(), principal)
+		if body.RichFamilies != nil {
+			clean, invalid := preferences.CleanRichFamilies(body.RichFamilies)
+			if invalid != "" {
+				writeJSONError(w, http.StatusBadRequest, "invalid rich_families: "+invalid)
+				return
+			}
+			richFamilies = clean
+		}
 		saved, err := a.backend.Preferences.Upsert(r.Context(), principal, preferences.UpsertParams{
 			PreferredName:             body.PreferredName,
 			Profession:                body.Profession,
@@ -142,6 +168,7 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			MaxSubAgentDepth:          body.MaxSubAgentDepth,
 			MemoryEnabled:             memoryEnabled,
 			RichAnswersDisabled:       !richAnswersEnabled,
+			RichFamilies:              richFamilies,
 		})
 		if err != nil {
 			writeBackendError(w, err)
