@@ -6,9 +6,7 @@ import './gallery.css'
 import { catalogLoader, i18nOptions } from '@renderer/i18n'
 import { applyCurrentTheme, chooseMode, getEffectiveTheme } from '@renderer/lib/theme'
 import { PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
-import { RichBlock } from '@renderer/components/chat/richblocks/view/RichBlock'
-import { RichActionProvider } from '@renderer/components/chat/richblocks/view/actions/richActions'
-import { parseUi } from '@renderer/components/chat/richblocks/lang/parseUi'
+import { ExampleGallery } from '@renderer/components/generative/ExampleGallery'
 
 // A page to look at every example of the catalogue as the chat draws it, in both themes and both languages, and to see what a click on a
 // form, a quiz or a button would send. Run it with `npm run gallery`. It is a tool for the people who work on the components: the app
@@ -16,55 +14,20 @@ import { parseUi } from '@renderer/components/chat/richblocks/lang/parseUi'
 
 type Language = 'en' | 'fr'
 
-function titleOf(code: string): string {
-  const first = code.split('\n').find((line) => /^\w+\s*=/.test(line)) ?? ''
-  return first.replace(/\s*=\s*/, ' = ').slice(0, 90)
-}
+const LOGO_CHECK = 'root = Stack([Browser([Logos(["aws", "aws lambda", "aws s3", "azure", "google cloud", "microsoft", "slack", "linkedin"], "Logos found by name")], null, "#ffffff"), Browser([Logos(["aws", "github", "openai", "stripe", "nobody-knows"], "On a dark page")], null, "#111827")])'
 
 function Gallery({ language }: { language: Language }) {
-  const [sent, setSent] = useState<string[]>([])
-  const [filter, setFilter] = useState(new URLSearchParams(window.location.search).get('filter') ?? '')
   const instance = React.useMemo(() => {
     const created = i18next.createInstance()
     void created.use(catalogLoader).init(i18nOptions(language))
     return created
   }, [language])
-  const LOGO_CHECK = 'root = Stack([Browser([Logos(["aws", "aws lambda", "aws s3", "azure", "google cloud", "microsoft", "slack", "linkedin"], "Logos found by name")], null, "#ffffff"), Browser([Logos(["aws", "github", "openai", "stripe", "nobody-knows"], "On a dark page")], null, "#111827")])'
-  const examples = filter.toLowerCase().includes('logo') ? [LOGO_CHECK] : PROMPT_EXAMPLES
-  const shown = examples.map((code, index) => ({ code, index })).filter(({ code }) => code.toLowerCase().includes(filter.toLowerCase()))
+  const query = new URLSearchParams(window.location.search)
   return (
     <I18nextProvider i18n={instance}>
-      <RichActionProvider ask={(message) => setSent((previous) => [...previous, message])} busy={false}>
-        <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 pb-40 pt-6 text-app-text">
-          <input
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            placeholder="Filter the examples (a component name)"
-            className="rounded-lg border border-app-border-subtle bg-app-surface px-3 py-2 text-[13px] outline-none"
-          />
-          {shown.map(({ code, index }) => {
-            const errors = parseUi(code, { streaming: false }).errors
-            return (
-              <section key={index} className="flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-3 text-[12px] text-app-text-muted">
-                  <span>{`#${index + 1} · ${titleOf(code)}`}</span>
-                  <span className={errors.length > 0 ? 'text-app-error' : 'text-app-success'}>{errors.length > 0 ? `${errors.length} error(s)` : 'no error'}</span>
-                </div>
-                <RichBlock code={code} streaming={false} fallback={<pre className="text-xs">{code}</pre>} />
-                {errors.length > 0 && <pre className="m-0 whitespace-pre-wrap text-[11.5px] text-app-error">{errors.map((error) => error.message).join('\n')}</pre>}
-                <details className="text-[12px] text-app-text-muted">
-                  <summary className="cursor-pointer">source</summary>
-                  <pre className="whitespace-pre-wrap">{code}</pre>
-                </details>
-              </section>
-            )
-          })}
-        </div>
-        <div className="fixed inset-x-0 bottom-0 max-h-36 overflow-auto border-0 border-t border-solid border-app-border-subtle bg-app-surface-elevated px-4 py-2 text-[12px] text-app-text-secondary">
-          <div className="mb-1 font-semibold text-app-text">What the chat would receive ({sent.length})</div>
-          {sent.length === 0 ? <div className="text-app-text-muted">Nothing sent yet: click a button, a choice, a quiz report, a form.</div> : sent.map((message, i) => <pre key={i} className="m-0 mb-1 whitespace-pre-wrap">{message}</pre>)}
-        </div>
-      </RichActionProvider>
+      <div className="mx-auto max-w-3xl px-4 pb-40 pt-6 text-app-text">
+        <ExampleGallery examples={[LOGO_CHECK, ...PROMPT_EXAMPLES]} showErrors initialFilter={query.get('filter') ?? ''} />
+      </div>
     </I18nextProvider>
   )
 }

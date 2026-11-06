@@ -328,3 +328,55 @@ func TestRichAnswersAreOnWhenPreferencesCannotBeRead(t *testing.T) {
 		t.Fatal("a service without a provider must leave the default on")
 	}
 }
+
+// ─── forced families of components ────────────────────────────────────────────
+
+func TestFamiliesForcedByTheUserAreKeptAndAutomaticOnesAreNot(t *testing.T) {
+	svc := openPreferencesService(t)
+	ctx := context.Background()
+	principal := principalFor("usr_families")
+
+	if got := svc.RichFamilyModes(ctx, principal); len(got) != 0 {
+		t.Fatalf("a user who never chose has every family automatic, got %v", got)
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{RichFamilies: map[string]string{"forms": "off", "design": "on"}}); err != nil {
+		t.Fatal(err)
+	}
+	got := svc.RichFamilyModes(ctx, principal)
+	if got["forms"] != "off" || got["design"] != "on" || len(got) != 2 {
+		t.Fatalf("forced families must be read back, got %v", got)
+	}
+	if other := svc.RichFamilyModes(ctx, principalFor("usr_other")); len(other) != 0 {
+		t.Fatalf("one user's choice must not apply to another, got %v", other)
+	}
+	if _, err := svc.Upsert(ctx, principal, UpsertParams{}); err != nil {
+		t.Fatal(err)
+	}
+	if got := svc.RichFamilyModes(ctx, principal); len(got) != 0 {
+		t.Fatalf("an empty map makes every family automatic, got %v", got)
+	}
+}
+
+func TestCleanRichFamiliesRefusesWhatItDoesNotKnow(t *testing.T) {
+	clean, invalid := CleanRichFamilies(map[string]string{"charts": "auto", "forms": "on"})
+	if invalid != "" || len(clean) != 1 || clean["forms"] != "on" {
+		t.Fatalf("auto is dropped and on is kept, got %v (%q)", clean, invalid)
+	}
+	if _, invalid := CleanRichFamilies(map[string]string{"nothing": "on"}); invalid == "" {
+		t.Error("an unknown family must be refused")
+	}
+	if _, invalid := CleanRichFamilies(map[string]string{"forms": "sometimes"}); invalid == "" {
+		t.Error("an unknown mode must be refused")
+	}
+}
+
+func TestStoredFamiliesThatCannotBeReadMeanAutomatic(t *testing.T) {
+	for _, text := range []string{"", "   ", "not json", `{"forms":"maybe"}`, `{"unknown":"on"}`} {
+		if got := DecodeRichFamilies(text); len(got) != 0 {
+			t.Errorf("%q should read as automatic, got %v", text, got)
+		}
+	}
+	if got := DecodeRichFamilies(EncodeRichFamilies(map[string]string{"charts": "on"})); got["charts"] != "on" {
+		t.Errorf("what is encoded must be read back, got %v", got)
+	}
+}

@@ -1,11 +1,13 @@
 package query
 
 import (
+	"context"
 	"encoding/json"
 	"regexp"
 	"strings"
 	"sync"
 
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
@@ -90,6 +92,54 @@ func richUIFamiliesFor(prompt string) richUIFamilies {
 		forms:        richUIFormsWords.MatchString(text),
 		design:       richUIDesignWords.MatchString(text),
 	}
+}
+
+// richFamilyModesProvider is what the preferences offer when the person can force a family on or off.
+type richFamilyModesProvider interface {
+	RichFamilyModes(ctx context.Context, principal *backendauth.Principal) map[string]string
+}
+
+// withModes applies what the person forced: a family set on is taught whatever the request, one set off never, the others stay as the
+// request and the conversation made them.
+func (f richUIFamilies) withModes(modes map[string]string) richUIFamilies {
+	force := func(current bool, mode string) bool {
+		switch mode {
+		case "on":
+			return true
+		case "off":
+			return false
+		}
+		return current
+	}
+	f.architecture = force(f.architecture, modes["architecture"])
+	f.charts = force(f.charts, modes["charts"])
+	f.forms = force(f.forms, modes["forms"])
+	f.design = force(f.design, modes["design"])
+	return f
+}
+
+var (
+	richFamilyWordsOnce  sync.Once
+	richFamilyWordsCache map[string]int
+)
+
+// RichFamilyWords is what each family of components adds to the prompt, in words: the figure the person sees next to the choice.
+func RichFamilyWords() map[string]int {
+	richFamilyWordsOnce.Do(func() {
+		core := len(strings.Fields(richAnswersBlock(richUIFamilies{})))
+		words := func(f richUIFamilies) int { return len(strings.Fields(richAnswersBlock(f))) - core }
+		richFamilyWordsCache = map[string]int{
+			"architecture": words(richUIFamilies{architecture: true}),
+			"charts":       words(richUIFamilies{charts: true}),
+			"forms":        words(richUIFamilies{forms: true}),
+			"design":       words(richUIFamilies{design: true}),
+		}
+	})
+	out := make(map[string]int, len(richFamilyWordsCache))
+	for family, count := range richFamilyWordsCache {
+		out[family] = count
+	}
+	return out
 }
 
 func (f richUIFamilies) has(group string) bool {

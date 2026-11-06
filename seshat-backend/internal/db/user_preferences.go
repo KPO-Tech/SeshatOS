@@ -28,8 +28,11 @@ type gUserPreferences struct {
 	MemoryEnabled bool `gorm:"column:memory_enabled;not null;default:false"`
 	// RichAnswersDisabled is stored as an opt-out so that a user who never chose, or a row written before the column
 	// existed, gets rich answers: the zero value is the default.
-	RichAnswersDisabled bool  `gorm:"column:rich_answers_disabled;not null;default:false"`
-	UpdatedAtUnix       int64 `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
+	RichAnswersDisabled bool `gorm:"column:rich_answers_disabled;not null;default:false"`
+	// RichFamilies is a JSON object, family -> auto|on|off, for the families of components the person chose to force on or off. Empty
+	// means every family is automatic: taught when the request calls for it.
+	RichFamilies  string `gorm:"column:rich_families;type:text;not null;default:''"`
+	UpdatedAtUnix int64  `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
 }
 
 func (gUserPreferences) TableName() string { return "user_preferences" }
@@ -51,7 +54,9 @@ type UserPreferences struct {
 	MemoryEnabled bool
 	// RichAnswersDisabled reports whether the user turned off structured components in answers.
 	RichAnswersDisabled bool
-	UpdatedAt           time.Time
+	// RichFamilies is the JSON text of the families the person forced on or off; empty when none.
+	RichFamilies string
+	UpdatedAt    time.Time
 }
 
 type UpsertUserPreferencesParams struct {
@@ -67,6 +72,7 @@ type UpsertUserPreferencesParams struct {
 	MaxSubAgentDepth          int
 	MemoryEnabled             bool
 	RichAnswersDisabled       bool
+	RichFamilies              string
 }
 
 type UserPreferencesStore struct {
@@ -112,6 +118,7 @@ func (s *UserPreferencesStore) Upsert(ctx context.Context, p UpsertUserPreferenc
 		MaxSubAgentDepth:          p.MaxSubAgentDepth,
 		MemoryEnabled:             p.MemoryEnabled,
 		RichAnswersDisabled:       p.RichAnswersDisabled,
+		RichFamilies:              p.RichFamilies,
 	}
 	err := s.db.gormDB.WithContext(ctx).
 		Clauses(clause.OnConflict{
@@ -120,7 +127,7 @@ func (s *UserPreferencesStore) Upsert(ctx context.Context, p UpsertUserPreferenc
 				"preferred_name", "profession", "about",
 				"working_style", "response_style", "extra_context",
 				"interactive_permission_mode", "automation_permission_mode",
-				"max_sub_agent_depth", "memory_enabled", "rich_answers_disabled", "updated_at_unix",
+				"max_sub_agent_depth", "memory_enabled", "rich_answers_disabled", "rich_families", "updated_at_unix",
 			}),
 		}).
 		Create(&row).Error
@@ -145,6 +152,7 @@ func userPreferencesFromModel(r gUserPreferences) UserPreferences {
 		MaxSubAgentDepth:          r.MaxSubAgentDepth,
 		MemoryEnabled:             r.MemoryEnabled,
 		RichAnswersDisabled:       r.RichAnswersDisabled,
+		RichFamilies:              r.RichFamilies,
 		UpdatedAt:                 time.Unix(r.UpdatedAtUnix, 0).UTC(),
 	}
 }

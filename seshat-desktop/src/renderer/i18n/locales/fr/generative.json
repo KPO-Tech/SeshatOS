@@ -1,0 +1,96 @@
+{
+  "page": {
+    "title": "UI générative",
+    "subtitle": "Ce que l'agent peut dessiner dans ses réponses : tableaux, graphiques, formulaires, quiz, maquettes de page.",
+    "tabs": {
+      "overview": "Aperçu",
+      "gallery": "Galerie"
+    },
+    "switch": {
+      "title": "Réponses riches",
+      "on": "Activé : l'agent peut répondre avec des tableaux, graphiques, formulaires et maquettes.",
+      "off": "Désactivé : l'agent répond en texte seulement."
+    }
+  },
+  "tryIt": {
+    "title": "Essayer",
+    "hint": "Chaque demande ouvre un nouveau chat, texte prêt à envoyer.",
+    "disabled": "Activez d'abord les réponses riches.",
+    "items": {
+      "quiz": {
+        "label": "Un quiz",
+        "prompt": "Fais-moi un quiz de 5 questions sur les goroutines en Go, avec explications, et un bouton pour t'envoyer mon score."
+      },
+      "cards": {
+        "label": "Flashcards",
+        "prompt": "Crée des flashcards de vocabulaire anglais sur le voyage, avec une catégorie et la prononciation sur chacune."
+      },
+      "essay": {
+        "label": "Exercice d'écriture",
+        "prompt": "Entraîne-moi à la rédaction en français : donne-moi un sujet de 100 à 150 mots et une zone pour écrire ma réponse."
+      },
+      "sine": {
+        "label": "Un graphique à explorer",
+        "prompt": "Fais-moi un graphique interactif des fonctions sinus, cosinus et tangente, avec des curseurs pour l'amplitude, la fréquence, la phase et le décalage vertical, et affiche l'équation actuelle."
+      },
+      "parabola": {
+        "label": "Une parabole",
+        "prompt": "Montre-moi la parabole f(x) = a(x - h)^2 + k avec des curseurs pour a, h et k, et marque son sommet sur le graphique."
+      },
+      "site": {
+        "label": "Maquette de site",
+        "prompt": "Montre-moi à quoi pourrait ressembler le site d'une boulangerie artisanale, avec une palette de couleurs."
+      },
+      "dashboard": {
+        "label": "Tableau de bord",
+        "prompt": "Fais la maquette d'un tableau de bord pour un outil de gestion de projets : barre latérale, chiffres clés, une courbe de tendance et un tableau de projets."
+      },
+      "architecture": {
+        "label": "Une architecture",
+        "prompt": "Dessine l'architecture d'un chatbot RAG sur AWS : des documents dans S3, une Lambda qui les indexe, une base vectorielle et une API."
+      }
+    }
+  },
+  "gallery": {
+    "intro": "Tous les exemples dont l'agent s'inspire, dessinés comme dans le chat. Cliquez sur un bouton ou remplissez un formulaire : le message qui serait envoyé s'affiche en bas, rien n'est envoyé.",
+    "filter": "Filtrer par composant",
+    "none": "Aucun résultat.",
+    "source": "source",
+    "wouldReceive": "Ce que le chat recevrait ({{count}})",
+    "nothingSent": "Rien pour l'instant : cliquez sur un bouton, un choix, un résultat de quiz ou un formulaire.",
+    "families": {
+      "all": "Tout",
+      "basics": "Bases",
+      "charts": "Graphiques",
+      "forms": "Formulaires",
+      "design": "Design",
+      "architecture": "Architecture"
+    }
+  },
+  "families": {
+    "title": "Familles de composants",
+    "hint": "Automatique : une famille n'est enseignée à l'agent que si la demande s'y prête. Toujours : elle l'est à chaque demande, ce qui coûte plus. Jamais : elle n'est pas utilisée.",
+    "cost": "environ {{words}} mots",
+    "modes": {
+      "auto": "Automatique",
+      "on": "Toujours",
+      "off": "Jamais"
+    },
+    "charts": {
+      "label": "Graphiques et maths",
+      "hint": "Courbes de formules, curseurs, histogrammes, cartes de chaleur."
+    },
+    "forms": {
+      "label": "Formulaires et quiz",
+      "hint": "Exercices, quiz, cartes mémoire, brouillons à modifier."
+    },
+    "design": {
+      "label": "Design",
+      "hint": "Maquettes de site ou d'application, palettes de couleurs."
+    },
+    "architecture": {
+      "label": "Architecture",
+      "hint": "Schémas de systèmes, avec les logos des technologies."
+    }
+  }
+}

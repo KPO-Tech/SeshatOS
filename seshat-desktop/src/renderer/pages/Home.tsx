@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ChartHistogram, Code, FileTextOne, Globe, LightMember } from '@icon-park/react'
 import { ChatInput } from '@renderer/components/chat/composer/ChatInput'
 import { attachmentCategory, isPDFFile, sentAttachment, type ChatAttachment } from '@renderer/components/chat/attachments/attachmentTypes'
@@ -68,11 +68,17 @@ export function NewChat({ fixedProjectPath, variant = 'home', placeholder = 'Ask
   const { t } = useTranslation('shell')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const { loading: providersLoading } = useProviders()
   const providers = useProvidersStore((s) => s.providers)
   const addSession = useSessionStore((s) => s.addSession)
   const permissionMode = useUIStore((s) => s.permissionMode)
   const [inputValue, setInputValue] = useState('')
+  // Another page (Generative UI) may hand over a request to start from: it is put in the input, not sent.
+  useEffect(() => {
+    const handed = (location.state as { prompt?: unknown } | null)?.prompt
+    if (typeof handed === 'string' && handed !== '') setInputValue(handed)
+  }, [location.key, location.state])
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null)
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ProviderModel[]>>({})

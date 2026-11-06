@@ -231,6 +231,10 @@ export type UserPreferences = {
   memory_enabled?: boolean
   /** Answers may use drawn components (tables, figures, steps). On unless the person turned it off. */
   rich_answers_enabled?: boolean
+  /** Families of components the person forced, family -> on | off. A family that is absent is automatic. */
+  rich_families?: Record<string, 'on' | 'off'>
+  /** What each family adds to the prompt, in words. Given by the backend, read only. */
+  rich_family_words?: Record<string, number>
   updated_at?: number
 }
 
