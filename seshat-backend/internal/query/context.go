@@ -19,7 +19,7 @@ import (
 const renderingCapabilitiesBlock = `## Rich rendering available in this UI
 
 - Interactive charts: a ` + "```chart" + ` fenced code block containing a JSON Chart.js config (` + "`{\"type\": \"bar\"|\"line\"|\"pie\"|\"doughnut\"|..., \"data\": {...}, \"options\": {...}}`" + `) renders as a live chart inline in your response. Use this instead of a text table when the data is genuinely better shown visually.
-- Live HTML/CSS/JS preview: writing a single self-contained HTML file (inline ` + "`<style>`" + ` and ` + "`<script>`" + `, no external resources) via write_file with a ` + "`.html`" + ` extension lets the user open it as a live, interactive preview alongside the conversation. Use this for demos, small interactive tools, or visualizations that need real script execution beyond what a chart block covers. Nothing outside the file loads in it: no web font, no CDN, no remote image.`
+- Live HTML/CSS/JS preview: writing a single HTML file (inline ` + "`<style>`" + ` and ` + "`<script>`" + `; libraries load from cdnjs.cloudflare.com, cdn.jsdelivr.net or unpkg.com at an exact version, and the app ships Chart.js, D3, three.js, ECharts, Mermaid, Plotly, Leaflet, p5, GSAP, React, Vue and Tailwind) via write_file with a ` + "`.html`" + ` extension lets the user open it as a live, interactive preview alongside the conversation. Use this for demos, small interactive tools, or visualizations that need real script execution beyond what a chart block covers. Web fonts and remote images do not load: use system fonts.`
 
 // narrationGuidanceBlock asks the model to briefly narrate what it's about
 // to do before each tool call, instead of chaining tool calls silently and
