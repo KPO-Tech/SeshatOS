@@ -23,6 +23,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Diagrams that say an idea.** The agent can draw a honeycomb of parts, a process in arrow-shaped steps, a cycle, a pyramid or a funnel, a matrix of two by two and a stack of layers, in colours of its choosing (ADR 0018). A new family in the Generative UI window, with a gallery.
 - **Architectures as posters.** An architecture can lay its stages in a row, sit in a frame with a large title, draw databases as cylinders and join the stages with big arrows (ADR 0019).
 - **Venn diagrams, org charts and decision trees**, hexagon and pill shapes for the steps of an architecture, and a legend that wraps under the bars of a session or a budget, where short parts overlapped their words.
+- **Drafts that open in your mail app, and tables to fill in.** A draft can be opened as a new mail after you confirm the address; the agent can also give a table with columns and rows you edit, then send it back as a Markdown table (ADR 0020).
 
 ## [0.3.16] - 2026-11-05
 
