@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { I18nextProvider } from 'react-i18next'
 import { describe, expect, it } from 'vitest'
 import { catalogLoader, i18nOptions } from '@renderer/i18n'
-import { EXAMPLE_TITLES, PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
+import { GALLERIES } from '@renderer/components/chat/richblocks/catalog/galleries'
 import { Gallery } from './Gallery'
 
 async function draw(language: 'en' | 'fr') {
@@ -13,13 +13,12 @@ async function draw(language: 'en' | 'fr') {
   return renderToStaticMarkup(createElement(I18nextProvider, { i18n: instance }, createElement(Gallery)))
 }
 
-describe('the gallery of examples as a grid of cards', () => {
-  it('shows one card for each example, with its title, and a way to open it', async () => {
+describe('the galleries as a grid of collections', () => {
+  it('shows one cover for each collection, with its name, its line and its number of examples', async () => {
     const html = await draw('en')
-    expect((html.match(/role="button"/g) ?? []).length).toBe(PROMPT_EXAMPLES.length)
-    for (const title of EXAMPLE_TITLES) expect(html).toContain(title)
-    expect(html).toContain('View')
-    expect(html).toContain('Filter by component')
+    expect((html.match(/role="button"/g) ?? []).length).toBe(GALLERIES.length)
+    for (const name of ['Landing pages', 'Mobile apps', 'Dashboards', 'Brand boards', 'Maths lab', 'Calculators', 'Data science', 'Cloud architectures', 'Learn and practise', 'Decisions and reports']) expect(html).toContain(name)
+    expect(html).toContain('Examples: 5')
   })
 
   it('keeps the pictures out of reach: they cannot be pressed or tabbed to from the grid', async () => {
@@ -30,14 +29,13 @@ describe('the gallery of examples as a grid of cards', () => {
 
   it('does not put a button inside a button', async () => {
     const html = await draw('en')
-    // Cards are divs with a role; a real <button> never holds another one.
     expect(html).not.toMatch(/<button[^>]*>(?:(?!<\/button>).)*<button/s)
   })
 
   it('says it in French', async () => {
     const html = await draw('fr')
-    expect(html).toContain('Filtrer par composant')
-    expect(html).toContain('Voir')
-    expect(html).not.toContain('gallery.')
+    expect(html).toContain('Pages d&#x27;accueil')
+    expect(html).toContain('Exemples : 5')
+    expect(html).not.toContain('collections.')
   })
 })

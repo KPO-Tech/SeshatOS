@@ -8,6 +8,7 @@ import { applyCurrentTheme, chooseMode, getEffectiveTheme } from '@renderer/lib/
 import { EXAMPLE_TITLES, PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
 import { MemoryRouter } from 'react-router'
 import { ExampleGallery } from '@renderer/components/generative/ExampleGallery'
+import { Gallery as Collections } from '@renderer/components/generative/Gallery'
 import { GenerativeUiModal, type SectionId } from '@renderer/components/generative/GenerativeUiModal'
 
 // A page to look at every example of the catalogue as the chat draws it, in both themes and both languages, and to see what a click on a
@@ -32,6 +33,16 @@ function Gallery({ language }: { language: Language }) {
         <MemoryRouter>
           <GenerativeUiModal onClose={() => undefined} initialSection={(query.get('section') as SectionId | null) ?? 'overview'} />
         </MemoryRouter>
+      </I18nextProvider>
+    )
+  }
+  if (query.get('collection') !== null || query.get('hub') === '1') {
+    const example = query.get('example')
+    return (
+      <I18nextProvider i18n={instance}>
+        <div className="mx-auto max-w-5xl px-6 pb-20 pt-6 text-app-text">
+          <Collections initialCollection={query.get('collection') ?? undefined} initialExample={example === null ? undefined : Number(example)} />
+        </div>
       </I18nextProvider>
     )
   }

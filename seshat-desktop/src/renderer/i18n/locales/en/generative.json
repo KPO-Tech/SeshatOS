@@ -22,7 +22,7 @@
     },
     "gallery": {
       "label": "Gallery",
-      "description": "Every example the agent is taught from: pick one to see it large, with its source."
+      "description": "Collections of examples to look through: pick one, then a card to see it large with its source."
     }
   },
   "overview": {
@@ -131,6 +131,55 @@
       "design": "Design",
       "architecture": "Architecture"
     },
-    "back": "Gallery"
+    "hub": {
+      "back": "All galleries",
+      "count": "Examples: {{count}}"
+    }
+  },
+  "collections": {
+    "landing": {
+      "title": "Landing pages",
+      "description": "Sketches of the home page of a site, by trade: a colour, a font and a mood for each."
+    },
+    "mobile": {
+      "title": "Mobile apps",
+      "description": "Screens of an app in a phone: figures, curves, lists and one clear button."
+    },
+    "dashboards": {
+      "title": "Dashboards",
+      "description": "Side bar, key figures, curves and tables: the look of a product for every kind of work."
+    },
+    "brand": {
+      "title": "Brand boards",
+      "description": "Palettes, buttons, pictures and moods: the same page in other colours, fonts and corners."
+    },
+    "math": {
+      "title": "Maths lab",
+      "description": "Functions to explore: move a slider, and the curve, the marks and the equation follow."
+    },
+    "calculators": {
+      "title": "Calculators",
+      "description": "Small tools that answer as you move a slider: money, motion, units and health."
+    },
+    "data": {
+      "title": "Data science",
+      "description": "The pictures of a model: learning curves, errors, correlations and classification."
+    },
+    "cloud": {
+      "title": "Cloud architectures",
+      "description": "Systems drawn with the logos of the services they use: AWS, Kubernetes, Kafka and others."
+    },
+    "learning": {
+      "title": "Learn and practise",
+      "description": "Quizzes, cards, writing exercises and revision plans, to answer in the conversation."
+    },
+    "work": {
+      "title": "Decisions and reports",
+      "description": "The documents of a working week: status, roadmap, comparisons, decisions, checklists and mail."
+    },
+    "core": {
+      "title": "The agent's examples",
+      "description": "The short examples the agent is taught from: tables, steps, charts, forms and a first sketch of a page."
+    }
   }
 }
