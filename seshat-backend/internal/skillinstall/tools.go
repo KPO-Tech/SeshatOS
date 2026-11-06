@@ -36,8 +36,9 @@ var runCommand = func(ctx context.Context, dir string, env []string, name string
 	return out.String(), err
 }
 
-// findPython looks for a Python at least as new as minimum ("3.10"); EnvPython names one to use instead of searching.
-func findPython(minimum string) (interpreter, error) {
+// findPython looks for a Python at least as new as minimum ("3.10"); EnvPython names one to use instead of searching. A variable so that a
+// test can stand in for a machine that has none.
+var findPython = func(minimum string) (interpreter, error) {
 	wantMajor, wantMinor := parseVersion(minimum)
 	var candidates [][]string
 	if explicit := strings.TrimSpace(os.Getenv(EnvPython)); explicit != "" {

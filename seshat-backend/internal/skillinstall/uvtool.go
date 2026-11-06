@@ -1,6 +1,7 @@
 package skillinstall
 
 import (
+	"strconv"
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
@@ -220,4 +221,26 @@ func writeFile(dest string, source io.Reader) error {
 		return err
 	}
 	return out.Close()
+}
+
+// managedPythonPossible says whether uv can give a Python when the machine has none: one is on the machine, or it can be downloaded.
+func managedPythonPossible() bool {
+	if _, ok := findUV(); ok {
+		return true
+	}
+	return uvCanBeDownloaded()
+}
+
+// managedPythonDir is where the Pythons that uv downloads for Seshat are kept, apart from the ones of the system and of the person's own uv.
+func managedPythonDir() string {
+	return runtimepath.Join("", "tools", "python")
+}
+
+// managedPythonVersion is the Python uv is asked for when the machine has none that fits: 3.12, or the minimum when the skills need newer.
+func managedPythonVersion(minimum string) string {
+	major, minor := parseVersion(minimum)
+	if major > 3 || (major == 3 && minor > 12) {
+		return strconv.Itoa(major) + "." + strconv.Itoa(minor)
+	}
+	return "3.12"
 }
