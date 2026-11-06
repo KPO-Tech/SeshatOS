@@ -212,7 +212,8 @@ export function checkVars(root: UiNode): UiError[] {
     if (node.props.text.length > VAR_LIMITS.live) problem(`The text of a Live is longer than ${VAR_LIMITS.live} characters.`)
     for (const match of node.props.text.matchAll(EXPRESSION)) {
       const parsed = tryParseExpression(match[1], defaults)
-      if (parsed.error) problem(`A Live shows {{${match[1]}}}, which cannot be read: ${parsed.error}.`, 'Name a Slider for each letter, and write * between a number and a variable (2*a).')
+      const asksText = /[?<>:]|'|"/.test(match[1])
+      if (parsed.error) problem(`A Live shows {{${match[1]}}}, which cannot be read: ${parsed.error}.`, asksText ? 'A formula gives a number: no text, no a > b ? x : y. Write the words around it, or show one Live per case with a Toggle or a Select.' : 'Name a Slider for each letter, and write * between a number and a variable (2*a).')
     }
   }
   return errors

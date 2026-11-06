@@ -11,7 +11,7 @@
       "name": "Card",
       "group": "Layout",
       "signature": "Card(children: [Component], title?: text, tone?: tone)",
-      "description": "A bordered block with an optional title."
+      "description": "A bordered block with an optional title: groups parts that belong together (an explorer, a record). Not for a plain paragraph or list."
     },
     {
       "name": "Section",
@@ -41,7 +41,7 @@
       "name": "Callout",
       "group": "Text",
       "signature": "Callout(tone: tone, title: text, body?: text)",
-      "description": "A highlighted note: info, success, warning or danger."
+      "description": "A highlighted note: info, success, warning or danger. For a caveat or a recommendation the reader must not miss; one or two per answer at most."
     },
     {
       "name": "Badge",
@@ -59,7 +59,7 @@
       "name": "Table",
       "group": "Data",
       "signature": "Table(columns: [Col|ColGroup], rows: [[cell]|Row], caption?: text, sortable?: true|false, striped?: true|false, compact?: true|false)",
-      "description": "Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup."
+      "description": "Compare items on criteria, or list records; use it, never a Markdown table. Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup."
     },
     {
       "name": "Col",
@@ -89,7 +89,7 @@
       "name": "Metric",
       "group": "Data",
       "signature": "Metric(label: text, value: text|number, delta?: text|number, trend?: up|down|flat, note?: text, tone?: tone)",
-      "description": "One figure with its label and its change."
+      "description": "One key figure with its label and its change: a result to watch."
     },
     {
       "name": "MetricRow",
@@ -101,31 +101,31 @@
       "name": "BarChart",
       "group": "Charts",
       "signature": "BarChart(labels: [text], series: [Series], mode?: grouped|stacked, unit?: text, horizontal?: true|false, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "Bars, one group per label and one bar per series."
+      "description": "Bars to compare values between categories (sales per quarter); several Series make grouped bars."
     },
     {
       "name": "LineChart",
       "group": "Charts",
       "signature": "LineChart(labels: [text], series: [Series], unit?: text, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "Lines over ordered labels: a trend, a learning curve (loss and accuracy per epoch)."
+      "description": "Lines to follow a value over ordered labels: a trend over time, a learning curve (loss and accuracy per epoch)."
     },
     {
       "name": "AreaChart",
       "group": "Charts",
       "signature": "AreaChart(labels: [text], series: [Series], unit?: text, stacked?: true|false, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "Filled lines over ordered labels."
+      "description": "Filled lines over ordered labels: a cumulated trend over time."
     },
     {
       "name": "PieChart",
       "group": "Charts",
       "signature": "PieChart(labels: [text], values: [number], donut?: true|false, title?: text)",
-      "description": "Shares of a whole."
+      "description": "Shares of a whole with few parts (five at most); with more, a BarChart."
     },
     {
       "name": "ScatterChart",
       "group": "Charts",
       "signature": "ScatterChart(series: [Points], xLabel?: text, yLabel?: text, title?: text)",
-      "description": "Points on two axes, one colour per Points."
+      "description": "Points on two axes: the link between two measures, clusters. One colour per Points."
     },
     {
       "name": "Series",
@@ -143,7 +143,7 @@
       "name": "Plot",
       "group": "Charts",
       "signature": "Plot(layers: [Curve|Shade|Dot|VLine|HLine|Points], xmin: number, xmax: number, ymin?: number, ymax?: number, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "A graph of formulas in x over [xmin, xmax], with the layers drawn on the same axes. The vertical range is automatic unless given."
+      "description": "The graph of a function of x (a parabola, a derivative, an area), to explore with Sliders; any function is a Plot, never an HTML page. A graph of formulas in x over [xmin, xmax], with the layers drawn on the same axes. The vertical range is automatic unless given."
     },
     {
       "name": "Curve",
@@ -203,7 +203,7 @@
       "name": "Histogram",
       "group": "Charts",
       "signature": "Histogram(values: [number], bins?: number, title?: text, xLabel?: text, tone?: tone)",
-      "description": "The distribution of a list of values, in equal bins (a residual, a feature, a weight)."
+      "description": "The distribution of a list of values, in equal bins: the spread of a measure (a residual, a feature, a weight)."
     },
     {
       "name": "Heatmap",
@@ -215,7 +215,7 @@
       "name": "Architecture",
       "group": "Architecture",
       "signature": "Architecture(children: [Component], flows?: [Flow], title?: text, direction?: column|row, framed?: true|false)",
-      "description": "The frame of a system drawing: it lays Panels out and draws the Flow arrows over them. direction row puts them side by side, as the stages of a pipeline; framed draws a frame around all, with the title large."
+      "description": "A system, its layers or a data flow, up to about fifteen boxes. The frame of a system drawing: it lays Panels out and draws the Flow arrows over them. direction row puts them side by side, as the stages of a pipeline; framed draws a frame around all, with the title large."
     },
     {
       "name": "Panel",
@@ -239,7 +239,7 @@
       "name": "Steps",
       "group": "Guidance",
       "signature": "Steps(items: [Step])",
-      "description": "An ordered procedure."
+      "description": "An ordered procedure of three steps or more: a how-to, a setup."
     },
     {
       "name": "Step",
@@ -335,7 +335,7 @@
       "name": "Quiz",
       "group": "Forms",
       "signature": "Quiz(questions: [Question], title?: text, report?: text)",
-      "description": "Multiple-choice questions answered in the answer, judged at once with their explanation, then a score. Optional report: the message the reader may send at the end, with {{score}}, {{total}}, {{missed}}. The answers are visible: a study tool, not an exam."
+      "description": "To test knowledge. Multiple-choice questions answered in the answer, judged at once with their explanation, then a score. Optional report: the message the reader may send at the end, with {{score}}, {{total}}, {{missed}}. The answers are visible: a study tool, not an exam."
     },
     {
       "name": "Question",
@@ -347,7 +347,7 @@
       "name": "Flashcards",
       "group": "Forms",
       "signature": "Flashcards(cards: [Flash], title?: text, report?: text)",
-      "description": "Cards the reader flips and marks known or to review. Optional report, with {{known}}, {{total}}, {{again}} (fronts to review)."
+      "description": "To memorise: vocabulary, definitions. Cards the reader flips and marks known or to review. Optional report, with {{known}}, {{total}}, {{again}} (fronts to review)."
     },
     {
       "name": "Flash",
@@ -359,7 +359,7 @@
       "name": "Browser",
       "group": "Design",
       "signature": "Browser(children: [Component], url?: text, bg?: text, font?: sans|serif|mono|display, radius?: none|sm|md|lg|full)",
-      "description": "A browser window to sketch a page in. bg is the page colour; a colour is a hex code (#f97316), a name (orange), rgb(249, 115, 22) or hsl(25, 95%, 53%), and a gradient is \"#f97316 > #ec4899\". font: sans, serif, mono, display. radius of the corners: none, sm, md, lg, full."
+      "description": "A quick sketch to talk over, not the site; to build it, write the files. A browser window to sketch a page in. bg is the page colour; a colour is a hex code (#f97316), a name (orange), rgb(249, 115, 22) or hsl(25, 95%, 53%), and a gradient is \"#f97316 > #ec4899\". font: sans, serif, mono, display. radius of the corners: none, sm, md, lg, full."
     },
     {
       "name": "Phone",
@@ -455,7 +455,7 @@
       "name": "Shell",
       "group": "Design",
       "signature": "Shell(items: [SideItem], children: [Component], title?: text, color?: text)",
-      "description": "A dashboard layout: a side bar of SideItem (the first is the current page) and a main area of Tiles, Kpis, Sparks, DataRows. title is the product name."
+      "description": "A quick sketch of a dashboard to talk over. A dashboard layout: a side bar of SideItem (the first is the current page) and a main area of Tiles, Kpis, Sparks, DataRows. title is the product name."
     },
     {
       "name": "SideItem",
@@ -491,7 +491,7 @@
       "name": "Palette",
       "group": "Design",
       "signature": "Palette(swatches: [Swatch], title?: text)",
-      "description": "The colours of a design, each with its name and its code."
+      "description": "The colours of a design or a brand, each with its name and its code: to propose a palette."
     },
     {
       "name": "Swatch",
@@ -509,7 +509,7 @@
       "name": "Hive",
       "group": "Diagrams",
       "signature": "Hive(columns: [[Hex]], title?: text, left?: text, right?: text)",
-      "description": "A honeycomb of hexagons, in columns of one, two, one, two...: a strategy or a model whose parts touch. left and right are the headings of the two groups. Colour the one to stress."
+      "description": "Parts that touch. A honeycomb of hexagons, in columns of one, two, one, two...: a strategy or a model whose parts touch. left and right are the headings of the two groups. Colour the one to stress."
     },
     {
       "name": "Hex",
@@ -521,7 +521,7 @@
       "name": "Chevrons",
       "group": "Diagrams",
       "signature": "Chevrons(items: [Chev], title?: text)",
-      "description": "A process in arrow-shaped steps, each with a short text under it."
+      "description": "A process in arrow-shaped steps, each with a short text: a method, phases of a roadmap."
     },
     {
       "name": "Chev",
@@ -533,7 +533,7 @@
       "name": "Cycle",
       "group": "Diagrams",
       "signature": "Cycle(loops: [Loop], center?: text, title?: text)",
-      "description": "Three to eight steps in a loop, with arrows from one to the next; center is the word in the middle."
+      "description": "Three to eight steps in a loop, with arrows from one to the next (a lifecycle, PDCA, a flywheel); center is the word in the middle."
     },
     {
       "name": "Loop",
@@ -545,7 +545,7 @@
       "name": "Pyramid",
       "group": "Diagrams",
       "signature": "Pyramid(levels: [Level], title?: text, funnel?: true|false)",
-      "description": "Levels from the top down, widening: a hierarchy or a scale. funnel true makes it narrow downwards: a funnel of conversion."
+      "description": "Levels from the top down, widening: a hierarchy or a scale (Maslow). funnel true makes it narrow downwards: a funnel of conversion."
     },
     {
       "name": "Level",
@@ -569,7 +569,7 @@
       "name": "Quadrant",
       "group": "Diagrams",
       "signature": "Quadrant(cells: [Quad], xLabel?: text, yLabel?: text, title?: text)",
-      "description": "A matrix of two by two, four Quad in order: top left, top right, bottom left, bottom right. xLabel and yLabel name the axes."
+      "description": "A matrix of two by two (urgent/important, effort/impact), four Quad in order: top left, top right, bottom left, bottom right. xLabel and yLabel name the axes."
     },
     {
       "name": "Quad",
@@ -581,7 +581,7 @@
       "name": "Layers",
       "group": "Diagrams",
       "signature": "Layers(layers: [Layer], title?: text)",
-      "description": "A stack of layers, the top one first: a label on the left and its text on the right."
+      "description": "A stack of levels, the top one first: a label on the left and its text on the right (network layers, a stack seen as levels)."
     },
     {
       "name": "Layer",
@@ -605,7 +605,7 @@
       "name": "Tree",
       "group": "Diagrams",
       "signature": "Tree(root: Branch, title?: text)",
-      "description": "A tree or an org chart from one root Branch, its children below, up to four levels."
+      "description": "A decision tree, an org chart or a breakdown from one root Branch, its children below, up to four levels."
     },
     {
       "name": "Branch",
@@ -617,13 +617,13 @@
       "name": "Sheet",
       "group": "Forms",
       "signature": "Sheet(columns: [text], rows?: [[text]], title?: text, report?: text)",
-      "description": "A table to fill in. report: the message they may send, with {{table}}, {{rows}}."
+      "description": "A table the reader fills in and sends back (a budget, a list). report: the message they may send, with {{table}}, {{rows}}. For a spreadsheet to open elsewhere, write a file."
     },
     {
       "name": "Draft",
       "group": "Forms",
       "signature": "Draft(body: text, subject?: text, to?: text, title?: text)",
-      "description": "A text the reader can edit and copy: an email, a letter. subject and to are optional lines above the body."
+      "description": "For a mail or a letter they will send. A text the reader can edit and copy: an email, a letter. subject and to are optional lines above the body."
     },
     {
       "name": "ProgressBar",

@@ -1566,6 +1566,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	// costs a fixed handful of tokens and applies to every surface.
 	if !knowledgeProfile {
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, htmlPageBlock)
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
 		// Structured components are on unless the user turned them off in Settings.
 		if s.richAnswersOn(ctx, p) {

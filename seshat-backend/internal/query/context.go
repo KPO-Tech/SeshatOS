@@ -21,6 +21,25 @@ const renderingCapabilitiesBlock = `## Rich rendering available in this UI
 - Interactive charts: a ` + "```chart" + ` fenced code block containing a JSON Chart.js config (` + "`{\"type\": \"bar\"|\"line\"|\"pie\"|\"doughnut\"|..., \"data\": {...}, \"options\": {...}}`" + `) renders as a live chart inline in your response. Use this instead of a text table when the data is genuinely better shown visually.
 - Live HTML/CSS/JS preview: writing a single HTML file (inline ` + "`<style>`" + ` and ` + "`<script>`" + `; libraries load from cdnjs.cloudflare.com, cdn.jsdelivr.net or unpkg.com at an exact version, and the app ships Chart.js, D3, three.js, ECharts, Mermaid, Plotly, Leaflet, p5, GSAP, React, Vue and Tailwind) via write_file with a ` + "`.html`" + ` extension lets the user open it as a live, interactive preview alongside the conversation. Use this for demos, small interactive tools, or visualizations that need real script execution beyond what a chart block covers. Web fonts and remote images do not load: use system fonts.`
 
+// htmlPageBlock is the base of every page the agent writes for the preview: the palette, the spacing and the habits that make pages look
+// made by one hand (ADR 0024). It is a recipe in the prompt, not a file copied into the workspace: the agent adapts it, and it works with
+// any model.
+const htmlPageBlock = `## Writing an HTML page
+
+Start every page from this base and adapt it; do not ship it raw.
+
+:root{--bg:#fafaf9;--surface:#fff;--text:#1c1917;--muted:#78716c;--border:#e7e5e4;--accent:#ea580c;--blue:#2563eb;--green:#16a34a;--amber:#d97706;--red:#dc2626;--radius:14px;--shadow:0 1px 2px rgba(28,25,23,.06),0 4px 16px rgba(28,25,23,.06);--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"Cascadia Code",Consolas,monospace}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--font)} main{max-width:1100px;margin:0 auto;padding:40px 24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+
+- Light by default (the page above); dark only if the reader asks, then redefine the variables, never hard-code colours in the elements.
+- One accent colour, the others for meaning (green ok, amber warning, red danger). Spacing in multiples of 8px, one size of radius, headings in the same weight, text never smaller than 13px.
+- Icons are inline SVG (24px grid, stroke 1.75, round caps, currentColor), never emoji and never an icon font.
+- A diagram or an architecture: boxes in a CSS grid or flex layout, arrows in one SVG layer over it (or Mermaid or D3 for a graph of many nodes), a title, a legend if colours mean something, and room for the labels of the arrows. Group by layer or by stage, not by the order of writing.
+- A chart: Chart.js or ECharts. An interactive 3D scene: three.js. A map: Leaflet.
+- Responsive from 360px wide up; the page is read in a side panel, so it must not need a wide window.
+- System fonts only; images are drawn (SVG, CSS gradients), never linked.`
+
 // narrationGuidanceBlock asks the model to briefly narrate what it's about
 // to do before each tool call, instead of chaining tool calls silently and
 // only producing prose once everything is done. The desktop app's chat renders
