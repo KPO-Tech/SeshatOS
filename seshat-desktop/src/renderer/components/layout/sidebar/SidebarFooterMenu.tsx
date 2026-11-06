@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router'
 import { Down, Gift, Logout, Magic, SettingTwo, Shield } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useAuth } from '@renderer/hooks/useAuth'
+import { useDialogsStore } from '@renderer/stores/dialogs'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
 import { edition } from '@renderer/lib/edition'
 import { OPEN_WHATS_NEW_EVENT } from '@renderer/lib/whatsNew'
@@ -19,7 +19,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
   const [open, setOpen] = useState(false)
   const { isAdmin, connected, go } = useSettingsMenu()
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const openGenerative = useDialogsStore((state) => state.openGenerative)
 
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
@@ -68,7 +68,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
             role="menu"
           >
             <MenuButton icon={<SettingTwo theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.settings')} onClick={() => pick(() => go('settings'))} />
-            <MenuButton icon={<Magic theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.generativeUi')} onClick={() => pick(() => navigate('/generative-ui'))} />
+            <MenuButton icon={<Magic theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.generativeUi')} onClick={() => pick(openGenerative)} />
             <MenuButton icon={<Gift theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.whatSNew')} onClick={() => pick(() => window.dispatchEvent(new Event(OPEN_WHATS_NEW_EVENT)))} />
             {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.admin')} disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
             {edition.accounts && (

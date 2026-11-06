@@ -6,7 +6,9 @@ import './gallery.css'
 import { catalogLoader, i18nOptions } from '@renderer/i18n'
 import { applyCurrentTheme, chooseMode, getEffectiveTheme } from '@renderer/lib/theme'
 import { EXAMPLE_TITLES, PROMPT_EXAMPLES } from '@renderer/components/chat/richblocks/catalog/examples'
+import { MemoryRouter } from 'react-router'
 import { ExampleGallery } from '@renderer/components/generative/ExampleGallery'
+import { GenerativeUiModal, type SectionId } from '@renderer/components/generative/GenerativeUiModal'
 
 // A page to look at every example of the catalogue as the chat draws it, in both themes and both languages, and to see what a click on a
 // form, a quiz or a button would send. Run it with `npm run gallery`. It is a tool for the people who work on the components: the app
@@ -23,6 +25,16 @@ function Gallery({ language }: { language: Language }) {
     return created
   }, [language])
   const query = new URLSearchParams(window.location.search)
+  if (query.get('modal') === '1') {
+    // The window of the Generative UI as the app shows it, over an empty page.
+    return (
+      <I18nextProvider i18n={instance}>
+        <MemoryRouter>
+          <GenerativeUiModal onClose={() => undefined} initialSection={(query.get('section') as SectionId | null) ?? 'overview'} />
+        </MemoryRouter>
+      </I18nextProvider>
+    )
+  }
   return (
     <I18nextProvider i18n={instance}>
       <div className="mx-auto max-w-3xl px-4 pb-40 pt-6 text-app-text">

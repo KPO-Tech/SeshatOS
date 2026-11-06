@@ -71,11 +71,11 @@ export function ExampleGallery({ examples = PROMPT_EXAMPLES, titles = EXAMPLE_TI
 
         {shown.length === 0 && <div className="text-[13px] text-[var(--text-muted)]">{t('gallery.none')}</div>}
 
-        {shown.map(({ code, index, families }) => (
+        {shown.map(({ code, index, families }, position) => (
           <ExampleCard
             key={index}
             code={code}
-            index={index}
+            index={position}
             title={titles[index] ?? `#${index + 1}`}
             families={families}
             familyLabels={labels}

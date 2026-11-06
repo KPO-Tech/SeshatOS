@@ -5,16 +5,19 @@ import { useDialogsStore } from '@renderer/stores/dialogs'
 // The window is large (every page of Settings is behind it) and closed at start: it loads the first time it is opened.
 const SettingsModal = lazy(() => import('@renderer/components/settings/page/SettingsModal').then((m) => ({ default: m.SettingsModal })))
 
-// Shows the window of Settings when something asked for it (see stores/dialogs).
+const GenerativeUiModal = lazy(() => import('@renderer/components/generative/GenerativeUiModal').then((m) => ({ default: m.GenerativeUiModal })))
+
+// Shows the window of Settings, or of the Generative UI, when something asked for it (see stores/dialogs).
 export function DialogHost() {
   const section = useDialogsStore((state) => state.section)
+  const generative = useDialogsStore((state) => state.generative)
   const close = useDialogsStore((state) => state.close)
   const { user } = useAuth()
 
-  if (!user || !section) return null
+  if (!user || (!section && !generative)) return null
   return (
     <Suspense fallback={null}>
-      <SettingsModal initialSection={section} onClose={close} />
+      {generative ? <GenerativeUiModal onClose={close} /> : section && <SettingsModal initialSection={section} onClose={close} />}
     </Suspense>
   )
 }

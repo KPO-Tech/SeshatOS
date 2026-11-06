@@ -1,6 +1,8 @@
 {
   "page": {
-    "title": "UI générative"
+    "title": "UI générative",
+    "close": "Fermer",
+    "pages": "Pages"
   },
   "nav": {
     "general": "Général",
