@@ -190,6 +190,101 @@ function Cycle({ props }: ComponentProps) {
   )
 }
 
+// ── Hub: a centre and what surrounds it ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** The angles, from the top and clockwise, of the satellites of a Hub: four make a cross (the five forces), any other number is spread evenly. */
+export function hubAngles(n: number): number[] {
+  if (n === 4) return [-90, 0, 90, 180]
+  return Array.from({ length: n }, (_, i) => -90 + (360 * i) / n)
+}
+
+function Hub({ props }: ComponentProps) {
+  const spokes = partsOf({ props }, 'spokes').slice(0, DIAGRAM_LIMITS.spokes)
+  const core = isNode(props.core) ? props.core : null
+  const n = spokes.length
+  if (!core || n < 2) return null
+  const W = 760
+  const H = n <= 4 ? 420 : 460
+  const cx = W / 2
+  const cy = H / 2
+  const rx = 268
+  const ry = n <= 4 ? 160 : 185
+  const spokeW = 200
+  const spokeH = 72
+  const coreW = 230
+  const coreH = 86
+  const direction = props.arrows === 'out' || props.arrows === 'none' ? props.arrows : 'in'
+  const angles = hubAngles(n)
+  // A line from the centre to a satellite, cut where it leaves one box and enters the other.
+  const edge = (dx: number, dy: number, w: number, h: number, gap: number) => {
+    const s = Math.min(dx === 0 ? Infinity : w / 2 / Math.abs(dx), dy === 0 ? Infinity : h / 2 / Math.abs(dy))
+    const length = Math.hypot(dx, dy)
+    return s + gap / length
+  }
+  const label = (node: UiNode, x: number, y: number, size: number, ink: string, large: boolean) => {
+    const heading = twoLines(String(node.props.label ?? ''))
+    const sub = text(node.props.text) ? twoLines(text(node.props.text) as string) : []
+    const total = heading.length + sub.length
+    const rowHeight = large ? 17 : 15
+    const top = y - ((total - 1) * rowHeight) / 2
+    return (
+      <text x={x} y={top} textAnchor="middle" dominantBaseline="middle" fill={ink}>
+        {heading.map((line, k) => (
+          <tspan key={`h${k}`} x={x} dy={k === 0 ? 0 : rowHeight} style={{ fontSize: size, fontWeight: 700 }}>
+            {line}
+          </tspan>
+        ))}
+        {sub.map((line, k) => (
+          <tspan key={`s${k}`} x={x} dy={rowHeight - 1} style={{ fontSize: size - 1.5, fontWeight: 400, opacity: 0.85 }}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    )
+  }
+  const coreFill = fillOf(core, 1)
+  return (
+    <div className="my-3">
+      <Title value={text(props.title)} />
+      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block w-full max-w-[760px]" role="img" aria-label={text(props.title) ?? 'hub'}>
+        <defs>
+          <marker id="hub-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" className="text-app-text-muted" />
+          </marker>
+        </defs>
+        {spokes.map((spoke, i) => {
+          const theta = (angles[i] * Math.PI) / 180
+          const x = cx + rx * Math.cos(theta)
+          const y = cy + ry * Math.sin(theta)
+          const dx = x - cx
+          const dy = y - cy
+          const a = edge(dx, dy, coreW, coreH, 6)
+          const b = 1 - edge(dx, dy, spokeW, spokeH, 6)
+          const from = direction === 'in' ? { x: cx + dx * b, y: cy + dy * b } : { x: cx + dx * a, y: cy + dy * a }
+          const to = direction === 'in' ? { x: cx + dx * a, y: cy + dy * a } : { x: cx + dx * b, y: cy + dy * b }
+          return (
+            <line key={`line-${i}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke="currentColor" strokeWidth="1.8" className="text-app-text-muted" opacity="0.75" markerEnd={direction === 'none' ? undefined : 'url(#hub-head)'} />
+          )
+        })}
+        <rect x={cx - coreW / 2} y={cy - coreH / 2} width={coreW} height={coreH} rx="18" fill={coreFill.base} />
+        {label(core, cx, cy, 14.5, readableOn(coreFill.base), true)}
+        {spokes.map((spoke, i) => {
+          const theta = (angles[i] * Math.PI) / 180
+          const x = cx + rx * Math.cos(theta)
+          const y = cy + ry * Math.sin(theta)
+          const fill = fillOf(spoke, i + 2)
+          return (
+            <g key={`spoke-${i}`}>
+              <rect x={x - spokeW / 2} y={y - spokeH / 2} width={spokeW} height={spokeH} rx="14" fill={fill.base} />
+              {label(spoke, x, y, 13, readableOn(fill.base), false)}
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
 // ── Pyramid and funnel ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 function Pyramid({ props }: ComponentProps) {
@@ -387,5 +482,6 @@ function ReadByParent() {
 }
 
 export const diagramComponents: Record<string, ComponentType<ComponentProps>> = {
+  Hub,
   Hive, Hex: ReadByParent, Chevrons, Chev: ReadByParent, Cycle, Loop: ReadByParent, Pyramid, Level: ReadByParent, Quadrant, Quad: ReadByParent, Layers, Layer: ReadByParent, Venn, VSet: ReadByParent, Tree, Branch: ReadByParent
 }

@@ -64,3 +64,11 @@ describe('a venn and a tree, drawn', () => {
     expect((html.match(/h-px bg-app-border/g) ?? []).length).toBe(3)
   })
 })
+
+describe('a hub, drawn', () => {
+  it('draws the core, every satellite and an arrow towards the centre', async () => {
+    const html = await draw('root = Hub(Spoke("Rivalry", "Fight", "#1e3a8a"), [Spoke("New entrants"), Spoke("Suppliers"), Spoke("Buyers"), Spoke("Substitutes")], "Porter", "in")')
+    for (const word of ['Rivalry', 'New entrants', 'Suppliers', 'Buyers', 'Substitutes', 'Porter']) expect(html).toContain(word)
+    expect((html.match(/<line /g) ?? []).length).toBe(4)
+  })
+})

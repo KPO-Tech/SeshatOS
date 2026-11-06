@@ -14,6 +14,8 @@ export const DIAGRAM_LIMITS = {
   chevrons: 8,
   loops: 8,
   levels: 7,
+  /** Satellites of a Hub. */
+  spokes: 8,
   layers: 8,
   /** Cells of a Quadrant. */
   quads: 4,
@@ -28,9 +30,9 @@ export const DIAGRAM_LIMITS = {
 /** The colours a shape takes when the model names none, one after the other: calm, distinct, readable with white or dark text. */
 export const DIAGRAM_COLOURS = ['#1e3a8a', '#2563eb', '#0ea5e9', '#14b8a6', '#8b5cf6', '#db2777', '#f97316', '#65a30d'] as const
 
-export const DIAGRAM_COMPONENTS = ['Hive', 'Hex', 'Chevrons', 'Chev', 'Cycle', 'Loop', 'Pyramid', 'Level', 'Quadrant', 'Quad', 'Layers', 'Layer', 'Venn', 'VSet', 'Tree', 'Branch'] as const
+export const DIAGRAM_COMPONENTS = ['Hive', 'Hex', 'Chevrons', 'Chev', 'Cycle', 'Loop', 'Pyramid', 'Level', 'Quadrant', 'Quad', 'Layers', 'Layer', 'Venn', 'VSet', 'Tree', 'Branch', 'Hub', 'Spoke'] as const
 
-const COLOR_PARTS = ['Hex', 'Chev', 'Loop', 'Level', 'Quad', 'Layer', 'VSet', 'Branch']
+const COLOR_PARTS = ['Hex', 'Chev', 'Loop', 'Level', 'Quad', 'Layer', 'VSet', 'Branch', 'Spoke']
 
 const isNodeLike = (value: unknown): value is UiNode => typeof value === 'object' && value !== null && (value as UiNode).kind === 'element'
 const count = (node: UiNode, key: string) => (Array.isArray(node.props[key]) ? (node.props[key] as unknown[]).length : 0)
@@ -78,6 +80,11 @@ export function checkDiagrams(root: UiNode): UiError[] {
         if (total > DIAGRAM_LIMITS.nodes) problem(`A Tree holds at most ${DIAGRAM_LIMITS.nodes} nodes.`)
         if (deepest > DIAGRAM_LIMITS.depth) problem(`A Tree goes down at most ${DIAGRAM_LIMITS.depth} levels.`)
       }
+    }
+    if (node.name === 'Hub') {
+      if (!isNodeLike(node.props.core)) problem('A Hub needs a core: a Spoke for the centre.')
+      if (count(node, 'spokes') < 2 || count(node, 'spokes') > DIAGRAM_LIMITS.spokes) problem(`A Hub needs two to ${DIAGRAM_LIMITS.spokes} Spokes around its core.`)
+      if (node.props.arrows !== undefined && node.props.arrows !== null && !['in', 'out', 'none'].includes(String(node.props.arrows))) problem('The arrows of a Hub are "in", "out" or "none".')
     }
     if (node.name === 'Cycle' && count(node, 'loops') < 3) problem('A Cycle needs at least three steps.')
     if (node.name === 'Quadrant' && count(node, 'cells') !== DIAGRAM_LIMITS.quads) problem('A Quadrant needs four cells: top left, top right, bottom left, bottom right.')
