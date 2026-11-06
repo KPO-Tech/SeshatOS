@@ -24,3 +24,12 @@ nothing told the agent how a page of the app should look. The descriptions of th
 
 - Pages share one look, and the agent knows the libraries exist. The base is about 250 words on every turn.
 - Not done: giving a page the app's own icons (an icon tool, with the SVG tool), a library of ready sections.
+
+## Update, 2026-11-06: the skill was tried and dropped
+
+The recipe was moved into a built-in skill (`html-page`, collection seshat-skills) and tried in the real app. With a large reasoning model it read four files
+before writing (about 35k tokens), looked for them by a wrong relative path, read the whole icon file when its search failed, and lost most of eight minutes
+to something else (the permission classifier blocking every write, see the runtime). A smaller model with the recipe in the prompt wrote a good page in 1 min 32.
+A skill pays only for a large content that is rarely needed; this base is short and needed on every page. The recipe stays in the prompt, with the habits of
+`design-rules.md` added (what makes a page look made by a model, one write call, say so when a write is refused), and the skill was removed. The icon set, the
+three.js and diagram snippets were not kept: a model draws a simple SVG and knows those libraries.
