@@ -73,7 +73,7 @@ var richUIFormsWords = richUIWords(
 var richUIDesignWords = richUIWords(
 	[]string{"maquette", "mockup", "mock-up", "wireframe", "landing", "page d'accueil", "page d’accueil", "homepage", "home page", "site web", "website",
 		"web site", "page web", "web page", "charte graphique", "palette", "branding", "design", "prototype", "interface", "couleurs", "colours", "colors",
-		"à quoi ressemble", "what would it look like", "look like"},
+		"à quoi ressembl", "what would it look like", "look like"},
 	[]string{"ui", "ux", "site", "sites"},
 )
 
