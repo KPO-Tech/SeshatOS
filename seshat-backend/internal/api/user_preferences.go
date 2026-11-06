@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/SeshatOS/seshat-backend/internal/preferences"
+	backendquery "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/query"
 	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
