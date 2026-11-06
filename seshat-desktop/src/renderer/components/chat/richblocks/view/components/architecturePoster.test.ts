@@ -52,3 +52,15 @@ describe('the poster look of an architecture', () => {
     expect(html).toContain('Plain')
   })
 })
+
+describe('the shapes of an item', () => {
+  it('draws a hexagon, a pill and a cylinder with their words, and the icon above them', async () => {
+    const html = await draw(
+      ['root = Architecture([p], [])', 'p = Panel([a, b, c], "P", "blue", null, false, "column")', 'a = Item("Hex", "code", null, false, "blue", "hexagon")', 'b = Item("Pill", "box", null, false, "orange", "pill")', 'c = Item("Cyl", "database", "SQL", false, "green", "cylinder")'].join('\n')
+    )
+    expect(html).toContain('<polygon points="25,2 75,2 99,50 75,98 25,98 1,50"')
+    expect(html).toContain('rounded-full bg-current')
+    expect(html).toContain('M1 15 C1 3 99 3 99 15')
+    for (const word of ['Hex', 'Pill', 'Cyl', 'SQL']) expect(html).toContain(word)
+  })
+})

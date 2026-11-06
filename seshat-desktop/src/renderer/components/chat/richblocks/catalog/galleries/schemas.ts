@@ -79,6 +79,44 @@ q3 = Quad("Fill-ins", "Only if there is spare time.", "#64748b")
 q4 = Quad("Money pits", "Say no.", "#dc2626")`
     },
     {
+      title: 'What a product person does',
+      about: 'Three overlapping skills.',
+      code: `root = Venn([a, b, c], "Product", "What a product person does")
+a = VSet("Business", "Value, price, growth", "#2563eb")
+b = VSet("Design", "Needs, flows, craft", "#db2777")
+c = VSet("Technology", "What is possible", "#16a34a")`
+    },
+    {
+      title: 'Two sets',
+      about: 'What two teams share.',
+      code: `root = Venn([a, b], "Shared", "Where design and engineering meet")
+a = VSet("Design", "Look and feel", "#8b5cf6")
+b = VSet("Engineering", "Build and run", "#0ea5e9")`
+    },
+    {
+      title: 'An org chart',
+      about: 'A company in three levels.',
+      code: `root = Tree(ceo, "Acme, who does what")
+ceo = Branch("CEO", [cto, cfo, cmo], "Amina Diallo", "#1e3a8a")
+cto = Branch("CTO", [eng, ops], "Koffi Mensah", "#2563eb")
+cfo = Branch("CFO", [fin], "Sam Okoro", "#0ea5e9")
+cmo = Branch("CMO", [], "Mia Traore", "#14b8a6")
+eng = Branch("Engineering", [], "24 people", "#64748b")
+ops = Branch("Platform", [], "9 people", "#64748b")
+fin = Branch("Finance", [], "6 people", "#64748b")`
+    },
+    {
+      title: 'A decision tree',
+      about: 'Should we build it ourselves?',
+      code: `root = Tree(q1, "Build or buy?")
+q1 = Branch("Is it our core?", [yes, no], null, "#1e3a8a")
+yes = Branch("Yes: build", [team], "It sets us apart", "#16a34a")
+no = Branch("No: can we buy it?", [buy, rent], null, "#2563eb")
+team = Branch("Staff a team", [], "Two engineers", "#64748b")
+buy = Branch("Yes: buy", [], "A vendor", "#f97316")
+rent = Branch("No: wait", [], "Revisit in a year", "#64748b")`
+    },
+    {
       title: 'A web application stack',
       about: 'Five layers, from the screen to the machine.',
       code: `root = Layers([l1, l2, l3, l4, l5], "From the screen to the machine")

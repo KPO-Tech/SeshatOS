@@ -29,5 +29,7 @@ two, a stack of layers. A model asked for "my strategy as a honeycomb" could onl
 ## Consequences
 
 - A request for a visual of a strategy or a method gets a real shape, in colours of the model's choosing, in a few lines.
-- Not done here: a Venn, a tree or an org chart, a swim lane, and the poster look of an architecture (cylinders for databases, block arrows
-  between stages, a frame around the whole with its title, stages laid out in a row). The last one is the next piece of work on Architecture.
+- Added afterwards: `Venn` of two or three `VSet` (circles that overlap, one word for what they share) and `Tree` of `Branch` (an org chart or
+  a decision tree, up to 25 nodes, 4 levels and 6 children a node, the connecting lines drawn from the structure). The poster look of an
+  architecture is ADR 0019.
+- Not done here: a swim lane, a mind map.

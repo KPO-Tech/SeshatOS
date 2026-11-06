@@ -14,7 +14,7 @@ Four options, all appended to the arguments of the existing components, so that 
 
 - `Architecture(children, flows?, title?, direction?, framed?)`: `direction row` lays the blocks side by side (wrapping when the width
   is short) with room between them for the arrows; `framed true` draws a frame around everything, with the title large and in capitals.
-- `Item(..., shape?)`: `shape cylinder` draws a database, in the colour of the tone of the item, with its label and its caption on it.
+- `Item(..., shape?)`: `cylinder` draws a database, `hexagon` and `pill` a step, in the colour of the tone of the item, with the icon (if any) above its label and its caption.
 - `Flow(..., style?)`: `style block` draws the big arrow of a stage to the next, a thick line with a head of its own size, in the accent
   colour. The route is the same as for the thin arrows (around boxes, titles and other arrows).
 - Panels that hold panels in a row are a little further apart, so that an arrow between them has room.
@@ -25,4 +25,4 @@ examples made with them: a data fabric as a poster and a pipeline in a row.
 ## Consequences
 
 - A platform drawn as in an analyst's poster is a few dozen lines, and stays in the same family and the same budget.
-- Not done: hexagons or other shapes for an Item, an icon inside the cylinder, a legend, a numbering of the arrows.
+- Not done: a legend, a numbering of the arrows.
