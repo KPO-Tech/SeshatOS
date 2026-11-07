@@ -21,6 +21,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Added
 
+- **"What's new" tells everything since 0.3.0, in your language.** The card that opens after an update now reads "New in 0.3.0 → 0.3.17" and has twelve pictures instead of six: Generative UI, web pages beside the chat, skills from a catalog, the pull requests of the agent, the interface in French, token use and the sandbox, next to the earlier ones. Its texts were in English only; they are now translated, and the start page card no longer shows a Generative UI switch that moved to Settings.
 - **A sketch says its texts are examples.** When the agent sketches a page in a Browser or a Phone, the figures, names and quotes in it are made up; it is now told to say so under the sketch instead of presenting them as real.
 - **The permission modes say what they do.** The shield menu showed "Smart" and "Auto", and "Auto" was the one that never checks anything. It is now "No confirmation" ("Sans confirmation"), and each mode has a line under its name: Smart checks each action and asks when it is unsure or risky; No confirmation runs everything without asking.
 - **Better pages from the agent.** The base the agent starts an HTML page from now also says what to avoid (indigo accent, gradient titles, invented figures, the same skeleton every time), to write the page in one call, and to ask you when a write is refused instead of looking for a way around it.

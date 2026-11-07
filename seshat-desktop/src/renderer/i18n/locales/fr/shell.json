@@ -253,9 +253,61 @@
       "yourAiWorkspace": "Votre espace IA",
       "workingOn": "travaillons-nous",
       "askAnything": "Votre question…",
-      "generativeUi": "UI générative",
       "appearance": "Apparence",
       "startSession": "Nouvelle session"
+    },
+    "release": {
+      "headline": "D'un nouveau look à des réponses qui dessinent"
+    },
+    "highlights": {
+      "look": {
+        "title": "Choisissez votre look au premier lancement",
+        "text": "Quatorze thèmes et une couleur d'accent, et un clic pour passer du thème sombre au clair. Les mêmes choix restent dans les Réglages."
+      },
+      "tasks": {
+        "title": "Téléchargements et installations en arrière-plan",
+        "text": "Quittez la page, fermez même la fenêtre : une carte au-dessus de la Boutique suit chaque tâche, avec un numéro à cliquer quand il y en a plusieurs."
+      },
+      "bell": {
+        "title": "Une cloche qui vous tient informé",
+        "text": "Ce qui est fini, ce qui a échoué et ce que l'agent vient de faire, au même endroit. Vous choisissez quoi, et quand."
+      },
+      "home": {
+        "title": "Un accueil plus riche",
+        "text": "Cinq façons de commencer, avec la saisie en bas comme dans une conversation."
+      },
+      "settings": {
+        "title": "Des Réglages au même style",
+        "text": "Chaque page partage le même en-tête, les mêmes cartes et les mêmes contrôles : ce que vous cherchez est là où vous l'attendez."
+      },
+      "projects": {
+        "title": "Des projets qu'on lit et qu'on interroge",
+        "text": "Parcourez les fichiers d'un dossier, lisez-les et lancez une conversation depuis le projet, avec son contexte."
+      },
+      "genui": {
+        "title": "Réponses dessinées",
+        "text": "Formulaires, quiz, cartes mémoire, schémas, affiches, graphiques à curseurs, tableaux à remplir et brouillons pour votre messagerie : l'agent montre au lieu de décrire."
+      },
+      "pages": {
+        "title": "Les pages web s'ouvrent à côté du chat",
+        "text": "Une page construite par l'agent s'ouvre à côté de la conversation et marche hors ligne avec les bibliothèques courantes. Elle signale ses erreurs, et un bouton l'ouvre dans votre navigateur."
+      },
+      "language": {
+        "title": "SeshatOS parle français",
+        "text": "Toute l'interface, ses dialogues et l'installateur Windows suivent votre langue : anglais ou français."
+      },
+      "skills": {
+        "title": "Skills d'un catalogue",
+        "text": "Installez-les avec la progression affichée, lisez leurs fichiers comme un projet, et ajoutez des skills qui demandent un correctif ou un Python à eux : SeshatOS les prépare."
+      },
+      "changes": {
+        "title": "Suivez les pull requests de l'agent",
+        "text": "La carte Modifications liste les pull requests ouvertes par l'agent, montre leurs contrôles et les fusionne quand vous le dites."
+      },
+      "usage": {
+        "title": "Jetons par jour, shell sûr",
+        "text": "Le compte montre les jetons utilisés, jour par jour, et les commandes de l'agent peuvent tourner dans un bac à sable sous Windows."
+      }
     },
     "whatsNewHost": {
       "close": "Fermer",
