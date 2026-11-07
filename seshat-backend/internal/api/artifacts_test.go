@@ -58,13 +58,16 @@ func TestArtifactPreviewPointsCDNAddressesHere(t *testing.T) {
 		t.Fatalf("an address of another host was rewritten: %s", body)
 	}
 	csp := rec.Header().Get("Content-Security-Policy")
-	for _, want := range []string{"script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' " + lib + "/;", "connect-src 'none'", "form-action 'none'"} {
+	for _, want := range []string{"script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' " + lib + "/;", "connect-src 'none'", "form-action 'none'", "sandbox allow-scripts;"} {
 		if !strings.Contains(csp, want) {
 			t.Errorf("CSP lacks %q: %s", want, csp)
 		}
 	}
 	if strings.Contains(csp, "https:") || strings.Contains(csp, "*") {
 		t.Errorf("CSP opens the network: %s", csp)
+	}
+	if strings.Contains(csp, "allow-same-origin") {
+		t.Errorf("the page must never get the origin of the backend: %s", csp)
 	}
 }
 

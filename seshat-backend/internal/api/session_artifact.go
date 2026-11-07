@@ -40,6 +40,7 @@ func resolveSessionArtifact(roots []string, requested string) (string, error) {
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
 			continue
 		}
+		// #nosec G703 -- realFile was resolved with EvalSymlinks and checked to stay inside the folders of the session just above
 		info, err := os.Stat(realFile)
 		if err != nil || !info.Mode().IsRegular() {
 			continue
@@ -71,6 +72,7 @@ func (app *App) handleSessionArtifact(w http.ResponseWriter, r *http.Request, pr
 		writeJSONError(w, http.StatusNotFound, err.Error())
 		return
 	}
+	// #nosec G703 -- file comes from resolveSessionArtifact, which refuses anything outside the folders of the session
 	handle, err := os.Open(file)
 	if err != nil {
 		writeJSONError(w, http.StatusNotFound, "file not found")

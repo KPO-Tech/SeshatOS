@@ -3,18 +3,34 @@
  * with a title, badges, a picture or a table of contents, none of which says anything about the project, so those are passed over.
  */
 export function descriptionFromReadme(markdown: string, maxLength = 220): string {
-  const text = markdown
-    .replace(/^﻿/, '')
-    .replace(/\r\n?/g, '\n')
-    .replace(/^---\n[\s\S]*?\n---\n/, '') // front matter
-    .replace(/<!--[\s\S]*?-->/g, '') // comments
-    .replace(/^(```|~~~)[\s\S]*?^\1[^\n]*$/gm, '') // fenced code
+  const text = withoutUntilStable(
+    markdown
+      .replace(/^﻿/, '')
+      .replace(/\r\n?/g, '\n')
+      .replace(/^---\n[\s\S]*?\n---\n/, '') // front matter
+      .replace(/^(```|~~~)[\s\S]*?^\1[^\n]*$/gm, ''), // fenced code
+    /<!--[\s\S]*?-->/g, // comments
+  )
 
   for (const block of text.split(/\n\s*\n/)) {
     const prose = proseOf(block)
     if (prose) return firstSentence(prose, maxLength)
   }
   return ''
+}
+
+/**
+ * Removes what the pattern matches until nothing matches any more. One pass is not enough: removing the inside of "<!<!-- -->--" leaves
+ * "<!--" behind, which is the start of a comment again, and the same holds for any markup written around what is taken out.
+ */
+function withoutUntilStable(text: string, pattern: RegExp): string {
+  let current = text
+  for (let pass = 0; pass < 10; pass += 1) {
+    const next = current.replace(pattern, '')
+    if (next === current) return next
+    current = next
+  }
+  return current
 }
 
 /** The text of a block when it is a paragraph of prose, and an empty string for a title, a list, a table, a badge or a picture. */
@@ -32,7 +48,7 @@ function proseOf(block: string): string {
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // pictures
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links keep their words
     .replace(/\[([^\]]+)\]\[[^\]]*\]/g, '$1')
-    .replace(/<[^>]+>/g, '') // inline html
+    .replace(/<[^>]*>?/g, '') // inline html, and a tag that is not closed
     .replace(/(\*\*|__|\*|_|`)/g, '') // emphasis and code marks
     .replace(/\s+/g, ' ')
     .trim()

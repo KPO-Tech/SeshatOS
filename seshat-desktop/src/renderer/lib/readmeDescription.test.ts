@@ -58,3 +58,18 @@ describe('descriptionFromReadme', () => {
     expect(descriptionFromReadme('﻿# Titre\r\n\r\nUne application pour suivre les dépenses du foyer.\r\n')).toBe('Une application pour suivre les dépenses du foyer.')
   })
 })
+
+describe('descriptionFromReadme and markup written around markup', () => {
+  it('does not let a comment come back from the text around a removed one', () => {
+    const text = descriptionFromReadme('<!<!-- x -->-- hidden -->\n\nA sentence about the project that says what it does.')
+    expect(text).not.toContain('<!--')
+    expect(text).not.toContain('<')
+    expect(text).toContain('A sentence about the project')
+  })
+
+  it('drops a tag that is never closed, so that no "<script" is left in the text', () => {
+    const text = descriptionFromReadme('A sentence about the project that says what it does <scr<script>ipt src=x')
+    expect(text).not.toMatch(/<\s*script/i)
+    expect(text).toContain('A sentence about the project')
+  })
+})

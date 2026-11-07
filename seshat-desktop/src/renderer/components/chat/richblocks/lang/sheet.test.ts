@@ -41,3 +41,17 @@ describe('the message of a table', () => {
     expect(fillSheetReport('{{table}}', ['a'], Array.from({ length: SHEET_LIMITS.rows }, () => ['x'.repeat(SHEET_LIMITS.cell)])).length).toBeLessThanOrEqual(SHEET_LIMITS.message)
   })
 })
+
+describe('markdownTable escaping', () => {
+  it('keeps a bar inside its cell, also when the cell holds a backslash before it', () => {
+    const table = markdownTable(['Path'], [['a|b'], ['a\\|b'], ['C:\\temp']])
+    const rows = table.split('\n').slice(2)
+    // each row has the two outer bars and nothing else that is not escaped
+    for (const row of rows) {
+      const unescapedBars = row.replace(/\\\\/g, '').replace(/\\\|/g, '').split('|').length - 1
+      expect(unescapedBars).toBe(2)
+    }
+    expect(rows[1]).toBe('| a\\\\\\|b |')
+    expect(rows[2]).toBe('| C:\\\\temp |')
+  })
+})

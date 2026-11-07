@@ -76,8 +76,56 @@ and [0009](decisions/0009-lighter-rich-answers-prompt.md).
   words.
 - **Fonts in the downloaded SVG.** The SVG is faithful on screen but the fonts are not embedded.
 
+## Release and security
+
+From the audit of 2026-11-07. What was done (a gosec triage of the high findings, a Windows test job, commits pinned in the catalog, rules on
+`main`, `dev` and the `v*` tags, secret scanning and a security policy) is in the changelog; this is what is left.
+
+### Sign the installers
+
+Noted 2026-11-07. The Windows installer of every release is built unsigned (the build warns "no WIN_CSC_LINK secret") and the macOS app is
+signed ad hoc (`identity: "-"`) and not notarized. Windows SmartScreen and macOS Gatekeeper warn the person, and the update feed rests on
+GitHub and a hash only.
+
+Why later: it needs things that are not here yet. No certificate has been bought, and the person who decides cannot get one for now.
+
+What it needs:
+- **Windows.** A code signing certificate (an OV certificate, or an EV one to avoid the SmartScreen warning from the first download). The
+  release workflow already signs when the repository secrets `WIN_CSC_LINK` (the .pfx as base64 or a URL) and `WIN_CSC_KEY_PASSWORD` exist.
+- **macOS.** An Apple Developer account, a Developer ID Application certificate and a notarization key. The workflow does not do it yet:
+  `identity` must stop being `"-"` and the notarization step must be added, which can only be tried with a manual run of the release
+  workflow (a tag is the only other way, so try it on a tag that is not published first).
+
+### Read the pinned catalog commits again
+
+Noted 2026-11-07 (ADR 0026). The commits written in `skills_catalog.go` are those of the day they were pinned, not the ones the entries were
+read at. Reading each repository again at its commit (the instructions of its skills and every script they run) is what makes the pin mean
+"reviewed". Moving a `Ref` later should come with the difference between the two commits read.
+
+### Bring the release workflow up to date
+
+Noted 2026-11-07. `release-desktop.yml` still uses `actions/checkout@v4` and `actions/setup-go@v5`, which the runner reports as Node 20 (the CI
+workflow was moved to v7), and a script that `actionlint` flags (`sha256sum *`, SC2035). The workflow only runs on a tag, so change it
+together and try it with a manual run (it builds the installers and keeps them as artifacts) before the next tag.
+
+### Triage the other findings of gosec
+
+Noted 2026-11-07. The high findings were read one by one and a new one now fails the CI. The 73 of medium severity and the 7 of low
+severity are only reported (file permissions of 0644 or 0755 where 0600 or 0750 would do, files opened from a variable, commands
+started with arguments). Most are expected in an app that writes the files of the person; a pass over them would raise a few and justify
+the rest, then let the medium ones fail the job too. Run gosec on macOS as well: it was not analysed (the CI runs on Linux only).
+
+### Tests that only run on one system
+
+Noted 2026-11-07. The tests run on Linux and, since 2026-11-07, on Windows. Nothing runs on macOS, which the README calls experimental.
+About twenty-five packages have no test at all, most of them under `internal/cloud/`, `internal/oauth/`, `internal/audit` and
+`internal/metrics`.
+
 ## Done
 
+- 2026-11-07: rules on `main`, `dev` and the `v*` tags, secret scanning with push protection, private vulnerability reporting, Dependabot
+  security updates, CodeQL; gosec fails the CI on a new high finding; the tests run on Windows; the repositories of the catalog are
+  pinned to a commit (#513, #514, #515).
 - 2026-10-31: follow-up cards (a `Choice` with a description and an icon) and `SourcePills` in rich answers (PR 335).
 - 2026-10-29: the prompt reads the last answers of the session to keep a family a follow-up needs; `FileRef` opens a text file in the
   Files panel.
