@@ -1,6 +1,6 @@
 # 0006 - Architecture drawings in chat: nested panels with icons, and measured arrows
 
-Status: proposed, 2026-10-29. Builds on [0005](0005-chat-ui-catalog.md).
+Status: accepted and built (proposed 2026-10-29; the architecture drawings shipped, and ADR 0019 added the poster). Builds on [0005](0005-chat-ui-catalog.md).
 
 ## Context
 

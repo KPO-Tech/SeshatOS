@@ -1,6 +1,7 @@
 # 0012 - Background tasks, faster skill environments and notifications
 
-Status: proposed, 2026-11-01. Follows the first lot of this work, which made the environments of skills faster (PR 384).
+Status: accepted and built (proposed 2026-11-01; skills install as background tasks you can follow, and the bell keeps what finished, in
+0.3.0). Follows the first lot of this work, which made the environments of skills faster (PR 384).
 
 ## Context
 

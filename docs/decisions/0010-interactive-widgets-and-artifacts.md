@@ -1,6 +1,7 @@
 # 0010 - Interactive widgets, artifacts and projects (to discuss)
 
-Status: to discuss, 2026-10-30. Nothing is decided or scheduled. Builds on [0005](0005-chat-ui-catalog.md), [0007](0007-chat-charts-and-plots.md)
+Status: partly built, the rest to discuss (2026-10-30). Sliders with live formulas shipped (ADR 0014) and web pages the agent builds open live
+beside the conversation (0.3.4, ADR 0024). The Artifacts panel, 3D scenes and projects are not decided or scheduled. Builds on [0005](0005-chat-ui-catalog.md), [0007](0007-chat-charts-and-plots.md)
 and [0008](0008-chat-interactions.md).
 
 ## Context
