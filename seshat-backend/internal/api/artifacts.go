@@ -30,7 +30,10 @@ func artifactPreviewCSP(libBase string) string {
 		"frame-src 'none'; " +
 		"object-src 'none'; " +
 		"base-uri 'none'; " +
-		"form-action 'none';"
+		"form-action 'none'; " +
+		// The frame of the app is already a sandbox (allow-scripts, no allow-same-origin). The same here, in the response, so that the page
+		// opened by itself, outside the frame, runs with no origin either and not with the origin of the backend.
+		"sandbox allow-scripts;"
 }
 
 // artifactLibBase is the library route as the previewed page reaches it: the
