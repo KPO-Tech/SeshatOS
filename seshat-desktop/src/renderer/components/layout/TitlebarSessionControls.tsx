@@ -7,13 +7,16 @@ import { useSessionPanelToggles } from '@renderer/hooks/useSessionPanelToggles'
 import { useUIStore, type UIPermissionMode } from '@renderer/stores/ui'
 import { useTranslation } from 'react-i18next'
 
+// "auto" runs a safety check on each action and asks when it is unsure; "bypass" runs everything without asking. The second one used to be
+// labelled "Auto", which read as the smart one: it is named for what it does.
 const PERMISSION_OPTIONS: SelectorOption[] = [
-  { id: 'auto', label: 'shell:layout.titlebarSessionControls.smart' },
-  { id: 'bypass', label: 'shell:layout.titlebarSessionControls.auto' },
+  { id: 'auto', label: 'shell:layout.titlebarSessionControls.smart', description: 'shell:layout.titlebarSessionControls.smartHint' },
+  { id: 'bypass', label: 'shell:layout.titlebarSessionControls.noConfirmation', description: 'shell:layout.titlebarSessionControls.noConfirmationHint' },
 ]
 
-function permissionModeTitle(mode: UIPermissionMode): string {
-  return { onRequest: 'Ask First', auto: 'Smart', bypass: 'Auto' }[mode]
+function permissionModeTitle(mode: UIPermissionMode, t: (key: string) => string): string {
+  if (mode === 'onRequest') return 'Ask First'
+  return t(mode === 'auto' ? 'layout.titlebarSessionControls.smart' : 'layout.titlebarSessionControls.noConfirmation')
 }
 
 function permissionModeColor(mode: UIPermissionMode): 'green' | 'orange' | 'red' {
@@ -70,14 +73,14 @@ export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { 
           icon={<Shield size={14} />}
           variant="ghost"
           size={26}
-          title={permissionModeTitle(permissionMode)}
+          title={permissionModeTitle(permissionMode, t)}
           active
           activeColor={permissionModeColor(permissionMode)}
           onClick={() => setPermissionOpen((v) => !v)}
         />
         {permissionOpen && (
           <SelectorMenu
-            options={PERMISSION_OPTIONS.map((option) => ({ ...option, label: t(option.label) }))}
+            options={PERMISSION_OPTIONS.map((option) => ({ ...option, label: t(option.label), description: option.description ? t(option.description) : undefined }))}
             selectedId={permissionMode}
             onSelect={(id) => selectPermissionMode(id as UIPermissionMode)}
           />
