@@ -11,6 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.18] - 2026-11-07
+
+### Highlights
+
+- **Skills of the catalog stay at the commit that was chosen**, and the download of a skill repository can no longer be tricked by the size an archive announces.
+- **Choosing a folder and opening a page the agent wrote are safer**: git no longer runs a program named by the repository you pick, and the preview is in a sandbox even outside the app's frame.
+- **Two dependencies with a known flaw are updated**, and a Sheet table keeps its bars.
+
 ### Fixed
 
 - **Choosing a folder no longer runs a program named by its repository.** The card of the Environment reads the git state of a folder as soon as it is chosen, and git runs the program a repository names in `core.fsmonitor` when it does. That setting is switched off for this reading.
@@ -21,7 +29,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ### Changed
 
-- **Skills of the catalog are installed at a commit and no longer change by themselves.** Until now each repository of the catalog was installed from its default branch and updated in the background about once an hour, so a change at the source (or a takeover of the repository) reached every machine within the hour, unread. Each entry now names the commit that is installed, and the app no longer updates these repositories from their source: a change reaches you with a release of SeshatOS. A repository you add by its address still follows its branch (ADR 0026).
+- **Skills of the catalog are installed at a commit and no longer change by themselves.** Until now each repository of the catalog was installed from its default branch and updated in the background about once an hour, so a change at the source (or a takeover of the repository) reached every machine within the hour, unread. Each entry now names the commit that is installed, and the app no longer updates these repositories from their source: a change reaches you with a release of SeshatOS. A repository you add by its address still follows its branch. On the first start of this version, an installed repository of the catalog that is not on the chosen commit is moved to it (what was changed by hand in its files is not kept; the files the app keeps beside them are) (ADR 0026).
 
 ## [0.3.17] - 2026-11-07
 
