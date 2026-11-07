@@ -3,6 +3,7 @@ package gitstate
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -49,7 +50,14 @@ func dirty(ctx context.Context, folder string) bool {
 	return err == nil && out != ""
 }
 
+// git runs one read-only command in folder. The card is drawn as soon as a folder is chosen, before anyone has looked at what is in it, and
+// git reads the configuration of the repository it runs in: a repository that came from somewhere else can name a program there, and
+// `git status` runs it (core.fsmonitor). That one is switched off, and nothing is locked for the sake of an index refresh. The clean and
+// smudge filters a repository can name are still run by git for files it must compare; only a full trust prompt for a folder would close
+// that, like the workspace trust of a code editor.
 func git(ctx context.Context, folder string, args ...string) (string, error) {
-	out, err := exec.CommandContext(ctx, "git", append([]string{"-C", folder}, args...)...).Output()
+	cmd := exec.CommandContext(ctx, "git", append([]string{"-c", "core.fsmonitor=false", "-C", folder}, args...)...) // #nosec G204 G702 -- the program is git, and the folder is the value of -C
+	cmd.Env = append(os.Environ(), "GIT_OPTIONAL_LOCKS=0")
+	out, err := cmd.Output()
 	return strings.TrimSpace(string(out)), err
 }
