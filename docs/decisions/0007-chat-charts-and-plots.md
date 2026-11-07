@@ -1,6 +1,6 @@
 # 0007 - Charts in chat: data charts, plots of formulas, and charts for machine learning
 
-Status: proposed, 2026-10-29. Builds on [0005](0005-chat-ui-catalog.md).
+Status: accepted and built (proposed 2026-10-29; the charts and the plots shipped, and ADR 0014 added sliders and live formulas). Builds on [0005](0005-chat-ui-catalog.md).
 
 ## Context
 

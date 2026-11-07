@@ -1,6 +1,7 @@
 # 0011 - Faster and steadier indexing of Knowledge
 
-Status: proposed, 2026-10-31. Builds on [0002](0002-chat-document-reading.md) for the readers.
+Status: accepted, mostly built (proposed 2026-10-31; the lots 1 to 4 shipped: ordering and retrying documents, waiting out a refusal for
+quota, a paused queue, several readers; the changelog has the entries about indexing). The later lots are not done. Builds on [0002](0002-chat-document-reading.md) for the readers.
 
 ## Context
 
