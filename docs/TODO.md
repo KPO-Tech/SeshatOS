@@ -88,6 +88,19 @@ severity are only reported (file permissions of 0644 or 0755 where 0600 or 0750 
 started with arguments). Most are expected in an app that writes the files of the person; a pass over them would raise a few and justify
 the rest, then let the medium ones fail the job too. Run gosec on macOS as well: it was not analysed (the CI runs on Linux only).
 
+### Accepted for now
+
+Read on 2026-11-07 and left as they are, with the reason, so that they are not found again as new:
+
+- **CORS accepts any localhost origin when it is on.** It is on only with the debug flag (`config.Debug`); the packaged app has it off, and a
+  token is needed anyway. If a web mode ever turns it on, give it an explicit list (`AllowedOrigins`).
+- **`/metrics` answers without a token.** The server listens on the loopback address only and the page carries counters, no content. A scraper
+  such as Prometheus needs it open; to close it, require the token and hand one to the scraper.
+- **166 French texts are longer than their English** (`npm run i18n:length`). Shorten them, to the rule "as short as the English", when a
+  screen is touched.
+- **`internal/cloud/*` has no test** (about ten packages, thin clients of SeshatCloud for the connected mode). Cover them with a fake server when
+  that part changes.
+
 ### Tests that only run on one system
 
 Noted 2026-11-07. The tests run on Linux and, since 2026-11-07, on Windows. Nothing runs on macOS, which the README calls experimental.
