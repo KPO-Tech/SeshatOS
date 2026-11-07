@@ -64,7 +64,16 @@ var gitAvailable = func() bool {
 }
 
 // archiveURL is the address of the zip of the default branch of a GitHub repository, or false for another host.
-func archiveURL(repoURL string) (string, bool) {
+func archiveURL(repoURL string) (string, bool) { return archiveURLAt(repoURL, "") }
+
+// archiveURLAt is archiveURL for a ref: the zip of a commit, a tag or a branch (the default branch when there is none).
+func archiveURLAt(repoURL, ref string) (string, bool) {
+	if !ValidRef(ref) {
+		return "", false
+	}
+	if ref == "" {
+		ref = "HEAD"
+	}
 	parsed, err := url.Parse(strings.TrimSpace(repoURL))
 	if err != nil || parsed.Scheme != "https" || !strings.EqualFold(parsed.Host, "github.com") {
 		return "", false
@@ -77,7 +86,7 @@ func archiveURL(repoURL string) (string, bool) {
 	if repo == "" || repo == "." || repo == ".." || owner == "." || owner == ".." {
 		return "", false
 	}
-	return "https://github.com/" + owner + "/" + repo + "/archive/HEAD.zip", true
+	return "https://github.com/" + owner + "/" + repo + "/archive/" + ref + ".zip", true
 }
 
 // downloadArchive fetches the zip of a repository and unpacks it into dest, which must not exist yet.

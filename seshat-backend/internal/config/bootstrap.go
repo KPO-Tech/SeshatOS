@@ -891,6 +891,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		}
 	}
 
+	pinnedRepos := api.PinnedSkillRepoNames(api.DefaultFeaturedRepos)
 	if entries, err := os.ReadDir(skillsloader.GetSkillReposPath()); err == nil {
 		var installed []skillrepos.Repo
 		for _, e := range entries {
@@ -899,6 +900,10 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 			// it isn't re-listed here as a fake repo with no URL.
 			// A repository downloaded as an archive (no git on the computer) has no .git to pull: it is left as it is.
 			_, gitErr := os.Stat(filepath.Join(skillsloader.GetSkillReposPath(), e.Name(), ".git"))
+			// A repository of the catalog is at a commit: it is not updated from its source here (see api.PinInstalledSkillRepos).
+			if pinnedRepos[e.Name()] {
+				continue
+			}
 			if e.IsDir() && !strings.HasPrefix(e.Name(), ".") && gitErr == nil {
 				installed = append(installed, skillrepos.Repo{Name: e.Name()})
 			}
@@ -932,7 +937,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 	}
 
 	// The copies and corrections of the catalog skills are made again after the update above, so that a new version of a skill keeps them.
-	api.PrepareInstalledSkillRepos(featuredRepos)
+	api.PinInstalledSkillRepos(ctx, featuredRepos)
 
 	if config.AdminEmail != "" {
 		if strings.TrimSpace(config.AdminPassword) != "" && strings.TrimSpace(config.AdminPasswordHash) == "" {

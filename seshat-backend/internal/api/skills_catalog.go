@@ -8,11 +8,17 @@ import "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/skillinstall"
 // skills chosen from it were opened and checked. Skills is the choice made from a larger repository; the others stay unused on disk. The
 // repository folder is named after Name, so that two repositories that end in the same word ("skills") never share one.
 //
+// Every entry is installed at a commit (Ref), not at whatever the default branch holds on the day: a repository that changes under the
+// person, with scripts and instructions the agent follows, is a way in. The commits are those of 2026-11-07, taken as they were, not read
+// again line by line; the entries were read at the dates written below. Moving a Ref is a decision taken with the changes in front of
+// you, in a release of the app, and the installed repositories follow it when the app starts (see PinInstalledSkillRepos).
+//
 // Checked on 2026-10-31. Removed: gstack, which is written for Claude Code (its setup script, its hooks in ~/.claude, its commands).
 var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "remotion-skills",
 		URL:         "https://github.com/remotion-dev/skills",
+		Ref:         "a2824c67f8b4585c294a8101db9f9f0ad3c643f8",
 		Description: "The official Remotion skills: create a video project, write compositions, captions and audio, preview in the studio and render. Videos are made in React.",
 		Category:    "Video",
 		Needs:       []string{"Node.js"},
@@ -24,6 +30,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "scientific-agent-skills",
 		URL:         "https://github.com/K-Dense-AI/scientific-agent-skills",
+		Ref:         "a25cf9ec00e2745d03f8704acf6f6919694ccd9a",
 		Description: "Data analysis with Python: exploratory analysis, statistics and tests, DataFrames with polars, machine learning with scikit-learn, and publication-quality charts.",
 		Category:    "Data analysis",
 		Needs:       []string{"Python 3.11+"},
@@ -37,6 +44,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "superpowers",
 		URL:         "https://github.com/obra/superpowers",
+		Ref:         "22f0b463e7a5e579904dd6211a520321035526f7",
 		Description: "A method for building software with an agent: brainstorm, write a plan, execute it, debug from the cause, test first, verify before saying it is done, and review code.",
 		Category:    "Method",
 		Skills: []string{
@@ -47,6 +55,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "ppt-master",
 		URL:         "https://github.com/hugohe3/ppt-master",
+		Ref:         "769547394107870a0c7b5ad8d1c0c75035123aef",
 		Description: "Makes editable PowerPoint decks from a topic, a document, a PDF or a web page, with native shapes, charts, transitions and optional narration.",
 		Category:    "Presentations",
 		Needs:       []string{"Python 3.10+"},
@@ -57,6 +66,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 		// LaTeX is missing, so the plan says LaTeX is missing first.
 		Name:        "latex-document-skill",
 		URL:         "https://github.com/ndpvt-web/latex-document-skill",
+		Ref:         "37b2d714d1acfe3657bfa55044866befd2661c4f",
 		Description: "Makes PDF documents with LaTeX: reports, papers, theses, CVs, letters, exams, posters and Beamer slides, with charts, tables, bibliographies and fillable forms.",
 		Category:    "Documents",
 		Needs:       []string{"Python 3.10+", "LaTeX"},
@@ -72,6 +82,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "strix",
 		URL:         "https://github.com/usestrix/strix",
+		Ref:         "06015506625a78b981ae0b34be40239fc1b389be",
 		Description: "Autonomous penetration testing of your own web apps, APIs and code: finds vulnerabilities and proves each one with a working exploit. Use it only on what you are allowed to test.",
 		Category:    "Security",
 		Needs:       []string{"Docker"},
@@ -84,6 +95,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "paperasse",
 		URL:         "https://github.com/romainsimon/paperasse",
+		Ref:         "4fd0a05702dce66214af15aedcc3e21adf698610",
 		Description: "Pour la paperasse française : comptabilité, fiscalité, notariat, syndic, commissariat aux comptes et contrôle fiscal.",
 		Category:    "Administration (FR)",
 		Needs:       []string{"Node.js"},
@@ -94,6 +106,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 		// copied to a visible one, and its text is corrected for Seshat (the path of its scripts, the Python to use, where it is not for).
 		Name:           "ui-ux-pro-max-skill",
 		URL:            "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+		Ref:            "b7d5353e0130feb8c5574ef1251f8a1db1873ccb",
 		Description:    "Design help for building a real interface in a project: styles, palettes, font pairings, UX and accessibility rules, chart choices and guides for 22 stacks, searched from local data.",
 		Category:       "Design",
 		Needs:          []string{"Python 3.10+"},
@@ -120,6 +133,7 @@ var DefaultFeaturedRepos = []FeaturedSkillRepo{
 	{
 		Name:        "linkedin-skills",
 		URL:         "https://github.com/sergebulaev/linkedin-skills",
+		Ref:         "8f8bc4b40a2d5419b2dcf898772b85712cfbdf41",
 		Description: "Write LinkedIn posts that sound human, draft comments and replies, optimize a profile, and plan a publishing cadence.",
 		Category:    "Social media",
 		Needs:       []string{"Python 3.10+"},
