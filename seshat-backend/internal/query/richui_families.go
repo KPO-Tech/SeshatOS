@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
-	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
 // Two parts of the catalog cost a lot and apply to few requests: the drawings of an architecture (with the icon lists they need) and
@@ -31,79 +30,6 @@ const (
 	richUIDesignGroup       = "Design"
 	richUIDiagramsGroup     = "Diagrams"
 )
-
-// A request is matched on its lower-cased text. A stem must start a word (so "trace" does not match "embrace"); an exact word must
-// be the whole word (so "roc" does not match "process").
-func richUIWords(stems, exact []string) *regexp.Regexp {
-	quote := func(words []string) string {
-		quoted := make([]string, len(words))
-		for i, word := range words {
-			quoted[i] = regexp.QuoteMeta(word)
-		}
-		return strings.Join(quoted, "|")
-	}
-	return regexp.MustCompile(`(?:^|[^\p{L}\p{N}])(?:(?:` + quote(stems) + `)|(?:` + quote(exact) + `)(?:$|[^\p{L}\p{N}]))`)
-}
-
-// Words of a request that ask for a drawing of a system.
-var richUIArchitectureWords = richUIWords(
-	[]string{"architecture", "schema", "schéma", "diagram", "flowchart", "organigramme", "infrastructure", "topolog", "data flow",
-		"flux de donn", "system design", "conception du syst", "composants du syst", "dessin", "dessine", "draw"},
-	[]string{"uml"},
-)
-
-// Words of a request about numbers, curves or mathematics.
-var richUIChartWords = richUIWords(
-	[]string{"graph", "chart", "courbe", "curve", "plot", "trac", "histogram", "heatmap", "carte de chaleur", "confusion", "correlation",
-		"corrélation", "scatter", "nuage de points", "camembert", "barres", "visualis", "dessin", "dessine", "draw", "deriv", "dériv",
-		"integral", "intégral", "primitive", "fonction", "function", "equation", "équation", "asymptote", "extremum", "extrema",
-		"racine", "regression", "régression", "loss", "accuracy", "learning curve", "apprentissage", "overfit", "machine learning",
-		"deep learning", "neural", "réseau de neurones", "distribution", "statisti", "x^", "x²", "x³",
-		"slider", "curseur", "interactif", "interactive", "parametr", "paramètre", "explor", "illustrat", "visuel", "visual", "figure", "gradient", "descente", "optimi", "convergence", "simulation"},
-	[]string{"pie", "roc", "auc", "limite", "limit"},
-)
-
-// Words of a request where the reader is to write, answer or fill in something, or to get a text they will edit: an exercise, a quiz, a
-// text to correct, an email or a letter to draft.
-var richUIFormsWords = richUIWords(
-	[]string{"entraîn", "entrain", "exerc", "quiz", "qcm", "practice", "train me", "teach me", "apprend", "rédig", "redig",
-		"rédaction", "redaction", "dissertation", "brouillon", "draft", "e-mail", "email", "courriel", "lettre de", "cover letter", "my text", "mon texte",
-		"évalue mon", "evaluate my", "flashcard", "révis", "revis", "interroge-moi", "test me", "questionnaire", "formulaire",
-		"sondage", "survey", "dictée", "dictee", "mémoris", "memoris", "vocabulaire", "vocabulary", "grammaire", "grammar"},
-	[]string{"mail", "mails"},
-)
-
-// Words of a request about the look of something: a site, a mockup, a landing page, a palette.
-var richUIDesignWords = richUIWords(
-	[]string{"maquette", "mockup", "mock-up", "wireframe", "landing", "page d'accueil", "page d’accueil", "homepage", "home page", "site web", "website",
-		"web site", "page web", "web page", "charte graphique", "palette", "branding", "design", "prototype", "interface", "couleurs", "colours", "colors",
-		"à quoi ressembl", "what would it look like", "look like"},
-	[]string{"ui", "ux", "site", "sites"},
-)
-
-// Words of a request for a shape that says an idea: a honeycomb, a process, a cycle, a pyramid, a funnel, a matrix, a stack of layers.
-var richUIDiagramsWords = richUIWords(
-	[]string{"hexagon", "honeycomb", "nid d'abeille", "nid d’abeille", "ruche", "pyramide", "pyramid", "entonnoir", "funnel", "quadrant", "2x2", "swot",
-		"eisenhower", "maslow", "venn", "organigramme", "org chart", "mind map", "carte mentale", "gartner", "mckinsey", "value chain", "chaîne de valeur",
-		"business model", "modèle économique", "diagramme", "diagram", "strategy map", "framework visuel"},
-	[]string{"pdca", "okr", "bmc"},
-)
-
-var richUIFormula = regexp.MustCompile(`\b[fgh]\s*\(\s*x\s*\)|\bx\s*\^\s*\d|\b[a-z]\s*=\s*\d*x\s*[+\-^]`)
-
-// richUIFamiliesFor decides what a request needs. The prompt is built again for every turn, so a follow-up that names nothing
-// ("and the second one?") falls back to the core; a word such as chart or diagram, in the reader's own reply to a Choice, brings
-// the family back.
-func richUIFamiliesFor(prompt string) richUIFamilies {
-	text := strings.ToLower(prompt)
-	return richUIFamilies{
-		architecture: richUIArchitectureWords.MatchString(text),
-		charts:       richUIChartWords.MatchString(text) || richUIFormula.MatchString(text),
-		forms:        richUIFormsWords.MatchString(text),
-		design:       richUIDesignWords.MatchString(text),
-		diagrams:     richUIDiagramsWords.MatchString(text),
-	}
-}
 
 // richFamilyModesProvider is what the preferences offer when the person can force a family on or off.
 type richFamilyModesProvider interface {
@@ -339,82 +265,4 @@ func usesAny(example string, names []string) bool {
 		}
 	}
 	return false
-}
-
-// How many of the latest messages of a session are read for the families they already used.
-const richUIHistoryWindow = 12
-
-func (f richUIFamilies) union(other richUIFamilies) richUIFamilies {
-	return richUIFamilies{architecture: f.architecture || other.architecture, charts: f.charts || other.charts, forms: f.forms || other.forms, design: f.design || other.design, diagrams: f.diagrams || other.diagrams}
-}
-
-var (
-	richUIUsesOnce         sync.Once
-	richUIUsesArchitecture *regexp.Regexp
-	richUIUsesCharts       *regexp.Regexp
-	richUIUsesForms        *regexp.Regexp
-	richUIUsesDesign       *regexp.Regexp
-	richUIUsesDiagrams     *regexp.Regexp
-)
-
-// richUIUsesOf matches a call of any component of the three families, whatever the words of the request were.
-func richUIUsesOf() (architecture, charts, forms, design, diagrams *regexp.Regexp) {
-	richUIUsesOnce.Do(func() {
-		catalog := richUICatalogLoaded()
-		if catalog == nil {
-			return
-		}
-		var archNames, chartNames, formNames, designNames, diagramNames []string
-		for _, c := range catalog.Components {
-			switch c.Group {
-			case richUIArchitectureGroup:
-				archNames = append(archNames, regexp.QuoteMeta(c.Name))
-			case richUIChartsGroup:
-				chartNames = append(chartNames, regexp.QuoteMeta(c.Name))
-			case richUIFormsGroup:
-				formNames = append(formNames, regexp.QuoteMeta(c.Name))
-			case richUIDesignGroup:
-				designNames = append(designNames, regexp.QuoteMeta(c.Name))
-			case richUIDiagramsGroup:
-				diagramNames = append(diagramNames, regexp.QuoteMeta(c.Name))
-			}
-		}
-		compile := func(names []string) *regexp.Regexp {
-			if len(names) == 0 {
-				return nil
-			}
-			return regexp.MustCompile(`(?:^|[^A-Za-z])(?:` + strings.Join(names, "|") + `)\(`)
-		}
-		richUIUsesArchitecture, richUIUsesCharts, richUIUsesForms, richUIUsesDesign, richUIUsesDiagrams = compile(archNames), compile(chartNames), compile(formNames), compile(designNames), compile(diagramNames)
-	})
-	return richUIUsesArchitecture, richUIUsesCharts, richUIUsesForms, richUIUsesDesign, richUIUsesDiagrams
-}
-
-// richUIFamiliesInHistory returns the families that the latest answers of a session already drew. A follow-up that names nothing
-// ("and for x squared?", "now the second one") is about what was just shown, so the model keeps what it needs to continue it.
-func richUIFamiliesInHistory(messages []types.Message) richUIFamilies {
-	arch, charts, forms, design, diagrams := richUIUsesOf()
-	var found richUIFamilies
-	read := 0
-	for i := len(messages) - 1; i >= 0 && read < richUIHistoryWindow; i-- {
-		read++
-		if messages[i].Role != types.RoleAssistant {
-			continue
-		}
-		for _, block := range messages[i].Content {
-			text, ok := block.(types.TextContent)
-			if !ok || !strings.Contains(text.Text, richUIFence+"seshat-ui") {
-				continue
-			}
-			found.architecture = found.architecture || (arch != nil && arch.MatchString(text.Text))
-			found.charts = found.charts || (charts != nil && charts.MatchString(text.Text))
-			found.forms = found.forms || (forms != nil && forms.MatchString(text.Text))
-			found.design = found.design || (design != nil && design.MatchString(text.Text))
-			found.diagrams = found.diagrams || (diagrams != nil && diagrams.MatchString(text.Text))
-		}
-		if found == richUIAllFamilies {
-			break
-		}
-	}
-	return found
 }

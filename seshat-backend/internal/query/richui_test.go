@@ -104,35 +104,6 @@ func TestRichAnswersFamiliesAreTaughtOnlyWhenAsked(t *testing.T) {
 	}
 }
 
-func TestRichUIFamiliesFor(t *testing.T) {
-	cases := []struct {
-		prompt       string
-		architecture bool
-		charts       bool
-	}{
-		{"compare these two tools", false, false},
-		{"Explique-moi la différence entre SQLite et DuckDB", false, false},
-		{"fais un schéma de l'architecture de mon application", true, false},
-		{"draw a diagram of the data flow", true, true},
-		{"trace la courbe d'apprentissage de ce modèle", false, true},
-		{"Calcule la dérivée de f(x) = x^3 - 3x + 1", false, true},
-		{"montre la matrice de confusion", false, true},
-		{"what is the ROC curve", false, true},
-		{"explain the process of photosynthesis", false, false},
-		{"help me with a pie chart", false, true},
-		{"please process the list", false, false},
-		{"Show it as a chart", false, true},
-		{"expliques moi la descente de gradient avec des illustrations visuelles", false, true},
-		{"explain gradient descent with visual figures", false, true},
-	}
-	for _, c := range cases {
-		got := richUIFamiliesFor(c.prompt)
-		if got.architecture != c.architecture || got.charts != c.charts {
-			t.Errorf("%q: got architecture=%v charts=%v, want architecture=%v charts=%v", c.prompt, got.architecture, got.charts, c.architecture, c.charts)
-		}
-	}
-}
-
 func TestBuildContextInput_RichAnswersFollowThePreference(t *testing.T) {
 	on := appendedPrompt(t, &Service{preferences: fakePreferences{richAnswers: true}})
 	if !strings.Contains(on, "## Rich answers") {
@@ -153,64 +124,7 @@ func TestBuildContextInput_RichAnswersAreOnWithoutPreferences(t *testing.T) {
 	}
 }
 
-func richUIMessage(role types.Role, text string) types.Message {
-	return types.Message{Role: role, Content: []types.ContentBlock{types.TextContent{Text: text}}}
-}
-
-func TestRichUIFamiliesInHistory(t *testing.T) {
-	plot := richUIMessage(types.RoleAssistant, "Here it is.\n```seshat-ui\nroot = Plot([c], -3, 3)\nc = Curve(\"x^3\")\n```")
-	drawing := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Architecture([p], [])\np = Panel([], \"Core\")\n```")
-	table := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Table([Col(\"A\")], [[\"1\"]])\n```")
-	asked := richUIMessage(types.RoleUser, "```seshat-ui\nroot = Plot([], 0, 1)\n```")
-
-	if got := richUIFamiliesInHistory([]types.Message{plot}); got != (richUIFamilies{charts: true}) {
-		t.Errorf("a plot brings the charts family back, got %+v", got)
-	}
-	if got := richUIFamiliesInHistory([]types.Message{drawing, table}); got != (richUIFamilies{architecture: true}) {
-		t.Errorf("a drawing brings the architecture family back, got %+v", got)
-	}
-	if got := richUIFamiliesInHistory([]types.Message{table}); got != (richUIFamilies{}) {
-		t.Errorf("a table needs no family, got %+v", got)
-	}
-	if got := richUIFamiliesInHistory([]types.Message{asked}); got != (richUIFamilies{}) {
-		t.Errorf("only what the assistant drew counts, got %+v", got)
-	}
-	if got := richUIFamiliesInHistory([]types.Message{plot, drawing}); got != (richUIFamilies{architecture: true, charts: true}) {
-		t.Errorf("both families are found, got %+v", got)
-	}
-	exercise := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Form([TextArea(\"a\")], Submit(\"Send\", \"{{a}}\"))\n```")
-	if got := richUIFamiliesInHistory([]types.Message{exercise}); got != (richUIFamilies{forms: true}) {
-		t.Errorf("a form brings the forms family back, so that its answer can be corrected, got %+v", got)
-	}
-
-	old := []types.Message{plot}
-	for i := 0; i < richUIHistoryWindow; i++ {
-		old = append(old, richUIMessage(types.RoleUser, "and the next one?"))
-	}
-	if got := richUIFamiliesInHistory(old); got != (richUIFamilies{}) {
-		t.Errorf("a plot older than the window is forgotten, got %+v", got)
-	}
-}
-
-func TestRichUIFamiliesInText(t *testing.T) {
-	// Words in a Markdown explanation are not a call: only a seshat-ui block counts.
-	prose := richUIMessage(types.RoleAssistant, "The Plot( function is described above, and an Architecture( too.")
-	if got := richUIFamiliesInHistory([]types.Message{prose}); got != (richUIFamilies{}) {
-		t.Errorf("prose is not a block, got %+v", got)
-	}
-}
-
-func TestRichUIFormsAreTaughtForExercisesAndDrafts(t *testing.T) {
-	for _, prompt := range []string{"entraîne-moi à la rédaction en anglais", "aide-moi à écrire un mail de démission", "give me a quiz on Go", "help me write a cover letter"} {
-		if !richUIFamiliesFor(prompt).forms {
-			t.Errorf("%q should bring the forms family", prompt)
-		}
-	}
-	for _, prompt := range []string{"explique les goroutines", "what is the capital of France"} {
-		if richUIFamiliesFor(prompt).forms {
-			t.Errorf("%q should not bring the forms family", prompt)
-		}
-	}
+func TestRichUIFormsBlockTeachesTheForms(t *testing.T) {
 	block := richAnswersBlock(richUIFamilies{forms: true})
 	for _, want := range []string{"Form(", "Submit(", "TextArea(", "Draft("} {
 		if !strings.Contains(block, want) {
@@ -226,11 +140,6 @@ func TestRichUIFormsAreTaughtForExercisesAndDrafts(t *testing.T) {
 }
 
 func TestRichUISlidersAreTaughtWithTheCharts(t *testing.T) {
-	for _, prompt := range []string{"fais-moi un graphique interactif du sinus avec des curseurs", "let me explore a parabola with sliders"} {
-		if !richUIFamiliesFor(prompt).charts {
-			t.Errorf("%q should bring the charts family", prompt)
-		}
-	}
 	block := richAnswersBlock(richUIFamilies{charts: true})
 	for _, want := range []string{"Slider(", "Live(", "a*sin(b*x + c) + d"} {
 		if !strings.Contains(block, want) {
@@ -255,23 +164,9 @@ func TestRichUIQuizzesAreTaughtWithTheForms(t *testing.T) {
 			t.Errorf("the charts block must mention %q", want)
 		}
 	}
-	quiz := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Quiz([Question(\"q\", [\"a\", \"b\"], 0)])\n```")
-	if got := richUIFamiliesInHistory([]types.Message{quiz}); !got.forms {
-		t.Errorf("a quiz brings the forms family back, got %+v", got)
-	}
 }
 
-func TestRichUIDesignIsTaughtForSketchesOfASite(t *testing.T) {
-	for _, prompt := range []string{"montre-moi à quoi pourrait ressembler mon site", "fais une maquette de landing page pour mon app", "sketch a homepage for a bakery", "propose-moi une palette de couleurs"} {
-		if !richUIFamiliesFor(prompt).design {
-			t.Errorf("%q should bring the design family", prompt)
-		}
-	}
-	for _, prompt := range []string{"explique les goroutines", "trace sin et cos"} {
-		if richUIFamiliesFor(prompt).design {
-			t.Errorf("%q should not bring the design family", prompt)
-		}
-	}
+func TestRichUIDesignBlockTeachesTheDesignPieces(t *testing.T) {
 	block := richAnswersBlock(richUIFamilies{design: true})
 	for _, want := range []string{"Browser(", "Hero(", "Features(", "Palette(", "hex codes"} {
 		if !strings.Contains(block, want) {
@@ -283,10 +178,6 @@ func TestRichUIDesignIsTaughtForSketchesOfASite(t *testing.T) {
 	}
 	if strings.Contains(richKnowledgeAnswersBlock(richUIAllFamilies), "Browser(") {
 		t.Error("the Knowledge agent must not be taught design pieces")
-	}
-	sketch := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Browser([Hero(\"T\")])\n```")
-	if got := richUIFamiliesInHistory([]types.Message{sketch}); !got.design {
-		t.Errorf("a sketch brings the design family back, got %+v", got)
 	}
 }
 
@@ -326,7 +217,7 @@ func TestAFamilyForcedOnIsTaughtWhateverTheRequest(t *testing.T) {
 func TestAFamilyForcedOffIsNeverTaught(t *testing.T) {
 	quiz := "make me a quiz of five questions on Go"
 	if !strings.Contains(promptFor(t, quiz, nil), "Quiz(") {
-		t.Fatal("automatic: a request for a quiz is taught the forms")
+		t.Fatal("without a choice, every family is taught, a request for a quiz included")
 	}
 	if strings.Contains(promptFor(t, quiz, map[string]string{"forms": "off"}), "Quiz(") {
 		t.Error("forms forced off must not be taught, whatever the request")
@@ -349,17 +240,7 @@ func TestFamilyWordsAreWhatEachFamilyAddsToThePrompt(t *testing.T) {
 	}
 }
 
-func TestRichUIDiagramsAreTaughtForShapesOfAnIdea(t *testing.T) {
-	for _, prompt := range []string{"fais un schéma en nid d'abeille de mon projet", "draw a pyramid of the needs", "montre un entonnoir de conversion", "make a 2x2 matrix of effort and impact", "un diagramme de Venn"} {
-		if !richUIFamiliesFor(prompt).diagrams {
-			t.Errorf("%q should bring the diagrams family", prompt)
-		}
-	}
-	for _, prompt := range []string{"explique les goroutines", "process this file", "trace sin et cos", "what is the confusion matrix of my model"} {
-		if richUIFamiliesFor(prompt).diagrams {
-			t.Errorf("%q should not bring the diagrams family", prompt)
-		}
-	}
+func TestRichUIDiagramsBlockTeachesTheShapes(t *testing.T) {
 	block := richAnswersBlock(richUIFamilies{diagrams: true})
 	for _, want := range []string{"Hive(", "Hex(", "Chevrons(", "Cycle(", "Pyramid(", "Quadrant(", "Layers("} {
 		if !strings.Contains(block, want) {
@@ -371,9 +252,5 @@ func TestRichUIDiagramsAreTaughtForShapesOfAnIdea(t *testing.T) {
 	}
 	if strings.Contains(richKnowledgeAnswersBlock(richUIAllFamilies), "Hive(") {
 		t.Error("the Knowledge agent must not be taught diagrams")
-	}
-	hive := richUIMessage(types.RoleAssistant, "```seshat-ui\nroot = Hive([[a]])\na = Hex(\"x\")\n```")
-	if got := richUIFamiliesInHistory([]types.Message{hive}); !got.diagrams {
-		t.Errorf("a honeycomb brings the diagrams family back, got %+v", got)
 	}
 }
