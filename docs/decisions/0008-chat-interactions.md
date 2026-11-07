@@ -1,6 +1,6 @@
 # 0008 - Interactions in chat answers
 
-Status: proposed, 2026-10-29. Builds on [0005](0005-chat-ui-catalog.md).
+Status: accepted and built (proposed 2026-10-29; the choices, the forms and the actions shipped, see ADRs 0013, 0015, 0020 and 0021). Builds on [0005](0005-chat-ui-catalog.md).
 
 ## Context
 

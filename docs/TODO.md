@@ -5,34 +5,6 @@ When one is done, move it to "Done" at the bottom with the PR number.
 
 ## Chat
 
-### Follow the GitHub pull requests of a session in the right sidebar
-
-Noted 2026-10-29. A "Changes" card in the right panel, next to Environment, Context and Activity: one row per PR of the session
-with the state (open, draft, merged, closed), the title, the repository and number, the lines added and removed, a dot for the CI
-result, and a menu (open on GitHub, copy the link, refresh, unbind). The Claude desktop app has the same card.
-
-Why later: not part of the chat MVP; Chat and Knowledge come first.
-
-It belongs in SeshatOS, not in SeshatCloud: it needs the user's machine (the git folder, `gh`, a local token).
-
-What it needs:
-- **Link a PR to a session.** The git branch of the session's folder (`git rev-parse`, the `origin` remote gives the owner and
-  the repository), and any `github.com/.../pull/N` address that a tool result of the session printed.
-- **A data source.** The `gh` command when it is installed and signed in; otherwise the GitHub API with a token kept in the OS
-  keychain (Electron `safeStorage`). The calls go through the Go backend, never the renderer. Read-only scopes (pull requests,
-  checks).
-- **Backend.** A small domain (`internal/<domain>/`) with a route such as `GET /sessions/:id/pulls`. It polls every 30 to 60
-  seconds, only while the panel is visible, with conditional requests (ETag) for the rate limit, and caches.
-- **Desktop.** A section in the right panel host (the floating column already exists), the rows and the menu, an empty state.
-- **Edge cases.** No git repository, GitLab or Bitbucket, GitHub Enterprise, forks, several PRs per session, offline, rate limit,
-  expired token.
-
-Size: the read-only version with `gh` (list, state, CI dot, open link) is about 2 to 4 days with tests; the token and keychain flow
-adds more. The bigger second step is acting: merging from the app, or waking the agent when a check fails (auto-fix). That needs
-write scopes and the permission model.
-
-Start with: the read-only version with `gh`.
-
 ### Link previews with an image for the sources of a web answer
 
 Noted 2026-10-31. ChatGPT shows the image of a source (the `og:image` of the page) in its cards. We have the follow-up cards and the
@@ -62,18 +34,19 @@ Size: about two PRs (the endpoint with its guards and tests, then the card and t
 ### Rich answers: what is left
 
 See [0005](decisions/0005-chat-ui-catalog.md), [0007](decisions/0007-chat-charts-and-plots.md), [0008](decisions/0008-chat-interactions.md)
-and [0009](decisions/0009-lighter-rich-answers-prompt.md).
+and [0023](decisions/0023-all-families-and-the-hub.md). Forms, inputs, quizzes, sliders and live formulas, diagrams, the architecture poster and
+the families of the prompt are done (see Done).
 
 - **Open a file at a line or a page.** `FileRef` opens a text file in the Files panel; the line and the page it can carry are not
   used yet, and the panel has no way to scroll to a line.
-- **Interactive widgets, artifacts and projects.** Sliders with live formulas, 3D scenes, HTML prototypes and real sites run and tested by the agent in the browser: three levels (declarative with state, an Artifacts panel, projects), how to make them reliable, the order to do them in, and the sources are in [0010](decisions/0010-interactive-widgets-and-artifacts.md). To discuss, not scheduled.
+- **Interactive widgets beyond sliders, artifacts and projects.** 3D scenes, HTML prototypes and real sites run and tested by the agent in the
+  browser: an Artifacts panel and projects, how to make them reliable, the order to do them in, and the sources are in
+  [0010](decisions/0010-interactive-widgets-and-artifacts.md). The pages the agent writes already open live beside the conversation; the rest is
+  to discuss, not scheduled.
 - **Patch a drawing in place.** Change one box of an architecture drawing without drawing it again (it comes with the Artifacts panel of 0010).
 - **More kinds of curves.** Parametric and polar curves, implicit curves (a circle), inequalities, 3D surfaces, a neural network
   drawn as layers.
-- **Forms and inputs in an answer**, and an answer that updates in place.
-- **A tool for the families of the prompt.** Today the architecture and chart parts of the prompt are loaded from the words of the
-  request and from what the last answers drew. A tool the model calls to read a family when it decides to draw would not depend on
-  words.
+- **An answer that updates in place.**
 - **Fonts in the downloaded SVG.** The SVG is faithful on screen but the fonts are not embedded.
 
 ## Release and security
@@ -115,6 +88,19 @@ severity are only reported (file permissions of 0644 or 0755 where 0600 or 0750 
 started with arguments). Most are expected in an app that writes the files of the person; a pass over them would raise a few and justify
 the rest, then let the medium ones fail the job too. Run gosec on macOS as well: it was not analysed (the CI runs on Linux only).
 
+### Accepted for now
+
+Read on 2026-11-07 and left as they are, with the reason, so that they are not found again as new:
+
+- **CORS accepts any localhost origin when it is on.** It is on only with the debug flag (`config.Debug`); the packaged app has it off, and a
+  token is needed anyway. If a web mode ever turns it on, give it an explicit list (`AllowedOrigins`).
+- **`/metrics` answers without a token.** The server listens on the loopback address only and the page carries counters, no content. A scraper
+  such as Prometheus needs it open; to close it, require the token and hand one to the scraper.
+- **166 French texts are longer than their English** (`npm run i18n:length`). Shorten them, to the rule "as short as the English", when a
+  screen is touched.
+- **`internal/cloud/*` has no test** (about ten packages, thin clients of SeshatCloud for the connected mode). Cover them with a fake server when
+  that part changes.
+
 ### Tests that only run on one system
 
 Noted 2026-11-07. The tests run on Linux and, since 2026-11-07, on Windows. Nothing runs on macOS, which the README calls experimental.
@@ -123,6 +109,9 @@ About twenty-five packages have no test at all, most of them under `internal/clo
 
 ## Done
 
+- 2026-11-02: the Changes card of the right panel lists the pull requests the agent opened, with their checks, and can merge them (0.3.3).
+- 2026-11-01 to 2026-11-07: forms, quizzes and flashcards, sliders and live formulas, the diagrams, the architecture poster, tables to fill in,
+  drafts for a mail app, the hub diagram, and every family taught by default (ADRs 0013 to 0024).
 - 2026-11-07: rules on `main`, `dev` and the `v*` tags, secret scanning with push protection, private vulnerability reporting, Dependabot
   security updates, CodeQL; gosec fails the CI on a new high finding; the tests run on Windows; the repositories of the catalog are
   pinned to a commit (#513, #514, #515).

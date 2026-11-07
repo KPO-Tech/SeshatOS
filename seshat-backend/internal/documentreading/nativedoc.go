@@ -144,11 +144,6 @@ func InitNativeDocRuntime() (Capabilities, error) {
 	return DetectCapabilities(), nil
 }
 
-// DownloadNativeDocModels downloads the models of the active recognizer pack (Chinese and English until another is chosen).
-func DownloadNativeDocModels(ctx context.Context, onProgress func(NativeDocDownloadProgress)) error {
-	return DownloadNativeDocPack(ctx, NativeDocActivePack(), onProgress)
-}
-
 func NewNativeDocConverter() documentreader.Converter {
 	// The models can arrive after the backend started (the first-run setup, or Settings): bring the OCR up when a document needs it
 	// rather than at the next start. InitORT runs once, so a machine where it fails pays for it once.
