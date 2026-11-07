@@ -11,13 +11,21 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.17] - 2026-11-07
+
+### Highlights
+
+- **A fuller Generative UI.** The agent knows every component by default and reaches for a page of HTML only when it has to; forms and graphs share numbers, tables can be filled in and sent, a hub diagram, diagrams open large and can be saved.
+- **Public skills that needed fixing can now be offered.** The catalog copies a skill from a hidden folder, corrects its text after each update, and gives it a Python of its own (downloaded by uv if the machine has none). ui-ux-pro-max is the first.
+- **glm-5.3 writes files again** (runtime v1.15.1), and the permission modes say what they do: "No confirmation" is the one that never checks.
+
 ### Added
 
 - **A sketch says its texts are examples.** When the agent sketches a page in a Browser or a Phone, the figures, names and quotes in it are made up; it is now told to say so under the sketch instead of presenting them as real.
 - **The permission modes say what they do.** The shield menu showed "Smart" and "Auto", and "Auto" was the one that never checks anything. It is now "No confirmation" ("Sans confirmation"), and each mode has a line under its name: Smart checks each action and asks when it is unsure or risky; No confirmation runs everything without asking.
 - **Better pages from the agent.** The base the agent starts an HTML page from now also says what to avoid (indigo accent, gradient titles, invented figures, the same skeleton every time), to write the page in one call, and to ask you when a write is refused instead of looking for a way around it.
 - **Public skills that need a copy, a correction or a Python.** The catalog can now install a skill that keeps its files in a hidden folder (copied to a visible one), correct the text that does not suit Seshat (re-applied after each update, reported if it no longer fits), and give a skill that only uses Python's own library an environment too. When the machine has no Python, uv downloads one for Seshat after you agree. ui-ux-pro-max (design help for building a real interface) is the first entry (ADR 0025).
-- **Seshat's own skills install at first start.** The collection `seshat-skills` is cloned in the background and kept up to date; it now holds only skills written for Seshat, starting with `html-page` (base page, design rules, snippets and icons for an HTML page shown in the preview). Public skills stay in the catalog.
+- **Seshat's own skills collection is cloned at first start.** `seshat-skills` is downloaded in the background and kept up to date; it holds only skills written for Seshat and is empty for now (an `html-page` skill was tried and dropped for a base in the prompt). Public skills stay in the catalog.
 - **Forms in chat answers.** The agent can now put an exercise, a quiz or a text to correct in the answer: a text box with a word counter and a button that sends what you wrote as your next message. It can also give a draft (an email, a letter) to edit and copy, a score bar and a bar cut in parts. Nothing is sent without your click (ADR 0013).
 - **Sliders and live formulas.** A graph in an answer can be explored: sliders change the parameters of a curve, and the equation, the marks (a vertex, a root) and the values follow (ADR 0014).
 - **Switches, choices, quizzes and flashcards.** A switch or a list can show or hide curves of a graph. A quiz gives the right answer and its explanation at once, with a score; flashcards flip and are marked known or to review. At the end you may send your result to the agent with one click (ADR 0015).
@@ -33,6 +41,10 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **A hub diagram, and every component known to the agent.** A centre with what surrounds it (the five forces of Porter, stakeholders, a mind map) can be drawn. The agent now knows all the components on every request, so it no longer falls back to an HTML page for a decision tree; the big arrows of an architecture poster are thinner (ADR 0023).
 - **Diagrams open large and can be saved.** A tree, a cycle, a hub or any other diagram has the same corner button as an architecture: a large view, and a download as an image. The agent is also told that pages can use the libraries the app ships (Chart.js, D3, three.js, Mermaid...).
 - **Better pages, better choices.** The agent writes its HTML pages from a common base (light colours, one accent, inline icons, the shipped libraries), and each component description now says when to use it, so a function, a decision tree or an architecture of a few boxes stays in the answer (ADR 0024).
+
+### Fixed
+
+- **Files can be written with glm-5.3 again.** In the smart permission mode every write was refused without a question: the safety check asked z.ai to switch the model's reasoning off, glm-5.3 always reasons and rejects that, so the check failed. The runtime (v1.15.1) no longer sends it to a model that refuses it, and a check that cannot decide now asks you instead of refusing.
 
 ## [0.3.16] - 2026-11-05
 
