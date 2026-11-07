@@ -108,7 +108,9 @@
       "browser": "Navigateur",
       "terminal": "Terminal",
       "smart": "Intelligent",
-      "auto": "Auto"
+      "smartHint": "Chaque action est vérifiée ; on vous demande si elle est douteuse ou risquée.",
+      "noConfirmation": "Sans confirmation",
+      "noConfirmationHint": "Exécute tout sans vous demander. Pour un dossier de confiance."
     },
     "updateBanner": {
       "restarting": "Redémarrage…",
