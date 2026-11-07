@@ -56,7 +56,10 @@ func dirty(ctx context.Context, folder string) bool {
 // smudge filters a repository can name are still run by git for files it must compare; only a full trust prompt for a folder would close
 // that, like the workspace trust of a code editor.
 func git(ctx context.Context, folder string, args ...string) (string, error) {
-	cmd := exec.CommandContext(ctx, "git", append([]string{"-c", "core.fsmonitor=false", "-C", folder}, args...)...) // #nosec G204 G702 -- the program is git, and the folder is the value of -C
+	// The folder is the directory the program runs in, not one of its arguments: nothing the folder says can be read as an option, and the
+	// arguments are all written here.
+	cmd := exec.CommandContext(ctx, "git", append([]string{"-c", "core.fsmonitor=false"}, args...)...) // #nosec G204 G702 -- the program is git and its arguments are written in this package
+	cmd.Dir = folder
 	cmd.Env = append(os.Environ(), "GIT_OPTIONAL_LOCKS=0")
 	out, err := cmd.Output()
 	return strings.TrimSpace(string(out)), err
