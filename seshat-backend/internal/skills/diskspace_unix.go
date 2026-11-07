@@ -12,5 +12,9 @@ func freeDiskBytes(path string) (uint64, bool) {
 	if err := syscall.Statfs(path, &st); err != nil {
 		return 0, false
 	}
+	if st.Bsize <= 0 {
+		return 0, false
+	}
+	// #nosec G115 -- Bsize is positive just above
 	return st.Bavail * uint64(st.Bsize), true
 }
