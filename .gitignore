@@ -38,3 +38,6 @@ data/
 
 # Demo videos: too heavy for git, and a README only plays one uploaded to GitHub
 docs/img/*.mp4
+
+# A build of the app without the language packs, made by hand (hundreds of MB): never part of a commit.
+seshat-desktop/dist-nolang/

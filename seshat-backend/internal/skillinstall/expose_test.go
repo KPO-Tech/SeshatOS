@@ -181,3 +181,19 @@ func TestManagedPythonVersionFollowsTheMinimum(t *testing.T) {
 		}
 	}
 }
+
+func TestPrepareDoesNotCopyALinkToAFileOutsideTheSkill(t *testing.T) {
+	root := hiddenSkillRepo(t)
+	secret := filepath.Join(t.TempDir(), "secret.txt")
+	write(t, secret, "the person's own file")
+	if err := os.Symlink(secret, filepath.Join(root, ".claude", "skills", "pro", "data-link.txt")); err != nil {
+		t.Skipf("this machine does not allow links: %v", err)
+	}
+	Prepare(root, proSpec())
+	if _, err := os.Stat(filepath.Join(root, "pro", "data-link.txt")); err == nil {
+		t.Fatal("a link inside a skill must not be followed: it could carry a file of the person into the copy")
+	}
+	if _, err := os.Stat(filepath.Join(root, "pro", "SKILL.md")); err != nil {
+		t.Fatal("the rest of the skill is still copied")
+	}
+}

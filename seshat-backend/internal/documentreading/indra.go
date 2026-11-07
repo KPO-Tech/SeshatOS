@@ -263,6 +263,7 @@ func findPython() ([]string, error) {
 			continue
 		}
 		command := append([]string{path}, candidate[1:]...)
+		// #nosec G702 -- command is a Python interpreter found on this machine, and the script it is given is a constant
 		cmd := exec.Command(command[0], append(command[1:], "-c", "import sys; print(sys.version_info[0], sys.version_info[1])")...)
 		hideWindow(cmd)
 		out, err := cmd.Output()

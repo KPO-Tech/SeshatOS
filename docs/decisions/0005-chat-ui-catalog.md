@@ -1,6 +1,7 @@
 # 0005 - Rich answers in chat: a component catalog and a streaming line language
 
-Status: proposed, 2026-10-29. Nothing is built yet. Replaces [0003](0003-chat-generative-ui.md), which fixed the idea
+Status: accepted and built (proposed 2026-10-29; the catalog, the line language, the streaming and the families have shipped, and
+ADRs 0013 to 0024 extend them). Replaces [0003](0003-chat-generative-ui.md), which fixed the idea
 (the agent describes, the client renders) but not the format, the streaming behaviour or the catalog.
 
 ## Context

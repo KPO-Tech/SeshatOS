@@ -28,7 +28,8 @@ export function sheetOf(sheet: Pick<UiNode, 'props'>): SheetSpec {
   return { columns, rows }
 }
 
-const cell = (value: string) => value.replace(/\s*\n\s*/g, ' ').replace(/\|/g, '\\|').trim()
+// A backslash is escaped first: a cell that holds "a\|b" would otherwise become "a\\|b", where the bar is no longer escaped and ends the cell.
+const cell = (value: string) => value.replace(/\s*\n\s*/g, ' ').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').trim()
 
 /** The rows that hold something: a row left blank is not sent. */
 export const filledRows = (rows: string[][]) => rows.filter((row) => row.some((value) => value.trim() !== ''))

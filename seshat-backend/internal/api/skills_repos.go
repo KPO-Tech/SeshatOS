@@ -38,6 +38,10 @@ type FeaturedSkillRepo struct {
 	PythonPackages []string `json:"-"`
 	// Commands are programs the skills run and an environment cannot hold, looked for when the plan is made.
 	Commands []skillinstall.CommandNeed `json:"-"`
+	// Ref is the commit the repository is installed at (40 hexadecimal digits). It is never empty for a catalog entry: see the note of
+	// DefaultFeaturedRepos. Installed repositories that were added by their address have no Ref and follow their default branch, as the person
+	// asked.
+	Ref string `json:"-"`
 	// PythonRequired asks for a Python environment even when the skills list no package, so that their scripts run with a Python Seshat controls.
 	PythonRequired bool `json:"-"`
 	// Expose copies skills kept in a hidden folder of the repository (.claude/skills) to a folder that is read.
@@ -316,7 +320,11 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 	// run, and its skills stay out of the agent's reach until the person has agreed to the installation (see handleSkillRepoEnvironment).
 	task, _ := a.taskManager().Start(skillCloneTask, repo.Name, "Downloading "+repo.Name, func(ctx context.Context, report *tasks.Reporter) error {
 		report.Step(1, 2, "Downloading the skills")
-		if err := skillinstall.CloneInto(ctx, repo.URL, skillCloneStaging(repo.Name), target, report); err != nil {
+		ref := ""
+		if featured != nil {
+			ref = featured.Ref
+		}
+		if err := skillinstall.CloneIntoAt(ctx, repo.URL, ref, skillCloneStaging(repo.Name), target, report); err != nil {
 			return err
 		}
 		report.Step(2, 2, "Reading what they need")
@@ -400,17 +408,40 @@ func skillSpec(featured *FeaturedSkillRepo, recorded []string) skillinstall.Spec
 	}
 }
 
-// PrepareInstalledSkillRepos makes again the copies and the corrections of the catalog skills that need them, after the repositories were
-// updated from their sources. What could not be corrected is printed, never fatal.
-func PrepareInstalledSkillRepos(featured []FeaturedSkillRepo) {
+// PinnedSkillRepoNames are the installed repositories the app does not update by itself: the ones of the catalog, which are at a commit.
+func PinnedSkillRepoNames(featured []FeaturedSkillRepo) map[string]bool {
+	pinned := map[string]bool{}
+	for _, repo := range featured {
+		if repo.Ref != "" {
+			pinned[repo.Name] = true
+		}
+	}
+	return pinned
+}
+
+// PinInstalledSkillRepos puts the installed repositories of the catalog on the commit this version of the app names, then makes again the
+// copies and the corrections of the skills that need them. A repository already on its commit is not touched, and none is updated from its
+// source: what is new there reaches the person with a release of the app. What could not be done is printed, never fatal.
+func PinInstalledSkillRepos(ctx context.Context, featured []FeaturedSkillRepo) {
 	reposDir := skillsloader.GetSkillReposPath()
 	for i := range featured {
 		repo := &featured[i]
-		if len(repo.Expose) == 0 {
+		if repo.Ref == "" && len(repo.Expose) == 0 {
 			continue
 		}
 		target := filepath.Join(reposDir, repo.Name)
 		if _, err := os.Stat(target); err != nil {
+			continue
+		}
+		if repo.Ref != "" {
+			moved, err := skillinstall.Pin(ctx, target, repo.Ref)
+			if err != nil {
+				fmt.Printf("[API] Skill repo %s: not moved to %s: %v\n", repo.Name, repo.Ref[:12], err)
+			} else if moved {
+				fmt.Printf("[API] Skill repo %s: moved to %s\n", repo.Name, repo.Ref[:12])
+			}
+		}
+		if len(repo.Expose) == 0 {
 			continue
 		}
 		for _, warning := range skillinstall.Prepare(target, skillSpec(repo, nil)) {

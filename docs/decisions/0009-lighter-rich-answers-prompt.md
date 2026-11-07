@@ -1,6 +1,7 @@
 # 0009 - A lighter prompt for rich answers
 
-Status: proposed, 2026-10-29. Builds on [0005](0005-chat-ui-catalog.md), [0007](0007-chat-charts-and-plots.md) and
+Status: superseded by [0023](0023-all-families-and-the-hub.md) (proposed 2026-10-29; the families were chosen from the words of the request, then
+every family was taught by default, and the code that read the words was removed on 2026-11-07). Builds on [0005](0005-chat-ui-catalog.md), [0007](0007-chat-charts-and-plots.md) and
 [0008](0008-chat-interactions.md).
 
 ## Context

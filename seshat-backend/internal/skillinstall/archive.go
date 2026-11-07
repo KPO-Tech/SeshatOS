@@ -64,7 +64,16 @@ var gitAvailable = func() bool {
 }
 
 // archiveURL is the address of the zip of the default branch of a GitHub repository, or false for another host.
-func archiveURL(repoURL string) (string, bool) {
+func archiveURL(repoURL string) (string, bool) { return archiveURLAt(repoURL, "") }
+
+// archiveURLAt is archiveURL for a ref: the zip of a commit, a tag or a branch (the default branch when there is none).
+func archiveURLAt(repoURL, ref string) (string, bool) {
+	if !ValidRef(ref) {
+		return "", false
+	}
+	if ref == "" {
+		ref = "HEAD"
+	}
 	parsed, err := url.Parse(strings.TrimSpace(repoURL))
 	if err != nil || parsed.Scheme != "https" || !strings.EqualFold(parsed.Host, "github.com") {
 		return "", false
@@ -77,7 +86,7 @@ func archiveURL(repoURL string) (string, bool) {
 	if repo == "" || repo == "." || repo == ".." || owner == "." || owner == ".." {
 		return "", false
 	}
-	return "https://github.com/" + owner + "/" + repo + "/archive/HEAD.zip", true
+	return "https://github.com/" + owner + "/" + repo + "/archive/" + ref + ".zip", true
 }
 
 // downloadArchive fetches the zip of a repository and unpacks it into dest, which must not exist yet.
@@ -160,6 +169,12 @@ func unpackArchive(archive, dest string) error {
 		case !mode.IsRegular():
 			continue
 		}
+		// A header can announce any size: read as a signed number, a huge one would turn negative and lower the total, so that the files after
+		// it could go past the limit.
+		if file.UncompressedSize64 > archiveMaxUnpacked {
+			return fmt.Errorf("the repository is larger than %d MB once unpacked", archiveMaxUnpacked>>20)
+		}
+		// #nosec G115 -- bounded by archiveMaxUnpacked just above
 		unpacked += int64(file.UncompressedSize64)
 		if unpacked > archiveMaxUnpacked {
 			return fmt.Errorf("the repository is larger than %d MB once unpacked", archiveMaxUnpacked>>20)
@@ -184,8 +199,14 @@ func unpackFile(file *zip.File, target string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	// The size in the header can lie; never write more than it announced.
-	if _, err := io.Copy(out, io.LimitReader(source, int64(file.UncompressedSize64))); err != nil {
+	// The size in the header can lie; never write more than it announced, and never more than the limit.
+	announced := file.UncompressedSize64
+	if announced > archiveMaxUnpacked {
+		out.Close()
+		return fmt.Errorf("a file of the repository is larger than %d MB once unpacked", archiveMaxUnpacked>>20)
+	}
+	// #nosec G115 -- bounded by archiveMaxUnpacked just above
+	if _, err := io.Copy(out, io.LimitReader(source, int64(announced))); err != nil {
 		out.Close()
 		return err
 	}

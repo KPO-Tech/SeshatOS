@@ -79,3 +79,27 @@ func TestInspectOutsideARepository(t *testing.T) {
 		t.Fatalf("no folder: %+v", state)
 	}
 }
+
+// A repository that came from somewhere else can name a program in its own configuration, and git status runs it. The card is drawn for a
+// folder as soon as it is chosen, so the program must not run. The test first proves that this machine would run it (a plain git status
+// makes the marker), and only then checks that Inspect does not.
+func TestInspectDoesNotRunTheProgramARepositoryNamesInItsConfiguration(t *testing.T) {
+	dir := newRepo(t)
+	marker := filepath.Join(t.TempDir(), "ran")
+	run(t, dir, "config", "core.fsmonitor", "echo ran > '"+filepath.ToSlash(marker)+"'; exit 0")
+
+	control := exec.Command("git", "-C", dir, "status", "--porcelain")
+	_ = control.Run()
+	if _, err := os.Stat(marker); err != nil {
+		t.Skip("this git does not run core.fsmonitor here, so there is nothing to guard against")
+	}
+	_ = os.Remove(marker)
+
+	state := Inspect(context.Background(), dir)
+	if !state.Repo || state.Branch != "main" {
+		t.Fatalf("the card still works: %+v", state)
+	}
+	if _, err := os.Stat(marker); err == nil {
+		t.Fatal("Inspect ran the program named by core.fsmonitor in the repository")
+	}
+}
