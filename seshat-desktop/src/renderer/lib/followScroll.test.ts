@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { followAfterScroll } from './followScroll'
+import { followAfterPress, followAfterScroll } from './followScroll'
 
 describe('followAfterScroll', () => {
   it('keeps following when the content outgrew the chat own scroll', () => {
@@ -25,5 +25,16 @@ describe('followAfterScroll', () => {
 
   it('does not start again on a move up near the end', () => {
     expect(followAfterScroll(false, { top: 790, lastTop: 800, distance: 10 })).toBe(false)
+  })
+})
+
+describe('followAfterPress', () => {
+  it('stops following when the reader presses on something far from the end: what grows under their hand must not take them down', () => {
+    expect(followAfterPress(true, 800)).toBe(false)
+  })
+
+  it('keeps following when they press near the end', () => {
+    expect(followAfterPress(true, 20)).toBe(true)
+    expect(followAfterPress(false, 20)).toBe(false)
   })
 })

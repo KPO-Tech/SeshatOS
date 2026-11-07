@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Caution, Down, Refresh, ShareOne } from '@icon-park/react'
+import { ArrowRightUp, Caution, Down, Refresh } from '@icon-park/react'
 import { api } from '@renderer/api/client'
 import type { Session } from '@renderer/api/types'
 import { CodeBox } from '@renderer/components/chat/tools/common'
@@ -181,7 +181,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
         ))}
         <span className="min-w-0 flex-1 truncate px-2 text-[11px] text-app-text-muted" title={location ?? path}>{path}</span>
         <button type="button" onClick={openInBrowser} disabled={!location} className={iconButton} aria-label={t('chat.panels.artifactPreviewPanel.openInTheBrowser')} title={t('chat.panels.artifactPreviewPanel.openInTheBrowserWith')}>
-          <ShareOne size={12} />
+          <ArrowRightUp size={13} strokeWidth={4} />
         </button>
         <button type="button" onClick={() => setReloads((value) => value + 1)} className={iconButton} aria-label={t('chat.panels.artifactPreviewPanel.reload')} title={t('chat.panels.artifactPreviewPanel.reload')}>
           <Refresh size={12} />

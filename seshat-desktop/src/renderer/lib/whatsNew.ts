@@ -1,26 +1,44 @@
 // What changed in each release, told with a picture and a few words: the card that opens after an update reads this.
 
-export type VisualId = 'look' | 'tasks' | 'bell' | 'home' | 'settings' | 'projects'
+export type VisualId =
+  | 'look' | 'tasks' | 'bell' | 'home' | 'settings' | 'projects'
+  | 'genui' | 'pages' | 'language' | 'skills' | 'changes' | 'usage'
 
-export type Highlight = { id: VisualId; title: string; text: string }
+/** A card of the release: its picture, and its title and text, which are read from the translations under whatsnew.highlights.<id>. */
+export type Highlight = { id: VisualId }
 
-export type ReleaseNotes = { version: string; headline: string; highlights: Highlight[] }
+/**
+ * What a release brings. from, when there is one, makes the card say "New in 0.3.0 -> 0.3.17": the release then tells everything since
+ * that version, for a person who comes from far behind. The texts are in the translations (whatsnew.release.headline).
+ */
+export type ReleaseNotes = { version: string; from?: string; highlights: Highlight[] }
 
 /** Newest first. A release with no entry here opens no card. */
 export const RELEASES: ReleaseNotes[] = [
   {
-    version: '0.3.0',
-    headline: 'A new look, and work that goes on in the background',
+    version: '0.3.17',
+    from: '0.3.0',
     highlights: [
-      { id: 'look', title: 'Pick your look on the first launch', text: 'Dark, Light or Midnight, and an accent colour. The page restyles itself as you choose, and the same choices stay in Settings.' },
-      { id: 'tasks', title: 'Downloads and installs go on in the background', text: 'Leave the page, even close the window: a card above the Store follows each task, with a number to click when there are several.' },
-      { id: 'bell', title: 'A bell that keeps you informed', text: 'What finished, what failed and what the agent just did, kept in one place. You choose what to be told about, and when.' },
-      { id: 'home', title: 'A fuller start page', text: 'Five ways to begin, the input docked at the bottom like in a conversation, and a switch for Generative UI one click away.' },
-      { id: 'settings', title: 'One Settings, one look', text: 'Every page shares the same header, cards and controls, so what you look for is where you expect it.' },
-      { id: 'projects', title: 'Projects you can read and ask about', text: 'Browse the files of a folder, read them, and start a conversation from the project with its context.' }
+      { id: 'genui' },
+      { id: 'pages' },
+      { id: 'skills' },
+      { id: 'changes' },
+      { id: 'look' },
+      { id: 'language' },
+      { id: 'tasks' },
+      { id: 'bell' },
+      { id: 'usage' },
+      { id: 'home' },
+      { id: 'settings' },
+      { id: 'projects' }
     ]
   }
 ]
+
+/** The label of a release: its version, or the range it covers. */
+export function releaseLabel(release: ReleaseNotes): string {
+  return release.from ? `${release.from} → ${release.version}` : release.version
+}
 
 /** Compares two versions written as 1.2.3: negative when a is older, positive when it is newer. Anything after a dash is ignored. */
 export function compareVersions(a: string, b: string): number {

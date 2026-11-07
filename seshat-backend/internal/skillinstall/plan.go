@@ -27,7 +27,7 @@ func (p Plan) Empty() bool { return p.Python == nil && p.Node == nil }
 
 // Ready reports whether the tools the plan needs were found on the machine.
 func (p Plan) Ready() bool {
-	return (p.Python == nil || p.Python.Found) && (p.Node == nil || p.Node.Found)
+	return (p.Python == nil || p.Python.Found || p.Python.Managed) && (p.Node == nil || p.Node.Found)
 }
 
 // PythonPlan is the Python environment to make.
@@ -35,6 +35,8 @@ type PythonPlan struct {
 	// Minimum is the oldest Python the skills accept ("3.10").
 	Minimum string `json:"minimum"`
 	Found   bool   `json:"found"`
+	// Managed is true when the machine has no Python that is new enough and uv will download one for Seshat, kept apart from the system.
+	Managed bool `json:"managed,omitempty"`
 	// Version is the Python that will be used, when one was found.
 	Version string `json:"version,omitempty"`
 	// Files are the requirement files of the repository that will be read, relative to it.
@@ -54,6 +56,13 @@ type NodePlan struct {
 type Spec struct {
 	// Include is the skills chosen, by folder name; empty means every skill.
 	Include []string
+	// PythonRequired asks for a Python environment even when no package is listed: the skills only use the standard library, but their scripts
+	// must run with a Python that Seshat controls, not with whatever the machine has.
+	PythonRequired bool
+	// Expose copies skills kept in a folder the installers skip (.claude/skills) to a folder where they are read; see Prepare.
+	Expose []Expose
+	// Fixes correct text of the exposed skills that does not suit Seshat; see Prepare.
+	Fixes []Fix
 	// PythonMinimum is the oldest Python the skills accept; "3.10" when empty.
 	PythonMinimum string
 	// PythonPackages are packages the skills use and the repository does not list in a file.
@@ -223,7 +232,7 @@ func Detect(repoRoot string, spec Spec) Plan {
 	packages = append(packages, spec.PythonPackages...)
 	files, packages, nodePackages = uniqueSorted(files), uniqueSorted(packages), uniqueSorted(nodePackages)
 
-	if len(packages) > 0 {
+	if len(packages) > 0 || spec.PythonRequired {
 		minimum := spec.PythonMinimum
 		if minimum == "" {
 			minimum = defaultPythonMinimum
@@ -231,6 +240,9 @@ func Detect(repoRoot string, spec Spec) Plan {
 		python := &PythonPlan{Minimum: minimum, Files: files, Packages: packages}
 		if interpreter, err := findPython(minimum); err == nil {
 			python.Found, python.Version = true, interpreter.version
+		} else if managedPythonPossible() {
+			python.Managed = true
+			plan.Notes = append(plan.Notes, "Python "+minimum+" or newer is not on this machine: uv will download one (about 30 MB) and keep it for Seshat, apart from the system.")
 		} else {
 			plan.Warnings = append(plan.Warnings, "Python "+minimum+" or newer was not found on this machine: install it, then try again.")
 		}

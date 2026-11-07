@@ -1,0 +1,197 @@
+{
+  "page": {
+    "title": "UI générative",
+    "close": "Fermer",
+    "pages": "Pages"
+  },
+  "nav": {
+    "general": "Général"
+  },
+  "sections": {
+    "overview": {
+      "label": "Aperçu",
+      "description": "Ce que l'agent peut dessiner dans ses réponses, et l'interrupteur qui l'autorise."
+    },
+    "families": {
+      "label": "Familles",
+      "description": "Choisissez les types de dessin que l'agent peut utiliser, et leur coût."
+    },
+    "try": {
+      "label": "Essayer",
+      "description": "Des demandes qui font ressortir chaque type de dessin."
+    },
+    "gallery": {
+      "label": "Galerie",
+      "description": "Des collections d'exemples : ouvrez-en une, puis une carte pour la voir en grand avec sa source."
+    }
+  },
+  "overview": {
+    "switch": {
+      "title": "Réponses riches",
+      "on": "Activé : l'agent peut répondre avec des tableaux, graphiques, formulaires et maquettes.",
+      "off": "Désactivé : l'agent répond en texte seulement."
+    },
+    "safety": {
+      "title": "Pourquoi c'est sûr",
+      "pieces": {
+        "title": "Pièces fixes seulement",
+        "hint": "L'agent choisit dans un catalogue de pièces. Il n'écrit jamais de code ni de page."
+      },
+      "click": {
+        "title": "Rien sans votre clic",
+        "hint": "Un formulaire ou un quiz n'envoie un message que lorsque vous appuyez sur son bouton, et vous le voyez avant."
+      },
+      "local": {
+        "title": "Tout reste ici",
+        "hint": "Ce que vous saisissez dans un bloc reste sur cet ordinateur jusqu'à l'envoi."
+      }
+    }
+  },
+  "families": {
+    "hint": "Automatique et Toujours : la famille est enseignée à l'agent à chaque demande. Jamais : elle n'est pas utilisée.",
+    "cost": "environ {{words}} mots",
+    "modes": {
+      "auto": "Automatique",
+      "on": "Toujours",
+      "off": "Jamais"
+    },
+    "charts": {
+      "hint": "Courbes de formules, curseurs, histogrammes, cartes de chaleur."
+    },
+    "forms": {
+      "hint": "Exercices, quiz, flashcards, brouillons à modifier."
+    },
+    "design": {
+      "hint": "Maquettes de site ou d'application, palettes de couleurs."
+    },
+    "architecture": {
+      "hint": "Schémas de systèmes, avec les logos des technologies."
+    },
+    "diagrams": {
+      "hint": "Nids d'abeille, processus, cycles, pyramides, entonnoirs, matrices et piles."
+    }
+  },
+  "tryIt": {
+    "hint": "Chaque demande ouvre un nouveau chat, texte prêt à envoyer.",
+    "disabled": "Activez les réponses riches.",
+    "items": {
+      "quiz": {
+        "label": "Un quiz",
+        "prompt": "Fais-moi un quiz de 5 questions sur les goroutines en Go, avec explications, et un bouton pour t'envoyer mon score."
+      },
+      "cards": {
+        "label": "Flashcards",
+        "prompt": "Crée des flashcards de vocabulaire anglais sur le voyage, avec une catégorie et la prononciation sur chacune."
+      },
+      "essay": {
+        "label": "Exercice d'écriture",
+        "prompt": "Entraîne-moi à la rédaction en français : donne-moi un sujet de 100 à 150 mots et une zone pour écrire ma réponse."
+      },
+      "sine": {
+        "label": "Un graphique à explorer",
+        "prompt": "Fais-moi un graphique interactif des fonctions sinus, cosinus et tangente, avec des curseurs pour l'amplitude, la fréquence, la phase et le décalage vertical, et affiche l'équation actuelle."
+      },
+      "parabola": {
+        "label": "Une parabole",
+        "prompt": "Montre-moi la parabole f(x) = a(x - h)^2 + k avec des curseurs pour a, h et k, et marque son sommet sur le graphique."
+      },
+      "site": {
+        "label": "Maquette de site",
+        "prompt": "Montre-moi à quoi pourrait ressembler le site d'une boulangerie artisanale, avec une palette de couleurs."
+      },
+      "dashboard": {
+        "label": "Tableau de bord",
+        "prompt": "Fais la maquette d'un tableau de bord pour un outil de gestion de projets : barre latérale, chiffres clés, une courbe de tendance et un tableau de projets."
+      },
+      "architecture": {
+        "label": "Une architecture",
+        "prompt": "Dessine l'architecture d'un chatbot RAG sur AWS : des documents dans S3, une Lambda qui les indexe, une base vectorielle et une API."
+      },
+      "strategy": {
+        "label": "Un schéma de stratégie",
+        "prompt": "Dessine ma stratégie produit en nid d'abeille de sept parties : clients, problème, positionnement, produit, prix, mise sur le marché et mesures, avec le positionnement en orange."
+      }
+    }
+  },
+  "gallery": {
+    "filter": "Filtrer par composant",
+    "none": "Aucun résultat.",
+    "view": {
+      "preview": "Aperçu",
+      "code": "Code",
+      "both": "Les deux",
+      "open": "Voir"
+    },
+    "code": {
+      "lines": "Lignes : {{count}}",
+      "copy": "Copier",
+      "copied": "Copié"
+    },
+    "clear": "Effacer",
+    "wouldReceive": "Ce que le chat recevrait ({{count}})",
+    "nothingSent": "Rien pour l'instant : appuyez sur un bouton, un choix, un résultat de quiz ou un formulaire.",
+    "families": {
+      "all": "Tout",
+      "basics": "Bases",
+      "charts": "Graphiques",
+      "forms": "Formulaires",
+      "design": "Design",
+      "architecture": "Architecture",
+      "diagrams": "Schémas"
+    },
+    "hub": {
+      "back": "Toutes les galeries",
+      "count": "Exemples : {{count}}"
+    }
+  },
+  "collections": {
+    "landing": {
+      "title": "Pages d'accueil",
+      "description": "Maquettes de la page d'accueil d'un site, par métier : une couleur, une police et une ambiance chacune."
+    },
+    "mobile": {
+      "title": "Applications mobiles",
+      "description": "Écrans d'application dans un téléphone : chiffres, courbes, listes et un bouton clair."
+    },
+    "dashboards": {
+      "title": "Tableaux de bord",
+      "description": "Barre latérale, chiffres clés, courbes et tableaux : l'allure d'un produit pour chaque métier."
+    },
+    "brand": {
+      "title": "Chartes graphiques",
+      "description": "Palettes, boutons, images et ambiances : la même page dans d'autres couleurs, polices et arrondis."
+    },
+    "math": {
+      "title": "Labo de maths",
+      "description": "Des fonctions à explorer : bougez un curseur, la courbe, les marques et l'équation suivent."
+    },
+    "calculators": {
+      "title": "Calculatrices",
+      "description": "Petits outils qui répondent quand on bouge un curseur : argent, mouvement, unités et santé."
+    },
+    "data": {
+      "title": "Science des données",
+      "description": "Les images d'un modèle : courbes d'apprentissage, erreurs, corrélations et classification."
+    },
+    "cloud": {
+      "title": "Architectures cloud",
+      "description": "Des systèmes dessinés avec les logos des services utilisés : AWS, Kubernetes, Kafka et autres."
+    },
+    "learning": {
+      "title": "Apprendre et s'exercer",
+      "description": "Quiz, cartes, exercices d'écriture et plans de révision, pour répondre dans la conversation."
+    },
+    "work": {
+      "title": "Décisions et rapports",
+      "description": "Les documents d'une semaine de travail : bilan, feuille de route, comparaisons, décisions, listes et e-mails."
+    },
+    "core": {
+      "title": "Exemples de l'agent",
+      "description": "Les courts exemples dont l'agent s'inspire : tableaux, étapes, graphiques, formulaires et une première maquette."
+    },
+    "schemas": {
+      "title": "Schémas et stratégie",
+      "description": "Les formes d'une stratégie ou d'une méthode : nid d'abeille, processus, cycle, pyramide, entonnoir, matrice et pile."
+    }
+  }
+}

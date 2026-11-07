@@ -81,7 +81,6 @@
         "seshatos": "SeshatOS",
         "settings": "Settings",
         "generativeUi": "Generative UI",
-        "tablesFiguresAndStepsDrawn": "Tables, figures and steps drawn in answers. From the next message.",
         "whatSNew": "What's new",
         "admin": "Admin",
         "signOut": "Sign out"
@@ -109,7 +108,9 @@
       "browser": "Browser",
       "terminal": "Terminal",
       "smart": "Smart",
-      "auto": "Auto"
+      "smartHint": "Each action is checked; you are asked when it is unsure or risky.",
+      "noConfirmation": "No confirmation",
+      "noConfirmationHint": "Runs everything without asking you. For a folder you trust."
     },
     "updateBanner": {
       "restarting": "Restarting…",
@@ -252,9 +253,61 @@
       "yourAiWorkspace": "Your AI Workspace",
       "workingOn": "working on",
       "askAnything": "Ask anything...",
-      "generativeUi": "Generative UI",
       "appearance": "Appearance",
       "startSession": "Start session"
+    },
+    "release": {
+      "headline": "From a new look to answers that draw"
+    },
+    "highlights": {
+      "look": {
+        "title": "Pick your look on the first launch",
+        "text": "Fourteen themes and an accent colour, and a one-click switch between your dark and light theme. The same choices stay in Settings."
+      },
+      "tasks": {
+        "title": "Downloads and installs go on in the background",
+        "text": "Leave the page, even close the window: a card above the Store follows each task, with a number to click when there are several."
+      },
+      "bell": {
+        "title": "A bell that keeps you informed",
+        "text": "What finished, what failed and what the agent just did, kept in one place. You choose what to be told about, and when."
+      },
+      "home": {
+        "title": "A fuller start page",
+        "text": "Five ways to begin, with the input docked at the bottom like in a conversation."
+      },
+      "settings": {
+        "title": "One Settings, one look",
+        "text": "Every page shares the same header, cards and controls, so what you look for is where you expect it."
+      },
+      "projects": {
+        "title": "Projects you can read and ask about",
+        "text": "Browse the files of a folder, read them, and start a conversation from the project with its context."
+      },
+      "genui": {
+        "title": "Answers that draw",
+        "text": "Forms, quizzes, flashcards, diagrams, posters, graphs with sliders, tables to fill in and drafts for your mail app: the agent shows instead of describing."
+      },
+      "pages": {
+        "title": "Web pages open live beside the chat",
+        "text": "A page the agent builds opens next to the conversation and works offline with the usual libraries. It reports its own errors, and one button opens it in your browser."
+      },
+      "language": {
+        "title": "SeshatOS speaks French",
+        "text": "The whole interface, its dialogs and the Windows installer follow your language: English or French."
+      },
+      "skills": {
+        "title": "Skills from a catalog",
+        "text": "Install them with the progress shown, read their files like a project, and add skills that need a fix or a Python of their own: SeshatOS prepares them."
+      },
+      "changes": {
+        "title": "Follow the pull requests the agent opens",
+        "text": "The Changes card lists the pull requests the agent opened, shows their checks, and merges them when you say so."
+      },
+      "usage": {
+        "title": "Your token use, and a safer shell",
+        "text": "Account shows the tokens you use, day by day, and the agent's commands can run in a sandbox on Windows."
+      }
     },
     "whatsNewHost": {
       "close": "Close",

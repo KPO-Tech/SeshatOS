@@ -1566,6 +1566,7 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	// costs a fixed handful of tokens and applies to every surface.
 	if !knowledgeProfile {
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, renderingCapabilitiesBlock)
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, htmlPageBlock)
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, narrationGuidanceBlock)
 		// Structured components are on unless the user turned them off in Settings.
 		if s.richAnswersOn(ctx, p) {
@@ -1734,14 +1735,14 @@ func (s *Service) richAnswersOn(ctx context.Context, p ContextBuildParams) bool 
 	return s.preferences == nil || s.preferences.RichAnswersEnabled(ctx, p.Principal)
 }
 
-// richFamilies decides which families of components this turn is taught: the ones its request asks for, and the ones the latest answers
-// of the session drew, since a follow-up that names nothing is about what they showed.
+// richFamilies decides which families of components this turn is taught: all of them unless the person turned one off.
 func (s *Service) richFamilies(ctx context.Context, p ContextBuildParams) richUIFamilies {
-	families := richUIFamiliesFor(p.Prompt)
-	if families != richUIAllFamilies && p.SessionID != "" {
-		if messages, err := s.loadSessionMessages(ctx, p.SessionID); err == nil {
-			families = families.union(richUIFamiliesInHistory(messages))
-		}
+	// Every family is taught by default (about 8,000 tokens): a model that is not told a component exists reaches for an HTML page instead
+	// (ADR 0023). Choosing the families by the words of the request was tried first and removed: it missed requests that named nothing.
+	families := richUIAllFamilies
+	// What the person turned off in the Generative UI page wins.
+	if provider, ok := s.preferences.(richFamilyModesProvider); ok && p.Principal != nil {
+		families = families.withModes(provider.RichFamilyModes(ctx, p.Principal))
 	}
 	return families
 }

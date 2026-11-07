@@ -1,0 +1,197 @@
+{
+  "page": {
+    "title": "Generative UI",
+    "close": "Close",
+    "pages": "Pages"
+  },
+  "nav": {
+    "general": "General"
+  },
+  "sections": {
+    "overview": {
+      "label": "Overview",
+      "description": "What the agent can draw in its answers, and the switch that allows it."
+    },
+    "families": {
+      "label": "Families",
+      "description": "Choose which kinds of drawing the agent may use, and see what each costs."
+    },
+    "try": {
+      "label": "Try it",
+      "description": "Requests that bring out each kind of drawing."
+    },
+    "gallery": {
+      "label": "Gallery",
+      "description": "Collections of examples to look through: pick one, then a card to see it large with its source."
+    }
+  },
+  "overview": {
+    "switch": {
+      "title": "Rich answers",
+      "on": "On: the agent may answer with tables, graphs, forms and sketches.",
+      "off": "Off: the agent answers with text only."
+    },
+    "safety": {
+      "title": "How it stays safe",
+      "pieces": {
+        "title": "Fixed pieces only",
+        "hint": "The agent picks from a catalogue of pieces. It never writes code or a page."
+      },
+      "click": {
+        "title": "Nothing without your click",
+        "hint": "A form or a quiz sends a message only when you press its button, and you see it first."
+      },
+      "local": {
+        "title": "Everything stays here",
+        "hint": "What you type in a block stays on this computer until you send it."
+      }
+    }
+  },
+  "families": {
+    "hint": "Automatic and Always: the family is taught to the agent on every request. Never: it is not used.",
+    "cost": "about {{words}} words",
+    "modes": {
+      "auto": "Automatic",
+      "on": "Always",
+      "off": "Never"
+    },
+    "charts": {
+      "hint": "Plots of formulas, sliders, histograms, heatmaps."
+    },
+    "forms": {
+      "hint": "Exercises, quizzes, flashcards, drafts to edit."
+    },
+    "design": {
+      "hint": "Sketches of a site or an app, colour palettes."
+    },
+    "architecture": {
+      "hint": "Drawings of systems, with the logos of technologies."
+    },
+    "diagrams": {
+      "hint": "Honeycombs, processes, cycles, pyramids, funnels, matrices and stacks."
+    }
+  },
+  "tryIt": {
+    "hint": "Each request opens a new chat with the text ready to send.",
+    "disabled": "Turn on rich answers first.",
+    "items": {
+      "quiz": {
+        "label": "A quiz",
+        "prompt": "Make me a quiz of 5 questions on Go goroutines, with explanations, and a button to send you my score."
+      },
+      "cards": {
+        "label": "Flashcards",
+        "prompt": "Create flashcards of English travel vocabulary, with a category and a pronunciation on each."
+      },
+      "essay": {
+        "label": "A writing exercise",
+        "prompt": "Train me to write in English: give me a subject of 100 to 150 words and a box to write my answer in."
+      },
+      "sine": {
+        "label": "A graph to explore",
+        "prompt": "Make an interactive graph of sine, cosine and tangent with sliders for amplitude, frequency, phase and vertical shift, and show the current equation."
+      },
+      "parabola": {
+        "label": "A parabola",
+        "prompt": "Show me the parabola f(x) = a(x - h)^2 + k with sliders for a, h and k, and mark its vertex on the graph."
+      },
+      "site": {
+        "label": "A site sketch",
+        "prompt": "Show me what the site of an artisan bakery could look like, with a colour palette."
+      },
+      "dashboard": {
+        "label": "Dashboard",
+        "prompt": "Sketch a dashboard for a project management tool: side bar, key figures, a trend curve and a table of projects."
+      },
+      "architecture": {
+        "label": "An architecture",
+        "prompt": "Draw the architecture of a RAG chatbot on AWS: documents in S3, a Lambda that indexes them, a vector database and an API."
+      },
+      "strategy": {
+        "label": "A strategy diagram",
+        "prompt": "Draw my product strategy as a honeycomb of seven parts: customers, problem, positioning, product, pricing, go to market and metrics, with the positioning in orange."
+      }
+    }
+  },
+  "gallery": {
+    "filter": "Filter by component",
+    "none": "No result.",
+    "view": {
+      "preview": "Preview",
+      "code": "Code",
+      "both": "Both",
+      "open": "View"
+    },
+    "code": {
+      "lines": "Lines: {{count}}",
+      "copy": "Copy",
+      "copied": "Copied"
+    },
+    "clear": "Clear",
+    "wouldReceive": "What the chat would receive ({{count}})",
+    "nothingSent": "Nothing yet: press a button, a choice, a quiz result or a form.",
+    "families": {
+      "all": "All",
+      "basics": "Basics",
+      "charts": "Graphs",
+      "forms": "Forms",
+      "design": "Design",
+      "architecture": "Architecture",
+      "diagrams": "Diagrams"
+    },
+    "hub": {
+      "back": "All galleries",
+      "count": "Examples: {{count}}"
+    }
+  },
+  "collections": {
+    "landing": {
+      "title": "Landing pages",
+      "description": "Sketches of the home page of a site, by trade: a colour, a font and a mood for each."
+    },
+    "mobile": {
+      "title": "Mobile apps",
+      "description": "Screens of an app in a phone: figures, curves, lists and one clear button."
+    },
+    "dashboards": {
+      "title": "Dashboards",
+      "description": "Side bar, key figures, curves and tables: the look of a product for every kind of work."
+    },
+    "brand": {
+      "title": "Brand boards",
+      "description": "Palettes, buttons, pictures and moods: the same page in other colours, fonts and corners."
+    },
+    "math": {
+      "title": "Maths lab",
+      "description": "Functions to explore: move a slider, and the curve, the marks and the equation follow."
+    },
+    "calculators": {
+      "title": "Calculators",
+      "description": "Small tools that answer as you move a slider: money, motion, units and health."
+    },
+    "data": {
+      "title": "Data science",
+      "description": "The pictures of a model: learning curves, errors, correlations and classification."
+    },
+    "cloud": {
+      "title": "Cloud architectures",
+      "description": "Systems drawn with the logos of the services they use: AWS, Kubernetes, Kafka and others."
+    },
+    "learning": {
+      "title": "Learn and practise",
+      "description": "Quizzes, cards, writing exercises and revision plans, to answer in the conversation."
+    },
+    "work": {
+      "title": "Decisions and reports",
+      "description": "The documents of a working week: status, roadmap, comparisons, decisions, checklists and mail."
+    },
+    "core": {
+      "title": "The agent's examples",
+      "description": "The short examples the agent is taught from: tables, steps, charts, forms and a first sketch of a page."
+    },
+    "schemas": {
+      "title": "Schemas and strategy",
+      "description": "The shapes of a strategy or a method: a honeycomb, a process, a cycle, a pyramid, a funnel, a matrix and a stack."
+    }
+  }
+}

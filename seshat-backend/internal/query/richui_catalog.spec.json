@@ -11,7 +11,7 @@
       "name": "Card",
       "group": "Layout",
       "signature": "Card(children: [Component], title?: text, tone?: tone)",
-      "description": "A bordered block with an optional title."
+      "description": "A bordered block with an optional title: groups parts that belong together (an explorer, a record). Not for a plain paragraph or list."
     },
     {
       "name": "Section",
@@ -41,7 +41,7 @@
       "name": "Callout",
       "group": "Text",
       "signature": "Callout(tone: tone, title: text, body?: text)",
-      "description": "A highlighted note: info, success, warning or danger."
+      "description": "A highlighted note: info, success, warning or danger. For a caveat or a recommendation the reader must not miss; one or two per answer at most."
     },
     {
       "name": "Badge",
@@ -59,7 +59,7 @@
       "name": "Table",
       "group": "Data",
       "signature": "Table(columns: [Col|ColGroup], rows: [[cell]|Row], caption?: text, sortable?: true|false, striped?: true|false, compact?: true|false)",
-      "description": "Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup."
+      "description": "Compare items on criteria, or list records; use it, never a Markdown table. Rows and columns. A cell is a text, a number, a Badge, an Item or a Cell; a row is a list of cells or a Row. Columns may be grouped under a heading with ColGroup."
     },
     {
       "name": "Col",
@@ -89,7 +89,7 @@
       "name": "Metric",
       "group": "Data",
       "signature": "Metric(label: text, value: text|number, delta?: text|number, trend?: up|down|flat, note?: text, tone?: tone)",
-      "description": "One figure with its label and its change."
+      "description": "One key figure with its label and its change: a result to watch."
     },
     {
       "name": "MetricRow",
@@ -101,31 +101,31 @@
       "name": "BarChart",
       "group": "Charts",
       "signature": "BarChart(labels: [text], series: [Series], mode?: grouped|stacked, unit?: text, horizontal?: true|false, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "Bars, one group per label and one bar per series."
+      "description": "Bars to compare values between categories (sales per quarter); several Series make grouped bars."
     },
     {
       "name": "LineChart",
       "group": "Charts",
       "signature": "LineChart(labels: [text], series: [Series], unit?: text, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "Lines over ordered labels: a trend, a learning curve (loss and accuracy per epoch)."
+      "description": "Lines to follow a value over ordered labels: a trend over time, a learning curve (loss and accuracy per epoch)."
     },
     {
       "name": "AreaChart",
       "group": "Charts",
       "signature": "AreaChart(labels: [text], series: [Series], unit?: text, stacked?: true|false, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "Filled lines over ordered labels."
+      "description": "Filled lines over ordered labels: a cumulated trend over time."
     },
     {
       "name": "PieChart",
       "group": "Charts",
       "signature": "PieChart(labels: [text], values: [number], donut?: true|false, title?: text)",
-      "description": "Shares of a whole."
+      "description": "Shares of a whole with few parts (five at most); with more, a BarChart."
     },
     {
       "name": "ScatterChart",
       "group": "Charts",
       "signature": "ScatterChart(series: [Points], xLabel?: text, yLabel?: text, title?: text)",
-      "description": "Points on two axes, one colour per Points."
+      "description": "Points on two axes: the link between two measures, clusters. One colour per Points."
     },
     {
       "name": "Series",
@@ -143,43 +143,67 @@
       "name": "Plot",
       "group": "Charts",
       "signature": "Plot(layers: [Curve|Shade|Dot|VLine|HLine|Points], xmin: number, xmax: number, ymin?: number, ymax?: number, title?: text, xLabel?: text, yLabel?: text)",
-      "description": "A graph of formulas in x over [xmin, xmax], with the layers drawn on the same axes. The vertical range is automatic unless given."
+      "description": "The graph of a function of x (a parabola, a derivative, an area), to explore with Sliders; any function is a Plot, never an HTML page. A graph of formulas in x over [xmin, xmax], with the layers drawn on the same axes. The vertical range is automatic unless given."
     },
     {
       "name": "Curve",
       "group": "Charts",
-      "signature": "Curve(expr: text, label?: text, tone?: tone, dashed?: true|false, op?: value|derivative|integral)",
+      "signature": "Curve(expr: text, label?: text, tone?: tone, dashed?: true|false, op?: value|derivative|integral, show?: text|number)",
       "description": "A formula in x (x^3 - 3x + 1, sin(2x)/x, e^(-x^2); + - * / ^, sin cos tan exp ln sqrt abs, pi, e). op derivative draws its derivative and integral its antiderivative from xmin, both computed numerically."
     },
     {
       "name": "Shade",
       "group": "Charts",
-      "signature": "Shade(expr: text, from: number, to: number, label?: text, tone?: tone)",
+      "signature": "Shade(expr: text, from: text|number, to: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "The area between a formula and the x axis from one bound to another; the legend gives its value (the definite integral)."
     },
     {
       "name": "Dot",
       "group": "Charts",
-      "signature": "Dot(x: number, y: number, label?: text, tone?: tone)",
-      "description": "A marked point of a Plot (a root, an extremum, an inflection point), with its label."
+      "signature": "Dot(x: text|number, y: text|number, label?: text, tone?: tone, show?: text|number)",
+      "description": "A marked point of a Plot (a root, an extremum, an inflection point), with its label. x and y may be formulas in the sliders (\"-b/(2*a)\") to follow them; so may the bound of a VLine, HLine or Shade."
     },
     {
       "name": "VLine",
       "group": "Charts",
-      "signature": "VLine(x: number, label?: text, tone?: tone)",
+      "signature": "VLine(x: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "A vertical guide of a Plot at x (an asymptote, a bound)."
     },
     {
       "name": "HLine",
       "group": "Charts",
-      "signature": "HLine(y: number, label?: text, tone?: tone)",
+      "signature": "HLine(y: text|number, label?: text, tone?: tone, show?: text|number)",
       "description": "A horizontal guide of a Plot at y (an asymptote, a threshold, a mean)."
+    },
+    {
+      "name": "Slider",
+      "group": "Charts",
+      "signature": "Slider(name: text, min: number, max: number, value?: number, step?: number, label?: text)",
+      "description": "A slider the reader moves to change a variable (name: a, b, h, amp; not x, e, pi) that the formulas of Curve, Shade and Live use."
+    },
+    {
+      "name": "Toggle",
+      "group": "Charts",
+      "signature": "Toggle(name: text, label?: text, value?: true|false)",
+      "description": "A switch: a variable, 1 when on and 0 when off (value true starts it on)."
+    },
+    {
+      "name": "Select",
+      "group": "Charts",
+      "signature": "Select(name: text, options: [text], value?: number, label?: text)",
+      "description": "A list of choices: the variable is the number of the choice made, from 0."
+    },
+    {
+      "name": "Live",
+      "group": "Charts",
+      "signature": "Live(text: text)",
+      "description": "Markdown text where {{formula}} shows its value with the current sliders: \"$f(x) = {{a}}x^2$\", \"vertex ({{h}}, {{k}})\", \"{{2*a+b}}\". Write * between a number and a variable. Formulas give numbers: no text, no a > b ? x : y."
     },
     {
       "name": "Histogram",
       "group": "Charts",
       "signature": "Histogram(values: [number], bins?: number, title?: text, xLabel?: text, tone?: tone)",
-      "description": "The distribution of a list of values, in equal bins (a residual, a feature, a weight)."
+      "description": "The distribution of a list of values, in equal bins: the spread of a measure (a residual, a feature, a weight)."
     },
     {
       "name": "Heatmap",
@@ -190,8 +214,8 @@
     {
       "name": "Architecture",
       "group": "Architecture",
-      "signature": "Architecture(children: [Component], flows?: [Flow], title?: text)",
-      "description": "The frame of a system drawing: it lays Panels out and draws the Flow arrows over them."
+      "signature": "Architecture(children: [Component], flows?: [Flow], title?: text, direction?: column|row, framed?: true|false)",
+      "description": "A system, its layers or a data flow, up to about fifteen boxes. The frame of a system drawing: it lays Panels out and draws the Flow arrows over them. direction row puts them side by side, as the stages of a pipeline; framed draws a frame around all, with the title large."
     },
     {
       "name": "Panel",
@@ -202,20 +226,20 @@
     {
       "name": "Item",
       "group": "Architecture",
-      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone)",
-      "description": "A line with an icon, a label and a caption; boxed draws it as a card. Give it its own name to link it with a Flow."
+      "signature": "Item(label: text, icon?: icon, caption?: text, boxed?: true|false, tone?: tone, shape?: box|cylinder|hexagon|pill)",
+      "description": "A line with an icon, a label and a caption; boxed draws it as a card, shape cylinder as a database, hexagon or pill for a step. Give it its own name to link it with a Flow."
     },
     {
       "name": "Flow",
       "group": "Architecture",
-      "signature": "Flow(from: name, to: name, label?: text, both?: true|false, style?: solid|dashed)",
+      "signature": "Flow(from: name, to: name, label?: text, both?: true|false, style?: solid|dashed|block)",
       "description": "An arrow between two Panels or Items, by the names of their statements. Only inside the flows of an Architecture."
     },
     {
       "name": "Steps",
       "group": "Guidance",
       "signature": "Steps(items: [Step])",
-      "description": "An ordered procedure."
+      "description": "An ordered procedure of three steps or more: a how-to, a setup."
     },
     {
       "name": "Step",
@@ -276,6 +300,348 @@
       "group": "Interaction",
       "signature": "Choice(label: text, action: @Ask(\"text\")|@OpenFile(path)|@OpenUrl(url), description?: text, icon?: icon)",
       "description": "One follow-up of Choices; a description makes it a card."
+    },
+    {
+      "name": "Form",
+      "group": "Forms",
+      "signature": "Form(children: [Component], submit: Submit, title?: text)",
+      "description": "Lets the reader answer inside the answer: fields, a Counter, then one Submit that sends their text back to you as their next message. For an exercise, a quiz, a text to correct. One per answer; never ask for a secret."
+    },
+    {
+      "name": "TextArea",
+      "group": "Forms",
+      "signature": "TextArea(name: text, placeholder?: text, rows?: number, value?: text)",
+      "description": "A box for a longer text, inside a Form. name is how a template refers to it; value is the text it starts with."
+    },
+    {
+      "name": "Field",
+      "group": "Forms",
+      "signature": "Field(name: text, label?: text, placeholder?: text, value?: text, kind?: text)",
+      "description": "A line to fill in. kind \"number\": a variable that graphs and Live read by name."
+    },
+    {
+      "name": "Counter",
+      "group": "Forms",
+      "signature": "Counter(of: text, unit?: text, min?: number, max?: number)",
+      "description": "Counts the words of a field (of is its name); min and max colour it. unit is the word for the count, in the language of the reader."
+    },
+    {
+      "name": "Submit",
+      "group": "Forms",
+      "signature": "Submit(label: text, template: text, requires?: [text])",
+      "description": "The button of a Form. template is the message you will receive, written as the reader would, with {{name}} where the text of a field goes. Disabled until the fields in requires (all by default) are filled."
+    },
+    {
+      "name": "Quiz",
+      "group": "Forms",
+      "signature": "Quiz(questions: [Question], title?: text, report?: text)",
+      "description": "To test knowledge. Multiple-choice questions answered in the answer, judged at once with their explanation, then a score. Optional report: the message the reader may send at the end, with {{score}}, {{total}}, {{missed}}. The answers are visible: a study tool, not an exam."
+    },
+    {
+      "name": "Question",
+      "group": "Forms",
+      "signature": "Question(text: text, options: [text], answer: number, explanation?: text)",
+      "description": "A question of a Quiz: 2 to 6 options; answer is the number of the right one, counting from 0."
+    },
+    {
+      "name": "Flashcards",
+      "group": "Forms",
+      "signature": "Flashcards(cards: [Flash], title?: text, report?: text)",
+      "description": "To memorise: vocabulary, definitions. Cards the reader flips and marks known or to review. Optional report, with {{known}}, {{total}}, {{again}} (fronts to review)."
+    },
+    {
+      "name": "Flash",
+      "group": "Forms",
+      "signature": "Flash(front: text, back: text, tag?: text, note?: text)",
+      "description": "A card: front (a word), back (the answer), tag on the front (a category), note under the back (a pronunciation, an example)."
+    },
+    {
+      "name": "Browser",
+      "group": "Design",
+      "signature": "Browser(children: [Component], url?: text, bg?: text, font?: sans|serif|mono|display, radius?: none|sm|md|lg|full)",
+      "description": "A quick sketch to talk over, not the site; to build it, write the files. Its texts, figures, names and quotes are examples: say so under it, never as real data. A browser window to sketch a page in. bg is the page colour; a colour is a hex code (#f97316), a name (orange), rgb(249, 115, 22) or hsl(25, 95%, 53%), and a gradient is \"#f97316 > #ec4899\". font: sans, serif, mono, display. radius of the corners: none, sm, md, lg, full."
+    },
+    {
+      "name": "Phone",
+      "group": "Design",
+      "signature": "Phone(children: [Component], bg?: text, font?: sans|serif|mono|display, radius?: none|sm|md|lg|full)",
+      "description": "A phone screen to sketch an app in, like Browser (bg, font, radius)."
+    },
+    {
+      "name": "Nav",
+      "group": "Design",
+      "signature": "Nav(brand: text, links?: [text], cta?: text, color?: text)",
+      "description": "The navigation bar of a page: brand, links, a call to action in color."
+    },
+    {
+      "name": "Hero",
+      "group": "Design",
+      "signature": "Hero(title: text, subtitle?: text, primary?: text, secondary?: text, color?: text, align?: center|left)",
+      "description": "The top of a page: a title on a gradient of color, a subtitle, two buttons. Texts take a readable colour by themselves."
+    },
+    {
+      "name": "Features",
+      "group": "Design",
+      "signature": "Features(items: [Feature], columns?: number)",
+      "description": "A grid of Feature cards (columns 1 to 4)."
+    },
+    {
+      "name": "Feature",
+      "group": "Design",
+      "signature": "Feature(title: text, text?: text, icon?: icon, color?: text)",
+      "description": "A card of Features: title, text, an icon, a color."
+    },
+    {
+      "name": "Grid",
+      "group": "Design",
+      "signature": "Grid(children: [Component], columns?: number)",
+      "description": "Its children in 1 to 4 equal columns."
+    },
+    {
+      "name": "Picture",
+      "group": "Design",
+      "signature": "Picture(label?: text, color?: text, ratio?: number)",
+      "description": "A picture placeholder: a gradient of color with a label; ratio is width over height."
+    },
+    {
+      "name": "Cta",
+      "group": "Design",
+      "signature": "Cta(label: text, color?: text, variant?: solid|outline)",
+      "description": "A button of a page, solid or outline."
+    },
+    {
+      "name": "Plans",
+      "group": "Design",
+      "signature": "Plans(items: [Plan])",
+      "description": "Pricing: up to 4 Plan cards side by side."
+    },
+    {
+      "name": "Plan",
+      "group": "Design",
+      "signature": "Plan(name: text, price: text, features?: [text], cta?: text, color?: text, highlight?: true|false)",
+      "description": "A price card: name, price, up to 8 features, a button; highlight marks the one to choose."
+    },
+    {
+      "name": "Stats",
+      "group": "Design",
+      "signature": "Stats(items: [Stat])",
+      "description": "A row of up to 6 big figures."
+    },
+    {
+      "name": "Stat",
+      "group": "Design",
+      "signature": "Stat(value: text, label: text)",
+      "description": "A figure of Stats: its value (10k+) and its label."
+    },
+    {
+      "name": "Testimonial",
+      "group": "Design",
+      "signature": "Testimonial(quote: text, author: text, role?: text, color?: text)",
+      "description": "A quote with its author, their role, and their initials in a coloured circle."
+    },
+    {
+      "name": "Avatar",
+      "group": "Design",
+      "signature": "Avatar(name: text, color?: text)",
+      "description": "A coloured circle with the initials of a name."
+    },
+    {
+      "name": "Logos",
+      "group": "Design",
+      "signature": "Logos(names: [text], title?: text)",
+      "description": "A row of up to 8 names with their logo when it is a known technology (react, postgres)."
+    },
+    {
+      "name": "Shell",
+      "group": "Design",
+      "signature": "Shell(items: [SideItem], children: [Component], title?: text, color?: text)",
+      "description": "A quick sketch of a dashboard to talk over. A dashboard layout: a side bar of SideItem (the first is the current page) and a main area of Tiles, Kpis, Sparks, DataRows. title is the product name."
+    },
+    {
+      "name": "SideItem",
+      "group": "Design",
+      "signature": "SideItem(label: text, icon?: icon, active?: true|false)",
+      "description": "An entry of the side bar of a Shell: a label, an icon, active."
+    },
+    {
+      "name": "Tile",
+      "group": "Design",
+      "signature": "Tile(children: [Component], title?: text)",
+      "description": "A bordered box of a dashboard, with a title."
+    },
+    {
+      "name": "Kpi",
+      "group": "Design",
+      "signature": "Kpi(label: text, value: text, delta?: text, color?: text)",
+      "description": "A figure of a dashboard: label, value, change (+12% is green, -3% red)."
+    },
+    {
+      "name": "Spark",
+      "group": "Design",
+      "signature": "Spark(values: [number], color?: text, kind?: line|bars)",
+      "description": "A small curve or bars from up to 60 numbers."
+    },
+    {
+      "name": "DataRows",
+      "group": "Design",
+      "signature": "DataRows(columns: [text], rows: [[text]])",
+      "description": "A table of a page: up to 6 columns, 12 rows of text."
+    },
+    {
+      "name": "Palette",
+      "group": "Design",
+      "signature": "Palette(swatches: [Swatch], title?: text)",
+      "description": "The colours of a design or a brand, each with its name and its code: to propose a palette."
+    },
+    {
+      "name": "Swatch",
+      "group": "Design",
+      "signature": "Swatch(color: text, name?: text)",
+      "description": "A colour of a Palette: a colour or a gradient, and its name."
+    },
+    {
+      "name": "Footer",
+      "group": "Design",
+      "signature": "Footer(text: text, links?: [text])",
+      "description": "The foot of a page: a line of text and a few links."
+    },
+    {
+      "name": "Hive",
+      "group": "Diagrams",
+      "signature": "Hive(columns: [[Hex]], title?: text, left?: text, right?: text)",
+      "description": "Parts that touch. A honeycomb of hexagons, in columns of one, two, one, two...: a strategy or a model whose parts touch. left and right are the headings of the two groups. Colour the one to stress."
+    },
+    {
+      "name": "Hex",
+      "group": "Diagrams",
+      "signature": "Hex(label: text, color?: text)",
+      "description": "A hexagon of a Hive: a short label and a color."
+    },
+    {
+      "name": "Chevrons",
+      "group": "Diagrams",
+      "signature": "Chevrons(items: [Chev], title?: text)",
+      "description": "A process in arrow-shaped steps, each with a short text: a method, phases of a roadmap."
+    },
+    {
+      "name": "Chev",
+      "group": "Diagrams",
+      "signature": "Chev(label: text, text?: text, color?: text)",
+      "description": "A step of Chevrons."
+    },
+    {
+      "name": "Cycle",
+      "group": "Diagrams",
+      "signature": "Cycle(loops: [Loop], center?: text, title?: text)",
+      "description": "Three to eight steps in a loop, with arrows from one to the next (a lifecycle, PDCA, a flywheel); center is the word in the middle."
+    },
+    {
+      "name": "Loop",
+      "group": "Diagrams",
+      "signature": "Loop(label: text, color?: text)",
+      "description": "A step of a Cycle."
+    },
+    {
+      "name": "Pyramid",
+      "group": "Diagrams",
+      "signature": "Pyramid(levels: [Level], title?: text, funnel?: true|false)",
+      "description": "Levels from the top down, widening: a hierarchy or a scale (Maslow). funnel true makes it narrow downwards: a funnel of conversion."
+    },
+    {
+      "name": "Level",
+      "group": "Diagrams",
+      "signature": "Level(label: text, text?: text, color?: text)",
+      "description": "A level of a Pyramid."
+    },
+    {
+      "name": "Hub",
+      "group": "Diagrams",
+      "signature": "Hub(core: Spoke, spokes: [Spoke], title?: text, arrows?: text)",
+      "description": "A centre (core, a Spoke) and two to eight Spokes around it, joined to it by arrows: what presses on a subject (the five forces of Porter, with four Spokes around the rivalry), stakeholders, an ecosystem, a mind map. arrows: in (towards the centre, the default), out or none."
+    },
+    {
+      "name": "Spoke",
+      "group": "Diagrams",
+      "signature": "Spoke(label: text, text?: text, color?: text)",
+      "description": "The centre or a satellite of a Hub: a label, a short text, a color."
+    },
+    {
+      "name": "Quadrant",
+      "group": "Diagrams",
+      "signature": "Quadrant(cells: [Quad], xLabel?: text, yLabel?: text, title?: text)",
+      "description": "A matrix of two by two (urgent/important, effort/impact), four Quad in order: top left, top right, bottom left, bottom right. xLabel and yLabel name the axes."
+    },
+    {
+      "name": "Quad",
+      "group": "Diagrams",
+      "signature": "Quad(title: text, text?: text, color?: text)",
+      "description": "A cell of a Quadrant: a title, a text, a color (a hex code or a name such as red, never a tone)."
+    },
+    {
+      "name": "Layers",
+      "group": "Diagrams",
+      "signature": "Layers(layers: [Layer], title?: text)",
+      "description": "A stack of levels, the top one first: a label on the left and its text on the right (network layers, a stack seen as levels)."
+    },
+    {
+      "name": "Layer",
+      "group": "Diagrams",
+      "signature": "Layer(label: text, text?: text, color?: text)",
+      "description": "A layer of Layers."
+    },
+    {
+      "name": "Venn",
+      "group": "Diagrams",
+      "signature": "Venn(sets: [VSet], center?: text, title?: text)",
+      "description": "Two or three sets that overlap, each a VSet; center names what they share."
+    },
+    {
+      "name": "VSet",
+      "group": "Diagrams",
+      "signature": "VSet(label: text, text?: text, color?: text)",
+      "description": "A set of a Venn: its label, a short text, a color."
+    },
+    {
+      "name": "Tree",
+      "group": "Diagrams",
+      "signature": "Tree(root: Branch, title?: text)",
+      "description": "A decision tree, an org chart or a breakdown from one root Branch, its children below, up to four levels."
+    },
+    {
+      "name": "Branch",
+      "group": "Diagrams",
+      "signature": "Branch(label: text, children?: [Branch], text?: text, color?: text)",
+      "description": "A node of a Tree: a label, its children (Branch), a short text, a color."
+    },
+    {
+      "name": "Sheet",
+      "group": "Forms",
+      "signature": "Sheet(columns: [text], rows?: [[text]], title?: text, report?: text)",
+      "description": "A table the reader fills in and sends back (a budget, a list). report: the message they may send, with {{table}}, {{rows}}. For a spreadsheet to open elsewhere, write a file."
+    },
+    {
+      "name": "Draft",
+      "group": "Forms",
+      "signature": "Draft(body: text, subject?: text, to?: text, title?: text)",
+      "description": "For a mail or a letter they will send. A text the reader can edit and copy: an email, a letter. subject and to are optional lines above the body."
+    },
+    {
+      "name": "ProgressBar",
+      "group": "Forms",
+      "signature": "ProgressBar(value: number, max?: number, label?: text, tone?: tone)",
+      "description": "A bar filled to value out of max (100 by default): a score, a level, a completion."
+    },
+    {
+      "name": "SegmentBar",
+      "group": "Forms",
+      "signature": "SegmentBar(segments: [Segment], unit?: text, title?: text)",
+      "description": "A bar cut in parts in proportion to their value: how a session or a budget is shared. unit follows each figure (min, h, EUR)."
+    },
+    {
+      "name": "Segment",
+      "group": "Forms",
+      "signature": "Segment(label: text, value: number, tone?: tone)",
+      "description": "One part of SegmentBar: its label (what it is) and its value (the figure, in the unit of the bar)."
     }
   ],
   "icons": {
@@ -413,60 +779,7 @@
       "elasticsearch",
       "kafka",
       "rabbitmq",
-      "airflow",
-      "spark",
-      "pandas",
-      "go",
-      "python",
-      "typescript",
-      "javascript",
-      "rust",
-      "kotlin",
-      "swift",
-      "ruby",
-      "php",
-      "lua",
-      "cpp",
-      "dotnet",
-      "react",
-      "vue",
-      "svelte",
-      "angular",
-      "nextjs",
-      "tailwind",
-      "vite",
-      "nodejs",
-      "express",
-      "fastapi",
-      "flask",
-      "django",
-      "graphql",
-      "electron",
-      "tauri",
-      "pytorch",
-      "anthropic",
-      "ollama",
-      "docker",
-      "kubernetes",
-      "terraform",
-      "linux",
-      "apple",
-      "nginx",
-      "git",
-      "github",
-      "gitlab",
-      "githubactions",
-      "jenkins",
-      "prometheus",
-      "grafana",
-      "opentelemetry",
-      "datadog",
-      "sentry",
-      "googlecloud",
-      "cloudflare",
-      "vercel",
-      "firebase",
-      "supabase"
+      "airflow"
     ]
   },
   "tones": [
@@ -490,6 +803,13 @@
     "root = Architecture([clients, runtime, storage], [f1, f2, f3], \"Local app\")\nclients = Panel([ui, docs], \"Inputs\", \"violet\", \"monitor\", false, \"row\")\nui = Item(\"Desktop UI\", \"monitor\", \"React\", true)\ndocs = Item(\"Documents\", \"files\", \"PDF, DOCX\", true)\nruntime = Panel([api, jobs, agents], \"Runtime\", \"orange\", \"si:go\", false, \"row\")\napi = Item(\"HTTP API\", \"api\", \"Commands, streaming\", true)\njobs = Item(\"Jobs\", \"workflow\", \"Indexing\", true)\nagents = Item(\"Agents\", \"ai\", \"LLM, tools\", true)\nstorage = Panel([sql, olap], \"Storage\", \"blue\", \"database\", true, \"row\")\nsql = Item(\"SQLite\", \"si:sqlite\", \"Transactions\", true)\nolap = Item(\"DuckDB\", \"si:duckdb\", \"Analytics\", true)\nf1 = Flow(\"ui\", \"api\", null, true)\nf2 = Flow(\"docs\", \"jobs\", \"ingest\")\nf3 = Flow(\"api\", \"sql\")",
     "root = Table([Col(\"Tool\"), install, writes], rows, \"Three engines compared\", false, true)\ninstall = ColGroup(\"Install\", [Col(\"Size (MB)\", \"number\"), Col(\"Setup\")])\nwrites = ColGroup(\"Writes\", [Col(\"Concurrent\"), Col(\"Mode\")], \"violet\")\nrows = [Row([\"Embedded\"], \"blue\", \"section\"), [\"SQLite\", 1, \"None\", Cell(\"one writer\", \"warning\"), \"WAL\"], [\"DuckDB\", 30, \"None\", Cell(\"one writer\", \"warning\"), \"Columnar\"], Row([\"Server\"], \"blue\", \"section\"), [\"PostgreSQL\", 300, \"Installer\", Cell(\"many writers\", \"success\", true), \"MVCC\"], Row([\"Smallest\", \"SQLite\"], null, \"total\")]",
     "root = Stack([intro, plot, curve])\nintro = Heading(\"f(x) = x^3 - 3x + 1 and its derivative\", 3)\nplot = Plot([f, slope, extremum1, extremum2, axis], -3, 3, null, null, \"f and f'\", \"x\", \"y\")\nf = Curve(\"x^3 - 3x + 1\", \"f(x)\", \"blue\")\nslope = Curve(\"3x^2 - 3\", \"f'(x)\", \"orange\", true)\nextremum1 = Dot(-1, 3, \"local maximum (-1, 3)\", \"red\")\nextremum2 = Dot(1, -1, \"local minimum (1, -1)\", \"red\")\naxis = HLine(0)\ncurve = Plot([Curve(\"x^3 - 3x + 1\", \"f(x)\"), Shade(\"x^3 - 3x + 1\", -2, 2, \"area under f\")], -3, 3, null, null, \"Integral from -2 to 2\")",
-    "root = Stack([loss, matrix, errors])\nloss = LineChart([\"1\", \"2\", \"3\", \"4\", \"5\"], [Series(\"train\", [0.92, 0.55, 0.38, 0.29, 0.24]), Series(\"validation\", [0.95, 0.63, 0.47, 0.42, 0.41])], null, \"Loss per epoch\", \"epoch\", \"loss\")\nmatrix = Heatmap([\"cat\", \"dog\", \"bird\"], [\"cat\", \"dog\", \"bird\"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], \"Confusion matrix\", \"blue\", 0)\nerrors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, \"Residuals\", \"error\")"
+    "root = Stack([loss, matrix, errors])\nloss = LineChart([\"1\", \"2\", \"3\", \"4\", \"5\"], [Series(\"train\", [0.92, 0.55, 0.38, 0.29, 0.24]), Series(\"validation\", [0.95, 0.63, 0.47, 0.42, 0.41])], null, \"Loss per epoch\", \"epoch\", \"loss\")\nmatrix = Heatmap([\"cat\", \"dog\", \"bird\"], [\"cat\", \"dog\", \"bird\"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], \"Confusion matrix\", \"blue\", 0)\nerrors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, \"Residuals\", \"error\")",
+    "root = Card([intro, graph, a, b, c, d, eq], \"Sine wave explorer\")\nintro = Markdown(\"Move the sliders to see how each parameter changes the sine wave.\")\ngraph = Plot([Curve(\"a*sin(b*x + c) + d\", \"a sin(bx + c) + d\", \"blue\"), Curve(\"cos(x)\", \"cos(x)\", \"green\", true), HLine(0)], -10, 10, -4, 4, null, \"x\", \"y\")\na = Slider(\"a\", -3, 3, 1, 0.1, \"Amplitude (a)\")\nb = Slider(\"b\", 0.2, 4, 1, 0.1, \"Frequency (b)\")\nc = Slider(\"c\", -3.14, 3.14, 0, 0.1, \"Phase (c)\")\nd = Slider(\"d\", -3, 3, 0, 0.1, \"Vertical shift (d)\")\neq = Live(\"Current equation: $f(x) = {{a}}\\\\sin({{b}}x + {{c}}) + {{d}}$, period {{2*pi/b}}\")",
+    "root = Stack([quiz, cards])\nquiz = Quiz([Question(\"Which keyword starts a goroutine?\", [\"go\", \"async\"], 0, \"go f() runs f concurrently.\"), Question(\"A write to a nil map...\", [\"creates the key\", \"panics\"], 1)], \"Go basics\", \"Quiz: {{score}}/{{total}}. Missed:\\n{{missed}}\\nExplain.\")\ncards = Flashcards([Flash(\"goroutine\", \"A light thread.\"), Flash(\"channel\", \"A typed pipe.\")], \"Vocabulary\", \"{{known}}/{{total}} known. Review: {{again}}.\")",
+    "root = Stack([site, colours])\nsite = Browser([nav, hero, feats, plans, foot], \"https://seshat.app\", \"#ffffff\", \"sans\", \"md\")\nnav = Nav(\"Seshat\", [\"Product\", \"Pricing\"], \"Download\", \"orange\")\nhero = Hero(\"Your agents, on your machine\", \"Chat, projects and tools that stay local.\", \"Get started\", \"See the docs\", \"#f97316 > #ec4899\")\nfeats = Features([Feature(\"Local first\", \"Your files stay here.\", \"lock\", \"orange\"), Feature(\"Any model\", \"Bring your own.\", \"ai\", \"blue\")], 2)\nplans = Plans([Plan(\"Free\", \"0\", [\"Local chat\"], \"Start\", \"slate\"), Plan(\"Team\", \"12 EUR\", [\"Shared knowledge\"], \"Try it\", \"orange\", true)])\nfoot = Footer(\"2026 Seshat\", [\"Privacy\", \"Terms\"])\ncolours = Palette([Swatch(\"orange\", \"Orange\"), Swatch(\"#f97316 > #ec4899\", \"Sunset\"), Swatch(\"hsl(221, 83%, 53%)\", \"Blue\")], \"Colours\")",
+    "root = Browser([app], \"https://app.seshat.dev\", \"#ffffff\")\napp = Shell([SideItem(\"Overview\", \"dashboard\"), SideItem(\"Projects\", \"folder\")], [row, trend], \"Seshat\", \"#f97316\")\nrow = Grid([Kpi(\"Projects\", \"24\", \"+12%\", \"orange\"), Kpi(\"Open bugs\", \"7\", \"-3%\", \"red\")], 2)\ntrend = Tile([Spark([4, 6, 5, 8, 11, 14], \"orange\"), DataRows([\"Project\", \"Status\"], [[\"Website\", \"On track\"], [\"Docs\", \"Done\"]])], \"Activity\")",
+    "root = Stack([plan, exercise])\nplan = SegmentBar([Segment(\"Discover 2 words\", 2, \"blue\"), Segment(\"Write 100 to 150 words\", 8, \"green\"), Segment(\"Correct and rewrite\", 5, \"orange\")], \"min\", \"A session of 15 minutes\")\nexercise = Form([topic, essay, count], send, \"Day 1: argue\")\ntopic = Markdown(\"**Subject:** is discipline more important than motivation? Write 100 to 150 words: your opinion, two arguments, a conclusion.\")\nessay = TextArea(\"essay\", \"In my opinion, discipline plays an essential part because...\", 7)\ncount = Counter(\"essay\", \"words\", 100, 150)\nsend = Submit(\"Correct my text\", \"Here is my text of the day. Correct it like a teacher: a mark out of 20, the mistakes explained, then ask me to rewrite the weak passages.\\n\\n{{essay}}\")",
+    "root = Stack([score, advice, mail])\nscore = Card([bar, grades], \"Mark of the day: 11.5 / 20\", \"orange\")\nbar = ProgressBar(11.5, 20)\ngrades = Table([Col(\"Criterion\"), Col(\"Mark\", \"text\", \"right\")], [[\"Ideas\", \"4/5\"], [\"Organisation\", \"2/5\"], [\"Grammar and spelling\", \"2.5/5\"], [\"Vocabulary and style\", \"3/5\"]])\nadvice = Callout(\"info\", \"To work on\", \"The construction of sentences and the agreement of words.\")\nmail = Draft(\"Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully\", \"Notice of departure\", \"agency@example.com\")",
+    "root = Hive([[a], [b, c], [d], [e, f], [g]], \"The role of architecture\", \"Strategy\", \"Operating model\")\na = Hex(\"Vision\", \"#1e3a8a\")\nb = Hex(\"Outcomes\", \"#1e3a8a\")\nc = Hex(\"Value\", \"#1e3a8a\")\nd = Hex(\"Capabilities\", \"#1e3a8a\")\ne = Hex(\"Ecosystem\", \"#1e3a8a\")\nf = Hex(\"Architecture\", \"#f97316\")\ng = Hex(\"Delivery\", \"#1e3a8a\")"
   ]
 }

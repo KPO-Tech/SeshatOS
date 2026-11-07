@@ -444,6 +444,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gTokenActivityDay{}, &gTokenActivitySession{}, &gTokenActivityCall{})
 			},
 		},
+		{
+			ID:    "20261106_064_user_preferences_rich_families",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
+			},
+		},
 	}
 }
 

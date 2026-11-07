@@ -1,6 +1,6 @@
 {
   "name": "seshat-desktop",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "description": "SeshatOS Desktop Client",
   "main": "out/main/index.js",
   "private": true,
@@ -22,6 +22,7 @@
     "lint": "oxlint src",
     "artifact-libs": "node scripts/artifact-libs.mjs",
     "ui-catalog": "node scripts/generate-ui-catalog.mjs",
+    "gallery": "vite --config vite.gallery.config.ts",
     "i18n:check": "node scripts/i18n-scan.mjs check",
     "i18n:sync": "node scripts/i18n-scan.mjs sync",
     "i18n:length": "node scripts/i18n-length.mjs",
@@ -40,6 +41,7 @@
   },
   "dependencies": {
     "@icon-park/react": "^1.4.2",
+    "@iconify-json/logos": "^1.2.19",
     "@seshat/connector-catalog": "file:../shared/connector-catalog",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-virtual": "^3.14.13",

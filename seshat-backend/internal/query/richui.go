@@ -40,10 +40,19 @@ Besides Markdown, the desktop app draws structured components from a fenced bloc
 
 For figures or illustrations, draw them in the answer with these components; write no file or HTML page unless asked.
 `
+	// Told to the general agent only: the Knowledge agent writes no page and no file.
+	richUIMediumNote = `Choosing how to show something, in this order:
+1. In the answer, with these components, for anything they can draw: tables, charts, a function with sliders, a quiz or flashcards, an exercise, a draft, an architecture of a few boxes, a shape that says an idea, a quick example of a page or a dashboard to talk over. A function, a parabola or a graph to explore is a Plot with Sliders, never an HTML page.
+2. An HTML preview file only when the reader asks for a page, an app, a game or a site to keep, or when the components cannot draw it: 3D, animation over time, a simulation, a map, a free drawing, or an architecture too big or too tangled for an Architecture (more than about fifteen boxes, or crossing flows). Such a page uses the shipped libraries (Chart.js, D3, three.js, ECharts, Mermaid...) from a CDN at an exact version for what they do well, never a web font or a remote image (system fonts), has a light background by default unless the reader asks for dark, a careful design, and icons drawn as inline SVG, never emoji.
+3. A real file (a spreadsheet, a document, a script) when the reader wants something to open elsewhere; a table to fill in here is a Sheet.
+
+`
 	richUIArchitectureShape = `- the architecture of a system, its layers or a data flow: an Architecture of Panels that hold Items with icons, and Flow arrows between them;
 `
 	richUIChartShapes = `- numbers to compare or follow: BarChart, LineChart (a learning curve is one), AreaChart, PieChart; the spread of values: Histogram; a confusion or a correlation matrix: Heatmap; points and a fitted line: ScatterChart, or a Plot with Points;
 - a function, its derivative, its integral or the area under it: a Plot of Curves, where op derivative or integral draws them for you, Shade for an area (the legend gives its value) and Dot for a root or an extremum;
+`
+	richUIFormsShape = `- an exercise, a quiz, a text for the reader to write, fill in or correct: a Form (TextArea or Field, a Counter, one Submit), a Quiz of Questions with their right answer and explanation, or Flashcards of Flash; a text the reader will edit and copy, as an email or a letter: a Draft; a score or a level: a ProgressBar; how a session or a budget is shared: a SegmentBar of Segments;
 `
 	richUIInteractionShape = `- the next steps the reader may want: Choices at the end of the answer, one Choice per follow-up (two to four, each a short phrase; add a description and icon to explore a topic); an action the reader can trigger: Button; a file you read or changed: FileRef; a passage taken from a source: Citation; the sources used: SourceList; the sites a web search drew from: SourcePills, with real addresses only.
 `
@@ -56,10 +65,23 @@ Format: one statement per line, name = Component(arguments). Arguments are posit
 
 `
 
-	richUIArchitectureNote = `For an Architecture, write each Panel or Item you want to link as its own named statement, and name it in quotes in a Flow: Flow("api", "storage"). Put linked boxes side by side or one above the other, so that an arrow does not cross a third box. Keep a Panel to a handful of Items and the label of a Flow to a few words.
+	richUIDesignShape = `- a sketch of a site or of a screen: a Browser (or a Phone) holding a Nav, a Hero, Logos, Features of Feature, Stats, Plans of Plan, a Testimonial, a Grid, Pictures and a Footer; a dashboard: a Shell (side bar of SideItem, main area of Tile, Kpi, Spark, DataRows); the colours of a design: a Palette of Swatches;
+`
+	richUIDiagramsShape = `- a shape that says an idea, a strategy or a method: a Hive of Hex (a honeycomb of parts that touch), Chevrons of Chev (a process), a Cycle of Loop (steps in a loop), a Pyramid of Level (a hierarchy, or a funnel), a Quadrant of four Quad (a matrix of two by two), Layers of Layer (a stack), a Venn of two or three VSet, a Tree of Branch (an org chart, a decision tree), a Hub of Spoke (a centre and what surrounds it: the five forces of Porter, stakeholders, a mind map);
+`
+	richUIFormsNote = `Draw exercises, quizzes and flashcards here, not as a file or HTML page, unless the reader wants a game or an interface these components cannot make. A Form lets the reader answer without typing in the chat. Name every field (letters, digits and _, as essay) and write the Submit template as the message the reader would send you, in their language, with {{name}} where a field's text goes, as in Submit("Correct my text", "Here is my text. Correct it like a teacher: a mark out of 20, the mistakes explained.\n\n{{essay}}"). You receive their next message, so end your turn after the Form. One Form per answer, a few fields, a Counter with min and max when a length is asked, never a password or a secret. A Quiz is checked in the block (answer is the number of the right choice, from 0), so write its explanations; its report, with {{score}}, {{total}} and {{missed}}, is the message the reader may send at the end. Flashcards work the same with {{known}}, {{total}} and {{again}}; a Flash may carry a tag (a category) and a note (a pronunciation, an example). A Draft is a text to edit, copy or mail; an email has a subject. A Sheet is a table to fill in: columns, a few rows, a report with {{table}}.
 
 `
-	richUIChartNote = `In a Curve the formula is text in x: + - * / ^, sin cos tan exp ln log sqrt abs, pi and e, as 3x^2 or 3*x^2 or (x+1)(x-1). For a mathematics exercise, explain the steps in Markdown outside the block (LaTeX between $ signs works) and draw f, its derivative and the area in Plot blocks, with the roots and extrema as Dots.
+	richUIDesignNote = `A Browser sketches how a page could look, quickly, to be judged and changed: a few sections, short texts, colours as hex codes, names or rgb() and hsl() (a gradient is "#f97316 > #ec4899"), one main colour and one or two accents, a font and a radius that fit the brand. A Hero colours itself with its color; the texts take a readable colour by themselves. It is a sketch to talk over, not the site: for the real page write the files.
+
+`
+	richUIDiagramsNote = `Choose the shape that says the idea, not the one that is easiest: parts that touch, a Hive; steps in order, Chevrons; a loop, a Cycle; a hierarchy or a funnel, a Pyramid; two axes, a Quadrant; levels of a system, Layers; a decision tree, a Tree; a centre pressed on by forces (Porter), a Hub, never an Architecture. Short labels, four words at most; one colour for the part to stress, and the others calm.
+
+`
+	richUIArchitectureNote = `For an Architecture, write each Panel or Item you want to link as its own named statement, and name it in quotes in a Flow: Flow("api", "storage"). Put linked boxes side by side or one above the other, so that an arrow does not cross a third box. Keep a Panel to a handful of Items and the label of a Flow to a few words. For a poster of stages (a pipeline, a platform), give the Architecture direction "row", framed true for a frame with a large title, Items of shape cylinder for databases, and Flows of style block for the big arrows between stages.
+
+`
+	richUIChartNote = `In a Curve the formula is text in x: + - * / ^, sin cos tan exp ln log sqrt abs, pi and e, as 3x^2 or 3*x^2 or (x+1)(x-1). For a mathematics exercise, explain the steps in Markdown outside the block (LaTeX between $ signs works) and draw f, its derivative and the area in Plot blocks, with the roots and extrema as Dots. Put the controls and the graph of an explorer together in one Card. To let the reader explore a function, add a Slider for each parameter (name a letter, not x, e or pi) and write the Curve with it, as a*sin(b*x + c) + d, with * between a number and a variable; a Toggle or a Select (a variable 0 or 1, or the number of the choice, from 0) hides a layer (Curve, Dot, VLine, HLine, Shade: its last argument show) with show: "name" or "eq(name, 1)"; a Dot, VLine or HLine may take such a formula (Dot("-b/(2*a)", "-b^2/(4*a)", "vertex")); a Live shows the equation or a value with the current figures, as $y = {{a}}x^2$ or {{-b/(2*a)}}.
 
 `
 	richUITextNote = `The text of a component is Markdown: bold, italics, lists, links and code fences are drawn. Use a Card or a Callout only for what must stand apart or carry a colour; never put code, a paragraph or a list in a Card or a Markdown component when plain Markdown says it as well.
@@ -81,5 +103,5 @@ For a complex table, ColGroup puts a heading over several columns; Row(cells, to
 In these components everything comes from the excerpts, exactly as in a sentence: never a figure, a date or a name that no excerpt gives. Cite as in a paragraph: write the reference in square brackets, as [k7f3a91], after the text it supports, in a table cell, a Markdown component, a Callout body or a Step body; never in a title, a label, a value or a chart. A chart only for figures that the excerpts give; with only a few figures, a table or a sentence says it better. A component is for what it makes easier to read (a comparison, steps, key figures); a short answer is a sentence.`
 
 	// Told when a family is left out, so that the model can still offer it: the reader's reply carries the word that loads it.
-	richUIOffer = "\n\nMore components exist for architecture drawings and for charts and plots; they are described when the request is about a diagram, a chart or a graph. When one would clearly help and was not asked for, offer it as a Choice whose @Ask names it, as in Show it as a chart."
+	richUIOffer = "\n\nMore components exist for architecture drawings, charts and plots, forms, and site sketches; they are described when the request is about one of them. When one would clearly help and was not asked for, offer it as a Choice whose @Ask names it, as in Show it as a chart."
 )

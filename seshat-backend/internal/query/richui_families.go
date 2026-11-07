@@ -1,12 +1,13 @@
 package query
 
 import (
+	"context"
 	"encoding/json"
 	"regexp"
 	"strings"
 	"sync"
 
-	"github.com/KPO-Tech/seshat-runtime/pkg/types"
+	backendauth "github.com/KPO-Tech/SeshatOS/seshat-backend/internal/auth"
 )
 
 // Two parts of the catalog cost a lot and apply to few requests: the drawings of an architecture (with the icon lists they need) and
@@ -14,58 +15,70 @@ import (
 type richUIFamilies struct {
 	architecture bool
 	charts       bool
+	forms        bool
+	design       bool
+	diagrams     bool
 }
 
-var richUIAllFamilies = richUIFamilies{architecture: true, charts: true}
+var richUIAllFamilies = richUIFamilies{architecture: true, charts: true, forms: true, design: true, diagrams: true}
 
 // The catalog groups that belong to a family; every other group is core.
 const (
 	richUIArchitectureGroup = "Architecture"
 	richUIChartsGroup       = "Charts"
+	richUIFormsGroup        = "Forms"
+	richUIDesignGroup       = "Design"
+	richUIDiagramsGroup     = "Diagrams"
 )
 
-// A request is matched on its lower-cased text. A stem must start a word (so "trace" does not match "embrace"); an exact word must
-// be the whole word (so "roc" does not match "process").
-func richUIWords(stems, exact []string) *regexp.Regexp {
-	quote := func(words []string) string {
-		quoted := make([]string, len(words))
-		for i, word := range words {
-			quoted[i] = regexp.QuoteMeta(word)
-		}
-		return strings.Join(quoted, "|")
-	}
-	return regexp.MustCompile(`(?:^|[^\p{L}\p{N}])(?:(?:` + quote(stems) + `)|(?:` + quote(exact) + `)(?:$|[^\p{L}\p{N}]))`)
+// richFamilyModesProvider is what the preferences offer when the person can force a family on or off.
+type richFamilyModesProvider interface {
+	RichFamilyModes(ctx context.Context, principal *backendauth.Principal) map[string]string
 }
 
-// Words of a request that ask for a drawing of a system.
-var richUIArchitectureWords = richUIWords(
-	[]string{"architecture", "schema", "schéma", "diagram", "flowchart", "organigramme", "infrastructure", "topolog", "data flow",
-		"flux de donn", "system design", "conception du syst", "composants du syst", "dessin", "dessine", "draw"},
-	[]string{"uml"},
-)
-
-// Words of a request about numbers, curves or mathematics.
-var richUIChartWords = richUIWords(
-	[]string{"graph", "chart", "courbe", "curve", "plot", "trac", "histogram", "heatmap", "carte de chaleur", "confusion", "correlation",
-		"corrélation", "scatter", "nuage de points", "camembert", "barres", "visualis", "dessin", "dessine", "draw", "deriv", "dériv",
-		"integral", "intégral", "primitive", "fonction", "function", "equation", "équation", "asymptote", "extremum", "extrema",
-		"racine", "regression", "régression", "loss", "accuracy", "learning curve", "apprentissage", "overfit", "machine learning",
-		"deep learning", "neural", "réseau de neurones", "distribution", "statisti", "x^", "x²", "x³",
-		"illustrat", "visuel", "visual", "figure", "gradient", "descente", "optimi", "convergence", "simulation"},
-	[]string{"pie", "roc", "auc", "limite", "limit"},
-)
-
-var richUIFormula = regexp.MustCompile(`\b[fgh]\s*\(\s*x\s*\)|\bx\s*\^\s*\d|\b[a-z]\s*=\s*\d*x\s*[+\-^]`)
-
-// richUIFamiliesFor decides what a request needs. The prompt is built again for every turn, so a follow-up that names nothing
-// ("and the second one?") falls back to the core; a word such as chart or diagram, in the reader's own reply to a Choice, brings
-// the family back.
-func richUIFamiliesFor(prompt string) richUIFamilies {
-	text := strings.ToLower(prompt)
-	return richUIFamilies{
-		architecture: richUIArchitectureWords.MatchString(text),
-		charts:       richUIChartWords.MatchString(text) || richUIFormula.MatchString(text),
+// withModes applies what the person forced: a family set on is taught whatever the request, one set off never, the others stay as the
+// request and the conversation made them.
+func (f richUIFamilies) withModes(modes map[string]string) richUIFamilies {
+	force := func(current bool, mode string) bool {
+		switch mode {
+		case "on":
+			return true
+		case "off":
+			return false
+		}
+		return current
 	}
+	f.architecture = force(f.architecture, modes["architecture"])
+	f.charts = force(f.charts, modes["charts"])
+	f.forms = force(f.forms, modes["forms"])
+	f.design = force(f.design, modes["design"])
+	f.diagrams = force(f.diagrams, modes["diagrams"])
+	return f
+}
+
+var (
+	richFamilyWordsOnce  sync.Once
+	richFamilyWordsCache map[string]int
+)
+
+// RichFamilyWords is what each family of components adds to the prompt, in words: the figure the person sees next to the choice.
+func RichFamilyWords() map[string]int {
+	richFamilyWordsOnce.Do(func() {
+		core := len(strings.Fields(richAnswersBlock(richUIFamilies{})))
+		words := func(f richUIFamilies) int { return len(strings.Fields(richAnswersBlock(f))) - core }
+		richFamilyWordsCache = map[string]int{
+			"architecture": words(richUIFamilies{architecture: true}),
+			"charts":       words(richUIFamilies{charts: true}),
+			"forms":        words(richUIFamilies{forms: true}),
+			"design":       words(richUIFamilies{design: true}),
+			"diagrams":     words(richUIFamilies{diagrams: true}),
+		}
+	})
+	out := make(map[string]int, len(richFamilyWordsCache))
+	for family, count := range richFamilyWordsCache {
+		out[family] = count
+	}
+	return out
 }
 
 func (f richUIFamilies) has(group string) bool {
@@ -74,6 +87,12 @@ func (f richUIFamilies) has(group string) bool {
 		return f.architecture
 	case richUIChartsGroup:
 		return f.charts
+	case richUIFormsGroup:
+		return f.forms
+	case richUIDesignGroup:
+		return f.design
+	case richUIDiagramsGroup:
+		return f.diagrams
 	}
 	return true
 }
@@ -112,7 +131,13 @@ func richAnswersBlock(families richUIFamilies) string { return richBlock(familie
 
 // richKnowledgeAnswersBlock is the same for the Knowledge agent: no source components, only the @Ask action, and the rules that keep
 // a component as faithful to the excerpts as a sentence.
-func richKnowledgeAnswersBlock(families richUIFamilies) string { return richBlock(families, true) }
+func richKnowledgeAnswersBlock(families richUIFamilies) string {
+	// The Knowledge agent answers from documents: it asks nothing of the reader in a form.
+	families.forms = false
+	families.design = false
+	families.diagrams = false
+	return richBlock(families, true)
+}
 
 func richBlock(families richUIFamilies, knowledge bool) string {
 	catalog := richUICatalogLoaded()
@@ -133,11 +158,23 @@ func richBlock(families richUIFamilies, knowledge bool) string {
 func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge bool) string {
 	var b strings.Builder
 	b.WriteString(richUIHead)
+	if !knowledge {
+		b.WriteString(richUIMediumNote)
+	}
 	if families.architecture {
 		b.WriteString(richUIArchitectureShape)
 	}
 	if families.charts {
 		b.WriteString(richUIChartShapes)
+	}
+	if families.forms {
+		b.WriteString(richUIFormsShape)
+	}
+	if families.design {
+		b.WriteString(richUIDesignShape)
+	}
+	if families.diagrams {
+		b.WriteString(richUIDiagramsShape)
 	}
 	if knowledge {
 		b.WriteString(richUIKnowledgeInteractionShape)
@@ -150,6 +187,15 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge
 	}
 	if families.charts {
 		b.WriteString(richUIChartNote)
+	}
+	if families.forms {
+		b.WriteString(richUIFormsNote)
+	}
+	if families.design {
+		b.WriteString(richUIDesignNote)
+	}
+	if families.diagrams {
+		b.WriteString(richUIDiagramsNote)
 	}
 	b.WriteString(richUITextNote)
 	if knowledge {
@@ -179,7 +225,7 @@ func buildRichUIBlock(catalog *richUICatalog, families richUIFamilies, knowledge
 			b.WriteString("\nIcons, for the icon argument: " + strings.Join(catalog.Icons.Names, ", ") + ".\n")
 		}
 		if len(catalog.Icons.Brands) > 0 {
-			b.WriteString("Technology logos, written si: and a name: " + strings.Join(catalog.Icons.Brands, ", ") + ".\n")
+			b.WriteString("A technology or a service by its plain name (" + strings.Join(catalog.Icons.Brands, ", ") + ", aws lambda, azure, slack, openai, stripe, figma...) draws its logo as an icon when the app has it, and nothing otherwise.\n")
 		}
 	}
 	if len(catalog.Tones) > 0 {
@@ -219,70 +265,4 @@ func usesAny(example string, names []string) bool {
 		}
 	}
 	return false
-}
-
-// How many of the latest messages of a session are read for the families they already used.
-const richUIHistoryWindow = 12
-
-func (f richUIFamilies) union(other richUIFamilies) richUIFamilies {
-	return richUIFamilies{architecture: f.architecture || other.architecture, charts: f.charts || other.charts}
-}
-
-var (
-	richUIUsesOnce         sync.Once
-	richUIUsesArchitecture *regexp.Regexp
-	richUIUsesCharts       *regexp.Regexp
-)
-
-// richUIUsesOf matches a call of any component of the two families, whatever the words of the request were.
-func richUIUsesOf() (architecture, charts *regexp.Regexp) {
-	richUIUsesOnce.Do(func() {
-		catalog := richUICatalogLoaded()
-		if catalog == nil {
-			return
-		}
-		var archNames, chartNames []string
-		for _, c := range catalog.Components {
-			switch c.Group {
-			case richUIArchitectureGroup:
-				archNames = append(archNames, regexp.QuoteMeta(c.Name))
-			case richUIChartsGroup:
-				chartNames = append(chartNames, regexp.QuoteMeta(c.Name))
-			}
-		}
-		compile := func(names []string) *regexp.Regexp {
-			if len(names) == 0 {
-				return nil
-			}
-			return regexp.MustCompile(`(?:^|[^A-Za-z])(?:` + strings.Join(names, "|") + `)\(`)
-		}
-		richUIUsesArchitecture, richUIUsesCharts = compile(archNames), compile(chartNames)
-	})
-	return richUIUsesArchitecture, richUIUsesCharts
-}
-
-// richUIFamiliesInHistory returns the families that the latest answers of a session already drew. A follow-up that names nothing
-// ("and for x squared?", "now the second one") is about what was just shown, so the model keeps what it needs to continue it.
-func richUIFamiliesInHistory(messages []types.Message) richUIFamilies {
-	arch, charts := richUIUsesOf()
-	var found richUIFamilies
-	read := 0
-	for i := len(messages) - 1; i >= 0 && read < richUIHistoryWindow; i-- {
-		read++
-		if messages[i].Role != types.RoleAssistant {
-			continue
-		}
-		for _, block := range messages[i].Content {
-			text, ok := block.(types.TextContent)
-			if !ok || !strings.Contains(text.Text, richUIFence+"seshat-ui") {
-				continue
-			}
-			found.architecture = found.architecture || (arch != nil && arch.MatchString(text.Text))
-			found.charts = found.charts || (charts != nil && charts.MatchString(text.Text))
-		}
-		if found == richUIAllFamilies {
-			break
-		}
-	}
-	return found
 }

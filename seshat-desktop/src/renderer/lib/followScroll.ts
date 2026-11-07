@@ -7,6 +7,14 @@ export const FOLLOW_DISTANCE = 60
  * back down, land more than a few lines short of the end; reading that as the reader leaving stopped the follow with nobody touching
  * anything. The chat only ever scrolls down, so a move up is the reader's (wheel, scrollbar, a selection dragged up).
  */
+/**
+ * Whether the chat keeps following its end after the reader presses on something in the conversation. Away from the end, they are working
+ * with what they see (answering a quiz, flipping a card, moving a slider): what that makes grow must not carry the view to the end.
+ */
+export function followAfterPress(following: boolean, distance: number): boolean {
+  return distance > FOLLOW_DISTANCE ? false : following
+}
+
 export function followAfterScroll(following: boolean, move: { top: number; lastTop: number; distance: number }): boolean {
   if (move.top < move.lastTop && move.distance > FOLLOW_DISTANCE) return false
   if (move.top > move.lastTop && move.distance <= FOLLOW_DISTANCE) return true

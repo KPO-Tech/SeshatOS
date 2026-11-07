@@ -38,16 +38,19 @@ type FeaturedSkillRepo struct {
 	PythonPackages []string `json:"-"`
 	// Commands are programs the skills run and an environment cannot hold, looked for when the plan is made.
 	Commands []skillinstall.CommandNeed `json:"-"`
+	// PythonRequired asks for a Python environment even when the skills list no package, so that their scripts run with a Python Seshat controls.
+	PythonRequired bool `json:"-"`
+	// Expose copies skills kept in a hidden folder of the repository (.claude/skills) to a folder that is read.
+	Expose []skillinstall.Expose `json:"-"`
+	// Fixes correct the text of those skills where it does not suit Seshat, again after each update from the source.
+	Fixes []skillinstall.Fix `json:"-"`
 }
 
-// DefaultSeshatSkillsRepo is the official Seshat skills collection. Left empty
-// for now: some of its skills (e.g. pdf) shadow the SDK's own better-suited
-// built-in tools (document-reader-backed Read) for tasks the skill's description
-// claims too broadly, causing worse agent behavior than not having it at all.
-// Re-enable once the individual skill descriptions are scoped tightly enough
-// to stop competing with built-in tools. Operators can still opt in with
-// SESHAT_DEFAULT_SKILL_REPO.
-const DefaultSeshatSkillsRepo = ""
+// DefaultSeshatSkillsRepo is the collection of Seshat's own skills, cloned in the background at first start and updated about once an hour.
+// It was left empty while it still held public skills (pdf, docx...) that shadowed the built-in document tools; it now holds only skills
+// written for Seshat (html-page), each limited to one case, and public skills come from the catalog. SESHAT_DEFAULT_SKILL_REPO changes it,
+// "none" turns it off.
+const DefaultSeshatSkillsRepo = "https://github.com/KPO-Tech/seshat-skills"
 
 // defaultAllowedSkillRepoHosts is the curated allowlist of git hosting services accepted
 // when installing a skill repo via the HTTP API. Operators may override with SESHAT_SKILL_REPO_HOSTS.
@@ -318,6 +321,9 @@ func (a *App) handleSkillRepoInstall(w http.ResponseWriter, r *http.Request) {
 		}
 		report.Step(2, 2, "Reading what they need")
 		spec := skillSpec(featured, nil)
+		for _, warning := range skillinstall.Prepare(target, spec) {
+			fmt.Printf("[API] Skill repo %s: %s\n", repo.Name, warning)
+		}
 		plan := skillinstall.Detect(target, spec)
 		if len(spec.Include) > 0 || !plan.Empty() {
 			if err := skillinstall.WriteInstall(target, skillsloader.RepoInstall{Include: spec.Include, Pending: !plan.Empty()}); err != nil {
@@ -388,7 +394,29 @@ func skillSpec(featured *FeaturedSkillRepo, recorded []string) skillinstall.Spec
 	if featured == nil {
 		return skillinstall.Spec{Include: recorded}
 	}
-	return skillinstall.Spec{Include: featured.Skills, PythonMinimum: featured.PythonMinimum, PythonPackages: featured.PythonPackages, Commands: featured.Commands}
+	return skillinstall.Spec{
+		Include: featured.Skills, PythonMinimum: featured.PythonMinimum, PythonPackages: featured.PythonPackages, Commands: featured.Commands,
+		PythonRequired: featured.PythonRequired, Expose: featured.Expose, Fixes: featured.Fixes,
+	}
+}
+
+// PrepareInstalledSkillRepos makes again the copies and the corrections of the catalog skills that need them, after the repositories were
+// updated from their sources. What could not be corrected is printed, never fatal.
+func PrepareInstalledSkillRepos(featured []FeaturedSkillRepo) {
+	reposDir := skillsloader.GetSkillReposPath()
+	for i := range featured {
+		repo := &featured[i]
+		if len(repo.Expose) == 0 {
+			continue
+		}
+		target := filepath.Join(reposDir, repo.Name)
+		if _, err := os.Stat(target); err != nil {
+			continue
+		}
+		for _, warning := range skillinstall.Prepare(target, skillSpec(repo, nil)) {
+			fmt.Printf("[API] Skill repo %s: %s\n", repo.Name, warning)
+		}
+	}
 }
 
 // skillCloneStaging is where a repository is downloaded before it is moved among the others: outside the folder the skills are read from.

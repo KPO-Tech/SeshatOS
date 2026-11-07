@@ -1,6 +1,7 @@
 package preferences
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -24,7 +25,10 @@ type UserPreferences struct {
 	// RichAnswersDisabled is true when the user turned off structured components (tables, figures, steps) in answers.
 	// It is an opt-out so that the zero value, which is also what a user who never chose reads back, means on.
 	RichAnswersDisabled bool
-	UpdatedAt           time.Time
+	// RichFamilies holds the families of components the person forced: family -> "on" or "off". A family that is not in it is
+	// automatic. Only valid entries are kept.
+	RichFamilies map[string]string
+	UpdatedAt    time.Time
 }
 
 type UpsertParams struct {
@@ -39,6 +43,65 @@ type UpsertParams struct {
 	MaxSubAgentDepth          int
 	MemoryEnabled             bool
 	RichAnswersDisabled       bool
+	// RichFamilies is stored whole: the caller sends back the families it wants forced, and an empty map makes them all automatic.
+	RichFamilies map[string]string
+}
+
+// The families of components a person may force, and the modes they may give them.
+var (
+	RichFamilyNames = []string{"architecture", "charts", "forms", "design", "diagrams"}
+	richFamilyModes = map[string]bool{"auto": true, "on": true, "off": true}
+)
+
+// CleanRichFamilies keeps the known families with a known mode other than auto, and says what it dropped.
+func CleanRichFamilies(in map[string]string) (clean map[string]string, invalid string) {
+	clean = map[string]string{}
+	for family, mode := range in {
+		known := false
+		for _, name := range RichFamilyNames {
+			if name == family {
+				known = true
+			}
+		}
+		if !known {
+			return nil, "unknown family " + family
+		}
+		if !richFamilyModes[mode] {
+			return nil, "unknown mode " + mode + " for " + family
+		}
+		if mode != "auto" {
+			clean[family] = mode
+		}
+	}
+	return clean, ""
+}
+
+// EncodeRichFamilies is the text stored for a map of families: empty when none is forced.
+func EncodeRichFamilies(families map[string]string) string {
+	if len(families) == 0 {
+		return ""
+	}
+	raw, err := json.Marshal(families)
+	if err != nil {
+		return ""
+	}
+	return string(raw)
+}
+
+// DecodeRichFamilies reads what EncodeRichFamilies wrote, keeping only valid entries: a stored text that cannot be read means automatic.
+func DecodeRichFamilies(text string) map[string]string {
+	if strings.TrimSpace(text) == "" {
+		return map[string]string{}
+	}
+	var raw map[string]string
+	if err := json.Unmarshal([]byte(text), &raw); err != nil {
+		return map[string]string{}
+	}
+	clean, invalid := CleanRichFamilies(raw)
+	if invalid != "" {
+		return map[string]string{}
+	}
+	return clean
 }
 
 // BuildSystemPromptBlock renders the preferences as a system prompt injection

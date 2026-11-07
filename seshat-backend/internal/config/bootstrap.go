@@ -927,6 +927,9 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 		featuredRepos = append(featuredRepos, extra...)
 	}
 
+	// The copies and corrections of the catalog skills are made again after the update above, so that a new version of a skill keeps them.
+	api.PrepareInstalledSkillRepos(featuredRepos)
+
 	if config.AdminEmail != "" {
 		if strings.TrimSpace(config.AdminPassword) != "" && strings.TrimSpace(config.AdminPasswordHash) == "" {
 			fmt.Fprintf(os.Stderr, "[API] AVERTISSEMENT SÉCURITÉ: SESHAT_ADMIN_PASSWORD est défini en clair dans l'environnement.\n")

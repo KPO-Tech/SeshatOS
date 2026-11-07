@@ -45,5 +45,67 @@ curve = Plot([Curve("x^3 - 3x + 1", "f(x)"), Shade("x^3 - 3x + 1", -2, 2, "area 
   `root = Stack([loss, matrix, errors])
 loss = LineChart(["1", "2", "3", "4", "5"], [Series("train", [0.92, 0.55, 0.38, 0.29, 0.24]), Series("validation", [0.95, 0.63, 0.47, 0.42, 0.41])], null, "Loss per epoch", "epoch", "loss")
 matrix = Heatmap(["cat", "dog", "bird"], ["cat", "dog", "bird"], [[48, 2, 0], [5, 41, 4], [1, 3, 46]], "Confusion matrix", "blue", 0)
-errors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, "Residuals", "error")`
+errors = Histogram([-0.4, -0.2, -0.1, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.9], 5, "Residuals", "error")`,
+  `root = Card([intro, graph, a, b, c, d, eq], "Sine wave explorer")
+intro = Markdown("Move the sliders to see how each parameter changes the sine wave.")
+graph = Plot([Curve("a*sin(b*x + c) + d", "a sin(bx + c) + d", "blue"), Curve("cos(x)", "cos(x)", "green", true), HLine(0)], -10, 10, -4, 4, null, "x", "y")
+a = Slider("a", -3, 3, 1, 0.1, "Amplitude (a)")
+b = Slider("b", 0.2, 4, 1, 0.1, "Frequency (b)")
+c = Slider("c", -3.14, 3.14, 0, 0.1, "Phase (c)")
+d = Slider("d", -3, 3, 0, 0.1, "Vertical shift (d)")
+eq = Live("Current equation: $f(x) = {{a}}\\\\sin({{b}}x + {{c}}) + {{d}}$, period {{2*pi/b}}")`,
+  `root = Stack([quiz, cards])
+quiz = Quiz([Question("Which keyword starts a goroutine?", ["go", "async"], 0, "go f() runs f concurrently."), Question("A write to a nil map...", ["creates the key", "panics"], 1)], "Go basics", "Quiz: {{score}}/{{total}}. Missed:\\n{{missed}}\\nExplain.")
+cards = Flashcards([Flash("goroutine", "A light thread."), Flash("channel", "A typed pipe.")], "Vocabulary", "{{known}}/{{total}} known. Review: {{again}}.")`,
+  `root = Stack([site, colours])
+site = Browser([nav, hero, feats, plans, foot], "https://seshat.app", "#ffffff", "sans", "md")
+nav = Nav("Seshat", ["Product", "Pricing"], "Download", "orange")
+hero = Hero("Your agents, on your machine", "Chat, projects and tools that stay local.", "Get started", "See the docs", "#f97316 > #ec4899")
+feats = Features([Feature("Local first", "Your files stay here.", "lock", "orange"), Feature("Any model", "Bring your own.", "ai", "blue")], 2)
+plans = Plans([Plan("Free", "0", ["Local chat"], "Start", "slate"), Plan("Team", "12 EUR", ["Shared knowledge"], "Try it", "orange", true)])
+foot = Footer("2026 Seshat", ["Privacy", "Terms"])
+colours = Palette([Swatch("orange", "Orange"), Swatch("#f97316 > #ec4899", "Sunset"), Swatch("hsl(221, 83%, 53%)", "Blue")], "Colours")`,
+  `root = Browser([app], "https://app.seshat.dev", "#ffffff")
+app = Shell([SideItem("Overview", "dashboard"), SideItem("Projects", "folder")], [row, trend], "Seshat", "#f97316")
+row = Grid([Kpi("Projects", "24", "+12%", "orange"), Kpi("Open bugs", "7", "-3%", "red")], 2)
+trend = Tile([Spark([4, 6, 5, 8, 11, 14], "orange"), DataRows(["Project", "Status"], [["Website", "On track"], ["Docs", "Done"]])], "Activity")`,
+  `root = Stack([plan, exercise])
+plan = SegmentBar([Segment("Discover 2 words", 2, "blue"), Segment("Write 100 to 150 words", 8, "green"), Segment("Correct and rewrite", 5, "orange")], "min", "A session of 15 minutes")
+exercise = Form([topic, essay, count], send, "Day 1: argue")
+topic = Markdown("**Subject:** is discipline more important than motivation? Write 100 to 150 words: your opinion, two arguments, a conclusion.")
+essay = TextArea("essay", "In my opinion, discipline plays an essential part because...", 7)
+count = Counter("essay", "words", 100, 150)
+send = Submit("Correct my text", "Here is my text of the day. Correct it like a teacher: a mark out of 20, the mistakes explained, then ask me to rewrite the weak passages.\\n\\n{{essay}}")`,
+  `root = Stack([score, advice, mail])
+score = Card([bar, grades], "Mark of the day: 11.5 / 20", "orange")
+bar = ProgressBar(11.5, 20)
+grades = Table([Col("Criterion"), Col("Mark", "text", "right")], [["Ideas", "4/5"], ["Organisation", "2/5"], ["Grammar and spelling", "2.5/5"], ["Vocabulary and style", "3/5"]])
+advice = Callout("info", "To work on", "The construction of sentences and the agreement of words.")
+mail = Draft("Dear Sir or Madam,\\n\\nI am writing to give notice that I will leave the flat on 31 December.\\n\\nYours faithfully", "Notice of departure", "agency@example.com")`,
+  `root = Hive([[a], [b, c], [d], [e, f], [g]], "The role of architecture", "Strategy", "Operating model")
+a = Hex("Vision", "#1e3a8a")
+b = Hex("Outcomes", "#1e3a8a")
+c = Hex("Value", "#1e3a8a")
+d = Hex("Capabilities", "#1e3a8a")
+e = Hex("Ecosystem", "#1e3a8a")
+f = Hex("Architecture", "#f97316")
+g = Hex("Delivery", "#1e3a8a")`
+]
+
+/** A name for each example, in the order of PROMPT_EXAMPLES: what the gallery shows over it. */
+export const EXAMPLE_TITLES: string[] = [
+  'A report: figures, a table and a note',
+  'Step by step',
+  'A status card with its plan',
+  'The architecture of a local app',
+  'A comparison table',
+  'A function, its derivative and its area',
+  'Machine learning: loss, matrix and residuals',
+  'A sine wave to explore',
+  'A quiz and flashcards',
+  'A site sketch with its palette',
+  'A dashboard sketch',
+  'A writing exercise',
+  'A score, advice and an email draft',
+  'A honeycomb diagram'
 ]

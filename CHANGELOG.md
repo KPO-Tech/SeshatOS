@@ -11,6 +11,42 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.17] - 2026-11-07
+
+### Highlights
+
+- **A fuller Generative UI.** The agent knows every component by default and reaches for a page of HTML only when it has to; forms and graphs share numbers, tables can be filled in and sent, a hub diagram, diagrams open large and can be saved.
+- **Public skills that needed fixing can now be offered.** The catalog copies a skill from a hidden folder, corrects its text after each update, and gives it a Python of its own (downloaded by uv if the machine has none). ui-ux-pro-max is the first.
+- **glm-5.3 writes files again** (runtime v1.15.1), and the permission modes say what they do: "No confirmation" is the one that never checks.
+
+### Added
+
+- **"What's new" tells everything since 0.3.0, in your language.** The card that opens after an update now reads "New in 0.3.0 → 0.3.17" and has twelve pictures instead of six: Generative UI, web pages beside the chat, skills from a catalog, the pull requests of the agent, the interface in French, token use and the sandbox, next to the earlier ones. Its texts were in English only; they are now translated, and the start page card no longer shows a Generative UI switch that moved to Settings.
+- **A sketch says its texts are examples.** When the agent sketches a page in a Browser or a Phone, the figures, names and quotes in it are made up; it is now told to say so under the sketch instead of presenting them as real.
+- **The permission modes say what they do.** The shield menu showed "Smart" and "Auto", and "Auto" was the one that never checks anything. It is now "No confirmation" ("Sans confirmation"), and each mode has a line under its name: Smart checks each action and asks when it is unsure or risky; No confirmation runs everything without asking.
+- **Better pages from the agent.** The base the agent starts an HTML page from now also says what to avoid (indigo accent, gradient titles, invented figures, the same skeleton every time), to write the page in one call, and to ask you when a write is refused instead of looking for a way around it.
+- **Public skills that need a copy, a correction or a Python.** The catalog can now install a skill that keeps its files in a hidden folder (copied to a visible one), correct the text that does not suit Seshat (re-applied after each update, reported if it no longer fits), and give a skill that only uses Python's own library an environment too. When the machine has no Python, uv downloads one for Seshat after you agree. ui-ux-pro-max (design help for building a real interface) is the first entry (ADR 0025).
+- **Seshat's own skills collection is cloned at first start.** `seshat-skills` is downloaded in the background and kept up to date; it holds only skills written for Seshat and is empty for now (an `html-page` skill was tried and dropped for a base in the prompt). Public skills stay in the catalog.
+- **Forms in chat answers.** The agent can now put an exercise, a quiz or a text to correct in the answer: a text box with a word counter and a button that sends what you wrote as your next message. It can also give a draft (an email, a letter) to edit and copy, a score bar and a bar cut in parts. Nothing is sent without your click (ADR 0013).
+- **Sliders and live formulas.** A graph in an answer can be explored: sliders change the parameters of a curve, and the equation, the marks (a vertex, a root) and the values follow (ADR 0014).
+- **Switches, choices, quizzes and flashcards.** A switch or a list can show or hide curves of a graph. A quiz gives the right answer and its explanation at once, with a score; flashcards flip and are marked known or to review. At the end you may send your result to the agent with one click (ADR 0015).
+- **Flashcards that turn.** Cards flip with an animation, show progress and a count of known and to review, can be shuffled and used with the keyboard, and may carry a category and a note.
+- **Site sketches in the chat.** The agent can draw how a page could look: a browser window with a navigation bar, a hero, feature cards, a grid, pictures, a footer, and a colour palette, with colours of its own choosing (ADR 0016).
+- **Logos for architecture drawings.** A technology or a service by its plain name (aws lambda, azure, slack, openai, stripe, react) now shows its logo in colour, from a large set that ships with the app and works offline.
+- **A Generative UI page.** The menu entry opens a page with the switch, a gallery of every example the agent is taught from, eight requests to try (each opens a new chat with the text ready), and the choice of families of components: automatic, always or never, with what each adds to the prompt (ADR 0017).
+- **Diagrams that say an idea.** The agent can draw a honeycomb of parts, a process in arrow-shaped steps, a cycle, a pyramid or a funnel, a matrix of two by two and a stack of layers, in colours of its choosing (ADR 0018). A new family in the Generative UI window, with a gallery.
+- **Architectures as posters.** An architecture can lay its stages in a row, sit in a frame with a large title, draw databases as cylinders and join the stages with big arrows (ADR 0019).
+- **Venn diagrams, org charts and decision trees**, hexagon and pill shapes for the steps of an architecture, and a legend that wraps under the bars of a session or a budget, where short parts overlapped their words.
+- **Drafts that open in your mail app, and tables to fill in.** A draft can be opened as a new mail after you confirm the address; the agent can also give a table with columns and rows you edit, then send it back as a Markdown table (ADR 0020).
+- **Numbers typed in a form move the graph.** A number field in a form works like a slider: the curve and the live formulas follow what you type, and the message you send can carry the sliders' values too (ADR 0021).
+- **A hub diagram, and every component known to the agent.** A centre with what surrounds it (the five forces of Porter, stakeholders, a mind map) can be drawn. The agent now knows all the components on every request, so it no longer falls back to an HTML page for a decision tree; the big arrows of an architecture poster are thinner (ADR 0023).
+- **Diagrams open large and can be saved.** A tree, a cycle, a hub or any other diagram has the same corner button as an architecture: a large view, and a download as an image. The agent is also told that pages can use the libraries the app ships (Chart.js, D3, three.js, Mermaid...).
+- **Better pages, better choices.** The agent writes its HTML pages from a common base (light colours, one accent, inline icons, the shipped libraries), and each component description now says when to use it, so a function, a decision tree or an architecture of a few boxes stays in the answer (ADR 0024).
+
+### Fixed
+
+- **Files can be written with glm-5.3 again.** In the smart permission mode every write was refused without a question: the safety check asked z.ai to switch the model's reasoning off, glm-5.3 always reasons and rejects that, so the check failed. The runtime (v1.15.1) no longer sends it to a model that refuses it, and a check that cannot decide now asks you instead of refusing.
+
 ## [0.3.16] - 2026-11-05
 
 ### Highlights

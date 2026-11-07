@@ -2,8 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Down, Gift, Logout, Magic, SettingTwo, Shield } from '@icon-park/react'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useAuth } from '@renderer/hooks/useAuth'
+import { useDialogsStore } from '@renderer/stores/dialogs'
 import { useSettingsMenu } from '@renderer/hooks/useSettingsMenu'
-import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 import { edition } from '@renderer/lib/edition'
 import { OPEN_WHATS_NEW_EVENT } from '@renderer/lib/whatsNew'
 import { useTranslation } from 'react-i18next'
@@ -19,17 +19,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
   const [open, setOpen] = useState(false)
   const { isAdmin, connected, go } = useSettingsMenu()
   const { user, logout } = useAuth()
-  const { prefs, busy, save } = useUserPreferences()
-  // The switch answers at once; the preference is saved behind it.
-  const [generativeUi, setGenerativeUi] = useState<boolean | null>(null)
-  const generativeOn = generativeUi ?? prefs?.rich_answers_enabled !== false
-
-  function toggleGenerativeUi() {
-    if (busy || !prefs) return
-    const next = !generativeOn
-    setGenerativeUi(next)
-    void save({ rich_answers_enabled: next }).finally(() => setGenerativeUi(null))
-  }
+  const openGenerative = useDialogsStore((state) => state.openGenerative)
 
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
@@ -78,7 +68,7 @@ export function SidebarFooterMenu({ collapsed }: { collapsed: boolean }) {
             role="menu"
           >
             <MenuButton icon={<SettingTwo theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.settings')} onClick={() => pick(() => go('settings'))} />
-            <MenuSwitch icon={<Magic theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.generativeUi')} hint={t('layout.sidebar.sidebarFooterMenu.tablesFiguresAndStepsDrawn')} on={generativeOn} disabled={busy || !prefs} onClick={toggleGenerativeUi} />
+            <MenuButton icon={<Magic theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.generativeUi')} onClick={() => pick(openGenerative)} />
             <MenuButton icon={<Gift theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.whatSNew')} onClick={() => pick(() => window.dispatchEvent(new Event(OPEN_WHATS_NEW_EVENT)))} />
             {edition.cloud && connected && <MenuButton icon={<Shield theme="outline" size={14} />} label={t('layout.sidebar.sidebarFooterMenu.admin')} disabled={!isAdmin} onClick={() => pick(() => go('admin'))} />}
             {edition.accounts && (
@@ -105,27 +95,6 @@ function MenuButton({ icon, label, disabled, onClick }: { icon: ReactNode; label
     >
       {icon}
       <span>{label}</span>
-    </button>
-  )
-}
-
-/** A menu line that turns something on or off without closing the menu. */
-function MenuSwitch({ icon, label, hint, on, disabled, onClick }: { icon: ReactNode; label: string; hint?: string; on: boolean; disabled?: boolean; onClick: () => void }) {
-  return (
-    <button
-      className="flex w-full cursor-pointer items-center gap-2 whitespace-nowrap rounded-[7px] border-0 bg-transparent px-[9px] py-2 text-left text-[12px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-45 disabled:hover:bg-transparent"
-      type="button"
-      role="menuitemcheckbox"
-      aria-checked={on}
-      title={hint}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {icon}
-      <span className="flex-1">{label}</span>
-      <span className={cx('relative h-[14px] w-[26px] shrink-0 rounded-full transition-colors duration-150', on ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border-strong)]')} aria-hidden="true">
-        <span className={cx('absolute top-[2px] size-[10px] rounded-full bg-white transition-[left] duration-150', on ? 'left-[14px]' : 'left-[2px]')} />
-      </span>
     </button>
   )
 }

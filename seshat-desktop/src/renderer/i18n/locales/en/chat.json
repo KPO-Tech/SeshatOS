@@ -358,6 +358,43 @@
             "histogram": "Histogram",
             "heatmap": "Heatmap",
             "binTitle": "{{from}} to {{to}}: {{count}}"
+          },
+          "forms": {
+            "sent": "Sent",
+            "words": "words",
+            "fillIn": "Fill in the fields to continue.",
+            "needsConversation": "Open the conversation to send.",
+            "wait": "Wait for the answer to finish.",
+            "willSend": "Sends: {{text}}",
+            "copy": "Copy",
+            "copied": "Copied",
+            "to": "To",
+            "subject": "Subject",
+            "draft": "Draft",
+            "mail": "Open in mail",
+            "mailTo": "Open your mail app with a message to {{to}}?",
+            "mailNoRecipient": "Open your mail app with this message, to nobody yet?",
+            "mailOpen": "Open",
+            "mailCancel": "Cancel",
+            "sheetAdd": "Add a row",
+            "sheetRemove": "Remove row {{n}}",
+            "sheetSend": "Send my table"
+          },
+          "quiz": {
+            "send": "Send my result",
+            "correct": "Right",
+            "wrong": "Wrong",
+            "score": "Score: {{score}} / {{total}}",
+            "retry": "Try again",
+            "flip": "Show the answer",
+            "showFront": "Show the question",
+            "again": "To review",
+            "knew": "I knew it",
+            "cardOf": "Card {{n}} of {{total}}",
+            "cardsDone": "{{known}} known out of {{total}}",
+            "cards": "Flashcards",
+            "shuffle": "Shuffle",
+            "keys": "Space turns the card · K known · U to review"
           }
         },
         "expand": {

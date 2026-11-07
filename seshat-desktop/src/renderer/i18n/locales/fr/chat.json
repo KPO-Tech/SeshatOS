@@ -358,6 +358,43 @@
             "histogram": "Histogramme",
             "heatmap": "Heatmap",
             "binTitle": "{{from}} à {{to}} : {{count}}"
+          },
+          "forms": {
+            "sent": "Envoyé",
+            "words": "mots",
+            "fillIn": "Remplissez les champs pour continuer.",
+            "needsConversation": "Ouvrez la conversation pour envoyer.",
+            "wait": "Attendez la fin de la réponse.",
+            "willSend": "Envoie : {{text}}",
+            "copy": "Copier",
+            "copied": "Copié",
+            "to": "À",
+            "subject": "Objet",
+            "draft": "Brouillon",
+            "mail": "Ouvrir le mail",
+            "mailTo": "Ouvrir votre messagerie avec un message à {{to}} ?",
+            "mailNoRecipient": "Ouvrir votre messagerie avec ce message, sans destinataire ?",
+            "mailOpen": "Ouvrir",
+            "mailCancel": "Annuler",
+            "sheetAdd": "Ajouter une ligne",
+            "sheetRemove": "Retirer la ligne {{n}}",
+            "sheetSend": "Envoyer mon tableau"
+          },
+          "quiz": {
+            "send": "Envoyer mon résultat",
+            "correct": "Juste",
+            "wrong": "Faux",
+            "score": "Score : {{score}} / {{total}}",
+            "retry": "Recommencer",
+            "flip": "Voir la réponse",
+            "showFront": "Voir la question",
+            "again": "À revoir",
+            "knew": "Je savais",
+            "cardOf": "Carte {{n}} sur {{total}}",
+            "cardsDone": "{{known}} connues sur {{total}}",
+            "cards": "Cartes mémoire",
+            "shuffle": "Mélanger",
+            "keys": "Espace retourne · K connue · U à revoir"
           }
         },
         "expand": {
