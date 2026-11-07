@@ -51,9 +51,6 @@ func LoadBundle(dir string) (*Bundle, error) {
 	return b, nil
 }
 
-// Len is the number of libraries shipped.
-func (b *Bundle) Len() int { return len(b.libs) }
-
 // lookup finds the shipped file for a request: an exact version only matches itself; a missing version, a tag or a range matches the
 // shipped version of the same major (any shipped version when it names no major). sameMajor also lets an exact version fall back to the
 // shipped one of its major, used when the exact one cannot be downloaded.
