@@ -1,0 +1,27 @@
+# Text files are stored with LF and checked out with LF on every system, so that a Windows checkout does not turn them into CRLF (the
+# "LF will be replaced by CRLF" warnings, a changelog with two kinds of line endings, a formatter that disagrees with the file).
+* text=auto eol=lf
+
+# Windows batch files are the one kind of text that needs CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files are never converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.node binary
+*.onnx binary
+*.wasm binary
