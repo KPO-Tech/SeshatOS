@@ -29,7 +29,8 @@ import (
 // Google's "one shared OAuth client works for every user" model instead of
 // requiring a specific tenant ID at deploy time.
 const (
-	authURL  = "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize"
+	authURL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize"
+	// #nosec G101 -- a public endpoint of Microsoft, not a credential
 	tokenURL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/token"
 )
 

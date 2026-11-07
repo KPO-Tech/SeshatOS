@@ -21,7 +21,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       desktop: ${{ steps.filter.outputs.desktop }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -40,7 +40,7 @@ jobs:
           fi
           CHANGED=$(git diff --name-only "$BASE" "${{ github.sha }}")
           echo "$CHANGED"
-          echo "backend=$(echo "$CHANGED" | grep -qE '^(seshat-backend/|go\.work|\.github/workflows/ci\.yml)' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "backend=$(echo "$CHANGED" | grep -qE '^(seshat-backend/|go\.work|\.github/workflows/)' && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "desktop=$(echo "$CHANGED" | grep -q '^seshat-desktop/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
   build:
@@ -49,9 +49,9 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.work
           cache-dependency-path: |
@@ -68,9 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.work
           cache-dependency-path: |
@@ -88,15 +88,35 @@ jobs:
             ./seshat-backend/internal/files \
             ./seshat-backend/internal/query
 
+  # The app is used on Windows: paths, processes and file locking behave differently there, and nothing else in this workflow runs on it.
+  test-windows:
+    name: Test (Windows)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.work
+          cache-dependency-path: |
+            go.work.sum
+            seshat-backend/go.sum
+
+      - name: Tests
+        run: go test ./seshat-backend/... -timeout 20m
+
   lint:
     name: Lint
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.work
           cache-dependency-path: |
@@ -115,6 +135,11 @@ jobs:
       - name: go vet
         run: go vet ./seshat-backend/...
 
+      - name: actionlint (the workflows)
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          "$(go env GOPATH)/bin/actionlint"
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
@@ -128,9 +153,9 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.work
           cache-dependency-path: |
@@ -138,19 +163,23 @@ jobs:
             seshat-backend/go.sum
 
       # gosec is installed with the Go of the repository, not run through the securego/gosec action: the action runs an image with its
-      # own Go, which cannot load the packages once go.work asks for a newer one. Followed on master it failed the job on 2026-10-23
-      # with 45 findings; pinned in its image (v2.29.0) it fails to load anything. Run with the repository Go, v2.29.0 reports 44
-      # findings in existing code (documentreading, config, connector, api, skills, oauth). They are to be triaged, so they are reported
-      # here and do not fail the job (-no-fail) until they are: raise the pin and drop -no-fail together with that work.
-      - name: gosec
+      # own Go, which cannot load the packages once go.work asks for a newer one. Triaged on 2026-11-07: the 21 findings of high
+      # severity were read one by one; two were real (a size announced by an archive header that wrapped around, a file opened in a
+      # directory walk without checking it was the file listed) and are fixed, the others carry a "#nosec <rule> -- <why>" next to the
+      # line. From now on a new finding of high severity fails the job. The medium and low ones are not triaged yet and are only reported.
+      - name: gosec (high severity fails the job)
         working-directory: seshat-backend
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
-          gosec -exclude-generated -no-fail ./...
+          gosec -exclude-generated -severity high ./...
+
+      - name: gosec (medium and low, reported)
+        working-directory: seshat-backend
+        run: gosec -exclude-generated -no-fail ./...
 
       - name: govulncheck
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
           (cd seshat-backend && govulncheck ./...)
 
   desktop:
@@ -159,7 +188,7 @@ jobs:
     if: needs.changes.outputs.desktop == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
@@ -192,24 +221,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Enforce PR branch flow
+        # The names of the branches come from outside (a pull request from a fork chooses its own): they are read from the
+        # environment, never written into the text of the script, where a name with a quote in it would run as code.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" && \
-                "${{ github.base_ref }}" == "main" && \
-                "${{ github.head_ref }}" != "dev" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" && \
+                "$BASE_REF" == "main" && \
+                "$HEAD_REF" != "dev" ]]; then
             echo "Pull requests targeting main must come from dev."
-            echo "Current head branch: ${{ github.head_ref }}"
+            echo "Current head branch: $HEAD_REF"
             exit 1
           fi
 
-          if [[ "${{ github.event_name }}" == "pull_request" && \
-                "${{ github.base_ref }}" == "dev" ]]; then
-            case "${{ github.head_ref }}" in
+          if [[ "$EVENT_NAME" == "pull_request" && \
+                "$BASE_REF" == "dev" ]]; then
+            case "$HEAD_REF" in
               feat/*|feature/*|fix/*|bugfix/*|docs/*|refactor/*|test/*|chore/*|perf/*|ci/*|dependabot/*)
                 ;;
               *)
                 echo "Pull requests targeting dev must come from a typed topic branch."
                 echo "Allowed prefixes: feat/, feature/, fix/, bugfix/, docs/, refactor/, test/, chore/, perf/, ci/, dependabot/"
-                echo "Current head branch: ${{ github.head_ref }}"
+                echo "Current head branch: $HEAD_REF"
                 exit 1
                 ;;
             esac
@@ -226,9 +261,9 @@ jobs:
     name: Runtime pin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.work
           cache-dependency-path: |
@@ -241,7 +276,7 @@ jobs:
   gate:
     name: Gate
     runs-on: ubuntu-latest
-    needs: [changes, build, test, lint, security, desktop, runtime-pin, branch-policy]
+    needs: [changes, build, test, test-windows, lint, security, desktop, runtime-pin, branch-policy]
     if: always()
     steps:
       - name: All checks passed
@@ -249,6 +284,7 @@ jobs:
           ok() { [[ "$1" == "success" || "$1" == "skipped" ]]; }
           if ! ok "${{ needs.build.result }}" || \
              ! ok "${{ needs.test.result }}" || \
+             ! ok "${{ needs.test-windows.result }}" || \
              ! ok "${{ needs.lint.result }}" || \
              ! ok "${{ needs.security.result }}" || \
              ! ok "${{ needs.desktop.result }}" || \
@@ -259,6 +295,7 @@ jobs:
             echo "  changes:       ${{ needs.changes.result }}"
             echo "  build:         ${{ needs.build.result }}"
             echo "  test:          ${{ needs.test.result }}"
+            echo "  test-windows:  ${{ needs.test-windows.result }}"
             echo "  lint:          ${{ needs.lint.result }}"
             echo "  security:      ${{ needs.security.result }}"
             echo "  desktop:       ${{ needs.desktop.result }}"

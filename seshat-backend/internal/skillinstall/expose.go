@@ -106,6 +106,7 @@ func applyFixes(dst, name string, fixes []Fix) []string {
 			warnings = append(warnings, fmt.Sprintf("skill %q: the text to correct in %s is gone (the skill changed upstream), so the correction was not applied (%s)", name, fix.File, fix.Why))
 			continue
 		}
+		// #nosec G703 -- file is inside the copy made above: insideRepo refuses any path that leaves it
 		if err := os.WriteFile(file, []byte(strings.ReplaceAll(text, fix.Old, fix.New)), 0o644); err != nil {
 			warnings = append(warnings, fmt.Sprintf("skill %q: could not correct %s: %v", name, fix.File, err))
 		}
@@ -173,11 +174,22 @@ func copyTree(src, dst string) error {
 		if !entry.Type().IsRegular() {
 			return nil
 		}
+		listed, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		// #nosec G122 -- what was opened is compared with the file that was listed (os.SameFile) just below
 		in, err := os.Open(path)
 		if err != nil {
 			return err
 		}
 		defer in.Close()
+		// A repository from the outside can change a file between the listing and the opening, for example for a link to a file of the
+		// person: what was opened must be the file that was listed, and a regular one.
+		opened, err := in.Stat()
+		if err != nil || !opened.Mode().IsRegular() || !os.SameFile(listed, opened) {
+			return nil
+		}
 		out, err := os.OpenFile(filepath.Join(dst, rel), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err

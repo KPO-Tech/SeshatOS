@@ -160,6 +160,12 @@ func unpackArchive(archive, dest string) error {
 		case !mode.IsRegular():
 			continue
 		}
+		// A header can announce any size: read as a signed number, a huge one would turn negative and lower the total, so that the files after
+		// it could go past the limit.
+		if file.UncompressedSize64 > archiveMaxUnpacked {
+			return fmt.Errorf("the repository is larger than %d MB once unpacked", archiveMaxUnpacked>>20)
+		}
+		// #nosec G115 -- bounded by archiveMaxUnpacked just above
 		unpacked += int64(file.UncompressedSize64)
 		if unpacked > archiveMaxUnpacked {
 			return fmt.Errorf("the repository is larger than %d MB once unpacked", archiveMaxUnpacked>>20)
@@ -184,8 +190,14 @@ func unpackFile(file *zip.File, target string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	// The size in the header can lie; never write more than it announced.
-	if _, err := io.Copy(out, io.LimitReader(source, int64(file.UncompressedSize64))); err != nil {
+	// The size in the header can lie; never write more than it announced, and never more than the limit.
+	announced := file.UncompressedSize64
+	if announced > archiveMaxUnpacked {
+		out.Close()
+		return fmt.Errorf("a file of the repository is larger than %d MB once unpacked", archiveMaxUnpacked>>20)
+	}
+	// #nosec G115 -- bounded by archiveMaxUnpacked just above
+	if _, err := io.Copy(out, io.LimitReader(source, int64(announced))); err != nil {
 		out.Close()
 		return err
 	}

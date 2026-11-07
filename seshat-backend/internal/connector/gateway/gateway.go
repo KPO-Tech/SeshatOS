@@ -32,6 +32,7 @@ import (
 
 // TokenHeader carries the per-process secret that proves a request comes from the runtime this backend started, so another program on the
 // machine cannot use a connected account through the loopback port.
+// #nosec G101 -- the name of a header: the secret itself is generated for each process
 const TokenHeader = "X-Seshat-Gateway"
 
 const maxBody = 8 << 20

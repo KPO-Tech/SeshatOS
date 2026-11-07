@@ -134,3 +134,29 @@ func TestCloneWithoutGitNamesTheLimitForAnotherHost(t *testing.T) {
 		t.Fatal("a failed download left a folder behind")
 	}
 }
+
+// A header can announce any size. Read as a signed number, 1<<63 is negative: it lowered the running total, so that the files after it went
+// past the limit of the unpacked size. The entry is refused for what it announces.
+func TestUnpackArchiveRefusesASizeThatWouldWrapAround(t *testing.T) {
+	var buf bytes.Buffer
+	writer := zip.NewWriter(&buf)
+	raw, err := writer.CreateRaw(&zip.FileHeader{Name: "repo-1/huge.bin", Method: zip.Store, UncompressedSize64: 1 << 63, CompressedSize64: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Write([]byte("hi")); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	archive := filepath.Join(t.TempDir(), "huge.zip")
+	if err := os.WriteFile(archive, buf.Bytes(), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(t.TempDir(), "repo")
+	err = unpackArchive(archive, dest)
+	if err == nil || !strings.Contains(err.Error(), "larger than") {
+		t.Fatalf("an entry that announces a size beyond the limit must be refused, got %v", err)
+	}
+}
