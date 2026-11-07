@@ -49,6 +49,22 @@ the families of the prompt are done (see Done).
 - **An answer that updates in place.**
 - **Fonts in the downloaded SVG.** The SVG is faithful on screen but the fonts are not embedded.
 
+## Skills catalog
+
+### Add the founder skill, and maybe make its chain a workflow
+
+[Jakeschincariol/founder-skill](https://github.com/Jakeschincariol/founder-skill) (MIT, read on 2026-11-07 at `fd9385b`): eleven skills
+that test a business before it is launched (board, competitors, a panel of 100 simulated buyers, pricing, offer, CFO, marketing, brand,
+operations, launch, plan). Four Python scripts, standard library only, no network. Nothing is installed yet.
+
+- **Check first:** the panel and the board launch sub-agents in parallel (the Agent tool), and the skills find their scripts through
+  `${CLAUDE_SKILL_DIR}`. Test both in our runtime on a copy before adding it. Without sub-agents the panel does not run as it is.
+- **Catalog entry:** pinned at a commit (ADR 0026), Python required, one entry for the whole repository.
+- **Workflow, not one agent:** it is a chain of 11 steps that hands files through a `founder/` folder, with points where the person must
+  correct something (the customer profile before the panel) and a heavy step to confirm (100 sub-agent calls; offer the 20-buyer run).
+  Show the steps and the files in the app, and the verdict (Profitable, Not yet, Incomplete) as a card. Keep the numbers in the scripts:
+  the verdict is computed, not written by the model.
+
 ## Release and security
 
 From the audit of 2026-11-07. What was done (a gosec triage of the high findings, a Windows test job, commits pinned in the catalog, rules on
