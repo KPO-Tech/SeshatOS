@@ -42,13 +42,13 @@ function proseOf(block: string): string {
   if (/^(=+|-+)$/.test(lines[1] ?? '')) return '' // a title underlined
   if (/^(!\[|\[!\[|<|\||[-*+]\s|\d+[.)]\s|\[[^\]]+\]:\s|={3,}|-{3,}|\*{3,})/.test(first)) return '' // a picture, a badge, markup, a table, a list, a rule
 
-  const cleaned = lines
+  const joined = lines
     .map((line) => line.replace(/^>\s?/, '')) // a quoted tagline is still the tagline
     .join(' ')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // pictures
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links keep their words
     .replace(/\[([^\]]+)\]\[[^\]]*\]/g, '$1')
-    .replace(/<[^>]*>?/g, '') // inline html, and a tag that is not closed
+  const cleaned = withoutUntilStable(joined, /<[^>]*>?/g) // inline html, and a tag that is not closed
     .replace(/(\*\*|__|\*|_|`)/g, '') // emphasis and code marks
     .replace(/\s+/g, ' ')
     .trim()
