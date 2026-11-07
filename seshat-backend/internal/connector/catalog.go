@@ -64,6 +64,7 @@ func (d Definition) Validate() error {
 // localCatalog is the v1 list. A vendor joins it only once its hosted MCP server takes a person's own key as a bearer token (checked
 // against the vendor's documentation) and the end-to-end test passes for it. The other connectors of the shared catalog need an OAuth
 // application registered by an organization, which is SeshatCloud's job.
+// #nosec G101 -- public endpoints of hosted connectors and the name of the header that carries a person's own key; no credential is written here
 var localCatalog = []Definition{
 	{
 		Kind:            "github",

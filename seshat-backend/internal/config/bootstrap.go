@@ -90,10 +90,12 @@ func discoverElectronBrowserRemoteControlURL(ctx context.Context) string {
 	}
 	reqCtx, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
+	// #nosec G704 -- the host is fixed to the loopback address; only the port of the browser the app itself started is added
 	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, "http://127.0.0.1:"+port+"/json/version", nil)
 	if err != nil {
 		return ""
 	}
+	// #nosec G704 -- the request was built above for the loopback address
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return ""
@@ -133,10 +135,12 @@ func resolveElectronBrowserSessionTarget(ctx context.Context, sessionID sdk.Sess
 	reqCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	url := "http://127.0.0.1:" + port + "/session-target?sessionId=" + neturl.QueryEscape(string(sessionID))
+	// #nosec G704 -- url is built just above from the loopback address and the port of the app's own browser panel; the session id is query-escaped
 	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", false
 	}
+	// #nosec G704 -- the request was built above for the loopback address
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", false
@@ -1030,6 +1034,7 @@ func BuildApp(ctx context.Context, config appconfig.Config) (*api.App, func() er
 			slog.Warn("token activity: count failed", "session", sessionID, "error", err)
 		}
 	})
+	// #nosec G118 -- the sweep of the token counts runs once at start-up and must outlive any request
 	go func() {
 		if err := tokenActivityStore.CollectAll(context.Background()); err != nil {
 			slog.Warn("token activity: sweep failed", "error", err)

@@ -448,6 +448,7 @@ func (s *Service) ResolveAPIKeyPrincipal(ctx context.Context, key string) (*Prin
 	}
 
 	// Touch API key asynchronously
+	// #nosec G118 -- touching the last use of a key must not wait for, or be cancelled with, the request that used it
 	go func() {
 		apiKeyRow, err := s.apiKeys.GetAPIKeyByKey(context.Background(), key)
 		if err == nil {

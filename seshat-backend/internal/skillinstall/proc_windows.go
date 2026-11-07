@@ -18,6 +18,7 @@ func hideWindow(cmd *exec.Cmd) {
 // and killing only the first leaves the others writing in the folder that is about to be removed.
 func stopWithChildren(cmd *exec.Cmd) {
 	cmd.Cancel = func() error {
+		// #nosec G702 -- the argument is the process number of a program this function started
 		kill := exec.Command("taskkill", "/T", "/F", "/PID", strconv.Itoa(cmd.Process.Pid))
 		kill.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 		_ = kill.Run()

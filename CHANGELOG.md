@@ -11,6 +11,11 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **A repository downloaded as an archive can no longer announce a size that slips past the limit.** When git is missing, a skill repository is downloaded as a zip; the size an entry announced was read as a signed number, so a huge one turned negative and lowered the running total, and the files after it could go beyond the 2 GB limit. Such an entry is now refused. Copying a skill from a hidden folder also checks that the file it opens is the one it listed, so a link swapped in the meantime is not followed.
+- **Two dependencies with a known flaw are updated** (the spreadsheet library and the cryptography module). Neither was reachable from the app's code, and the vulnerability check now finds nothing.
+
 ## [0.3.17] - 2026-11-07
 
 ### Highlights

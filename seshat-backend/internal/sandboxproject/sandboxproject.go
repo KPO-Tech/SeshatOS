@@ -42,6 +42,7 @@ func newHost(goos, override, dir string) *Host {
 	if path == "" {
 		path = filepath.Join(dir, "seshat-sandboxd.exe")
 	}
+	// #nosec G703 -- path is the helper the app ships next to itself, or the one named in the app's own configuration
 	if info, err := os.Stat(path); err != nil || info.IsDir() {
 		return &Host{Reason: "This build of the app does not include the sandbox."}
 	}
