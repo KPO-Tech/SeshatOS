@@ -1738,7 +1738,7 @@ func (s *Service) richAnswersOn(ctx context.Context, p ContextBuildParams) bool 
 // richFamilies decides which families of components this turn is taught: all of them unless the person turned one off.
 func (s *Service) richFamilies(ctx context.Context, p ContextBuildParams) richUIFamilies {
 	// Every family is taught by default (about 8,000 tokens): a model that is not told a component exists reaches for an HTML page instead
-	// (ADR 0023). The words of a request (richUIFamiliesFor) are kept for a lighter mode.
+	// (ADR 0023). Choosing the families by the words of the request was tried first and removed: it missed requests that named nothing.
 	families := richUIAllFamilies
 	// What the person turned off in the Generative UI page wins.
 	if provider, ok := s.preferences.(richFamilyModesProvider); ok && p.Principal != nil {

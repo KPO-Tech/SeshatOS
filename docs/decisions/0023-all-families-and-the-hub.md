@@ -23,3 +23,10 @@ the rest of the prompt.
 
 - The Knowledge agent now also gets the architecture and chart families on every request (about 6,000 tokens more).
 - The diagrams family budget goes from 600 to 700 words.
+
+## Update, 2026-11-07: the words of a request were removed
+
+The code that chose the families from the words of the request (`richUIFamiliesFor`, its word lists, the reading of the latest answers) was kept "for a lighter
+mode" and never called in production, only by its own tests. It was removed (about 280 lines with its tests). A lighter mode, if it comes back, will start from
+what the model sees (the size of the prompt, the model) and not from words of the request, which missed the requests that named nothing; the old code is in the
+history of the repository (ADR 0009 describes it).
