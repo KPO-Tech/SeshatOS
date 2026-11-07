@@ -359,7 +359,7 @@
       "name": "Browser",
       "group": "Design",
       "signature": "Browser(children: [Component], url?: text, bg?: text, font?: sans|serif|mono|display, radius?: none|sm|md|lg|full)",
-      "description": "A quick sketch to talk over, not the site; to build it, write the files. A browser window to sketch a page in. bg is the page colour; a colour is a hex code (#f97316), a name (orange), rgb(249, 115, 22) or hsl(25, 95%, 53%), and a gradient is \"#f97316 > #ec4899\". font: sans, serif, mono, display. radius of the corners: none, sm, md, lg, full."
+      "description": "A quick sketch to talk over, not the site; to build it, write the files. Its texts, figures, names and quotes are examples: say so under it, never as real data. A browser window to sketch a page in. bg is the page colour; a colour is a hex code (#f97316), a name (orange), rgb(249, 115, 22) or hsl(25, 95%, 53%), and a gradient is \"#f97316 > #ec4899\". font: sans, serif, mono, display. radius of the corners: none, sm, md, lg, full."
     },
     {
       "name": "Phone",
