@@ -66,6 +66,12 @@ type ToolDisplayEntry = {
   snippet?: (tool: ToolUseBlock) => string
   /** Custom summary for the solo/quiet-group line (e.g. "Read foo.py"). Falls back to label when null/omitted. */
   soloLabel?: (tool: ToolUseBlock) => string | null
+  /**
+   * A step that produces something to look at - an image, an audio file, a
+   * document - rather than moving the work forward. It is a point of decision
+   * in a turn: it stays in place instead of folding behind the turn's header.
+   */
+  decidesInPlace?: boolean
 }
 
 const DEFAULTS = {
@@ -154,10 +160,10 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
   read_document_url: { label: 'Web Fetch', groupable: false, silent: true, render: WebFetchToolView, snippet: (t) => str(t, 'url'), soloLabel: webFetchSoloLabel },
   read_url: { label: 'Web Fetch', groupable: false, silent: true, render: WebFetchToolView, snippet: (t) => str(t, 'url'), soloLabel: webFetchSoloLabel },
 
-  generate_image: { label: 'Generate Image', groupable: false, render: ImageGenToolView },
-  present_artifact: { label: 'Present File', groupable: false, silent: true, snippet: (t) => str(t, 'path') },
-  text_to_speech: { label: 'Text To Speech', groupable: false, render: TtsToolView },
-  speech_to_text: { label: 'Speech To Text', groupable: false, render: SttToolView },
+  generate_image: { label: 'Generate Image', groupable: false, render: ImageGenToolView, decidesInPlace: true },
+  present_artifact: { label: 'Present File', groupable: false, silent: true, snippet: (t) => str(t, 'path'), decidesInPlace: true },
+  text_to_speech: { label: 'Text To Speech', groupable: false, render: TtsToolView, decidesInPlace: true },
+  speech_to_text: { label: 'Speech To Text', groupable: false, render: SttToolView, decidesInPlace: true },
 
   rag_search: { label: 'RAG Search', render: RagSearchToolView },
   // The tool Chat's agent actually uses to search every accessible corpus
@@ -217,7 +223,7 @@ const TOOL_REGISTRY: Record<string, ToolDisplayEntry> = {
   get_goal: { label: 'Get Goal', silent: true, snippet: (t) => str(t, 'goal_id') },
 
   // Doc generation - no preview needed.
-  docx: { label: 'Docx', silent: true, snippet: (t) => basename(str(t, 'filename') || str(t, 'path')) },
+  docx: { label: 'Docx', silent: true, snippet: (t) => basename(str(t, 'filename') || str(t, 'path')), decidesInPlace: true },
 
   // Messaging.
   mailbox_send: { label: 'Send', silent: true, snippet: (t) => str(t, 'recipient') || str(t, 'to') },
@@ -417,6 +423,11 @@ export function hasCustomRender(name: string): boolean {
 
 export function isGroupable(name: string): boolean {
   return getEntry(name)?.groupable ?? DEFAULTS.groupable
+}
+
+/** Whether this step is one the reader has to see in place - see decidesInPlace above. */
+export function isDecisionTool(name: string): boolean {
+  return getEntry(name)?.decidesInPlace ?? false
 }
 
 export function isEditTool(name: string): boolean {

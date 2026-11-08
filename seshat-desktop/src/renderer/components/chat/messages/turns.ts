@@ -1,5 +1,6 @@
 import type { ContentBlock, Message, ToolUseBlock } from '@renderer/api/types'
 import { isCompactionDivider } from '@renderer/lib/compactedHistory'
+import { isAgentTool, isDecisionTool } from '../tools/toolDisplay'
 
 // Tools the chat never draws a line for: each has its own surface elsewhere.
 // - mode-switching tools: silent, handled by the Computer panel
@@ -40,7 +41,12 @@ export function shownBlocks(message: Message): ContentBlock[] {
  * about, so the steps before it fold above it and the ones after fold below.
  */
 function isDecision(block: ContentBlock): boolean {
-  return block.type === 'tool_use' && (block._status === 'awaiting_approval' || block.name === 'submit_plan')
+  if (block.type !== 'tool_use') return false
+  if (block._status === 'awaiting_approval') return true
+  // A plan handed over for review, a step that produced something to look at
+  // (an image, an audio file, a document - see decidesInPlace in toolDisplay),
+  // or a sub-agent: these are what the turn is about, not work behind it.
+  return block.name === 'submit_plan' || isDecisionTool(block.name) || isAgentTool(block.name)
 }
 
 export type TurnLayout = {

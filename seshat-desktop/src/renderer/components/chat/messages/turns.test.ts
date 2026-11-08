@@ -19,6 +19,10 @@ function plan(id: string): Message['content'][number] {
   return { type: 'tool_use', id, name: 'submit_plan', input: {} }
 }
 
+function tool(name: string, id: string): Message['content'][number] {
+  return { type: 'tool_use', id, name, input: {} }
+}
+
 function said(id: string, text: string): Message {
   return step(id, { type: 'text', text })
 }
@@ -51,6 +55,28 @@ describe('layoutTurns', () => {
     expect(layout[2].folded).toBe(false)
     expect(ids(layout[2].foldedMessages)).toEqual(['a1'])
     expect(layout[3].folded).toBe(true)
+    expect(ids(layout[4].foldedMessages)).toEqual(['a3'])
+  })
+
+  it('keeps what a turn produced on screen: an image, an audio file, a document', () => {
+    for (const name of ['generate_image', 'text_to_speech', 'docx', 'present_artifact']) {
+      const layout = layoutTurns([asked('go'), step('a1', tool(name, 't1')), said('a2', 'done')])
+      expect(layout[1].folded, name).toBe(false)
+      expect(layout[2].foldedMessages, name).toEqual([])
+    }
+  })
+
+  it('keeps a sub-agent on screen', () => {
+    const layout = layoutTurns([asked('go'), step('a1', tool('agent', 't1')), said('a2', 'done')])
+
+    expect(layout[1].folded).toBe(false)
+    expect(layout[2].foldedMessages).toEqual([])
+  })
+
+  it('still folds the work around a step that stays in place', () => {
+    const layout = layoutTurns([asked('go'), step('a1', read('t1')), step('a2', tool('generate_image', 't2')), step('a3', read('t3')), said('a4', 'here it is')])
+
+    expect(ids(layout[2].foldedMessages)).toEqual(['a1'])
     expect(ids(layout[4].foldedMessages)).toEqual(['a3'])
   })
 
