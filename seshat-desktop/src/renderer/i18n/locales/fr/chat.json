@@ -104,6 +104,12 @@
         "proceed": "Poursuivre",
         "clickToReview": "Cliquez pour relire"
       },
+      "workedFor": {
+        "title": "A travaillé {{duration}}",
+        "titleNoDuration": "A travaillé",
+        "showSteps": "Voir les étapes de ce tour",
+        "hideSteps": "Masquer les étapes de ce tour"
+      },
       "youTubeEmbed": {
         "thisVideoLinkIsNot": "Ce lien vidéo n'est pas valide.",
         "youtubeVideo": "Vidéo YouTube"

@@ -28,6 +28,8 @@ import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 import type { AnswerExtras } from './answerExtras'
 import { useTranslation } from 'react-i18next'
+import { isToolResultOnly } from './turns'
+import { WorkedForGroup } from './WorkedForGroup'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -51,12 +53,6 @@ const HIDDEN_TOOLS = new Set([
   'task_update',
   'task_list',
 ])
-
-// Messages that contain only tool_result blocks are synthetic turn-separator
-// messages, not user-visible chat bubbles — skip them entirely.
-function isToolResultOnly(msg: Message): boolean {
-  return msg.role === 'user' && msg.content.length > 0 && msg.content.every(b => b.type === 'tool_result')
-}
 
 function messageAttachments(message: Message): ChatAttachment[] {
   const value = message.metadata?.attachments
@@ -163,6 +159,14 @@ type Props = {
   // variant here would match every message, not just the conversation's
   // first one, and silently override the margin below on all of them.
   isFirst?: boolean
+  /** Folded behind the header of the turn this message ends: this message draws nothing of its own. */
+  folded?: boolean
+  /** The steps that header holds, oldest first. */
+  foldedMessages?: Message[]
+  /** Identity of the turn: keeps its open state and the time it took. */
+  turnKey?: string
+  /** True while the turn this message ends still runs. */
+  liveTurn?: boolean
   compact?: boolean
   revealThinking?: boolean
   autoExpandTools?: boolean
@@ -335,9 +339,11 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
   return { text, attachments: messageAttachments(message) }
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, folded = false, foldedMessages, turnKey, liveTurn = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
   const { t } = useTranslation('chat')
   const [editing, setEditing] = useState(false)
+  // Folded behind the header of its turn: the header draws it.
+  if (folded) return null
   if (isCompactionDivider(message)) {
     const first = message.content[0]
     return <CompactionDivider text={first && first.type === 'text' ? first.text : ''} />
@@ -375,6 +381,23 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
       )}
     >
       <div className={cx('flex min-w-0 flex-1 flex-col gap-1.5', isUser && 'max-w-[85%] items-end')}>
+        {foldedMessages && foldedMessages.length > 0 && (
+          <WorkedForGroup turnKey={turnKey ?? `turn-${message.id ?? ""}`} live={liveTurn}>
+            {foldedMessages.map((step, index) => (
+              <MessageItem
+                key={step.id ?? `${turnKey ?? 'turn'}-${index}`}
+                message={step}
+                sessionId={sessionId}
+                compact
+                autoExpandTools={autoExpandTools}
+                onApproveTool={onApproveTool}
+                onDenyTool={onDenyTool}
+                onSubmitToolPrompt={onSubmitToolPrompt}
+              />
+            ))}
+          </WorkedForGroup>
+        )}
+
         {attachments.length > 0 && (
           <div className="flex max-w-full flex-nowrap gap-2 overflow-x-auto justify-end px-0.5 py-[5px]">
             {attachments.map((file) => (

@@ -6,6 +6,7 @@ import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
 import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
 import { useStableEntries } from '@renderer/lib/stableEntries'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
+import { layoutTurns } from '@renderer/components/chat/messages/turns'
 import type { AnswerExtras } from '@renderer/components/chat/messages/answerExtras'
 import { useTranslation } from 'react-i18next'
 
@@ -58,6 +59,8 @@ export function MessageList({
   const webSources = useStableEntries(useMemo(() => webSourcesByTurnEnd(messages, isStreaming), [messages, isStreaming]))
   // The pages consulted so far in the turn, to tell which links of an answer are citations.
   const consulted = useStableEntries(useMemo(() => webSourcesSoFar(messages), [messages]))
+  // Which steps of each turn fold behind its "Worked for ..." header.
+  const turnLayout = useMemo(() => layoutTurns(messages), [messages])
 
   // An answer can be asked again from the prompt before it, unless a turn is running. One function per answer, kept between renders.
   const regenerators = useMemo(() => {
@@ -98,6 +101,7 @@ export function MessageList({
           const revealThinking = isStreaming && msg.role === 'assistant' && i === messages.length - 1
           const showLiveActivity = revealThinking && !pendingPermission && !pendingAskUser
           const showCompleted = justCompleted && msg.role === 'assistant' && i === messages.length - 1 && !pendingPermission && !pendingAskUser
+          const turn = turnLayout[i]
           return (
             <div
               key={virtualRow.key}
@@ -110,6 +114,10 @@ export function MessageList({
                 message={msg}
                 sessionId={sessionId}
                 isFirst={i === 0}
+                folded={turn?.folded}
+                foldedMessages={turn?.foldedMessages}
+                turnKey={`${sessionId ?? ''}:turn-${turn?.turnStart ?? i}`}
+                liveTurn={revealThinking}
                 compact={msg.role === 'assistant' && i > 0 && messages[i - 1]?.role === 'assistant'}
                 revealThinking={revealThinking}
                 liveActivity={showLiveActivity ? liveActivity : undefined}

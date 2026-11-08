@@ -104,6 +104,12 @@
         "proceed": "Proceed",
         "clickToReview": "Click to review"
       },
+      "workedFor": {
+        "title": "Worked for {{duration}}",
+        "titleNoDuration": "Worked",
+        "showSteps": "Show the steps of this turn",
+        "hideSteps": "Hide the steps of this turn"
+      },
       "youTubeEmbed": {
         "thisVideoLinkIsNot": "This video link is not valid.",
         "youtubeVideo": "YouTube video"
