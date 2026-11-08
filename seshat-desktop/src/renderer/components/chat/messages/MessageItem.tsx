@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Copy, Down, Time, CheckOne } from '@icon-park/react'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
@@ -28,31 +28,12 @@ import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 import type { AnswerExtras } from './answerExtras'
 import { useTranslation } from 'react-i18next'
-import { isToolResultOnly } from './turns'
+import { foldSteps, isToolResultOnly, shownBlocks } from './turns'
 import { WorkedForGroup } from './WorkedForGroup'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
-
-// Tools that never appear as chat tool blocks - each has its own dedicated
-// surface elsewhere so an inline line here would just be a redundant second
-// copy of the same information:
-// - mode-switching tools: silent, handled by the Computer panel
-// - task_create/task_update/task_list: the live task list with per-item
-//   status already lives in the Computer panel (auto-opened on
-//   task_create - see useConversationPanels.ts), which is a far more useful view
-//   than a growing wall of "Create Task"/"Update Task" lines for every
-//   single item
-const HIDDEN_TOOLS = new Set([
-  'enter_plan_mode',
-  'exit_plan_mode',
-  'enter_pair_programming_mode',
-  'exit_pair_programming_mode',
-  'task_create',
-  'task_update',
-  'task_list',
-])
 
 function messageAttachments(message: Message): ChatAttachment[] {
   const value = message.metadata?.attachments
@@ -67,12 +48,7 @@ function messageAttachments(message: Message): ChatAttachment[] {
 export function isRenderableMessage(message: Message): boolean {
   if (isToolResultOnly(message)) return false
   if (messageAttachments(message).length > 0) return true
-  return message.content.some((block) => {
-    if (block.type === 'text') return Boolean(block.text.trim())
-    if (block.type === 'thinking') return Boolean(block.thinking.trim())
-    if (block.type === 'tool_use') return !HIDDEN_TOOLS.has(block.name)
-    return false
-  })
+  return shownBlocks(message).length > 0
 }
 
 // ThinkingBlock isolates its own Zustand subscription so toggling one thinking
@@ -342,6 +318,8 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
 export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, folded = false, foldedMessages, turnKey, liveTurn = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
   const { t } = useTranslation('chat')
   const [editing, setEditing] = useState(false)
+  // The steps behind this turn's header, drawn in the order they ran.
+  const foldedSteps = useMemo(() => (foldedMessages ? foldSteps(foldedMessages) : []), [foldedMessages])
   // Folded behind the header of its turn: the header draws it.
   if (folded) return null
   if (isCompactionDivider(message)) {
@@ -352,13 +330,8 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
   const isUser = message.role === 'user'
   const attachments = messageAttachments(message)
   if (isToolResultOnly(message)) return null
-  const visibleBlocks = message.content.filter((block) => {
-    if (block.type === 'text') return Boolean(block.text.trim())
-    if (block.type === 'thinking') return Boolean(block.thinking.trim())
-    if (block.type === 'tool_use') return !HIDDEN_TOOLS.has(block.name)
-    return false
-  })
-  if (visibleBlocks.length === 0 && attachments.length === 0 && !liveActivity && !justCompleted) return null
+  const shown = shownBlocks(message)
+  if (shown.length === 0 && attachments.length === 0 && !liveActivity && !justCompleted) return null
 
   const copyText = message.content
     .map((block) => {
@@ -368,7 +341,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
     .filter(Boolean)
     .join('\n\n')
 
-  const renderItems = groupBlocks(visibleBlocks, message.id ?? 'msg')
+  const renderItems = groupBlocks(shown, message.id ?? 'msg')
 
   return (
     <div
@@ -381,20 +354,32 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
       )}
     >
       <div className={cx('flex min-w-0 flex-1 flex-col gap-1.5', isUser && 'max-w-[85%] items-end')}>
-        {foldedMessages && foldedMessages.length > 0 && (
+        {foldedSteps.length > 0 && (
           <WorkedForGroup turnKey={turnKey ?? `turn-${message.id ?? ""}`} live={liveTurn}>
-            {foldedMessages.map((step, index) => (
-              <MessageItem
-                key={step.id ?? `${turnKey ?? 'turn'}-${index}`}
-                message={step}
-                sessionId={sessionId}
-                compact
-                autoExpandTools={autoExpandTools}
-                onApproveTool={onApproveTool}
-                onDenyTool={onDenyTool}
-                onSubmitToolPrompt={onSubmitToolPrompt}
-              />
-            ))}
+            {foldedSteps.map((folded, index) =>
+              folded.kind === 'tools' ? (
+                <QuietToolGroup
+                  key={`${turnKey ?? 'turn'}-tools-${index}`}
+                  items={folded.items}
+                  sessionId={sessionId}
+                  live={liveTurn && index === foldedSteps.length - 1}
+                  autoExpandTools={autoExpandTools}
+                  onSubmitPrompt={onSubmitToolPrompt}
+                />
+              ) : (
+                <MessageItem
+                  key={folded.message.id ?? `${turnKey ?? 'turn'}-${index}`}
+                  message={folded.message}
+                  sessionId={sessionId}
+                  compact
+                  endsTurn={false}
+                  autoExpandTools={autoExpandTools}
+                  onApproveTool={onApproveTool}
+                  onDenyTool={onDenyTool}
+                  onSubmitToolPrompt={onSubmitToolPrompt}
+                />
+              ),
+            )}
           </WorkedForGroup>
         )}
 
@@ -477,7 +462,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           }
           if (block.type === 'thinking') {
             const thinkingId = `${message.id ?? 'msg'}-thinking-${item.index}`
-            return <ThinkingBlock key={thinkingId} thinkingId={thinkingId} thinking={block.thinking} sessionId={sessionId} live={revealThinking && item.index === visibleBlocks.length - 1} />
+            return <ThinkingBlock key={thinkingId} thinkingId={thinkingId} thinking={block.thinking} sessionId={sessionId} live={revealThinking && item.index === shown.length - 1} />
           }
           if (block.type === 'tool_use') {
             const key = block.id || `${message.id ?? 'msg'}-tool-${item.index}`

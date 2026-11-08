@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Message, ToolStatus } from '@renderer/api/types'
 import { compactionDivider } from '@renderer/lib/compactedHistory'
-import { layoutTurns } from './turns'
+import { foldSteps, layoutTurns } from './turns'
 
 function asked(text: string): Message {
   return { id: `user-${text}`, role: 'user', content: [{ type: 'text', text }] }
@@ -15,6 +15,10 @@ function read(id: string, status?: ToolStatus): Message['content'][number] {
   return { type: 'tool_use', id, name: 'read', input: { file_path: 'a.ts' }, ...(status ? { _status: status } : {}) }
 }
 
+function plan(id: string): Message['content'][number] {
+  return { type: 'tool_use', id, name: 'submit_plan', input: {} }
+}
+
 function said(id: string, text: string): Message {
   return step(id, { type: 'text', text })
 }
@@ -24,7 +28,7 @@ function ids(messages: Message[]): Array<string | undefined> {
 }
 
 describe('layoutTurns', () => {
-  it('folds every step of a turn except its last message', () => {
+  it('folds every step of a turn onto its last message', () => {
     const layout = layoutTurns([asked('go'), step('a1', read('t1')), step('a2', read('t2')), said('a3', 'done')])
 
     expect(layout[1].folded).toBe(true)
@@ -41,11 +45,21 @@ describe('layoutTurns', () => {
     expect(layout[1].foldedMessages).toEqual([])
   })
 
-  it('folds nothing when a step is waiting for the user', () => {
-    const layout = layoutTurns([asked('go'), step('a1', read('t1', 'awaiting_approval')), said('a2', 'done')])
+  it('folds the steps before a plan above it, and the ones after below', () => {
+    const layout = layoutTurns([asked('go'), step('a1', read('t1')), step('a2', plan('p1')), step('a3', read('t2')), said('a4', 'summary')])
 
-    expect(layout[1].folded).toBe(false)
-    expect(layout[2].foldedMessages).toEqual([])
+    expect(layout[2].folded).toBe(false)
+    expect(ids(layout[2].foldedMessages)).toEqual(['a1'])
+    expect(layout[3].folded).toBe(true)
+    expect(ids(layout[4].foldedMessages)).toEqual(['a3'])
+  })
+
+  it('keeps a card waiting for the user on screen', () => {
+    const layout = layoutTurns([asked('go'), step('a1', read('t1')), step('a2', read('t2', 'awaiting_approval')), said('a3', 'done')])
+
+    expect(layout[2].folded).toBe(false)
+    expect(ids(layout[2].foldedMessages)).toEqual(['a1'])
+    expect(layout[3].foldedMessages).toEqual([])
   })
 
   it('keeps a tool result separator inside the turn it belongs to', () => {
@@ -71,5 +85,33 @@ describe('layoutTurns', () => {
     expect(ids(layout[2].foldedMessages)).toEqual(['a1'])
     expect(layout[4].turnStart).toBe(3)
     expect(ids(layout[5].foldedMessages)).toEqual(['b1'])
+  })
+})
+
+describe('foldSteps', () => {
+  it('runs tool calls of separate messages together', () => {
+    const steps = foldSteps([step('a1', read('t1')), step('a2', read('t2')), step('a3', read('t3'))])
+
+    expect(steps).toHaveLength(1)
+    expect(steps[0].kind).toBe('tools')
+    if (steps[0].kind !== 'tools') return
+    expect(steps[0].items.map((item) => (item.kind === 'tool' ? item.tool.id : item.thinkingId))).toEqual(['t1', 't2', 't3'])
+  })
+
+  it('lets a message that says something stand on its own, between two runs', () => {
+    const steps = foldSteps([step('a1', read('t1')), said('a2', 'now reading'), step('a3', read('t2'))])
+
+    expect(steps.map((entry) => entry.kind)).toEqual(['tools', 'message', 'tools'])
+  })
+
+  it('folds a thought into the run it sits in', () => {
+    const steps = foldSteps([step('a1', { type: 'thinking', thinking: 'looking' }, read('t1'))])
+
+    if (steps[0].kind !== 'tools') throw new Error('expected a run')
+    expect(steps[0].items.map((item) => item.kind)).toEqual(['thinking', 'tool'])
+  })
+
+  it('draws nothing for a step the chat never shows', () => {
+    expect(foldSteps([step('a1', { type: 'tool_use', id: 't1', name: 'task_create', input: {} })])).toEqual([])
   })
 })

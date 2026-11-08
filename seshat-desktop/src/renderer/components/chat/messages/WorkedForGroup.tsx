@@ -55,13 +55,7 @@ export function WorkedForGroup({ turnKey, live = false, children }: Props) {
           <Down size={10} />
         </span>
       </div>
-      {expanded && (
-        // The indent and the rule are what say "these belong to the turn above";
-        // without them the steps read as separate messages of their own.
-        <div className="mt-0.5 ml-[5px] flex flex-col gap-1.5 border-l border-[var(--border-subtle)] pl-3">
-          {children}
-        </div>
-      )}
+      {expanded && <div className="flex flex-col gap-1.5">{children}</div>}
     </div>
   )
 }
