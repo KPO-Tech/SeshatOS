@@ -29,7 +29,8 @@
       },
       "conversationComposer": {
         "messageSeshatos": "Écrire à SeshatOS...",
-        "modelsUnavailable": "Modèles indisponibles"
+        "modelsUnavailable": "Modèles indisponibles",
+        "condenseTurns": "Condenser les tours"
       },
       "contextGauge": {
         "percentOfContext": "{{percent}} % du contexte",
@@ -71,6 +72,22 @@
         "files": "Fichiers",
         "new": "Nouveau",
         "edited": "Modifié"
+      },
+      "foldedTools": {
+        "read_one": "Lecture de {{count}} fichier",
+        "read_other": "Lecture de {{count}} fichiers",
+        "search_one": "{{count}} recherche",
+        "search_other": "{{count}} recherches",
+        "edit_one": "{{count}} fichier modifié",
+        "edit_other": "{{count}} fichiers modifiés",
+        "write_one": "{{count}} fichier écrit",
+        "write_other": "{{count}} fichiers écrits",
+        "bash_one": "{{count}} commande exécutée",
+        "bash_other": "{{count}} commandes exécutées",
+        "other_one": "{{label}} ({{count}})",
+        "other_other": "{{label}} ({{count}})",
+        "showThese": "Voir ces étapes",
+        "hideThese": "Masquer ces étapes"
       },
       "inlineMedia": {
         "preparingTheFile": "Préparation du fichier...",

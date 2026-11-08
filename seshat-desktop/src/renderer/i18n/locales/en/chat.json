@@ -29,7 +29,8 @@
       },
       "conversationComposer": {
         "messageSeshatos": "Message SeshatOS...",
-        "modelsUnavailable": "Models unavailable"
+        "modelsUnavailable": "Models unavailable",
+        "condenseTurns": "Condense turns"
       },
       "contextGauge": {
         "percentOfContext": "{{percent}}% of context",
@@ -71,6 +72,22 @@
         "files": "Files",
         "new": "New",
         "edited": "Edited"
+      },
+      "foldedTools": {
+        "read_one": "Read {{count}} file",
+        "read_other": "Read {{count}} files",
+        "search_one": "Searched {{count}} time",
+        "search_other": "Searched {{count}} times",
+        "edit_one": "Edited {{count}} file",
+        "edit_other": "Edited {{count}} files",
+        "write_one": "Wrote {{count}} file",
+        "write_other": "Wrote {{count}} files",
+        "bash_one": "Ran {{count}} command",
+        "bash_other": "Ran {{count}} commands",
+        "other_one": "{{label}} ({{count}})",
+        "other_other": "{{label}} ({{count}})",
+        "showThese": "Show these steps",
+        "hideThese": "Hide these steps"
       },
       "inlineMedia": {
         "preparingTheFile": "Preparing the file...",

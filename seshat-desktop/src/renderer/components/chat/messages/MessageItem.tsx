@@ -30,6 +30,7 @@ import type { AnswerExtras } from './answerExtras'
 import { useTranslation } from 'react-i18next'
 import { foldSteps, isToolResultOnly, shownBlocks } from './turns'
 import { WorkedForGroup } from './WorkedForGroup'
+import { FoldedTools } from './FoldedTools'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -358,7 +359,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           <WorkedForGroup turnKey={turnKey ?? `turn-${message.id ?? ""}`} live={liveTurn}>
             {foldedSteps.map((folded, index) =>
               folded.kind === 'tools' ? (
-                <QuietToolGroup
+                <FoldedTools
                   key={`${turnKey ?? 'turn'}-tools-${index}`}
                   items={folded.items}
                   sessionId={sessionId}

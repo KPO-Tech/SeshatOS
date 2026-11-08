@@ -1,6 +1,6 @@
 import type { ContentBlock, Message, ToolUseBlock } from '@renderer/api/types'
 import { isCompactionDivider } from '@renderer/lib/compactedHistory'
-import { isAgentTool, isDecisionTool } from '../tools/toolDisplay'
+import { isDecisionTool } from '../tools/toolDisplay'
 
 // Tools the chat never draws a line for: each has its own surface elsewhere.
 // - mode-switching tools: silent, handled by the Computer panel
@@ -43,10 +43,11 @@ export function shownBlocks(message: Message): ContentBlock[] {
 function isDecision(block: ContentBlock): boolean {
   if (block.type !== 'tool_use') return false
   if (block._status === 'awaiting_approval') return true
-  // A plan handed over for review, a step that produced something to look at
-  // (an image, an audio file, a document - see decidesInPlace in toolDisplay),
-  // or a sub-agent: these are what the turn is about, not work behind it.
-  return block.name === 'submit_plan' || isDecisionTool(block.name) || isAgentTool(block.name)
+  // A plan handed over for review, or a step that produced something to look
+  // at (an image, an audio file, a document - see decidesInPlace in
+  // toolDisplay). A sub-agent is work like any other: it runs to its end on its
+  // own, so it folds with the rest of the turn.
+  return block.name === 'submit_plan' || isDecisionTool(block.name)
 }
 
 export type TurnLayout = {

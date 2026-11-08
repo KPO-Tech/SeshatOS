@@ -215,6 +215,8 @@ type UIState = {
   // Seconds each thought took, by thinkingKey: measured in the client while it was written, since nothing stamps it.
   thinkingDurations: Record<string, number>
   // Whether a turn's "Worked for ..." header is open, by turn key, and the seconds each turn took.
+  // Whether a finished turn folds its steps behind a "Worked for ..." header.
+  condenseTurns: boolean
   turnExpansion: Record<string, boolean>
   turnDurations: Record<string, number>
   // Answers already submitted within a still-open ask_user_question call,
@@ -256,6 +258,7 @@ type UIState = {
   setThinkingDuration: (key: string, seconds: number) => void
   setTurnExpansion: (key: string, expanded: boolean) => void
   setTurnDuration: (key: string, seconds: number) => void
+  setCondenseTurns: (value: boolean) => void
   setAskUserAnswer: (key: string, value: string) => void
   rememberApproval: (signature: string) => void
   forgetApproval: (signature: string) => void
@@ -277,6 +280,7 @@ export const useUIStore = create<UIState>()(
       permissionMode: 'auto',
       thinkingExpansion: {},
       thinkingDurations: {},
+      condenseTurns: false,
       turnExpansion: {},
       turnDurations: {},
       askUserAnswers: {},
@@ -559,6 +563,8 @@ export const useUIStore = create<UIState>()(
       setTurnDuration: (key, seconds) =>
         set((s) => ({ turnDurations: keepNewestDurations({ ...s.turnDurations, [key]: seconds }, MAX_TURN_DURATIONS) })),
 
+      setCondenseTurns: (value) => set({ condenseTurns: value }),
+
       setAskUserAnswer: (key, value) =>
         set((s) => ({
           askUserAnswers: {
@@ -601,6 +607,7 @@ export const useUIStore = create<UIState>()(
         permissionMode: s.permissionMode,
         thinkingExpansion: s.thinkingExpansion,
         thinkingDurations: s.thinkingDurations,
+        condenseTurns: s.condenseTurns,
         turnExpansion: s.turnExpansion,
         turnDurations: s.turnDurations,
         askUserAnswers: s.askUserAnswers,

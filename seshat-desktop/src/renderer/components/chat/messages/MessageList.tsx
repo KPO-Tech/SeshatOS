@@ -7,6 +7,7 @@ import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
 import { useStableEntries } from '@renderer/lib/stableEntries'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
 import { layoutTurns } from '@renderer/components/chat/messages/turns'
+import { useUIStore } from '@renderer/stores/ui'
 import type { AnswerExtras } from '@renderer/components/chat/messages/answerExtras'
 import { useTranslation } from 'react-i18next'
 
@@ -59,8 +60,11 @@ export function MessageList({
   const webSources = useStableEntries(useMemo(() => webSourcesByTurnEnd(messages, isStreaming), [messages, isStreaming]))
   // The pages consulted so far in the turn, to tell which links of an answer are citations.
   const consulted = useStableEntries(useMemo(() => webSourcesSoFar(messages), [messages]))
-  // Which steps of each turn fold behind its "Worked for ..." header.
-  const turnLayout = useMemo(() => layoutTurns(messages), [messages])
+  // Which steps of each turn fold behind its "Worked for ..." header. Nothing
+  // folds until the reader asks for it: in a coding session the trace of the
+  // turn is often what they are reading.
+  const condenseTurns = useUIStore((state) => state.condenseTurns)
+  const turnLayout = useMemo(() => (condenseTurns ? layoutTurns(messages) : []), [condenseTurns, messages])
 
   // An answer can be asked again from the prompt before it, unless a turn is running. One function per answer, kept between renders.
   const regenerators = useMemo(() => {

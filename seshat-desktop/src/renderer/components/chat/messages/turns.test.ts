@@ -66,11 +66,11 @@ describe('layoutTurns', () => {
     }
   })
 
-  it('keeps a sub-agent on screen', () => {
+  it('folds a sub-agent with the rest of the turn', () => {
     const layout = layoutTurns([asked('go'), step('a1', tool('agent', 't1')), said('a2', 'done')])
 
-    expect(layout[1].folded).toBe(false)
-    expect(layout[2].foldedMessages).toEqual([])
+    expect(layout[1].folded).toBe(true)
+    expect(ids(layout[2].foldedMessages)).toEqual(['a1'])
   })
 
   it('still folds the work around a step that stays in place', () => {
