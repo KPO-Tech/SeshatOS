@@ -9,9 +9,11 @@ import { useTranslation } from 'react-i18next'
 
 // "auto" runs a safety check on each action and asks when it is unsure; "bypass" runs everything without asking. The second one used to be
 // labelled "Auto", which read as the smart one: it is named for what it does.
+// The names say what each mode does; a hint beside them was cut to a few words
+// and repeated what the label already said.
 const PERMISSION_OPTIONS: SelectorOption[] = [
-  { id: 'auto', label: 'shell:layout.titlebarSessionControls.smart', description: 'shell:layout.titlebarSessionControls.smartHint' },
-  { id: 'bypass', label: 'shell:layout.titlebarSessionControls.noConfirmation', description: 'shell:layout.titlebarSessionControls.noConfirmationHint' },
+  { id: 'auto', label: 'shell:layout.titlebarSessionControls.smart' },
+  { id: 'bypass', label: 'shell:layout.titlebarSessionControls.noConfirmation' },
 ]
 
 function permissionModeTitle(mode: UIPermissionMode, t: (key: string) => string): string {
@@ -83,7 +85,7 @@ export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { 
             // The button sits at the right end of the title bar: a menu growing to its
             // right opened past the window edge and was cut off.
             align="right"
-            options={PERMISSION_OPTIONS.map((option) => ({ ...option, label: t(option.label), description: option.description ? t(option.description) : undefined }))}
+            options={PERMISSION_OPTIONS.map((option) => ({ ...option, label: t(option.label) }))}
             selectedId={permissionMode}
             onSelect={(id) => selectPermissionMode(id as UIPermissionMode)}
           />
