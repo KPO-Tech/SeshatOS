@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChartHistogram, CheckOne, Close, Down, Globe, History, Home, LoadingOne, RightC } from '@icon-park/react'
-import { derivePlanSnapshot } from '@renderer/lib/plan'
+import { ChartHistogram, Close, Globe, History, Home, LoadingOne, RightC } from '@icon-park/react'
 import { useUIStore } from '@renderer/stores/ui'
 import { useSessionStore } from '@renderer/stores/session'
 import { toolIcon } from '@renderer/components/chat/tools/helpers'
@@ -21,8 +20,6 @@ const EMPTY_MESSAGES: Message[] = []
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
-
-const sectionLabelClass = 'text-[10px] font-bold uppercase tracking-[0.08em] text-app-text-muted'
 
 // Tools that never show up in the Tools page: mode-switch plumbing has no
 // useful detail view, bash has its own Terminal panel, and browser_* has its
@@ -72,9 +69,6 @@ type ComputerPanelProps = {
  */
 export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onClose, onToggleMaximize }: ComputerPanelProps) {
   const { t } = useTranslation('chat')
-  const planArtifact = useSessionStore(
-    (s) => s.sessions.find((session) => session.id === sessionId)?.planArtifact,
-  )
   const sessionMessages = useSessionStore(
     (s) => s.sessions.find((session) => session.id === sessionId)?.messages ?? EMPTY_MESSAGES,
   )
@@ -83,7 +77,6 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const [view, setView] = useState<ScreenView>('home')
   const [focusedId, setFocusedId] = useState<string | null>(focusToolId ?? null)
-  const [planOpen, setPlanOpen] = useState(false)
 
   // A tool row clicked in the chat transcript (ToolLineItem) opens/updates
   // this same panel with a new focusToolId instead of expanding inline -
@@ -92,10 +85,6 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
     if (focusToolId) setFocusedId(focusToolId)
   }, [focusToolId])
 
-  const plan = useMemo(
-    () => derivePlanSnapshot(sessionMessages, streaming),
-    [sessionMessages, streaming],
-  )
   const tools = useMemo(
     () => collectWorkspaceTools(sessionMessages, streaming),
     [sessionMessages, streaming],
@@ -152,61 +141,6 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
   return (
     // No background of its own: the frame gives the panel the background of the chat (--chat-bg).
     <div className="flex h-full min-h-0 flex-col">
-      {/* Plan: collapsed progress bar by default, click to see the checklist inline */}
-      {plan.items.length > 0 && (
-        <div className="shrink-0 border-b border-app-border-subtle">
-          <button
-            type="button"
-            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left"
-            onClick={() => setPlanOpen((v) => !v)}
-          >
-            <span className={cx(sectionLabelClass, 'shrink-0')}>{t('chat.panels.computerPanel.plan')}</span>
-            <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-              <span
-                className="block h-full rounded-full bg-[var(--accent-primary)] transition-[width] duration-200"
-                style={{ width: `${Math.round((plan.completedCount / plan.items.length) * 100)}%` }}
-              />
-            </span>
-            <span className="shrink-0 text-[10.5px] font-semibold tabular-nums text-app-text-muted">
-              {plan.completedCount}/{plan.items.length}
-            </span>
-            <Down size={11} className={cx('shrink-0 text-app-text-muted transition-transform duration-150', planOpen && 'rotate-180')} />
-          </button>
-          {planOpen && (
-            <div className="flex flex-col gap-1.5 px-3 pb-3 pl-[74px]">
-              {plan.items.map((item) => (
-                <div key={item.id} className="flex items-start gap-1.5">
-                  {item.status === 'completed' ? (
-                    <span className="mt-px flex size-[13px] shrink-0 items-center justify-center rounded-full bg-app-success text-app-bg">
-                      <CheckOne size={8} />
-                    </span>
-                  ) : (
-                    <span
-                      className={cx(
-                        'mt-1.5 size-[7px] shrink-0 rounded-full',
-                        item.status === 'in_progress' ? 'bg-[var(--accent-primary)]' : item.status === 'failed' ? 'bg-app-error' : 'bg-app-text-muted',
-                      )}
-                    />
-                  )}
-                  <span className={cx('text-[11.5px] leading-normal', item.status === 'completed' ? 'text-app-text-muted' : 'text-app-text')}>
-                    {item.title}
-                  </span>
-                </div>
-              ))}
-              {planArtifact && (
-                <button
-                  type="button"
-                  className="mt-1 flex w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[10.5px] font-semibold text-[var(--accent-primary)] hover:underline"
-                  onClick={() => openRightPanel({ kind: 'markdown', title: t('chat.panels.computerPanel.implementationPlan'), sessionId, markdown: planArtifact })}
-                >
-                  {t('chat.panels.computerPanel.viewFullPlan')}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Screen: the whole panel now - styled as a distinct device screen (dark
           bezel, inset frame) so it reads as "the computer" at a glance. Stats
           is home; Web and Tools are its two pages; a focused tool's live

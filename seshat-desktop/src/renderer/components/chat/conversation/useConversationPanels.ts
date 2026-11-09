@@ -55,6 +55,9 @@ export function useConversationPanels({
   const browserToolNavigationRef = useRef<string | null>(null)
   const prevCategoryRef = useRef<ToolPanelCategory | null>(null)
   const openedPagesRef = useRef(new Set<string>())
+  // The plan the agent builds is the one thing the chat cannot show while it is written:
+  // the first task opens the Session panel, once per session.
+  const planOpenedRef = useRef<string | null>(null)
   const activeToolName = agentState.activeTool?.toolName
   const isFileToolActive = activeToolName != null && isFileTool(activeToolName)
   const activeCategory = categoryForTool(activeToolName)
@@ -71,6 +74,14 @@ export function useConversationPanels({
     }
     prevCategoryRef.current = activeCategory
   }, [activeCategory, sessionId, openRightPanel])
+
+  useEffect(() => {
+    if (!sessionId || planOpenedRef.current === sessionId) return
+    const creating = streaming.some((block) => block.type === 'tool_use' && block.name === 'task_create')
+    if (!creating) return
+    planOpenedRef.current = sessionId
+    openRightPanel({ kind: 'computer', title: t('chat.panels.computerPanel.session'), sessionId })
+  }, [openRightPanel, sessionId, streaming, t])
 
   // Follows each read/write/edit call live while Files is showing.
   useEffect(() => {

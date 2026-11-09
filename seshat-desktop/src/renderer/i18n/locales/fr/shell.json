@@ -95,6 +95,7 @@
       }
     },
     "titlebar": {
+      "language": "Langue",
       "navigation": "Navigation",
       "home": "Accueil",
       "back": "Retour",
@@ -108,9 +109,7 @@
       "browser": "Navigateur",
       "terminal": "Terminal",
       "smart": "Intelligent",
-      "smartHint": "Chaque action est vérifiée ; on vous demande si elle est douteuse ou risquée.",
-      "noConfirmation": "Sans confirmation",
-      "noConfirmationHint": "Exécute tout sans vous demander. Pour un dossier de confiance."
+      "noConfirmation": "Sans confirmation"
     },
     "updateBanner": {
       "restarting": "Redémarrage…",

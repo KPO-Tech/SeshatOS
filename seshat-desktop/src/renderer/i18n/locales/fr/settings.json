@@ -18,8 +18,8 @@
       "description": "Qui vous êtes sur cet appareil."
     },
     "languageNotifications": {
-      "label": "Langue et notifications",
-      "description": "La langue de l'interface, et ce dont l'application vous informe."
+      "label": "Préférences",
+      "description": "La langue de l'interface, les notifications et l'affichage des conversations."
     },
     "appearance": {
       "label": "Apparence",
@@ -117,6 +117,9 @@
     }
   },
   "languageNotifications": {
+    "chatCard": "Conversation",
+    "condenseTurns": "Condenser les tours",
+    "condenseTurnsHint": "Replier les étapes d'un tour terminé derrière une ligne. Les suites d'appels d'outils sont résumées de toute façon.",
     "languageCard": "Langue",
     "interfaceLanguage": "Langue de l'interface",
     "notificationsCard": "Notifications",

@@ -72,6 +72,19 @@
         "new": "Nouveau",
         "edited": "Modifié"
       },
+      "toolRun": {
+        "read": "Fichiers lus",
+        "search": "Recherches",
+        "edit": "Fichiers modifiés",
+        "write": "Fichiers écrits",
+        "bash": "Commandes exécutées",
+        "other": "Outils utilisés",
+        "thought": "Réflexion",
+        "call_one": "{{label}} · {{count}} appel",
+        "call_other": "{{label}} · {{count}} appels",
+        "show": "Voir ces étapes",
+        "hide": "Masquer ces étapes"
+      },
       "inlineMedia": {
         "preparingTheFile": "Préparation du fichier...",
         "creatingImage": "Création de l'image...",
@@ -103,6 +116,12 @@
         "reject": "Refuser",
         "proceed": "Poursuivre",
         "clickToReview": "Cliquez pour relire"
+      },
+      "workedFor": {
+        "title": "A travaillé {{duration}}",
+        "titleNoDuration": "A travaillé",
+        "showSteps": "Voir les étapes de ce tour",
+        "hideSteps": "Masquer les étapes de ce tour"
       },
       "youTubeEmbed": {
         "thisVideoLinkIsNot": "Ce lien vidéo n'est pas valide.",
@@ -191,6 +210,7 @@
         }
       },
       "computerPanel": {
+        "unnamedTask": "Tâche sans nom",
         "session": "Session",
         "browser": "Navigateur",
         "plan": "Plan",
@@ -270,6 +290,8 @@
         "summarizeTheOlderPartOf": "Résumer maintenant la partie la plus ancienne de la conversation, sans attendre le seuil automatique",
         "compacting": "Compactage…",
         "compactNow": "Compacter",
+        "condenseTurns": "Condenser les tours",
+        "condenseTurnsHint": "Replier les étapes d'un tour terminé derrière une ligne. Les suites d'appels d'outils restent résumées de toute façon.",
         "changes": "Modifications",
         "connectors": "Connecteurs",
         "outputs": "Résultats",
@@ -301,11 +323,8 @@
         "waitingForSubAgent": "En attente du sous-agent…",
         "cancelling": "Annulation…",
         "cancel": "Annuler",
-        "activity": "Activité",
         "agentIsStarting": "L'agent démarre…",
-        "toolLog": "Journal d'outils",
         "failed": "échec",
-        "outputWillAppearHereOnce": "Le résultat apparaîtra ici une fois l'agent terminé.",
         "noFinalOutputWasCaptured": "Aucun résultat final n'a été capturé.",
         "agentOutput": "Sortie de l'agent",
         "turns_one": "{{count}} tour",
@@ -492,9 +511,7 @@
           "error": "Erreur"
         },
         "genericToolView": {
-          "input": "Entrée",
-          "output": "Sortie",
-          "details": "Détails"
+          "input": "Entrée"
         },
         "globToolView": {
           "error": "Erreur",
@@ -570,7 +587,6 @@
         },
         "silentToolView": {
           "files": "Fichiers",
-          "session": "Session",
           "failed": "échec"
         },
         "sttToolView": {
@@ -602,9 +618,9 @@
         }
       },
       "toolLineItem": {
+        "agent": "Sous-agent",
         "browser": "Navigateur",
         "files": "Fichiers",
-        "session": "Session",
         "failed": "échec",
         "completed": "Terminé",
         "copy": "Copier",
