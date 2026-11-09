@@ -159,7 +159,9 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
           See BashToolView/WebSearchToolView for the two that were missing
           that section until this pass. */}
       {expanded && (
-        <div className="pt-1">
+        // The opened body keeps the row's own horizontal inset: wider than the
+        // line it belongs to, it read as a different, floating block.
+        <div className="px-2 pt-1">
           {isDiffTool ? (
             <DiffContent tool={tool} sessionId={sessionId} />
           ) : (

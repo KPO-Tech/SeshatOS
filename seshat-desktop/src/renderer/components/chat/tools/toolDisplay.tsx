@@ -396,17 +396,6 @@ export function toolCategory(name: string): ToolCategory {
 // specific per-tool icon). One glance at the icon now says *what kind* of
 // step this was (read/write/edit/search/bash/other) instead of every row
 // looking the same status dot regardless of what it actually did.
-// Each kind of work carries the colour of what it does, the way the files page
-// colours a file by its format: the row says what happened before its label is read.
-const CATEGORY_COLOR: Record<ToolCategory, string> = {
-  read: '#5aa8e0',
-  search: '#a78bfa',
-  edit: '#e8a33d',
-  write: '#4cb782',
-  bash: '#48b8a6',
-  other: '#8a8f98',
-}
-
 const CATEGORY_ICON: Record<ToolCategory, ReactNode> = {
   read: <FileTextOne size={12} />,
   write: <Write size={12} />,
@@ -417,8 +406,7 @@ const CATEGORY_ICON: Record<ToolCategory, ReactNode> = {
 }
 
 export function categoryIcon(name: string): ReactNode {
-  const category = toolCategory(name)
-  return <span style={{ color: CATEGORY_COLOR[category] }}>{CATEGORY_ICON[category]}</span>
+  return CATEGORY_ICON[toolCategory(name)]
 }
 
 export function isSilentTool(name: string): boolean {

@@ -119,7 +119,7 @@ export function ToolRunGroup({ items, sessionId, live = false, autoExpandTools =
           <Down size={10} />
         </span>
       </div>
-      {expanded && rows}
+      {expanded && <div className="pl-2">{rows}</div>}
     </div>
   )
 }
@@ -132,7 +132,11 @@ function SegmentRow({ segment, sessionId, live, autoExpandTools, onSubmitPrompt 
   const last = tools[tools.length - 1] ?? first
 
   if (tools.length < 2 || !first) {
-    return <QuietToolGroup items={segment.items} sessionId={sessionId} live={live} autoExpandTools={autoExpandTools} onSubmitPrompt={onSubmitPrompt} />
+    return (
+      <div className="pl-2">
+        <QuietToolGroup items={segment.items} sessionId={sessionId} live={live} autoExpandTools={autoExpandTools} onSubmitPrompt={onSubmitPrompt} />
+      </div>
+    )
   }
 
   const label = t('chat.messages.toolRun.call', { count: tools.length, label: toolLabel(first.tool.name) })
@@ -156,7 +160,9 @@ function SegmentRow({ segment, sessionId, live, autoExpandTools, onSubmitPrompt 
         </span>
       </div>
       {open && (
-        <QuietToolGroup items={segment.items} sessionId={sessionId} live={live} autoExpandTools={autoExpandTools} onSubmitPrompt={onSubmitPrompt} />
+        <div className="pl-2">
+          <QuietToolGroup items={segment.items} sessionId={sessionId} live={live} autoExpandTools={autoExpandTools} onSubmitPrompt={onSubmitPrompt} />
+        </div>
       )}
     </div>
   )
