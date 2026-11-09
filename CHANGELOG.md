@@ -11,6 +11,32 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.19] - 2026-11-09
+
+### Highlights
+
+- **A retry replaces the answer instead of adding a second one.** The prompt stays where it is and the new answer is drawn in the place of the old one, error included. The backend takes the failed turn out of the conversation too (`regenerate` on the prompt, which uses the runtime's new rewind), so the model no longer sees the attempt that failed. Only the last answer offers it.
+- **A long turn can be read.** With "condense turns" on (a checkbox in the context card), the steps of a finished turn fold behind a "Worked for ..." header, runs of tool calls are summarised in one line, and what must be seen stays in place: a card waiting for an answer, a plan, an image, a document, a sub-agent.
+- **A sub-agent is read like the chat.** Its panel draws its prompt and its work with the chat's own message component, tools included, and in the chat an agent is one line in the accent colour that opens the panel.
+- **Runtime 1.16.0:** a session that went on after a compaction can be restored again, z.ai no longer refuses a compacted conversation, and `excelize` is updated for a crash on a crafted spreadsheet (GHSA-mx22-3794-2vpv).
+
+### Added
+
+- **A check on every copy button.** Eight icon buttons copied silently; they now show a check for a moment once the text has reached the clipboard.
+- **Every tool opens under its own line** (its result first, as JSON when it is JSON, the arguments behind "Input"). Only the sub-agent keeps a panel of its own, and Files and the Browser keep their readers.
+- **The plan has its own card** at the end of the session overview, one line per task, and the Session panel opens when the agent starts a plan.
+- **A language switch in the title bar**, and the permission menu stays inside the window.
+
+### Fixed
+
+- **The tools of a sub-agent were drawn with no arguments and no result.** The sub-agent branch of the tool events kept only the status, and a call that never came as a content block was not drawn at all.
+- **A turn that is only read no longer jumps to the end** when the reader unfolds something in it.
+- **A plan row shows its task, not its id**, and the plan is read in the shape the engine sends it.
+
+### Changed
+
+- **seshat-runtime v1.16.0** (rewind of the last turn, two compaction fixes, the `excelize` update, and the gRPC and Python additions that the desktop does not use).
+
 ## [0.3.18] - 2026-11-07
 
 ### Highlights
