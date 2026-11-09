@@ -290,6 +290,8 @@
         "summarizeTheOlderPartOf": "Résumer maintenant la partie la plus ancienne de la conversation, sans attendre le seuil automatique",
         "compacting": "Compactage…",
         "compactNow": "Compacter",
+        "condenseTurns": "Condenser les tours",
+        "condenseTurnsHint": "Replier les étapes d'un tour terminé derrière une ligne. Les suites d'appels d'outils restent résumées de toute façon.",
         "changes": "Modifications",
         "connectors": "Connecteurs",
         "outputs": "Résultats",

@@ -290,6 +290,8 @@
         "summarizeTheOlderPartOf": "Summarize the older part of the conversation now, instead of waiting for the automatic threshold",
         "compacting": "Compacting…",
         "compactNow": "Compact now",
+        "condenseTurns": "Condense turns",
+        "condenseTurnsHint": "Fold the steps of a finished turn behind one line. Runs of tool calls stay summarized either way.",
         "changes": "Changes",
         "connectors": "Connectors",
         "outputs": "Outputs",
