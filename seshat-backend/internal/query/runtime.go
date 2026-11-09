@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -381,6 +382,9 @@ func (r *SDKRuntime) RunPrompt(ctx context.Context, input QueryInput) (*QueryRes
 		return nil, err
 	}
 	defer r.turnFinished(session)
+	if err := rewindForRegeneration(session, input); err != nil {
+		return nil, err
+	}
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// See the matching comment in StreamPrompt: carried on ctx, not
@@ -455,6 +459,9 @@ func (r *SDKRuntime) StreamPrompt(ctx context.Context, input QueryInput, onChunk
 	}
 	sessionLoadMs := time.Since(sessionStart).Milliseconds()
 	defer r.turnFinished(session)
+	if err := rewindForRegeneration(session, input); err != nil {
+		return nil, err
+	}
 	applyToolAllowlist(session, input.AllowedTools)
 
 	// Carried on ctx (not client.SetPromptFn/SetWebSearchRunner, which mutate
@@ -572,6 +579,52 @@ func applyForcedExecutionMode(session *sdk.Session, forced string) {
 
 // submitQueryMessage calls SubmitMessageWithContent when image attachments are present,
 // falling back to plain SubmitMessage for text-only turns.
+// rewindForRegeneration takes the last turn out of the session when the request asks for its answer again. When that turn
+// cannot be taken back (it starts inside what a compaction kept) the request fails and the session is left as it was.
+func rewindForRegeneration(session *sdk.Session, input QueryInput) error {
+	if !input.RegenerateLastTurn {
+		return nil
+	}
+	// A client asks again for what it believes is the last turn. When that turn never reached the server (a prompt that
+	// failed to send), the last one the session holds is an earlier, answered turn: taking it back would lose it.
+	if prompt, ok := lastTurnPrompt(session.GetMessages()); !ok || strings.TrimSpace(prompt) != strings.TrimSpace(input.Prompt) {
+		return bkerr.Conflict("the last answer cannot be asked again: the session does not hold that prompt as its last turn", nil)
+	}
+	if _, err := session.RewindLastTurn(); err != nil {
+		if errors.Is(err, sdk.ErrNothingToRewind) {
+			return bkerr.Conflict("the last answer cannot be asked again: nothing to take back", err)
+		}
+		return fmt.Errorf("rewind the last turn: %w", err)
+	}
+	return nil
+}
+
+// interruptedTurnNotePrefix starts the message the runtime adds to a turn that stopped on an error or was cancelled: it is not
+// something the person wrote.
+const interruptedTurnNotePrefix = "[The previous turn stopped because"
+
+// lastTurnPrompt is the text the person wrote to start the last turn of the conversation.
+func lastTurnPrompt(messages []types.Message) (string, bool) {
+	for i := len(messages) - 1; i >= 0; i-- {
+		message := messages[i]
+		if message.Role != types.RoleUser {
+			continue
+		}
+		var text strings.Builder
+		for _, block := range message.Content {
+			if textBlock, ok := block.(types.TextContent); ok {
+				text.WriteString(textBlock.Text)
+			}
+		}
+		prompt := strings.TrimSpace(text.String())
+		if prompt == "" || strings.HasPrefix(prompt, interruptedTurnNotePrefix) {
+			continue
+		}
+		return prompt, true
+	}
+	return "", false
+}
+
 func submitQueryMessage(ctx context.Context, session *sdk.Session, input QueryInput) (*sdk.SessionResponse, error) {
 	if len(input.Images) == 0 {
 		return session.SubmitMessage(ctx, input.Prompt)

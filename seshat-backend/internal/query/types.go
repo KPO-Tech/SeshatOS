@@ -47,6 +47,10 @@ type QueryInput struct {
 	// apply for this session. When set, the agent's system prompt, model, and
 	// permission mode override the defaults unless already explicitly provided.
 	AgentSlug string
+	// RegenerateLastTurn takes the last turn of the session out of the conversation before this prompt is submitted, so
+	// the prompt asks again for an answer that was already given (or failed) instead of adding a second attempt on top.
+	// The prompt is the one of the turn that is taken back.
+	RegenerateLastTurn bool
 	// AllowedTools, when non-empty, restricts the session to exactly these
 	// tool names for this turn - populated from the resolved agent
 	// definition's Tools allowlist in BuildContextInput. Empty means no
@@ -148,7 +152,9 @@ type ContextBuildParams struct {
 	FileIDs            []string
 	AppendSystemPrompt *string
 	AgentSlug          string
-	Principal          *backendauth.Principal
+	// Regenerate asks again for the answer of the last turn: that turn is removed first.
+	Regenerate bool
+	Principal  *backendauth.Principal
 	// OnStage, when set, is called once right before the one sub-phase of
 	// context building slow enough to be worth naming individually to the
 	// client (the RAG search) - see the [perf] context_build timings this
