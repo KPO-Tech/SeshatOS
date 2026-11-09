@@ -80,7 +80,23 @@ export function MessageList({
   // folds until the reader asks for it: in a coding session the trace of the
   // turn is often what they are reading.
   const condenseTurns = useUIStore((state) => state.condenseTurns)
-  const turnLayout = useMemo(() => (condenseTurns ? layoutTurns(messages) : []), [condenseTurns, messages])
+  // Turns are laid out on the rows the list draws, not on the raw messages: a step merged into an earlier
+  // row draws nothing, so a fold hung on it would hide the whole run.
+  const turnLayout = useMemo(() => {
+    if (!condenseTurns) return []
+    const drawn = rows.map((row, index) => ({ row, index })).filter((entry) => !entry.row.merged)
+    const layout = layoutTurns(drawn.map((entry) => entry.row.message))
+    const out: Array<(typeof layout)[number] | undefined> = rows.map(() => undefined)
+    drawn.forEach((entry, position) => {
+      const item = layout[position]
+      out[entry.index] = { ...item, turnStart: drawn[item.turnStart]?.index ?? entry.index }
+    })
+    return out
+  }, [condenseTurns, rows])
+  // The row that holds the newest message, and the last row an assistant draws: where the live turn is.
+  const lastMessageRow = rows.findIndex((row) => row.indexes.includes(messages.length - 1))
+  let lastAssistantRow = -1
+  rows.forEach((row, index) => { if (!row.merged && row.message.role === 'assistant') lastAssistantRow = index })
 
   // An answer can be asked again from the prompt before it, unless a turn is running. One function per answer, kept between renders.
   const regenerators = useMemo(() => {
@@ -119,9 +135,9 @@ export function MessageList({
           const row = rows[virtualRow.index]
           const msg = row.message
           const i = virtualRow.index
-          const revealThinking = isStreaming && msg.role === 'assistant' && i === messages.length - 1
+          const revealThinking = isStreaming && msg.role === 'assistant' && i === lastMessageRow
           const showLiveActivity = revealThinking && !pendingPermission && !pendingAskUser
-          const showCompleted = justCompleted && msg.role === 'assistant' && i === messages.length - 1 && !pendingPermission && !pendingAskUser
+          const showCompleted = justCompleted && msg.role === 'assistant' && i === lastMessageRow && !pendingPermission && !pendingAskUser
           const turn = turnLayout[i]
           return (
             <div
@@ -138,7 +154,7 @@ export function MessageList({
                 folded={turn?.folded || row.merged}
                 foldedMessages={turn?.foldedMessages}
                 turnKey={`${sessionId ?? ''}:turn-${turn?.turnStart ?? i}`}
-                liveTurn={revealThinking}
+                liveTurn={isStreaming && i === lastAssistantRow}
                 compact={msg.role === 'assistant' && i > 0 && messages[i - 1]?.role === 'assistant'}
                 revealThinking={revealThinking}
                 liveActivity={showLiveActivity ? liveActivity : undefined}

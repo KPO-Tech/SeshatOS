@@ -68,13 +68,6 @@ function isQuietStep(message: Message): boolean {
   return blocks.every((block) => block.type !== 'text' && !isDecision(block))
 }
 
-/**
- * The messages as the rows the list draws. The runtime writes a message per
- * step, with a tool_result message after every call: left alone, three commands
- * read as three separate rows instead of one run. Consecutive steps that hold
- * nothing but calls and reasoning are drawn as one row, so their calls group in
- * a single line - and a tool_result, which draws nothing, does not end the run.
- */
 /** A message that ends on a call: the run it holds can take in the step that follows. */
 function keepsRunOpen(message: Message): boolean {
   if (message.role !== 'assistant') return false
@@ -83,6 +76,13 @@ function keepsRunOpen(message: Message): boolean {
   return last !== undefined && last.type !== 'text' && blocks.every((block) => !isDecision(block))
 }
 
+/**
+ * The messages as the rows the list draws. The runtime writes a message per
+ * step, with a tool_result message after every call: left alone, three commands
+ * read as three separate rows instead of one run. Consecutive steps that hold
+ * nothing but calls and reasoning are drawn as one row, so their calls group in
+ * a single line - and a tool_result, which draws nothing, does not end the run.
+ */
 export function listRows(messages: Message[]): ListRow[] {
   const rows: ListRow[] = messages.map((message, index) => ({ message, indexes: [index], merged: false }))
   let head = -1

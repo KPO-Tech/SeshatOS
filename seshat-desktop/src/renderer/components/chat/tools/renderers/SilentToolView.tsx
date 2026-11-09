@@ -85,7 +85,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
   // Every call opens right here, under its own line: the Session panel is for
   // the session, not for one tool, and a panel of its own put the result far
   // from the turn that explains it.
-  const canExpand = !isPastedFile && !isFileTool(tool.name)
+  const canExpand = !isPastedFile && !isFileTool(tool.name) && Boolean(result)
   const expanded = opened
 
   function handleClick() {
@@ -103,7 +103,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
     setOpened((value) => !value)
   }
 
-  const clickable = canOpenPlan || !isPastedFile
+  const clickable = canOpenPlan || canExpand || (!isPastedFile && isFileTool(tool.name))
 
   const line = (
     <div

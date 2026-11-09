@@ -3,6 +3,10 @@ import type { Message, ToolStatus } from '@renderer/api/types'
 import { compactionDivider } from '@renderer/lib/compactedHistory'
 import { foldSteps, layoutTurns, listRows } from './turns'
 
+function result(id: string): Message {
+  return { id: `res-${id}`, role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: 'ok' } as never] }
+}
+
 function asked(text: string): Message {
   return { id: `user-${text}`, role: 'user', content: [{ type: 'text', text }] }
 }
@@ -177,5 +181,16 @@ describe('foldSteps', () => {
 
   it('draws nothing for a step the chat never shows', () => {
     expect(foldSteps([step('a1', { type: 'tool_use', id: 't1', name: 'task_create', input: {} })])).toEqual([])
+  })
+})
+
+describe('rows and turns together', () => {
+  it('a running turn of calls only still draws something', () => {
+    const messages = [asked('go'), step('a1', read('t1')), result('t1'), step('a2', read('t2')), result('t2'), step('a3', read('t3')), result('t3')]
+    const rows = listRows(messages)
+    const drawn = rows.map((row, index) => ({ row, index })).filter((entry) => !entry.row.merged)
+    const layout = layoutTurns(drawn.map((entry) => entry.row.message))
+    const drawsSomething = drawn.some((entry, position) => entry.row.message.role === 'assistant' && !layout[position].folded)
+    expect(drawsSomething).toBe(true)
   })
 })

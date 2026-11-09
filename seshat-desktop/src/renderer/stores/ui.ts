@@ -214,9 +214,9 @@ type UIState = {
   thinkingExpansion: Record<string, boolean>
   // Seconds each thought took, by thinkingKey: measured in the client while it was written, since nothing stamps it.
   thinkingDurations: Record<string, number>
-  // Whether a turn's "Worked for ..." header is open, by turn key, and the seconds each turn took.
   // Whether a finished turn folds its steps behind a "Worked for ..." header.
   condenseTurns: boolean
+  // Whether each turn's header is open, by turn key, and the seconds each turn took.
   turnExpansion: Record<string, boolean>
   turnDurations: Record<string, number>
   // Answers already submitted within a still-open ask_user_question call,
@@ -558,7 +558,13 @@ export const useUIStore = create<UIState>()(
       setThinkingDuration: (key, seconds) =>
         set((s) => ({ thinkingDurations: keepNewestDurations({ ...s.thinkingDurations, [key]: seconds }, MAX_THINKING_DURATIONS) })),
 
-      setTurnExpansion: (key, expanded) => set((s) => ({ turnExpansion: { ...s.turnExpansion, [key]: expanded } })),
+      setTurnExpansion: (key, expanded) =>
+        set((s) => {
+          const next = { ...s.turnExpansion, [key]: expanded }
+          const keys = Object.keys(next)
+          for (const old of keys.slice(0, Math.max(0, keys.length - MAX_TURN_DURATIONS))) delete next[old]
+          return { turnExpansion: next }
+        }),
 
       setTurnDuration: (key, seconds) =>
         set((s) => ({ turnDurations: keepNewestDurations({ ...s.turnDurations, [key]: seconds }, MAX_TURN_DURATIONS) })),

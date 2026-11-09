@@ -18,18 +18,20 @@ export function useTurnDuration(key: string, live: boolean): number | null {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (!live) return
+    if (!live) {
+      // The turn is over: its duration is written once, here, not when the row merely unmounts.
+      const begin = startedAt.get(key)
+      if (begin !== undefined) {
+        setDuration(key, Math.max(1, Math.round((Date.now() - begin) / 1000)))
+        startedAt.delete(key)
+      }
+      return
+    }
     if (!startedAt.has(key)) startedAt.set(key, Date.now())
     const tick = () => setNow(Date.now())
     tick()
     const timer = window.setInterval(tick, 1000)
-    return () => {
-      window.clearInterval(timer)
-      // Written on every step, so the last write of the turn is the whole
-      // duration: each one counts from the same start.
-      const begin = startedAt.get(key)
-      if (begin !== undefined) setDuration(key, Math.max(1, Math.round((Date.now() - begin) / 1000)))
-    }
+    return () => window.clearInterval(timer)
   }, [live, key, setDuration])
 
   if (!live) return stored ?? null
