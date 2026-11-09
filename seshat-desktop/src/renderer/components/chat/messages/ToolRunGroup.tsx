@@ -84,6 +84,25 @@ export function ToolRunGroup({ items, sessionId, live = false, autoExpandTools =
 
   const phrase = kinds.length === 0 ? t('chat.messages.toolRun.thought') : kinds.map(partOf).join(', ')
 
+  const rows = (
+    <div className="flex flex-col gap-1">
+      {segments.map((segment) => (
+        <SegmentRow
+          key={segment.key}
+          segment={segment}
+          sessionId={sessionId}
+          live={live}
+          autoExpandTools={autoExpandTools}
+          onSubmitPrompt={onSubmitPrompt}
+        />
+      ))}
+    </div>
+  )
+
+  // A run of a single nature says exactly what its rows say: a heading above them would
+  // only make the same work be opened twice.
+  if (kinds.length === 1) return rows
+
   return (
     <div className="flex flex-col">
       <div
@@ -100,20 +119,7 @@ export function ToolRunGroup({ items, sessionId, live = false, autoExpandTools =
           <Down size={10} />
         </span>
       </div>
-      {expanded && (
-        <div className="flex flex-col gap-1">
-          {segments.map((segment) => (
-            <SegmentRow
-              key={segment.key}
-              segment={segment}
-              sessionId={sessionId}
-              live={live}
-              autoExpandTools={autoExpandTools}
-              onSubmitPrompt={onSubmitPrompt}
-            />
-          ))}
-        </div>
-      )}
+      {expanded && rows}
     </div>
   )
 }
