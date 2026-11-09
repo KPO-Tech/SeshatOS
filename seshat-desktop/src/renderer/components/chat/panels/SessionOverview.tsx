@@ -378,9 +378,10 @@ function PlanCard({
             )}
             <span
               className={cx(
-                'text-[12px] leading-snug',
+                'min-w-0 flex-1 truncate text-[12px] leading-snug',
                 item.status === 'completed' ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)]',
               )}
+              title={item.title || t('chat.panels.computerPanel.unnamedTask')}
             >
               {item.title || t('chat.panels.computerPanel.unnamedTask')}
             </span>
