@@ -2,9 +2,9 @@ import type { Message, ToolStatus, ToolUseBlock } from '@renderer/api/types'
 import type { StreamingBlock } from '@renderer/stores/session'
 import { streamingToContentBlocks } from '@renderer/stores/session'
 
-type PlanItemStatus = 'pending' | 'in_progress' | 'completed' | 'failed'
+export type PlanItemStatus = 'pending' | 'in_progress' | 'completed' | 'failed'
 
-type PlanItem = {
+export type PlanItem = {
   id: string
   /** What the task says. Empty when the engine never named it: the panel has a word for that. */
   title: string

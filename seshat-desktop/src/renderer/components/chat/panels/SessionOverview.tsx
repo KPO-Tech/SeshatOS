@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Down } from '@icon-park/react'
+import { CheckOne, Down } from '@icon-park/react'
 import { useContextUsage } from '@renderer/hooks/useContextUsage'
 import { currentSandbox } from '@renderer/components/config/environment/sandboxApi'
 import { confinementView } from '@renderer/components/config/environment/confinementView'
@@ -15,6 +15,7 @@ import { useGitState } from '@renderer/hooks/useGitState'
 import { ChangesList } from './changes/ChangesList'
 import { usePullRequests } from './changes/usePullRequests'
 import { api, ApiError } from '@renderer/api/client'
+import { derivePlanSnapshot, type PlanItem } from '@renderer/lib/plan'
 import { compactionNote, connectorRows, environmentRows, formatTokens, liveContextAfterCompaction, type CompactionOutcome } from '@renderer/lib/sessionOverview'
 import { formatDuration } from '@renderer/lib/turnTiming'
 import { useSessionStore } from '@renderer/stores/session'
@@ -51,6 +52,8 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   const session = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId))
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const messages = session?.messages ?? EMPTY
+  const streaming = useSessionStore((s) => s.getStreaming(sessionId))
+  const plan = useMemo(() => derivePlanSnapshot(messages, streaming), [messages, streaming])
 
   const [confinement, setConfinement] = useState<{ label: string; confined: boolean } | null>(null)
   const [servers, setServers] = useState<MCPServer[]>([])
@@ -204,7 +207,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
 
   if (connectors.total > 0) {
     cards.push(
-      <OverviewCard key="connectors" title={t('chat.panels.sessionOverview.connectors')} count={connectors.total}>
+      <OverviewCard key="connectors" title={t('chat.panels.sessionOverview.connectors')} count={connectors.total} defaultOpen={false}>
         <ul className="m-0 grid list-none gap-1.5 p-0">
           {connectors.shown.map((row) => (
             <li key={row.id} className="flex items-center gap-2 text-[12px] text-[var(--text-primary)]">
@@ -266,6 +269,18 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
     )
   }
 
+  if (plan.items.length > 0) {
+    cards.push(
+      <PlanCard
+        key="plan"
+        items={plan.items}
+        completedCount={plan.completedCount}
+        artifact={session?.planArtifact}
+        sessionId={sessionId}
+      />,
+    )
+  }
+
   if (cards.length === 0) {
     return <p className="m-0 p-1 text-[12px] italic text-[var(--text-muted)]">{t('chat.panels.sessionOverview.nothingToShowYetThis')}</p>
   }
@@ -276,8 +291,21 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   )
 }
 
-function OverviewCard({ title, count, children }: { title: string; count?: number; children: ReactNode }) {
-  const [open, setOpen] = useState(true)
+function OverviewCard({
+  title,
+  count,
+  summary,
+  defaultOpen = true,
+  children,
+}: {
+  title: string
+  count?: number
+  /** What the card shows without being opened, beside its title. */
+  summary?: ReactNode
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
   const ask = useContext(VariantContext) === 'ask'
   return (
     <section className={ask ? 'rounded-[16px] border border-app-border-subtle bg-[color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-root))]' : 'rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)]'}>
@@ -289,12 +317,93 @@ function OverviewCard({ title, count, children }: { title: string; count?: numbe
       >
         <span className={cx('font-semibold text-[var(--text-primary)]', ask ? 'text-[13.5px]' : 'text-[13px]')}>{title}</span>
         <span className="flex items-center gap-2 text-[var(--text-muted)]">
+          {summary}
           {count !== undefined && <span className="text-[11px] tabular-nums">{count}</span>}
           <Down size={11} className={cx('transition-transform duration-150', !open && '-rotate-90')} />
         </span>
       </button>
       {open && <div className={ask ? 'px-4 pb-3.5' : 'px-3.5 pb-3'}>{children}</div>}
     </section>
+  )
+}
+
+function PlanCard({
+  items,
+  completedCount,
+  artifact,
+  sessionId,
+}: {
+  items: PlanItem[]
+  completedCount: number
+  artifact?: string
+  sessionId: string
+}) {
+  const { t } = useTranslation('chat')
+  const openRightPanel = useUIStore((s) => s.openRightPanel)
+  const percent = Math.round((completedCount / items.length) * 100)
+
+  return (
+    <OverviewCard
+      title={t('chat.panels.computerPanel.plan')}
+      defaultOpen={false}
+      summary={
+        <>
+          <span className="h-1 w-14 overflow-hidden rounded-full bg-[var(--surface-muted)]">
+            <span className="block h-full rounded-full bg-[var(--accent-primary)]" style={{ width: `${percent}%` }} />
+          </span>
+          <span className="text-[11px] tabular-nums">
+            {completedCount}/{items.length}
+          </span>
+        </>
+      }
+    >
+      <ul className="m-0 grid list-none gap-1.5 p-0">
+        {items.map((item) => (
+          <li key={item.id} className="flex items-start gap-2">
+            {item.status === 'completed' ? (
+              <span className="mt-0.5 flex size-[13px] shrink-0 items-center justify-center rounded-full bg-app-success text-app-bg">
+                <CheckOne size={8} />
+              </span>
+            ) : (
+              <span
+                className={cx(
+                  'mt-1.5 size-[7px] shrink-0 rounded-full',
+                  item.status === 'in_progress'
+                    ? 'bg-[var(--accent-primary)]'
+                    : item.status === 'failed'
+                      ? 'bg-app-error'
+                      : 'bg-[var(--text-muted)]',
+                )}
+              />
+            )}
+            <span
+              className={cx(
+                'text-[12px] leading-snug',
+                item.status === 'completed' ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)]',
+              )}
+            >
+              {item.title || t('chat.panels.computerPanel.unnamedTask')}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {artifact && (
+        <button
+          type="button"
+          className="mt-2 cursor-pointer border-0 bg-transparent p-0 text-[11px] font-semibold text-[var(--accent-primary)] hover:underline"
+          onClick={() =>
+            openRightPanel({
+              kind: 'markdown',
+              title: t('chat.panels.computerPanel.implementationPlan'),
+              sessionId,
+              markdown: artifact,
+            })
+          }
+        >
+          {t('chat.panels.computerPanel.viewFullPlan')}
+        </button>
+      )}
+    </OverviewCard>
   )
 }
 
