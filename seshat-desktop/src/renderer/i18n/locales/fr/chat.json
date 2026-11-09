@@ -29,8 +29,7 @@
       },
       "conversationComposer": {
         "messageSeshatos": "Écrire à SeshatOS...",
-        "modelsUnavailable": "Modèles indisponibles",
-        "condenseTurns": "Condenser les tours"
+        "modelsUnavailable": "Modèles indisponibles"
       },
       "contextGauge": {
         "percentOfContext": "{{percent}} % du contexte",

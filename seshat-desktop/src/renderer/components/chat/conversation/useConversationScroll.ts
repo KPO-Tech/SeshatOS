@@ -29,8 +29,12 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
   // bottom, and for a row wholly above the screen. Scrolling up measures the rows coming into view from above (they were only estimated),
   // and without the second case each measure pushed the text being read down, by the difference, under the reader. A row the reader is in
   // (the answer being written, read from its middle) never moves the view: its growth goes below.
+  // Growth is followed while a turn runs, because that growth is the answer being written. Once it
+  // has stopped, the only thing that grows is something the reader opened: following it would pull
+  // the view to the end while they are reading what they just unfolded.
+  const followGrowth = streaming.length > 0
   rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = (item, _delta, instance) =>
-    isAtBottomRef.current || item.end <= (instance.scrollOffset ?? 0)
+    (followGrowth && isAtBottomRef.current) || item.end <= (instance.scrollOffset ?? 0)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -98,14 +102,14 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
   // when a picture has loaded, when a tool's result arrives.
   const totalSize = rowVirtualizer.getTotalSize()
   useEffect(() => {
-    if (!isAtBottomRef.current || messageCount === 0) return
+    if (!followGrowth || !isAtBottomRef.current || messageCount === 0) return
     if (scrollRafRef.current !== null) return
     scrollRafRef.current = requestAnimationFrame(() => {
       scrollRafRef.current = null
       const el = scrollRef.current
       if (el && isAtBottomRef.current) el.scrollTo({ top: el.scrollHeight })
     })
-  }, [messageCount, streaming, totalSize])
+  }, [followGrowth, messageCount, streaming, totalSize])
 
   useEffect(() => {
     return () => {

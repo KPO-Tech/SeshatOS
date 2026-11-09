@@ -29,8 +29,7 @@
       },
       "conversationComposer": {
         "messageSeshatos": "Message SeshatOS...",
-        "modelsUnavailable": "Models unavailable",
-        "condenseTurns": "Condense turns"
+        "modelsUnavailable": "Models unavailable"
       },
       "contextGauge": {
         "percentOfContext": "{{percent}}% of context",
