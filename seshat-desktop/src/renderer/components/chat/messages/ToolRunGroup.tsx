@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Down } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
 import { QuietToolGroup } from '../tools/QuietToolGroup'
-import { toolCategory, toolLabel, type ToolCategory } from '../tools/toolDisplay'
+import { categoryIcon, toolCategory, toolLabel, type ToolCategory } from '../tools/toolDisplay'
 import type { ToolBlockProps } from '../tools/types'
 import type { FoldedToolItem } from './turns'
 
@@ -129,6 +129,7 @@ function SegmentRow({ segment, sessionId, live, autoExpandTools, onSubmitPrompt 
   const [open, setOpen] = useState(false)
   const tools = segment.items.filter((item): item is Extract<FoldedToolItem, { kind: 'tool' }> => item.kind === 'tool')
   const first = tools[0]
+  const last = tools[tools.length - 1] ?? first
 
   if (tools.length < 2 || !first) {
     return <QuietToolGroup items={segment.items} sessionId={sessionId} live={live} autoExpandTools={autoExpandTools} onSubmitPrompt={onSubmitPrompt} />
@@ -146,6 +147,9 @@ function SegmentRow({ segment, sessionId, live, autoExpandTools, onSubmitPrompt 
         onClick={() => setOpen((value) => !value)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((value) => !value) } }}
       >
+        <span className="inline-flex size-3.5 shrink-0 items-center justify-center text-app-text-muted">
+          {categoryIcon(last.tool.name)}
+        </span>
         <span className="flex-none">{label}</span>
         <span className={cx('inline-flex shrink-0 items-center opacity-45 transition-transform duration-150', open && 'rotate-180')}>
           <Down size={10} />

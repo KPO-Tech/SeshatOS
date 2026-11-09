@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Message, ToolStatus } from '@renderer/api/types'
 import { compactionDivider } from '@renderer/lib/compactedHistory'
-import { foldSteps, layoutTurns } from './turns'
+import { foldSteps, layoutTurns, listRows } from './turns'
 
 function asked(text: string): Message {
   return { id: `user-${text}`, role: 'user', content: [{ type: 'text', text }] }
@@ -30,6 +30,34 @@ function said(id: string, text: string): Message {
 function ids(messages: Message[]): Array<string | undefined> {
   return messages.map((message) => message.id)
 }
+
+describe('listRows', () => {
+  it('draws the steps the runtime splits as one row, across their tool results', () => {
+    const rows = listRows([
+      asked('go'),
+      step('a1', tool('bash', 't1')),
+      { id: 'r1', role: 'user', content: [{ type: 'tool_result', tool_use_id: 't1', content: '' }] },
+      step('a2', tool('bash', 't2')),
+    ])
+
+    expect(rows.map((row) => row.merged)).toEqual([false, false, false, true])
+    expect(rows[1].message.content.map((block) => (block.type === 'tool_use' ? block.id : ''))).toEqual(['t1', 't2'])
+  })
+
+  it('ends the run where the agent says something of its own', () => {
+    const rows = listRows([step('a1', tool('bash', 't1')), said('a2', 'Here.'), step('a3', tool('bash', 't2'))])
+
+    expect(rows.map((row) => row.merged)).toEqual([false, false, false])
+    expect(rows[2].message.id).toBe('a3')
+  })
+
+  it('leaves a card waiting for the reader in its own row', () => {
+    const rows = listRows([step('a1', tool('bash', 't1')), step('a2', read('t2', 'awaiting_approval'))])
+
+    expect(rows[1].merged).toBe(false)
+    expect(rows[1].message.content).toHaveLength(1)
+  })
+})
 
 describe('layoutTurns', () => {
   it('folds every step of a turn onto its last message', () => {

@@ -50,6 +50,53 @@ function isDecision(block: ContentBlock): boolean {
   return block.name === 'submit_plan' || isDecisionTool(block.name)
 }
 
+/** A message as the list draws it: a run of quiet steps may take in the ones that follow it. */
+export type ListRow = {
+  /** The message this row draws, with the content of the messages it took in. */
+  message: Message
+  /** Every message whose content this row draws, oldest first. */
+  indexes: number[]
+  /** Taken into an earlier row: this one draws nothing. */
+  merged: boolean
+}
+
+/** A step that says nothing of its own - only calls and reasoning, which one row can hold. */
+function isQuietStep(message: Message): boolean {
+  if (message.role !== 'assistant') return false
+  const blocks = shownBlocks(message)
+  if (blocks.length === 0) return false
+  return blocks.every((block) => block.type !== 'text' && !isDecision(block))
+}
+
+/**
+ * The messages as the rows the list draws. The runtime writes a message per
+ * step, with a tool_result message after every call: left alone, three commands
+ * read as three separate rows instead of one run. Consecutive steps that hold
+ * nothing but calls and reasoning are drawn as one row, so their calls group in
+ * a single line - and a tool_result, which draws nothing, does not end the run.
+ */
+export function listRows(messages: Message[]): ListRow[] {
+  const rows: ListRow[] = messages.map((message, index) => ({ message, indexes: [index], merged: false }))
+  let head = -1
+  for (let index = 0; index < messages.length; index++) {
+    const message = messages[index]
+    if (isToolResultOnly(message)) continue
+    if (!isQuietStep(message)) {
+      head = -1
+      continue
+    }
+    if (head >= 0) {
+      const into = rows[head]
+      into.message = { ...into.message, content: [...into.message.content, ...message.content] }
+      into.indexes.push(index)
+      rows[index] = { ...rows[index], merged: true }
+      continue
+    }
+    head = index
+  }
+  return rows
+}
+
 export type TurnLayout = {
   /** Folded behind a header: this row draws nothing of its own. */
   folded: boolean
