@@ -1,4 +1,4 @@
-import { Copy } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { fmtDuration, parseBashResult } from '../helpers'
 import type { ToolViewProps } from '../types'
 import { useTranslation } from 'react-i18next'
@@ -38,14 +38,11 @@ function BashPanel({
         {content}
       </pre>
       {copyable && (
-        <button
+        <CopyButton
+          text={content}
+          label={t('chat.tools.renderers.bashToolView.copy')}
           className="absolute right-2 top-1.5 inline-flex size-5 items-center justify-center rounded border-0 bg-transparent p-0 text-app-text-muted opacity-0 transition-[opacity,color,background] duration-[120ms] group-hover:opacity-100 hover:bg-[var(--surface-hover)] hover:text-app-text"
-          type="button"
-          aria-label={t('chat.tools.renderers.bashToolView.copy')}
-          onClick={() => void navigator.clipboard.writeText(content)}
-        >
-          <Copy size={10} />
-        </button>
+        />
       )}
     </div>
   )

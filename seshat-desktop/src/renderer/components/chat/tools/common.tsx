@@ -1,4 +1,4 @@
-import { Copy } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import type { CSSProperties, ReactNode } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
@@ -141,14 +141,7 @@ export function CodeBox({
         </pre>
       )}
       {copyable && (
-        <button
-          className={COPY_BUTTON_CSS}
-          type="button"
-          aria-label={t('chat.tools.common.copy')}
-          onClick={() => void navigator.clipboard.writeText(content)}
-        >
-          <Copy size={10} />
-        </button>
+        <CopyButton text={content} label={t('chat.tools.common.copy')} className={COPY_BUTTON_CSS} />
       )}
     </div>
   )
@@ -175,14 +168,7 @@ export function ProseBox({ content, copyable, bare, expanded }: { content: strin
           it), so it renders permanently at opacity-0. Left unchanged here;
           worth a follow-up if ProseBox copy is meant to work. */}
       {copyable && (
-        <button
-          className={COPY_BUTTON_CSS}
-          type="button"
-          aria-label={t('chat.tools.common.copy')}
-          onClick={() => void navigator.clipboard.writeText(content)}
-        >
-          <Copy size={10} />
-        </button>
+        <CopyButton text={content} label={t('chat.tools.common.copy')} className={COPY_BUTTON_CSS} />
       )}
     </div>
   )
