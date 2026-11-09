@@ -6,8 +6,6 @@ import type { ModelChoice } from '@renderer/components/chat/conversation/useConv
 import { modelSelectorOptions } from '@renderer/components/chat/conversation/modelOptions'
 import { modelAlias } from '@renderer/lib/modelAlias'
 import { useTranslation } from 'react-i18next'
-import { CheckOne } from '@icon-park/react'
-import { useUIStore } from '@renderer/stores/ui'
 
 type SendMessageOptions = {
   corpusId?: string | null
@@ -88,8 +86,6 @@ export function ConversationComposer({
   onExecutionModeChange,
 }: ConversationComposerProps) {
   const { t } = useTranslation('chat')
-  const condenseTurns = useUIStore((state) => state.condenseTurns)
-  const setCondenseTurns = useUIStore((state) => state.setCondenseTurns)
   return (
     <div className="conv-input-area">
       <div className="conv-input-inner">
@@ -150,19 +146,6 @@ export function ConversationComposer({
           onExecutionModeChange={onExecutionModeChange}
         />
         {sessionId && <ComposerStatusRow sessionId={sessionId} projectPath={projectPath} />}
-        <div className="mt-1 flex justify-end">
-          <button
-            type="button"
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded border-0 bg-transparent px-1 py-0.5 text-[11px] text-app-text-muted transition-colors hover:text-app-text-secondary"
-            aria-pressed={condenseTurns}
-            onClick={() => setCondenseTurns(!condenseTurns)}
-          >
-            <span className={`inline-flex size-3 items-center justify-center rounded-[3px] border ${condenseTurns ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-[var(--border-strong)]'}`}>
-              {condenseTurns && <CheckOne size={8} />}
-            </span>
-            {t('chat.composer.conversationComposer.condenseTurns')}
-          </button>
-        </div>
       </div>
     </div>
   )

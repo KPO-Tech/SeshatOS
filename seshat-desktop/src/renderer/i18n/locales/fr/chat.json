@@ -73,21 +73,18 @@
         "new": "Nouveau",
         "edited": "Modifié"
       },
-      "foldedTools": {
-        "read_one": "Lecture de {{count}} fichier",
-        "read_other": "Lecture de {{count}} fichiers",
-        "search_one": "{{count}} recherche",
-        "search_other": "{{count}} recherches",
-        "edit_one": "{{count}} fichier modifié",
-        "edit_other": "{{count}} fichiers modifiés",
-        "write_one": "{{count}} fichier écrit",
-        "write_other": "{{count}} fichiers écrits",
-        "bash_one": "{{count}} commande exécutée",
-        "bash_other": "{{count}} commandes exécutées",
-        "other_one": "{{label}} ({{count}})",
-        "other_other": "{{label}} ({{count}})",
-        "showThese": "Voir ces étapes",
-        "hideThese": "Masquer ces étapes"
+      "toolRun": {
+        "read": "Fichiers lus",
+        "search": "Recherches",
+        "edit": "Fichiers modifiés",
+        "write": "Fichiers écrits",
+        "bash": "Commandes exécutées",
+        "other": "Outils utilisés",
+        "thought": "Réflexion",
+        "call_one": "{{label}} · {{count}} appel",
+        "call_other": "{{label}} · {{count}} appels",
+        "show": "Voir ces étapes",
+        "hide": "Masquer ces étapes"
       },
       "inlineMedia": {
         "preparingTheFile": "Préparation du fichier...",

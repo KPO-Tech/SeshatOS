@@ -6,7 +6,6 @@ import { useUIStore } from '@renderer/stores/ui'
 import { ToolBlock } from '../tools/ToolBlock'
 import { PermissionCard } from '../tools/PermissionCard'
 import { AgentCardsRow } from '../tools/AgentToolView'
-import { QuietToolGroup } from '../tools/QuietToolGroup'
 import { THINKING_MARKDOWN_CLASS } from '../tools/thinkingMarkdownClass'
 import { thinkingPreview } from './thinkingPreview'
 import { formatThinkingDuration } from './thinkingTime'
@@ -30,7 +29,7 @@ import type { AnswerExtras } from './answerExtras'
 import { useTranslation } from 'react-i18next'
 import { foldSteps, isToolResultOnly, shownBlocks } from './turns'
 import { WorkedForGroup } from './WorkedForGroup'
-import { FoldedTools } from './FoldedTools'
+import { ToolRunGroup } from './ToolRunGroup'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -359,7 +358,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           <WorkedForGroup turnKey={turnKey ?? `turn-${message.id ?? ""}`} live={liveTurn}>
             {foldedSteps.map((folded, index) =>
               folded.kind === 'tools' ? (
-                <FoldedTools
+                <ToolRunGroup
                   key={`${turnKey ?? 'turn'}-tools-${index}`}
                   items={folded.items}
                   sessionId={sessionId}
@@ -410,7 +409,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           if (item.kind === 'quiet-group') {
             const firstToolId = item.items.find((it) => it.kind === 'tool')?.tool.id
             return (
-              <QuietToolGroup
+              <ToolRunGroup
                 key={firstToolId || `${message.id ?? 'msg'}-quiet-${i}`}
                 items={item.items}
                 sessionId={sessionId}
