@@ -21,6 +21,7 @@ import {
   registerController,
 } from '@renderer/components/chat/streaming/chatControllers'
 import { isUntitledSessionTitle } from '@renderer/lib/sessionTitle'
+import { CANNOT_ASK_AGAIN, withoutLastAnswer } from '@renderer/components/chat/streaming/regenerate'
 import type { RAGSearchResult } from '@renderer/api/types'
 import type { ToolActivity } from '@renderer/stores/session'
 import { useTranslation } from 'react-i18next'
@@ -39,6 +40,11 @@ type SendMessageOptions = {
   agentSlug?: string
   providerSettingId?: string | null
   modelId?: string | null
+  /**
+   * Ask again for the answer of the last turn: the prompt stays where it is and the new answer takes the place of the old one,
+   * which the backend also takes out of the conversation. Only done when the prompt is the one that started the last turn.
+   */
+  regenerate?: boolean
 }
 
 type UseChatStreamOptions = {
@@ -64,6 +70,9 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
   const onTurnSuccessRef = useRef<() => void>(() => {})
   onTurnSuccessRef.current = options?.onTurnSuccess ?? (() => {})
 
+  // The send function itself, for the one case that sends again from inside a send (see regeneration below).
+  const sendMessageRef = useRef<((text: string, opts?: SendMessageOptions) => Promise<void>) | null>(null)
+
   const sendMessage = useCallback(async (text: string, opts?: SendMessageOptions) => {
     const store = useSessionStore.getState()
     if (store.isSessionStreaming(sessionId)) return
@@ -73,18 +82,29 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
     const nowIso = new Date().toISOString()
 
     const assistantMessageId = crypto.randomUUID()
-    const userMessageId = crypto.randomUUID()
+    let userMessageId: string = crypto.randomUUID()
     const currentSession = store.sessions.find((session) => session.id === sessionId)
+    // Asking again: what the conversation held before, to put back if the backend cannot take the last turn back.
+    const messagesBefore = currentSession?.messages ?? []
+    const regeneratedFrom = opts?.regenerate ? withoutLastAnswer(messagesBefore, prompt) : null
+    let fallBackToNewTurn = false
     const isFirstMessage = Boolean(currentSession && currentSession.messages.length === 0 && isUntitledSessionTitle(currentSession.title))
     let receivedGeneratedTitle = false
-    store.updateSession(sessionId, { updatedAt: nowIso })
-    store.addMessage(sessionId, {
-      id: userMessageId,
-      role: 'user',
-      content: [{ type: 'text', text: prompt }],
-      metadata: opts?.attachments?.length ? { attachments: opts.attachments } : undefined,
-      status: 'sending',
-    })
+    if (regeneratedFrom) {
+      // The prompt does not move and the old answer goes: the new one is drawn where it was.
+      userMessageId = regeneratedFrom[regeneratedFrom.length - 1].id ?? userMessageId
+      store.updateSession(sessionId, { updatedAt: nowIso, messages: regeneratedFrom })
+      store.updateMessage(sessionId, userMessageId, (message) => ({ ...message, status: 'sending' }))
+    } else {
+      store.updateSession(sessionId, { updatedAt: nowIso })
+      store.addMessage(sessionId, {
+        id: userMessageId,
+        role: 'user',
+        content: [{ type: 'text', text: prompt }],
+        metadata: opts?.attachments?.length ? { attachments: opts.attachments } : undefined,
+        status: 'sending',
+      })
+    }
     store.addMessage(sessionId, { id: assistantMessageId, role: 'assistant', content: [] })
     store.setIsStreaming(sessionId, true)
     store.clearStreaming(sessionId)
@@ -175,6 +195,7 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
             ...(opts?.agentSlug ? { agent_slug: opts.agentSlug } : {}),
             ...(opts?.providerSettingId ? { provider_setting_id: opts.providerSettingId } : {}),
             ...(opts?.modelId ? { model_id: opts.modelId } : {}),
+            ...(regeneratedFrom ? { regenerate: true } : {}),
           }
           if (window.seshat?.http) {
             await consumeElectronStream(
@@ -322,6 +343,14 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
       }
     } catch (error) {
       if (committed) return
+      // The backend could not take the last turn back (it starts inside what a compaction kept, or it does not hold this
+      // prompt): put the conversation back as it was and send the prompt as a new turn instead of failing.
+      if (regeneratedFrom && error instanceof Error && error.message.includes(CANNOT_ASK_AGAIN)) {
+        store.updateSession(sessionId, { messages: messagesBefore })
+        store.clearStreaming(sessionId)
+        fallBackToNewTurn = true
+        return
+      }
       // A watchdog-triggered abort looks identical to a user Stop at the
       // AbortError level, but it isn't one - the turn stalled, not the user's
       // choice, so unlike a real Stop it must surface as a visible failure
@@ -365,8 +394,10 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
       if (committed && isFirstMessage) {
         void pollForGeneratedTitle(sessionId, () => receivedGeneratedTitle)
       }
+      if (fallBackToNewTurn) void sendMessageRef.current?.(text, { ...opts, regenerate: false })
     }
   }, [sessionId])
+  sendMessageRef.current = sendMessage
 
   const stopMessage = useCallback(async () => {
     const store = useSessionStore.getState()
