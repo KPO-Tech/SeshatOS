@@ -4,6 +4,7 @@ import { useSessionStore } from '@renderer/stores/session'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { api } from '@renderer/api/client'
 import { ToolBlock } from '../tools/ToolBlock'
+import { InlineMedia, isInlineMedia } from '../messages/InlineMedia'
 import { AgentCardsRow } from '../tools/AgentToolView'
 import { QuietToolGroup } from '../tools/QuietToolGroup'
 import { groupBlocks } from '../messages/MessageItem'
@@ -227,23 +228,23 @@ function StreamBlockView({ block, sessionId }: { block: Parameters<typeof groupB
   }
 
   if (block.type === 'tool_use') {
-    return (
-      <ToolBlock
-        tool={{
-          type: 'tool_use',
-          id: block.id,
-          name: block.name,
-          input: block.input,
-          metadata: block.metadata,
-          _status: block._status,
-          _result: block._result,
-          _approval: block._approval,
-          _prompt: block._prompt,
-          _partialInput: block._partialInput,
-          _message: block._message,
-        }}
-      />
-    )
+    const tool = {
+      type: 'tool_use' as const,
+      id: block.id,
+      name: block.name,
+      input: block.input,
+      metadata: block.metadata,
+      _status: block._status,
+      _result: block._result,
+      _approval: block._approval,
+      _prompt: block._prompt,
+      _partialInput: block._partialInput,
+      _message: block._message,
+    }
+    // A produced image or recording is shown as itself here too, the way the
+    // chat shows it, instead of as a tool row carrying its base64.
+    if (isInlineMedia(tool)) return <InlineMedia tool={tool} sessionId={sessionId} />
+    return <ToolBlock tool={tool} />
   }
 
   return null
