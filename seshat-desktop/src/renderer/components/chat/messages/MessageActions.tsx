@@ -1,4 +1,5 @@
-import { Copy, Edit, Refresh, Share } from '@icon-park/react'
+import { Edit, Refresh, Share } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { useTranslation } from 'react-i18next'
 
 const BUTTON_CSS = 'flex size-6 cursor-pointer items-center justify-center rounded-app-xs border-0 bg-transparent p-0 text-app-text-muted hover:bg-[var(--surface-hover)] hover:text-app-text-secondary disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-muted'
@@ -19,9 +20,7 @@ export function MessageActions({ text, align, onRegenerate, onEdit }: Props) {
     <div
       className={`-mt-1 flex items-center gap-0.5 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 ${align === 'end' ? 'justify-end' : ''}`}
     >
-      <button className={BUTTON_CSS} type="button" aria-label={t('chat.messages.messageActions.copy')} title={t('chat.messages.messageActions.copy')} onClick={() => void navigator.clipboard.writeText(text)}>
-        <Copy size={14} />
-      </button>
+      <CopyButton text={text} label={t('chat.messages.messageActions.copy')} className={BUTTON_CSS} size={14} withTitle />
       <button className={BUTTON_CSS} type="button" aria-label={t('chat.messages.messageActions.share')} title={t('chat.messages.messageActions.sharingIsNotAvailableYet')} disabled>
         <Share size={14} />
       </button>

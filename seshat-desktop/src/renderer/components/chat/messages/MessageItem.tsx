@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react'
-import { Copy, Down, Time, CheckOne } from '@icon-park/react'
+import { Down, Time, CheckOne } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
 import { useUIStore } from '@renderer/stores/ui'
@@ -96,14 +97,12 @@ function ThinkingBlock({
         )}
         <span className="ml-auto inline-flex shrink-0 items-center gap-1.5">
           {seconds !== null && <span className="not-italic tabular-nums" aria-label={t('chat.messages.messageItem.timeSpentThinking')}>{formatThinkingDuration(seconds)}</span>}
-          <button
-            type="button"
+          <CopyButton
+            text={thinking}
+            label={t('chat.messages.messageItem.copy')}
             className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent not-italic text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
-            aria-label={t('chat.messages.messageItem.copy')}
-            onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(thinking) }}
-          >
-            <Copy size={10} />
-          </button>
+            stopPropagation
+          />
           <span className={cx('inline-flex shrink-0 items-center not-italic opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
             <Down size={10} />
           </span>
