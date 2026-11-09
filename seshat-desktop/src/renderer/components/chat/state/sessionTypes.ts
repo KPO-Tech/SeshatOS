@@ -70,7 +70,6 @@ export type SubagentState = {
   inputTokens: number
   outputTokens: number
   activeTool: ToolActivity | null
-  activityLog: ToolActivity[]
   isThinking: boolean
   startedAt: number
   endedAt?: number

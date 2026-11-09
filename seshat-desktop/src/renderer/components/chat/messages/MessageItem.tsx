@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Copy, Down, Time, CheckOne } from '@icon-park/react'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SeshatLogo } from '@renderer/components/brand/SeshatLogo'
@@ -6,7 +6,6 @@ import { useUIStore } from '@renderer/stores/ui'
 import { ToolBlock } from '../tools/ToolBlock'
 import { PermissionCard } from '../tools/PermissionCard'
 import { AgentCardsRow } from '../tools/AgentToolView'
-import { QuietToolGroup } from '../tools/QuietToolGroup'
 import { THINKING_MARKDOWN_CLASS } from '../tools/thinkingMarkdownClass'
 import { thinkingPreview } from './thinkingPreview'
 import { formatThinkingDuration } from './thinkingTime'
@@ -28,34 +27,12 @@ import type { ChatAttachment, StreamingBlock } from '@renderer/stores/session'
 import { isArchivedMessage, isCompactionDivider } from '@renderer/lib/compactedHistory'
 import type { AnswerExtras } from './answerExtras'
 import { useTranslation } from 'react-i18next'
+import { foldSteps, isToolResultOnly, shownBlocks } from './turns'
+import { WorkedForGroup } from './WorkedForGroup'
+import { ToolRunGroup } from './ToolRunGroup'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
-}
-
-// Tools that never appear as chat tool blocks - each has its own dedicated
-// surface elsewhere so an inline line here would just be a redundant second
-// copy of the same information:
-// - mode-switching tools: silent, handled by the Computer panel
-// - task_create/task_update/task_list: the live task list with per-item
-//   status already lives in the Computer panel (auto-opened on
-//   task_create - see useConversationPanels.ts), which is a far more useful view
-//   than a growing wall of "Create Task"/"Update Task" lines for every
-//   single item
-const HIDDEN_TOOLS = new Set([
-  'enter_plan_mode',
-  'exit_plan_mode',
-  'enter_pair_programming_mode',
-  'exit_pair_programming_mode',
-  'task_create',
-  'task_update',
-  'task_list',
-])
-
-// Messages that contain only tool_result blocks are synthetic turn-separator
-// messages, not user-visible chat bubbles — skip them entirely.
-function isToolResultOnly(msg: Message): boolean {
-  return msg.role === 'user' && msg.content.length > 0 && msg.content.every(b => b.type === 'tool_result')
 }
 
 function messageAttachments(message: Message): ChatAttachment[] {
@@ -71,12 +48,7 @@ function messageAttachments(message: Message): ChatAttachment[] {
 export function isRenderableMessage(message: Message): boolean {
   if (isToolResultOnly(message)) return false
   if (messageAttachments(message).length > 0) return true
-  return message.content.some((block) => {
-    if (block.type === 'text') return Boolean(block.text.trim())
-    if (block.type === 'thinking') return Boolean(block.thinking.trim())
-    if (block.type === 'tool_use') return !HIDDEN_TOOLS.has(block.name)
-    return false
-  })
+  return shownBlocks(message).length > 0
 }
 
 // ThinkingBlock isolates its own Zustand subscription so toggling one thinking
@@ -163,6 +135,14 @@ type Props = {
   // variant here would match every message, not just the conversation's
   // first one, and silently override the margin below on all of them.
   isFirst?: boolean
+  /** Folded behind the header of the turn this message ends: this message draws nothing of its own. */
+  folded?: boolean
+  /** The steps that header holds, oldest first. */
+  foldedMessages?: Message[]
+  /** Identity of the turn: keeps its open state and the time it took. */
+  turnKey?: string
+  /** True while the turn this message ends still runs. */
+  liveTurn?: boolean
   compact?: boolean
   revealThinking?: boolean
   autoExpandTools?: boolean
@@ -335,9 +315,13 @@ export function userPrompt(message: Message): { text: string; attachments: ChatA
   return { text, attachments: messageAttachments(message) }
 }
 
-export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
+export const MessageItem = memo(function MessageItem({ message, sessionId, isFirst = false, folded = false, foldedMessages, turnKey, liveTurn = false, compact = false, revealThinking = false, autoExpandTools = false, liveActivity, justCompleted = false, changedFiles, onApproveTool, onDenyTool, onSubmitToolPrompt, onRetryMessage, onRegenerate, endsTurn = true, webSources, consultedPages, extras }: Props) {
   const { t } = useTranslation('chat')
   const [editing, setEditing] = useState(false)
+  // The steps behind this turn's header, drawn in the order they ran.
+  const foldedSteps = useMemo(() => (foldedMessages ? foldSteps(foldedMessages) : []), [foldedMessages])
+  // Folded behind the header of its turn: the header draws it.
+  if (folded) return null
   if (isCompactionDivider(message)) {
     const first = message.content[0]
     return <CompactionDivider text={first && first.type === 'text' ? first.text : ''} />
@@ -346,13 +330,8 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
   const isUser = message.role === 'user'
   const attachments = messageAttachments(message)
   if (isToolResultOnly(message)) return null
-  const visibleBlocks = message.content.filter((block) => {
-    if (block.type === 'text') return Boolean(block.text.trim())
-    if (block.type === 'thinking') return Boolean(block.thinking.trim())
-    if (block.type === 'tool_use') return !HIDDEN_TOOLS.has(block.name)
-    return false
-  })
-  if (visibleBlocks.length === 0 && attachments.length === 0 && !liveActivity && !justCompleted) return null
+  const shown = shownBlocks(message)
+  if (shown.length === 0 && attachments.length === 0 && !liveActivity && !justCompleted) return null
 
   const copyText = message.content
     .map((block) => {
@@ -362,7 +341,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
     .filter(Boolean)
     .join('\n\n')
 
-  const renderItems = groupBlocks(visibleBlocks, message.id ?? 'msg')
+  const renderItems = groupBlocks(shown, message.id ?? 'msg')
 
   return (
     <div
@@ -375,6 +354,35 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
       )}
     >
       <div className={cx('flex min-w-0 flex-1 flex-col gap-1.5', isUser && 'max-w-[85%] items-end')}>
+        {foldedSteps.length > 0 && (
+          <WorkedForGroup turnKey={turnKey ?? `turn-${message.id ?? ""}`} live={liveTurn}>
+            {foldedSteps.map((folded, index) =>
+              folded.kind === 'tools' ? (
+                <ToolRunGroup
+                  key={`${turnKey ?? 'turn'}-tools-${index}`}
+                  items={folded.items}
+                  sessionId={sessionId}
+                  live={liveTurn && index === foldedSteps.length - 1}
+                  autoExpandTools={autoExpandTools}
+                  onSubmitPrompt={onSubmitToolPrompt}
+                />
+              ) : (
+                <MessageItem
+                  key={folded.message.id ?? `${turnKey ?? 'turn'}-${index}`}
+                  message={folded.message}
+                  sessionId={sessionId}
+                  compact
+                  endsTurn={false}
+                  autoExpandTools={autoExpandTools}
+                  onApproveTool={onApproveTool}
+                  onDenyTool={onDenyTool}
+                  onSubmitToolPrompt={onSubmitToolPrompt}
+                />
+              ),
+            )}
+          </WorkedForGroup>
+        )}
+
         {attachments.length > 0 && (
           <div className="flex max-w-full flex-nowrap gap-2 overflow-x-auto justify-end px-0.5 py-[5px]">
             {attachments.map((file) => (
@@ -401,7 +409,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           if (item.kind === 'quiet-group') {
             const firstToolId = item.items.find((it) => it.kind === 'tool')?.tool.id
             return (
-              <QuietToolGroup
+              <ToolRunGroup
                 key={firstToolId || `${message.id ?? 'msg'}-quiet-${i}`}
                 items={item.items}
                 sessionId={sessionId}
@@ -454,7 +462,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
           }
           if (block.type === 'thinking') {
             const thinkingId = `${message.id ?? 'msg'}-thinking-${item.index}`
-            return <ThinkingBlock key={thinkingId} thinkingId={thinkingId} thinking={block.thinking} sessionId={sessionId} live={revealThinking && item.index === visibleBlocks.length - 1} />
+            return <ThinkingBlock key={thinkingId} thinkingId={thinkingId} thinking={block.thinking} sessionId={sessionId} live={revealThinking && item.index === shown.length - 1} />
           }
           if (block.type === 'tool_use') {
             const key = block.id || `${message.id ?? 'msg'}-tool-${item.index}`

@@ -25,8 +25,8 @@ export const HCARD_HEADER_STAT_CSS = 'ml-auto shrink-0 pl-2 text-[10px] font-med
 // Shared by GlobToolView and ListDirectoryToolView - both always render
 // their file list nested inside a HeaderCard, so no border/background of
 // its own (that's the card's).
-export const FILE_LIST_CSS = 'flex max-h-[240px] flex-col gap-0.5 overflow-y-auto overflow-x-hidden [scrollbar-width:thin]'
-export const FILE_ITEM_CSS = 'truncate rounded-[5px] px-2 py-[3px] font-[\'JetBrains_Mono\',\'Fira_Code\',monospace] text-[12px] text-app-text-secondary transition-colors duration-100 hover:bg-[rgba(255,255,255,0.04)]'
+export const FILE_LIST_CSS = 'flex max-h-[260px] flex-col gap-0.5 overflow-y-auto overflow-x-hidden [scrollbar-width:thin]'
+export const FILE_ITEM_CSS = 'shrink-0 truncate rounded-[5px] px-2 py-[3px] font-[\'JetBrains_Mono\',\'Fira_Code\',monospace] text-[12px] leading-[1.5] text-app-text-secondary transition-colors duration-100 hover:bg-[rgba(255,255,255,0.04)]'
 export const FILEPATH_CSS = 'truncate font-[\'JetBrains_Mono\',\'Fira_Code\',monospace] text-[12px] font-semibold text-app-text'
 
 // Shared by AskUserToolView (the read-only transcript record) and

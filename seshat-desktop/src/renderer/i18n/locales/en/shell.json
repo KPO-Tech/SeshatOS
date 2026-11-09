@@ -95,6 +95,7 @@
       }
     },
     "titlebar": {
+      "language": "Language",
       "navigation": "Navigation",
       "home": "Home",
       "back": "Back",
@@ -108,9 +109,7 @@
       "browser": "Browser",
       "terminal": "Terminal",
       "smart": "Smart",
-      "smartHint": "Each action is checked; you are asked when it is unsure or risky.",
-      "noConfirmation": "No confirmation",
-      "noConfirmationHint": "Runs everything without asking you. For a folder you trust."
+      "noConfirmation": "No confirmation"
     },
     "updateBanner": {
       "restarting": "Restarting…",

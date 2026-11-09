@@ -10,7 +10,6 @@ type SubagentActions = Pick<
   | 'appendSubagentStreamBlock'
   | 'updateSubagentStreamBlock'
   | 'clearSubagentStreaming'
-  | 'pushSubagentToolActivity'
 >
 type SessionSet = StoreApi<SessionState>['setState']
 type SessionGet = StoreApi<SessionState>['getState']
@@ -41,7 +40,6 @@ export function createSubagentActions(set: SessionSet, get: SessionGet): Subagen
               inputTokens: 0,
               outputTokens: 0,
               activeTool: null,
-              activityLog: [],
               isThinking: false,
               startedAt: Date.now(),
               ...patch,
@@ -104,18 +102,5 @@ export function createSubagentActions(set: SessionSet, get: SessionGet): Subagen
         }
       }),
 
-    pushSubagentToolActivity: (sessionId, toolUseId, activity) =>
-      set((state) => {
-        const byId = state.subagentsBySession[sessionId] ?? {}
-        const existing = byId[toolUseId]
-        if (!existing) return state
-        const log = [...existing.activityLog, activity].slice(-50)
-        return {
-          subagentsBySession: {
-            ...state.subagentsBySession,
-            [sessionId]: { ...byId, [toolUseId]: { ...existing, activityLog: log } },
-          },
-        }
-      }),
   }
 }

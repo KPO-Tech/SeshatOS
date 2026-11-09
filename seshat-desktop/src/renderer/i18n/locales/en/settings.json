@@ -14,7 +14,7 @@
   },
   "sections": {
     "account": { "label": "Account", "description": "Who you are on this device." },
-    "languageNotifications": { "label": "Language & notifications", "description": "The interface language, and what the app tells you about." },
+    "languageNotifications": { "label": "Preferences", "description": "The interface language, the notifications, and how conversations are drawn." },
     "appearance": { "label": "Appearance", "description": "Theme, colors and size." },
     "shortcuts": { "label": "Shortcuts", "description": "Keys to move around quickly." },
     "providers": { "label": "Providers", "description": "The AI providers your agents use." },
@@ -54,6 +54,9 @@
     }
   },
   "languageNotifications": {
+    "chatCard": "Conversation",
+    "condenseTurns": "Condense turns",
+    "condenseTurnsHint": "Fold the steps of a finished turn behind one line. Runs of tool calls are summarized in either case.",
     "languageCard": "Language",
     "interfaceLanguage": "Interface language",
     "notificationsCard": "Notifications",
