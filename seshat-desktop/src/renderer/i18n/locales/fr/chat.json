@@ -514,9 +514,7 @@
           "error": "Erreur"
         },
         "genericToolView": {
-          "input": "Entrée",
-          "output": "Sortie",
-          "details": "Détails"
+          "input": "Entrée"
         },
         "globToolView": {
           "error": "Erreur",
@@ -592,7 +590,6 @@
         },
         "silentToolView": {
           "files": "Fichiers",
-          "session": "Session",
           "failed": "échec"
         },
         "sttToolView": {
@@ -626,7 +623,6 @@
       "toolLineItem": {
         "browser": "Navigateur",
         "files": "Fichiers",
-        "session": "Session",
         "failed": "échec",
         "completed": "Terminé",
         "copy": "Copier",

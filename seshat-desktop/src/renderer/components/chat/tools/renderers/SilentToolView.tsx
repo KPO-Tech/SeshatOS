@@ -7,9 +7,7 @@ import { useSessionStore } from '@renderer/stores/session'
 import { PlanArtifactCard } from '@renderer/components/chat/messages/PlanArtifactCard'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { basename } from '../helpers'
-import { categoryIcon, hasCustomRender, isFileTool, renderToolBody, toolLabel } from '../toolDisplay'
-import { opensWide } from '../readableTools'
-import { isWebTool } from '../webTools'
+import { categoryIcon, isFileTool, renderToolBody, toolLabel } from '../toolDisplay'
 import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -84,40 +82,28 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
   const filePath = typeof tool.input.file_path === 'string' ? tool.input.file_path : ''
   const isPastedFile = isFileTool(tool.name) && isPastedTextFilename(basename(filePath))
 
-  // A silent tool with its own dedicated renderer (read, list_directory, …)
-  // stays worth opening even when it succeeded, not only on error - a
-  // pure-confirmation tool with no renderer (create_directory, …) stays
-  // non-clickable either way, since GenericToolView's raw Input/Output split
-  // is the only thing there'd be to show.
-  const hasRender = hasCustomRender(tool.name)
-  const isWeb = isWebTool(tool.name)
-  const hasWebBody = isWeb && Boolean(result)
-  const expanded = hasWebBody && opened
-  const expandable = isWeb ? hasWebBody : !isPastedFile && (isError || hasRender)
+  // Every call opens right here, under its own line: the Session panel is for
+  // the session, not for one tool, and a panel of its own put the result far
+  // from the turn that explains it.
+  const canExpand = !isPastedFile && !isFileTool(tool.name)
+  const expanded = opened
 
   function handleClick() {
-    if (isWeb) {
-      setOpened((value) => !value)
-      return
-    }
     if (canOpenPlan) {
       useUIStore.getState().openRightPanel({ kind: 'plan', title: planName, sessionId: sessionId!, planId })
       return
     }
-    // Same rule as ToolLineItem's own toggle(): a click never expands inline
-    // in the chat transcript, it opens this exact tool call's detail in a
-    // panel instead - Files for read/write/edit (list_directory stays in
-    // Computer, since a directory listing isn't "a file"). bash isn't silent
-    // (it still needs to auto-expand inline on running/error), so it never
-    // reaches this component - see ToolLineItem.tsx instead.
+    if (isPastedFile) return
+    // A file still opens in Files, where it can be read beside the
+    // conversation - same rule as ToolLineItem's own toggle().
     if (isFileTool(tool.name)) {
       useUIStore.getState().openRightPanel({ kind: 'files', title: t('chat.tools.renderers.silentToolView.files'), sessionId, focusToolId: tool.id })
       return
     }
-    useUIStore.getState().openRightPanel({ kind: 'computer', title: t('chat.tools.renderers.silentToolView.session'), sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
+    setOpened((value) => !value)
   }
 
-  const clickable = expandable || canOpenPlan
+  const clickable = canOpenPlan || !isPastedFile
 
   const line = (
     <div
@@ -129,7 +115,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       tabIndex={clickable ? 0 : undefined}
       onClick={clickable ? handleClick : undefined}
       onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') handleClick() } : undefined}
-      aria-expanded={isWeb && hasWebBody ? expanded : undefined}
+      aria-expanded={canExpand ? expanded : undefined}
     >
       <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
         {lineIcon(tool.name, isRunning, isError)}
@@ -137,7 +123,7 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
       <span className="shrink-0 font-medium not-italic text-inherit">{label}</span>
       {isError && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">{t('chat.tools.renderers.silentToolView.failed')}</span>}
       {snippet && <span className="min-w-0 flex-1 truncate font-mono text-[10px] opacity-[0.62]">{snippet}</span>}
-      {isWeb && hasWebBody && (
+      {canExpand && (
         <span className={cx('ml-auto inline-flex shrink-0 items-center opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
           <Down size={10} />
         </span>
@@ -145,7 +131,6 @@ export function SilentToolView({ tool, result, status, snippet, sessionId }: Pro
     </div>
   )
 
-  if (!isWeb) return line
   return (
     <div className="flex flex-col">
       {line}

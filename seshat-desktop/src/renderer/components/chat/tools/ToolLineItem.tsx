@@ -9,7 +9,6 @@ import { basename, fmtDuration, parseAskUserAnswers, resolveAskUserQuestions } f
 import { summarizeTool, toolResultSubtitle, toolStatus } from './quietGroupPhrase'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
-import { opensWide } from './readableTools'
 import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import type { ToolBlockProps } from './types'
 import { useTranslation } from 'react-i18next'
@@ -77,12 +76,11 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const subtitle = isDiffTool && status !== 'failed' ? null : toolResultSubtitle(tool)
   const copyText = tool._result?.content || JSON.stringify(tool.input, null, 2)
 
-  // Clicking a tool row now opens its own live panel instead of expanding
-  // inline - bash opens in place, browser_* has its own panel (Browser), read/write/edit open in Files (see FilesPanel.tsx), everything
-  // else (mcp, ...) opens in Computer, focused on this
-  // exact tool call. Sub-agent tools never reach this component - they
-  // render as AgentCardsRow instead (see MessageItem.tsx) - so no case is
-  // needed for them here.
+  // A click opens the result under the row, except where a panel is the
+  // reader itself: bash unfolds in place, browser_* opens the live page,
+  // read/write/edit open the file in Files (see FilesPanel.tsx). Sub-agent
+  // tools never reach this component - they render as AgentCardsRow instead
+  // (see MessageItem.tsx) - so no case is needed for them here.
   function toggle() {
     if (tool.name === 'bash') {
       setOpened((value) => !value)
@@ -100,8 +98,9 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       openRightPanel({ kind: 'files', title: t('chat.tools.toolLineItem.files'), sessionId, focusToolId: tool.id })
       return
     }
-    // What a knowledge search or a document read returns is text to read: its panel opens as wide as a document's.
-    openRightPanel({ kind: 'computer', title: t('chat.tools.toolLineItem.session'), sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
+    // Everything else unfolds under its own line: the turn around it is what
+    // explains the call, and a panel of one tool's own pulled the two apart.
+    setOpened((value) => !value)
   }
 
   return (
