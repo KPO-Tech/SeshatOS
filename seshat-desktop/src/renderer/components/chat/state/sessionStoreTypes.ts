@@ -43,5 +43,4 @@ export type SessionState = {
   appendSubagentStreamBlock: (sessionId: string, toolUseId: string, block: StreamingBlock) => void
   updateSubagentStreamBlock: (sessionId: string, toolUseId: string, index: number, delta: Partial<StreamingBlock>) => void
   clearSubagentStreaming: (sessionId: string, toolUseId: string) => void
-  pushSubagentToolActivity: (sessionId: string, toolUseId: string, activity: ToolActivity) => void
 }

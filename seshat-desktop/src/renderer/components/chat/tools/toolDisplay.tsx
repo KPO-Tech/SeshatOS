@@ -413,14 +413,6 @@ export function isSilentTool(name: string): boolean {
   return getEntry(name)?.silent ?? DEFAULTS.silent
 }
 
-// Whether this tool has a dedicated full-card renderer worth opening even
-// when it succeeded (used by SilentToolView to decide whether a silent
-// line's status click should do anything beyond the error case every silent
-// tool already gets - see its own comment for why that split exists).
-export function hasCustomRender(name: string): boolean {
-  return getEntry(name)?.render != null
-}
-
 export function isGroupable(name: string): boolean {
   return getEntry(name)?.groupable ?? DEFAULTS.groupable
 }

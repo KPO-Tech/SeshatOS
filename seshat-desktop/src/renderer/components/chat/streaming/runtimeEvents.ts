@@ -433,14 +433,6 @@ function handleSubagentEvent(
         }
         store.upsertSubagent(sessionId, toolUseId, { activeTool: activity })
       } else {
-        const activity: ToolActivity = {
-          toolName: progress.tool_name,
-          stage: progress.stage,
-          message: progress.message,
-          startedAt: now,
-          endedAt: now,
-        }
-        store.pushSubagentToolActivity(sessionId, toolUseId, activity)
         store.upsertSubagent(sessionId, toolUseId, { activeTool: null })
       }
 
