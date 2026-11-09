@@ -72,6 +72,19 @@
         "new": "New",
         "edited": "Edited"
       },
+      "toolRun": {
+        "read": "Read files",
+        "search": "Searched",
+        "edit": "Edited files",
+        "write": "Wrote files",
+        "bash": "Ran a command",
+        "other": "Ran a tool",
+        "thought": "Thought",
+        "call_one": "{{label}} · {{count}} call",
+        "call_other": "{{label}} · {{count}} calls",
+        "show": "Show these steps",
+        "hide": "Hide these steps"
+      },
       "inlineMedia": {
         "preparingTheFile": "Preparing the file...",
         "creatingImage": "Creating image...",
@@ -103,6 +116,12 @@
         "reject": "Reject",
         "proceed": "Proceed",
         "clickToReview": "Click to review"
+      },
+      "workedFor": {
+        "title": "Worked for {{duration}}",
+        "titleNoDuration": "Worked",
+        "showSteps": "Show the steps of this turn",
+        "hideSteps": "Hide the steps of this turn"
       },
       "youTubeEmbed": {
         "thisVideoLinkIsNot": "This video link is not valid.",
@@ -191,6 +210,7 @@
         }
       },
       "computerPanel": {
+        "unnamedTask": "Unnamed task",
         "session": "Session",
         "browser": "Browser",
         "plan": "Plan",
@@ -270,6 +290,8 @@
         "summarizeTheOlderPartOf": "Summarize the older part of the conversation now, instead of waiting for the automatic threshold",
         "compacting": "Compacting…",
         "compactNow": "Compact now",
+        "condenseTurns": "Condense turns",
+        "condenseTurnsHint": "Fold the steps of a finished turn behind one line. Runs of tool calls stay summarized either way.",
         "changes": "Changes",
         "connectors": "Connectors",
         "outputs": "Outputs",
@@ -301,11 +323,8 @@
         "waitingForSubAgent": "Waiting for sub-agent…",
         "cancelling": "Cancelling…",
         "cancel": "Cancel",
-        "activity": "Activity",
         "agentIsStarting": "Agent is starting…",
-        "toolLog": "Tool log",
         "failed": "failed",
-        "outputWillAppearHereOnce": "Output will appear here once the agent finishes.",
         "noFinalOutputWasCaptured": "No final output was captured.",
         "agentOutput": "Agent output",
         "turns_one": "{{count}} turn",
@@ -446,8 +465,7 @@
         "completed": "Completed",
         "failed": "Failed",
         "runningInBackground": "Running in background…",
-        "running": "Running…",
-        "viewActivity": "View activity →"
+        "running": "Running…"
       },
       "common": {
         "copy": "Copy"
@@ -492,9 +510,7 @@
           "error": "Error"
         },
         "genericToolView": {
-          "input": "Input",
-          "output": "Output",
-          "details": "Details"
+          "input": "Input"
         },
         "globToolView": {
           "error": "Error",
@@ -570,7 +586,6 @@
         },
         "silentToolView": {
           "files": "Files",
-          "session": "Session",
           "failed": "failed"
         },
         "sttToolView": {
@@ -604,7 +619,6 @@
       "toolLineItem": {
         "browser": "Browser",
         "files": "Files",
-        "session": "Session",
         "failed": "failed",
         "completed": "Completed",
         "copy": "Copy",

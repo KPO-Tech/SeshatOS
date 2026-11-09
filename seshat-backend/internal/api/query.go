@@ -51,6 +51,9 @@ type queryRequest struct {
 	// AgentSlug identifies an agent profile to run as. When set, the agent's
 	// system prompt, model, and permission mode are applied to the session.
 	AgentSlug string `json:"agent_slug,omitempty"`
+	// Regenerate asks again for the answer of the last turn: that turn is taken out of the conversation first, so the new
+	// answer replaces the old one instead of following it. The prompt is the one of the turn taken back.
+	Regenerate bool `json:"regenerate,omitempty"`
 }
 
 type createSessionRequest struct {
@@ -143,6 +146,7 @@ func (app *App) handleQuery(w http.ResponseWriter, r *http.Request) {
 		FileIDs:            req.FileIDs,
 		AppendSystemPrompt: req.AppendSystemPrompt,
 		AgentSlug:          req.AgentSlug,
+		Regenerate:         req.Regenerate,
 		Principal:          principal,
 	})
 	queryCtx := withKnowledgeScope(app.enrichContextWithAgentPrefs(r.Context(), principal), req.AgentSlug, req.CorpusID)
@@ -413,6 +417,7 @@ func (app *App) handleQueryStream(w http.ResponseWriter, r *http.Request) {
 		FileIDs:            req.FileIDs,
 		AppendSystemPrompt: req.AppendSystemPrompt,
 		AgentSlug:          req.AgentSlug,
+		Regenerate:         req.Regenerate,
 		Principal:          principal,
 		OnStage: func(stage, label string) {
 			onRuntimeEvent(sdk.RuntimeEvent{

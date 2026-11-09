@@ -1,14 +1,10 @@
-import { memo, useRef, useEffect, useState } from 'react'
+import { memo, useMemo, useRef, useEffect, useState } from 'react'
 import { CloseOne } from '@icon-park/react'
-import { useSessionStore } from '@renderer/stores/session'
+import { streamingToContentBlocks, useSessionStore } from '@renderer/stores/session'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { api } from '@renderer/api/client'
-import { ToolBlock } from '../tools/ToolBlock'
-import { AgentCardsRow } from '../tools/AgentToolView'
-import { QuietToolGroup } from '../tools/QuietToolGroup'
-import { groupBlocks } from '../messages/MessageItem'
-import type { ToolStatus } from '@renderer/api/types'
-import type { ToolActivity } from '@renderer/stores/session'
+import { MessageItem } from '../messages/MessageItem'
+import type { Message } from '@renderer/api/types'
 import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -29,15 +25,6 @@ const STATUS_TEXT_CSS: Record<SubagentLifecycle, string> = {
   failed: 'text-app-error',
 }
 
-const ACTIVITY_DOT_CSS: Record<ToolActivity['stage'], string> = {
-  pending: 'bg-[var(--accent-primary)]',
-  running: 'bg-[var(--accent-primary)]',
-  completed: 'bg-app-success',
-  failed: 'bg-app-error',
-}
-
-type Tab = 'activity' | 'output'
-
 type Props = {
   sessionId: string
   toolUseId: string
@@ -46,17 +33,27 @@ type Props = {
 export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId }: Props) {
   const { t } = useTranslation('chat')
   const subagent = useSessionStore((s) => s.getSubagent(sessionId, toolUseId))
-  const [tab, setTab] = useState<Tab>('activity')
   const bottomRef = useRef<HTMLDivElement>(null)
-  const prevResultRef = useRef<string | undefined>(undefined)
-  const [outputReady, setOutputReady] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
 
   const streaming = subagent?.streaming ?? []
   const result = subagent?.result
-  const hasResult = Boolean(result?.trim())
-  const hasTerminalOutputState = hasResult || (subagent != null && subagent.status !== 'running')
+  // The agent is read the way the chat is read: its prompt as a message of the person, what it wrote and
+  // called as one message of the agent, drawn by the same component.
+  const taskMessage = useMemo<Message | null>(
+    () => (subagent?.task ? { id: `${toolUseId}-task`, role: 'user', content: [{ type: 'text', text: subagent.task }] } : null),
+    [subagent?.task, toolUseId],
+  )
+  const answerMessage = useMemo<Message | null>(
+    () => (streaming.length > 0 ? { id: `${toolUseId}-stream`, role: 'assistant', content: streamingToContentBlocks(streaming) } : null),
+    [streaming, toolUseId],
+  )
+  // The final report is often the last thing the agent wrote already: it is not drawn twice.
+  const lastWritten = [...streaming].reverse().find((block) => block.type === 'text')
+  const alreadyWritten = Boolean(result?.trim()) && lastWritten?.type === 'text' && lastWritten.text.includes(result!.trim().slice(0, 200))
+  const hasTerminalOutputState = Boolean(result?.trim()) || (subagent != null && subagent.status !== 'running')
+  const showFinalOutput = hasTerminalOutputState && !alreadyWritten
 
   // No optimistic local status update here — CloseAgent on the backend cancels
   // the agent's context, which makes its own completion notifier fire the
@@ -77,27 +74,10 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
     }
   }
 
-  // Auto-scroll activity tab as new blocks arrive
+  // The transcript follows what the agent writes, the way the chat does.
   useEffect(() => {
-    if (tab === 'activity') {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [streaming.length, tab])
-
-  // When result first appears, light up the Output tab dot
-  useEffect(() => {
-    if (hasResult && result && prevResultRef.current === undefined) {
-      setOutputReady(true)
-      const id = setTimeout(() => setOutputReady(false), 4000)
-      prevResultRef.current = result
-      return () => clearTimeout(id)
-    }
-  }, [hasResult, result])
-
-  const handleTabClick = (next: Tab) => {
-    setTab(next)
-    if (next === 'output') setOutputReady(false)
-  }
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [streaming])
 
   if (!subagent) {
     return (
@@ -137,8 +117,6 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
 
         {cancelError && <div className="mb-1.5 text-[10.5px] text-app-error">{cancelError}</div>}
 
-        {subagent.task && <div className="mb-2 text-[11px] leading-[1.5] text-app-text">{subagent.task}</div>}
-
         <div className="flex flex-wrap items-center gap-2 pb-[7px] text-[10px] text-app-text-muted">
           <span>
             {subagent.status === 'running' ? `${formatMs(durationMs)} elapsed` : formatMs(durationMs)}
@@ -159,116 +137,31 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
           )}
         </div>
 
-        <div className="mt-auto flex border-t border-app-border-subtle">
-          <button
-            className={cx(
-              'flex flex-1 items-center justify-center gap-1 border-0 border-b-2 border-b-transparent bg-transparent py-1.5 text-[10px] font-semibold text-app-text-muted transition-colors duration-150 cursor-pointer',
-              tab === 'activity' ? 'border-b-[var(--accent-primary)] text-[var(--accent-primary)]' : 'hover:text-app-text-secondary',
-            )}
-            type="button"
-            onClick={() => handleTabClick('activity')}
-          >
-            {t('chat.panels.subagentPanel.activity')}
-          </button>
-          <button
-            className={cx(
-              'flex flex-1 items-center justify-center gap-1 border-0 border-b-2 border-b-transparent bg-transparent py-1.5 text-[10px] font-semibold text-app-text-muted transition-colors duration-150',
-              tab === 'output'
-                ? 'cursor-pointer border-b-[var(--accent-primary)] text-[var(--accent-primary)]'
-                : hasTerminalOutputState ? 'cursor-pointer hover:text-app-text-secondary' : 'cursor-not-allowed opacity-[0.38]',
-            )}
-            type="button"
-            disabled={!hasTerminalOutputState}
-            onClick={() => hasTerminalOutputState && handleTabClick('output')}
-          >
-            {outputReady && tab !== 'output' && <span className="size-1.5 shrink-0 rounded-full bg-app-success [animation:mode-dot-pulse_1.2s_ease-in-out_infinite]" />}
-            Output
-          </button>
-        </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar]:w-1">
-        {tab === 'activity' && (
-          <div className="flex flex-1 flex-col gap-2 p-2.5">
-            {streaming.length === 0 && subagent.status === 'running' && (
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
-                <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
-                <span className="text-[11px]">{t('chat.panels.subagentPanel.agentIsStarting')}</span>
-              </div>
-            )}
-            {groupBlocks(streaming, toolUseId).map((item, i) => {
-              if (item.kind === 'agent-group') {
-                return (
-                  <AgentCardsRow
-                    key={`${toolUseId}-agents-${i}`}
-                    tools={item.tools}
-                    sessionId={sessionId}
-                    getStatus={(item) => (item._status ?? (item._result ? (item._result.isError ? 'failed' : 'completed') : 'running')) as ToolStatus}
-                  />
-                )
-              }
-              if (item.kind === 'quiet-group') {
-                const firstToolId = item.items.find((it) => it.kind === 'tool')?.tool.id
-                return (
-                  <QuietToolGroup
-                    key={firstToolId || `${toolUseId}-quiet-${i}`}
-                    items={item.items}
-                    sessionId={sessionId}
-                  />
-                )
-              }
-              return <StreamBlockView key={`${toolUseId}-block-${i}`} block={item.block} sessionId={sessionId} />
-            })}
-            {subagent.activeTool && (
-              <div className="flex items-center gap-1.5 rounded-md border border-[rgba(239,124,47,0.25)] bg-[rgba(239,124,47,0.06)] px-[7px] py-1.5 text-[10px] text-[var(--accent-primary)]">
-                <div className="size-3 shrink-0 rounded-full border-2 border-[rgba(239,124,47,0.25)] border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
-                <span>
-                  <strong>{subagent.activeTool.toolName}</strong>
-                  {subagent.activeTool.message ? ` · ${subagent.activeTool.message}` : ''}
-                </span>
-              </div>
-            )}
-            {subagent.activityLog.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold uppercase text-app-text-muted">{t('chat.panels.subagentPanel.toolLog')}</span>
-                {subagent.activityLog.slice(-10).reverse().map((entry, index) => (
-                  <div key={`${entry.toolName}-${entry.startedAt}-${index}`} className="grid grid-cols-[8px_minmax(0,1fr)_auto] items-start gap-[7px] py-1">
-                    <span className={cx('mt-[5px] size-1.5 rounded-full', ACTIVITY_DOT_CSS[entry.stage] ?? 'bg-[var(--border-strong)]')} />
-                    <span className="flex min-w-0 flex-col gap-px">
-                      <span className="text-[10.5px] font-semibold text-app-text">{entry.toolName.replace(/_/g, ' ')}</span>
-                      {entry.message && <span className="truncate text-[10px] text-app-text-muted">{entry.message}</span>}
-                    </span>
-                    <span className="text-[10px] text-app-text-muted">{formatActivityDuration(entry)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {hasTerminalOutputState && (
-              <FinalOutputSummary status={subagent.status} result={result} sessionId={sessionId} />
-            )}
-            <div ref={bottomRef} />
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar]:w-1">
+        {taskMessage && <MessageItem message={taskMessage} sessionId={sessionId} isFirst />}
+        {streaming.length === 0 && subagent.status === 'running' && (
+          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
+            <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
+            <span className="text-[11px]">{t('chat.panels.subagentPanel.agentIsStarting')}</span>
           </div>
         )}
+        {answerMessage && (
+          <MessageItem
+            message={answerMessage}
+            sessionId={sessionId}
+            compact
+            endsTurn={subagent.status !== 'running'}
+            revealThinking={subagent.status === 'running'}
+            autoExpandTools
+          />
+        )}
+        {showFinalOutput && (
+          <FinalOutputSummary status={subagent.status} result={result} sessionId={sessionId} />
+        )}
+        <div ref={bottomRef} />
 
-        {tab === 'output' && (
-          <div className="flex flex-1 flex-col gap-2 p-2.5">
-            {hasResult
-              ? (
-                <div className="text-[12px] leading-[1.6] text-app-text">
-                  <MarkdownView sessionId={sessionId}>{result ?? ''}</MarkdownView>
-                </div>
-              )
-              : (
-                <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-center text-[11px] text-app-text-muted">
-                  <span className="inline-flex items-center gap-1.5">
-                    {subagent.status === 'failed' && <span className="text-[9px] font-bold leading-none text-app-error">{t('chat.panels.subagentPanel.failed')}</span>}
-                    <span>{subagent.status === 'running' ? t('chat.panels.subagentPanel.outputWillAppearHereOnce') : t('chat.panels.subagentPanel.noFinalOutputWasCaptured')}</span>
-                  </span>
-                </div>
-              )
-            }
-          </div>
-        )}
       </div>
     </div>
   )
@@ -297,48 +190,6 @@ function FinalOutputSummary({ status, result, sessionId }: { status: 'running' |
   )
 }
 
-function StreamBlockView({ block, sessionId }: { block: Parameters<typeof groupBlocks>[0][number]; sessionId?: string }) {
-  if (block.type === 'tool_result') return null
-
-  if (block.type === 'text') {
-    if (!block.text.trim()) return null
-    return (
-      <div className="text-[12px] leading-[1.6] text-app-text">
-        <MarkdownView sessionId={sessionId}>{block.text}</MarkdownView>
-      </div>
-    )
-  }
-
-  if (block.type === 'thinking') {
-    if (!block.thinking.trim()) return null
-    return (
-      <div className="border-l-2 border-[rgba(239,124,47,0.22)] pl-2 text-[11px] italic leading-[1.55] text-app-text-muted">{block.thinking}</div>
-    )
-  }
-
-  if (block.type === 'tool_use') {
-    return (
-      <ToolBlock
-        tool={{
-          type: 'tool_use',
-          id: block.id,
-          name: block.name,
-          input: block.input,
-          metadata: block.metadata,
-          _status: block._status,
-          _result: block._result,
-          _approval: block._approval,
-          _prompt: block._prompt,
-          _partialInput: block._partialInput,
-          _message: block._message,
-        }}
-      />
-    )
-  }
-
-  return null
-}
-
 function formatMs(ms: number): string {
   if (ms < 1000) return `${ms}ms`
   if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`
@@ -347,7 +198,3 @@ function formatMs(ms: number): string {
   return `${m}m${s > 0 ? ` ${s}s` : ''}`
 }
 
-function formatActivityDuration(entry: ToolActivity): string {
-  if (!entry.endedAt) return 'now'
-  return formatMs(Math.max(0, entry.endedAt - entry.startedAt))
-}

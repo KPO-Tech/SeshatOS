@@ -1,9 +1,10 @@
-import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution } from '@icon-park/react'
+import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution, Comment } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
 import { useNotificationPrefs } from '@renderer/hooks/useNotificationPrefs'
 import { SUPPORTED_LANGUAGES, normalizeLanguage } from '@renderer/i18n/languages'
 import { useLanguage } from '@renderer/i18n/useLanguage'
 import { SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
+import { useUIStore } from '@renderer/stores/ui'
 
 // A language is named in itself, in every language of the interface: "Français" is never "French" to a person who reads French.
 const LANGUAGES = SUPPORTED_LANGUAGES.map((entry) => ({ value: entry.code, label: entry.label }))
@@ -14,8 +15,16 @@ export function LanguageNotificationsSettings() {
   const { t } = useTranslation('settings')
   const { language, setLanguage } = useLanguage()
   const { prefs, change } = useNotificationPrefs()
+  const condenseTurns = useUIStore((state) => state.condenseTurns)
+  const setCondenseTurns = useUIStore((state) => state.setCondenseTurns)
   return (
     <SettingsPage id="language-notifications">
+      <SettingsCard title={t('languageNotifications.chatCard')}>
+        <SettingRow title={t('languageNotifications.condenseTurns')} hint={t('languageNotifications.condenseTurnsHint')} icon={icon(Comment)}>
+          <Toggle label={t('languageNotifications.condenseTurns')} enabled={condenseTurns} onChange={setCondenseTurns} />
+        </SettingRow>
+      </SettingsCard>
+
       <SettingsCard title={t('languageNotifications.languageCard')}>
         <SettingRow title={t('languageNotifications.interfaceLanguage')} icon={icon(Translate)}>
           <div className="w-[200px]">

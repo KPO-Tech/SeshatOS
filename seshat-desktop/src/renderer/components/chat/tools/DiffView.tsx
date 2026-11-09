@@ -1,4 +1,4 @@
-import { Copy } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { codeTheme } from '@renderer/lib/codeTheme'
 import type { ToolUseBlock } from '@renderer/api/types'
@@ -249,14 +249,11 @@ export function DiffView({
           SCROLL_THIN,
         )}
       >
-        <button
+        <CopyButton
+          text={copyText}
+          label={t('chat.tools.diffView.copyDiff')}
           className="absolute right-1.5 top-1.5 z-[2] flex size-[26px] items-center justify-center rounded-md border border-app-border-subtle bg-[rgba(0,0,0,0.4)] text-app-text-muted opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-app-text"
-          type="button"
-          aria-label={t('chat.tools.diffView.copyDiff')}
-          onClick={() => void navigator.clipboard.writeText(copyText)}
-        >
-          <Copy size={10} />
-        </button>
+        />
         {rows.map((row, i) => (
           <div
             key={i}

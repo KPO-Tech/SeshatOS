@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { connectorKind, serverLabel } from './connectorNames'
-import { CheckOne, Copy, Down } from '@icon-park/react'
+import { CheckOne, Down } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { useUIStore } from '@renderer/stores/ui'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { ErrorPre } from './common'
@@ -9,7 +10,6 @@ import { basename, fmtDuration, parseAskUserAnswers, resolveAskUserQuestions } f
 import { summarizeTool, toolResultSubtitle, toolStatus } from './quietGroupPhrase'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
 import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
-import { opensWide } from './readableTools'
 import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import type { ToolBlockProps } from './types'
 import { useTranslation } from 'react-i18next'
@@ -77,12 +77,9 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   const subtitle = isDiffTool && status !== 'failed' ? null : toolResultSubtitle(tool)
   const copyText = tool._result?.content || JSON.stringify(tool.input, null, 2)
 
-  // Clicking a tool row now opens its own live panel instead of expanding
-  // inline - bash opens in place, browser_* has its own panel (Browser), read/write/edit open in Files (see FilesPanel.tsx), everything
-  // else (mcp, ...) opens in Computer, focused on this
-  // exact tool call. Sub-agent tools never reach this component - they
-  // render as AgentCardsRow instead (see MessageItem.tsx) - so no case is
-  // needed for them here.
+  // A click opens the result under the row, except where a panel is the
+  // reader itself: bash unfolds in place, browser_* opens the live page,
+  // read/write/edit open the file in Files (see FilesPanel.tsx).
   function toggle() {
     if (tool.name === 'bash') {
       setOpened((value) => !value)
@@ -100,8 +97,9 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
       openRightPanel({ kind: 'files', title: t('chat.tools.toolLineItem.files'), sessionId, focusToolId: tool.id })
       return
     }
-    // What a knowledge search or a document read returns is text to read: its panel opens as wide as a document's.
-    openRightPanel({ kind: 'computer', title: t('chat.tools.toolLineItem.session'), sessionId, focusToolId: tool.id, readable: opensWide(tool.name) })
+    // Everything else unfolds under its own line: the turn around it is what
+    // explains the call, and a panel of one tool's own pulled the two apart.
+    setOpened((value) => !value)
   }
 
   return (
@@ -136,14 +134,12 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
             <CheckOne size={10} />
           </span>
         )}
-        <button
-          type="button"
+        <CopyButton
+          text={copyText}
+          label={t('chat.tools.toolLineItem.copy')}
           className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
-          aria-label={t('chat.tools.toolLineItem.copy')}
-          onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(copyText) }}
-        >
-          <Copy size={10} />
-        </button>
+          stopPropagation
+        />
         <span className={cx('inline-flex shrink-0 items-center opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
           <Down size={10} />
         </span>
@@ -159,7 +155,9 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
           See BashToolView/WebSearchToolView for the two that were missing
           that section until this pass. */}
       {expanded && (
-        <div className="pt-1">
+        // The opened body keeps the row's own horizontal inset: wider than the
+        // line it belongs to, it read as a different, floating block.
+        <div className="px-2 pt-1">
           {isDiffTool ? (
             <DiffContent tool={tool} sessionId={sessionId} />
           ) : (

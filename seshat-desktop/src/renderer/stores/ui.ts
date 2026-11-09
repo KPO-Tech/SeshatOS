@@ -6,6 +6,7 @@ import { useSessionStore } from '@renderer/stores/session'
 import { keepNewestDurations } from '@renderer/components/chat/messages/thinkingTime'
 
 const MAX_THINKING_DURATIONS = 400
+const MAX_TURN_DURATIONS = 200
 
 type Theme = 'light' | 'dark'
 export type RightPanelKind = 'markdown' | 'subagent' | 'browser' | 'shell' | 'computer' | 'files' | 'knowledge' | 'plan' | 'pdf' | 'artifact' | 'docx' | 'xlsx' | 'pptx'
@@ -213,6 +214,11 @@ type UIState = {
   thinkingExpansion: Record<string, boolean>
   // Seconds each thought took, by thinkingKey: measured in the client while it was written, since nothing stamps it.
   thinkingDurations: Record<string, number>
+  // Whether a finished turn folds its steps behind a "Worked for ..." header.
+  condenseTurns: boolean
+  // Whether each turn's header is open, by turn key, and the seconds each turn took.
+  turnExpansion: Record<string, boolean>
+  turnDurations: Record<string, number>
   // Answers already submitted within a still-open ask_user_question call,
   // keyed by `${toolUseId}:${questionIndex}` - AskUserPanel's own local
   // state doesn't survive it, since the panel unmounts and remounts between
@@ -250,6 +256,9 @@ type UIState = {
   setPermissionMode: (mode: UIPermissionMode) => void
   setThinkingExpansion: (thinkingId: string, expanded: boolean) => void
   setThinkingDuration: (key: string, seconds: number) => void
+  setTurnExpansion: (key: string, expanded: boolean) => void
+  setTurnDuration: (key: string, seconds: number) => void
+  setCondenseTurns: (value: boolean) => void
   setAskUserAnswer: (key: string, value: string) => void
   rememberApproval: (signature: string) => void
   forgetApproval: (signature: string) => void
@@ -271,6 +280,9 @@ export const useUIStore = create<UIState>()(
       permissionMode: 'auto',
       thinkingExpansion: {},
       thinkingDurations: {},
+      condenseTurns: false,
+      turnExpansion: {},
+      turnDurations: {},
       askUserAnswers: {},
       rememberedApprovals: {},
 
@@ -546,6 +558,19 @@ export const useUIStore = create<UIState>()(
       setThinkingDuration: (key, seconds) =>
         set((s) => ({ thinkingDurations: keepNewestDurations({ ...s.thinkingDurations, [key]: seconds }, MAX_THINKING_DURATIONS) })),
 
+      setTurnExpansion: (key, expanded) =>
+        set((s) => {
+          const next = { ...s.turnExpansion, [key]: expanded }
+          const keys = Object.keys(next)
+          for (const old of keys.slice(0, Math.max(0, keys.length - MAX_TURN_DURATIONS))) delete next[old]
+          return { turnExpansion: next }
+        }),
+
+      setTurnDuration: (key, seconds) =>
+        set((s) => ({ turnDurations: keepNewestDurations({ ...s.turnDurations, [key]: seconds }, MAX_TURN_DURATIONS) })),
+
+      setCondenseTurns: (value) => set({ condenseTurns: value }),
+
       setAskUserAnswer: (key, value) =>
         set((s) => ({
           askUserAnswers: {
@@ -588,6 +613,9 @@ export const useUIStore = create<UIState>()(
         permissionMode: s.permissionMode,
         thinkingExpansion: s.thinkingExpansion,
         thinkingDurations: s.thinkingDurations,
+        condenseTurns: s.condenseTurns,
+        turnExpansion: s.turnExpansion,
+        turnDurations: s.turnDurations,
         askUserAnswers: s.askUserAnswers,
         rememberedApprovals: s.rememberedApprovals,
       }),

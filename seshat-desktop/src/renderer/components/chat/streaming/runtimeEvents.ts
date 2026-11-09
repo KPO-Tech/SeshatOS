@@ -433,25 +433,34 @@ function handleSubagentEvent(
         }
         store.upsertSubagent(sessionId, toolUseId, { activeTool: activity })
       } else {
-        const activity: ToolActivity = {
-          toolName: progress.tool_name,
-          stage: progress.stage,
-          message: progress.message,
-          startedAt: now,
-          endedAt: now,
-        }
-        store.pushSubagentToolActivity(sessionId, toolUseId, activity)
         store.upsertSubagent(sessionId, toolUseId, { activeTool: null })
       }
 
       const subagentCurrent = store.getSubagent(sessionId, toolUseId)
       if (!subagentCurrent) break
-      const toolBlockIndex = subagentCurrent.streaming.findIndex(
+      const progressInput = toolInputFromProgress(progress)
+      const existing = subagentCurrent.streaming.find(
         (block) => block.type === 'tool_use' && (progress.tool_use_id ? block.id === progress.tool_use_id : block.name === progress.tool_name),
       )
-      if (toolBlockIndex >= 0) {
-        store.updateSubagentStreamBlock(sessionId, toolUseId, subagentCurrent.streaming[toolBlockIndex].index, {
+      if (existing && existing.type === 'tool_use') {
+        // The same record the main chat keeps: what the call was given, what it returned, how it ended.
+        store.updateSubagentStreamBlock(sessionId, toolUseId, existing.index, {
           _status: progress.stage as ToolStatus,
+          _message: progress.message ?? existing._message,
+          input: Object.keys(progressInput).length > 0 ? progressInput : existing.input,
+          _result: toolResultFromProgress(progress) ?? existing._result,
+        })
+      } else if (progress.tool_use_id) {
+        // The call never came as a content block: draw it from its progress, as the main chat does.
+        store.appendSubagentStreamBlock(sessionId, toolUseId, {
+          type: 'tool_use',
+          index: subagentCurrent.streaming.length,
+          id: progress.tool_use_id,
+          name: progress.tool_name,
+          input: progressInput,
+          _status: progress.stage as ToolStatus,
+          _result: toolResultFromProgress(progress),
+          _partialInput: '',
           _message: progress.message,
         })
       }

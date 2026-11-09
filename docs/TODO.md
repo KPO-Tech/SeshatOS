@@ -49,6 +49,48 @@ the families of the prompt are done (see Done).
 - **An answer that updates in place.**
 - **Fonts in the downloaded SVG.** The SVG is faithful on screen but the fonts are not embedded.
 
+## Skills catalog
+
+### Add the founder skill, and maybe make its chain a workflow
+
+[Jakeschincariol/founder-skill](https://github.com/Jakeschincariol/founder-skill) (MIT, read on 2026-11-07 at `fd9385b`): eleven skills
+that test a business before it is launched (board, competitors, a panel of 100 simulated buyers, pricing, offer, CFO, marketing, brand,
+operations, launch, plan). Four Python scripts, standard library only, no network. Nothing is installed yet.
+
+- **Check first:** the panel and the board launch sub-agents in parallel (the Agent tool), and the skills find their scripts through
+  `${CLAUDE_SKILL_DIR}`. Test both in our runtime on a copy before adding it. Without sub-agents the panel does not run as it is.
+- **Catalog entry:** pinned at a commit (ADR 0026), Python required, one entry for the whole repository.
+- **Workflow, not one agent:** it is a chain of 11 steps that hands files through a `founder/` folder, with points where the person must
+  correct something (the customer profile before the panel) and a heavy step to confirm (100 sub-agent calls; offer the 20-buyer run).
+  Show the steps and the files in the app, and the verdict (Profitable, Not yet, Incomplete) as a card. Keep the numbers in the scripts:
+  the verdict is computed, not written by the model.
+
+## Desktop app
+
+### A System page in the settings (decided 2026-11-08, after the System page of SeshatCloud)
+
+SeshatCloud has a System page for its platform administrator (machine, services, work waiting, API traffic, the intelligence service).
+The desktop application has the pieces of the same idea scattered, and no page that gathers them: `GET /api/v1/system/status`
+(mode, server address, sandbox backend, document reader, Docling, native reading and its models, local speech-to-text), the About
+settings that read it, `/system/network-diagnostics` and a local `/metrics`.
+
+Not for now: the SeshatCloud work comes first. What it would hold:
+
+- **What this install is:** the version of the application and of the embedded engine, uptime, memory of the backend, free space in the
+  data folder.
+- **What is there or missing**, from `/system/status`: the document reader, Docling and the native reader's models, local speech-to-text,
+  and whether the terminal is confined (Docker or Landlock) or not.
+- **The services it uses:** each configured AI provider answers or not (with its answer time), each MCP server runs or fails, the next run
+  of each scheduled job.
+- **A card "Connection to the organization"** in connected mode, which is what only Seshat has: connected to which server since when, the
+  last heartbeat, the policies and the agent rules received and their date, the last synchronisation. Today a person cannot see what their
+  organization imposes on them.
+- **A "Copy the diagnostic" button** that produces a text with no secret in it, to send to support.
+
+Mostly interface work on top of what the backend already answers; the new facts are the versions, the disk, the memory, the state of
+the providers and of the MCP servers, and the last synchronisation with the organization. Nothing here is a server for several people:
+no traffic per route, no queue of work.
+
 ## Release and security
 
 From the audit of 2026-11-07. What was done (a gosec triage of the high findings, a Windows test job, commits pinned in the catalog, rules on

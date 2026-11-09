@@ -2,38 +2,34 @@ import { useEffect, useRef } from 'react'
 import type { PlanDocument } from '@renderer/api/types'
 import type { AgentState, StreamingBlock } from '@renderer/stores/session'
 import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
-import { isAgentTool, isFileTool } from '@renderer/components/chat/tools/toolDisplay'
-import { isWebTool } from '@renderer/components/chat/tools/webTools'
+import { isFileTool } from '@renderer/components/chat/tools/toolDisplay'
 import { htmlArtifactPanel, presentedPages } from '@renderer/lib/htmlArtifact'
 import { useTranslation } from 'react-i18next'
 
-type ToolPanelCategory = Extract<RightPanelKind, 'computer' | 'browser' | 'files'>
+type ToolPanelCategory = Extract<RightPanelKind, 'browser'>
 
+/**
+ * Which right panel, if any, follows the tool the agent is running.
+ *
+ * Only the browser gets one: a page loads and navigates on its own, and the
+ * panel shows it live, which a chat row cannot. Every other tool draws its
+ * result in the conversation under its own line - bash, MCP, knowledge, RAG,
+ * notebook, and anything the engine adds later - so opening the Session panel
+ * for them stole the panel from whatever the user was actually reading.
+ * Subagents keep their own SubagentPanel, opened from the agent card.
+ *
+ * This is an allow-list on purpose: a tool that genuinely needs a live panel
+ * has to be named here, instead of every tool nobody thought about getting
+ * one by default.
+ */
 function categoryForTool(toolName: string | undefined): ToolPanelCategory | null {
   if (!toolName) return null
   if (toolName.startsWith('browser_')) return 'browser'
-  // agent/spawn_agent has its own SubagentPanel (opened by clicking the
-  // agent card) - it isn't Computer's content, so don't steal focus back to
-  // Computer every time the outer agent dispatches or re-dispatches one.
-  if (isAgentTool(toolName)) return null
-  // Files opens only on an explicit click (ToolLineItem/SilentToolView's own
-  // toggle/handleClick), unlike Computer/Terminal/Browser which show
-  // genuinely live activity worth auto-following - a Read the user never
-  // asked to see (routine context-gathering, often several per turn)
-  // shouldn't keep stealing focus from whatever panel they're actually
-  // looking at.
-  if (isFileTool(toolName)) return null
-  // A picture or a clip is drawn in the conversation itself (InlineMedia): there is nothing to follow in a panel.
-  if (toolName === 'generate_image' || toolName === 'text_to_speech' || toolName === 'present_artifact') return null
-  // A search or a fetched page is already in the conversation, opened under its row (SilentToolView): the panel only repeated it.
-  if (isWebTool(toolName)) return null
-  return 'computer'
+  return null
 }
 
 const PANEL_TITLE: Record<ToolPanelCategory, string> = {
-  computer: 'Session',
   browser: 'Browser',
-  files: 'Files',
 }
 
 type UseConversationPanelsArgs = {
@@ -59,26 +55,33 @@ export function useConversationPanels({
   const browserToolNavigationRef = useRef<string | null>(null)
   const prevCategoryRef = useRef<ToolPanelCategory | null>(null)
   const openedPagesRef = useRef(new Set<string>())
+  // The plan the agent builds is the one thing the chat cannot show while it is written:
+  // the first task opens the Session panel, once per session.
+  const planOpenedRef = useRef<string | null>(null)
   const activeToolName = agentState.activeTool?.toolName
   const isFileToolActive = activeToolName != null && isFileTool(activeToolName)
   const activeCategory = categoryForTool(activeToolName)
 
-  // Follows whatever the agent is actively doing, switching panels the
-  // moment its tool category changes (bash -> browser -> a file read -> a
-  // web search, ...) instead of only auto-opening once when nothing is open
-  // yet - that older guard meant an earlier panel (Terminal from a bash
-  // call, say) silently blocked every later auto-open for the rest of the
-  // turn, so the user had to switch panels by hand every time the agent
-  // moved on to a different kind of tool. Keyed on the *transition* (ref),
-  // not the level, so it fires exactly once per switch and never fights a
-  // panel the user deliberately closed while the agent keeps using the same
-  // tool category.
+  // Opens the Browser panel the moment the agent starts browsing, and only
+  // for that: every other tool now draws its result in the chat (see
+  // categoryForTool), so there is no other category to switch to. Keyed on
+  // the *transition* (ref) rather than the level, so it fires once per
+  // switch and never fights a panel the user deliberately closed while the
+  // agent keeps using the browser.
   useEffect(() => {
     if (sessionId && activeCategory && activeCategory !== prevCategoryRef.current) {
       openRightPanel({ kind: activeCategory, title: PANEL_TITLE[activeCategory], sessionId })
     }
     prevCategoryRef.current = activeCategory
   }, [activeCategory, sessionId, openRightPanel])
+
+  useEffect(() => {
+    if (!sessionId || planOpenedRef.current === sessionId) return
+    const creating = streaming.some((block) => block.type === 'tool_use' && block.name === 'task_create')
+    if (!creating) return
+    planOpenedRef.current = sessionId
+    openRightPanel({ kind: 'computer', title: t('chat.panels.computerPanel.session'), sessionId })
+  }, [openRightPanel, sessionId, streaming, t])
 
   // Follows each read/write/edit call live while Files is showing.
   useEffect(() => {

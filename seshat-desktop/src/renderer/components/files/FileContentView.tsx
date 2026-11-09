@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Copy, FolderOpen } from '@icon-park/react'
+import { FolderOpen } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { CodeBox } from '@renderer/components/chat/tools/common'
 import { languageForPath } from '@renderer/components/chat/tools/helpers'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
@@ -189,9 +190,7 @@ export function FileContentView({ path, relativePath, readText, readImage, onOpe
           </div>
         )}
         {copyPath && (
-          <button type="button" onClick={() => void navigator.clipboard.writeText(path)} aria-label={t('fileViewer.copyThePath')} title={t('fileViewer.copyThePath')} className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
-            <Copy size={13} />
-          </button>
+          <CopyButton text={path} label={t('fileViewer.copyThePath')} className="flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]" size={13} withTitle />
         )}
         {onOpenSystem && (
           <button type="button" onClick={() => onOpenSystem(path)} className="flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-[var(--border-soft)] bg-transparent px-2 text-[11.5px] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
