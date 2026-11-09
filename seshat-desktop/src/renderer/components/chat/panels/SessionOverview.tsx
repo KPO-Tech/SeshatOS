@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CheckOne, Down } from '@icon-park/react'
-import { ToggleSwitch } from '@renderer/components/config/knowledge/KnowledgePrimitives'
 import { useContextUsage } from '@renderer/hooks/useContextUsage'
 import { currentSandbox } from '@renderer/components/config/environment/sandboxApi'
 import { confinementView } from '@renderer/components/config/environment/confinementView'
@@ -184,13 +183,26 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
           >
             {compacting ? t('chat.panels.sessionOverview.compacting') : t('chat.panels.sessionOverview.compactNow')}
           </button>
-          <span
-            className="ml-auto flex shrink-0 items-center gap-2 text-[11px] text-[var(--text-muted)]"
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={condenseTurns}
             title={t('chat.panels.sessionOverview.condenseTurnsHint')}
+            onClick={() => setCondenseTurns(!condenseTurns)}
+            className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
           >
+            <span
+              className={cx(
+                'flex size-[13px] shrink-0 items-center justify-center rounded-[3px] border transition-colors',
+                condenseTurns
+                  ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-white'
+                  : 'border-[var(--border-strong)] bg-transparent',
+              )}
+            >
+              {condenseTurns && <CheckOne size={9} />}
+            </span>
             {t('chat.panels.sessionOverview.condenseTurns')}
-            <ToggleSwitch enabled={condenseTurns} onChange={setCondenseTurns} />
-          </span>
+          </button>
           {compactNote && (
             <span className={cx('min-w-0 flex-1 text-[11px]', compactNote.failed ? 'text-[var(--accent-warning)]' : 'text-[var(--text-muted)]')} role="status">
               {compactNote.text}
