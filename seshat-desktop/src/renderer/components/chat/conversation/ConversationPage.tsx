@@ -116,7 +116,8 @@ export function ConversationPage() {
   const askFromAnswer = useCallback((text: string) => void sendMessage(text), [sendMessage])
   // Stable, like every handler MessageList passes to the messages: a new function at each render drew them all again.
   const retryMessage = useCallback((text: string, attachments?: ChatAttachment[]) => {
-    void sendMessage(text, attachments?.length ? { fileIds: attachments.map((a) => a.id), attachments } : undefined)
+    // Asked again for the last turn, the answer takes the place of the old one; an edited prompt is a new turn (see sendMessage).
+    void sendMessage(text, { regenerate: true, ...(attachments?.length ? { fileIds: attachments.map((a) => a.id), attachments } : {}) })
   }, [sendMessage])
   const openFromAnswer = useCallback(
     (path: string) => {

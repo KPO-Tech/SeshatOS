@@ -1510,6 +1510,8 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 		ExecutionOrigin:   p.ExecutionOrigin,
 		PromptFn:          p.PromptFn,
 		AgentSlug:         effectiveAgentSlug,
+
+		RegenerateLastTurn: p.Regenerate,
 	}
 
 	// Agent profile: resolved first so preferences/memories/RAG layer on top.

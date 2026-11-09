@@ -98,19 +98,21 @@ export function MessageList({
   let lastAssistantRow = -1
   rows.forEach((row, index) => { if (!row.merged && row.message.role === 'assistant') lastAssistantRow = index })
 
-  // An answer can be asked again from the prompt before it, unless a turn is running. One function per answer, kept between renders.
+  // The last answer can be asked again from the prompt before it, unless a turn is running: the new one takes its place. An
+  // older answer offers nothing, because asking it again would have to drop everything that came after it.
   const regenerators = useMemo(() => {
     const out = new Map<number, () => void>()
     if (isStreaming) return out
+    let lastAnswer = -1
     for (let index = 0; index < messages.length; index++) {
-      if (messages[index].role !== 'assistant') continue
-      for (let i = index - 1; i >= 0; i--) {
-        if (messages[i].role !== 'user') continue
-        const { text, attachments } = userPrompt(messages[i])
-        if (!text.trim()) continue
-        out.set(index, () => onRetryMessage(text, attachments))
-        break
-      }
+      if (messages[index].role === 'assistant') lastAnswer = index
+    }
+    for (let i = lastAnswer - 1; i >= 0; i--) {
+      if (messages[i].role !== 'user') continue
+      const { text, attachments } = userPrompt(messages[i])
+      if (!text.trim()) continue
+      out.set(lastAnswer, () => onRetryMessage(text, attachments))
+      break
     }
     return out
   }, [messages, isStreaming, onRetryMessage])
