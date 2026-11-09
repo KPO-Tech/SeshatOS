@@ -32,6 +32,16 @@ function ids(messages: Message[]): Array<string | undefined> {
 }
 
 describe('listRows', () => {
+  it('joins a step to a run opened in a message that also says something', () => {
+    const rows = listRows([
+      step('a1', { type: 'text', text: 'Looking.' }, tool('bash', 't1')),
+      step('a2', tool('bash', 't2')),
+    ])
+
+    expect(rows[1].merged).toBe(true)
+    expect(rows[0].message.content).toHaveLength(3)
+  })
+
   it('draws the steps the runtime splits as one row, across their tool results', () => {
     const rows = listRows([
       asked('go'),

@@ -75,24 +75,30 @@ function isQuietStep(message: Message): boolean {
  * nothing but calls and reasoning are drawn as one row, so their calls group in
  * a single line - and a tool_result, which draws nothing, does not end the run.
  */
+/** A message that ends on a call: the run it holds can take in the step that follows. */
+function keepsRunOpen(message: Message): boolean {
+  if (message.role !== 'assistant') return false
+  const blocks = shownBlocks(message)
+  const last = blocks[blocks.length - 1]
+  return last !== undefined && last.type !== 'text' && blocks.every((block) => !isDecision(block))
+}
+
 export function listRows(messages: Message[]): ListRow[] {
   const rows: ListRow[] = messages.map((message, index) => ({ message, indexes: [index], merged: false }))
   let head = -1
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index]
     if (isToolResultOnly(message)) continue
-    if (!isQuietStep(message)) {
-      head = -1
-      continue
-    }
-    if (head >= 0) {
+    // A step that only holds calls joins the run still open above it - even when
+    // the call that opened the run shares its message with the sentence before.
+    if (head >= 0 && isQuietStep(message)) {
       const into = rows[head]
       into.message = { ...into.message, content: [...into.message.content, ...message.content] }
       into.indexes.push(index)
       rows[index] = { ...rows[index], merged: true }
       continue
     }
-    head = index
+    head = keepsRunOpen(message) ? index : -1
   }
   return rows
 }
