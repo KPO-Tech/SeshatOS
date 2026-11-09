@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { connectorKind, serverLabel } from './connectorNames'
-import { CheckOne, Copy, Down } from '@icon-park/react'
+import { CheckOne, Down } from '@icon-park/react'
+import { CopyButton } from '@renderer/components/ui/CopyButton'
 import { useUIStore } from '@renderer/stores/ui'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { ErrorPre } from './common'
@@ -133,14 +134,12 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
             <CheckOne size={10} />
           </span>
         )}
-        <button
-          type="button"
+        <CopyButton
+          text={copyText}
+          label={t('chat.tools.toolLineItem.copy')}
           className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-app-text-muted opacity-0 transition duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text group-hover:opacity-100"
-          aria-label={t('chat.tools.toolLineItem.copy')}
-          onClick={(e) => { e.stopPropagation(); void navigator.clipboard.writeText(copyText) }}
-        >
-          <Copy size={10} />
-        </button>
+          stopPropagation
+        />
         <span className={cx('inline-flex shrink-0 items-center opacity-45 transition-transform duration-150', expanded && 'rotate-180')}>
           <Down size={10} />
         </span>
