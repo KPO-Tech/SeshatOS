@@ -4,12 +4,13 @@ import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { SilentToolView } from './renderers/SilentToolView'
 import { InlineMedia, isInlineMedia } from '../messages/InlineMedia'
 import { ToolLineItem } from './ToolLineItem'
+import { AgentCardsRow } from './AgentToolView'
 import { THINKING_MARKDOWN_CLASS } from './thinkingMarkdownClass'
 import { thinkingPreview } from '../messages/thinkingPreview'
 import { formatThinkingDuration } from '../messages/thinkingTime'
 import { useThinkingDuration } from '../messages/useThinkingDuration'
 import { toolStatus } from './quietGroupPhrase'
-import { isSilentTool, toolSnippet } from './toolDisplay'
+import { isAgentTool, isSilentTool, toolSnippet } from './toolDisplay'
 import type { ToolBlockProps } from './types'
 import type { QuietGroupItem } from '../messages/MessageItem'
 import { useTranslation } from 'react-i18next'
@@ -47,6 +48,9 @@ export function QuietToolGroup({ items, sessionId, live = false, autoExpandTools
           // media, even when it sits inside a run of tools.
           if (isInlineMedia(tool)) {
             return <InlineMedia key={tool.id || `${sessionId ?? 'run'}-media-${position}`} tool={tool} sessionId={sessionId} />
+          }
+          if (isAgentTool(tool.name) && sessionId) {
+            return <AgentCardsRow key={tool.id} tools={[tool]} sessionId={sessionId} getStatus={() => status} />
           }
           // A silent tool already renders a complete, self-sufficient line
           // via SilentToolView - wrapping that in ToolLineItem's own

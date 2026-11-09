@@ -1,14 +1,10 @@
-import { memo, useRef, useEffect, useState } from 'react'
+import { memo, useMemo, useRef, useEffect, useState } from 'react'
 import { CloseOne } from '@icon-park/react'
-import { useSessionStore } from '@renderer/stores/session'
+import { streamingToContentBlocks, useSessionStore } from '@renderer/stores/session'
 import { MarkdownView } from '@renderer/components/ui/MarkdownView'
 import { api } from '@renderer/api/client'
-import { ToolBlock } from '../tools/ToolBlock'
-import { InlineMedia, isInlineMedia } from '../messages/InlineMedia'
-import { AgentCardsRow } from '../tools/AgentToolView'
-import { QuietToolGroup } from '../tools/QuietToolGroup'
-import { groupBlocks } from '../messages/MessageItem'
-import type { ToolStatus } from '@renderer/api/types'
+import { MessageItem } from '../messages/MessageItem'
+import type { Message } from '@renderer/api/types'
 import { useTranslation } from 'react-i18next'
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -43,7 +39,21 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
 
   const streaming = subagent?.streaming ?? []
   const result = subagent?.result
+  // The agent is read the way the chat is read: its prompt as a message of the person, what it wrote and
+  // called as one message of the agent, drawn by the same component.
+  const taskMessage = useMemo<Message | null>(
+    () => (subagent?.task ? { id: `${toolUseId}-task`, role: 'user', content: [{ type: 'text', text: subagent.task }] } : null),
+    [subagent?.task, toolUseId],
+  )
+  const answerMessage = useMemo<Message | null>(
+    () => (streaming.length > 0 ? { id: `${toolUseId}-stream`, role: 'assistant', content: streamingToContentBlocks(streaming) } : null),
+    [streaming, toolUseId],
+  )
+  // The final report is often the last thing the agent wrote already: it is not drawn twice.
+  const lastWritten = [...streaming].reverse().find((block) => block.type === 'text')
+  const alreadyWritten = Boolean(result?.trim()) && lastWritten?.type === 'text' && lastWritten.text.includes(result!.trim().slice(0, 200))
   const hasTerminalOutputState = Boolean(result?.trim()) || (subagent != null && subagent.status !== 'running')
+  const showFinalOutput = hasTerminalOutputState && !alreadyWritten
 
   // No optimistic local status update here — CloseAgent on the backend cancels
   // the agent's context, which makes its own completion notifier fire the
@@ -66,8 +76,8 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
 
   // The transcript follows what the agent writes, the way the chat does.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [streaming.length])
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [streaming])
 
   if (!subagent) {
     return (
@@ -130,52 +140,24 @@ export const SubagentPanel = memo(function SubagentPanel({ sessionId, toolUseId 
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2.5 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-app-border-subtle [&::-webkit-scrollbar]:w-1">
-        {subagent.task && (
-          <div className="flex w-full flex-col items-end">
-            <div className="max-w-[92%] rounded-[12px_12px_4px_12px] border border-app-border-subtle bg-app-surface px-[11px] py-[7px] text-[12px] leading-[1.6] text-app-text [overflow-wrap:anywhere]">
-              <MarkdownView sessionId={sessionId}>{subagent.task}</MarkdownView>
-            </div>
-          </div>
-        )}
+        {taskMessage && <MessageItem message={taskMessage} sessionId={sessionId} isFirst />}
         {streaming.length === 0 && subagent.status === 'running' && (
           <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-[22px] text-app-text-muted">
             <div className="size-[18px] rounded-full border-2 border-app-border-subtle border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
             <span className="text-[11px]">{t('chat.panels.subagentPanel.agentIsStarting')}</span>
           </div>
         )}
-        {groupBlocks(streaming, toolUseId).map((item, i) => {
-          if (item.kind === 'agent-group') {
-            return (
-              <AgentCardsRow
-                key={`${toolUseId}-agents-${i}`}
-                tools={item.tools}
-                sessionId={sessionId}
-                getStatus={(item) => (item._status ?? (item._result ? (item._result.isError ? 'failed' : 'completed') : 'running')) as ToolStatus}
-              />
-            )
-          }
-          if (item.kind === 'quiet-group') {
-            const firstToolId = item.items.find((it) => it.kind === 'tool')?.tool.id
-            return (
-              <QuietToolGroup
-                key={firstToolId || `${toolUseId}-quiet-${i}`}
-                items={item.items}
-                sessionId={sessionId}
-              />
-            )
-          }
-          return <StreamBlockView key={`${toolUseId}-block-${i}`} block={item.block} sessionId={sessionId} />
-        })}
-        {subagent.activeTool && (
-          <div className="flex items-center gap-1.5 rounded-md border border-[rgba(239,124,47,0.25)] bg-[rgba(239,124,47,0.06)] px-[7px] py-1.5 text-[10px] text-[var(--accent-primary)]">
-            <div className="size-3 shrink-0 rounded-full border-2 border-[rgba(239,124,47,0.25)] border-t-[var(--accent-primary)] [animation:spin_0.9s_linear_infinite]" />
-            <span>
-              <strong>{subagent.activeTool.toolName}</strong>
-              {subagent.activeTool.message ? ` · ${subagent.activeTool.message}` : ''}
-            </span>
-          </div>
+        {answerMessage && (
+          <MessageItem
+            message={answerMessage}
+            sessionId={sessionId}
+            compact
+            endsTurn={subagent.status !== 'running'}
+            revealThinking={subagent.status === 'running'}
+            autoExpandTools
+          />
         )}
-        {hasTerminalOutputState && (
+        {showFinalOutput && (
           <FinalOutputSummary status={subagent.status} result={result} sessionId={sessionId} />
         )}
         <div ref={bottomRef} />
@@ -206,48 +188,6 @@ function FinalOutputSummary({ status, result, sessionId }: { status: 'running' |
       }
     </div>
   )
-}
-
-function StreamBlockView({ block, sessionId }: { block: Parameters<typeof groupBlocks>[0][number]; sessionId?: string }) {
-  if (block.type === 'tool_result') return null
-
-  if (block.type === 'text') {
-    if (!block.text.trim()) return null
-    return (
-      <div className="text-[12px] leading-[1.6] text-app-text">
-        <MarkdownView sessionId={sessionId}>{block.text}</MarkdownView>
-      </div>
-    )
-  }
-
-  if (block.type === 'thinking') {
-    if (!block.thinking.trim()) return null
-    return (
-      <div className="border-l-2 border-[rgba(239,124,47,0.22)] pl-2 text-[11px] italic leading-[1.55] text-app-text-muted">{block.thinking}</div>
-    )
-  }
-
-  if (block.type === 'tool_use') {
-    const tool = {
-      type: 'tool_use' as const,
-      id: block.id,
-      name: block.name,
-      input: block.input,
-      metadata: block.metadata,
-      _status: block._status,
-      _result: block._result,
-      _approval: block._approval,
-      _prompt: block._prompt,
-      _partialInput: block._partialInput,
-      _message: block._message,
-    }
-    // A produced image or recording is shown as itself here too, the way the
-    // chat shows it, instead of as a tool row carrying its base64.
-    if (isInlineMedia(tool)) return <InlineMedia tool={tool} sessionId={sessionId} />
-    return <ToolBlock tool={tool} />
-  }
-
-  return null
 }
 
 function formatMs(ms: number): string {

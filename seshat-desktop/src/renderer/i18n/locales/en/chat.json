@@ -465,8 +465,7 @@
         "completed": "Completed",
         "failed": "Failed",
         "runningInBackground": "Running in background…",
-        "running": "Running…",
-        "viewActivity": "View activity →"
+        "running": "Running…"
       },
       "common": {
         "copy": "Copy"
@@ -618,7 +617,6 @@
         }
       },
       "toolLineItem": {
-        "agent": "Sub-agent",
         "browser": "Browser",
         "files": "Files",
         "failed": "failed",

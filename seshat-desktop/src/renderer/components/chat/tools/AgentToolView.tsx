@@ -5,34 +5,6 @@ import { useUIStore } from '@renderer/stores/ui'
 import type { ToolUseBlock, ToolStatus } from '@renderer/api/types'
 import { useTranslation } from 'react-i18next'
 
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
-
-const STATUS_BORDER_CSS: Record<ToolStatus, string> = {
-  running: 'border-[rgba(239,124,47,0.28)]',
-  completed: 'border-[rgba(var(--color-success-rgb),0.2)]',
-  failed: 'border-[rgba(var(--color-error-rgb),0.24)]',
-  pending: 'border-app-border-subtle',
-  awaiting_approval: 'border-app-border-subtle',
-}
-
-const STATUS_ICON_CSS: Record<ToolStatus, string> = {
-  running: 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]',
-  completed: 'bg-[rgba(var(--color-success-rgb),0.12)] text-app-success',
-  failed: 'bg-[rgba(var(--color-error-rgb),0.12)] text-app-error',
-  pending: 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]',
-  awaiting_approval: 'bg-[rgba(239,124,47,0.12)] text-[var(--accent-primary)]',
-}
-
-const STATUS_TEXT_CSS: Record<ToolStatus, string> = {
-  running: 'text-[var(--accent-primary)]',
-  completed: 'text-app-success',
-  failed: 'text-app-error',
-  pending: 'text-app-text-muted',
-  awaiting_approval: 'text-app-text-muted',
-}
-
 function useElapsedMs(startedAt: number, active: boolean): number {
   const [ms, setMs] = useState(() => Date.now() - startedAt)
   useEffect(() => {
@@ -125,68 +97,45 @@ function AgentToolCard({ tool, sessionId, status }: AgentToolCardProps) {
     } as Parameters<typeof openRightPanel>[0])
   }, [openRightPanel, agentType, sessionId, tool.id])
 
+  const label = agentType.replace(/_/g, ' ').replace(/-/g, ' ')
+  const statusText = derivedStatus === 'completed'
+    ? t('chat.tools.agentToolView.completed')
+    : derivedStatus === 'failed'
+      ? t('chat.tools.agentToolView.failed')
+      : isUntrackedBackgroundDispatch
+        ? t('chat.tools.agentToolView.runningInBackground')
+        : t('chat.tools.agentToolView.running')
+
+  // One line like any other tool, in the accent colour: it never unfolds under itself, a click opens
+  // the transcript of the agent in its own panel.
   return (
     <div
-      className={cx(
-        'flex min-w-[220px] max-w-full flex-1 basis-0 cursor-pointer flex-col overflow-hidden rounded-lg border bg-app-surface transition-[border-color,background] duration-150 ease-in-out hover:border-[rgba(239,124,47,0.3)] hover:bg-[var(--surface-hover)]',
-        STATUS_BORDER_CSS[derivedStatus],
-      )}
+      className="flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-[12px] leading-snug text-[var(--accent-primary)] transition-colors duration-150 hover:bg-[var(--surface-hover)]"
       role="button"
       tabIndex={0}
+      title={task || undefined}
       onClick={handleClick}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick() }}
     >
-      <div className="flex items-center gap-[7px] px-[9px] pb-[5px] pt-[7px]">
-        <div className={cx('flex size-[26px] shrink-0 items-center justify-center rounded-md', STATUS_ICON_CSS[derivedStatus])}>
-          {derivedStatus === 'completed'
-            ? <CheckOne size={13} />
-            : derivedStatus === 'failed'
-              ? <CloseOne size={13} />
-              : <Robot size={13} />
-          }
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-[10px] font-[750] uppercase tracking-[0.05em] text-app-text-muted">
-            {agentType.replace(/_/g, ' ').replace(/-/g, ' ')}
-          </span>
-          <span className={cx('flex items-center gap-1 text-[10px] font-[650]', STATUS_TEXT_CSS[derivedStatus])}>
-            {derivedStatus === 'running' && (
-              <span className="flex animate-[spin_1s_linear_infinite]">
-                <LoadingOne size={10} />
-              </span>
-            )}
-            {derivedStatus === 'completed'
-              ? t('chat.tools.agentToolView.completed')
-              : derivedStatus === 'failed'
-                ? t('chat.tools.agentToolView.failed')
-                : isUntrackedBackgroundDispatch
-                  ? t('chat.tools.agentToolView.runningInBackground')
-                  : t('chat.tools.agentToolView.running')
-            }
-          </span>
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-1.5 px-[9px] pb-[7px]">
-        {task && <div className="line-clamp-2 text-[12px] leading-[1.45] text-app-text">{task}</div>}
-        {activeTool && (
-          <div className="truncate rounded-[5px] border border-app-border-subtle bg-[rgba(255,255,255,0.04)] px-1.5 py-[3px] text-[10px] text-app-text-muted">
-            {activeTool.toolName}{activeTool.message ? ` · ${activeTool.message}` : ''}
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between border-t border-app-border-subtle px-[9px] py-1.5">
-        <span className="flex items-center gap-[3px] text-[10px] font-[650] text-[var(--accent-primary)]">{t('chat.tools.agentToolView.viewActivity')}</span>
-        <div className="flex items-center gap-1.5">
-          {tokens > 0 && (
-            <span className="text-[10px] text-app-text-muted">{fmtTokens(tokens)}</span>
-          )}
-          {(turnNumber > 0 || derivedStatus === 'running') && (
-            <span className="text-[10px] text-app-text-muted">{fmtElapsed(elapsedMs)}</span>
-          )}
-        </div>
-      </div>
+      <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
+        {derivedStatus === 'completed'
+          ? <CheckOne size={13} />
+          : derivedStatus === 'failed'
+            ? <CloseOne size={13} />
+            : <Robot size={13} />}
+      </span>
+      <span className="shrink-0 font-medium capitalize">{label}</span>
+      {task && <span className="min-w-0 flex-1 truncate text-[11px] text-app-text-muted">{task}</span>}
+      {!task && <span className="flex-1" />}
+      {derivedStatus === 'failed' && <span className="shrink-0 text-[9px] font-bold leading-none text-app-error">{statusText}</span>}
+      {derivedStatus === 'running' && (
+        <span className="flex shrink-0 animate-[spin_1s_linear_infinite]" title={statusText}>
+          <LoadingOne size={11} />
+        </span>
+      )}
+      {activeTool && derivedStatus === 'running' && <span className="max-w-[30%] shrink-0 truncate text-[10.5px] text-app-text-muted">{activeTool.toolName}</span>}
+      {tokens > 0 && <span className="shrink-0 text-[10px] text-app-text-muted">{fmtTokens(tokens)}</span>}
+      {(turnNumber > 0 || derivedStatus === 'running') && <span className="shrink-0 text-[10px] tabular-nums text-app-text-muted">{fmtElapsed(elapsedMs)}</span>}
     </div>
   )
 }
@@ -199,7 +148,7 @@ type Props = {
 
 export const AgentCardsRow = memo(function AgentCardsRow({ tools, sessionId, getStatus }: Props) {
   return (
-    <div className="flex w-full gap-[7px] overflow-x-auto pb-0.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-app-border-subtle">
+    <div className="flex w-full flex-col gap-0.5">
       {tools.map((tool) => (
         <AgentToolCard
           key={tool.id}

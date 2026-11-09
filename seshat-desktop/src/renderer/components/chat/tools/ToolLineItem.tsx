@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { connectorKind, serverLabel } from './connectorNames'
 import { CheckOne, Copy, Down } from '@icon-park/react'
 import { useUIStore } from '@renderer/stores/ui'
-import { useSessionStore } from '@renderer/stores/session'
 import type { ToolUseBlock } from '@renderer/api/types'
 import { ErrorPre } from './common'
 import { DiffView, resolveDiffRows } from './DiffView'
 import { basename, fmtDuration, parseAskUserAnswers, resolveAskUserQuestions } from './helpers'
 import { summarizeTool, toolResultSubtitle, toolStatus } from './quietGroupPhrase'
 import { isPastedTextFilename } from '@renderer/components/chat/composer/pastedTextFilename'
-import { categoryIcon, isAgentTool, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
+import { categoryIcon, isEditTool, isFileTool, isWriteTool, renderToolBody, toolLabel } from './toolDisplay'
 import { htmlArtifactPanel, isHtmlPath } from '@renderer/lib/htmlArtifact'
 import type { ToolBlockProps } from './types'
 import { useTranslation } from 'react-i18next'
@@ -55,7 +54,6 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
     tool.name.startsWith('mcp__')
   const isBigRow = isPreviewTool && tool.name !== 'bash'
   const openRightPanel = useUIStore((s) => s.openRightPanel)
-  const agentType = useSessionStore((s) => (sessionId ? s.subagentsBySession[sessionId]?.[tool.id]?.agentType : undefined))
   const status = toolStatus(tool)
   const isRunning = status === 'running' || status === 'pending'
   const isError = status === 'failed'
@@ -75,27 +73,13 @@ export function ToolLineItem({ tool, sessionId, autoExpand = false, onSubmitProm
   // expanded, DiffView's own path/stats strip repeats it a third time).
   // Still surface "failed" though, same as every other tool - it's the one
   // subtitle worth seeing without expanding.
-  // An agent's "result" is its whole final report: it lives in its own panel,
-  // not as a line count under the row that dispatched it.
-  const subtitle = isAgentTool(tool.name) || (isDiffTool && status !== 'failed') ? null : toolResultSubtitle(tool)
+  const subtitle = isDiffTool && status !== 'failed' ? null : toolResultSubtitle(tool)
   const copyText = tool._result?.content || JSON.stringify(tool.input, null, 2)
 
   // A click opens the result under the row, except where a panel is the
   // reader itself: bash unfolds in place, browser_* opens the live page,
-  // read/write/edit open the file in Files (see FilesPanel.tsx), and an
-  // agent opens its own transcript panel.
+  // read/write/edit open the file in Files (see FilesPanel.tsx).
   function toggle() {
-    // A dispatched agent is read in its own panel, where its prompt and its
-    // replies are a transcript - never expanded here as raw output.
-    if (isAgentTool(tool.name) && sessionId) {
-      openRightPanel({
-        kind: 'subagent',
-        title: agentType ? agentType.replace(/_/g, ' ').replace(/-/g, ' ') : t('chat.tools.toolLineItem.agent'),
-        sessionId,
-        subagentToolUseId: tool.id,
-      })
-      return
-    }
     if (tool.name === 'bash') {
       setOpened((value) => !value)
       return
