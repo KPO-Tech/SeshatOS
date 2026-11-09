@@ -618,6 +618,7 @@
         }
       },
       "toolLineItem": {
+        "agent": "Sous-agent",
         "browser": "Navigateur",
         "files": "Fichiers",
         "failed": "échec",

@@ -618,6 +618,7 @@
         }
       },
       "toolLineItem": {
+        "agent": "Sub-agent",
         "browser": "Browser",
         "files": "Files",
         "failed": "failed",
