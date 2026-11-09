@@ -189,7 +189,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
                     />
                   )}
                   <span className={cx('text-[11.5px] leading-normal', item.status === 'completed' ? 'text-app-text-muted' : 'text-app-text')}>
-                    {item.title}
+                    {item.title || t('chat.panels.computerPanel.unnamedTask')}
                   </span>
                 </div>
               ))}

@@ -210,6 +210,7 @@
         }
       },
       "computerPanel": {
+        "unnamedTask": "Unnamed task",
         "session": "Session",
         "browser": "Browser",
         "plan": "Plan",
