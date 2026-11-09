@@ -80,6 +80,9 @@ export function TitlebarSessionControls({ conversationId, variant = 'chat' }: { 
         />
         {permissionOpen && (
           <SelectorMenu
+            // The button sits at the right end of the title bar: a menu growing to its
+            // right opened past the window edge and was cut off.
+            align="right"
             options={PERMISSION_OPTIONS.map((option) => ({ ...option, label: t(option.label), description: option.description ? t(option.description) : undefined }))}
             selectedId={permissionMode}
             onSelect={(id) => selectPermissionMode(id as UIPermissionMode)}

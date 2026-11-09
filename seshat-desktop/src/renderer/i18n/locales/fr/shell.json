@@ -95,6 +95,7 @@
       }
     },
     "titlebar": {
+      "language": "Langue",
       "navigation": "Navigation",
       "home": "Accueil",
       "back": "Retour",

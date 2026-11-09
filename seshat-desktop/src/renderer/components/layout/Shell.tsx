@@ -13,6 +13,7 @@ import { ImageLightbox } from './ImageLightbox'
 import { RightPanelHost } from './RightPanelHost'
 import { Sidebar } from './sidebar/Sidebar'
 import { ThemeToggleButton } from './ThemeToggleButton'
+import { TitlebarLanguageButton } from './TitlebarLanguageButton'
 import { Titlebar } from './Titlebar'
 import { useAskSessionStore } from '@renderer/stores/askSession'
 import { TitlebarSessionControls } from './TitlebarSessionControls'
@@ -120,7 +121,12 @@ export function Shell() {
         onHome={() => navigate('/')}
         onBack={() => navigate(-1)}
         onForward={() => navigate(1)}
-        afterNav={<ThemeToggleButton />}
+        afterNav={
+          <>
+            <TitlebarLanguageButton />
+            <ThemeToggleButton />
+          </>
+        }
         left={
           isAdminRoute ? undefined : (
             <button
