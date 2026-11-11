@@ -239,6 +239,9 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
                   store.updateSession(sessionId, { title: titleEvent.title })
                 }
               },
+              // The backend's keepalive proves the connection lives while a tool runs or a permission waits: it holds the watchdog off,
+              // without counting as activity of the turn (a dropped connection may still be retried).
+              resetWatchdog,
             )
           } else {
             await consumeBrowserStream(

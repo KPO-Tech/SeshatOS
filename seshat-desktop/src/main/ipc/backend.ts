@@ -371,6 +371,11 @@ async function startStream(
     const decoder = new TextDecoder()
     let buffer = ''
     let eventName = ''
+    let finished = false
+    const sendEvent = (name: string, data: Record<string, unknown>) => {
+      if (event.sender.isDestroyed()) return
+      event.sender.send(STREAM_EVENT_CHANNEL, { streamId, name, data } satisfies StreamEventMessage)
+    }
     try {
       while (true) {
         const { done, value } = await reader.read()
@@ -379,7 +384,14 @@ async function startStream(
         const lines = buffer.split('\n')
         buffer = lines.pop() ?? ''
 
-        for (const line of lines) {
+        for (const rawLine of lines) {
+          const line = rawLine.endsWith('\r') ? rawLine.slice(0, -1) : rawLine
+          // The backend writes a ": keepalive" comment every 10 s. It is passed on: it is how the renderer tells a long tool call or a
+          // pending permission from a dead connection (see the watchdog of useChatStream.ts).
+          if (line.startsWith(':')) {
+            sendEvent('keepalive', {})
+            continue
+          }
           if (line.startsWith('event: ')) {
             eventName = line.slice(7).trim()
             continue
@@ -397,14 +409,14 @@ async function startStream(
           } catch {
             continue
           }
-          if (!event.sender.isDestroyed()) {
-            event.sender.send(STREAM_EVENT_CHANNEL, {
-              streamId,
-              name: eventName || 'message',
-              data: parsed,
-            } satisfies StreamEventMessage)
-          }
+          if (eventName === 'done' || eventName === 'error') finished = true
+          sendEvent(eventName || 'message', parsed)
         }
+      }
+      // A stream that closes without its done or error event (the backend stopped, the connection was cut) would leave the turn
+      // waiting: it is reported as an error. Not retryable: the turn may have run, and sending it again would run it twice.
+      if (!finished && !controller.signal.aborted) {
+        sendEvent('error', { error: 'The connection to the backend ended before the answer was complete.', retryable: false })
       }
     } catch (error) {
       if (!controller.signal.aborted && !event.sender.isDestroyed()) {
