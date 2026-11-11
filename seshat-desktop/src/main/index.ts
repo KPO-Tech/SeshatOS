@@ -136,12 +136,12 @@ function createWindow() {
 
   const rendererFile = join(__dirname, '../renderer/index.html')
   const appUrl = process.env.ELECTRON_RENDERER_URL || pathToFileURL(rendererFile).href
-  let lastFailure = 'The app did not finish loading.'
+  let lastFailure = mainT('load.notFinished')
   let watchdog: ReturnType<typeof setTimeout> | null = null
   const loadRenderer = () => {
     if (watchdog) clearTimeout(watchdog)
     watchdog = setTimeout(() => {
-      lastFailure = 'The app took too long to load.'
+      lastFailure = mainT('load.tooSlow')
       loadRetry.failed()
     }, LOAD_WATCHDOG_MS)
     const loading = process.env.ELECTRON_RENDERER_URL
@@ -155,7 +155,7 @@ function createWindow() {
     onGiveUp: () => {
       if (win.isDestroyed()) return
       if (watchdog) clearTimeout(watchdog)
-      void win.loadURL(buildLoadFailureUrl(lastFailure))
+      void win.loadURL(buildLoadFailureUrl(lastFailure, { title: mainT('load.title'), retry: mainT('load.retry') }))
       if (!win.isVisible()) win.show()
     }
   })

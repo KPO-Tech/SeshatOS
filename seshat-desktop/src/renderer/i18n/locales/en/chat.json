@@ -49,7 +49,8 @@
       },
       "conversationPage": {
         "files": "Files",
-        "compacted": "Compacted conversation - saved {{saved}} tokens ({{before}} → {{after}})"
+        "compacted": "Compacted conversation - saved {{saved}} tokens ({{before}} → {{after}})",
+        "modelSaveFailed": "Couldn't save the model choice. It may revert next time."
       },
       "jumpToLatest": {
         "goToTheLatestMessage": "Go to the latest message"
@@ -179,7 +180,9 @@
         "t1ProblemOnThePage": "1 problem on the page",
         "askTheAgentToFix": "Ask the agent to fix",
         "couldntLoadPage": "Couldn't load the page: {{message}}",
-        "problemsOnPage": "{{total}} problems on the page"
+        "problemsOnPage": "{{total}} problems on the page",
+        "agentStillWorking": "The agent is still working. Ask again when its turn ends.",
+        "couldNotOpenInBrowser": "The page could not be opened in the browser."
       },
       "askUserPanel": {
         "askUser": "Ask User",
@@ -234,7 +237,8 @@
         "subAgentActivityHasIts": "Sub-agent activity has its own live view, with its own transcript and tool calls.",
         "openSubAgentView": "Open sub-agent view",
         "noSitesVisitedYet": "No sites visited yet.",
-        "noToolActivityHasBeen": "No tool activity has been recorded yet."
+        "noToolActivityHasBeen": "No tool activity has been recorded yet.",
+        "subAgent": "Sub-agent"
       },
       "filesPanel": {
         "toggleFileTree": "Toggle file tree",
@@ -437,6 +441,11 @@
             "openLarge": "Open {{label}} in a large view"
           }
         }
+      },
+      "actions": {
+        "cannotRead": "This action could not be read",
+        "openToAsk": "Open the conversation to ask",
+        "waitForAnswer": "Wait for the answer to finish"
       }
     },
     "streaming": {

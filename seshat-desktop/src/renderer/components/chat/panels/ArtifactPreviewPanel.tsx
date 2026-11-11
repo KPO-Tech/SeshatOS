@@ -163,7 +163,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
   // message (sendMessage does nothing then): the person is told to wait instead, as for the Merge button of the Changes card.
   function askToFix() {
     if (useSessionStore.getState().isSessionStreaming(sessionId)) {
-      setNote('The agent is still working. Ask again when its turn ends.')
+      setNote(t('chat.panels.artifactPreviewPanel.agentStillWorking'))
       return
     }
     setNote(null)
@@ -197,7 +197,7 @@ export function ArtifactPreviewPanel({ sessionId, path, filename }: Props) {
   function openInBrowser() {
     if (!location) return
     setNote(null)
-    void window.seshat?.openLocalPath?.(location)?.catch(() => setNote('The page could not be opened in the browser.'))
+    void window.seshat?.openLocalPath?.(location)?.catch(() => setNote(t('chat.panels.artifactPreviewPanel.couldNotOpenInBrowser')))
   }
 
   return (
