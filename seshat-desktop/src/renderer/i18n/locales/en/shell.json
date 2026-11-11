@@ -1,5 +1,11 @@
 {
   "layout": {
+    "backendStatus": {
+      "restarting": "The local service stopped. Starting it again…",
+      "ready": "The local service is back.",
+      "failed": "The local service could not start again. Restart SeshatOS.",
+      "dismiss": "Hide"
+    },
     "imageLightbox": {
       "download": "Download",
       "close": "Close",

@@ -10,7 +10,7 @@ import { registerSetupHandlers } from './ipc/setup'
 import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
 import { resolveRuntimeRoot } from './runtime'
-import { startBackendSidecar, stopBackendSidecar } from './backend-process'
+import { onBackendStatus, startBackendSidecar, stopBackendSidecar } from './backend-process'
 import { isSetupCompleted } from './setup-manager'
 import { resumeLocalWhisperOnLaunch, stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
@@ -272,6 +272,10 @@ app.whenReady().then(async () => {
   })
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => ALLOWED_PERMISSIONS.has(permission))
 
+  onBackendStatus((status) => {
+    const win = mainWindow
+    if (win && !win.isDestroyed()) win.webContents.send('backend:status', status)
+  })
   try {
     await startBackendSidecar()
   } catch (error) {

@@ -6,6 +6,7 @@ import { useSessionsSync } from '@renderer/hooks/useSessionsSync'
 import { useTaskSync } from '@renderer/hooks/useTaskSync'
 import { SkillReviewHost } from '@renderer/components/skills/SkillReviewHost'
 import { WhatsNewHost } from '@renderer/components/whatsnew/WhatsNewHost'
+import { BackendStatusHost } from './BackendStatusHost'
 import { useUIStore } from '@renderer/stores/ui'
 import { DialogHost } from './DialogHost'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -107,6 +108,7 @@ export function Shell() {
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--surface-root)] text-[var(--text-primary)]">
       <SkillReviewHost />
       <WhatsNewHost />
+      <BackendStatusHost />
       <Titlebar
         right={
           <>
