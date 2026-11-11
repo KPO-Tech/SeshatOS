@@ -6,6 +6,7 @@ import { AdminEmptyRow, AdminIconButton, AdminStatusBadge, AdminTable, AdminTd, 
 import { NewBindingModal } from './NewBindingModal'
 import { deleteAdminDesktopPolicyBinding, useAdminDesktopPolicyBindings, useAdminDesktopPolicyCatalog } from './useAdminDesktopPolicies'
 import type { OrgDesktopPolicyBinding } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 // "group" is the wire value (matches seshat-server's SubjectType enum) -
 // labeled "Team" everywhere in the UI.
@@ -22,7 +23,7 @@ export function DesktopPoliciesView() {
 
   async function handleDelete(binding: OrgDesktopPolicyBinding) {
     if (deletingId) return
-    if (!window.confirm('Remove this binding? The affected subject falls back to whatever else applies, or the catalog default.')) return
+    if (!(await confirmAction('Remove this binding? The affected subject falls back to whatever else applies, or the catalog default.'))) return
     setActionError(null)
     setDeletingId(binding.id)
     try {

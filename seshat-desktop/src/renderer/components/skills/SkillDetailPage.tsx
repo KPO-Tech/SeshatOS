@@ -20,6 +20,7 @@ import { useSkillIcons } from './useSkillIcons'
 import { useSkillCatalog } from './useSkillCatalog'
 import { useSkills } from './useSkills'
 import { useTranslation } from 'react-i18next'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 // The values are keys of the catalogue; the page translates them.
 const SOURCE_LABEL: Record<string, string> = {
@@ -100,7 +101,7 @@ export function SkillDetailPage() {
   }
 
   async function remove(target: Skill) {
-    if (!window.confirm(t('skills.skillDetailPage.confirmDelete', { name: target.display_name || target.name }))) return
+    if (!(await confirmAction(t('skills.skillDetailPage.confirmDelete', { name: target.display_name || target.name })))) return
     try {
       await deleteSkill(target.name)
       navigate('/skills')

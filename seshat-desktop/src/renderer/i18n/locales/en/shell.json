@@ -1,5 +1,9 @@
 {
   "layout": {
+    "confirmAction": {
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
     "backendStatus": {
       "restarting": "The local service stopped. Starting it again…",
       "ready": "The local service is back.",

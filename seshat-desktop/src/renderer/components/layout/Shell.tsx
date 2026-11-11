@@ -7,6 +7,7 @@ import { useTaskSync } from '@renderer/hooks/useTaskSync'
 import { SkillReviewHost } from '@renderer/components/skills/SkillReviewHost'
 import { WhatsNewHost } from '@renderer/components/whatsnew/WhatsNewHost'
 import { BackendStatusHost } from './BackendStatusHost'
+import { ConfirmActionHost } from '@renderer/components/ui/confirm/ConfirmActionHost'
 import { useUIStore } from '@renderer/stores/ui'
 import { DialogHost } from './DialogHost'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -109,6 +110,7 @@ export function Shell() {
       <SkillReviewHost />
       <WhatsNewHost />
       <BackendStatusHost />
+      <ConfirmActionHost />
       <Titlebar
         right={
           <>

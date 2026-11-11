@@ -23,6 +23,7 @@ import { useSkillCatalog } from './useSkillCatalog'
 import { useSkillIcons } from './useSkillIcons'
 import { filterSkills, useSkills } from './useSkills'
 import { useTranslation } from 'react-i18next'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 type Tab = 'all' | 'builtin' | 'installed' | 'available' | 'agents'
 type Sort = 'name' | 'status'
@@ -111,7 +112,7 @@ export function SkillsPage() {
   }
 
   async function remove(skill: Skill) {
-    if (!window.confirm(t('skills.skillsPage.confirmDelete', { name: skill.display_name || skill.name }))) return
+    if (!(await confirmAction(t('skills.skillsPage.confirmDelete', { name: skill.display_name || skill.name })))) return
     try {
       await deleteSkill(skill.name)
       await reload()

@@ -6,6 +6,7 @@ import { AdminEmptyRow, AdminIconButton, AdminTable, AdminTd, AdminTh, AdminTr }
 import { TeamFormModal } from './TeamFormModal'
 import { deleteAdminTeam, useAdminTeams } from './useAdminTeams'
 import type { OrgTeam } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 export function TeamsView() {
   const { teams, loading, error, refetch } = useAdminTeams()
@@ -15,7 +16,7 @@ export function TeamsView() {
 
   async function handleDelete(team: OrgTeam) {
     if (deletingId) return
-    if (!window.confirm(`Delete team "${team.name}"? This cannot be undone.`)) return
+    if (!(await confirmAction(`Delete team "${team.name}"? This cannot be undone.`))) return
     setActionError(null)
     setDeletingId(team.id)
     try {

@@ -20,6 +20,7 @@ import { mcpLogo } from './catalog/mcpLogos'
 import { PluginDetailModal } from './PluginDetailModal'
 import { useLocalConnectors } from './useLocalConnectors'
 import { useTranslation } from 'react-i18next'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 const CREATE_ENTRIES = ['plugins:plugins.pluginsPage.createCustom', 'plugins:plugins.pluginsPage.createJson', 'plugins:plugins.pluginsPage.createUrl']
 const PREVIEW = 3
@@ -69,7 +70,7 @@ export function PluginsPage() {
   const openConnector = state.connectors.find((connector) => connector.kind === openId) ?? null
 
   async function disconnect(connector: LocalConnector) {
-    if (!window.confirm(t('plugins:plugins.panels.localConnectorPanel.confirmDisconnect', { name: connector.label }))) return
+    if (!(await confirmAction(t('plugins:plugins.panels.localConnectorPanel.confirmDisconnect', { name: connector.label })))) return
     try {
       await disconnectLocalConnector(connector.kind)
       await state.reload()
@@ -88,8 +89,8 @@ export function PluginsPage() {
     }
   }
 
-  function removeServer(server: MCPServer) {
-    if (!window.confirm(t('plugins.pluginsPage.confirmRemove', { name: server.display_name || server.name }))) return
+  async function removeServer(server: MCPServer) {
+    if (!(await confirmAction(t('plugins.pluginsPage.confirmRemove', { name: server.display_name || server.name })))) return
     void changeServer(server, () => deleteMCPServer(server.id))
   }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { connectLocalConnector, disconnectLocalConnector, type LocalConnector } from '../api/localConnectorsApi'
 import { ErrorNote, PrimaryAction } from './formParts'
 import { useTranslation } from 'react-i18next'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 type Props = {
   connector: LocalConnector
@@ -35,7 +36,7 @@ export function LocalConnectorPanel({ connector, onChanged }: Props) {
   }
 
   async function disconnect() {
-    if (!window.confirm(t('plugins.panels.localConnectorPanel.confirmDisconnect', { name: connector.label }))) return
+    if (!(await confirmAction(t('plugins.panels.localConnectorPanel.confirmDisconnect', { name: connector.label })))) return
     setRemoving(true)
     setError(null)
     try {

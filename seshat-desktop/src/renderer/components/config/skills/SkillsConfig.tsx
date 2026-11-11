@@ -8,6 +8,7 @@ import { Add, FolderOpen } from '@icon-park/react'
 import { ActionButton, Chip, SettingRow, SettingsCard, SettingsPage, StatusBadge } from '../../settings/kit'
 import { TextInput } from '../knowledge/KnowledgePrimitives'
 import { useTranslation } from 'react-i18next'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 export function SkillsConfig() {
   const { t } = useTranslation('config')
@@ -61,7 +62,7 @@ export function SkillsConfig() {
   }
 
   async function remove(repo: RepoInfo) {
-    if (!window.confirm(t('skills.skillsConfig.confirmRemoveRepo', { name: repo.name, count: repo.skill_count }))) return
+    if (!(await confirmAction(t('skills.skillsConfig.confirmRemoveRepo', { name: repo.name, count: repo.skill_count })))) return
     setBusy(repo.name)
     setMessage(null)
     try {
@@ -75,7 +76,7 @@ export function SkillsConfig() {
   }
 
   async function removeAll() {
-    if (!window.confirm(t('skills.skillsConfig.confirmRemoveAll', { count: installed.length }))) return
+    if (!(await confirmAction(t('skills.skillsConfig.confirmRemoveAll', { count: installed.length })))) return
     setBusy('all')
     setMessage(null)
     let failed = 0
