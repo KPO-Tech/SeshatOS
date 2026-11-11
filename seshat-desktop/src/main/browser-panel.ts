@@ -8,6 +8,7 @@ const BROWSER_HOME_URL = 'https://www.google.com/'
 const TARGET_RESOLVE_TIMEOUT_MS = 2500
 const TARGET_RESOLVE_INTERVAL_MS = 80
 const DEFAULT_CONTEXT_ID = 'default'
+const MAX_KEPT_CONTEXTS = 4
 // Agent-driven browser_open/browser_navigate tool calls always render into
 // the conversation's own right panel (Conversation.tsx), never into a
 // Projects workbench tab - so automation gets its own fixed context,
@@ -106,6 +107,13 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
     return win && !win.isDestroyed() ? win : null
   }
 
+  // The panel measures itself in the page's CSS pixels; a view is placed in the window's. They differ by the zoom of the app (Appearance),
+  // so a view placed with the raw numbers drifts off its panel at any zoom but 100 %.
+  function toWindowBounds(bounds: BrowserPanelBounds): BrowserPanelBounds {
+    const zoom = window()?.webContents.getZoomFactor() ?? 1
+    return normalizeBounds({ x: bounds.x * zoom, y: bounds.y * zoom, width: bounds.width * zoom, height: bounds.height * zoom })
+  }
+
   function send(channel: string, payload?: unknown) {
     const win = window()
     if (!win || win.webContents.isDestroyed()) return
@@ -201,6 +209,17 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
     if (currentContextId === id) return
     detachCurrentView()
     currentContextId = id
+    // Every tab is a page process kept alive after its panel closes. contexts keeps the order of use (moved to the end here), and only the
+    // most recent ones are kept: a conversation left long ago loses its tabs, not the ones in use.
+    const ctx = contexts.get(id)
+    if (ctx) {
+      contexts.delete(id)
+      contexts.set(id, ctx)
+    }
+    for (const stale of contexts.keys()) {
+      if (contexts.size <= MAX_KEPT_CONTEXTS) break
+      if (stale !== id) destroyContext(stale)
+    }
   }
 
   function wireTab(contextId: string, tab: BrowserTab) {
@@ -372,7 +391,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
     registerIpc(ipcMain: IpcMain) {
       ipcMain.handle('seshat:browser:show', (event, contextId: string, bounds?: BrowserPanelBounds) => trusted(event, () => {
         const id = normalizeContextId(contextId)
-        if (bounds) lastBounds = normalizeBounds(bounds)
+        if (bounds) lastBounds = toWindowBounds(bounds)
         visible = true
         bringContextToForeground(id)
         const ctx = getContext(id)
@@ -398,7 +417,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
       }))
       ipcMain.handle('seshat:browser:bounds', (event, contextId: string, bounds: BrowserPanelBounds) => trusted(event, () => {
         const id = normalizeContextId(contextId)
-        lastBounds = normalizeBounds(bounds)
+        lastBounds = toWindowBounds(bounds)
         if (visible && currentContextId === id) {
           getActiveTab(getContext(id))?.view.setBounds(lastBounds)
         }

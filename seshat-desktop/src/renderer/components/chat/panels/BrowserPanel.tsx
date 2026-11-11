@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AddOne, ArrowRightUp, Close, Globe, Left, LoadingOne, Refresh, Right } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
 import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
+import { useCoveredByDialog } from './useCoveredByDialog'
 
 // contextId scopes tabs/history to a single browsing session: the shared chat
 // panel, or each project/session-specific Browser tab.
@@ -72,6 +73,21 @@ export function BrowserPanel({ url, contextId = 'chat', isMaximized = false, onC
       void browserApi.hide(contextId).catch(() => undefined)
     }
   }, [browserApi, contextId, initialUrl, syncBounds, url])
+
+  // A dialog over the app would be drawn under the native page: the page is taken off while one is open and put back after.
+  const covered = useCoveredByDialog()
+  const wasCovered = useRef(false)
+  useEffect(() => {
+    if (!browserApi || covered === wasCovered.current) return
+    wasCovered.current = covered
+    if (covered) {
+      void browserApi.hide(contextId).catch(() => undefined)
+      return
+    }
+    const rect = viewportRef.current?.getBoundingClientRect()
+    if (!rect || rect.width < 2 || rect.height < 2) return
+    void browserApi.show(contextId, { x: rect.left, y: rect.top, width: rect.width, height: rect.height }).then(setState).catch(() => undefined)
+  }, [browserApi, contextId, covered])
 
   async function navigate() {
     const target = address.trim()
