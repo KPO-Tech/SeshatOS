@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { UiAction } from '../../lang/types'
+import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 
 export type RichActionBridge = {
   /** Sends a message as the user. Absent where an answer is shown without a conversation under it. */
@@ -46,7 +47,7 @@ export function runAction(action: UiAction | null, bridge: RichActionBridge): vo
   if (!action || !actionState(action, bridge).enabled) return
   const [first] = action.args
   if (action.name === 'Ask') bridge.ask?.(String(first))
-  else if (action.name === 'OpenUrl') void window.seshat?.openExternal?.(String(first))
+  else if (action.name === 'OpenUrl') openInAppBrowser(String(first))
   else if (bridge.openFile) bridge.openFile(String(first))
   else void window.seshat?.openLocalPath?.(String(first))?.catch(() => undefined)
 }
