@@ -1,6 +1,11 @@
 import type { IpcMainInvokeEvent } from 'electron'
+import { join } from 'path'
+import { pathToFileURL } from 'url'
+import { isAppNavigation } from '../url-safety'
 
 const allowedRendererURL = process.env.ELECTRON_RENDERER_URL?.replace(/\/$/, '')
+// The packaged renderer: the one file the window loads (see index.ts). Any other local page, even one that reached the window, is refused.
+const rendererFileURL = pathToFileURL(join(__dirname, '../renderer/index.html')).href
 
 // Every ipcMain.handle callback should call this first. Without it, any
 // frame the main process ever loads (a devtools popup, a future webview,
@@ -18,7 +23,7 @@ export function assertTrustedSender(event: IpcMainInvokeEvent) {
     }
     throw new Error(`Untrusted IPC sender: ${senderURL}`)
   }
-  if (!senderURL.startsWith('file://')) {
+  if (!isAppNavigation(senderURL, rendererFileURL)) {
     throw new Error(`Untrusted IPC sender: ${senderURL}`)
   }
 }
