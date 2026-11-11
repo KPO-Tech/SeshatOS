@@ -6,6 +6,7 @@ import { AdminEmptyRow, AdminIconButton, AdminTable, AdminTd, AdminTh, AdminTr }
 import { MCPServerFormModal } from './MCPServerFormModal'
 import { deleteAdminMCPServerConfig, useAdminMCPServerConfigs } from './useAdminMCPServerConfigs'
 import type { AdminMCPServerConfig } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 export function MCPServersView() {
   const { configs, loading, error, refetch } = useAdminMCPServerConfigs()
@@ -15,7 +16,7 @@ export function MCPServersView() {
 
   async function handleDelete(config: AdminMCPServerConfig) {
     if (deletingId) return
-    if (!window.confirm(`Delete ${config.display_name || config.name}? This cannot be undone.`)) return
+    if (!(await confirmAction(`Delete ${config.display_name || config.name}? This cannot be undone.`))) return
     setActionError(null)
     setDeletingId(config.id)
     try {

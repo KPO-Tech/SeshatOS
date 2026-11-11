@@ -1,5 +1,15 @@
 {
   "layout": {
+    "confirmAction": {
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
+    "backendStatus": {
+      "restarting": "Le service local s'est arrêté. Redémarrage…",
+      "ready": "Le service local est revenu.",
+      "failed": "Le service local ne redémarre pas. Relancez SeshatOS.",
+      "dismiss": "Masquer"
+    },
     "imageLightbox": {
       "download": "Télécharger",
       "close": "Fermer",

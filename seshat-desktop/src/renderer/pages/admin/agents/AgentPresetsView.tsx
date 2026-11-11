@@ -6,6 +6,7 @@ import { AdminEmptyRow, AdminIconButton, AdminStatusBadge, AdminTable, AdminTd, 
 import { AgentPresetModal } from './AgentPresetModal'
 import { deleteAdminAgentPreset, useAdminAgentPresets } from './useAdminAgentPresets'
 import type { OrgAgentPreset } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 export function AgentPresetsView() {
   const { presets, loading, error, refetch } = useAdminAgentPresets()
@@ -15,7 +16,7 @@ export function AgentPresetsView() {
 
   async function handleDelete(preset: OrgAgentPreset) {
     if (deletingId) return
-    if (!window.confirm(`Delete ${preset.name || preset.slug}? Devices using this preset fall back to the built-in registry.`)) return
+    if (!(await confirmAction(`Delete ${preset.name || preset.slug}? Devices using this preset fall back to the built-in registry.`))) return
     setActionError(null)
     setDeletingId(preset.id)
     try {

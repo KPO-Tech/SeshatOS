@@ -1,10 +1,8 @@
 import { create } from 'zustand'
 
-// Whether any centered modal (Search, Settings, Config) is currently
-// covering the app. The native browser view can't be dimmed/blurred by a
-// modal's own CSS backdrop - it's a separate OS-composited surface - so
-// BrowserLiveView watches this to freeze itself to a blurred still image
-// while a modal sits on top, instead of staying bright underneath it.
+// Whether a centered modal (Search, Settings, Config) covers the app. The browser panel's page is a native view drawn above the interface,
+// which a modal's backdrop cannot cover: the panel takes it off while a modal is open (see useCoveredByDialog.ts, which also watches every
+// role="dialog" in the page).
 type OverlayState = {
   modalOpen: boolean
   setModalOpen: (open: boolean) => void

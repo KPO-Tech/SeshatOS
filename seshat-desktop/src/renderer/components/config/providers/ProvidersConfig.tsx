@@ -17,6 +17,7 @@ import {
 import type { ProviderChoice, ProviderModel, ProviderSetting } from './providerTypes'
 import { buildProviderRows, isCodexProvider, upsertProviderSetting } from './providerUtils'
 import { useTranslation } from 'react-i18next'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 /** The providers of the assistant: each one as a card with its key, its state, a test and its default model. */
 export function ProvidersConfig() {
@@ -135,8 +136,8 @@ export function ProvidersConfig() {
                     setSettings((current) => current.map((item) => ({ ...item, is_default: item.id === updated.id })))
                   }, 'Failed to set the default provider.')
                 }
-                onRemove={(setting) => {
-                  if (!window.confirm(t('providers.providersConfig.confirmRemove', { name: row.name }))) return
+                onRemove={async (setting) => {
+                  if (!(await confirmAction(t('providers.providersConfig.confirmRemove', { name: row.name })))) return
                   void run(setting.id, async () => {
                     await deleteProviderSetting(setting.id)
                     setSettings((current) => current.filter((item) => item.id !== setting.id))

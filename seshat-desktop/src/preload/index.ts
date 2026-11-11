@@ -296,6 +296,14 @@ const seshatBridge = {
   background: {
     setBusy: (count: number): Promise<void> => ipcRenderer.invoke('background:set-busy', count),
   },
+  // The backend stopped by itself after the app started: it is being started again, is back, or could not be (see backend-process.ts).
+  backendStatus: {
+    onChange: (listener: (status: { state: 'restarting' | 'ready' | 'failed'; detail?: string }) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, status: { state: 'restarting' | 'ready' | 'failed'; detail?: string }) => listener(status)
+      ipcRenderer.on('backend:status', handler)
+      return () => ipcRenderer.removeListener('backend:status', handler)
+    },
+  },
   notify: {
     show: (notice: { title: string; body?: string; route?: string }): Promise<void> => ipcRenderer.invoke('notify:show', notice),
     onOpen: (listener: (route: string) => void) => {

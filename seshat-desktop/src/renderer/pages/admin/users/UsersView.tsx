@@ -8,6 +8,7 @@ import { adminInputClass } from '../shared/AdminModal'
 import { CreateMemberModal } from './CreateMemberModal'
 import { deleteAdminMembership, updateAdminMembershipRole, useAdminMemberships, useAdminRoles } from './useAdminMemberships'
 import type { OrgMembership } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 export function UsersView() {
   const currentUserId = useAuthStore((s) => s.user?.id)
@@ -37,7 +38,7 @@ export function UsersView() {
   async function handleRemove(membership: OrgMembership) {
     if (deletingId) return
     const label = membership.user_display_name || membership.user_email || membership.user_id
-    if (!window.confirm(`Remove ${label} from this organization? This cannot be undone.`)) return
+    if (!(await confirmAction(`Remove ${label} from this organization? This cannot be undone.`))) return
     setActionError(null)
     setDeletingId(membership.id)
     try {

@@ -19,6 +19,12 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **A second launch brings the open window back.** Starting SeshatOS while it ran (hidden near the clock during a task) started a second app and a second backend on the same data.
 - **A closed browser panel no longer leaves a page over the chat.** A tab opened or switched away from stayed attached under the active one and showed again once the panel closed; a reload of the app left the page in place too.
 - **A page in the built-in browser can only open web addresses.** Other schemes were handed to the system.
+- **A dialog is no longer hidden under the browser panel.** The page of the built-in browser is drawn above the interface, so Search, Settings, the notifications or a confirmation opened while it showed were covered; the page is now taken off while a dialog is open.
+- **The browser panel sits in its place at any zoom.** With the app zoom (Appearance) set away from 100 %, the page was drawn off its panel.
+- **Old browser tabs are let go.** Every conversation that ever opened a link kept its tabs, each a page process, until the app quit; only the four most recently used conversations keep theirs now.
+- **A backend that stops by itself starts again.** The app now restarts it (up to three times in five minutes) and says so at the top of the window, instead of failing every call with no explanation.
+- **Confirmations use the app's own dialog.** The system box looked foreign and, on Windows, left text fields unable to take focus after it closed.
+- **Only the app's own page can use the desktop bridge.** Any local file used to be trusted.
 
 ### Changed
 
