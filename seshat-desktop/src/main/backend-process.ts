@@ -114,6 +114,9 @@ export async function startBackendSidecar(): Promise<void> {
   })
 
   const port = await waitForReadyPort(child, logStream)
+  // waitForReadyPort read stdout line by line until the ready line; what the backend writes after it goes to the log as it comes.
+  // end: false, since stderr is piped into the same file.
+  child.stdout?.pipe(logStream, { end: false })
   setDynamicBackendOrigin(`http://127.0.0.1:${port}`)
   child.once('exit', (code, signal) => handleUnexpectedExit(child, code, signal))
 }
