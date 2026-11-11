@@ -38,7 +38,8 @@ type BrowserPanelState = {
 
 type BrowserPanelOptions = {
   getWindow: () => BrowserWindow | null
-  remoteDebugPort: number
+  /** The port of Chromium's debugging server; 0 while it is not known yet (see index.ts). */
+  getRemoteDebugPort: () => number
 }
 
 type BrowserTab = {
@@ -91,7 +92,7 @@ function targetMarkerUrl(tabId: string): string {
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
 }
 
-export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelOptions) {
+export function createBrowserPanel({ getWindow, getRemoteDebugPort }: BrowserPanelOptions) {
   let tabCounter = 0
   const contexts = new Map<string, BrowserContext>()
   let currentContextId: string | null = null
@@ -99,7 +100,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
   let lastBounds: BrowserPanelBounds | null = null
 
   function cdpBrowserUrl(): string {
-    return `http://127.0.0.1:${remoteDebugPort}`
+    return `http://127.0.0.1:${getRemoteDebugPort()}`
   }
 
   function window(): BrowserWindow | null {
@@ -308,6 +309,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
   }
 
   async function listCdpTargets(): Promise<Array<{ id?: string; type?: string; url?: string }>> {
+    const remoteDebugPort = getRemoteDebugPort()
     if (!remoteDebugPort || remoteDebugPort <= 0) return []
     const response = await fetch(`${cdpBrowserUrl()}/json/list`, { signal: AbortSignal.timeout(1000) })
     if (!response.ok) throw new Error(`CDP target list failed: HTTP ${response.status}`)
