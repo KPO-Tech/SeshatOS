@@ -11,6 +11,20 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- **A link in an answer opens in the app's browser again.** Clicking a link the agent gave, a source or a web search result opened the system browser: the call passed the conversation where the browser expected its provider, the built-in browser refused, and the click fell back to the system. It now opens a new tab in the conversation's browser panel, without taking over the tab the agent drives. Links in cards and `Link` components follow the same path.
+- **A long tool call or a pending permission no longer ends the turn.** The app gave up after 150 seconds without an event, while the backend was sending a keepalive every 10 seconds that never reached the chat. The keepalive now holds the turn, and a stream that closes without its end is shown as an error instead of waiting.
+- **The app can no longer be replaced by a page or a file.** A file dropped on the window, or a link no component handled, loaded in place of the interface. The window now only shows the app; a web address goes to the system browser.
+- **A second launch brings the open window back.** Starting SeshatOS while it ran (hidden near the clock during a task) started a second app and a second backend on the same data.
+- **A closed browser panel no longer leaves a page over the chat.** A tab opened or switched away from stayed attached under the active one and showed again once the panel closed; a reload of the app left the page in place too.
+- **A page in the built-in browser can only open web addresses.** Other schemes were handed to the system.
+
+### Changed
+
+- **The browser panel has no title row.** Maximize and close sit on the tabs row, and an arrow opens the current page in the system browser.
+- **A web page the agent made is shown as on a computer first.** The preview lays the page out at a desktop, tablet or phone width and scales it down to the panel, so a page made for a wide window no longer shows its phone layout in a narrow panel. The file path above the preview is gone.
+
 ## [0.3.19] - 2026-11-09
 
 ### Highlights

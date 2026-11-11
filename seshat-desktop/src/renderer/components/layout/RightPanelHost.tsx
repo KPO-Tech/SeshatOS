@@ -192,6 +192,21 @@ function PanelFrame({
     )
   }
 
+  // The browser carries its window controls on its tabs row (see BrowserPanel.tsx): no title row above it, and no padding around the page.
+  if (panel.kind === 'browser') {
+    return (
+      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
+        <BrowserPanel
+          url={panel.browserUrl}
+          contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'}
+          isMaximized={isMaximized}
+          onClose={onClose}
+          onToggleMaximize={onToggleMaximize}
+        />
+      </aside>
+    )
+  }
+
   return <GenericPanelFrame key={panel.id} panel={panel} isMaximized={isMaximized} onClose={onClose} onToggleMaximize={onToggleMaximize} />
 }
 
