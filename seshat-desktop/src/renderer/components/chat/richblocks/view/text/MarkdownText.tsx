@@ -5,16 +5,17 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import { KatexMath, isMathBlockNode, mathKind } from '@renderer/lib/math'
 import { useRichLink } from '../links/richLinks'
+import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
 
 /** True when a text uses Markdown that a plain paragraph would show as stray symbols. */
 export function hasMarkdown(text: string): boolean {
   return /\*\*|__|`|\$[^$\n]+\$|\[[^\]]+\]\([^)]+\)|^\s*(?:[-*+]|\d+\.)\s|^#{1,6}\s|\n/m.test(text)
 }
 
+// Every click is handled here: a link that is not a web address (a relative path, an anchor) would otherwise navigate the whole window.
 function openLink(event: { preventDefault: () => void }, href: string | undefined) {
-  if (!href || !/^https?:\/\//i.test(href)) return
   event.preventDefault()
-  void window.seshat?.openExternal?.(href)
+  if (href && /^https?:\/\//i.test(href)) openInAppBrowser(href)
 }
 
 function Anchor({ href, children }: { href?: string; children?: ReactNode }) {

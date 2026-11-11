@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, shell, ipcMain, globalShortcut, dialog, session } from 'electron'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
 import { registerSystemHandlers } from './ipc/system'
 import { registerFilesystemHandlers } from './ipc/filesystem'
 import { registerSecureStoreHandlers } from './ipc/secure-store'
@@ -14,7 +15,7 @@ import { isSetupCompleted } from './setup-manager'
 import { resumeLocalWhisperOnLaunch, stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
-import { isExternalOpenAllowed } from './url-safety'
+import { isAppNavigation, isExternalOpenAllowed } from './url-safety'
 import {
   LOAD_WATCHDOG_MS,
   SHOW_FALLBACK_MS,
@@ -133,6 +134,8 @@ function createWindow() {
     return { action: 'deny' }
   })
 
+  const rendererFile = join(__dirname, '../renderer/index.html')
+  const appUrl = process.env.ELECTRON_RENDERER_URL || pathToFileURL(rendererFile).href
   let lastFailure = 'The app did not finish loading.'
   let watchdog: ReturnType<typeof setTimeout> | null = null
   const loadRenderer = () => {
@@ -143,7 +146,7 @@ function createWindow() {
     }, LOAD_WATCHDOG_MS)
     const loading = process.env.ELECTRON_RENDERER_URL
       ? win.loadURL(process.env.ELECTRON_RENDERER_URL)
-      : win.loadFile(join(__dirname, '../renderer/index.html'))
+      : win.loadFile(rendererFile)
     // A failed load is handled by did-fail-load below.
     loading.catch(() => {})
   }
@@ -163,15 +166,26 @@ function createWindow() {
     lastFailure = `${errorDescription} (${errorCode})`
     loadRetry.failed()
   })
+  // A reload of the app (a hot reload in development, a renderer that crashed) loses the right panel, not the native browser view.
+  // did-navigate is a committed main-frame load of a new document, so a navigation refused by will-navigate below never reaches it.
+  win.webContents.on('did-navigate', () => browserPanel.detachAll())
+  win.webContents.on('render-process-gone', () => browserPanel.detachAll())
   win.webContents.on('did-finish-load', () => {
     if (watchdog) clearTimeout(watchdog)
     watchdog = null
   })
   win.webContents.on('will-navigate', (event, url) => {
-    if (!isRetryNavigation(url)) return
+    if (isRetryNavigation(url)) {
+      event.preventDefault()
+      loadRetry.reset()
+      loadRenderer()
+      return
+    }
+    if (isAppNavigation(url, appUrl)) return
+    // Anything else would replace the app: a file dropped on the window, a link no component handled. A web address goes to the
+    // system browser, the rest is refused.
     event.preventDefault()
-    loadRetry.reset()
-    loadRenderer()
+    if (isExternalOpenAllowed(url)) void shell.openExternal(url).catch(() => undefined)
   })
   win.on('closed', () => {
     if (watchdog) clearTimeout(watchdog)
@@ -182,6 +196,13 @@ function createWindow() {
 }
 
 configureRuntimePaths()
+
+// One app at a time. A second launch (a shortcut clicked while the window is hidden near the clock) would start a second backend on the
+// same data and fight the first one for the browser ports: it brings the running window back instead, and leaves. The lock lives in
+// userData, so it is taken after configureRuntimePaths.
+const isPrimaryInstance = app.requestSingleInstanceLock()
+if (!isPrimaryInstance) app.exit(0)
+app.on('second-instance', () => background.show())
 
 app.commandLine.appendSwitch('disable-gpu-vsync')
 app.commandLine.appendSwitch('use-angle', 'gl')
@@ -213,6 +234,7 @@ const browserBridge = createBrowserBridgeServer({
 })
 
 app.whenReady().then(async () => {
+  if (!isPrimaryInstance) return
   // Without it Windows does not name the app on its notifications; it is the appId of the installer, whose shortcuts carry it. Only for the
   // installed app: a run from the sources has no shortcut with that id, and Windows then draws a blank page in the taskbar instead of the
   // icon of the window.

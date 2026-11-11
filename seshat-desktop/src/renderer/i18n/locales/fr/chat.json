@@ -170,6 +170,11 @@
         "openInTheBrowser": "Ouvrir dans le navigateur",
         "openInTheBrowserWith": "Ouvrir dans le navigateur (avec le réseau)",
         "reload": "Recharger",
+        "device": {
+          "desktop": "PC",
+          "tablet": "Tablette",
+          "phone": "Mobile"
+        },
         "loadingThePage": "Chargement de la page…",
         "t1ProblemOnThePage": "1 problème sur la page",
         "askTheAgentToFix": "Demander la correction",
@@ -193,7 +198,11 @@
         "forward": "Avancer",
         "reload": "Recharger",
         "searchOrEnterWebsite": "Rechercher ou saisir un site",
-        "embeddedBrowserIsOnlyAvailable": "Navigateur intégré : application de bureau uniquement."
+        "embeddedBrowserIsOnlyAvailable": "Navigateur intégré : application de bureau uniquement.",
+        "openInSystemBrowser": "Navigateur du PC",
+        "restore": "Restaurer",
+        "maximize": "Agrandir",
+        "close": "Fermer"
       },
       "changes": {
         "changesList": {

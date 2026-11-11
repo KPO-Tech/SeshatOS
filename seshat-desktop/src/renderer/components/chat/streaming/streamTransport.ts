@@ -19,6 +19,7 @@ export async function consumeElectronStream(
   onRuntime: (payload: RuntimeEventPayload) => void,
   onChunk: (payload: StreamEvent) => void,
   onSessionTitled: (payload: SessionTitledPayload) => void,
+  onKeepAlive?: () => void,
 ) {
   if (!window.seshat?.http) {
     throw new Error('Electron HTTP bridge is unavailable')
@@ -41,6 +42,10 @@ export async function consumeElectronStream(
     let settled = false
     const unsubscribe = window.seshat.http!.onStreamEvent(streamId, ({ name, data }) => {
       if (settled) return
+      if (name === 'keepalive') {
+        onKeepAlive?.()
+        return
+      }
       if (name === 'error') {
         settled = true
         unsubscribe()

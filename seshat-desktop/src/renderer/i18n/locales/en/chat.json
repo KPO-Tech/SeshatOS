@@ -170,6 +170,11 @@
         "openInTheBrowser": "Open in the browser",
         "openInTheBrowserWith": "Open in the browser (with the network)",
         "reload": "Reload",
+        "device": {
+          "desktop": "Desktop",
+          "tablet": "Tablet",
+          "phone": "Phone"
+        },
         "loadingThePage": "Loading the page…",
         "t1ProblemOnThePage": "1 problem on the page",
         "askTheAgentToFix": "Ask the agent to fix",
@@ -193,7 +198,11 @@
         "forward": "Forward",
         "reload": "Reload",
         "searchOrEnterWebsite": "Search or enter website",
-        "embeddedBrowserIsOnlyAvailable": "Embedded browser is only available in the desktop app."
+        "embeddedBrowserIsOnlyAvailable": "Embedded browser is only available in the desktop app.",
+        "openInSystemBrowser": "Open in your browser",
+        "restore": "Restore",
+        "maximize": "Maximize",
+        "close": "Close"
       },
       "changes": {
         "changesList": {

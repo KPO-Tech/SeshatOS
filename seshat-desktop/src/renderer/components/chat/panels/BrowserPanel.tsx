@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AddOne, Close, Globe, Left, LoadingOne, Refresh, Right } from '@icon-park/react'
+import { AddOne, ArrowRightUp, Close, Globe, Left, LoadingOne, Refresh, Right } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
+import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/WindowControlIcon'
 
 // contextId scopes tabs/history to a single browsing session: the shared chat
 // panel, or each project/session-specific Browser tab.
-export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contextId?: string }) {
+const CONTROL_CSS =
+  'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text'
+
+type FrameControls = { isMaximized?: boolean; onClose?: () => void; onToggleMaximize?: () => void }
+
+// The panel draws its own header: the tabs row carries the window controls, so no frame row repeats "Browser" above it.
+export function BrowserPanel({ url, contextId = 'chat', isMaximized = false, onClose, onToggleMaximize }: { url?: string; contextId?: string } & FrameControls) {
   const { t } = useTranslation('chat')
   const browserApi = window.seshat?.browser
   const initialUrl = url || 'https://www.google.com/'
@@ -12,6 +19,8 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
   const [address, setAddress] = useState(initialUrl)
   const [state, setState] = useState<BrowserPanelState | null>(null)
   const activeTab = state?.tabs.find((tab) => tab.id === state.activeTabId) ?? state?.tabs[0] ?? null
+  // The page of the active tab, for the system browser: only a web address leaves the app (the main process refuses any other).
+  const externalUrl = activeTab && /^https?:\/\//i.test(activeTab.url) ? activeTab.url : null
 
   const syncBounds = useCallback(() => {
     const element = viewportRef.current
@@ -79,9 +88,9 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
   const tabs = state?.tabs ?? []
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-app-md border border-app-border-subtle bg-app-bg">
-      {tabs.length > 0 && (
-        <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-app-border-subtle bg-app-surface px-2 pb-1.5 pt-2">
+    <div className="flex h-full min-h-[420px] flex-col overflow-hidden bg-app-bg">
+      <div className="flex shrink-0 items-center gap-1 border-b border-app-border-subtle bg-app-surface px-2 pb-1.5 pt-2">
+        <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -110,7 +119,17 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
             <AddOne size={12} />
           </button>
         </div>
-      )}
+        {onToggleMaximize && (
+          <button className={CONTROL_CSS} type="button" onClick={onToggleMaximize} aria-label={isMaximized ? t('chat.panels.browserPanel.restore') : t('chat.panels.browserPanel.maximize')} title={isMaximized ? t('chat.panels.browserPanel.restore') : t('chat.panels.browserPanel.maximize')}>
+            <WindowMaximizeIcon />
+          </button>
+        )}
+        {onClose && (
+          <button className={CONTROL_CSS} type="button" onClick={onClose} aria-label={t('chat.panels.browserPanel.close')} title={t('chat.panels.browserPanel.close')}>
+            <WindowCloseIcon />
+          </button>
+        )}
+      </div>
       <div className="flex shrink-0 items-center gap-1 border-b border-app-border-subtle bg-app-surface px-2 py-1.5">
         <button className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary" type="button" onClick={() => void browserApi?.back(contextId).then(setState)} disabled={!activeTab?.canGoBack} aria-label={t('chat.panels.browserPanel.back')}>
           <Left size={12} />
@@ -136,6 +155,18 @@ export function BrowserPanel({ url, contextId = 'chat' }: { url?: string; contex
             spellCheck={false}
           />
         </form>
+        <button
+          className="flex size-7 cursor-pointer items-center justify-center rounded-[7px] border-0 bg-transparent text-app-text-secondary transition-colors duration-150 hover:bg-[var(--surface-hover)] hover:text-app-text disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-app-text-secondary"
+          type="button"
+          onClick={() => {
+            if (externalUrl) void window.seshat?.openExternal?.(externalUrl).catch(() => undefined)
+          }}
+          disabled={!externalUrl}
+          aria-label={t('chat.panels.browserPanel.openInSystemBrowser')}
+          title={t('chat.panels.browserPanel.openInSystemBrowser')}
+        >
+          <ArrowRightUp size={12} />
+        </button>
       </div>
       <div className="relative min-h-[260px] flex-1 overflow-hidden bg-white" ref={viewportRef}>
         {!browserApi && (

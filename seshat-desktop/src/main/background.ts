@@ -109,6 +109,8 @@ export function createBackground({ getWindow, iconPath }: Deps) {
       ensureTray()
       notify(keepRunningMessage(busy))
     },
+    /** Brings the window back, from the tray, minimized or behind other windows. */
+    show: showWindow,
     markQuitting() {
       quitting = true
       destroyTray()
