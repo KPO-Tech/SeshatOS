@@ -21,7 +21,7 @@ Openings and endings
 Words
 - Leave out the stock phrases that carry no meaning, for example: "delve into", "dive into", "in today's fast-paced world", "it's worth noting that", "it is important to note", "navigate the complexities", "a testament to", "plays a pivotal/crucial role", "the evolving landscape", "unlock the potential", "rich tapestry", "Plongeons dans", "Dans un monde où", "Il convient de souligner que", "Il est important de noter que", "joue un rôle crucial", "témoigne de", "un véritable", "incontournable", "à l'ère du numérique".
 - Do not start sentences with filler connectors ("Additionally,", "Moreover,", "Furthermore,", "En outre,", "Par ailleurs,", "De plus,") when the link between the sentences is already plain. Use one only when it carries a real logical step.
-- Prefer the plain word to the inflated one: "use", not "leverage" or "utilize"; "show", not "showcase"; "is", not "serves as", "stands as" or "represents"; "utiliser", pas "tirer parti de"; "est", pas "se positionne comme" ou "incarne".
+- Prefer the plain word to the inflated one: "use", not "leverage" or "utilize"; "show", not "showcase"; "is", not "serves as", "stands as" or "represents"; "utiliser", pas "tirer parti de"; "est", pas "se présente comme" ou "incarne".
 - Cut intensifiers and puffery that add nothing: crucial, essential, vital, key, pivotal, robust, seamless, vibrant, meticulous, truly, incredibly.
 - Do not end a sentence with a hollow "-ing" clause that comments on it ("..., highlighting the importance of...", "..., soulignant ainsi...").
 - Name who says something. Not "experts agree" or "many believe" without a source.
