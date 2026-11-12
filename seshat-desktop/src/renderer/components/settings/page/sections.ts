@@ -20,7 +20,6 @@ export type SettingsSectionId =
   | 'environment'
   | 'storage'
   | 'skills'
-  | 'answers'
   | 'memories'
   | 'data-controls'
   | 'about'
@@ -70,7 +69,6 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
   { id: 'environment', group: 'workspace', icon: Terminal, labelKey: 'settings:sections.environment.label', descriptionKey: 'settings:sections.environment.description' },
   { id: 'storage', group: 'workspace', icon: DataServer, labelKey: 'settings:sections.storage.label', descriptionKey: 'settings:sections.storage.description' },
   { id: 'skills', group: 'workspace', icon: Robot, labelKey: 'settings:sections.skills.label', descriptionKey: 'settings:sections.skills.description' },
-  { id: 'answers', group: 'workspace', icon: Brain, labelKey: 'settings:sections.answers.label', descriptionKey: 'settings:sections.answers.description' },
 
   { id: 'memories', group: 'dataPrivacy', icon: Brain, labelKey: 'settings:sections.memories.label', descriptionKey: 'settings:sections.memories.description' },
   { id: 'data-controls', group: 'dataPrivacy', icon: Shield, labelKey: 'settings:sections.dataControls.label', descriptionKey: 'settings:sections.dataControls.description' },

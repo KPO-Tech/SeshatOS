@@ -1,10 +1,4 @@
 {
-  "answers": {
-    "answersConfig": {
-      "richAnswers": "Rich answers",
-      "tablesFiguresAndStepsDrawn": "Tables, figures and steps drawn as components. From the next message."
-    }
-  },
   "cloud": {
     "cloudConfig": {
       "connected": "Connected",
