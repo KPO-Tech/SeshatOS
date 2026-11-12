@@ -11,6 +11,15 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.20] - 2026-11-12
+
+### Highlights
+
+- **Scrolling while the agent writes is as smooth as when it is done.** GPU rasterization was off on Windows, and every token redrew far more than the answer being written.
+- **Links open in the app's own browser again**, in a new tab of the conversation's browser panel.
+- **Natural writing:** a switch that asks the agent for plain prose, without the stock phrases and reflex structures of machine-written text.
+- **Fewer surprises:** long tools and pending permissions no longer end a turn, a stopped turn can be asked again in place, a second launch brings the window back, and a backend that stops starts again.
+
 ### Added
 
 - **Natural writing.** A switch in Settings > Preferences > Conversations asks the agent for plain prose: no stock phrases ("delve into", "Dans un monde où", "Il convient de souligner que"), no reflex bullet lists or groups of three, no em dashes, no preamble or closing summary, sentences of varied length. Off by default, since it suits some work and not all; code, data, components and any format you ask for in a message are left alone.
@@ -18,6 +27,8 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 ### Changed
 
 - **The Answers page is folded into Preferences.** Rich answers now sit with Condense turns and Natural writing under Preferences > Conversations.
+- **The browser panel has no title row.** Maximize and close sit on the tabs row, and an arrow opens the current page in the system browser.
+- **A web page the agent made is shown as on a computer first.** The preview lays the page out at a desktop, tablet or phone width and scales it down to the panel, so a page made for a wide window no longer shows its phone layout in a narrow panel. The file path above the preview is gone.
 
 ### Fixed
 
@@ -39,10 +50,9 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Asking again after stopping a turn replaces its answer.** The note the runtime adds when a turn is stopped ("[The previous turn was interrupted by the user...]") was shown as a message of yours and taken for your prompt, so a retry sent the prompt again as a new turn. The note is no longer shown (the agent still gets it), and the retry takes the stopped turn back.
 - **The last English texts follow the language.** The page shown when the window cannot load, the notes of the page preview, empty previews and a few messages of the chat.
 
-### Changed
+### Security
 
-- **The browser panel has no title row.** Maximize and close sit on the tabs row, and an arrow opens the current page in the system browser.
-- **A web page the agent made is shown as on a computer first.** The preview lays the page out at a desktop, tablet or phone width and scales it down to the panel, so a page made for a wide window no longer shows its phone layout in a narrow panel. The file path above the preview is gone.
+- **Go 1.26.11.** The backend is built with the Go release that fixes GO-2026-6859, an HTTP/1 server crash in `net/http`.
 
 ## [0.3.19] - 2026-11-09
 
