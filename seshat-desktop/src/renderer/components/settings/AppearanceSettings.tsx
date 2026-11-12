@@ -22,6 +22,7 @@ import { allThemes, themeById, type ThemeSeed } from '@renderer/lib/themes'
 import { ActionButton, SettingRow, SettingsCard, SettingsPage, SettingsTabs, type SettingsTab } from './kit'
 import { Segmented, ThemeCard, ThemeGroup, ThemePreview } from './ThemeCards'
 import { ThemeEditor } from './ThemeEditor'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 type Filter = 'all' | 'dark' | 'light'
 type Tab = 'theme' | 'interface'
@@ -99,8 +100,8 @@ export function AppearanceSettings() {
     setNotice(null)
   }
 
-  function remove(seed: ThemeSeed) {
-    if (!window.confirm(t('appearance.confirmDelete', { name: seed.label }))) return
+  async function remove(seed: ThemeSeed) {
+    if (!(await confirmAction(t('appearance.confirmDelete', { name: seed.label })))) return
     commit(custom.filter((item) => item.id !== seed.id))
   }
 

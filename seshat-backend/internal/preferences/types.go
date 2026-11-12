@@ -28,7 +28,9 @@ type UserPreferences struct {
 	// RichFamilies holds the families of components the person forced: family -> "on" or "off". A family that is not in it is
 	// automatic. Only valid entries are kept.
 	RichFamilies map[string]string
-	UpdatedAt    time.Time
+	// NaturalWriting asks the agent for plain prose without the stock phrases of machine-written text. Off by default.
+	NaturalWriting bool
+	UpdatedAt      time.Time
 }
 
 type UpsertParams struct {
@@ -44,7 +46,8 @@ type UpsertParams struct {
 	MemoryEnabled             bool
 	RichAnswersDisabled       bool
 	// RichFamilies is stored whole: the caller sends back the families it wants forced, and an empty map makes them all automatic.
-	RichFamilies map[string]string
+	RichFamilies   map[string]string
+	NaturalWriting bool
 }
 
 // The families of components a person may force, and the modes they may give them.

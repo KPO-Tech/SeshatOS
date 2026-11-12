@@ -1,5 +1,15 @@
 {
   "layout": {
+    "confirmAction": {
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "backendStatus": {
+      "restarting": "The local service stopped. Starting it again…",
+      "ready": "The local service is back.",
+      "failed": "The local service could not start again. Restart SeshatOS.",
+      "dismiss": "Hide"
+    },
     "imageLightbox": {
       "download": "Download",
       "close": "Close",
@@ -22,7 +32,33 @@
       "document": "Document",
       "index": "Index",
       "restore": "Restore",
-      "maximize": "Maximize"
+      "maximize": "Maximize",
+      "empty": {
+        "markdown": {
+          "title": "Markdown preview",
+          "description": "Markdown opens here when a note or document is opened."
+        },
+        "pdf": {
+          "title": "PDF preview",
+          "description": "This PDF couldn't be opened."
+        },
+        "docx": {
+          "title": "Document preview",
+          "description": "This document couldn't be opened."
+        },
+        "xlsx": {
+          "title": "Spreadsheet preview",
+          "description": "This spreadsheet couldn't be opened."
+        },
+        "pptx": {
+          "title": "Presentation preview",
+          "description": "This presentation couldn't be opened."
+        },
+        "artifact": {
+          "title": "Artifact preview",
+          "description": "This artifact couldn't be opened."
+        }
+      }
     },
     "searchModal": {
       "searchConversations": "Search conversations",

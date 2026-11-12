@@ -1,5 +1,8 @@
 import { app, BrowserWindow, Menu, shell, ipcMain, globalShortcut, dialog, session } from 'electron'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
+import { rmSync } from 'fs'
+import { readDevToolsPort } from './devtools-port'
 import { registerSystemHandlers } from './ipc/system'
 import { registerFilesystemHandlers } from './ipc/filesystem'
 import { registerSecureStoreHandlers } from './ipc/secure-store'
@@ -9,12 +12,12 @@ import { registerSetupHandlers } from './ipc/setup'
 import { broadcastLlamaProgress, registerLlamaHandlers } from './ipc/llama'
 import { registerEnvVarsHandlers } from './ipc/env-vars'
 import { resolveRuntimeRoot } from './runtime'
-import { startBackendSidecar, stopBackendSidecar } from './backend-process'
+import { onBackendStatus, startBackendSidecar, stopBackendSidecar } from './backend-process'
 import { isSetupCompleted } from './setup-manager'
 import { resumeLocalWhisperOnLaunch, stopWhisperServerProcess } from './whisper-manager'
 import { startLlamaOnLaunch, stopLlamaServerProcess } from './llama-manager'
 import { setupAutoUpdater } from './auto-update'
-import { isExternalOpenAllowed } from './url-safety'
+import { isAppNavigation, isExternalOpenAllowed } from './url-safety'
 import {
   LOAD_WATCHDOG_MS,
   SHOW_FALLBACK_MS,
@@ -133,17 +136,19 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  let lastFailure = 'The app did not finish loading.'
+  const rendererFile = join(__dirname, '../renderer/index.html')
+  const appUrl = process.env.ELECTRON_RENDERER_URL || pathToFileURL(rendererFile).href
+  let lastFailure = mainT('load.notFinished')
   let watchdog: ReturnType<typeof setTimeout> | null = null
   const loadRenderer = () => {
     if (watchdog) clearTimeout(watchdog)
     watchdog = setTimeout(() => {
-      lastFailure = 'The app took too long to load.'
+      lastFailure = mainT('load.tooSlow')
       loadRetry.failed()
     }, LOAD_WATCHDOG_MS)
     const loading = process.env.ELECTRON_RENDERER_URL
       ? win.loadURL(process.env.ELECTRON_RENDERER_URL)
-      : win.loadFile(join(__dirname, '../renderer/index.html'))
+      : win.loadFile(rendererFile)
     // A failed load is handled by did-fail-load below.
     loading.catch(() => {})
   }
@@ -152,7 +157,7 @@ function createWindow() {
     onGiveUp: () => {
       if (win.isDestroyed()) return
       if (watchdog) clearTimeout(watchdog)
-      void win.loadURL(buildLoadFailureUrl(lastFailure))
+      void win.loadURL(buildLoadFailureUrl(lastFailure, { title: mainT('load.title'), retry: mainT('load.retry') }))
       if (!win.isVisible()) win.show()
     }
   })
@@ -163,15 +168,26 @@ function createWindow() {
     lastFailure = `${errorDescription} (${errorCode})`
     loadRetry.failed()
   })
+  // A reload of the app (a hot reload in development, a renderer that crashed) loses the right panel, not the native browser view.
+  // did-navigate is a committed main-frame load of a new document, so a navigation refused by will-navigate below never reaches it.
+  win.webContents.on('did-navigate', () => browserPanel.detachAll())
+  win.webContents.on('render-process-gone', () => browserPanel.detachAll())
   win.webContents.on('did-finish-load', () => {
     if (watchdog) clearTimeout(watchdog)
     watchdog = null
   })
   win.webContents.on('will-navigate', (event, url) => {
-    if (!isRetryNavigation(url)) return
+    if (isRetryNavigation(url)) {
+      event.preventDefault()
+      loadRetry.reset()
+      loadRenderer()
+      return
+    }
+    if (isAppNavigation(url, appUrl)) return
+    // Anything else would replace the app: a file dropped on the window, a link no component handled. A web address goes to the
+    // system browser, the rest is refused.
     event.preventDefault()
-    loadRetry.reset()
-    loadRenderer()
+    if (isExternalOpenAllowed(url)) void shell.openExternal(url).catch(() => undefined)
   })
   win.on('closed', () => {
     if (watchdog) clearTimeout(watchdog)
@@ -183,10 +199,29 @@ function createWindow() {
 
 configureRuntimePaths()
 
-app.commandLine.appendSwitch('disable-gpu-vsync')
-app.commandLine.appendSwitch('use-angle', 'gl')
-const remoteDebugPort = Number.parseInt(process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT || '9333', 10)
-if (Number.isFinite(remoteDebugPort) && remoteDebugPort > 0) {
+// One app at a time. A second launch (a shortcut clicked while the window is hidden near the clock) would start a second backend on the
+// same data and fight the first one for the browser ports: it brings the running window back instead, and leaves. The lock lives in
+// userData, so it is taken after configureRuntimePaths.
+const isPrimaryInstance = app.requestSingleInstanceLock()
+if (!isPrimaryInstance) app.exit(0)
+app.on('second-instance', () => background.show())
+
+// Chromium's own graphics settings are kept. use-angle=gl (with disable-gpu-vsync) used to be set here: on Windows it turns GPU
+// rasterization off, so every pixel of the page was drawn by the CPU, and while an answer streamed its rows were drawn again at each
+// frame and the scroll waited for them. Measured on Electron 45: rasterization "unavailable_off" with it, "enabled" without.
+// The agent's browser tools drive the app's browser through Chromium's debugging port, which has no password: any program on the computer
+// that finds it can drive the app. Development keeps the fixed 9333 that a backend started by hand looks for; the installed app lets
+// Chromium pick a free port at each launch (port 0), reads it back from DevToolsActivePort, and hands it to the backend it starts.
+const configuredDebugPort = process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT
+const pickDebugPort = isPrimaryInstance && app.isPackaged && !configuredDebugPort
+const devToolsPortFile = join(app.getPath('userData'), 'DevToolsActivePort')
+let remoteDebugPort = pickDebugPort ? 0 : Number.parseInt(configuredDebugPort || '9333', 10)
+if (pickDebugPort) {
+  // The file of the last run would give a port that is gone.
+  rmSync(devToolsPortFile, { force: true })
+  app.commandLine.appendSwitch('remote-debugging-port', '0')
+  app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1')
+} else if (Number.isFinite(remoteDebugPort) && remoteDebugPort > 0) {
   app.commandLine.appendSwitch('remote-debugging-port', String(remoteDebugPort))
   app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1')
   process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT = String(remoteDebugPort)
@@ -194,7 +229,7 @@ if (Number.isFinite(remoteDebugPort) && remoteDebugPort > 0) {
 
 const browserPanel = createBrowserPanel({
   getWindow: () => mainWindow,
-  remoteDebugPort,
+  getRemoteDebugPort: () => remoteDebugPort,
 })
 
 // Lets seshat-backend ask "give me the visible tab for session X" so an
@@ -213,6 +248,7 @@ const browserBridge = createBrowserBridgeServer({
 })
 
 app.whenReady().then(async () => {
+  if (!isPrimaryInstance) return
   // Without it Windows does not name the app on its notifications; it is the appId of the installer, whose shortcuts carry it. Only for the
   // installed app: a run from the sources has no shortcut with that id, and Windows then draws a blank page in the taskbar instead of the
   // icon of the window.
@@ -250,6 +286,14 @@ app.whenReady().then(async () => {
   })
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => ALLOWED_PERMISSIONS.has(permission))
 
+  if (pickDebugPort) {
+    remoteDebugPort = await readDevToolsPort(devToolsPortFile)
+    if (remoteDebugPort > 0) process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT = String(remoteDebugPort)
+  }
+  onBackendStatus((status) => {
+    const win = mainWindow
+    if (win && !win.isDestroyed()) win.webContents.send('backend:status', status)
+  })
   try {
     await startBackendSidecar()
   } catch (error) {

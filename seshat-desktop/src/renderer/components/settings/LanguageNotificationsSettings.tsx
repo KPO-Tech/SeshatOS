@@ -1,9 +1,10 @@
-import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution, Comment } from '@icon-park/react'
+import { CheckCorrect, Remind, Translate, Up, VolumeNotice, Caution, Comment, ChartHistogram, Write } from '@icon-park/react'
 import { useTranslation } from 'react-i18next'
 import { useNotificationPrefs } from '@renderer/hooks/useNotificationPrefs'
 import { SUPPORTED_LANGUAGES, normalizeLanguage } from '@renderer/i18n/languages'
 import { useLanguage } from '@renderer/i18n/useLanguage'
-import { SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
+import { Notice, SelectField, SettingRow, SettingsCard, SettingsPage, Toggle } from './kit'
+import { useUserPreferences } from '@renderer/hooks/useUserPreferences'
 import { useUIStore } from '@renderer/stores/ui'
 
 // A language is named in itself, in every language of the interface: "Français" is never "French" to a person who reads French.
@@ -17,13 +18,33 @@ export function LanguageNotificationsSettings() {
   const { prefs, change } = useNotificationPrefs()
   const condenseTurns = useUIStore((state) => state.condenseTurns)
   const setCondenseTurns = useUIStore((state) => state.setCondenseTurns)
+  // What the agent is told about answers is kept by the backend with the person's other preferences (it shapes the prompt).
+  const answers = useUserPreferences()
+  const saveAnswers = (patch: { rich_answers_enabled?: boolean; natural_writing_enabled?: boolean }) => {
+    if (!answers.busy) void answers.save(patch)
+  }
   return (
     <SettingsPage id="language-notifications">
       <SettingsCard title={t('languageNotifications.chatCard')}>
         <SettingRow title={t('languageNotifications.condenseTurns')} hint={t('languageNotifications.condenseTurnsHint')} icon={icon(Comment)}>
           <Toggle label={t('languageNotifications.condenseTurns')} enabled={condenseTurns} onChange={setCondenseTurns} />
         </SettingRow>
+        <SettingRow title={t('languageNotifications.richAnswers')} hint={t('languageNotifications.richAnswersHint')} icon={icon(ChartHistogram as typeof Remind)}>
+          <Toggle
+            label={t('languageNotifications.richAnswers')}
+            enabled={answers.prefs?.rich_answers_enabled !== false}
+            onChange={(enabled) => saveAnswers({ rich_answers_enabled: enabled })}
+          />
+        </SettingRow>
+        <SettingRow title={t('languageNotifications.naturalWriting')} hint={t('languageNotifications.naturalWritingHint')} icon={icon(Write as typeof Remind)}>
+          <Toggle
+            label={t('languageNotifications.naturalWriting')}
+            enabled={answers.prefs?.natural_writing_enabled === true}
+            onChange={(enabled) => saveAnswers({ natural_writing_enabled: enabled })}
+          />
+        </SettingRow>
       </SettingsCard>
+      {answers.error && <Notice tone="error">{answers.error}</Notice>}
 
       <SettingsCard title={t('languageNotifications.languageCard')}>
         <SettingRow title={t('languageNotifications.interfaceLanguage')} icon={icon(Translate)}>

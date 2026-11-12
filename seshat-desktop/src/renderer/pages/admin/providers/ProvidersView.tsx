@@ -10,6 +10,7 @@ import { AdminIconButton } from '../shared/AdminTable'
 import { ProviderFormModal } from './ProviderFormModal'
 import { deleteAdminProviderSetting, setAdminProviderSettingDefault, unsetAdminProviderSettingDefault, useAdminProviderSettings } from './useAdminProviderSettings'
 import type { OrgProviderSetting } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 export function ProvidersView() {
   const [catalog, setCatalog] = useState<ProviderCatalogEntry[]>([])
@@ -29,7 +30,7 @@ export function ProvidersView() {
 
   async function handleDelete(setting: OrgProviderSetting) {
     if (busyId) return
-    if (!window.confirm(`Remove the organization's ${setting.provider} credential? This cannot be undone.`)) return
+    if (!(await confirmAction(`Remove the organization's ${setting.provider} credential? This cannot be undone.`))) return
     setActionError(null)
     setBusyId(setting.id)
     try {

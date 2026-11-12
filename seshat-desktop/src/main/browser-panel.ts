@@ -1,5 +1,6 @@
-import { WebContentsView, shell, type BrowserWindow, type IpcMain, type IpcMainInvokeEvent } from 'electron'
+import { WebContentsView, type BrowserWindow, type IpcMain, type IpcMainInvokeEvent } from 'electron'
 import { assertTrustedSender } from './ipc/trusted-sender'
+import { isExternalOpenAllowed } from './url-safety'
 
 const BROWSER_SESSION_PARTITION = 'persist:seshat-browser'
 const BROWSER_DEFAULT_URL = 'about:blank'
@@ -7,6 +8,7 @@ const BROWSER_HOME_URL = 'https://www.google.com/'
 const TARGET_RESOLVE_TIMEOUT_MS = 2500
 const TARGET_RESOLVE_INTERVAL_MS = 80
 const DEFAULT_CONTEXT_ID = 'default'
+const MAX_KEPT_CONTEXTS = 4
 // Agent-driven browser_open/browser_navigate tool calls always render into
 // the conversation's own right panel (Conversation.tsx), never into a
 // Projects workbench tab - so automation gets its own fixed context,
@@ -36,7 +38,8 @@ type BrowserPanelState = {
 
 type BrowserPanelOptions = {
   getWindow: () => BrowserWindow | null
-  remoteDebugPort: number
+  /** The port of Chromium's debugging server; 0 while it is not known yet (see index.ts). */
+  getRemoteDebugPort: () => number
 }
 
 type BrowserTab = {
@@ -89,7 +92,7 @@ function targetMarkerUrl(tabId: string): string {
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
 }
 
-export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelOptions) {
+export function createBrowserPanel({ getWindow, getRemoteDebugPort }: BrowserPanelOptions) {
   let tabCounter = 0
   const contexts = new Map<string, BrowserContext>()
   let currentContextId: string | null = null
@@ -97,12 +100,19 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
   let lastBounds: BrowserPanelBounds | null = null
 
   function cdpBrowserUrl(): string {
-    return `http://127.0.0.1:${remoteDebugPort}`
+    return `http://127.0.0.1:${getRemoteDebugPort()}`
   }
 
   function window(): BrowserWindow | null {
     const win = getWindow()
     return win && !win.isDestroyed() ? win : null
+  }
+
+  // The panel measures itself in the page's CSS pixels; a view is placed in the window's. They differ by the zoom of the app (Appearance),
+  // so a view placed with the raw numbers drifts off its panel at any zoom but 100 %.
+  function toWindowBounds(bounds: BrowserPanelBounds): BrowserPanelBounds {
+    const zoom = window()?.webContents.getZoomFactor() ?? 1
+    return normalizeBounds({ x: bounds.x * zoom, y: bounds.y * zoom, width: bounds.width * zoom, height: bounds.height * zoom })
   }
 
   function send(channel: string, payload?: unknown) {
@@ -154,13 +164,31 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
     send('seshat:browser:state', { contextId, state: state(contextId) })
   }
 
+  // The one view on the window. Attaching a tab takes the previous one off first: a tab left attached under the active one (after a tab
+  // switch or a new tab) would show again over the app once the active one is taken off, when the panel closes.
+  let attachedView: WebContentsView | null = null
+
+  function detachAttachedView() {
+    const win = window()
+    const view = attachedView
+    attachedView = null
+    if (!win || !view || view.webContents.isDestroyed()) return
+    try {
+      win.contentView.removeChildView(view)
+    } catch {
+      // Already detached.
+    }
+  }
+
   function attachActiveView() {
     const win = window()
     if (!win || !currentContextId || !visible || !lastBounds) return
     const tab = getActiveTab(getContext(currentContextId))
     if (!tab) return
+    if (attachedView !== tab.view) detachAttachedView()
     try {
       win.contentView.addChildView(tab.view)
+      attachedView = tab.view
       tab.view.setBounds(normalizeBounds(lastBounds))
       tab.view.webContents.focus()
     } catch (error) {
@@ -169,18 +197,11 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
   }
 
   function detachTabView(tab: BrowserTab | undefined) {
-    const win = window()
-    if (!win || !tab || tab.view.webContents.isDestroyed()) return
-    try {
-      win.contentView.removeChildView(tab.view)
-    } catch {
-      // Already detached.
-    }
+    if (tab && attachedView === tab.view) detachAttachedView()
   }
 
   function detachCurrentView() {
-    if (!currentContextId) return
-    detachTabView(getActiveTab(getContext(currentContextId)))
+    detachAttachedView()
   }
 
   // Makes contextId the one whose tab is attached to the window, detaching
@@ -189,6 +210,17 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
     if (currentContextId === id) return
     detachCurrentView()
     currentContextId = id
+    // Every tab is a page process kept alive after its panel closes. contexts keeps the order of use (moved to the end here), and only the
+    // most recent ones are kept: a conversation left long ago loses its tabs, not the ones in use.
+    const ctx = contexts.get(id)
+    if (ctx) {
+      contexts.delete(id)
+      contexts.set(id, ctx)
+    }
+    for (const stale of contexts.keys()) {
+      if (contexts.size <= MAX_KEPT_CONTEXTS) break
+      if (stale !== id) destroyContext(stale)
+    }
   }
 
   function wireTab(contextId: string, tab: BrowserTab) {
@@ -197,11 +229,8 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
       // A target=_blank / window.open() link opens as a real new tab in the
       // same context, matching how an actual browser behaves, instead of
       // hijacking whatever tab the user currently has open.
-      if (/^https?:\/\//i.test(url)) {
-        createTabInternal(contextId, url)
-      } else {
-        void shell.openExternal(url).catch(() => undefined)
-      }
+      // Any other scheme stays closed: a page must not hand search-ms: or file: to the system (see url-safety.ts).
+      if (isExternalOpenAllowed(url)) createTabInternal(contextId, url)
       return { action: 'deny' }
     })
     const onChange = () => broadcastState(contextId)
@@ -280,6 +309,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
   }
 
   async function listCdpTargets(): Promise<Array<{ id?: string; type?: string; url?: string }>> {
+    const remoteDebugPort = getRemoteDebugPort()
     if (!remoteDebugPort || remoteDebugPort <= 0) return []
     const response = await fetch(`${cdpBrowserUrl()}/json/list`, { signal: AbortSignal.timeout(1000) })
     if (!response.ok) throw new Error(`CDP target list failed: HTTP ${response.status}`)
@@ -363,7 +393,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
     registerIpc(ipcMain: IpcMain) {
       ipcMain.handle('seshat:browser:show', (event, contextId: string, bounds?: BrowserPanelBounds) => trusted(event, () => {
         const id = normalizeContextId(contextId)
-        if (bounds) lastBounds = normalizeBounds(bounds)
+        if (bounds) lastBounds = toWindowBounds(bounds)
         visible = true
         bringContextToForeground(id)
         const ctx = getContext(id)
@@ -389,7 +419,7 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
       }))
       ipcMain.handle('seshat:browser:bounds', (event, contextId: string, bounds: BrowserPanelBounds) => trusted(event, () => {
         const id = normalizeContextId(contextId)
-        lastBounds = normalizeBounds(bounds)
+        lastBounds = toWindowBounds(bounds)
         if (visible && currentContextId === id) {
           getActiveTab(getContext(id))?.view.setBounds(lastBounds)
         }
@@ -459,6 +489,12 @@ export function createBrowserPanel({ getWindow, remoteDebugPort }: BrowserPanelO
       }))
     },
     resolveSessionTarget,
+    /** Takes the visible tab off the window, keeping every tab. Used when the app's page loads again: the panel that placed the view
+     * is gone, and a view left attached would float over the new page. */
+    detachAll() {
+      visible = false
+      detachCurrentView()
+    },
     destroy() {
       visible = false
       for (const id of contexts.keys()) destroyContext(id)

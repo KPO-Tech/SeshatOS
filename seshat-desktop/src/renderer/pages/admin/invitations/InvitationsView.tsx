@@ -5,6 +5,7 @@ import { AdminEmptyRow, AdminIconButton, AdminStatusBadge, AdminTable, AdminTd, 
 import { InviteModal } from './InviteModal'
 import { revokeAdminInvitation, useAdminInvitations } from './useAdminInvitations'
 import type { OrgInvitation } from '../types'
+import { confirmAction } from '@renderer/components/ui/confirm/confirmAction'
 
 const STATUS_FILTERS = [
   { id: '', label: 'All' },
@@ -30,7 +31,7 @@ export function InvitationsView() {
 
   async function handleRevoke(invitation: OrgInvitation) {
     if (revokingId) return
-    if (!window.confirm(`Revoke the invitation sent to ${invitation.email}?`)) return
+    if (!(await confirmAction(`Revoke the invitation sent to ${invitation.email}?`))) return
     setActionError(null)
     setRevokingId(invitation.id)
     try {

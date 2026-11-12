@@ -12,6 +12,46 @@ const CDP_DISCOVERY_TIMEOUT_MS = 1500
 
 let backendProcess: ChildProcess | null = null
 
+/** What the window is told about the backend after it started: it stopped by itself, it is back, or it could not be brought back. */
+export type BackendStatus = { state: 'restarting' | 'ready' | 'failed'; detail?: string }
+
+// A backend that stops by itself is started again, a few times: past that it is crashing on start, and the person is told instead.
+const MAX_RESTARTS = 3
+const RESTART_WINDOW_MS = 5 * 60_000
+const RESTART_DELAY_MS = 1_000
+
+let statusListener: ((status: BackendStatus) => void) | null = null
+let restartTimes: number[] = []
+
+export function onBackendStatus(listener: (status: BackendStatus) => void): void {
+  statusListener = listener
+}
+
+function reportStatus(status: BackendStatus) {
+  statusListener?.(status)
+}
+
+// Called when the running backend exits while nothing asked it to (stopBackendSidecar clears backendProcess first).
+function handleUnexpectedExit(child: ChildProcess, code: number | null, signal: NodeJS.Signals | null) {
+  if (backendProcess !== child) return
+  backendProcess = null
+  const now = Date.now()
+  restartTimes = restartTimes.filter((time) => now - time < RESTART_WINDOW_MS)
+  const detail = `code=${code}, signal=${signal}`
+  if (restartTimes.length >= MAX_RESTARTS) {
+    reportStatus({ state: 'failed', detail })
+    return
+  }
+  restartTimes.push(now)
+  reportStatus({ state: 'restarting', detail })
+  setTimeout(() => {
+    if (backendProcess) return
+    startBackendSidecar()
+      .then(() => reportStatus({ state: 'ready' }))
+      .catch((error) => reportStatus({ state: 'failed', detail: error instanceof Error ? error.message : String(error) }))
+  }, RESTART_DELAY_MS)
+}
+
 function backendBinaryName() {
   return process.platform === 'win32' ? 'seshat-backend.exe' : 'seshat-backend'
 }
@@ -74,7 +114,11 @@ export async function startBackendSidecar(): Promise<void> {
   })
 
   const port = await waitForReadyPort(child, logStream)
+  // waitForReadyPort read stdout line by line until the ready line; what the backend writes after it goes to the log as it comes.
+  // end: false, since stderr is piped into the same file.
+  child.stdout?.pipe(logStream, { end: false })
   setDynamicBackendOrigin(`http://127.0.0.1:${port}`)
+  child.once('exit', (code, signal) => handleUnexpectedExit(child, code, signal))
 }
 
 async function resolveElectronBrowserControlURL(): Promise<string | null> {
@@ -183,5 +227,6 @@ export function stopBackendSidecar(): Promise<void> {
  * mode via startBackendSidecar's own app.isPackaged guard. */
 export async function restartBackendSidecar(): Promise<void> {
   await stopBackendSidecar()
+  restartTimes = []
   await startBackendSidecar()
 }

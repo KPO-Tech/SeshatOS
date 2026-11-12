@@ -109,6 +109,8 @@ export function createBackground({ getWindow, iconPath }: Deps) {
       ensureTray()
       notify(keepRunningMessage(busy))
     },
+    /** Brings the window back, from the tray, minimized or behind other windows. */
+    show: showWindow,
     markQuitting() {
       quitting = true
       destroyTray()
@@ -122,12 +124,16 @@ export function createBackground({ getWindow, iconPath }: Deps) {
         setTrayMenu()
       })
       ipcMain.handle('background:set-busy', (event, count: unknown) => {
+        assertTrustedSender(event)
         busy = typeof count === 'number' && Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
         // A hidden window gets its timers slowed down, which would delay the end of a task being noticed: not while work is in progress.
         const win = BrowserWindow.fromWebContents(event.sender)
         win?.webContents.setBackgroundThrottling(busy === 0)
       })
-      ipcMain.handle('notify:show', (_event, payload: NoticePayload) => notify(payload))
+      ipcMain.handle('notify:show', (event, payload: NoticePayload) => {
+        assertTrustedSender(event)
+        notify(payload)
+      })
     }
   }
 }

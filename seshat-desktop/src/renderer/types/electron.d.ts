@@ -135,6 +135,9 @@ interface Window {
     background?: {
       setBusy: (count: number) => Promise<void>
     }
+    backendStatus?: {
+      onChange: (listener: (status: { state: 'restarting' | 'ready' | 'failed'; detail?: string }) => void) => () => void
+    }
     notify?: {
       show: (notice: { title: string; body?: string; route?: string }) => Promise<void>
       onOpen: (listener: (route: string) => void) => () => void

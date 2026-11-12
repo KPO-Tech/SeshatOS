@@ -11,6 +11,49 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+## [0.3.20] - 2026-11-12
+
+### Highlights
+
+- **Scrolling while the agent writes is as smooth as when it is done.** GPU rasterization was off on Windows, and every token redrew far more than the answer being written.
+- **Links open in the app's own browser again**, in a new tab of the conversation's browser panel.
+- **Natural writing:** a switch that asks the agent for plain prose, without the stock phrases and reflex structures of machine-written text.
+- **Fewer surprises:** long tools and pending permissions no longer end a turn, a stopped turn can be asked again in place, a second launch brings the window back, and a backend that stops starts again.
+
+### Added
+
+- **Natural writing.** A switch in Settings > Preferences > Conversations asks the agent for plain prose: no stock phrases ("delve into", "Dans un monde où", "Il convient de souligner que"), no reflex bullet lists or groups of three, no em dashes, no preamble or closing summary, sentences of varied length. Off by default, since it suits some work and not all; code, data, components and any format you ask for in a message are left alone.
+
+### Changed
+
+- **The Answers page is folded into Preferences.** Rich answers now sit with Condense turns and Natural writing under Preferences > Conversations.
+- **The browser panel has no title row.** Maximize and close sit on the tabs row, and an arrow opens the current page in the system browser.
+- **A web page the agent made is shown as on a computer first.** The preview lays the page out at a desktop, tablet or phone width and scales it down to the panel, so a page made for a wide window no longer shows its phone layout in a narrow panel. The file path above the preview is gone.
+
+### Fixed
+
+- **A link in an answer opens in the app's browser again.** Clicking a link the agent gave, a source or a web search result opened the system browser: the call passed the conversation where the browser expected its provider, the built-in browser refused, and the click fell back to the system. It now opens a new tab in the conversation's browser panel, without taking over the tab the agent drives. Links in cards and `Link` components follow the same path.
+- **A long tool call or a pending permission no longer ends the turn.** The app gave up after 150 seconds without an event, while the backend was sending a keepalive every 10 seconds that never reached the chat. The keepalive now holds the turn, and a stream that closes without its end is shown as an error instead of waiting.
+- **The app can no longer be replaced by a page or a file.** A file dropped on the window, or a link no component handled, loaded in place of the interface. The window now only shows the app; a web address goes to the system browser.
+- **A second launch brings the open window back.** Starting SeshatOS while it ran (hidden near the clock during a task) started a second app and a second backend on the same data.
+- **A closed browser panel no longer leaves a page over the chat.** A tab opened or switched away from stayed attached under the active one and showed again once the panel closed; a reload of the app left the page in place too.
+- **A page in the built-in browser can only open web addresses.** Other schemes were handed to the system.
+- **A dialog is no longer hidden under the browser panel.** The page of the built-in browser is drawn above the interface, so Search, Settings, the notifications or a confirmation opened while it showed were covered; the page is now taken off while a dialog is open.
+- **The browser panel sits in its place at any zoom.** With the app zoom (Appearance) set away from 100 %, the page was drawn off its panel.
+- **Old browser tabs are let go.** Every conversation that ever opened a link kept its tabs, each a page process, until the app quit; only the four most recently used conversations keep theirs now.
+- **A backend that stops by itself starts again.** The app now restarts it (up to three times in five minutes) and says so at the top of the window, instead of failing every call with no explanation.
+- **Confirmations use the app's own dialog.** The system box looked foreign and, on Windows, left text fields unable to take focus after it closed.
+- **Only the app's own page can use the desktop bridge.** Any local file used to be trusted, and two channels (task count, notifications) did not check their caller at all.
+- **The debugging port of the installed app changes at each launch.** The agent's browser tools drive the app's browser through it, and it was always 9333, easy for another program to find. Development keeps 9333.
+- **The backend's log is complete again.** What the backend printed after it started was no longer written to `backend-sidecar.log`.
+- **Scrolling while the agent writes is as smooth as when it is done.** A launch switch (`use-angle=gl`) turned off GPU rasterization on Windows, so the CPU drew every pixel of the answer as it grew; it is gone. The answer being written now draws only its own row (once per frame, its last Markdown block only), the rest of the app (the conversation list, other pages, the sidebar) no longer redraws with each token, and the answer holds its updates while you scroll.
+- **Asking again after stopping a turn replaces its answer.** The note the runtime adds when a turn is stopped ("[The previous turn was interrupted by the user...]") was shown as a message of yours and taken for your prompt, so a retry sent the prompt again as a new turn. The note is no longer shown (the agent still gets it), and the retry takes the stopped turn back.
+- **The last English texts follow the language.** The page shown when the window cannot load, the notes of the page preview, empty previews and a few messages of the chat.
+
+### Security
+
+- **Go 1.26.11.** The backend is built with the Go release that fixes GO-2026-6859, an HTTP/1 server crash in `net/http`.
+
 ## [0.3.19] - 2026-11-09
 
 ### Highlights

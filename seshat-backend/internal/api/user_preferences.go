@@ -30,7 +30,9 @@ type userPreferencesResponse struct {
 	RichFamilies map[string]string `json:"rich_families"`
 	// RichFamilyWords is what each family adds to the prompt, in words, so that the person can weigh it.
 	RichFamilyWords map[string]int `json:"rich_family_words"`
-	UpdatedAt       int64          `json:"updated_at,omitempty"`
+	// NaturalWritingEnabled asks the agent for plain prose without the stock phrases of machine-written text. Off by default.
+	NaturalWritingEnabled bool  `json:"natural_writing_enabled"`
+	UpdatedAt             int64 `json:"updated_at,omitempty"`
 }
 
 func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
@@ -52,6 +54,7 @@ func prefsToResponse(p *preferences.UserPreferences) userPreferencesResponse {
 		RichAnswersEnabled:        !p.RichAnswersDisabled,
 		RichFamilies:              familiesOrEmpty(p.RichFamilies),
 		RichFamilyWords:           backendquery.RichFamilyWords(),
+		NaturalWritingEnabled:     p.NaturalWriting,
 		UpdatedAt:                 p.UpdatedAt.Unix(),
 	}
 }
@@ -121,6 +124,8 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			// RichFamilies is a map so that a client that does not know the field (nil) leaves the stored choice alone; an empty
 			// map makes every family automatic.
 			RichFamilies map[string]string `json:"rich_families"`
+			// NaturalWritingEnabled is a pointer like MemoryEnabled: a client that does not know it leaves the stored choice alone.
+			NaturalWritingEnabled *bool `json:"natural_writing_enabled"`
 		}
 		if !decodeJSONBody(w, r, &body) {
 			return
@@ -147,6 +152,10 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 		if body.RichAnswersEnabled != nil {
 			richAnswersEnabled = *body.RichAnswersEnabled
 		}
+		naturalWriting := a.backend.Preferences.NaturalWritingEnabled(r.Context(), principal)
+		if body.NaturalWritingEnabled != nil {
+			naturalWriting = *body.NaturalWritingEnabled
+		}
 		richFamilies := a.backend.Preferences.RichFamilyModes(r.Context(), principal)
 		if body.RichFamilies != nil {
 			clean, invalid := preferences.CleanRichFamilies(body.RichFamilies)
@@ -169,6 +178,7 @@ func (a *App) handleUserPreferences(w http.ResponseWriter, r *http.Request) {
 			MemoryEnabled:             memoryEnabled,
 			RichAnswersDisabled:       !richAnswersEnabled,
 			RichFamilies:              richFamilies,
+			NaturalWriting:            naturalWriting,
 		})
 		if err != nil {
 			writeBackendError(w, err)

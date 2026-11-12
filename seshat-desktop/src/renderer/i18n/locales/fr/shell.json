@@ -1,5 +1,15 @@
 {
   "layout": {
+    "confirmAction": {
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
+    "backendStatus": {
+      "restarting": "Le service local s'est arrêté. Redémarrage…",
+      "ready": "Le service local est revenu.",
+      "failed": "Le service local ne redémarre pas. Relancez SeshatOS.",
+      "dismiss": "Masquer"
+    },
     "imageLightbox": {
       "download": "Télécharger",
       "close": "Fermer",
@@ -22,7 +32,33 @@
       "document": "Document",
       "index": "Index",
       "restore": "Restaurer",
-      "maximize": "Agrandir"
+      "maximize": "Agrandir",
+      "empty": {
+        "markdown": {
+          "title": "Aperçu Markdown",
+          "description": "Le Markdown s'affiche ici à l'ouverture d'une note."
+        },
+        "pdf": {
+          "title": "Aperçu PDF",
+          "description": "Ce PDF n'a pas pu s'ouvrir."
+        },
+        "docx": {
+          "title": "Aperçu document",
+          "description": "Ce document n'a pas pu s'ouvrir."
+        },
+        "xlsx": {
+          "title": "Aperçu tableur",
+          "description": "Ce tableur n'a pas pu s'ouvrir."
+        },
+        "pptx": {
+          "title": "Aperçu présentation",
+          "description": "Cette présentation n'a pas pu s'ouvrir."
+        },
+        "artifact": {
+          "title": "Aperçu artifact",
+          "description": "Cet artifact n'a pas pu s'ouvrir."
+        }
+      }
     },
     "searchModal": {
       "searchConversations": "Chercher une conversation",

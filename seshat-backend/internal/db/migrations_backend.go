@@ -451,6 +451,13 @@ func backendMigrations() []schemaMigration {
 				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
 			},
 		},
+		{
+			ID:    "20261112_065_user_preferences_natural_writing",
+			Scope: migrationScopeBackend,
+			Run: func(ctx context.Context, db *DB) error {
+				return db.gormDB.WithContext(ctx).AutoMigrate(&gUserPreferences{})
+			},
+		},
 	}
 }
 

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { tmpdir } from 'node:os'
 import type { IpcMain, IpcMainInvokeEvent } from 'electron'
 import { registerShellHandlers, stopAllShellSessions } from './shell.js'
@@ -10,8 +11,8 @@ type Sent = { channel: string; payload: { id?: string; data?: string } }
 
 // A minimal ipcMain that only records handlers, so the whole pty path runs
 // with no Electron runtime. trusted-sender.ts imports electron as a type only
-// and requires a file:// sender when ELECTRON_RENDERER_URL is unset, which is
-// the case in this process.
+// and, when ELECTRON_RENDERER_URL is unset (the case in this process), only
+// accepts the renderer's index.html next to the compiled main code.
 function fakeIpcMain() {
   const handlers = new Map<string, Handler>()
   const ipcMain = {
@@ -25,7 +26,10 @@ function fakeIpcMain() {
   }
 }
 
-function fakeEvent(url = 'file:///app/index.html') {
+// This test is compiled next to trusted-sender.ts (.tmp/ipc-tests/ipc), so both see the same renderer file.
+const APP_URL = `${pathToFileURL(join(__dirname, '../renderer/index.html')).href}#/conversation/abc`
+
+function fakeEvent(url = APP_URL) {
   const sent: Sent[] = []
   const event = {
     senderFrame: { url },
@@ -94,6 +98,16 @@ test('refuses a sender that is not the app itself', async () => {
 
   await assert.rejects(async () => {
     await call(event, 'shell:start', { id: 'shell-untrusted', cwd: tmpdir(), cols: 80, rows: 24 })
+  })
+})
+
+test('refuses a local page that is not the app', async () => {
+  const { ipcMain, call } = fakeIpcMain()
+  registerShellHandlers(ipcMain)
+  const { event } = fakeEvent('file:///C:/Users/me/Downloads/page.html')
+
+  await assert.rejects(async () => {
+    await call(event, 'shell:start', { id: 'shell-local-page', cwd: tmpdir(), cols: 80, rows: 24 })
   })
 })
 

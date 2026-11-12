@@ -25,6 +25,7 @@ import { CANNOT_ASK_AGAIN, withoutLastAnswer } from '@renderer/components/chat/s
 import type { RAGSearchResult } from '@renderer/api/types'
 import type { ToolActivity } from '@renderer/stores/session'
 import { useTranslation } from 'react-i18next'
+import { isScrolling } from '@renderer/lib/scrollActivity'
 
 const MAX_RETRIES = 3
 const RETRY_BASE_MS = 1000
@@ -32,6 +33,9 @@ const RETRY_BASE_MS = 1000
 // all" - distinct from the network-drop retry above, which only fires on a
 // detected disconnect. Mirrors OpenHands' own 150s watchdog precedent.
 const WATCHDOG_TIMEOUT_MS = 150_000
+// How often the answer being written is copied into the session's messages (see scheduleSync).
+const SYNC_INTERVAL_MS = 1000
+const SCROLL_RETRY_MS = 200
 
 type SendMessageOptions = {
   corpusId?: string | null
@@ -55,9 +59,8 @@ type UseChatStreamOptions = {
 export function useChatStream(sessionId: string, options?: UseChatStreamOptions) {
   const { t } = useTranslation('chat')
   const isStreaming = useSessionStore((s) => Boolean(s.isStreamingBySession[sessionId]))
-  // Tracks a pending requestAnimationFrame for batching assistant-message syncs.
-  // Without batching, every SSE token triggers a full store.updateMessage call.
-  const syncRafRef = useRef<number | null>(null)
+  // The pending copy of the live answer into the session's messages (see SYNC_INTERVAL_MS).
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Ref (not state) since options.onCompaction is a plain callback the
   // caller may pass a fresh closure for on every render - a ref sidesteps
   // re-subscribing sendMessage's useCallback (scoped to [sessionId]) on
@@ -129,10 +132,10 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
     }
     resetWatchdog()
 
-    // Cancel any stale RAF from a prior message (defensive).
-    if (syncRafRef.current !== null) {
-      cancelAnimationFrame(syncRafRef.current)
-      syncRafRef.current = null
+    // Cancel any stale sync from a prior message (defensive).
+    if (syncTimerRef.current !== null) {
+      clearTimeout(syncTimerRef.current)
+      syncTimerRef.current = null
     }
 
     const token = useAuthStore.getState().token
@@ -142,28 +145,36 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
     let pendingTool: ToolActivity | null = null
     let targetStreaming = store.getStreaming(sessionId)
 
-    // scheduleSync batches assistant-message store updates to once per animation frame.
-    // Without this, every streamed token triggers updateMessage + React re-render.
+    // The answer being written is drawn from the streaming blocks (see LiveMessageItem); its copy in the session's messages is only for
+    // what reads the conversation as a whole (the list of conversations, citations, the Session panel). Copying it at every frame made
+    // a new list of sessions at every frame, and everything that reads that list was drawn again with each token.
     const scheduleSync = () => {
-      if (syncRafRef.current !== null) return
-      syncRafRef.current = requestAnimationFrame(() => {
-        syncRafRef.current = null
+      if (syncTimerRef.current !== null) return
+      const run = () => {
+        // Not while the person scrolls: the copy draws the list of conversations again (see scrollActivity.ts).
+        if (isScrolling()) {
+          syncTimerRef.current = setTimeout(run, SCROLL_RETRY_MS)
+          return
+        }
+        syncTimerRef.current = null
         syncAssistantPlaceholder(sessionId, assistantMessageId, useSessionStore.getState())
-      })
+      }
+      syncTimerRef.current = setTimeout(run, SYNC_INTERVAL_MS)
     }
 
-    // flushSync cancels any pending RAF and syncs immediately (used at done/error boundaries).
+    // flushSync cancels any pending sync and copies at once (used at done/error boundaries).
     const flushSync = () => {
-      if (syncRafRef.current !== null) {
-        cancelAnimationFrame(syncRafRef.current)
-        syncRafRef.current = null
+      if (syncTimerRef.current !== null) {
+        clearTimeout(syncTimerRef.current)
+        syncTimerRef.current = null
       }
       syncAssistantPlaceholder(sessionId, assistantMessageId, useSessionStore.getState())
     }
 
+    // The text being written is not copied into the session's messages: the copy draws the page and the list of conversations again,
+    // and only the steps of the turn (a tool that starts or ends, see handleRuntimeEvent) and its end need it.
     const presenter = new StreamPresenter((blocks) => {
       store.setStreaming(sessionId, blocks)
-      scheduleSync()
     })
 
     const flushPresenter = () => {
@@ -239,6 +250,9 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
                   store.updateSession(sessionId, { title: titleEvent.title })
                 }
               },
+              // The backend's keepalive proves the connection lives while a tool runs or a permission waits: it holds the watchdog off,
+              // without counting as activity of the turn (a dropped connection may still be retried).
+              resetWatchdog,
             )
           } else {
             await consumeBrowserStream(
@@ -378,9 +392,9 @@ export function useChatStream(sessionId: string, options?: UseChatStreamOptions)
       announceAgentFailed(sessionId, errMsg)
     } finally {
       if (watchdogTimer !== null) clearTimeout(watchdogTimer)
-      if (syncRafRef.current !== null) {
-        cancelAnimationFrame(syncRafRef.current)
-        syncRafRef.current = null
+      if (syncTimerRef.current !== null) {
+        clearTimeout(syncTimerRef.current)
+        syncTimerRef.current = null
       }
       presenter.cancel()
       clearSharedController(sessionId)

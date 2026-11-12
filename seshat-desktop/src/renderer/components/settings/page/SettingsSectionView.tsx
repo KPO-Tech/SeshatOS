@@ -1,4 +1,3 @@
-import { AnswersConfig } from '@renderer/components/config/answers/AnswersConfig'
 import { CloudConfig } from '@renderer/components/config/cloud/CloudConfig'
 import { DocumentsConfig } from '@renderer/components/config/documents/DocumentsConfig'
 import { EnvironmentConfig } from '@renderer/components/config/environment/EnvironmentConfig'
@@ -63,8 +62,6 @@ function SectionContent({ id }: { id: SettingsSectionId }) {
       return <StorageConfig />
     case 'skills':
       return <SkillsConfig />
-    case 'answers':
-      return <AnswersConfig />
     case 'memories':
       return <MemoriesSettings />
     case 'data-controls':

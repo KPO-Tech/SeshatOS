@@ -599,9 +599,10 @@ func rewindForRegeneration(session *sdk.Session, input QueryInput) error {
 	return nil
 }
 
-// interruptedTurnNotePrefix starts the message the runtime adds to a turn that stopped on an error or was cancelled: it is not
-// something the person wrote.
-const interruptedTurnNotePrefix = "[The previous turn stopped because"
+// interruptedTurnNotePrefix starts the message the runtime adds to a turn that stopped on an error ("[The previous turn stopped
+// because of an error...") or that the person stopped ("[The previous turn was interrupted by the user..."): it is not something the
+// person wrote. Only the error variant used to be matched, so asking again for a stopped answer sent its prompt as a new turn.
+const interruptedTurnNotePrefix = "[The previous turn "
 
 // lastTurnPrompt is the text the person wrote to start the last turn of the conversation.
 func lastTurnPrompt(messages []types.Message) (string, bool) {

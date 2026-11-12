@@ -23,6 +23,7 @@ import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/Win
 import { FLOATING_PANEL_WIDTH, isFloatingColumn } from './floatingColumn'
 import type { RightPanelInstance, RightPanelKind, RightPanelColumn } from '@renderer/stores/ui'
 import { useTranslation } from 'react-i18next'
+import { i18n } from '@renderer/i18n'
 
 export function RightPanelHost() {
   const rightColumns = useUIStore((s) => s.rightColumns)
@@ -192,6 +193,21 @@ function PanelFrame({
     )
   }
 
+  // The browser carries its window controls on its tabs row (see BrowserPanel.tsx): no title row above it, and no padding around the page.
+  if (panel.kind === 'browser') {
+    return (
+      <aside className="flex min-h-0 flex-1 flex-col overflow-hidden bg-app-surface">
+        <BrowserPanel
+          url={panel.browserUrl}
+          contextId={panel.sessionId ? `session:${panel.sessionId}` : 'chat'}
+          isMaximized={isMaximized}
+          onClose={onClose}
+          onToggleMaximize={onToggleMaximize}
+        />
+      </aside>
+    )
+  }
+
   return <GenericPanelFrame key={panel.id} panel={panel} isMaximized={isMaximized} onClose={onClose} onToggleMaximize={onToggleMaximize} />
 }
 
@@ -285,8 +301,8 @@ function renderPanelBody(panel: RightPanelInstance) {
       if (!panel.markdown) {
         return (
           <EmptyState
-            title="Markdown preview"
-            description="Generated markdown content will render here when a note or document is opened."
+            title={i18n.t('shell:layout.rightPanelHost.empty.markdown.title')}
+            description={i18n.t('shell:layout.rightPanelHost.empty.markdown.description')}
           />
         )
       }
@@ -313,31 +329,31 @@ function renderPanelBody(panel: RightPanelInstance) {
       return panel.documentFileId ? (
         <PDFViewerPanel fileId={panel.documentFileId} filename={panel.title} initialPage={panel.documentPage} highlight={panel.documentHighlight} />
       ) : (
-        <EmptyState title="PDF preview" description="This PDF couldn't be opened." />
+        <EmptyState title={i18n.t('shell:layout.rightPanelHost.empty.pdf.title')} description={i18n.t('shell:layout.rightPanelHost.empty.pdf.description')} />
       )
     case 'docx':
       return panel.documentFileId ? (
         <DocxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
-        <EmptyState title="Document preview" description="This document couldn't be opened." />
+        <EmptyState title={i18n.t('shell:layout.rightPanelHost.empty.docx.title')} description={i18n.t('shell:layout.rightPanelHost.empty.docx.description')} />
       )
     case 'xlsx':
       return panel.documentFileId ? (
         <XlsxPreviewPanel fileId={panel.documentFileId} filename={panel.title} highlight={panel.documentHighlight} />
       ) : (
-        <EmptyState title="Spreadsheet preview" description="This spreadsheet couldn't be opened." />
+        <EmptyState title={i18n.t('shell:layout.rightPanelHost.empty.xlsx.title')} description={i18n.t('shell:layout.rightPanelHost.empty.xlsx.description')} />
       )
     case 'pptx':
       return panel.documentFileId ? (
         <PptxPreviewPanel fileId={panel.documentFileId} filename={panel.title} initialSlide={panel.documentPage} highlight={panel.documentHighlight} />
       ) : (
-        <EmptyState title="Presentation preview" description="This presentation couldn't be opened." />
+        <EmptyState title={i18n.t('shell:layout.rightPanelHost.empty.pptx.title')} description={i18n.t('shell:layout.rightPanelHost.empty.pptx.description')} />
       )
     case 'artifact':
       return panel.sessionId && panel.artifactPath ? (
         <ArtifactPreviewPanel sessionId={panel.sessionId} path={panel.artifactPath} filename={panel.title} />
       ) : (
-        <EmptyState title="Artifact preview" description="This artifact couldn't be opened." />
+        <EmptyState title={i18n.t('shell:layout.rightPanelHost.empty.artifact.title')} description={i18n.t('shell:layout.rightPanelHost.empty.artifact.description')} />
       )
     default:
       return (

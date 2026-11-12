@@ -1,5 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { UiAction } from '../../lang/types'
+import { openInAppBrowser } from '@renderer/lib/openInAppBrowser'
+import { i18n } from '@renderer/i18n'
 
 export type RichActionBridge = {
   /** Sends a message as the user. Absent where an answer is shown without a conversation under it. */
@@ -35,10 +37,10 @@ export function actionTarget(action: UiAction | null): string | undefined {
 
 /** What an action can do here, and why not when it cannot. */
 export function actionState(action: UiAction | null, bridge: RichActionBridge): { enabled: boolean; why?: string } {
-  if (!action) return { enabled: false, why: 'This action could not be read' }
+  if (!action) return { enabled: false, why: i18n.t('chat:chat.richblocks.actions.cannotRead') }
   if (action.name !== 'Ask') return { enabled: true }
-  if (!bridge.ask) return { enabled: false, why: 'Open the conversation to ask' }
-  if (bridge.busy) return { enabled: false, why: 'Wait for the answer to finish' }
+  if (!bridge.ask) return { enabled: false, why: i18n.t('chat:chat.richblocks.actions.openToAsk') }
+  if (bridge.busy) return { enabled: false, why: i18n.t('chat:chat.richblocks.actions.waitForAnswer') }
   return { enabled: true }
 }
 
@@ -46,7 +48,7 @@ export function runAction(action: UiAction | null, bridge: RichActionBridge): vo
   if (!action || !actionState(action, bridge).enabled) return
   const [first] = action.args
   if (action.name === 'Ask') bridge.ask?.(String(first))
-  else if (action.name === 'OpenUrl') void window.seshat?.openExternal?.(String(first))
+  else if (action.name === 'OpenUrl') openInAppBrowser(String(first))
   else if (bridge.openFile) bridge.openFile(String(first))
   else void window.seshat?.openLocalPath?.(String(first))?.catch(() => undefined)
 }

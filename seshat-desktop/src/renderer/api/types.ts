@@ -235,6 +235,8 @@ export type UserPreferences = {
   rich_families?: Record<string, 'on' | 'off'>
   /** What each family adds to the prompt, in words. Given by the backend, read only. */
   rich_family_words?: Record<string, number>
+  /** The agent writes plain prose, without the stock phrases and structures of machine-written text. Off unless turned on. */
+  natural_writing_enabled?: boolean
   updated_at?: number
 }
 

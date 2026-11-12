@@ -21,7 +21,11 @@ const MESSAGES = {
     'hidden.oneTask': '1 task is still running',
     'hidden.manyTasks': '{{count}} tasks are still running',
     'hidden.body': '{{what}}. Open SeshatOS from the icon near the clock, or quit it from there.',
-    'backend.failed': 'SeshatOS backend failed to start'
+    'backend.failed': 'SeshatOS backend failed to start',
+    'load.title': 'SeshatOS could not load its window',
+    'load.retry': 'Retry',
+    'load.notFinished': 'The app did not finish loading.',
+    'load.tooSlow': 'The app took too long to load.'
   },
   fr: {
     'tray.open': 'Ouvrir SeshatOS',
@@ -35,7 +39,11 @@ const MESSAGES = {
     'hidden.oneTask': '1 tâche en cours',
     'hidden.manyTasks': '{{count}} tâches en cours',
     'hidden.body': '{{what}}. Rouvrez SeshatOS depuis l’icône près de l’horloge, ou quittez-le de là.',
-    'backend.failed': 'Le backend de SeshatOS n’a pas démarré'
+    'backend.failed': 'Le backend de SeshatOS n’a pas démarré',
+    'load.title': 'SeshatOS n’a pas pu charger sa fenêtre',
+    'load.retry': 'Réessayer',
+    'load.notFinished': 'L’application n’a pas fini de charger.',
+    'load.tooSlow': 'L’application a mis trop de temps à charger.'
   }
 } as const satisfies Record<MainLanguage, Record<string, string>>
 
