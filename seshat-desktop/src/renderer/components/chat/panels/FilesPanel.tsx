@@ -11,6 +11,7 @@ import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/Win
 import type { StreamingBlock } from '@renderer/stores/session'
 import type { Message, ToolUseBlock } from '@renderer/api/types'
 import { useTranslation } from 'react-i18next'
+import { useStreamingTools } from '@renderer/components/chat/state/useStreamingTools'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -73,7 +74,7 @@ export function FilesPanel({
   const { t } = useTranslation('chat')
   const session = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId))
   const messages = session?.messages ?? EMPTY_MESSAGES
-  const streaming = useSessionStore((s) => s.getStreaming(sessionId))
+  const streaming = useStreamingTools(sessionId)
   const projectPath = session?.projectPath
 
   // Closed by default - the root directory still loads in the background

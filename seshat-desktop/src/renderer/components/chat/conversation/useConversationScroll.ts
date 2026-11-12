@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import type { StreamingBlock } from '@renderer/stores/session'
 import { FOLLOW_DISTANCE, followAfterPress, followAfterScroll } from '@renderer/lib/followScroll'
 
 type UseConversationScrollArgs = {
   messageCount: number
-  streaming: StreamingBlock[]
+  /** True while a turn runs: the end of the conversation is followed as the answer grows. */
+  following: boolean
 }
 
 /** How far from the end the reader must be before a way back down is offered. */
 const JUMP_DISTANCE = 240
 
-export function useConversationScroll({ messageCount, streaming }: UseConversationScrollArgs) {
+export function useConversationScroll({ messageCount, following }: UseConversationScrollArgs) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
   const scrollRafRef = useRef<number | null>(null)
@@ -32,7 +32,7 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
   // Growth is followed while a turn runs, because that growth is the answer being written. Once it
   // has stopped, the only thing that grows is something the reader opened: following it would pull
   // the view to the end while they are reading what they just unfolded.
-  const followGrowth = streaming.length > 0
+  const followGrowth = following
   rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = (item, _delta, instance) =>
     (followGrowth && isAtBottomRef.current) || item.end <= (instance.scrollOffset ?? 0)
 
@@ -98,8 +98,8 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
     }
   }, [])
 
-  // Follows the end of the conversation. On the total size as well as on the stream: a row also grows with no new token, when it is measured,
-  // when a picture has loaded, when a tool's result arrives.
+  // Follows the end of the conversation as the total size grows: the answer being written grows its row, which is measured, and a row
+  // also grows when a picture has loaded or a tool's result arrives.
   const totalSize = rowVirtualizer.getTotalSize()
   useEffect(() => {
     if (!followGrowth || !isAtBottomRef.current || messageCount === 0) return
@@ -109,7 +109,7 @@ export function useConversationScroll({ messageCount, streaming }: UseConversati
       const el = scrollRef.current
       if (el && isAtBottomRef.current) el.scrollTo({ top: el.scrollHeight })
     })
-  }, [followGrowth, messageCount, streaming, totalSize])
+  }, [followGrowth, messageCount, totalSize])
 
   useEffect(() => {
     return () => {

@@ -1,11 +1,13 @@
-import { useMemo, type RefObject } from 'react'
-import type { Virtualizer } from '@tanstack/react-virtual'
+import { memo, useMemo } from 'react'
 import type { Message } from '@renderer/api/types'
 import type { ChatAttachment } from '@renderer/stores/session'
 import { changedFilesByTurnEnd } from '@renderer/lib/changedFiles'
 import { webSourcesByTurnEnd, webSourcesSoFar } from '@renderer/lib/webSources'
 import { useStableEntries } from '@renderer/lib/stableEntries'
 import { MessageItem, userPrompt } from '@renderer/components/chat/messages/MessageItem'
+import { LiveMessageItem } from '@renderer/components/chat/messages/LiveMessageItem'
+import { JumpToLatest } from '@renderer/components/chat/conversation/JumpToLatest'
+import { useConversationScroll } from '@renderer/components/chat/conversation/useConversationScroll'
 import { layoutTurns, listRows, type ListRow } from '@renderer/components/chat/messages/turns'
 import { useUIStore } from '@renderer/stores/ui'
 import type { AnswerExtras } from '@renderer/components/chat/messages/answerExtras'
@@ -19,8 +21,6 @@ type LiveActivity = {
 type MessageListProps = {
   sessionId?: string
   messages: Message[]
-  scrollRef: RefObject<HTMLDivElement | null>
-  rowVirtualizer: Virtualizer<HTMLDivElement, Element>
   blurred?: boolean
   isStreaming: boolean
   pendingPermission: unknown
@@ -48,11 +48,11 @@ function byRow<T>(rows: ListRow[], perMessage: Map<number, T>): Map<number, T> {
   return out
 }
 
-export function MessageList({
+// Memoized, and owner of its scroll: the page around it (composer, panels) draws again for its own reasons, and the list draws only when
+// its messages, its live answer or its scroll change. The arrow back to the end is drawn here too, after the list.
+export const MessageList = memo(function MessageList({
   sessionId,
   messages,
-  scrollRef,
-  rowVirtualizer,
   blurred = false,
   isStreaming,
   pendingPermission,
@@ -68,6 +68,8 @@ export function MessageList({
   // The files each turn created or edited, listed under the message that ends the turn.
   // Each list is kept identical while its content does not change, so that a streamed token only draws the message it lands in.
   const { t } = useTranslation('chat')
+  // Virtual list: only the rows near the viewport are drawn.
+  const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({ messageCount: messages.length, following: isStreaming })
   // The runtime writes a message per step. The consecutive ones that hold nothing but
   // calls are drawn as one row, so their calls read as a single run.
   const rows = useMemo(() => listRows(messages), [messages])
@@ -97,6 +99,8 @@ export function MessageList({
   const lastMessageRow = rows.findIndex((row) => row.indexes.includes(messages.length - 1))
   let lastAssistantRow = -1
   rows.forEach((row, index) => { if (!row.merged && row.message.role === 'assistant') lastAssistantRow = index })
+  // The row of the answer being written, drawn from the stream (LiveMessageItem): the last message, while a turn runs.
+  const liveRow = isStreaming && messages[messages.length - 1]?.role === 'assistant' && !rows[lastMessageRow]?.merged ? lastMessageRow : -1
 
   // The last answer can be asked again from the prompt before it, unless a turn is running: the new one takes its place. An
   // older answer offers nothing, because asking it again would have to drop everything that came after it.
@@ -128,6 +132,7 @@ export function MessageList({
   }
 
   return (
+    <>
     <div className={`conv-messages${blurred ? ' conv-messages--blurred' : ''}`} ref={scrollRef}>
       <div
         className="conv-messages-inner"
@@ -141,6 +146,7 @@ export function MessageList({
           const showLiveActivity = revealThinking && !pendingPermission && !pendingAskUser
           const showCompleted = justCompleted && msg.role === 'assistant' && i === lastMessageRow && !pendingPermission && !pendingAskUser
           const turn = turnLayout[i]
+          const RowItem = i === liveRow ? LiveMessageItem : MessageItem
           return (
             <div
               key={virtualRow.key}
@@ -149,7 +155,7 @@ export function MessageList({
               className="conv-virtual-row"
               style={{ position: 'absolute', top: 0, left: 0, right: 0, transform: `translateY(${virtualRow.start}px)` }}
             >
-              <MessageItem
+              <RowItem
                 message={msg}
                 sessionId={sessionId}
                 isFirst={i === 0}
@@ -177,5 +183,7 @@ export function MessageList({
         })}
       </div>
     </div>
+    <JumpToLatest away={away} onJump={scrollToBottom} />
+    </>
   )
-}
+})
