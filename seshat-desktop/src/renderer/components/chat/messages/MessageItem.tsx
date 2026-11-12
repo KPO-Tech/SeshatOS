@@ -446,7 +446,7 @@ export const MessageItem = memo(function MessageItem({ message, sessionId, isFir
                   isUser && message.status === 'error' && 'border-app-error',
                 )}
               >
-                <MarkdownView sessionId={sessionId} sources={edition.sources ? consultedPages : undefined} renderLink={isUser ? undefined : extras?.renderLink}>{isUser || !extras?.prepare ? block.text : extras.prepare(block.text)}</MarkdownView>
+                <MarkdownView streaming={liveTurn && !isUser} sessionId={sessionId} sources={edition.sources ? consultedPages : undefined} renderLink={isUser ? undefined : extras?.renderLink}>{isUser || !extras?.prepare ? block.text : extras.prepare(block.text)}</MarkdownView>
                 {isUser && message.status === 'error' && (
                   <button
                     type="button"

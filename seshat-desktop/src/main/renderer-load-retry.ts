@@ -51,12 +51,12 @@ const escapeHtml = (text: string) =>
 export const RETRY_URL = 'seshat-retry://reload'
 
 /** The page shown when the renderer still fails to load after the retries. */
-export function buildLoadFailureUrl(detail: string): string {
+export function buildLoadFailureUrl(detail: string, texts: { title: string; retry: string } = { title: 'SeshatOS could not load its window', retry: 'Retry' }): string {
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>SeshatOS</title><style>
 body{margin:0;height:100vh;display:grid;place-items:center;background:#2f2e34;color:#e8e6e3;font:14px system-ui,sans-serif}
 main{max-width:420px;padding:24px}h1{font-size:18px;margin:0 0 8px}p{margin:0 0 16px;color:#a8a5a0}
 a{display:inline-block;padding:8px 16px;border-radius:6px;background:#e8e6e3;color:#2f2e34;text-decoration:none;font-weight:600}
-</style></head><body><main><h1>SeshatOS could not load its window</h1><p>${escapeHtml(detail)}</p><a href="${RETRY_URL}">Retry</a></main></body></html>`
+</style></head><body><main><h1>${escapeHtml(texts.title)}</h1><p>${escapeHtml(detail)}</p><a href="${RETRY_URL}">${escapeHtml(texts.retry)}</a></main></body></html>`
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
 }
 

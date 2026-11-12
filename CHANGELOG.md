@@ -24,7 +24,11 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Old browser tabs are let go.** Every conversation that ever opened a link kept its tabs, each a page process, until the app quit; only the four most recently used conversations keep theirs now.
 - **A backend that stops by itself starts again.** The app now restarts it (up to three times in five minutes) and says so at the top of the window, instead of failing every call with no explanation.
 - **Confirmations use the app's own dialog.** The system box looked foreign and, on Windows, left text fields unable to take focus after it closed.
-- **Only the app's own page can use the desktop bridge.** Any local file used to be trusted.
+- **Only the app's own page can use the desktop bridge.** Any local file used to be trusted, and two channels (task count, notifications) did not check their caller at all.
+- **The debugging port of the installed app changes at each launch.** The agent's browser tools drive the app's browser through it, and it was always 9333, easy for another program to find. Development keeps 9333.
+- **The backend's log is complete again.** What the backend printed after it started was no longer written to `backend-sidecar.log`.
+- **Scrolling while the agent writes is as smooth as when it is done.** A launch switch (`use-angle=gl`) turned off GPU rasterization on Windows, so the CPU drew every pixel of the answer as it grew; it is gone. The answer being written now draws only its own row (once per frame, its last Markdown block only), the rest of the app (the conversation list, other pages, the sidebar) no longer redraws with each token, and the answer holds its updates while you scroll.
+- **The last English texts follow the language.** The page shown when the window cannot load, the notes of the page preview, empty previews and a few messages of the chat.
 
 ### Changed
 

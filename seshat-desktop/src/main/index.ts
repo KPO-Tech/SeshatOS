@@ -1,6 +1,8 @@
 import { app, BrowserWindow, Menu, shell, ipcMain, globalShortcut, dialog, session } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
+import { rmSync } from 'fs'
+import { readDevToolsPort } from './devtools-port'
 import { registerSystemHandlers } from './ipc/system'
 import { registerFilesystemHandlers } from './ipc/filesystem'
 import { registerSecureStoreHandlers } from './ipc/secure-store'
@@ -136,12 +138,12 @@ function createWindow() {
 
   const rendererFile = join(__dirname, '../renderer/index.html')
   const appUrl = process.env.ELECTRON_RENDERER_URL || pathToFileURL(rendererFile).href
-  let lastFailure = 'The app did not finish loading.'
+  let lastFailure = mainT('load.notFinished')
   let watchdog: ReturnType<typeof setTimeout> | null = null
   const loadRenderer = () => {
     if (watchdog) clearTimeout(watchdog)
     watchdog = setTimeout(() => {
-      lastFailure = 'The app took too long to load.'
+      lastFailure = mainT('load.tooSlow')
       loadRetry.failed()
     }, LOAD_WATCHDOG_MS)
     const loading = process.env.ELECTRON_RENDERER_URL
@@ -155,7 +157,7 @@ function createWindow() {
     onGiveUp: () => {
       if (win.isDestroyed()) return
       if (watchdog) clearTimeout(watchdog)
-      void win.loadURL(buildLoadFailureUrl(lastFailure))
+      void win.loadURL(buildLoadFailureUrl(lastFailure, { title: mainT('load.title'), retry: mainT('load.retry') }))
       if (!win.isVisible()) win.show()
     }
   })
@@ -204,10 +206,22 @@ const isPrimaryInstance = app.requestSingleInstanceLock()
 if (!isPrimaryInstance) app.exit(0)
 app.on('second-instance', () => background.show())
 
-app.commandLine.appendSwitch('disable-gpu-vsync')
-app.commandLine.appendSwitch('use-angle', 'gl')
-const remoteDebugPort = Number.parseInt(process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT || '9333', 10)
-if (Number.isFinite(remoteDebugPort) && remoteDebugPort > 0) {
+// Chromium's own graphics settings are kept. use-angle=gl (with disable-gpu-vsync) used to be set here: on Windows it turns GPU
+// rasterization off, so every pixel of the page was drawn by the CPU, and while an answer streamed its rows were drawn again at each
+// frame and the scroll waited for them. Measured on Electron 45: rasterization "unavailable_off" with it, "enabled" without.
+// The agent's browser tools drive the app's browser through Chromium's debugging port, which has no password: any program on the computer
+// that finds it can drive the app. Development keeps the fixed 9333 that a backend started by hand looks for; the installed app lets
+// Chromium pick a free port at each launch (port 0), reads it back from DevToolsActivePort, and hands it to the backend it starts.
+const configuredDebugPort = process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT
+const pickDebugPort = isPrimaryInstance && app.isPackaged && !configuredDebugPort
+const devToolsPortFile = join(app.getPath('userData'), 'DevToolsActivePort')
+let remoteDebugPort = pickDebugPort ? 0 : Number.parseInt(configuredDebugPort || '9333', 10)
+if (pickDebugPort) {
+  // The file of the last run would give a port that is gone.
+  rmSync(devToolsPortFile, { force: true })
+  app.commandLine.appendSwitch('remote-debugging-port', '0')
+  app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1')
+} else if (Number.isFinite(remoteDebugPort) && remoteDebugPort > 0) {
   app.commandLine.appendSwitch('remote-debugging-port', String(remoteDebugPort))
   app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1')
   process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT = String(remoteDebugPort)
@@ -215,7 +229,7 @@ if (Number.isFinite(remoteDebugPort) && remoteDebugPort > 0) {
 
 const browserPanel = createBrowserPanel({
   getWindow: () => mainWindow,
-  remoteDebugPort,
+  getRemoteDebugPort: () => remoteDebugPort,
 })
 
 // Lets seshat-backend ask "give me the visible tab for session X" so an
@@ -272,6 +286,10 @@ app.whenReady().then(async () => {
   })
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => ALLOWED_PERMISSIONS.has(permission))
 
+  if (pickDebugPort) {
+    remoteDebugPort = await readDevToolsPort(devToolsPortFile)
+    if (remoteDebugPort > 0) process.env.SESHAT_ELECTRON_REMOTE_DEBUG_PORT = String(remoteDebugPort)
+  }
   onBackendStatus((status) => {
     const win = mainWindow
     if (win && !win.isDestroyed()) win.webContents.send('backend:status', status)

@@ -1,6 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
+import { memo, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { normalizeMathDelimiters, sealOpenFences } from '@renderer/lib/markdownText'
+import { splitMarkdownBlocks } from '@renderer/lib/markdownBlocks'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
@@ -352,6 +353,22 @@ type CodeProps = {
 
 const REMARK_PLUGINS = [remarkGfm, remarkMath]
 
+type MarkdownBlockProps = {
+  text: string
+  components: Components
+  rehypePlugins: ComponentProps<typeof ReactMarkdown>['rehypePlugins']
+}
+
+// One block of an answer being written. Memoized on its text: the blocks above the one that grows keep the same text, so a token parses
+// and draws only the last block instead of the whole answer.
+const MarkdownBlock = memo(function MarkdownBlock({ text, components, rehypePlugins }: MarkdownBlockProps) {
+  return (
+    <ReactMarkdown remarkPlugins={REMARK_PLUGINS} rehypePlugins={rehypePlugins} components={components}>
+      {text}
+    </ReactMarkdown>
+  )
+})
+
 export function MarkdownView({ children, className, streaming = false, sessionId, variant = 'chat', sources, renderLink, imageLoader }: Props) {
   const content = normalizeMathDelimiters(streaming ? sealOpenFences(children) : children)
   // The pages consulted are kept by value: a new array with the same addresses must not rebuild the components below mid-stream.
@@ -506,13 +523,28 @@ export function MarkdownView({ children, className, streaming = false, sessionId
           }
         }), [streaming, sessionId, consulted, renderLink, imageLoader])
 
+  // While the text streams it is parsed block by block (see MarkdownBlock); once complete, as one document, so what needs the whole of it
+  // (a link reference, a footnote) is drawn right.
+  const blocks = useMemo(() => (streaming ? splitMarkdownBlocks(content) : null), [streaming, content])
+  const rehypePlugins = variant === 'document' ? DOCUMENT_REHYPE_PLUGINS : undefined
+
+  if (blocks) {
+    return (
+      <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
+        {blocks.map((block, index) => (
+          <MarkdownBlock key={index} text={block} components={markdownComponents} rehypePlugins={rehypePlugins} />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className={cx(VARIANT_CLASS[variant], 'text-[var(--text-primary)]', className)}>
       <ReactMarkdown
         // The formulas are drawn while the answer streams: remark-math finds the closed ones, and KatexMath keeps what it typeset by
         // formula, so a token only costs the formula it completes. Prism still waits for the message to be complete (see `code`).
         remarkPlugins={REMARK_PLUGINS}
-        rehypePlugins={variant === 'document' ? DOCUMENT_REHYPE_PLUGINS : undefined}
+        rehypePlugins={rehypePlugins}
         components={markdownComponents}
       >
         {content}

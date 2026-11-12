@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { CheckOne, Delete, Down, Edit, FileTextOne, History, MoreOne, Right, Share } from '@icon-park/react'
 import { api } from '@renderer/api/client'
@@ -27,7 +27,16 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
   const { t } = useTranslation('shell')
   const activeId = useSessionStore((state) => state.activeId)
   const updateSession = useSessionStore((state) => state.updateSession)
-  const agentStates = useSessionStore((state) => state.agentStates)
+  // Only which sessions are working, as one string: the agent states change at every event of a running turn (a stage, a tool, a token
+  // count), and reading them whole drew this list again each time, on every page.
+  const busyIds = useSessionStore((state) =>
+    Object.entries(state.agentStates)
+      .filter(([, agent]) => Boolean(agent?.isThinking || agent?.activeTool))
+      .map(([id]) => id)
+      .sort()
+      .join('|'),
+  )
+  const busy = useMemo(() => new Set(busyIds ? busyIds.split('|') : []), [busyIds])
   const navigate = useNavigate()
   const [open, setOpen] = useState(true)
   const [menuSessionId, setMenuSessionId] = useState<string | null>(null)
@@ -120,8 +129,7 @@ export function RecentSessions({ sessions, onOpenSession, onOpenHistory }: Props
           {sessions.map((session) => {
             const active = session.id === activeId
             const menuOpen = menuSessionId === session.id
-            const agentState = agentStates[session.id]
-            const isBusy = Boolean(agentState?.isThinking || agentState?.activeTool)
+            const isBusy = busy.has(session.id)
             return (
               <div key={session.id} className={cx('group relative flex items-center overflow-visible rounded-md', active ? 'bg-[var(--surface-hover)]' : 'hover:bg-[var(--surface-hover)]')}>
                 {editingId === session.id ? (

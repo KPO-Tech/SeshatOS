@@ -1,9 +1,16 @@
 import type { StreamingBlock } from '@renderer/stores/session'
+import { isScrolling } from '@renderer/lib/scrollActivity'
 
-type TimerHandle = ReturnType<typeof setTimeout>
-
+// A delta this short is shown at once; a longer one is let out over the next frames, so text arrives as a flow rather than in bursts.
 const LARGE_DELTA_THRESHOLD = 5
-const MICRO_CHUNK_DELAY_MS = 5
+// The least a queued block shows per frame. With the share of the backlog below, a short queue still moves a few characters at a time and
+// one that fell behind the live stream catches up in a handful of frames instead of growing until the next flush dumps it in one jump.
+const MIN_CHARS_PER_FRAME = 6
+const BACKLOG_SHARE_PER_FRAME = 0.35
+// A hidden window has no animation frames: the queue drains on a timer instead, so the turn still ends on time.
+const HIDDEN_FRAME_MS = 16
+
+type FrameHandle = { kind: 'raf'; id: number } | { kind: 'timeout'; id: ReturnType<typeof setTimeout> }
 
 function textOf(block: StreamingBlock | undefined, type: 'text' | 'thinking') {
   if (!block) return ''
@@ -16,31 +23,6 @@ function withText(block: StreamingBlock, type: 'text' | 'thinking', text: string
   return type === 'text'
     ? { ...block, type: 'text', text }
     : { ...block, type: 'thinking', thinking: text }
-}
-
-function cloneBlocks(blocks: StreamingBlock[]) {
-  return blocks.map((block) => {
-    if (block.type === 'text' || block.type === 'thinking') return { ...block }
-    return {
-      ...block,
-      input: { ...block.input },
-      metadata: block.metadata ? { ...block.metadata } : undefined,
-      _approval: block._approval ? { ...block._approval, toolInput: { ...block._approval.toolInput } } : undefined,
-      _prompt: block._prompt
-        ? {
-            ...block._prompt,
-            options: block._prompt.options?.map((option) => ({ ...option })),
-            metadata: block._prompt.metadata ? { ...block._prompt.metadata } : undefined,
-          }
-        : undefined,
-      _result: block._result
-        ? {
-            ...block._result,
-            metadata: block._result.metadata ? { ...block._result.metadata } : undefined,
-          }
-        : undefined,
-    }
-  }) as StreamingBlock[]
 }
 
 function pendingCharacterCount(current: StreamingBlock[], target: StreamingBlock[]) {
@@ -56,29 +38,50 @@ function pendingCharacterCount(current: StreamingBlock[], target: StreamingBlock
   }, 0)
 }
 
+function requestFrame(callback: () => void): FrameHandle {
+  const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden'
+  if (hidden || typeof requestAnimationFrame !== 'function') return { kind: 'timeout', id: setTimeout(callback, HIDDEN_FRAME_MS) }
+  return { kind: 'raf', id: requestAnimationFrame(callback) }
+}
+
+function cancelFrameHandle(handle: FrameHandle) {
+  if (handle.kind === 'raf') cancelAnimationFrame(handle.id)
+  else clearTimeout(handle.id)
+}
+
+/**
+ * Turns the blocks of a streaming answer into what is shown, at most once per frame. Every publish redraws the answer being written, so
+ * the stream, however fast its deltas come, costs one store update per frame the screen can show, and the frames left are the reader's.
+ *
+ * Blocks are kept as given (the reducers never change a block in place): a tool call that did not change keeps the same object, so a part
+ * of the screen that only shows tools is not drawn again for each token of the text.
+ */
 export class StreamPresenter {
   private target: StreamingBlock[] = []
   private displayed: StreamingBlock[] = []
-  private frame: TimerHandle | null = null
+  private frame: FrameHandle | null = null
   private idleResolvers: Array<() => void> = []
   private queues = new Map<number, string>()
-  private trickleTimer: TimerHandle | null = null
 
   constructor(private readonly publish: (blocks: StreamingBlock[]) => void) {}
 
   update(target: StreamingBlock[]) {
     const previous = this.target
-    this.target = cloneBlocks(target)
+    this.target = target
+    const displayed = this.displayed.slice(0, target.length)
 
-    this.target.forEach((block, index) => {
+    target.forEach((block, index) => {
       if (block.type !== 'text' && block.type !== 'thinking') {
-        this.displayed[index] = cloneBlocks([block])[0]
+        displayed[index] = block
         return
       }
 
       const type = block.type
       const delta = textOf(block, type).slice(textOf(previous[index], type).length)
-      if (!delta) return
+      if (!delta) {
+        if (!displayed[index]) displayed[index] = withText(block, type, '')
+        return
+      }
 
       const queued = this.queues.get(index)
       if (queued) {
@@ -87,25 +90,23 @@ export class StreamPresenter {
       }
 
       if (delta.length < LARGE_DELTA_THRESHOLD) {
-        const current = this.displayed[index] ?? withText(block, type, '')
-        this.displayed[index] = withText(current, type, textOf(current, type) + delta)
+        const current = displayed[index] ?? withText(block, type, '')
+        displayed[index] = withText(current, type, textOf(current, type) + delta)
         return
       }
 
       this.queues.set(index, delta)
     })
 
-    this.displayed = this.displayed.slice(0, this.target.length)
-    this.startTrickle()
+    this.displayed = displayed
     this.schedule()
   }
 
   flush(target = this.target) {
-    this.target = cloneBlocks(target)
+    this.target = target
     this.cancelFrame()
-    this.cancelTrickle()
     this.queues.clear()
-    this.displayed = cloneBlocks(this.target)
+    this.displayed = [...target]
     this.publish(this.displayed)
     this.resolveIdle()
   }
@@ -121,68 +122,53 @@ export class StreamPresenter {
 
   cancel() {
     this.cancelFrame()
-    this.cancelTrickle()
     this.queues.clear()
     this.resolveIdle()
   }
 
   private schedule() {
     if (this.frame !== null) return
-    this.frame = setTimeout(() => {
-      this.frame = null
-      this.publish(this.displayed)
-      if (this.queues.size === 0) this.resolveIdle()
-    }, 16)
+    this.frame = requestFrame(this.onFrame)
   }
 
-  private startTrickle() {
-    if (this.trickleTimer !== null || this.queues.size === 0) return
-    this.tickTrickle()
+  private onFrame = () => {
+    this.frame = null
+    // The person is scrolling: nothing is drawn until they stop, so the frames are all theirs. The text keeps arriving in target and
+    // shows at once afterwards (see scrollActivity.ts).
+    if (isScrolling()) {
+      this.schedule()
+      return
+    }
+    this.advanceQueues()
+    this.publish(this.displayed)
+    if (this.queues.size > 0) this.schedule()
+    else this.resolveIdle()
   }
 
-  private tickTrickle = () => {
-    this.trickleTimer = null
+  private advanceQueues() {
+    if (this.queues.size === 0) return
+    const displayed = [...this.displayed]
     for (const [index, queued] of this.queues) {
-      // Proportional to the backlog, not flat - a short queue still trickles
-      // a couple characters at a time (feels smooth), but a queue that fell
-      // behind the live stream (delta arrival faster than a flat drain rate
-      // could ever keep up with) catches up in a handful of ticks instead of
-      // growing without bound until the next flush() dumps the whole backlog
-      // in one visible jump.
-      const take = Math.min(queued.length, Math.max(2, Math.ceil(queued.length * 0.2)) + Math.floor(Math.random() * 2))
       const targetBlock = this.target[index]
       if (!targetBlock || (targetBlock.type !== 'text' && targetBlock.type !== 'thinking')) {
         this.queues.delete(index)
         continue
       }
+      const take = Math.min(queued.length, Math.max(MIN_CHARS_PER_FRAME, Math.ceil(queued.length * BACKLOG_SHARE_PER_FRAME)))
       const type = targetBlock.type
-      const shown = queued.slice(0, take)
       const rest = queued.slice(take)
       if (rest) this.queues.set(index, rest)
       else this.queues.delete(index)
-
-      const current = this.displayed[index] ?? withText(targetBlock, type, '')
-      this.displayed[index] = withText(current, type, textOf(current, type) + shown)
+      const current = displayed[index] ?? withText(targetBlock, type, '')
+      displayed[index] = withText(current, type, textOf(current, type) + queued.slice(0, take))
     }
-    this.publish(this.displayed)
-    if (this.queues.size === 0) {
-      this.resolveIdle()
-      return
-    }
-    const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden'
-    this.trickleTimer = setTimeout(this.tickTrickle, hidden ? 0 : MICRO_CHUNK_DELAY_MS)
+    this.displayed = displayed
   }
 
   private cancelFrame() {
     if (this.frame === null) return
-    clearTimeout(this.frame)
+    cancelFrameHandle(this.frame)
     this.frame = null
-  }
-
-  private cancelTrickle() {
-    if (this.trickleTimer === null) return
-    clearTimeout(this.trickleTimer)
-    this.trickleTimer = null
   }
 
   private resolveIdle() {

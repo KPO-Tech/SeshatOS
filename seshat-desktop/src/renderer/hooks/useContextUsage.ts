@@ -3,6 +3,8 @@ import { fetchProviderModels } from '@renderer/hooks/useProviders'
 import { contextUsage, streamedChars, tokensSinceReport, type ContextUsage } from '@renderer/lib/sessionOverview'
 import { useSessionStore } from '@renderer/stores/session'
 
+const STREAMED_STEP = 400
+
 /**
  * How full the context of a session is, live while the answer streams. The window comes from the runtime's own figure once a
  * turn has reported it; before that, from the model list of the session's provider.
@@ -11,7 +13,9 @@ export function useContextUsage(sessionId: string): { usage: ContextUsage | null
   const agentState = useSessionStore((s) => s.getAgentState(sessionId))
   const providerId = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId)?.providerSettingId)
   const modelId = useSessionStore((s) => s.sessions.find((item) => item.id === sessionId)?.modelId)
-  const streamed = useSessionStore((s) => s.streamingBySession[sessionId])
+  // A number, in steps of STREAMED_STEP characters: the gauge moves by a fraction of a percent per token, so reading the blocks themselves
+  // drew it (and the composer row around it) again at every frame of the answer.
+  const streamed = useSessionStore((s) => Math.floor(streamedChars(s.streamingBySession[sessionId]) / STREAMED_STEP) * STREAMED_STEP)
   const [windowTokens, setWindowTokens] = useState<number | null>(null)
 
   useEffect(() => {
@@ -32,7 +36,7 @@ export function useContextUsage(sessionId: string): { usage: ContextUsage | null
     agentState.outputTokens,
     windowTokens,
     agentState.liveContext,
-    tokensSinceReport(streamedChars(streamed), agentState.liveContext),
+    tokensSinceReport(streamed, agentState.liveContext),
   )
   return { usage, windowTokens }
 }
