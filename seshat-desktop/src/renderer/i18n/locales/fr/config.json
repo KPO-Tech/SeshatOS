@@ -1,10 +1,4 @@
 {
-  "answers": {
-    "answersConfig": {
-      "richAnswers": "Réponses riches",
-      "tablesFiguresAndStepsDrawn": "Tableaux, figures et étapes dessinés sous forme de composants. À partir du prochain message."
-    }
-  },
   "cloud": {
     "cloudConfig": {
       "connected": "Connecté",

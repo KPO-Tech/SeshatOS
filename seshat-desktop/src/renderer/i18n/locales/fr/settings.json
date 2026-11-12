@@ -77,10 +77,6 @@
       "label": "Skills",
       "description": "Skills utilisables par vos agents."
     },
-    "answers": {
-      "label": "Réponses",
-      "description": "Comment l'agent présente ses réponses."
-    },
     "memories": {
       "label": "Mémoire",
       "description": "Ce dont l'agent se souvient."
@@ -117,9 +113,13 @@
     }
   },
   "languageNotifications": {
-    "chatCard": "Conversation",
+    "chatCard": "Conversations",
     "condenseTurns": "Condenser les tours",
     "condenseTurnsHint": "Replier les étapes d'un tour terminé derrière une ligne. Les suites d'appels d'outils sont résumées de toute façon.",
+    "richAnswers": "Réponses riches",
+    "richAnswersHint": "Tableaux, figures et étapes dessinés en composants. Dès le prochain message.",
+    "naturalWriting": "Écriture naturelle",
+    "naturalWritingHint": "Prose simple, sans tournures toutes faites ni listes réflexes. Dès le prochain message.",
     "languageCard": "Langue",
     "interfaceLanguage": "Langue de l'interface",
     "notificationsCard": "Notifications",

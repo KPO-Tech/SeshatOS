@@ -29,7 +29,6 @@
     "environment": { "label": "Environment", "description": "Where commands run, and API keys." },
     "storage": { "label": "Storage", "description": "Where files and caches live." },
     "skills": { "label": "Skills", "description": "Skills your agents can use." },
-    "answers": { "label": "Answers", "description": "How the agent presents answers." },
     "memories": { "label": "Memories", "description": "What the agent remembers." },
     "dataControls": { "label": "Data controls", "description": "What is kept on this device." },
     "about": { "label": "About", "description": "Version and origin of SeshatOS." },
@@ -54,9 +53,13 @@
     }
   },
   "languageNotifications": {
-    "chatCard": "Conversation",
+    "chatCard": "Conversations",
     "condenseTurns": "Condense turns",
     "condenseTurnsHint": "Fold the steps of a finished turn behind one line. Runs of tool calls are summarized in either case.",
+    "richAnswers": "Rich answers",
+    "richAnswersHint": "Tables, figures and steps drawn as components. From the next message.",
+    "naturalWriting": "Natural writing",
+    "naturalWritingHint": "Plain prose, without stock phrases or reflex lists. From the next message.",
     "languageCard": "Language",
     "interfaceLanguage": "Interface language",
     "notificationsCard": "Notifications",

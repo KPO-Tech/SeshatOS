@@ -11,6 +11,14 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 
 ## [Unreleased]
 
+### Added
+
+- **Natural writing.** A switch in Settings > Preferences > Conversations asks the agent for plain prose: no stock phrases ("delve into", "Dans un monde où", "Il convient de souligner que"), no reflex bullet lists or groups of three, no em dashes, no preamble or closing summary, sentences of varied length. Off by default, since it suits some work and not all; code, data, components and any format you ask for in a message are left alone.
+
+### Changed
+
+- **The Answers page is folded into Preferences.** Rich answers now sit with Condense turns and Natural writing under Preferences > Conversations.
+
 ### Fixed
 
 - **A link in an answer opens in the app's browser again.** Clicking a link the agent gave, a source or a web search result opened the system browser: the call passed the conversation where the browser expected its provider, the built-in browser refused, and the click fell back to the system. It now opens a new tab in the conversation's browser panel, without taking over the tab the agent drives. Links in cards and `Link` components follow the same path.
