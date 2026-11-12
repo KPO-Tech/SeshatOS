@@ -52,7 +52,7 @@ export function ConversationPage() {
     sessionId: id,
     session,
     updateSession,
-    onSaveError: () => showToast("Couldn't save model selection - it may revert next time you open this conversation.", 'err'),
+    onSaveError: () => showToast(t('chat.conversation.conversationPage.modelSaveFailed'), 'err'),
   })
 
   const {

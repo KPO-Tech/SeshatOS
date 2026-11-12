@@ -32,7 +32,33 @@
       "document": "Document",
       "index": "Index",
       "restore": "Restore",
-      "maximize": "Maximize"
+      "maximize": "Maximize",
+      "empty": {
+        "markdown": {
+          "title": "Markdown preview",
+          "description": "Markdown opens here when a note or document is opened."
+        },
+        "pdf": {
+          "title": "PDF preview",
+          "description": "This PDF couldn't be opened."
+        },
+        "docx": {
+          "title": "Document preview",
+          "description": "This document couldn't be opened."
+        },
+        "xlsx": {
+          "title": "Spreadsheet preview",
+          "description": "This spreadsheet couldn't be opened."
+        },
+        "pptx": {
+          "title": "Presentation preview",
+          "description": "This presentation couldn't be opened."
+        },
+        "artifact": {
+          "title": "Artifact preview",
+          "description": "This artifact couldn't be opened."
+        }
+      }
     },
     "searchModal": {
       "searchConversations": "Search conversations",

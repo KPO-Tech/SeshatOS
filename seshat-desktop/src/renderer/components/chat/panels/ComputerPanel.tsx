@@ -127,7 +127,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
     const agentType = subagents?.[tool.id]?.agentType
     openRightPanel({
       kind: 'subagent',
-      title: agentType ? agentType.replace(/_/g, ' ').replace(/-/g, ' ') : 'Sub-agent',
+      title: agentType ? agentType.replace(/_/g, ' ').replace(/-/g, ' ') : t('chat.panels.computerPanel.subAgent'),
       sessionId,
       subagentToolUseId: tool.id,
     })

@@ -49,7 +49,8 @@
       },
       "conversationPage": {
         "files": "Fichiers",
-        "compacted": "Conversation compactée - {{saved}} jetons économisés ({{before}} → {{after}})"
+        "compacted": "Conversation compactée - {{saved}} jetons économisés ({{before}} → {{after}})",
+        "modelSaveFailed": "Choix du modèle non enregistré. Il peut revenir."
       },
       "jumpToLatest": {
         "goToTheLatestMessage": "Aller au dernier message"
@@ -179,7 +180,9 @@
         "t1ProblemOnThePage": "1 problème sur la page",
         "askTheAgentToFix": "Demander la correction",
         "couldntLoadPage": "La page n'a pas pu être chargée : {{message}}",
-        "problemsOnPage": "{{total}} problèmes sur la page"
+        "problemsOnPage": "{{total}} problèmes sur la page",
+        "agentStillWorking": "L'agent travaille encore. Redemandez à la fin.",
+        "couldNotOpenInBrowser": "La page n'a pas pu s'ouvrir."
       },
       "askUserPanel": {
         "askUser": "Ask User",
@@ -234,7 +237,8 @@
         "subAgentActivityHasIts": "L'activité d'un sous-agent a sa propre vue en direct, avec sa propre transcription et ses propres appels d'outils.",
         "openSubAgentView": "Ouvrir le sous-agent",
         "noSitesVisitedYet": "Aucun site visité.",
-        "noToolActivityHasBeen": "Aucune activité d'outil."
+        "noToolActivityHasBeen": "Aucune activité d'outil.",
+        "subAgent": "Sous-agent"
       },
       "filesPanel": {
         "toggleFileTree": "Basculer l'arborescence",
@@ -437,6 +441,11 @@
             "openLarge": "Ouvrir {{label}} en grand"
           }
         }
+      },
+      "actions": {
+        "cannotRead": "Action illisible",
+        "openToAsk": "Ouvrez la conversation",
+        "waitForAnswer": "Attendez la fin de la réponse"
       }
     },
     "streaming": {
