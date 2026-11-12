@@ -31,8 +31,11 @@ type gUserPreferences struct {
 	RichAnswersDisabled bool `gorm:"column:rich_answers_disabled;not null;default:false"`
 	// RichFamilies is a JSON object, family -> auto|on|off, for the families of components the person chose to force on or off. Empty
 	// means every family is automatic: taught when the request calls for it.
-	RichFamilies  string `gorm:"column:rich_families;type:text;not null;default:''"`
-	UpdatedAtUnix int64  `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
+	RichFamilies string `gorm:"column:rich_families;type:text;not null;default:''"`
+	// NaturalWriting asks the agent to write without the stock phrases and structures of machine-written text. Off until the user
+	// turns it on: it suits some work and not all.
+	NaturalWriting bool  `gorm:"column:natural_writing;not null;default:false"`
+	UpdatedAtUnix  int64 `gorm:"column:updated_at_unix;autoUpdateTime:unix"`
 }
 
 func (gUserPreferences) TableName() string { return "user_preferences" }
@@ -56,7 +59,9 @@ type UserPreferences struct {
 	RichAnswersDisabled bool
 	// RichFamilies is the JSON text of the families the person forced on or off; empty when none.
 	RichFamilies string
-	UpdatedAt    time.Time
+	// NaturalWriting reports whether the user asked for plain, human-sounding prose.
+	NaturalWriting bool
+	UpdatedAt      time.Time
 }
 
 type UpsertUserPreferencesParams struct {
@@ -73,6 +78,7 @@ type UpsertUserPreferencesParams struct {
 	MemoryEnabled             bool
 	RichAnswersDisabled       bool
 	RichFamilies              string
+	NaturalWriting            bool
 }
 
 type UserPreferencesStore struct {
@@ -119,6 +125,7 @@ func (s *UserPreferencesStore) Upsert(ctx context.Context, p UpsertUserPreferenc
 		MemoryEnabled:             p.MemoryEnabled,
 		RichAnswersDisabled:       p.RichAnswersDisabled,
 		RichFamilies:              p.RichFamilies,
+		NaturalWriting:            p.NaturalWriting,
 	}
 	err := s.db.gormDB.WithContext(ctx).
 		Clauses(clause.OnConflict{
@@ -127,7 +134,7 @@ func (s *UserPreferencesStore) Upsert(ctx context.Context, p UpsertUserPreferenc
 				"preferred_name", "profession", "about",
 				"working_style", "response_style", "extra_context",
 				"interactive_permission_mode", "automation_permission_mode",
-				"max_sub_agent_depth", "memory_enabled", "rich_answers_disabled", "rich_families", "updated_at_unix",
+				"max_sub_agent_depth", "memory_enabled", "rich_answers_disabled", "rich_families", "natural_writing", "updated_at_unix",
 			}),
 		}).
 		Create(&row).Error
@@ -153,6 +160,7 @@ func userPreferencesFromModel(r gUserPreferences) UserPreferences {
 		MemoryEnabled:             r.MemoryEnabled,
 		RichAnswersDisabled:       r.RichAnswersDisabled,
 		RichFamilies:              r.RichFamilies,
+		NaturalWriting:            r.NaturalWriting,
 		UpdatedAt:                 time.Unix(r.UpdatedAtUnix, 0).UTC(),
 	}
 }

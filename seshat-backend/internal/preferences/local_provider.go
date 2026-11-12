@@ -63,6 +63,7 @@ func (p *LocalProvider) Upsert(ctx context.Context, principal *backendauth.Princ
 		MemoryEnabled:             params.MemoryEnabled,
 		RichAnswersDisabled:       params.RichAnswersDisabled,
 		RichFamilies:              EncodeRichFamilies(params.RichFamilies),
+		NaturalWriting:            params.NaturalWriting,
 	})
 	if err != nil {
 		return nil, bkerr.Internal(err.Error(), err)
@@ -89,6 +90,7 @@ func fromDB(p *db.UserPreferences) UserPreferences {
 		MemoryEnabled:             p.MemoryEnabled,
 		RichAnswersDisabled:       p.RichAnswersDisabled,
 		RichFamilies:              DecodeRichFamilies(p.RichFamilies),
+		NaturalWriting:            p.NaturalWriting,
 		UpdatedAt:                 p.UpdatedAt,
 	}
 }

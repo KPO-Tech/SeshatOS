@@ -9,7 +9,7 @@ import (
 	"github.com/KPO-Tech/seshat-runtime/pkg/types"
 )
 
-type fakePreferences struct{ richAnswers bool }
+type fakePreferences struct{ richAnswers, naturalWriting bool }
 
 func (fakePreferences) BuildSystemPromptBlock(context.Context, *backendauth.Principal) (string, error) {
 	return "", nil
@@ -23,6 +23,10 @@ func (fakePreferences) MemoryEnabled(context.Context, *backendauth.Principal) bo
 
 func (f fakePreferences) RichAnswersEnabled(context.Context, *backendauth.Principal) bool {
 	return f.richAnswers
+}
+
+func (f fakePreferences) NaturalWritingEnabled(context.Context, *backendauth.Principal) bool {
+	return f.naturalWriting
 }
 
 func appendedPrompt(t *testing.T, svc *Service) string {

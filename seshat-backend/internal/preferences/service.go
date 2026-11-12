@@ -97,6 +97,16 @@ func (s *Service) RichAnswersEnabled(ctx context.Context, principal *backendauth
 	return err != nil || prefs == nil || !prefs.RichAnswersDisabled
 }
 
+// NaturalWritingEnabled reports whether the user asked for plain, human-sounding prose. It is false when preferences cannot be read:
+// the feature is opt-in.
+func (s *Service) NaturalWritingEnabled(ctx context.Context, principal *backendauth.Principal) bool {
+	if s == nil || s.provider == nil || principal == nil {
+		return false
+	}
+	prefs, err := s.provider.Get(ctx, principal)
+	return err == nil && prefs != nil && prefs.NaturalWriting
+}
+
 // RichFamilyModes returns the families of components the person forced, family -> "on" or "off". A family that is not in the map is
 // automatic. It is empty when preferences cannot be read: the default is automatic.
 func (s *Service) RichFamilyModes(ctx context.Context, principal *backendauth.Principal) map[string]string {

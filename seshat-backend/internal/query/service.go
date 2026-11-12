@@ -70,6 +70,7 @@ type preferencesProvider interface {
 	ResolvePermissionModes(ctx context.Context, principal *backendauth.Principal, origin types.ExecutionOrigin) (types.PermissionMode, error)
 	MemoryEnabled(ctx context.Context, principal *backendauth.Principal) bool
 	RichAnswersEnabled(ctx context.Context, principal *backendauth.Principal) bool
+	NaturalWritingEnabled(ctx context.Context, principal *backendauth.Principal) bool
 }
 
 type knowledgeProvider interface {
@@ -1577,6 +1578,10 @@ func (s *Service) BuildContextInput(ctx context.Context, p ContextBuildParams) (
 	} else if s.richAnswersOn(ctx, p) {
 		// The Knowledge agent is told everything else by its own prompt, but the components are drawn by the same view.
 		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, richKnowledgeAnswersBlock(s.richFamilies(ctx, p)))
+	}
+	// Natural writing is off unless the person turned it on: it names the habits of machine-written prose to avoid (natural_writing.go).
+	if s.naturalWritingOn(ctx, p) {
+		input.AppendSystemPrompt = appendBlock(input.AppendSystemPrompt, naturalWritingBlock)
 	}
 	// Surfaces: the runtime's prompt was written for its terminal UI, so the
 	// two instructions that are false here (where the agent is running, and how

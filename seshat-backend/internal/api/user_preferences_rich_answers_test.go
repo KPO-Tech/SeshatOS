@@ -64,3 +64,20 @@ func TestUserPreferencesRichAnswersAreOnByDefaultAndKeepTheChoice(t *testing.T) 
 		t.Fatal("the choice to turn them back on must be saved")
 	}
 }
+
+func TestUserPreferencesNaturalWritingIsOffByDefaultAndKeepsTheChoice(t *testing.T) {
+	app := newPreferencesTestApp(t)
+
+	if callPreferences(t, app, http.MethodGet, nil).NaturalWritingEnabled {
+		t.Fatal("natural writing is opt-in: a user who never chose must read it as false")
+	}
+	if !callPreferences(t, app, http.MethodPut, map[string]any{"natural_writing_enabled": true}).NaturalWritingEnabled {
+		t.Fatal("the choice to turn it on must be saved")
+	}
+	if !callPreferences(t, app, http.MethodPut, map[string]any{"rich_answers_enabled": false}).NaturalWritingEnabled {
+		t.Fatal("a save that omits the field must leave the stored choice alone")
+	}
+	if callPreferences(t, app, http.MethodPut, map[string]any{"natural_writing_enabled": false}).NaturalWritingEnabled {
+		t.Fatal("the choice to turn it off must be saved")
+	}
+}
