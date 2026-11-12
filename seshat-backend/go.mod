@@ -1,6 +1,6 @@
 module github.com/KPO-Tech/SeshatOS/seshat-backend
 
-go 1.26.10
+go 1.26.11
 
 require (
 	github.com/KPO-Tech/seshat-runtime v1.16.0
