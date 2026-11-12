@@ -206,8 +206,9 @@ const isPrimaryInstance = app.requestSingleInstanceLock()
 if (!isPrimaryInstance) app.exit(0)
 app.on('second-instance', () => background.show())
 
-app.commandLine.appendSwitch('disable-gpu-vsync')
-app.commandLine.appendSwitch('use-angle', 'gl')
+// Chromium's own graphics settings are kept. use-angle=gl (with disable-gpu-vsync) used to be set here: on Windows it turns GPU
+// rasterization off, so every pixel of the page was drawn by the CPU, and while an answer streamed its rows were drawn again at each
+// frame and the scroll waited for them. Measured on Electron 45: rasterization "unavailable_off" with it, "enabled" without.
 // The agent's browser tools drive the app's browser through Chromium's debugging port, which has no password: any program on the computer
 // that finds it can drive the app. Development keeps the fixed 9333 that a backend started by hand looks for; the installed app lets
 // Chromium pick a free port at each launch (port 0), reads it back from DevToolsActivePort, and hands it to the backend it starts.
