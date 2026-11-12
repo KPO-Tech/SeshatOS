@@ -1,4 +1,5 @@
 import type { Message } from '@renderer/api/types'
+import { isInterruptedTurnNote } from '@renderer/lib/interruptedTurnNote'
 
 /** The text of a message a person wrote, without what they attached. */
 function promptText(message: Message): string {
@@ -10,13 +11,15 @@ function promptText(message: Message): string {
 
 /**
  * Where the last turn starts: the last message the person wrote (a message made only of tool results is the runtime's
- * separator after a call, not theirs). Null when the conversation has none.
+ * separator after a call, and the note after a stopped turn is the runtime's too). Null when the conversation has none.
  */
 export function lastPrompt(messages: Message[]): { index: number; text: string } | null {
   for (let index = messages.length - 1; index >= 0; index--) {
     const message = messages[index]
     if (message.role !== 'user') continue
     if (message.content.length > 0 && message.content.every((block) => block.type === 'tool_result')) continue
+    // Nor is the note the runtime adds after a stopped turn: asking again for that turn's answer must find the prompt before it.
+    if (isInterruptedTurnNote(message)) continue
     const text = promptText(message)
     if (text) return { index, text }
   }

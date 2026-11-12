@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next'
 import { foldSteps, isToolResultOnly, shownBlocks } from './turns'
 import { WorkedForGroup } from './WorkedForGroup'
 import { ToolRunGroup } from './ToolRunGroup'
+import { isInterruptedTurnNote } from '@renderer/lib/interruptedTurnNote'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -48,6 +49,8 @@ function messageAttachments(message: Message): ChatAttachment[] {
 
 export function isRenderableMessage(message: Message): boolean {
   if (isToolResultOnly(message)) return false
+  // The runtime's note after a stopped turn is for the model, not a message of the person.
+  if (isInterruptedTurnNote(message)) return false
   if (messageAttachments(message).length > 0) return true
   return shownBlocks(message).length > 0
 }
