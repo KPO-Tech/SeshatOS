@@ -27,6 +27,7 @@ The runtime that powers the agents has its own changelog in [seshat-runtime](htt
 - **Only the app's own page can use the desktop bridge.** Any local file used to be trusted, and two channels (task count, notifications) did not check their caller at all.
 - **The debugging port of the installed app changes at each launch.** The agent's browser tools drive the app's browser through it, and it was always 9333, easy for another program to find. Development keeps 9333.
 - **The backend's log is complete again.** What the backend printed after it started was no longer written to `backend-sidecar.log`.
+- **Scrolling while the agent writes is as smooth as when it is done.** A launch switch (`use-angle=gl`) turned off GPU rasterization on Windows, so the CPU drew every pixel of the answer as it grew; it is gone. The answer being written now draws only its own row (once per frame, its last Markdown block only), the rest of the app (the conversation list, other pages, the sidebar) no longer redraws with each token, and the answer holds its updates while you scroll.
 - **The last English texts follow the language.** The page shown when the window cannot load, the notes of the page preview, empty previews and a few messages of the chat.
 
 ### Changed
