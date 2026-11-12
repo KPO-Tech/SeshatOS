@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
-import { useSessionStore, EMPTY_STREAMING, DEFAULT_AGENT_STATE, type ChatAttachment } from '@renderer/stores/session'
+import { useSessionStore, DEFAULT_AGENT_STATE, type ChatAttachment } from '@renderer/stores/session'
+import { useStreamingTools } from '@renderer/components/chat/state/useStreamingTools'
 import { useUIStore } from '@renderer/stores/ui'
 import { isRenderableMessage } from '../messages/MessageItem'
 import { withArchivedHistory } from '@renderer/lib/compactedHistory'
@@ -10,7 +11,6 @@ import { useConversationModes } from './useConversationModes'
 import { useConversationPanels } from './useConversationPanels'
 import { ConversationPendingPanels } from './ConversationPendingPanels'
 import { useConversationRuntimeActions } from './useConversationRuntimeActions'
-import { useConversationScroll } from './useConversationScroll'
 import { useConversationSessionLoad } from './useConversationSessionLoad'
 import { useConversationModels } from './useConversationModels'
 import { ConversationEmpty } from './ConversationEmpty'
@@ -20,7 +20,6 @@ import { useToast, ToastStack } from '@renderer/components/ui/Toast'
 import { useChat } from '@renderer/hooks/useChat'
 import { RichActionProvider } from '../richblocks/view/actions/richActions'
 import { filePlace } from '../richblocks/view/actions/filePlace'
-import { JumpToLatest } from './JumpToLatest'
 import { useMergeWhenReady } from '../panels/changes/useMergeWhenReady'
 import './ConversationPage.css'
 import { useTranslation } from 'react-i18next'
@@ -28,10 +27,9 @@ import { useTranslation } from 'react-i18next'
 export function ConversationPage() {
   const { t } = useTranslation('chat')
   const { id } = useParams()
-  const sessions = useSessionStore((s) => s.sessions)
   const updateSession = useSessionStore((s) => s.updateSession)
-  const streaming = useSessionStore((s) => (id ? s.streamingBySession[id] : null) ?? EMPTY_STREAMING)
-  const session = sessions.find((s) => s.id === id)
+  // This conversation only: reading the whole list drew the page again whenever any conversation changed.
+  const session = useSessionStore((s) => (id ? s.sessions.find((item) => item.id === id) : undefined))
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const filesOpen = useUIStore((s) =>
     s.rightColumns.some((c) => c.panels.some((p) => p.kind === 'files' && p.sessionId === id))
@@ -67,9 +65,9 @@ export function ConversationPage() {
   const pendingPermission = agentState.pendingPermission
   const isPlanPending = pendingPermission?.toolName === 'exit_plan_mode'
   const pendingPlan = useSessionStore((s) => (id ? s.getPendingPlan(id) : undefined))
-  const pendingAskUser = streaming.find(
-    (b) => b.type === 'tool_use' && b.name === 'ask_user_question' && b._prompt
-  ) ?? null
+  // Only the tool calls of the stream: the page reads none of its text, and reading every block drew the whole page with each token.
+  const streamingTools = useStreamingTools(id)
+  const pendingAskUser = streamingTools.find((b) => b.name === 'ask_user_question' && b._prompt) ?? null
   const liveActivity = useLiveActivityForAgent(agentState)
   const [inputValue, setInputValue] = useState('')
   const [selectedCorpusId, setSelectedCorpusId] = useState<string | null>(null)
@@ -104,7 +102,6 @@ export function ConversationPage() {
   useConversationPanels({
     sessionId: id,
     agentState,
-    streaming,
     filesOpen,
     isPlanPending,
     pendingPlan,
@@ -170,12 +167,6 @@ export function ConversationPage() {
     onBlocked: (message) => showToast(message, 'err'),
   })
 
-  // Virtual list - renders only the rows visible in the viewport.
-  const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({
-    messageCount: visibleMessages.length,
-    streaming,
-  })
-
   if (!session) {
     // Every conversation open goes through this branch for however long
     // GET /sessions/:id takes, even a perfectly healthy one - without this,
@@ -199,8 +190,6 @@ export function ConversationPage() {
       <MessageList
         sessionId={id}
         messages={visibleMessages}
-        scrollRef={scrollRef}
-        rowVirtualizer={rowVirtualizer}
         blurred={isPlanPending}
         isStreaming={isStreaming}
         pendingPermission={pendingPermission}
@@ -222,7 +211,6 @@ export function ConversationPage() {
         onSubmitToolPrompt={onSubmitToolPrompt}
       />
 
-      <JumpToLatest away={away} onJump={scrollToBottom} />
 
       <ConversationComposer
         sessionId={id}

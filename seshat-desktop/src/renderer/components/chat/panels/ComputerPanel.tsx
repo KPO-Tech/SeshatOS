@@ -11,6 +11,7 @@ import { WindowCloseIcon, WindowMaximizeIcon } from '@renderer/components/ui/Win
 import type { StreamingBlock } from '@renderer/stores/session'
 import type { Message, ToolUseBlock } from '@renderer/api/types'
 import { useTranslation } from 'react-i18next'
+import { useStreamingTools } from '@renderer/components/chat/state/useStreamingTools'
 
 // Stable empty reference - must be module-level so the Zustand selector returns
 // the same reference every render when no session is found. An inline []
@@ -72,7 +73,7 @@ export function ComputerPanel({ sessionId, focusToolId, isMaximized = false, onC
   const sessionMessages = useSessionStore(
     (s) => s.sessions.find((session) => session.id === sessionId)?.messages ?? EMPTY_MESSAGES,
   )
-  const streaming = useSessionStore((s) => s.getStreaming(sessionId))
+  const streaming = useStreamingTools(sessionId)
   const subagents = useSessionStore((s) => s.subagentsBySession[sessionId])
   const openRightPanel = useUIStore((s) => s.openRightPanel)
   const [view, setView] = useState<ScreenView>('home')

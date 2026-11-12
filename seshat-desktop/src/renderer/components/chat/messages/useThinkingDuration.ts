@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useUIStore } from '@renderer/stores/ui'
 import { thinkingKey } from './thinkingTime'
 
@@ -7,7 +7,9 @@ import { thinkingKey } from './thinkingTime'
  * backend stamps a thought, so the time is measured here, and a thought from before this was measured shows none.
  */
 export function useThinkingDuration(sessionId: string | undefined, text: string, live: boolean): number | null {
-  const stored = useUIStore((s) => s.thinkingDurations[thinkingKey(sessionId, text)])
+  // The key reads the whole thought: worked out once per text, not inside the selector, which runs at every change of the UI store.
+  const key = useMemo(() => thinkingKey(sessionId, text), [sessionId, text])
+  const stored = useUIStore((s) => s.thinkingDurations[key])
   const setDuration = useUIStore((s) => s.setThinkingDuration)
   const startedAt = useRef<number | null>(null)
   const latestText = useRef(text)

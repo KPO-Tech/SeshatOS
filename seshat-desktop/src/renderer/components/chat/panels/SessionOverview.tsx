@@ -21,6 +21,7 @@ import { formatDuration } from '@renderer/lib/turnTiming'
 import { useSessionStore } from '@renderer/stores/session'
 import { useUIStore } from '@renderer/stores/ui'
 import { useTranslation } from 'react-i18next'
+import { useStreamingTools } from '@renderer/components/chat/state/useStreamingTools'
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -54,7 +55,7 @@ export function SessionOverview({ sessionId, webCount, toolCount, onOpenWeb, onO
   const condenseTurns = useUIStore((s) => s.condenseTurns)
   const setCondenseTurns = useUIStore((s) => s.setCondenseTurns)
   const messages = session?.messages ?? EMPTY
-  const streaming = useSessionStore((s) => s.getStreaming(sessionId))
+  const streaming = useStreamingTools(sessionId)
   const plan = useMemo(() => derivePlanSnapshot(messages, streaming), [messages, streaming])
 
   const [confinement, setConfinement] = useState<{ label: string; confined: boolean } | null>(null)

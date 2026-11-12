@@ -1,11 +1,9 @@
 import { useMemo } from 'react'
-import { DEFAULT_AGENT_STATE, EMPTY_STREAMING, useSessionStore } from '@renderer/stores/session'
+import { DEFAULT_AGENT_STATE, useSessionStore } from '@renderer/stores/session'
 import { isRenderableMessage } from '@renderer/components/chat/messages/MessageItem'
 import { MessageList } from '@renderer/components/chat/messages/MessageList'
 import { useLiveActivityForAgent } from '@renderer/components/chat/messages/liveActivity'
 import { useConversationRuntimeActions } from '@renderer/components/chat/conversation/useConversationRuntimeActions'
-import { useConversationScroll } from '@renderer/components/chat/conversation/useConversationScroll'
-import { JumpToLatest } from '@renderer/components/chat/conversation/JumpToLatest'
 import { RichActionProvider } from '@renderer/components/chat/richblocks/view/actions/richActions'
 import type { Passage } from '../chat/knowledgeSearchResults'
 import { askExtras, type OpenHow } from './askExtras'
@@ -26,7 +24,6 @@ type Props = {
 // citations of the answer and the documents it rests on added by askExtras.
 export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName, onAsk, onOpenPassage }: Props) {
   const session = useSessionStore((state) => state.sessions.find((item) => item.id === sessionId))
-  const streaming = useSessionStore((state) => state.streamingBySession[sessionId] ?? EMPTY_STREAMING)
   const agentState = useSessionStore((state) => state.agentStates[sessionId] ?? DEFAULT_AGENT_STATE)
   const pendingPermission = agentState.pendingPermission
   const liveActivity = useLiveActivityForAgent(agentState)
@@ -38,7 +35,6 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
   const extras = useMemo(() => askExtras(messages, scopeName, onOpenPassage), [messages, scopeName, onOpenPassage])
 
   const { onApproveTool, onDenyTool, onSubmitToolPrompt } = useConversationRuntimeActions({ sessionId, pendingPermission, sendMessage })
-  const { scrollRef, rowVirtualizer, away, scrollToBottom } = useConversationScroll({ messageCount: messages.length, streaming })
 
   return (
     // A follow-up of a component (a Choice, a Button) is a question like the ones of the composer, with the scope the person has now.
@@ -47,8 +43,6 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
       <MessageList
         sessionId={sessionId}
         messages={messages}
-        scrollRef={scrollRef}
-        rowVirtualizer={rowVirtualizer}
         isStreaming={isStreaming}
         pendingPermission={pendingPermission}
         pendingAskUser={null}
@@ -60,7 +54,6 @@ export function AskConversation({ sessionId, isStreaming, sendMessage, scopeName
         onRetryMessage={(text) => onAsk(text)}
         extrasFor={(index) => extras[index]}
       />
-      <JumpToLatest away={away} onJump={scrollToBottom} />
     </div>
     </RichActionProvider>
   )

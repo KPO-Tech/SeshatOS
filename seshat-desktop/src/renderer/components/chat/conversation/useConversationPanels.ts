@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
 import type { PlanDocument } from '@renderer/api/types'
-import type { AgentState, StreamingBlock } from '@renderer/stores/session'
+import type { AgentState } from '@renderer/stores/session'
 import type { RightPanelKind, RightPanelPayload } from '@renderer/stores/ui'
 import { isFileTool } from '@renderer/components/chat/tools/toolDisplay'
 import { htmlArtifactPanel, presentedPages } from '@renderer/lib/htmlArtifact'
 import { useTranslation } from 'react-i18next'
+import { useStreamingTools } from '@renderer/components/chat/state/useStreamingTools'
 
 type ToolPanelCategory = Extract<RightPanelKind, 'browser'>
 
@@ -35,7 +36,6 @@ const PANEL_TITLE: Record<ToolPanelCategory, string> = {
 type UseConversationPanelsArgs = {
   sessionId?: string
   agentState: AgentState
-  streaming: StreamingBlock[]
   filesOpen: boolean
   isPlanPending: boolean
   pendingPlan?: PlanDocument
@@ -45,13 +45,14 @@ type UseConversationPanelsArgs = {
 export function useConversationPanels({
   sessionId,
   agentState,
-  streaming,
   filesOpen,
   isPlanPending,
   pendingPlan,
   openRightPanel,
 }: UseConversationPanelsArgs) {
   const { t } = useTranslation('chat')
+  // Only the tool calls: the effects below follow tools, and reading every block drew the whole page again for each token.
+  const streaming = useStreamingTools(sessionId)
   const browserToolNavigationRef = useRef<string | null>(null)
   const prevCategoryRef = useRef<ToolPanelCategory | null>(null)
   const openedPagesRef = useRef(new Set<string>())
