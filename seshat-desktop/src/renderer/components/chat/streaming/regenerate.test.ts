@@ -34,6 +34,17 @@ describe('withoutLastAnswer', () => {
     expect(kept?.map((message) => message.id)).toEqual(['u1', 'a1', 'u2'])
   })
 
+  it('asks again for a turn the person stopped: the runtime note after it is not the prompt, and goes with the answer', () => {
+    const note: Message = {
+      id: 'msg-interrupted-turn-2',
+      role: 'user',
+      content: [{ type: 'text', text: '[The previous turn was interrupted by the user before it finished. Everything done in it is preserved above.]' }],
+    }
+    const stopped = [said('u1', 'first'), answered('a1', 'one'), said('u2', 'second'), answered('a2', 'half'), note]
+    expect(lastPrompt(stopped)).toEqual({ index: 2, text: 'second' })
+    expect(withoutLastAnswer(stopped, 'second')?.map((message) => message.id)).toEqual(['u1', 'a1', 'u2'])
+  })
+
   it('also drops an answer that failed and the error it carries', () => {
     const failed = [said('u1', 'first'), answered('a1', 'one'), { ...said('u2', 'second'), status: 'error' as const }, answered('a2', 'Something went wrong')]
     expect(withoutLastAnswer(failed, 'second')?.map((message) => message.id)).toEqual(['u1', 'a1', 'u2'])

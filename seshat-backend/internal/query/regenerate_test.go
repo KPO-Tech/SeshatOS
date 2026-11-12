@@ -64,3 +64,14 @@ func TestTheLastTurnPromptIsWhatThePersonWrote(t *testing.T) {
 		t.Fatal("an empty conversation has no prompt")
 	}
 }
+
+func TestTheNoteOfAStoppedTurnIsNotAPrompt(t *testing.T) {
+	messages := []types.Message{
+		userSaid("first question"),
+		{Role: types.RoleAssistant, Content: []types.ContentBlock{types.TextContent{Text: "half an answer"}}},
+		userSaid("[The previous turn was interrupted by the user before it finished. Everything done in it is preserved above. If asked to continue, resume from where it stopped; do not start over.]"),
+	}
+	if got, ok := lastTurnPrompt(messages); !ok || got != "first question" {
+		t.Fatalf("got %q, %v: the note the runtime adds when the person stops a turn is not a prompt", got, ok)
+	}
+}
